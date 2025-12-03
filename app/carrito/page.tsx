@@ -1,0 +1,414 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useCart } from '@/contexts/CartContext';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import PublicHeader from '@/components/public/PublicHeader';
+import { toast } from 'react-hot-toast';
+
+export default function CarritoPage() {
+  const router = useRouter();
+  const { items, removeItem, updateQuantity, clearCart, getTotalPrice } = useCart();
+  const { confirm } = useConfirm();
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-VE', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(price);
+  };
+
+  const handleRemoveItem = async (id: string) => {
+    setRemoving(id);
+    setTimeout(() => {
+      removeItem(id);
+      setRemoving(null);
+    }, 300);
+  };
+
+  const handleClearCart = async () => {
+    const confirmed = await confirm({
+      title: 'Vaciar carrito',
+      message: '¿Estás seguro de que deseas vaciar el carrito? Esta acción no se puede deshacer.',
+      confirmText: 'Sí, vaciar',
+      cancelText: 'Cancelar',
+      type: 'danger',
+    });
+
+    if (confirmed) {
+      clearCart();
+    }
+  };
+
+  const handleCheckout = async () => {
+    setIsCheckingOut(true);
+    try {
+      const response = await fetch('/api/cart/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map(i => ({ productId: i.id, quantity: i.quantity }))
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al reservar stock');
+      }
+
+      toast.success('Stock reservado por 15 minutos');
+      router.push('/checkout');
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      toast.error(error.message || 'No se pudo iniciar el checkout');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
+  const subtotal = getTotalPrice();
+  const tax = subtotal * 0.16; // 16% IVA
+  const total = subtotal + tax;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
+      <PublicHeader />
+
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 left-10 w-64 h-64 bg-white rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <nav className="flex items-center gap-2 text-sm mb-6">
+            <Link href="/" className="text-white/80 hover:text-white transition-colors font-medium">
+              Inicio
+            </Link>
+            <svg className="w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <span className="text-white font-bold">Carrito de Compras</span>
+          </nav>
+
+          <div className="text-center">
+            <div className="inline-flex items-center gap-3 mb-6">
+              <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h1 className="text-5xl font-black text-white">
+                Mi Carrito
+              </h1>
+            </div>
+            <p className="text-xl text-white/90">
+              {items.length > 0 ? `${items.length} ${items.length === 1 ? 'producto' : 'productos'} en tu carrito` : 'Tu carrito está vacío'}
+            </p>
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 60L60 55C120 50 240 40 360 35C480 30 600 30 720 32.5C840 35 960 40 1080 42.5C1200 45 1320 45 1380 45L1440 45V60H1380C1320 60 1200 60 1080 60C960 60 840 60 720 60C600 60 480 60 360 60C240 60 120 60 60 60H0Z" fill="#f8f9fa" />
+          </svg>
+        </div>
+      </section>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {items.length === 0 ? (
+          /* Empty Cart State */
+          <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/50 p-16 text-center shadow-2xl"
+            style={{
+              animation: 'fadeInUp 0.6s ease-out both',
+            }}
+          >
+            <div className="max-w-md mx-auto">
+              <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-[#212529] mb-3">
+                Tu carrito está vacío
+              </h2>
+              <p className="text-[#6a6c6b] mb-8">
+                Explora nuestros productos y añade tus favoritos al carrito
+              </p>
+              <Link
+                href="/productos"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-2xl transition-all hover:scale-105 shadow-xl"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                Ver Productos
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <div className="lg:col-span-2 space-y-4">
+              {/* Clear Cart Button */}
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-[#212529]">
+                  Productos ({items.length})
+                </h2>
+                <button
+                  onClick={handleClearCart}
+                  className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-semibold"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Vaciar Carrito
+                </button>
+              </div>
+
+              {/* Cart Items List */}
+              {items.map((item, index) => (
+                <div
+                  key={item.id}
+                  className={`relative bg-white rounded-2xl border border-gray-200 overflow-hidden transition-all duration-300 ${removing === item.id ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+                    }`}
+                  style={{
+                    perspective: '1000px',
+                    animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`,
+                  }}
+                >
+                  {/* Glow Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#2a63cd]/10 via-purple-500/10 to-pink-500/10 rounded-2xl opacity-0 hover:opacity-100 transition-opacity duration-500 blur-xl -z-10"></div>
+
+                  <div className="p-6">
+                    <div className="flex gap-6">
+                      {/* Product Image */}
+                      <div className="relative w-32 h-32 flex-shrink-0 bg-gradient-to-br from-[#f8f9fa] to-gray-100 rounded-xl overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-10"></div>
+                        {item.imageUrl ? (
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.name}
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-700"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Product Info */}
+                      <div className="flex-1 flex flex-col">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-[#212529] mb-2 line-clamp-2">
+                            {item.name}
+                          </h3>
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-xs font-bold text-[#212529] opacity-60">USD</span>
+                              <span className="text-2xl font-black text-[#212529]">
+                                {Number(item.price).toFixed(2).replace('.', ',')}
+                              </span>
+                            </div>
+                            <span className="text-sm text-[#6a6c6b]">
+                              c/u
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Quantity Controls */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <label className="text-sm font-semibold text-[#212529]">Cantidad:</label>
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl hover:from-[#2a63cd] hover:to-[#1e4ba3] hover:text-white transition-all shadow-md hover:shadow-lg hover:scale-105"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
+                                </svg>
+                              </button>
+                              <span className="w-16 text-center text-xl font-bold text-[#212529]">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                disabled={item.quantity >= item.stock}
+                                className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl hover:from-[#2a63cd] hover:to-[#1e4ba3] hover:text-white transition-all shadow-md hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+                                </svg>
+                              </button>
+                            </div>
+                            {item.quantity >= item.stock && (
+                              <span className="text-xs text-orange-600 font-semibold">
+                                Stock máximo
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Remove Button */}
+                          <button
+                            onClick={() => handleRemoveItem(item.id)}
+                            className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-semibold"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Eliminar
+                          </button>
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-[#6a6c6b]">Subtotal:</span>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-xs font-bold text-[#212529] opacity-60">USD</span>
+                              <span className="text-xl font-black text-[#212529]">
+                                {Number(item.price * item.quantity).toFixed(2).replace('.', ',')}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Order Summary - Sticky */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24 space-y-6">
+                {/* Summary Card */}
+                <div
+                  className="relative bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/50 p-8 shadow-2xl"
+                  style={{
+                    animation: 'fadeInUp 0.6s ease-out 0.2s both',
+                  }}
+                >
+                  <h2 className="text-2xl font-bold text-[#212529] mb-6">
+                    Resumen del Pedido
+                  </h2>
+
+                  <div className="space-y-4 mb-6">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#6a6c6b]">Subtotal:</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xs font-bold text-[#212529] opacity-60">USD</span>
+                        <span className="text-lg font-bold text-[#212529]">
+                          {Number(subtotal).toFixed(2).replace('.', ',')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#6a6c6b]">IVA (16%):</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xs font-bold text-[#212529] opacity-60">USD</span>
+                        <span className="text-lg font-bold text-[#212529]">
+                          {Number(tax).toFixed(2).replace('.', ',')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-[#212529]">Total:</span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-sm font-bold text-[#212529] opacity-60">USD</span>
+                          <span className="text-3xl font-black text-[#212529]">
+                            {Number(total).toFixed(2).replace('.', ',')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleCheckout}
+                    disabled={isCheckingOut}
+                    className="w-full flex items-center justify-center gap-3 px-8 py-5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-lg font-bold rounded-2xl hover:shadow-2xl transition-all hover:scale-[1.02] shadow-xl mb-4 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isCheckingOut ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        Proceder al Pago
+                      </>
+                    )}
+                  </button>
+
+                  <Link
+                    href="/productos"
+                    className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-white text-[#2a63cd] font-bold border-2 border-[#2a63cd] rounded-2xl hover:bg-[#f8f9fa] transition-all shadow-md hover:shadow-lg"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Seguir Comprando
+                  </Link>
+                </div>
+
+                {/* Trust Badges */}
+                <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6 shadow-xl">
+                  <h3 className="text-sm font-bold text-[#212529] mb-4">Compra Segura</h3>
+                  <div className="space-y-3">
+                    {[
+                      { icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>, text: 'Pago Seguro SSL' },
+                      { icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>, text: 'Garantía Oficial' },
+                      { icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>, text: 'Envío Rápido' },
+                    ].map((badge, index) => (
+                      <div key={index} className="flex items-center gap-3 text-sm text-[#6a6c6b]">
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                          {badge.icon}
+                        </div>
+                        <span>{badge.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+        }
+      </main >
+
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </div >
+  );
+}

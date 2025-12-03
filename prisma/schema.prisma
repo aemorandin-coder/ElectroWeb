@@ -1,0 +1,467 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  orders        Order[]
+  reviews       Review[]
+  addresses     Address[]
+  reservations  StockReservation[]
+  notifications Notification[]
+  notificationPreferences NotificationPreference?
+
+  @@map("users")
+}
+
+model Address {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  street       String
+  city         String
+  state        String
+  zipCode      String
+  country      String
+  phone        String
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("addresses")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPPORT
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  sku         String   @unique
+  slug        String   @unique
+  description String
+  priceUSD    Decimal
+  priceVES    Decimal?
+  stock       Int      @default(0)
+  images      String   // JSON string of image URLs
+  features    String?  // JSON string of features
+  specs       String?  // JSON string of specifications
+  
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  
+  brandId     String?
+  brand       Brand?   @relation(fields: [brandId], references: [id])
+
+  status      ProductStatus @default(DRAFT)
+  isFeatured  Boolean       @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  orderItems  OrderItem[]
+  reviews     Review[]
+  reservations StockReservation[]
+
+  @@map("products")
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  parentId    String?
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("categories")
+}
+
+model Brand {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  logo        String?
+  products    Product[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("brands")
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique // Format: ORD-YYYY-XXXX
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id])
+  
+  // Guest Checkout Info (if userId is null)
+  guestName     String?
+  guestEmail    String?
+  guestPhone    String?
+  
+  status        OrderStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentMethod String?
+  
+  // Amounts
+  subtotalUSD   Decimal
+  taxUSD        Decimal
+  shippingUSD   Decimal
+  totalUSD      Decimal
+  
+  exchangeRate  Decimal
+  totalVES      Decimal
+  
+  // Shipping Info
+  shippingAddress String
+  trackingNumber  String?
+  
+  notes         String?
+  
+  items         OrderItem[]
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  
+  quantity    Int
+  priceUSD    Decimal
+  totalUSD    Decimal
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("order_items")
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int
+  comment     String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  isApproved  Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("reviews")
+}
+
+model CompanySettings {
+  id          String   @id @default("default")
+  companyName String
+  tagline     String?
+  rif         String?
+  legalName   String?
+  foundedYear String?
+  description String?
+  
+  // Branding
+  logo        String?
+  favicon     String?
+  primaryColor   String?
+  secondaryColor String?
+  
+  // Contact
+  phone       String?
+  whatsapp    String?
+  email       String?
+  contactEmail String?
+  contactPhone String?
+  address     String?
+  city        String?
+  state       String?
+  businessHoursText String?
+  
+  // Social Media
+  instagram   String?
+  facebook    String?
+  twitter     String?
+  youtube     String?
+  socialMedia String?
+  
+  // Business Logic
+  businessHours String?
+  primaryCurrency String @default("USD")
+  autoExchangeRates Boolean @default(false)
+  exchangeRateVES Decimal?
+  exchangeRateEUR Decimal?
+  lastRateUpdate DateTime?
+  
+  // Shipping & Delivery
+  deliveryEnabled Boolean @default(true)
+  deliveryFeeUSD Decimal?
+  freeDeliveryThresholdUSD Decimal?
+  pickupEnabled Boolean @default(true)
+  pickupAddress String?
+  pickupInstructions String?
+  
+  // Taxes
+  taxEnabled Boolean @default(true)
+  taxPercent Decimal?
+  
+  // Order Limits
+  minOrderAmountUSD Decimal?
+  maxOrderAmountUSD Decimal?
+  
+  // Maintenance Mode
+  maintenanceMode    Boolean @default(false)
+  maintenanceMessage String?
+  maintenanceStartTime DateTime?
+  maintenanceEndTime   DateTime?
+  maintenanceAllowedIPs String?
+
+  // SEO Settings
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+
+  // Hero Video Section
+  heroVideoEnabled     Boolean @default(false)
+  heroVideoUrl         String?
+  heroVideoTitle       String?
+  heroVideoDescription String?
+
+  // Homepage Display Settings
+  maxFeaturedProducts Int @default(8)
+
+  // HomePage Hero Section
+  heroTitle           String?
+  heroSubtitle        String?
+  heroButtonText      String?
+  heroButtonLink      String?
+  heroBackgroundImage String?
+
+  // HomePage Stats Section
+  showStats  Boolean @default(true)
+  stat1Label String?
+  stat1Value String?
+  stat1Icon  String?
+  stat2Label String?
+  stat2Value String?
+  stat2Icon  String?
+  stat3Label String?
+  stat3Value String?
+  stat3Icon  String?
+  stat4Label String?
+  stat4Value String?
+  stat4Icon  String?
+
+  // HomePage Categories Display
+  showCategories       Boolean @default(true)
+  maxCategoriesDisplay Int     @default(6)
+
+  // Inventory Configuration
+  lowStockThreshold      Int     @default(10)
+  criticalStockThreshold Int     @default(5)
+  autoHideOutOfStock     Boolean @default(false)
+  notifyLowStock         Boolean @default(true)
+  notifyOutOfStock       Boolean @default(true)
+
+  // HomePage CTA Section
+  ctaEnabled     Boolean @default(true)
+  ctaTitle       String?
+  ctaDescription String?
+  ctaButtonText  String?
+  ctaButtonLink  String?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("company_settings")
+}
+
+model CompanyPaymentMethod {
+  id            String  @id @default(cuid())
+  type          PaymentMethodType
+  name          String
+
+  // Bank Details
+  bankName      String?
+  accountNumber String?
+  accountType   String?
+  holderName    String?
+  holderId      String?
+
+  // Mobile Payment
+  phone         String?
+
+  // Crypto/Digital
+  email         String?
+  walletAddress String?
+  network       String?
+
+  instructions  String?
+
+  isActive      Boolean @default(true)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("company_payment_methods")
+}
+
+enum PaymentMethodType {
+  BANK_TRANSFER
+  MOBILE_PAYMENT
+  ZELLE
+  PAYPAL
+  CRYPTO
+  CASH
+  OTHER
+}
+
+model ContactMessage {
+  id      String @id @default(cuid())
+  name    String
+  email   String
+  phone   String
+  subject String
+  message String
+  status  String @default("PENDING")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contact_messages")
+}
+
+model StockReservation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([productId])
+  @@index([expiresAt])
+
+  @@map("stock_reservations")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // ORDER, REVIEW, PROMOTION, SYSTEM
+  title       String
+  message     String
+  link        String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  emailOrders       Boolean @default(true)
+  emailReviews      Boolean @default(true)
+  emailPromotions   Boolean @default(false)
+  inAppOrders       Boolean @default(true)
+  inAppReviews      Boolean @default(true)
+  inAppPromotions   Boolean @default(true)
+  soundEnabled      Boolean @default(false)
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}

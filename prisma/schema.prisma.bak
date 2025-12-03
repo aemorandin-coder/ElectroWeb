@@ -1,0 +1,1019 @@
+// Electro Shop Morandin C.A. - Database Schema
+// E-commerce platform with multi-currency support
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTHENTICATION & USER MANAGEMENT
+// ============================================
+
+enum UserRole {
+  CUSTOMER
+  EMPLOYEE
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AdminPermission {
+  MANAGE_PRODUCTS
+  MANAGE_ORDERS
+  MANAGE_USERS
+  MANAGE_CONTENT
+  MANAGE_SETTINGS
+  VIEW_REPORTS
+}
+
+// Customer Users
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  name          String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile        Profile?
+  orders         Order[]
+  accounts       Account[]
+  sessions       Session[]
+  paymentMethods SavedPaymentMethod[]
+  balance        UserBalance?
+  passwordResetTokens PasswordResetToken[]
+  notifications       Notification[]
+  notificationPreference NotificationPreference?
+  stockReservations   StockReservation[]
+
+  @@map("users")
+}
+
+// Admin/Employee Users
+model AdminUser {
+  id          String            @id @default(cuid())
+  email       String            @unique
+  password    String
+  name        String
+  role        UserRole          @default(EMPLOYEE)
+  permissions AdminPermission[]
+  isActive    Boolean           @default(true)
+  lastLogin   DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  createdBy     String?
+  creator       AdminUser?  @relation("AdminCreatedBy", fields: [createdBy], references: [id])
+  createdAdmins AdminUser[] @relation("AdminCreatedBy")
+
+  @@map("admin_users")
+}
+
+// Customer Profile (extended info)
+model Profile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  phone     String?
+  whatsapp  String?
+  instagram String?
+  facebook  String?
+  twitter   String?
+
+  // Customer type and company info
+  customerType String? @default("PERSON") // "PERSON" or "COMPANY"
+  companyName  String?
+  taxId        String? // RIF/NIT for companies
+
+  // Business verification fields
+  isBusinessAccount          Boolean   @default(false)
+  businessVerified           Boolean   @default(false)
+  businessVerificationStatus String?   @default("NONE") // NONE, PENDING, APPROVED, REJECTED
+  businessRIF                String?
+  businessConstitutiveAct    String?   @db.Text // URL to document
+  businessRIFDocument        String?   @db.Text // URL to document
+  businessVerificationNotes  String?   @db.Text // Admin notes for rejection/approval
+  businessVerifiedAt         DateTime?
+
+  // Purchase preferences
+  purchaseAsBusinessDefault Boolean @default(false) // Default purchase type
+
+  // Settings & Preferences
+  emailNotifications Boolean @default(true)
+  orderUpdates       Boolean @default(true)
+  promotions         Boolean @default(false)
+  newsletter         Boolean @default(true)
+  twoFactorAuth      Boolean @default(false)
+  language           String  @default("es")
+  currency           String  @default("USD")
+  theme              String  @default("light")
+
+  addresses Address[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+// Shipping/Billing Addresses
+model Address {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  label     String // e.g., "Casa", "Oficina"
+  firstName String
+  lastName  String
+  phone     String
+
+  // Venezuelan address structure
+  state        String // Estado
+  city         String // Ciudad
+  municipality String? // Municipio
+  parish       String? // Parroquia
+  street       String // Calle/Avenida
+  building     String? // Edificio/Residencia
+  apartment    String? // Apartamento/Casa
+  zipCode      String?
+  reference    String? // Punto de referencia
+
+  isDefault Boolean @default(false)
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("addresses")
+}
+
+// NextAuth required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Password Reset Tokens
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+// ============================================
+// PRODUCT CATALOG
+// ============================================
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  image       String?
+  icon        String? // Icon name for UI
+
+  // Nested categories
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+
+  products Product[]
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  isActive Boolean @default(true)
+  order    Int     @default(0) // For sorting
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("categories")
+}
+
+model Product {
+  id          String @id @default(cuid())
+  sku         String @unique
+  name        String
+  slug        String @unique
+  description String @db.Text
+
+  // Pricing (base in USD)
+  priceUSD Decimal @db.Decimal(10, 2)
+
+  // Inventory
+  stock             Int @default(0)
+  lowStockThreshold Int @default(5)
+
+  // Categories
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  // Media
+  images    String[] // Array of image URLs
+  mainImage String? // Primary product image
+
+  // Technical specs (flexible JSON)
+  specifications Json?
+
+  // Product attributes
+  brand      String?
+  model      String?
+  weight     Decimal? @db.Decimal(8, 2) // in kg
+  dimensions Json? // {length, width, height} in cm
+
+  // Status flags
+  isFeatured      Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  isNew           Boolean  @default(false)
+  hasDiscount     Boolean  @default(false)
+  discountPercent Decimal? @db.Decimal(5, 2)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  // Relations
+  orderItems OrderItem[]
+  stockReservations StockReservation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isFeatured])
+  @@map("products")
+}
+
+// ============================================
+// ORDERS & CHECKOUT
+// ============================================
+
+enum OrderStatus {
+  PENDING // Pedido creado, esperando confirmaci贸n
+  CONFIRMED // Confirmado por el cliente
+  PAYMENT_PENDING // Esperando pago
+  PAID // Pagado
+  PROCESSING // En preparaci贸n
+  READY_FOR_PICKUP // Listo para retirar
+  SHIPPED // Enviado
+  DELIVERED // Entregado
+  CANCELLED // Cancelado
+  REFUNDED // Reembolsado
+}
+
+enum PaymentMethod {
+  CASH // Efectivo
+  BANK_TRANSFER // Transferencia bancaria
+  MOBILE_PAYMENT // Pago m贸vil
+  ZELLE // Zelle
+  PAYPAL // PayPal
+  CREDIT_CARD // Tarjeta de cr茅dito
+  CRYPTO // Criptomonedas
+  WALLET // Billetera Digital
+}
+
+enum DeliveryMethod {
+  PICKUP // Retiro en tienda
+  HOME_DELIVERY // Delivery a domicilio
+  SHIPPING // Env铆o
+}
+
+enum Currency {
+  USD
+  VES
+  EUR
+}
+
+model Order {
+  id          String @id @default(cuid())
+  orderNumber String @unique // Format: ORD-2025-0001
+
+  // Customer
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Delivery address (if applicable)
+  addressId String?
+  address   Address? @relation(fields: [addressId], references: [id])
+
+  // Order details
+  items OrderItem[]
+
+  // Pricing (stored at time of order)
+  currency Currency
+  subtotal Decimal  @db.Decimal(12, 2)
+  tax      Decimal  @default(0) @db.Decimal(12, 2)
+  shipping Decimal  @default(0) @db.Decimal(12, 2)
+  discount Decimal  @default(0) @db.Decimal(12, 2)
+  total    Decimal  @db.Decimal(12, 2)
+
+  // Exchange rates at time of order (for transparency)
+  exchangeRateVES Decimal? @db.Decimal(12, 4)
+  exchangeRateEUR Decimal? @db.Decimal(12, 4)
+
+  // Payment & Delivery
+  paymentMethod  PaymentMethod?
+  deliveryMethod DeliveryMethod
+
+  // Status
+  status OrderStatus @default(PENDING)
+
+  // Tracking
+  trackingNumber String?
+  notes          String? @db.Text
+  adminNotes     String? @db.Text // Internal notes
+
+  // Timestamps
+  paidAt      DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+  cancelledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  // Snapshot of product at time of order
+  productName  String
+  productSku   String
+  productImage String?
+
+  // Pricing (in order currency)
+  pricePerUnit Decimal @db.Decimal(12, 2)
+  quantity     Int
+  subtotal     Decimal @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ============================================
+// CONTENT MANAGEMENT
+// ============================================
+
+// Technical Service Video Testimonials
+model TechServiceVideo {
+  id          String  @id @default(cuid())
+  title       String
+  description String? @db.Text
+  videoUrl    String // YouTube, Vimeo, or self-hosted
+  thumbnail   String?
+
+  customerName String?
+  testimonial  String? @db.Text
+
+  isActive Boolean @default(true)
+  order    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tech_service_videos")
+}
+
+// Online Courses
+model Course {
+  id          String @id @default(cuid())
+  title       String
+  slug        String @unique
+  description String @db.Text
+
+  // Course details
+  thumbnail  String?
+  duration   String? // e.g., "4 semanas", "20 horas"
+  level      String? // Principiante, Intermedio, Avanzado
+  instructor String?
+
+  // Pricing
+  priceUSD Decimal @db.Decimal(10, 2)
+
+  // Content
+  syllabus Json? // Course structure
+
+  // Modality
+  isOnline    Boolean @default(true)
+  isInPerson  Boolean @default(false)
+  maxStudents Int?
+
+  // Status
+  isActive   Boolean @default(true)
+  isFeatured Boolean @default(false)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("courses")
+}
+
+// ============================================
+// NOTIFICATIONS SYSTEM
+// ============================================
+
+enum NotificationType {
+  NEW_ORDER // Nueva orden creada
+  LOW_STOCK // Producto con stock bajo
+  OUT_OF_STOCK // Producto sin stock
+  PRODUCT_REQUEST // Cliente solicita producto inexistente
+  ORDER_CANCELLED // Orden cancelada
+  ORDER_PAID // Orden pagada
+  STOCK_CRITICAL // Stock cr铆tico (1 unidad)
+  SYSTEM_ALERT // Alerta del sistema
+  ORDER_CONFIRMED // Orden confirmada (cliente)
+  ORDER_SHIPPED // Orden enviada (cliente)
+  ORDER_DELIVERED // Orden entregada (cliente)
+  REVIEW_APPROVED // Rese馻 aprobada (cliente)
+  REVIEW_REPLIED // Rese馻 respondida (cliente)
+  PROMOTION // Promoci髇 (cliente)
+  STOCK_AVAILABLE // Producto disponible (cliente)
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Notification {
+  id       String               @id @default(cuid())
+  type     NotificationType
+  priority NotificationPriority @default(MEDIUM)
+
+  // Content
+  title   String
+  message String @db.Text
+
+  // Related entities
+  orderId   String?
+  productId String?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Metadata (flexible JSON for additional data)
+  metadata Json?
+
+  // Status
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  // Action URL (optional link to related page)
+  actionUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([type])
+  @@map("notifications")
+}
+
+// Product Request from customers
+model ProductRequest {
+  id String @id @default(cuid())
+
+  // Customer info
+  userId        String?
+  customerName  String
+  customerEmail String
+  customerPhone String?
+
+  // Product details
+  productName     String
+  description     String   @db.Text
+  category        String?
+  estimatedBudget Decimal? @db.Decimal(10, 2)
+
+  // Status
+  status     String  @default("PENDING") // PENDING, IN_PROGRESS, FULFILLED, REJECTED
+  adminNotes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("product_requests")
+}
+
+// ============================================
+// PREMIUM FEATURES - REVIEWS & RATINGS
+// ============================================
+
+model Review {
+  id String @id @default(cuid())
+
+  // Product & User
+  productId String
+  userId    String
+  userName  String // Snapshot of user name
+  userImage String?
+
+  // Rating & Content
+  rating  Int // 1-5 stars
+  title   String?
+  comment String   @db.Text
+  images  String[] // Array of review images
+
+  // Verification
+  isVerifiedPurchase Boolean @default(false)
+
+  // Status
+  isApproved  Boolean @default(false)
+  isPublished Boolean @default(false)
+
+  // Helpful votes
+  helpfulCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([userId])
+  @@index([isPublished])
+  @@map("reviews")
+}
+
+// ============================================
+// PREMIUM FEATURES - PRODUCT COMPARISON
+// ============================================
+
+model Comparison {
+  id         String   @id @default(cuid())
+  userId     String
+  name       String   @default("Mi Comparaci贸n")
+  productIds String[] // Array of product IDs (max 4)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("comparisons")
+}
+
+// ============================================
+// PREMIUM FEATURES - WISHLIST
+// ============================================
+
+model Wishlist {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  productIds String[] // Array of product IDs
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("wishlists")
+}
+
+// ============================================
+// PREMIUM FEATURES - LIVE CHAT SUPPORT
+// ============================================
+
+enum ChatStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model ChatConversation {
+  id        String @id @default(cuid())
+  userId    String
+  userName  String
+  userEmail String
+
+  status ChatStatus @default(OPEN)
+
+  // Assigned support agent
+  assignedTo String?
+
+  // Priority
+  priority Int @default(1) // 1=Normal, 2=High, 3=Urgent
+
+  messages ChatMessage[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@map("chat_conversations")
+}
+
+model ChatMessage {
+  id             String           @id @default(cuid())
+  conversationId String
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId   String
+  senderName String
+  senderType String // "customer" or "admin"
+
+  message     String   @db.Text
+  attachments String[] // Array of file URLs
+
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+// ============================================
+// PREMIUM FEATURES - USER BALANCE & TRANSACTIONS
+// ============================================
+
+enum TransactionType {
+  RECHARGE // Recarga de saldo
+  PURCHASE // Compra realizada
+  REFUND // Reembolso
+  BONUS // Bonificaci贸n
+  WITHDRAWAL // Retiro
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model UserBalance {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  balance  Decimal  @default(0) @db.Decimal(12, 2)
+  currency Currency @default(USD)
+
+  // Tracking
+  totalRecharges Decimal @default(0) @db.Decimal(12, 2)
+  totalSpent     Decimal @default(0) @db.Decimal(12, 2)
+
+  transactions Transaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("user_balances")
+}
+
+model Transaction {
+  id        String      @id @default(cuid())
+  balanceId String
+  balance   UserBalance @relation(fields: [balanceId], references: [id], onDelete: Cascade)
+
+  type   TransactionType
+  status TransactionStatus @default(PENDING)
+
+  amount   Decimal  @db.Decimal(12, 2)
+  currency Currency @default(USD)
+
+  // Description
+  description String
+  reference   String? // Payment reference, order number, etc.
+
+  // Related entities
+  orderId String?
+
+  // Payment details
+  paymentMethod String?
+
+  // Metadata
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([balanceId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+enum PaymentMethodType {
+  BANK_TRANSFER // Transferencia bancaria
+  MOBILE_PAYMENT // Pago m贸vil
+  CASH // Efectivo
+  CRYPTO // Criptomoneda
+  ZELLE // Zelle
+  PAYPAL // PayPal
+  OTHER // Otro
+}
+
+model SavedPaymentMethod {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type PaymentMethodType
+  name String // Nombre descriptivo: "Banco Venezuela - Juan P茅rez"
+
+  // Bank/Mobile Payment details
+  bankName      String?
+  accountNumber String?
+  accountType   String? // Ahorro, Corriente
+  holderName    String?
+  holderId      String? // C茅dula del titular
+  phone         String? // Para pago m贸vil
+
+  // Crypto details
+  walletAddress String?
+  network       String? // BTC, ETH, USDT, etc.
+
+  isDefault Boolean @default(false)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isDefault])
+  @@map("payment_methods")
+}
+
+// ============================================
+// COMPANY SETTINGS & CONFIGURATION
+// ============================================
+
+model CompanySettings {
+  id String @id @default(cuid())
+
+  // Company Info
+  companyName String  @default("Electro Shop Morandin C.A.")
+  tagline     String?
+  rif         String? // RIF / NIT
+  legalName   String? // Raz贸n Social
+  foundedYear String? // A帽o de fundaci贸n
+  description String? @db.Text // Descripci贸n de la empresa
+  logo        String?
+  favicon     String?
+
+  // Contact
+  phone             String?
+  whatsapp          String?
+  email             String?
+  contactEmail      String? // Separate email for contact form
+  contactPhone      String? // Separate phone for contact form
+  address           String?
+  city              String?
+  state             String?
+  businessHoursText String? // e.g., "8:00 AM - 6:00 PM"
+
+  // Social Media
+  instagram   String?
+  facebook    String?
+  twitter     String?
+  youtube     String?
+  socialMedia Json? // Custom social media with enabled/disabled status
+
+  // Business Hours (JSON)
+  businessHours Json?
+
+  // Currency Exchange Rates
+  primaryCurrency   String   @default("USD") // USD, VES, or EUR
+  autoExchangeRates Boolean  @default(false) // true = use API, false = manual
+  exchangeRateVES   Decimal  @default(1) @db.Decimal(12, 4)
+  exchangeRateEUR   Decimal  @default(1) @db.Decimal(12, 4)
+  lastRateUpdate    DateTime @default(now())
+
+  // Delivery Settings
+  deliveryEnabled          Boolean  @default(true)
+  deliveryFeeUSD           Decimal  @default(0) @db.Decimal(10, 2)
+  freeDeliveryThresholdUSD Decimal? @db.Decimal(10, 2)
+
+  // Pickup Settings
+  pickupEnabled      Boolean @default(true)
+  pickupAddress      String?
+  pickupInstructions String? @db.Text
+
+  // Tax Settings
+  taxEnabled Boolean @default(false)
+  taxPercent Decimal @default(0) @db.Decimal(5, 2)
+
+  // Cart Settings
+  minOrderAmountUSD Decimal? @db.Decimal(10, 2)
+  maxOrderAmountUSD Decimal? @db.Decimal(10, 2)
+
+  // Maintenance Mode
+  maintenanceMode    Boolean @default(false)
+  maintenanceMessage String? @db.Text
+
+  // SEO Settings
+  metaTitle       String? @db.Text
+  metaDescription String? @db.Text
+  metaKeywords    String? @db.Text
+
+  // Hero Video Section
+  heroVideoEnabled     Boolean @default(false)
+  heroVideoUrl         String? // YouTube, Vimeo URL or local path
+  heroVideoTitle       String?
+  heroVideoDescription String? @db.Text
+
+  // Homepage Display Settings
+  maxFeaturedProducts Int @default(8) // 8 or 16 products to display on homepage
+
+  // HomePage Hero Section
+  heroTitle           String? @db.Text
+  heroSubtitle        String? @db.Text
+  heroButtonText      String?
+  heroButtonLink      String?
+  heroBackgroundImage String?
+
+  // HomePage Stats Section
+  showStats  Boolean @default(true)
+  stat1Label String?
+  stat1Value String?
+  stat1Icon  String?
+  stat2Label String?
+  stat2Value String?
+  stat2Icon  String?
+  stat3Label String?
+  stat3Value String?
+  stat3Icon  String?
+  stat4Label String?
+  stat4Value String?
+  stat4Icon  String?
+
+  // HomePage Categories Display
+  showCategories       Boolean @default(true)
+  maxCategoriesDisplay Int     @default(6)
+
+  // Inventory Configuration
+  lowStockThreshold      Int     @default(10) // Alert when stock is below this
+  criticalStockThreshold Int     @default(5) // Critical alert threshold
+  autoHideOutOfStock     Boolean @default(false) // Hide products with 0 stock
+  notifyLowStock         Boolean @default(true) // Send notifications for low stock
+  notifyOutOfStock       Boolean @default(true) // Send notifications when out of stock
+
+  // HomePage CTA Section
+  ctaEnabled     Boolean @default(true)
+  ctaTitle       String? @db.Text
+  ctaDescription String? @db.Text
+  ctaButtonText  String?
+  ctaButtonLink  String?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("company_settings")
+}
+
+model CompanyPaymentMethod {
+  id            String  @id @default(cuid())
+  type          PaymentMethodType
+  name          String  // "Banco Venezuela", "Zelle (Correo)"
+  
+  // Bank Details
+  bankName      String?
+  accountNumber String?
+  accountType   String? // Ahorro, Corriente
+  holderName    String?
+  holderId      String? // C茅dula/RIF
+  
+  // Mobile Payment
+  phone         String?
+  
+  // Crypto/Digital
+  email         String? // For Zelle/PayPal
+  walletAddress String? // For Crypto
+  network       String? // For Crypto
+  
+  instructions  String? @db.Text 
+  
+  isActive      Boolean @default(true)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("company_payment_methods")
+}
+
+model ContactMessage {
+  id      String @id @default(cuid())
+  name    String
+  email   String
+  phone   String
+  subject String
+  message String @db.Text
+  status  String @default("PENDING") // PENDING, READ, RESPONDED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contact_messages")
+}
+// ============================================
+// STOCK RESERVATION SYSTEM
+// ============================================
+
+model StockReservation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([productId])
+  @@index([expiresAt])
+
+  @@map("stock_reservations")
+}
+
+
+model NotificationPreference {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  emailOrders       Boolean @default(true)
+  emailReviews      Boolean @default(true)
+  emailPromotions   Boolean @default(false)
+  inAppOrders       Boolean @default(true)
+  inAppReviews      Boolean @default(true)
+  inAppPromotions   Boolean @default(true)
+  soundEnabled      Boolean @default(false)
+  
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("notification_preferences")
+}
+
+
+

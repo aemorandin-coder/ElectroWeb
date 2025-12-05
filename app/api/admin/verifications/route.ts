@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 export async function GET(request: NextRequest) {
     try {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
         // but ideally should check `session.user.role === 'ADMIN'`)
         // Based on previous files, it seems we check permissions.
 
-        if (!session || !(session.user as any).permissions?.includes('MANAGE_USERS')) {
+        if (!isAuthorized(session, 'MANAGE_USERS')) {
             // Fallback if permissions structure is different, but let's assume standard admin check
             // If strictly following previous patterns:
             // return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !(session.user as any).permissions?.includes('MANAGE_USERS')) {
+        if (!isAuthorized(session, 'MANAGE_USERS')) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 

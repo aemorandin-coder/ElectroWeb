@@ -19,7 +19,12 @@ export async function GET() {
       where: { userId },
       include: {
         items: {
-          include: {
+          select: {
+            id: true,
+            quantity: true,
+            priceUSD: true,
+            productName: true,
+            productImage: true,
             product: {
               select: {
                 name: true,
@@ -28,7 +33,6 @@ export async function GET() {
             },
           },
         },
-        shippingAddress: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -38,20 +42,31 @@ export async function GET() {
       id: order.id,
       orderNumber: order.orderNumber,
       status: order.status,
-      total: Number(order.total),
+      total: Number(order.totalUSD),
       createdAt: order.createdAt.toISOString(),
-      items: order.items.map(item => ({
-        id: item.id,
-        productName: item.product.name,
-        quantity: item.quantity,
-        price: Number(item.price),
-        imageUrl: item.product.images && item.product.images.length > 0
-          ? (item.product.images as string[])[0]
-          : null,
-      })),
-      shippingAddress: order.shippingAddress
-        ? `${order.shippingAddress.addressLine1}, ${order.shippingAddress.city}, ${order.shippingAddress.country}`
-        : null,
+      items: order.items.map(item => {
+        let imageUrl = item.productImage || null;
+
+        // Safely parse images JSON
+        if (!imageUrl && item.product.images) {
+          try {
+            const images = JSON.parse(item.product.images);
+            imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : null;
+          } catch (e) {
+            console.error('Error parsing product images:', e);
+            imageUrl = null;
+          }
+        }
+
+        return {
+          id: item.id,
+          productName: item.productName || item.product.name,
+          quantity: item.quantity,
+          price: Number(item.priceUSD),
+          imageUrl,
+        };
+      }),
+      shippingAddress: order.shippingAddress,
       paymentMethod: order.paymentMethod,
     }));
 

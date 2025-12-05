@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 // GET - Obtener notificaciones del usuario
 export async function GET(request: NextRequest) {
@@ -65,8 +66,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     // Solo admins pueden crear notificaciones manualmente
-    const isAdmin = (session?.user as any)?.permissions?.includes('MANAGE_CONTENT');
-    if (!isAdmin) {
+    if (!isAuthorized(session, 'MANAGE_CONTENT')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 

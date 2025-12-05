@@ -229,3 +229,6 @@ export interface SettingsValidationErrors {
   exchangeRates?: string;
   [key: string]: string | undefined;
 }
+
+
+

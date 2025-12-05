@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user) {
+        if (!session?.user || !session.user.id) {
             return NextResponse.json({
                 canReview: false,
                 message: 'Debes iniciar sesión para dejar una reseña'
@@ -45,15 +45,7 @@ export async function GET(request: NextRequest) {
                 productId,
                 order: {
                     userId: session.user.id,
-                    status: 'DELIVERED', // Only DELIVERED orders
-                },
-            },
-            include: {
-                order: {
-                    select: {
-                        status: true,
-                        deliveredAt: true,
-                    },
+                    status: 'DELIVERED',
                 },
             },
         });
@@ -68,7 +60,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
             canReview: true,
             message: 'Puedes dejar una reseña para este producto',
-            deliveredAt: deliveredOrder.order.deliveredAt,
         });
     } catch (error) {
         console.error('Error checking review eligibility:', error);

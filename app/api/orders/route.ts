@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { isAuthorized } from '@/lib/auth-helpers';
 import {
   createNotification,
   notifyOrderConfirmed,
   notifyOrderShipped,
   notifyOrderDelivered
 } from '@/lib/notifications';
-import { OrderStatus, PaymentMethod } from '@prisma/client';
+import { OrderStatus, PaymentStatus } from '@prisma/client';
 import { sendEmail } from '@/lib/email';
 import { generateOrderConfirmationEmail } from '@/lib/email-templates/OrderConfirmation';
 import { generateReviewReminderEmail } from '@/lib/email-templates/ReviewReminder';
@@ -26,12 +27,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const userId = searchParams.get('userId');
-    const userType = (session.user as any)?.userType;
+    const userRole = (session.user as any)?.role;
 
     const where: any = {};
 
-    // If user is customer, only show their orders
-    if (userType === 'customer') {
+    // If user is a customer (not admin), only show their orders
+    if (userRole === 'USER') {
       where.userId = session.user.id;
     } else if (userId) {
       // Admin can filter by userId
@@ -71,7 +72,6 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        address: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
 
       const product = await prisma.product.findUnique({
         where: { id: item.productId },
-        select: { stock: true, name: true, isActive: true },
+        select: { stock: true, name: true, status: true },
       });
 
       if (!product) {
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      if (!product.isActive) {
+      if (product.status !== 'PUBLISHED') {
         stockErrors.push(`El producto "${product.name}" no está disponible`);
         continue;
       }
@@ -228,28 +228,31 @@ export async function POST(request: NextRequest) {
         data: {
           orderNumber,
           userId: body.userId || session.user.id,
-          addressId: body.addressId,
-          currency: body.currency,
-          subtotal: body.subtotal,
-          tax: body.tax || 0,
-          shipping: body.shipping || 0,
-          discount: body.discount || 0,
-          total: body.total,
+          shippingAddress: body.shippingAddress || '',
+          subtotalUSD: body.subtotalUSD || body.subtotal || 0,
+          taxUSD: body.taxUSD || body.tax || 0,
+          shippingUSD: body.shippingUSD || body.shipping || 0,
+          discountUSD: body.discountUSD || body.discount || 0,
+          totalUSD: body.totalUSD || body.total,
+          exchangeRate: body.exchangeRate || 1,
+          totalVES: body.totalVES || 0,
           exchangeRateVES: body.exchangeRateVES,
           exchangeRateEUR: body.exchangeRateEUR,
           paymentMethod: body.paymentMethod,
-          deliveryMethod: body.deliveryMethod,
-          status: body.paymentMethod === 'WALLET' ? OrderStatus.PAID : OrderStatus.PENDING,
+          status: body.paymentMethod === 'WALLET' ? OrderStatus.PROCESSING : OrderStatus.PENDING,
+          paymentStatus: body.paymentMethod === 'WALLET' ? 'PAID' : 'PENDING',
           paidAt: body.paymentMethod === 'WALLET' ? new Date() : null,
+          trackingNumber: body.trackingNumber,
+          notes: body.notes,
           items: {
             create: body.items.map((item: any) => ({
               productId: item.productId,
               productName: item.productName,
-              productSku: item.productSku,
-              productImage: item.productImage,
-              pricePerUnit: item.pricePerUnit,
+              productSku: item.productSku || item.sku,
+              productImage: item.productImage || item.image,
+              priceUSD: item.priceUSD || item.pricePerUnit || item.price,
               quantity: item.quantity,
-              subtotal: item.subtotal,
+              totalUSD: item.totalUSD || item.subtotal || (item.quantity * (item.priceUSD || item.pricePerUnit || item.price)),
             })),
           },
         },
@@ -305,37 +308,43 @@ export async function POST(request: NextRequest) {
       );
 
       if (body.paymentMethod === 'WALLET') {
-        await createNotification({ userId: body.userId || session.user.id, type: 'ORDER_PAID', title: '?? Pago Confirmado', message: `El pago de tu orden #${orderNumber} ha sido confirmado con Billetera Digital.`, actionUrl: `/customer/orders` });
+        await createNotification({
+          userId: body.userId || session.user.id,
+          type: 'ORDER_PAID',
+          title: '💰 Pago Confirmado',
+          message: `El pago de tu orden #${orderNumber} ha sido confirmado con Billetera Digital.`,
+          link: `/customer/orders`,
+          icon: '💰'
+        });
       }
 
       // Send order confirmation email
       try {
         const companySettings = await prisma.companySettings.findFirst();
-        const address = result.addressId ? await prisma.address.findUnique({ where: { id: result.addressId } }) : null;
 
         const emailHtml = generateOrderConfirmationEmail({
           companyName: companySettings?.companyName || 'Electro Shop',
           companyLogo: companySettings?.logo || undefined,
           orderNumber: result.orderNumber,
-          customerName: result.user.name || 'Cliente',
+          customerName: result.user?.name || 'Cliente',
           orderDate: format(new Date(result.createdAt), "d 'de' MMMM, yyyy", { locale: es }),
           items: result.items.map(item => ({
-            name: item.productName,
+            name: item.productName || 'Producto',
             quantity: item.quantity,
-            price: item.pricePerUnit.toString(),
+            price: item.priceUSD.toString(),
           })),
-          subtotal: result.subtotal.toString(),
-          shipping: result.shipping.toString(),
-          tax: result.tax.toString(),
-          total: result.total.toString(),
-          currency: result.currency,
+          subtotal: result.subtotalUSD.toString(),
+          shipping: result.shippingUSD.toString(),
+          tax: result.taxUSD.toString(),
+          total: result.totalUSD.toString(),
+          currency: 'USD',
           paymentMethod: result.paymentMethod || 'N/A',
-          deliveryMethod: result.deliveryMethod,
-          deliveryAddress: address ? `${address.street}, ${address.city}, ${address.state}` : undefined,
+          deliveryMethod: 'Delivery',
+          deliveryAddress: result.shippingAddress || undefined,
         });
 
         await sendEmail({
-          to: result.user.email,
+          to: result.user?.email || '',
           subject: `Confirmación de Pedido - ${result.orderNumber}`,
           html: emailHtml,
         });
@@ -356,7 +365,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session.user as any).permissions?.includes('MANAGE_ORDERS')) {
+    if (!isAuthorized(session, 'MANAGE_ORDERS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
@@ -378,10 +387,13 @@ export async function PATCH(request: NextRequest) {
       ...body,
     };
 
-    // Handle status-specific updates
-    if (body.status === OrderStatus.PAID && oldOrder.status !== OrderStatus.PAID) {
+    // Handle payment status updates
+    if (body.paymentStatus === PaymentStatus.PAID && oldOrder.paymentStatus !== PaymentStatus.PAID) {
       updateData.paidAt = new Date();
-    } else if (body.status === OrderStatus.SHIPPED && oldOrder.status !== OrderStatus.SHIPPED) {
+    }
+
+    // Handle order status-specific updates
+    if (body.status === OrderStatus.SHIPPED && oldOrder.status !== OrderStatus.SHIPPED) {
       updateData.shippedAt = new Date();
     } else if (body.status === OrderStatus.DELIVERED && oldOrder.status !== OrderStatus.DELIVERED) {
       updateData.deliveredAt = new Date();
@@ -398,23 +410,26 @@ export async function PATCH(request: NextRequest) {
     });
 
     // Create notifications for status changes
+    if (body.paymentStatus === PaymentStatus.PAID && oldOrder.paymentStatus !== PaymentStatus.PAID) {
+      await createNotification({
+        userId: oldOrder.userId!,
+        type: 'ORDER_PAID',
+        title: '💰 Pago Confirmado',
+        message: `El pago de tu orden #${oldOrder.orderNumber} ha sido confirmado.`,
+        link: `/customer/orders`,
+        icon: '💰'
+      });
+    }
+
     if (body.status && body.status !== oldOrder.status) {
-      if (body.status === OrderStatus.PAID) {
-        const paymentMethodName = body.paymentMethod || oldOrder.paymentMethod || 'No especificado';
+      if (body.status === OrderStatus.CANCELLED) {
         await createNotification({
-          userId: oldOrder.userId,
-          type: 'ORDER_PAID',
-          title: '💰 Pago Confirmado',
-          message: `El pago de tu orden #${oldOrder.orderNumber} ha sido confirmado.`,
-          actionUrl: `/customer/orders`
-        });
-      } else if (body.status === OrderStatus.CANCELLED) {
-        await createNotification({
-          userId: oldOrder.userId,
+          userId: oldOrder.userId!,
           type: 'ORDER_CANCELLED',
           title: '❌ Orden Cancelada',
           message: `Tu orden #${oldOrder.orderNumber} ha sido cancelada. ${body.notes || ''}`,
-          actionUrl: `/customer/orders`
+          link: `/customer/orders`,
+          icon: '❌'
         });
 
         // Restore stock if order is cancelled
@@ -428,9 +443,9 @@ export async function PATCH(request: NextRequest) {
             },
           });
         }
-      } else if (body.status === OrderStatus.SHIPPED) {
+      } else if (body.status === OrderStatus.SHIPPED && oldOrder.userId) {
         await notifyOrderShipped(oldOrder.userId, oldOrder.orderNumber, order.id);
-      } else if (body.status === OrderStatus.DELIVERED) {
+      } else if (body.status === OrderStatus.DELIVERED && oldOrder.userId) {
         await notifyOrderDelivered(oldOrder.userId, oldOrder.orderNumber, order.id);
         // Send review reminder email when order is delivered
         try {
@@ -446,14 +461,14 @@ export async function PATCH(request: NextRequest) {
             },
           });
 
-          if (orderWithUser && orderWithUser.items.length > 0) {
+          if (orderWithUser && orderWithUser.items.length > 0 && orderWithUser.user) {
             const companySettings = await prisma.companySettings.findFirst();
             const firstProduct = orderWithUser.items[0].product;
 
             const emailHtml = generateReviewReminderEmail({
               companyName: companySettings?.companyName || 'Electro Shop',
               companyLogo: companySettings?.logo || undefined,
-              customerName: orderWithUser.user.name || 'Cliente',
+              customerName: orderWithUser.user?.name || 'Cliente',
               orderNumber: orderWithUser.orderNumber,
               productName: firstProduct.name,
               productImage: firstProduct.mainImage || undefined,
@@ -461,7 +476,7 @@ export async function PATCH(request: NextRequest) {
             });
 
             await sendEmail({
-              to: orderWithUser.user.email,
+              to: orderWithUser.user?.email || '',
               subject: `¿Qué te pareció tu compra? - ${orderWithUser.orderNumber}`,
               html: emailHtml,
             });

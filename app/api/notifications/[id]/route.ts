@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma';
 // PATCH - Actualizar notificación (marcar como leída)
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const session = await getServerSession(authOptions);
         if (!session?.user) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -19,7 +20,7 @@ export async function PATCH(
 
         // Verificar que la notificación pertenece al usuario
         const notification = await prisma.notification.findUnique({
-            where: { id: params.id },
+            where: { id: id },
         });
 
         if (!notification) {
@@ -34,7 +35,7 @@ export async function PATCH(
         }
 
         const updated = await prisma.notification.update({
-            where: { id: params.id },
+            where: { id: id },
             data: { read },
         });
 
@@ -51,9 +52,10 @@ export async function PATCH(
 // DELETE - Eliminar notificación
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const session = await getServerSession(authOptions);
         if (!session?.user) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -61,7 +63,7 @@ export async function DELETE(
 
         // Verificar que la notificación pertenece al usuario
         const notification = await prisma.notification.findUnique({
-            where: { id: params.id },
+            where: { id: id },
         });
 
         if (!notification) {
@@ -76,7 +78,7 @@ export async function DELETE(
         }
 
         await prisma.notification.delete({
-            where: { id: params.id },
+            where: { id: id },
         });
 
         return NextResponse.json({ message: 'Notificación eliminada' });

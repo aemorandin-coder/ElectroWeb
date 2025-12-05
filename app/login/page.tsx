@@ -43,8 +43,10 @@ export default function LoginPage() {
   useEffect(() => {
     const redirect = searchParams.get('redirect');
     const error = searchParams.get('error');
+    // Also check callbackUrl to see if we should default to admin tab (e.g. if trying to access /admin)
+    const callbackUrl = searchParams.get('callbackUrl');
 
-    if (redirect === 'admin') {
+    if (redirect === 'admin' || (callbackUrl && callbackUrl.includes('/admin'))) {
       setUserType('admin');
     }
 
@@ -126,7 +128,11 @@ export default function LoginPage() {
         // Wait a bit for session to be established
         await new Promise(resolve => setTimeout(resolve, 200));
         // Redirect based on user type
-        if (userType === 'admin') {
+        // Redirect based on user type or callback
+        const callbackUrl = searchParams.get('callbackUrl');
+        if (callbackUrl && callbackUrl.startsWith('/')) {
+          window.location.href = callbackUrl;
+        } else if (userType === 'admin') {
           window.location.href = '/admin';
         } else {
           window.location.href = '/';
@@ -395,22 +401,6 @@ export default function LoginPage() {
             </form>
           </div>
         </div>
-
-        {/* Development Credentials */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-6 p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 animate-fadeIn">
-            <p className="text-xs text-blue-200/80 text-center mb-2 font-medium uppercase tracking-wider">
-              Credenciales de desarrollo
-            </p>
-            <div className="bg-black/20 px-4 py-2 rounded-lg text-center">
-              <p className="text-xs text-white/90 font-mono">
-                {userType === 'admin'
-                  ? 'admin@electroshop.com / admin123'
-                  : 'cliente@ejemplo.com / cliente123'}
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

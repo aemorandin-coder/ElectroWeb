@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 // GET - Get customer details
 export async function GET(
@@ -10,7 +11,7 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session.user as any)?.permissions?.includes('MANAGE_USERS')) {
+    if (!isAuthorized(session, 'MANAGE_USERS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
@@ -25,23 +26,20 @@ export async function GET(
     const customer = await prisma.user.findUnique({
       where: { id: customerId },
       include: {
-        profile: {
-          include: {
-            addresses: true,
-          },
-        },
+        profile: true,
+        addresses: true,
         orders: {
           select: {
             id: true,
             orderNumber: true,
             status: true,
-            total: true,
+            totalUSD: true,
             createdAt: true,
             items: {
               select: {
                 productName: true,
                 quantity: true,
-                pricePerUnit: true,
+                priceUSD: true,
               },
             },
           },
@@ -58,10 +56,10 @@ export async function GET(
     }
 
     // Calculate stats
-    const totalSpent = customer.orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    const totalSpent = customer.orders.reduce((sum, order) => sum + Number(order.totalUSD || 0), 0);
     const orderCount = customer.orders.length;
     const activeOrders = customer.orders.filter((o) =>
-      ['PENDING', 'PAID', 'SHIPPED'].includes(o.status)
+      ['PENDING', 'PROCESSING', 'SHIPPED'].includes(o.status)
     ).length;
 
     return NextResponse.json({
@@ -85,7 +83,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session.user as any)?.permissions?.includes('MANAGE_USERS')) {
+    if (!isAuthorized(session, 'MANAGE_USERS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
@@ -173,7 +171,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session.user as any)?.permissions?.includes('MANAGE_USERS')) {
+    if (!isAuthorized(session, 'MANAGE_USERS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 

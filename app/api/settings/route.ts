@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { isAuthorized } from '@/lib/auth-helpers';
 import { validateSettings, normalizeSocialMedia, normalizeExchangeRate } from '@/lib/validations/settings';
 import { SettingsFormData } from '@/types/settings';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -93,7 +94,7 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || !(session.user as any).permissions?.includes('MANAGE_SETTINGS')) {
+    if (!isAuthorized(session, 'MANAGE_SETTINGS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 

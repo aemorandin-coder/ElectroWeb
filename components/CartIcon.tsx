@@ -114,20 +114,50 @@ export default function CartIcon() {
                     <div className="flex gap-3">
                       {/* Image */}
                       <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded flex-shrink-0 relative overflow-hidden">
-                        {item.imageUrl ? (
-                          <Image
-                            src={item.imageUrl}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
-                          </div>
-                        )}
+                        {(() => {
+                          let imageUrl: string | undefined = item.imageUrl;
+
+                          // Handle JSON string arrays
+                          if (typeof imageUrl === 'string' && (imageUrl.startsWith('[') || imageUrl.includes('","'))) {
+                            try {
+                              const parsed = JSON.parse(imageUrl);
+                              if (Array.isArray(parsed) && parsed.length > 0) {
+                                imageUrl = parsed[0];
+                              }
+                            } catch (e) {
+                              // If parse fails, try simple cleanup if it looks like a stringified array
+                              if (imageUrl && imageUrl.startsWith('["') && imageUrl.endsWith('"]')) {
+                                imageUrl = imageUrl.slice(2, -2);
+                              }
+                            }
+                          }
+
+                          // Ensure relative paths start with /
+                          if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                            imageUrl = `/${imageUrl}`;
+                          }
+
+                          // Debug log
+                          // console.log('Cart Image:', { name: item.name, url: imageUrl });
+
+                          return imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                console.error('Error loading cart image:', imageUrl);
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                              </svg>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Info */}

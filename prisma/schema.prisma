@@ -56,8 +56,75 @@ model User {
   reservations  StockReservation[]
   notifications Notification[]
   notificationPreferences NotificationPreference?
+  profile       Profile?
+  balance       UserBalance?
+  wishlist      Wishlist?
+  savedPaymentMethods SavedPaymentMethod[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
+}
+
+model Profile {
+  id                          String   @id @default(cuid())
+  userId                      String   @unique
+  user                        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userEmail                   String?  @unique
+  phone                       String?
+  whatsapp                    String?
+  bio                         String?
+  birthdate                   String?
+  gender                      String?
+  customerType                String   @default("PERSON") // PERSON or COMPANY
+  companyName                 String?
+  taxId                       String?
+  isBusinessAccount           Boolean  @default(false)
+  businessVerified            Boolean  @default(false)
+  businessVerificationStatus  String   @default("NONE") // NONE, PENDING, APPROVED, REJECTED
+  businessRIF                 String?
+  businessConstitutiveAct     String?
+  businessRIFDocument         String?
+  businessVerificationNotes   String?
+  businessVerifiedAt          DateTime?
+  savedAddresses              String?  // JSON array of saved addresses
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+model UserBalance {
+  id          String        @id @default(cuid())
+  userId      String        @unique
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance     Decimal       @default(0)
+  currency    String        @default("USD")
+  totalSpent  Decimal       @default(0)
+  totalRecharges Decimal    @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  transactions Transaction[]
+
+  @@map("user_balances")
+}
+
+model Transaction {
+  id            String      @id @default(cuid())
+  balanceId     String
+  balance       UserBalance @relation(fields: [balanceId], references: [id], onDelete: Cascade)
+  type          String      // DEPOSIT, PURCHASE, REFUND
+  status        String      // PENDING, COMPLETED, FAILED
+  amount        Decimal
+  currency      String
+  description   String?
+  reference     String?
+  paymentMethod String?
+  metadata      String?     // JSON string
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([balanceId])
+  @@map("transactions")
 }
 
 model Address {
@@ -81,6 +148,7 @@ model Address {
 enum Role {
   USER
   ADMIN
+  SUPER_ADMIN
   SUPPORT
 }
 
@@ -93,25 +161,28 @@ model Product {
   priceUSD    Decimal
   priceVES    Decimal?
   stock       Int      @default(0)
+  minStock    Int      @default(0)
   images      String   // JSON string of image URLs
+  mainImage   String?  // Main product image URL
   features    String?  // JSON string of features
   specs       String?  // JSON string of specifications
-  
+
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
-  
+
   brandId     String?
   brand       Brand?   @relation(fields: [brandId], references: [id])
 
   status      ProductStatus @default(DRAFT)
   isFeatured  Boolean       @default(false)
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime  @updatedAt
 
   orderItems  OrderItem[]
   reviews     Review[]
   reservations StockReservation[]
+  wishlistItems WishlistItem[]
 
   @@map("products")
 }
@@ -157,33 +228,42 @@ model Order {
   orderNumber   String      @unique // Format: ORD-YYYY-XXXX
   userId        String?
   user          User?       @relation(fields: [userId], references: [id])
-  
+
   // Guest Checkout Info (if userId is null)
   guestName     String?
   guestEmail    String?
   guestPhone    String?
-  
+
   status        OrderStatus @default(PENDING)
   paymentStatus PaymentStatus @default(PENDING)
   paymentMethod String?
-  
+
   // Amounts
   subtotalUSD   Decimal
   taxUSD        Decimal
   shippingUSD   Decimal
   totalUSD      Decimal
-  
+  discountUSD   Decimal     @default(0)
+
   exchangeRate  Decimal
   totalVES      Decimal
-  
+  exchangeRateVES Decimal?
+  exchangeRateEUR Decimal?
+
   // Shipping Info
   shippingAddress String
   trackingNumber  String?
-  
+
   notes         String?
-  
+
+  // Status Timestamps
+  paidAt        DateTime?
+  shippedAt     DateTime?
+  deliveredAt   DateTime?
+  cancelledAt   DateTime?
+
   items         OrderItem[]
-  
+
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -212,11 +292,14 @@ model OrderItem {
   order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId   String
   product     Product @relation(fields: [productId], references: [id])
-  
+
   quantity    Int
   priceUSD    Decimal
   totalUSD    Decimal
-  
+  productName String?
+  productImage String?
+  productSku  String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -442,6 +525,7 @@ model Notification {
   title       String
   message     String
   link        String?
+  icon        String?
   read        Boolean  @default(false)
   createdAt   DateTime @default(now())
 
@@ -464,4 +548,151 @@ model NotificationPreference {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_preferences")
+}
+
+model TechServiceVideo {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  videoUrl      String
+  thumbnail     String?
+  customerName  String?
+  testimonial   String?
+  isActive      Boolean  @default(true)
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("tech_service_videos")
+}
+
+model ChatConversation {
+  id        String   @id @default(cuid())
+  userId    String?
+  userName  String?
+  userEmail String?
+  priority  Int      @default(0)
+  status    String   @default("OPEN") // OPEN, IN_PROGRESS, CLOSED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  messages  ChatMessage[]
+
+  @@map("chat_conversations")
+}
+
+model ChatMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  senderName     String
+  senderType     String // customer, admin
+  message        String
+  attachments    String? // JSON string of attachments
+  isRead         Boolean @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId])
+  @@map("chat_messages")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model Course {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  description     String
+  duration        String?
+  level           String?
+  instructor      String?
+  priceUSD        Decimal
+  isOnline        Boolean  @default(true)
+  isInPerson      Boolean  @default(false)
+  maxStudents     Int?
+  syllabus        String?
+  thumbnail       String?
+  isFeatured      Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  metaTitle       String?
+  metaDescription String?
+  
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  @@map("courses")
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WishlistItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("wishlists")
+}
+
+model WishlistItem {
+  id         String   @id @default(cuid())
+  wishlistId String
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  createdAt  DateTime @default(now())
+  
+  @@unique([wishlistId, productId])
+  @@map("wishlist_items")
+}
+
+model SavedPaymentMethod {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String   // BANK_TRANSFER, MOBILE_PAYMENT, ZELLE, PAYPAL, CRYPTO, etc.
+  name          String
+  bankName      String?
+  accountNumber String?
+  accountType   String?
+  holderName    String?
+  holderId      String?
+  phone         String?
+  walletAddress String?
+  network       String?
+  isDefault     Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("saved_payment_methods")
+}
+
+model ProductRequest {
+  id               String   @id @default(cuid())
+  userId           String?
+  customerName     String
+  customerEmail    String
+  customerPhone    String?
+  productName      String
+  description      String?
+  category         String?
+  estimatedBudget  Decimal?
+  status           String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, REJECTED
+  adminNotes       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("product_requests")
 }

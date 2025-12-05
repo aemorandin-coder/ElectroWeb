@@ -13,11 +13,7 @@ export async function GET() {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: {
-        profile: {
-          include: {
-            addresses: true,
-          },
-        },
+        profile: true,
       },
     });
 
@@ -81,7 +77,7 @@ export async function PUT(request: NextRequest) {
     if (body.address) {
       const defaultAddress = await prisma.address.findFirst({
         where: {
-          profileId: profile.id,
+          userId: session.user.id,
           isDefault: true,
         },
       });
@@ -90,32 +86,23 @@ export async function PUT(request: NextRequest) {
         await prisma.address.update({
           where: { id: defaultAddress.id },
           data: {
-            state: body.address.state || '',
-            city: body.address.city || '',
-            municipality: body.address.municipality || null,
-            street: body.address.street || '',
-            building: body.address.building || null,
-            apartment: body.address.apartment || null,
-            zipCode: body.address.zipCode || null,
-            reference: body.address.reference || null,
+            state: body.address.state || defaultAddress.state,
+            city: body.address.city || defaultAddress.city,
+            street: body.address.street || defaultAddress.street,
+            zipCode: body.address.zipCode || defaultAddress.zipCode,
           },
         });
-      } else {
+      } else if (body.address.street && body.address.city && body.address.state) {
         await prisma.address.create({
           data: {
-            profileId: profile.id,
-            label: 'Principal',
-            firstName: session.user.name?.split(' ')[0] || '',
-            lastName: session.user.name?.split(' ').slice(1).join(' ') || '',
+            userId: session.user.id,
+            name: session.user.name || 'Principal',
             phone: body.phone || '',
-            state: body.address.state || '',
-            city: body.address.city || '',
-            municipality: body.address.municipality || null,
-            street: body.address.street || '',
-            building: body.address.building || null,
-            apartment: body.address.apartment || null,
-            zipCode: body.address.zipCode || null,
-            reference: body.address.reference || null,
+            state: body.address.state,
+            city: body.address.city,
+            street: body.address.street,
+            zipCode: body.address.zipCode || '',
+            country: 'Venezuela',
             isDefault: true,
           },
         });

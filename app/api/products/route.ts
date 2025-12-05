@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { isAuthorized } from '@/lib/auth-helpers';
 import { createNotification } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session.user as any).permissions?.includes('MANAGE_PRODUCTS')) {
+    if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
@@ -106,12 +107,16 @@ export async function POST(request: NextRequest) {
     const priceUSD = parseFloat(body.priceUSD);
 
     // Validar y procesar imágenes
-    let imagesToSave = '[]';
+    let imageArray: string[] = [];
     if (body.images) {
       if (typeof body.images === 'string') {
-        imagesToSave = body.images;
+        try {
+          imageArray = JSON.parse(body.images);
+        } catch {
+          imageArray = [];
+        }
       } else if (Array.isArray(body.images)) {
-        imagesToSave = JSON.stringify(body.images);
+        imageArray = body.images;
       }
     }
 
@@ -119,15 +124,18 @@ export async function POST(request: NextRequest) {
       data: {
         name: body.name,
         sku: body.sku,
-        slug,
+        slug: finalSlug,
         description: body.description || '',
         priceUSD,
         stock,
+        minStock: parseInt(body.minStock) || 0,
         categoryId: body.categoryId,
         brandId: body.brandId || null,
-        images: imagesToSave,
+        images: JSON.stringify(imageArray),
+        mainImage: imageArray.length > 0 ? imageArray[0] : null,
         specs: body.specifications ? JSON.stringify(body.specifications) : null,
-        status: body.isActive ? 'PUBLISHED' : 'DRAFT',
+        features: body.features ? JSON.stringify(body.features) : null,
+        status: body.status || (body.isActive ? 'PUBLISHED' : 'DRAFT'),
         isFeatured: body.isFeatured || false,
       },
     });
@@ -157,7 +165,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session.user as any).permissions?.includes('MANAGE_PRODUCTS')) {
+    if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 

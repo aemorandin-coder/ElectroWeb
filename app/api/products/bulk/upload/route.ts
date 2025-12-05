@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 interface ProductRow {
   nombre: string;
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || !(session.user as any).permissions?.includes('MANAGE_PRODUCTS')) {
+    if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
@@ -94,20 +95,25 @@ export async function POST(request: NextRequest) {
               .slice(0, 4) // Máximo 4 imágenes
           : [];
 
+        // Determinar status basado en el campo activo
+        const isActive = row.activo?.toLowerCase() === 'true' || row.activo === '1';
+        const productStatus = isActive ? 'PUBLISHED' : 'DRAFT';
+
         // Crear producto
         await prisma.product.create({
           data: {
             name: row.nombre,
             slug,
             sku: row.sku,
-            description: row.descripcion || null,
+            description: row.descripcion || 'Sin descripción',
             priceUSD: parseFloat(row.precioUSD),
             stock: parseInt(row.stock) || 0,
             minStock: row.stockMinimo ? parseInt(row.stockMinimo) : 0,
-            isActive: row.activo?.toLowerCase() === 'true' || row.activo === '1',
+            status: productStatus,
             isFeatured: row.destacado?.toLowerCase() === 'true' || row.destacado === '1',
-            categoryId,
-            images: images.length > 0 ? images : undefined,
+            categoryId: categoryId!,
+            images: JSON.stringify(images),
+            mainImage: images.length > 0 ? images[0] : null,
           },
         });
 

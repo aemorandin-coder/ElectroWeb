@@ -52,7 +52,15 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
           <Link href="/" className="flex items-center gap-4 group">
             {companySettings?.logo && (
               <div className="relative w-14 h-14 rounded-xl overflow-hidden shadow-xl transition-all duration-300 group-hover:scale-105" style={{ boxShadow: `0 10px 15px -3px ${primaryColor}4d` }}>
-                <Image src={companySettings.logo} alt={companySettings.companyName} fill className="object-contain" />
+                <Image
+                  src={companySettings.logo}
+                  alt={companySettings.companyName}
+                  fill
+                  className="object-contain"
+                  priority
+                  quality={100}
+                  sizes="56px"
+                />
               </div>
             )}
             <div>

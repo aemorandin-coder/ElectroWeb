@@ -11,24 +11,16 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    // Get user profile
-    const profile = await prisma.profile.findUnique({
+    // Get user addresses
+    const addresses = await prisma.address.findMany({
       where: { userId: session.user.id },
-      include: {
-        addresses: {
-          orderBy: [
-            { isDefault: 'desc' },
-            { createdAt: 'desc' },
-          ],
-        },
-      },
+      orderBy: [
+        { isDefault: 'desc' },
+        { createdAt: 'desc' },
+      ],
     });
 
-    if (!profile) {
-      return NextResponse.json({ addresses: [] });
-    }
-
-    return NextResponse.json({ addresses: profile.addresses });
+    return NextResponse.json({ addresses });
   } catch (error) {
     console.error('Error fetching addresses:', error);
     return NextResponse.json(
@@ -48,64 +40,42 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const {
-      label,
-      firstName,
-      lastName,
-      phone,
-      state,
-      city,
-      municipality,
-      parish,
+      name,
       street,
-      building,
-      apartment,
+      city,
+      state,
       zipCode,
-      reference,
+      country,
+      phone,
       isDefault,
     } = body;
 
     // Validate required fields
-    if (!label || !firstName || !lastName || !phone || !state || !city || !street) {
+    if (!name || !street || !city || !state || !phone) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos: label, firstName, lastName, phone, state, city, street' },
+        { error: 'Faltan campos requeridos: name, street, city, state, phone' },
         { status: 400 }
       );
     }
 
-    // Get or create profile
-    const profile = await prisma.profile.upsert({
-      where: { userId: session.user.id },
-      update: {},
-      create: {
-        userId: session.user.id,
-        customerType: 'PERSON',
-      },
-    });
-
     // If this should be default, unset other defaults
     if (isDefault) {
       await prisma.address.updateMany({
-        where: { profileId: profile.id },
+        where: { userId: session.user.id },
         data: { isDefault: false },
       });
     }
 
     const address = await prisma.address.create({
       data: {
-        profileId: profile.id,
-        label,
-        firstName,
-        lastName,
-        phone,
-        state,
-        city,
-        municipality,
-        parish,
+        userId: session.user.id,
+        name,
         street,
-        building,
-        apartment,
-        zipCode,
-        reference,
+        city,
+        state,
+        zipCode: zipCode || '',
+        country: country || 'Venezuela',
+        phone,
         isDefault: isDefault ?? false,
       },
     });
@@ -139,20 +109,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Verify address belongs to user
-    const profile = await prisma.profile.findUnique({
-      where: { userId: session.user.id },
-      include: { addresses: true },
+    const existingAddress = await prisma.address.findUnique({
+      where: { id },
     });
 
-    if (!profile) {
-      return NextResponse.json(
-        { error: 'Perfil no encontrado' },
-        { status: 404 }
-      );
-    }
-
-    const addressBelongsToUser = profile.addresses.some(addr => addr.id === id);
-    if (!addressBelongsToUser) {
+    if (!existingAddress || existingAddress.userId !== session.user.id) {
       return NextResponse.json(
         { error: 'No tienes permiso para editar esta dirección' },
         { status: 403 }
@@ -162,7 +123,7 @@ export async function PATCH(request: NextRequest) {
     // If setting as default, unset other defaults
     if (updateData.isDefault === true) {
       await prisma.address.updateMany({
-        where: { profileId: profile.id, id: { not: id } },
+        where: { userId: session.user.id, id: { not: id } },
         data: { isDefault: false },
       });
     }
@@ -201,20 +162,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify address belongs to user
-    const profile = await prisma.profile.findUnique({
-      where: { userId: session.user.id },
-      include: { addresses: true },
+    const existingAddress = await prisma.address.findUnique({
+      where: { id },
     });
 
-    if (!profile) {
-      return NextResponse.json(
-        { error: 'Perfil no encontrado' },
-        { status: 404 }
-      );
-    }
-
-    const addressBelongsToUser = profile.addresses.some(addr => addr.id === id);
-    if (!addressBelongsToUser) {
+    if (!existingAddress || existingAddress.userId !== session.user.id) {
       return NextResponse.json(
         { error: 'No tienes permiso para eliminar esta dirección' },
         { status: 403 }

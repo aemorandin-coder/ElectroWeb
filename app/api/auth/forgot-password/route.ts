@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Always return success to prevent email enumeration
-        if (!user) {
+        if (!user || !user.email) {
             return NextResponse.json(
                 { message: 'Si el correo existe, recibirás un enlace de recuperación' },
                 { status: 200 }

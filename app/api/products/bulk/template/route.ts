@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || !(session.user as any).permissions?.includes('MANAGE_PRODUCTS')) {
+    if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 

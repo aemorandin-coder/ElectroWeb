@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 // GET /api/products/[id] - Get a single product
 export async function GET(
@@ -48,7 +49,7 @@ export async function PATCH(
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || !(session.user as any).permissions?.includes('MANAGE_PRODUCTS')) {
+    if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
@@ -140,7 +141,7 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || !(session.user as any).permissions?.includes('MANAGE_PRODUCTS')) {
+    if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 

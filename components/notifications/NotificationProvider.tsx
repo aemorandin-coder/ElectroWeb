@@ -10,7 +10,7 @@ export interface Notification {
     'PROMOTION' | 'STOCK_ALERT';
     title: string;
     message: string;
-    actionUrl?: string;
+    link?: string;
     icon?: string;
     read: boolean;
     createdAt: string;

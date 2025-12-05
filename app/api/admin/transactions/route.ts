@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 // GET - Get all transactions
 export async function GET(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !(session.user as any).permissions?.includes('MANAGE_ORDERS')) {
+        if (!isAuthorized(session, 'MANAGE_ORDERS')) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !(session.user as any).permissions?.includes('MANAGE_ORDERS')) {
+        if (!isAuthorized(session, 'MANAGE_ORDERS')) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 

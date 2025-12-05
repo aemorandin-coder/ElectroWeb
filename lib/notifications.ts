@@ -18,7 +18,7 @@ interface CreateNotificationParams {
   type: NotificationType;
   title: string;
   message: string;
-  actionUrl?: string;
+  link?: string;
   icon?: string;
 }
 
@@ -33,7 +33,7 @@ export async function createNotification(params: CreateNotificationParams) {
         type: params.type,
         title: params.title,
         message: params.message,
-        actionUrl: params.actionUrl,
+        link: params.link,
         icon: params.icon,
       },
     });
@@ -54,7 +54,8 @@ export async function notifyOrderConfirmed(userId: string, orderNumber: string, 
     type: 'ORDER_CONFIRMED',
     title: '¡Pedido Confirmado!',
     message: `Tu pedido #${orderNumber} ha sido confirmado y está siendo procesado.`,
-    actionUrl: `/customer/orders`,
+    link: `/customer/orders`,
+    icon: '✅',
   });
 }
 
@@ -67,7 +68,8 @@ export async function notifyOrderShipped(userId: string, orderNumber: string, or
     type: 'ORDER_SHIPPED',
     title: '📦 Pedido Enviado',
     message: `Tu pedido #${orderNumber} ha sido enviado y está en camino.`,
-    actionUrl: `/customer/orders`,
+    link: `/customer/orders`,
+    icon: '📦',
   });
 }
 
@@ -80,7 +82,8 @@ export async function notifyOrderDelivered(userId: string, orderNumber: string, 
     type: 'ORDER_DELIVERED',
     title: '✅ Pedido Entregado',
     message: `Tu pedido #${orderNumber} ha sido entregado. ¡Esperamos que lo disfrutes!`,
-    actionUrl: `/customer/orders`,
+    link: `/customer/orders`,
+    icon: '✅',
   });
 }
 
@@ -93,20 +96,22 @@ export async function notifyReviewApproved(userId: string, productName: string, 
     type: 'REVIEW_APPROVED',
     title: '⭐ Reseña Publicada',
     message: `Tu reseña de "${productName}" ha sido aprobada y ahora es visible para otros clientes.`,
-    actionUrl: `/productos/${productSlug}#reviews`,
+    link: `/productos/${productSlug}#reviews`,
+    icon: '⭐',
   });
 }
 
 /**
  * Create notification for promotion
  */
-export async function notifyPromotion(userId: string, title: string, message: string, actionUrl?: string) {
+export async function notifyPromotion(userId: string, title: string, message: string, link?: string) {
   return createNotification({
     userId,
     type: 'PROMOTION',
     title,
     message,
-    actionUrl,
+    link,
+    icon: '🎁',
   });
 }
 
@@ -119,7 +124,8 @@ export async function notifyStockAlert(userId: string, productName: string, prod
     type: 'STOCK_ALERT',
     title: '🎉 Producto Disponible',
     message: `"${productName}" está de vuelta en stock. ¡Consíguelo antes de que se agote!`,
-    actionUrl: `/productos/${productSlug}`,
+    link: `/productos/${productSlug}`,
+    icon: '🎉',
   });
 }
 
@@ -130,7 +136,7 @@ export async function getUnreadCount(userId: string) {
   return prisma.notification.count({
     where: {
       userId,
-      isRead: false,
+      read: false,
     },
   });
 }
@@ -141,7 +147,7 @@ export async function getUnreadCount(userId: string) {
 export async function markNotificationAsRead(notificationId: string) {
   return prisma.notification.update({
     where: { id: notificationId },
-    data: { isRead: true },
+    data: { read: true },
   });
 }
 
@@ -152,10 +158,10 @@ export async function markAllNotificationsAsRead(userId: string) {
   return prisma.notification.updateMany({
     where: {
       userId,
-      isRead: false,
+      read: false,
     },
     data: {
-      isRead: true,
+      read: true,
     },
   });
 }
@@ -169,7 +175,7 @@ export async function deleteOldNotifications(daysOld: number = 30) {
 
   return prisma.notification.deleteMany({
     where: {
-      isRead: true,
+      read: true,
       createdAt: {
         lt: date,
       },

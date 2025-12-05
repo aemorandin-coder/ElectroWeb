@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma';
 // Send message in conversation
 export async function POST(
   req: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
+    const { conversationId } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -24,19 +25,19 @@ export async function POST(
     // Create message
     const newMessage = await prisma.chatMessage.create({
       data: {
-        conversationId: params.conversationId,
+        conversationId: conversationId,
         senderId,
         senderName,
         senderType,
         message,
-        attachments: [],
+        attachments: '[]',
         isRead: false,
       },
     });
 
     // Update conversation status if needed
     await prisma.chatConversation.update({
-      where: { id: params.conversationId },
+      where: { id: conversationId },
       data: {
         status: senderType === 'customer' ? 'OPEN' : 'IN_PROGRESS',
         updatedAt: new Date(),

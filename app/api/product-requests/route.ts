@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { createNotification, NotificationTemplates } from '@/lib/notifications';
+import { isAuthorized } from '@/lib/auth-helpers';
+import { createNotification } from '@/lib/notifications';
 
 // GET - Get all product requests
 export async function GET(request: NextRequest) {
@@ -52,14 +53,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create notification for new product request
-    await createNotification(
-      NotificationTemplates.productRequest(
-        body.customerName,
-        body.productName,
-        productRequest.id
-      )
-    );
+    // Create notification for new product request (if user is logged in)
+    if (body.userId) {
+      await createNotification({
+        userId: body.userId,
+        type: 'SYSTEM_UPDATE',
+        title: '📝 Solicitud de Producto Recibida',
+        message: `Tu solicitud para "${body.productName}" ha sido recibida. Te notificaremos cuando tengamos novedades.`,
+        link: `/customer/product-requests`,
+        icon: '📝',
+      });
+    }
 
     return NextResponse.json(productRequest, { status: 201 });
   } catch (error) {
@@ -72,7 +76,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session.user as any).permissions?.includes('MANAGE_PRODUCTS')) {
+    if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
@@ -104,7 +108,7 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session.user as any).permissions?.includes('MANAGE_PRODUCTS')) {
+    if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 

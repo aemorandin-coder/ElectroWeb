@@ -129,45 +129,35 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
 
     if (!canReview) {
         return (
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
-                <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                    <div className="flex-1">
-                        <h4 className="font-bold text-gray-900 mb-2">No puedes dejar una reseña aún</h4>
-                        <p className="text-gray-700 text-sm mb-3">{eligibilityMessage}</p>
-                        <div className="bg-white/60 rounded-lg p-3 text-sm text-gray-600">
-                            <p className="font-medium mb-1 flex items-center gap-2">
-                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Para dejar una reseña necesitas:
-                            </p>
-                            <ul className="space-y-1 ml-4">
-                                <li className="flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Haber comprado este producto
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Que tu pedido haya sido entregado
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+            <div
+                className="bg-gray-50/50 rounded-xl border border-gray-200 p-4 flex items-center gap-4 cursor-help group transition-all hover:bg-gray-50"
+                onClick={() => toast('Debes haber comprado y recibido el producto para opinar', {
+                    icon: '🔒',
+                    style: {
+                        borderRadius: '10px',
+                        background: '#333',
+                        color: '#fff',
+                    },
+                })}
+            >
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 group-hover:bg-gray-200 transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <div className="flex-1">
+                    <h4 className="text-sm font-bold text-gray-700">Opiniones verificadas</h4>
+                    <p className="text-xs text-gray-500">Solo los usuarios que han comprado este producto pueden dejar una reseña.</p>
+                </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 shadow-sm">
+                    Ver requisitos
                 </div>
             </div>
         );
     }
 
     return (
+
         <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
             <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -177,12 +167,15 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Escribe una reseña</h3>
             </div>
-            <p className="text-sm text-green-600 font-medium flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Compra verificada - Puedes dejar tu opinión
-            </p>
+
+            {canReview && (
+                <p className="text-sm text-green-600 font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Compra verificada - Tu opinión cuenta
+                </p>
+            )}
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -201,6 +194,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Resume tu experiencia"
                     maxLength={100}
+                    disabled={isSubmitting}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent"
                 />
             </div>
@@ -217,6 +211,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
                     required
                     minLength={10}
                     maxLength={1000}
+                    disabled={isSubmitting}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent resize-none"
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -228,6 +223,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
                 type="submit"
                 variant="primary"
                 isLoading={isSubmitting}
+                disabled={isSubmitting}
                 className="w-full"
             >
                 Enviar Reseña

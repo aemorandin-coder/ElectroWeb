@@ -7,7 +7,7 @@ export async function getProductReviewStats(productId: string) {
     const reviews = await prisma.review.findMany({
         where: {
             productId,
-            isPublished: true,
+            isApproved: true,
         },
         select: {
             rating: true,
@@ -32,7 +32,7 @@ export async function getProductRatingDistribution(productId: string) {
     const reviews = await prisma.review.findMany({
         where: {
             productId,
-            isPublished: true,
+            isApproved: true,
         },
         select: {
             rating: true,
@@ -65,7 +65,7 @@ export async function getProductsWithReviewStats(productIds?: string[]) {
         include: {
             category: true,
             reviews: {
-                where: { isPublished: true },
+                where: { isApproved: true },
                 select: { rating: true },
             },
         },
@@ -143,9 +143,9 @@ export async function canUserReviewProduct(userId: string, productId: string) {
 export async function getReviewStatistics() {
     const [total, pending, approved, rejected] = await Promise.all([
         prisma.review.count(),
-        prisma.review.count({ where: { isApproved: false, isPublished: false } }),
-        prisma.review.count({ where: { isApproved: true, isPublished: true } }),
-        prisma.review.count({ where: { isApproved: false, isPublished: false } }),
+        prisma.review.count({ where: { isApproved: false } }),
+        prisma.review.count({ where: { isApproved: true } }),
+        prisma.review.count({ where: { isApproved: false } }),
     ]);
 
     const recentReviews = await prisma.review.findMany({
@@ -169,7 +169,7 @@ export async function getReviewStatistics() {
 
     const averageRatingByProduct = await prisma.review.groupBy({
         by: ['productId'],
-        where: { isPublished: true },
+        where: { isApproved: true },
         _avg: {
             rating: true,
         },

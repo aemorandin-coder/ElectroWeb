@@ -103,7 +103,10 @@ export default function ConfirmDialog({
             />
 
             {/* Dialog Panel */}
-            <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left shadow-2xl animate-scaleIn">
+            <div
+                className="relative w-full transform overflow-hidden rounded-2xl bg-white p-8 text-left shadow-2xl animate-scaleIn"
+                style={{ maxWidth: '42rem', width: '95%' }} // Forzando ancho a ~670px
+            >
                 {/* Close Button */}
                 <button
                     onClick={onCancel}
@@ -124,7 +127,7 @@ export default function ConfirmDialog({
 
                 {/* Message */}
                 <div className="mt-2 mb-6">
-                    <p className="text-sm text-[#6a6c6b] text-center">
+                    <p className="text-base text-[#6a6c6b] text-center whitespace-normal break-words leading-relaxed">
                         {message}
                     </p>
                 </div>

@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma';
 // Get conversation with messages
 export async function GET(
   req: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
+    const { conversationId } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -16,7 +17,7 @@ export async function GET(
     }
 
     const conversation = await prisma.chatConversation.findUnique({
-      where: { id: params.conversationId },
+      where: { id: conversationId },
       include: {
         messages: {
           orderBy: { createdAt: 'asc' },

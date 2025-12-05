@@ -67,15 +67,15 @@ export async function GET(request: NextRequest) {
             where: {
                 userId,
                 createdAt: { gte: startOfMonth },
-                status: { in: ['PAID', 'DELIVERED'] },
+                paymentStatus: 'PAID',
             },
             select: {
-                total: true,
+                totalUSD: true,
             },
         });
 
         const totalSpentThisMonth = monthlyOrders.reduce(
-            (sum, order) => sum + Number(order.total),
+            (sum, order) => sum + Number(order.totalUSD),
             0
         );
 
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
             recentOrders: recentOrders.map(order => ({
                 id: order.id,
                 orderNumber: order.orderNumber,
-                total: Number(order.total),
+                total: Number(order.totalUSD),
                 status: order.status,
                 createdAt: order.createdAt,
                 itemCount: order.items.length,

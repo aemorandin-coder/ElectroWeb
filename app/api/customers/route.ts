@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session.user as any)?.permissions?.includes('MANAGE_USERS')) {
+
+    // Check if user is authorized to manage users
+    if (!isAuthorized(session, 'MANAGE_USERS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
@@ -17,7 +20,9 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {};
+    const where: any = {
+      role: 'USER', // Only show actual customers, not admins
+    };
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -40,7 +45,7 @@ export async function GET(request: NextRequest) {
           orders: {
             select: {
               id: true,
-              total: true,
+              totalUSD: true,
               status: true,
               createdAt: true,
             },
@@ -56,10 +61,10 @@ export async function GET(request: NextRequest) {
     // Calculate stats for each customer
     const customersWithStats = customers.map((customer) => {
       const orders = customer.orders || [];
-      const totalSpent = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+      const totalSpent = orders.reduce((sum, order) => sum + Number(order.totalUSD || 0), 0);
       const orderCount = orders.length;
-      const activeOrders = orders.filter((o) => 
-        ['PENDING', 'PAID', 'SHIPPED'].includes(o.status)
+      const activeOrders = orders.filter((o) =>
+        ['PENDING', 'PROCESSING', 'SHIPPED'].includes(o.status)
       ).length;
 
       return {
@@ -80,9 +85,10 @@ export async function GET(request: NextRequest) {
     thisMonth.setHours(0, 0, 0, 0);
 
     const [totalCustomers, thisMonthCustomers, activeCustomers] = await Promise.all([
-      prisma.user.count(),
+      prisma.user.count({ where: { role: 'USER' } }),
       prisma.user.count({
         where: {
+          role: 'USER',
           createdAt: {
             gte: thisMonth,
           },
@@ -90,10 +96,11 @@ export async function GET(request: NextRequest) {
       }),
       prisma.user.count({
         where: {
+          role: 'USER',
           orders: {
             some: {
               status: {
-                in: ['PENDING', 'PAID', 'SHIPPED'],
+                in: ['PENDING', 'PROCESSING', 'SHIPPED'],
               },
             },
           },

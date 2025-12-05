@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -8,7 +8,9 @@ import { useSession } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import RechargeModal from '@/components/modals/RechargeModal';
-import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight } from 'react-icons/fi';
+import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle } from 'react-icons/fi';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWallet } from '@fortawesome/free-solid-svg-icons';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -31,7 +33,32 @@ export default function CheckoutPage() {
     notes: '',
     paymentMethod: '' as 'BANK_TRANSFER' | 'MOBILE_PAYMENT' | 'ZELLE' | 'PAYPAL' | 'CREDIT_CARD' | 'CRYPTO' | 'WALLET',
     deliveryMethod: 'HOME_DELIVERY' as 'PICKUP' | 'HOME_DELIVERY' | 'SHIPPING',
+    courierService: '' as 'ZOOM' | 'MRW' | '',
+    courierOfficeId: '',
+    isOfficeDelivery: false,
   });
+
+  // Refs for auto-focus
+  const shippingAddressRef = useRef<HTMLInputElement>(null);
+  const shippingCityRef = useRef<HTMLInputElement>(null);
+  const shippingStateRef = useRef<HTMLInputElement>(null);
+
+  // State for tooltips
+  const [showShippingWarning, setShowShippingWarning] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  // Saved addresses
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [showAddressSelector, setShowAddressSelector] = useState(false);
+  const [isNewAddress, setIsNewAddress] = useState(true);
+
+  // Google Maps feature
+  const [showGoogleMapsHelper, setShowGoogleMapsHelper] = useState(false);
+  const [copiedFromMaps, setCopiedFromMaps] = useState(false);
+
+  // Tooltip for client data warning
+  const [showClientDataTooltip, setShowClientDataTooltip] = useState(false);
 
   // Load company settings for exchange rates
   useEffect(() => {
@@ -50,12 +77,26 @@ export default function CheckoutPage() {
         customerEmail: session.user.email || '',
       }));
 
-      // Load profile for phone
+      // Load profile for phone and saved addresses
       fetch('/api/user/profile')
         .then(res => res.json())
         .then(data => {
           if (data.profile?.phone) {
             setFormData(prev => ({ ...prev, customerPhone: data.profile.phone }));
+          }
+
+          // Load saved addresses
+          if (data.profile?.savedAddresses) {
+            try {
+              const addresses = typeof data.profile.savedAddresses === 'string'
+                ? JSON.parse(data.profile.savedAddresses)
+                : data.profile.savedAddresses;
+              if (Array.isArray(addresses)) {
+                setSavedAddresses(addresses);
+              }
+            } catch (error) {
+              console.error('Error parsing saved addresses:', error);
+            }
           }
         })
         .catch(err => console.error('Error loading profile:', err));
@@ -75,6 +116,18 @@ export default function CheckoutPage() {
       console.error('Error fetching balance:', error);
     }
   };
+
+  // Auto-focus on shipping address when section becomes visible
+  useEffect(() => {
+    if (session?.user && formData.customerName) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        if (!formData.isOfficeDelivery && shippingAddressRef.current) {
+          shippingAddressRef.current.focus();
+        }
+      }, 500);
+    }
+  }, [session, formData.customerName]);
 
   // State for redirect animation
   const [showRedirectMessage, setShowRedirectMessage] = useState(false);
@@ -166,6 +219,11 @@ export default function CheckoutPage() {
 
       const order = await response.json();
 
+      // Save address to profile if it's a new address
+      if (isNewAddress && formData.shippingAddress && formData.shippingCity && formData.shippingState) {
+        await saveAddressToProfile(formData);
+      }
+
       // Clear cart
       clearCart();
 
@@ -193,6 +251,55 @@ export default function CheckoutPage() {
       currency: 'USD',
       minimumFractionDigits: 2
     }).format(price);
+  };
+
+  // Function to paste from clipboard (Google Maps feature)
+  const handlePasteFromGoogleMaps = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        setFormData(prev => ({ ...prev, shippingAddress: text }));
+        setCopiedFromMaps(true);
+        setTimeout(() => setCopiedFromMaps(false), 3000);
+      }
+    } catch (err) {
+      console.error('Error reading clipboard:', err);
+      alert('No se pudo leer del portapapeles. Por favor, copia manualmente la dirección.');
+    }
+  };
+
+  // Function to select a saved address
+  const handleSelectSavedAddress = (address: any) => {
+    setFormData(prev => ({
+      ...prev,
+      shippingAddress: address.address,
+      shippingCity: address.city,
+      shippingState: address.state,
+    }));
+    setIsNewAddress(false);
+    setShowAddressSelector(false);
+  };
+
+  // Function to save address to profile
+  const saveAddressToProfile = async (addressData: any) => {
+    try {
+      const response = await fetch('/api/user/profile/address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: addressData.shippingAddress,
+          city: addressData.shippingCity,
+          state: addressData.shippingState,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSavedAddresses(data.savedAddresses || []);
+      }
+    } catch (err) {
+      console.error('Error saving address:', err);
+    }
   };
 
   // Show loading while checking authentication to prevent flash
@@ -378,127 +485,488 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {/* Contact Information */}
-              <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] p-6">
-                <h2 className="text-xl font-semibold text-[#212529] mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  Información de Contacto
-                </h2>
+              {/* Contact Information - Read Only */}
+              <div className="bg-gradient-to-br from-white to-blue-50/30 rounded-xl shadow-lg border border-blue-100 p-6 animate-fadeIn relative">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-[#212529] flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-md">
+                      <FiUser className="w-5 h-5 text-white" />
+                    </div>
+                    Información de Contacto
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 border border-green-300 rounded-full">
+                      <FiLock className="w-3.5 h-3.5 text-green-700" />
+                      <span className="text-xs font-bold text-green-700">Verificado</span>
+                    </div>
+                    {/* Tooltip Icono */}
+                    <div
+                      className="relative group"
+                      onMouseEnter={() => setShowClientDataTooltip(true)}
+                      onMouseLeave={() => setShowClientDataTooltip(false)}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-amber-500 hover:bg-amber-600 flex items-center justify-center cursor-help transition-all animate-pulse hover:animate-none shadow-lg">
+                        <FiAlertCircle className="w-4 h-4 text-white" />
+                      </div>
+                      {/* Epic Tooltip */}
+                      {showClientDataTooltip && (
+                        <div className="absolute right-0 top-full mt-3 w-80 z-50 animate-scaleIn">
+                          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl shadow-2xl border-2 border-amber-400 p-5 relative">
+                            {/* Arrow */}
+                            <div className="absolute -top-2 right-6 w-4 h-4 bg-amber-400 rotate-45 border-t-2 border-l-2 border-amber-400"></div>
+                            <div className="absolute -top-1.5 right-6 w-4 h-4 bg-gradient-to-br from-amber-50 to-orange-50 rotate-45"></div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="col-span-1 md:col-span-2">
-                    <label htmlFor="customerName" className="block text-sm font-medium text-[#212529] mb-1">
-                      Nombre Completo *
-                    </label>
-                    <input
-                      type="text"
-                      id="customerName"
-                      name="customerName"
-                      value={formData.customerName}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent text-sm"
-                      placeholder="Tu nombre completo"
-                    />
+                            <div className="flex items-start gap-3 mb-3">
+                              <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                                <FiAlertCircle className="w-5 h-5 text-white" />
+                              </div>
+                              <div>
+                                <h3 className="font-black text-amber-900 text-sm mb-1">
+                                  ⚠️ Importante para el Retiro
+                                </h3>
+                                <p className="text-xs text-amber-800 leading-relaxed font-medium">
+                                  Estos datos registrados (nombre, email, teléfono) son los <strong className="font-black">ÚNICOS válidos</strong> para retirar tu producto.
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="bg-white/50 rounded-xl p-3 border border-amber-300">
+                              <p className="text-xs text-amber-900 leading-relaxed">
+                                <strong className="font-black">Solo tú, el cliente logeado</strong>, podrás retirar el pedido presentando tu identificación que coincida con estos datos.
+                              </p>
+                            </div>
+
+                            <div className="mt-3 flex items-center gap-2 text-xs text-amber-700">
+                              <FiCheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span className="font-medium">Por seguridad, estos datos no son editables aquí</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  {/* Security Shield Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent rounded-lg pointer-events-none z-10"></div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
+                    <div className="col-span-1 md:col-span-2">
+                      <label className="block text-sm font-semibold text-[#212529] mb-2 flex items-center gap-2">
+                        Nombre Completo
+                        <div className="group relative">
+                          <FiInfo className="w-4 h-4 text-[#6a6c6b] cursor-help" />
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-[#212529] text-white text-xs rounded-lg shadow-xl z-20 animate-scaleIn">
+                            Dato protegido de tu registro. No se puede modificar aquí por seguridad.
+                            <div className="absolute bottom-0 left-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-[#212529]"></div>
+                          </div>
+                        </div>
+                      </label>
+                      <div className="relative">
+                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6c6b] z-20" />
+                        <input
+                          type="text"
+                          value={formData.customerName}
+                          readOnly
+                          disabled
+                          className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] bg-[#f8f9fa] text-[#212529] rounded-xl cursor-not-allowed font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-[#212529] mb-2 flex items-center gap-2">
+                        Email
+                        <div className="group relative">
+                          <FiInfo className="w-4 h-4 text-[#6a6c6b] cursor-help" />
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-[#212529] text-white text-xs rounded-lg shadow-xl z-20 animate-scaleIn">
+                            Email registrado y verificado. Para cambiarlo dirígete a tu perfil.
+                            <div className="absolute bottom-0 left-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-[#212529]"></div>
+                          </div>
+                        </div>
+                      </label>
+                      <div className="relative">
+                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6c6b] z-20" />
+                        <input
+                          type="email"
+                          value={formData.customerEmail}
+                          readOnly
+                          disabled
+                          className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] bg-[#f8f9fa] text-[#212529] rounded-xl cursor-not-allowed font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-[#212529] mb-2 flex items-center gap-2">
+                        Teléfono
+                        <div className="group relative">
+                          <FiInfo className="w-4 h-4 text-[#6a6c6b] cursor-help" />
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-[#212529] text-white text-xs rounded-lg shadow-xl z-20 animate-scaleIn">
+                            Teléfono de contacto registrado. Actualízalo desde tu perfil si es necesario.
+                            <div className="absolute bottom-0 left-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-[#212529]"></div>
+                          </div>
+                        </div>
+                      </label>
+                      <div className="relative">
+                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6c6b] z-20" />
+                        <input
+                          type="tel"
+                          value={formData.customerPhone}
+                          readOnly
+                          disabled
+                          className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] bg-[#f8f9fa] text-[#212529] rounded-xl cursor-not-allowed font-medium"
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <label htmlFor="customerEmail" className="block text-sm font-medium text-[#212529] mb-1">
-                      Email *
-                    </label>
-                    <input
-                      type="email"
-                      id="customerEmail"
-                      name="customerEmail"
-                      value={formData.customerEmail}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent text-sm"
-                      placeholder="tu@email.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="customerPhone" className="block text-sm font-medium text-[#212529] mb-1">
-                      Teléfono *
-                    </label>
-                    <input
-                      type="tel"
-                      id="customerPhone"
-                      name="customerPhone"
-                      value={formData.customerPhone}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent text-sm"
-                      placeholder="+58 424 1234567"
-                    />
+                  {/* Info Banner */}
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
+                    <FiInfo className="w-5 h-5 text-[#2a63cd] flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-[#212529] leading-relaxed">
+                      <strong className="font-bold">Datos protegidos:</strong> Esta información proviene de tu registro y no puede modificarse durante el checkout por seguridad.
+                      Para actualizar tus datos, ve a tu <Link href="/customer/profile" className="text-[#2a63cd] hover:underline font-bold">perfil de usuario</Link>.
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Shipping Information */}
-              <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] p-6">
-                <h2 className="text-xl font-semibold text-[#212529] mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Dirección de Envío
-                </h2>
-
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="shippingAddress" className="block text-sm font-medium text-[#212529] mb-1">
-                      Dirección *
-                    </label>
-                    <input
-                      type="text"
-                      id="shippingAddress"
-                      name="shippingAddress"
-                      value={formData.shippingAddress}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent text-sm"
-                      placeholder="Calle, número, edificio, apartamento"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="shippingCity" className="block text-sm font-medium text-[#212529] mb-1">
-                        Ciudad *
-                      </label>
-                      <input
-                        type="text"
-                        id="shippingCity"
-                        name="shippingCity"
-                        value={formData.shippingCity}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-3 py-2 border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent text-sm"
-                        placeholder="Guanare"
-                      />
+              {/* Shipping Information - Enhanced */}
+              <div className="bg-white rounded-xl shadow-lg border border-[#e9ecef] p-6 animate-fadeIn animation-delay-100">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-[#212529] flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-md">
+                      <FiMapPin className="w-5 h-5 text-white" />
                     </div>
+                    Dirección de Envío
+                  </h2>
+                </div>
 
+                {/* Critical Warning Banner */}
+                <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-orange-400 rounded-r-xl shadow-sm animate-pulse-slow">
+                  <div className="flex items-start gap-3">
+                    <FiAlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <label htmlFor="shippingState" className="block text-sm font-medium text-[#212529] mb-1">
-                        Estado *
-                      </label>
-                      <input
-                        type="text"
-                        id="shippingState"
-                        name="shippingState"
-                        value={formData.shippingState}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-3 py-2 border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent text-sm"
-                        placeholder="Portuguesa"
-                      />
+                      <h3 className="font-bold text-orange-900 mb-1 text-sm">¡Importante! Verifica tus datos</h3>
+                      <p className="text-xs text-orange-800 leading-relaxed">
+                        Verifica que tus datos de envío sean correctos, porque serán usados a la hora de envío de tus productos comprados.
+                        <strong className="font-bold"> La empresa no se hace responsable de datos errados ingresados por el usuario.</strong>
+                      </p>
                     </div>
                   </div>
                 </div>
+
+                {/* Delivery Type Selection */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-[#212529] mb-3">
+                    Tipo de Entrega *
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, isOfficeDelivery: false, courierOfficeId: '' })}
+                      className={`p-4 rounded-xl border-2 transition-all ${!formData.isOfficeDelivery
+                        ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
+                        : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
+                        }`}
+                    >
+                      <FiMapPin className={`w-6 h-6 mx-auto mb-2 ${!formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
+                      <p className={`text-sm font-bold ${!formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                        Dirección Personal
+                      </p>
+                      <p className="text-xs text-[#6a6c6b] mt-1">Envío a domicilio</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, isOfficeDelivery: true })}
+                      className={`p-4 rounded-xl border-2 transition-all ${formData.isOfficeDelivery
+                        ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
+                        : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
+                        }`}
+                    >
+                      <FiPackage className={`w-6 h-6 mx-auto mb-2 ${formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
+                      <p className={`text-sm font-bold ${formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                        Oficina Courier
+                      </p>
+                      <p className="text-xs text-[#6a6c6b] mt-1">ZOOM o MRW</p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Personal Address Form */}
+                {!formData.isOfficeDelivery && (
+                  <div className="space-y-4 animate-fadeIn">
+                    {/* Saved Addresses Selector */}
+                    {savedAddresses.length > 0 && (
+                      <div className="mb-4">
+                        <button
+                          type="button"
+                          onClick={() => setShowAddressSelector(!showAddressSelector)}
+                          className="w-full p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl hover:border-blue-400 transition-all flex items-center justify-between group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                              <FiMapPin className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="text-left">
+                              <p className="text-sm font-bold text-[#212529]">Direcciones Guardadas</p>
+                              <p className="text-xs text-[#6a6c6b]">Tienes {savedAddresses.length} dirección(es) guardada(s)</p>
+                            </div>
+                          </div>
+                          <FiArrowRight className={`w-5 h-5 text-blue-600 transition-transform ${showAddressSelector ? 'rotate-90' : ''}`} />
+                        </button>
+
+                        {showAddressSelector && (
+                          <div className="mt-3 space-y-2 animate-slideDown">
+                            {savedAddresses.map((address, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => handleSelectSavedAddress(address)}
+                                className="w-full p-4 bg-white border-2 border-[#e9ecef] rounded-xl hover:border-[#2a63cd] hover:bg-blue-50/50 transition-all text-left group"
+                              >
+                                <div className="flex items-start gap-3">
+                                  <FiCheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <p className="text-sm font-semibold text-[#212529] mb-1">{address.address}</p>
+                                    <p className="text-xs text-[#6a6c6b]">{address.city}, {address.state}</p>
+                                  </div>
+                                </div>
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsNewAddress(true);
+                                setShowAddressSelector(false);
+                                setFormData(prev => ({ ...prev, shippingAddress: '', shippingCity: '', shippingState: '' }));
+                              }}
+                              className="w-full p-3 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-dashed border-green-300 rounded-xl hover:border-green-500 transition-all flex items-center justify-center gap-2 group"
+                            >
+                              <FiPlus className="w-4 h-4 text-green-600 group-hover:scale-125 transition-transform" />
+                              <span className="text-sm font-bold text-green-700">Agregar Nueva Dirección</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label htmlFor="shippingAddress" className="block text-sm font-semibold text-[#212529]">
+                          Dirección Completa *
+                        </label>
+                        {/* Google Maps Helper Button */}
+                        <button
+                          type="button"
+                          onClick={() => setShowGoogleMapsHelper(!showGoogleMapsHelper)}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full hover:from-red-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+                        >
+                          <FiMapPin className="w-3.5 h-3.5" />
+                          Google Maps
+                        </button>
+                      </div>
+
+                      {/* Google Maps Helper Panel */}
+                      {showGoogleMapsHelper && (
+                        <div className="mb-3 p-4 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 border-2 border-orange-300 rounded-xl animate-slideDown shadow-lg">
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                              <FiMapPin className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-black text-orange-900 text-sm mb-1">📍 Ayuda de Google Maps</h4>
+                              <p className="text-xs text-orange-800 leading-relaxed">
+                                Si no conoces tu dirección exacta o quieres copiarla fácilmente desde Google Maps:
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 mb-3">
+                            <div className="flex items-start gap-2 text-xs text-orange-900">
+                              <span className="font-black text-orange-600 flex-shrink-0">1.</span>
+                              <p>Abre <strong>Google Maps</strong> en otra pestaña</p>
+                            </div>
+                            <div className="flex items-start gap-2 text-xs text-orange-900">
+                              <span className="font-black text-orange-600 flex-shrink-0">2.</span>
+                              <p>Busca tu ubicación y haz clic derecho en el mapa</p>
+                            </div>
+                            <div className="flex items-start gap-2 text-xs text-orange-900">
+                              <span className="font-black text-orange-600 flex-shrink-0">3.</span>
+                              <p>Copia la dirección que aparece</p>
+                            </div>
+                            <div className="flex items-start gap-2 text-xs text-orange-900">
+                              <span className="font-black text-orange-600 flex-shrink-0">4.</span>
+                              <p>Haz clic en el botón de abajo para pegarla automáticamente</p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handlePasteFromGoogleMaps}
+                            className="w-full p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl hover:from-orange-600 hover:to-red-600 transition-all shadow-md hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                          >
+                            {copiedFromMaps ? (
+                              <>
+                                <FiCheckCircle className="w-5 h-5 animate-bounce" />
+                                <span>¡Dirección Pegada! ✨</span>
+                              </>
+                            ) : (
+                              <>
+                                <FiCopy className="w-5 h-5" />
+                                <span>Pegar Desde Portapapeles</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="relative">
+                        <FiMapPin className="absolute left-4 top-3.5 text-[#6a6c6b]" />
+                        <input
+                          ref={shippingAddressRef}
+                          type="text"
+                          id="shippingAddress"
+                          name="shippingAddress"
+                          value={formData.shippingAddress}
+                          onChange={(e) => {
+                            handleChange(e);
+                            setIsNewAddress(true);
+                          }}
+                          onFocus={() => setShowShippingWarning(true)}
+                          onBlur={() => setTimeout(() => setShowShippingWarning(false), 200)}
+                          required={!formData.isOfficeDelivery}
+                          className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent transition-all"
+                          placeholder="Av. Principal, Edif. Torre, Piso 5, Apto 5-B"
+                        />
+                      </div>
+                      {showShippingWarning && (
+                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2 text-xs text-blue-800 animate-scaleIn">
+                          <FiInfo className="w-4 h-4 flex-shrink-0" />
+                          <span>Incluye puntos de referencia para facilitar la entrega</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="shippingCity" className="block text-sm font-semibold text-[#212529] mb-2">
+                          Ciudad *
+                        </label>
+                        <input
+                          ref={shippingCityRef}
+                          type="text"
+                          id="shippingCity"
+                          name="shippingCity"
+                          value={formData.shippingCity}
+                          onChange={handleChange}
+                          required={!formData.isOfficeDelivery}
+                          className="w-full px-4 py-3 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent transition-all"
+                          placeholder="Guanare"
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="shippingState" className="block text-sm font-semibold text-[#212529] mb-2">
+                          Estado *
+                        </label>
+                        <input
+                          ref={shippingStateRef}
+                          type="text"
+                          id="shippingState"
+                          name="shippingState"
+                          value={formData.shippingState}
+                          onChange={handleChange}
+                          required={!formData.isOfficeDelivery}
+                          className="w-full px-4 py-3 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent transition-all"
+                          placeholder="Portuguesa"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Courier Office Selection */}
+                {formData.isOfficeDelivery && (
+                  <div className="space-y-4 animate-fadeIn">
+                    <div>
+                      <label className="block text-sm font-semibold text-[#212529] mb-3">
+                        Empresa de Encomienda *
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, courierService: 'ZOOM' })}
+                          className={`p-4 rounded-xl border-2 transition-all ${formData.courierService === 'ZOOM'
+                            ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
+                            : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
+                            }`}
+                        >
+                          <FiTruck className={`w-6 h-6 mx-auto mb-2 ${formData.courierService === 'ZOOM' ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
+                          <p className={`text-sm font-bold ${formData.courierService === 'ZOOM' ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                            ZOOM
+                          </p>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, courierService: 'MRW' })}
+                          className={`p-4 rounded-xl border-2 transition-all ${formData.courierService === 'MRW'
+                            ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
+                            : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
+                            }`}
+                        >
+                          <FiTruck className={`w-6 h-6 mx-auto mb-2 ${formData.courierService === 'MRW' ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
+                          <p className={`text-sm font-bold ${formData.courierService === 'MRW' ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                            MRW
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+
+                    {formData.courierService && (
+                      <div className="animate-fadeIn">
+                        <label htmlFor="courierOfficeId" className="block text-sm font-semibold text-[#212529] mb-2">
+                          Oficina {formData.courierService} / Casillero *
+                        </label>
+                        <div className="relative">
+                          <FiPackage className="absolute left-4 top-3.5 text-[#6a6c6b]" />
+                          <input
+                            type="text"
+                            id="courierOfficeId"
+                            name="courierOfficeId"
+                            value={formData.courierOfficeId}
+                            onChange={(e) => setFormData({ ...formData, courierOfficeId: e.target.value })}
+                            required={formData.isOfficeDelivery}
+                            className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent transition-all"
+                            placeholder={`ID de oficina ${formData.courierService} o número de casillero`}
+                          />
+                        </div>
+                        <p className="mt-2 text-xs text-[#6a6c6b] flex items-center gap-1">
+                          <FiInfo className="w-3 h-3" />
+                          Ingresa el código de la oficina {formData.courierService} más cercana o tu número de casillero
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Info about courier services */}
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                      <h4 className="font-bold text-sm text-[#212529] mb-2 flex items-center gap-2">
+                        <FiInfo className="w-4 h-4 text-[#2a63cd]" />
+                        Sobre las oficinas de encomienda
+                      </h4>
+                      <ul className="text-xs text-[#6a6c6b] space-y-1 ml-6 list-disc">
+                        <li>Tu pedido será enviado a la oficina {formData.courierService || 'ZOOM/MRW'} que indiques</li>
+                        <li>Recibirás una notificación cuando tu paquete llegue a la oficina</li>
+                        <li>Debes retirar tu paquete con tu cédula de identidad</li>
+                        <li>Si tienes casillero, proporciona el número para envío directo</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Payment Method */}
@@ -547,7 +1015,7 @@ export default function CheckoutPage() {
                   >
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${paymentMode === 'WALLET' ? 'bg-[#2a63cd] text-white' : 'bg-[#f8f9fa] text-[#6a6c6b] group-hover:bg-[#2a63cd]/10 group-hover:text-[#2a63cd]'
                       }`}>
-                      <FiDollarSign className="w-6 h-6" />
+                      <FontAwesomeIcon icon={faWallet} className="w-6 h-6" />
                     </div>
                     <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'WALLET' ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
                       Usar Saldo / Recargar
@@ -655,61 +1123,118 @@ export default function CheckoutPage() {
                 )}
               </div>
 
-              {/* Delivery Method */}
-              <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] p-6">
-                <h2 className="text-xl font-semibold text-[#212529] mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                  </svg>
-                  Método de Entrega
-                </h2>
-
-                <div className="space-y-3">
-                  <label className="flex items-center p-3 border border-[#e9ecef] rounded-lg hover:bg-[#f8f9fa] cursor-pointer transition-colors">
-                    <input
-                      type="radio"
-                      name="deliveryMethod"
-                      value="HOME_DELIVERY"
-                      checked={formData.deliveryMethod === 'HOME_DELIVERY'}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#2a63cd]"
-                    />
-                    <div className="ml-3">
-                      <span className="text-sm font-medium text-[#212529]">Delivery a Domicilio</span>
-                      <p className="text-xs text-[#6a6c6b]">Entrega en tu dirección</p>
+              {/* Delivery Method - Linear and Premium */}
+              <div className="bg-white rounded-xl shadow-lg border border-[#e9ecef] p-6 animate-fadeIn animation-delay-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-[#212529] flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-md">
+                      <FiTruck className="w-5 h-5 text-white" />
                     </div>
-                  </label>
-
-                  <label className="flex items-center p-3 border border-[#e9ecef] rounded-lg hover:bg-[#f8f9fa] cursor-pointer transition-colors">
-                    <input
-                      type="radio"
-                      name="deliveryMethod"
-                      value="PICKUP"
-                      checked={formData.deliveryMethod === 'PICKUP'}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#2a63cd]"
-                    />
-                    <div className="ml-3">
-                      <span className="text-sm font-medium text-[#212529]">Retiro en Tienda</span>
-                      <p className="text-xs text-[#6a6c6b]">Recoge tu pedido en la tienda</p>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center p-3 border border-[#e9ecef] rounded-lg hover:bg-[#f8f9fa] cursor-pointer transition-colors">
-                    <input
-                      type="radio"
-                      name="deliveryMethod"
-                      value="SHIPPING"
-                      checked={formData.deliveryMethod === 'SHIPPING'}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#2a63cd]"
-                    />
-                    <div className="ml-3">
-                      <span className="text-sm font-medium text-[#212529]">Envío</span>
-                      <p className="text-xs text-[#6a6c6b]">Envío por correo (costo adicional)</p>
-                    </div>
-                  </label>
+                    Empresa de Envío
+                  </h2>
                 </div>
+
+                {/* Validation: Ensure address is provided */}
+                {(!formData.shippingAddress && !formData.isOfficeDelivery) || (formData.isOfficeDelivery && !formData.courierService) ? (
+                  <div className="p-6 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl text-center">
+                    <FiAlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-sm font-medium text-gray-600">
+                      Primero completa tu dirección de envío
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Selecciona la empresa de envío después de ingresar tu dirección
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* ZOOM Option */}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, deliveryMethod: 'SHIPPING', courierService: 'ZOOM' })}
+                      className={`w-full p-4 rounded-xl border-2 transition-all text-left group ${formData.courierService === 'ZOOM' && formData.deliveryMethod === 'SHIPPING'
+                        ? 'border-[#2a63cd] bg-gradient-to-r from-[#2a63cd]/10 to-[#1e4ba3]/5 shadow-md'
+                        : 'border-[#e9ecef] hover:border-[#2a63cd]/50 hover:shadow-sm'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${formData.courierService === 'ZOOM' && formData.deliveryMethod === 'SHIPPING'
+                            ? 'bg-[#2a63cd] shadow-lg'
+                            : 'bg-[#f8f9fa] group-hover:bg-[#2a63cd]/10'
+                            }`}>
+                            <FiTruck className={`w-6 h-6 ${formData.courierService === 'ZOOM' && formData.deliveryMethod === 'SHIPPING'
+                              ? 'text-white'
+                              : 'text-[#6a6c6b] group-hover:text-[#2a63cd]'
+                              }`} />
+                          </div>
+                          <div>
+                            <h3 className={`font-bold text-base mb-0.5 ${formData.courierService === 'ZOOM' && formData.deliveryMethod === 'SHIPPING'
+                              ? 'text-[#2a63cd]'
+                              : 'text-[#212529]'
+                              }`}>
+                              ZOOM
+                            </h3>
+                            <p className="text-xs text-[#6a6c6b]">Envío rápido y seguro</p>
+                          </div>
+                        </div>
+                        {formData.courierService === 'ZOOM' && formData.deliveryMethod === 'SHIPPING' && (
+                          <div className="w-6 h-6 bg-[#2a63cd] rounded-full flex items-center justify-center animate-scaleIn">
+                            <FiCheck className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    </button>
+
+                    {/* MRW Option */}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, deliveryMethod: 'SHIPPING', courierService: 'MRW' })}
+                      className={`w-full p-4 rounded-xl border-2 transition-all text-left group ${formData.courierService === 'MRW' && formData.deliveryMethod === 'SHIPPING'
+                        ? 'border-[#2a63cd] bg-gradient-to-r from-[#2a63cd]/10 to-[#1e4ba3]/5 shadow-md'
+                        : 'border-[#e9ecef] hover:border-[#2a63cd]/50 hover:shadow-sm'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${formData.courierService === 'MRW' && formData.deliveryMethod === 'SHIPPING'
+                            ? 'bg-[#2a63cd] shadow-lg'
+                            : 'bg-[#f8f9fa] group-hover:bg-[#2a63cd]/10'
+                            }`}>
+                            <FiTruck className={`w-6 h-6 ${formData.courierService === 'MRW' && formData.deliveryMethod === 'SHIPPING'
+                              ? 'text-white'
+                              : 'text-[#6a6c6b] group-hover:text-[#2a63cd]'
+                              }`} />
+                          </div>
+                          <div>
+                            <h3 className={`font-bold text-base mb-0.5 ${formData.courierService === 'MRW' && formData.deliveryMethod === 'SHIPPING'
+                              ? 'text-[#2a63cd]'
+                              : 'text-[#212529]'
+                              }`}>
+                              MRW
+                            </h3>
+                            <p className="text-xs text-[#6a6c6b]">Cobertura nacional garantizada</p>
+                          </div>
+                        </div>
+                        {formData.courierService === 'MRW' && formData.deliveryMethod === 'SHIPPING' && (
+                          <div className="w-6 h-6 bg-[#2a63cd] rounded-full flex items-center justify-center animate-scaleIn">
+                            <FiCheck className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Info Banner */}
+                    <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl flex items-start gap-3">
+                      <FiCheck className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-green-900 font-medium mb-1">Envío por empresa certificada</p>
+                        <p className="text-xs text-green-700">
+                          Tu pedido será procesado y enviado mediante {formData.courierService || 'la empresa seleccionada'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Notes */}
@@ -732,29 +1257,62 @@ export default function CheckoutPage() {
                 />
               </div>
 
+              {/* Terms and Conditions */}
+              <div className="bg-white rounded-xl shadow-lg border border-[#e9ecef] p-6 animate-fadeIn animation-delay-300">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="acceptTerms"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="w-5 h-5 mt-1 text-[#2a63cd] rounded focus:ring-2 focus:ring-[#2a63cd] cursor-pointer"
+                  />
+                  <label htmlFor="acceptTerms" className="flex-1 text-sm text-[#212529] leading-relaxed cursor-pointer">
+                    Acepto los{' '}
+                    <button
+                      type="button"
+                      onClick={() => setShowTermsModal(true)}
+                      className="text-[#2a63cd] hover:underline font-bold"
+                    >
+                      términos y condiciones
+                    </button>
+                    . Confirmo que la información de envío es correcta y entiendo que{' '}
+                    <strong className="font-bold text-orange-700">
+                      la empresa no se hace responsable por datos errados ingresados por el usuario
+                    </strong>
+                    .
+                  </label>
+                </div>
+              </div>
+
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || (paymentMode === 'WALLET' && userBalance < finalTotal)}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-semibold rounded-lg hover:from-[#1e4ba3] hover:to-[#2a63cd] transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || !acceptedTerms || (paymentMode === 'WALLET' && userBalance < finalTotal)}
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold text-lg rounded-xl hover:from-[#1e4ba3] hover:to-[#2a63cd] transition-all shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:scale-[1.02] active:scale-[0.98]"
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Procesando...</span>
+                    <span>Procesando Pedido...</span>
                   </>
                 ) : (
                   <>
+                    <FiCheck className="w-6 h-6" />
                     <span>Completar Pedido</span>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
+                    <FiArrowRight className="w-5 h-5" />
                   </>
                 )}
               </button>
+
+              {!acceptedTerms && (
+                <p className="text-center text-xs text-red-600 -mt-2 animate-pulse">
+                  Debes aceptar los términos y condiciones para continuar
+                </p>
+              )}
             </form>
           </div>
 
@@ -865,6 +1423,118 @@ export default function CheckoutPage() {
         onClose={() => setShowRechargeModal(false)}
         onSuccess={fetchBalance}
       />
+
+      {/* Terms and Conditions Modal */}
+      {showTermsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">Términos y Condiciones</h2>
+                <button
+                  onClick={() => setShowTermsModal(false)}
+                  className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+                >
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-200px)]">
+              <div className="space-y-6 text-sm text-[#212529]">
+                {/* Critical Warning */}
+                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-orange-500 rounded-r-xl">
+                  <h3 className="font-bold text-orange-900 mb-2 flex items-center gap-2">
+                    <FiAlertCircle className="w-5 h-5" />
+                    Responsabilidad del Usuario
+                  </h3>
+                  <p className="text-orange-800 leading-relaxed">
+                    <strong>IMPORTANTE:</strong> El usuario es completamente responsable de verificar que todos los datos de envío (dirección, ciudad, estado, oficina de encomienda, etc.) sean correctos antes de completar su pedido.
+                  </p>
+                  <p className="text-orange-800 mt-2 leading-relaxed font-bold">
+                    Electro Shop Morandin C.A. NO SE HACE RESPONSABLE por pérdidas, retrasos o costos adicionales derivados de datos errados ingresados por el usuario.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg mb-2">1. Información General</h3>
+                  <p className="leading-relaxed">
+                    Al realizar una compra en Electro Shop Morandin C.A., usted acepta estos términos y condiciones en su totalidad. Por favor, léalos cuidadosamente antes de completar su pedido.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg mb-2">2. Datos de Envío</h3>
+                  <ul className="list-disc ml-6 space-y-2">
+                    <li>Es responsabilidad del cliente proporcionar una dirección de envío completa y correcta.</li>
+                    <li>Los datos de contacto (nombre, email, teléfono) provienen de su registro y son verificados.</li>
+                    <li>Si selecciona envío a oficina de encomienda (ZOOM o MRW), debe proporcionar el código correcto de la oficina o casillero.</li>
+                    <li>La empresa NO corregirá datos errados después de que el pedido haya sido procesado.</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg mb-2">3. Envíos mediante ZOOM y MRW</h3>
+                  <ul className="list-disc ml-6 space-y-2">
+                    <li>Los pedidos se envían mediante las empresas certificadas ZOOM o MRW según la selección del cliente.</li>
+                    <li>El cliente debe proporcionar un código de oficina válido o número de casillero.</li>
+                    <li>Para retirar el paquete, debe presentar cédula de identidad.</li>
+                    <li>El tiempo de entrega depende de la empresa de encomienda seleccionada.</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg mb-2">4. Limitación de Responsabilidad</h3>
+                  <ul className="list-disc ml-6 space-y-2">
+                    <li>La empresa no se hace responsable de direcciones incorrectas o incompletas proporcionadas por el usuario.</li>
+                    <li>No se procesan reembolsos por entregas fallidas debido a datos incorrectos del cliente.</li>
+                    <li>Los costos adicionales de reenvío por datos incorrectos serán asumidos por el cliente.</li>
+                    <li>La empresa verificará la identidad del destinatario al momento de la entrega.</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg mb-2">5. Métodos de Pago</h3>
+                  <p className="leading-relaxed">
+                    Aceptamos transferencias bancarias, pago móvil, criptomonedas y saldo de billetera. Los pedidos se procesan una vez confirmado el pago.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg mb-2">6. Política de Cambios y Devoluciones</h3>
+                  <p className="leading-relaxed">
+                    Consulte nuestra política de cambios y devoluciones. No se aceptan devoluciones por datos de envío incorrectos proporcionados por el cliente.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 bg-[#f8f9fa] border-t border-[#e9ecef] flex gap-3">
+              <button
+                onClick={() => {
+                  setAcceptedTerms(true);
+                  setShowTermsModal(false);
+                }}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg transition-all"
+              >
+                Aceptar y Continuar
+              </button>
+              <button
+                onClick={() => setShowTermsModal(false)}
+                className="px-6 py-3 bg-white border-2 border-[#e9ecef] text-[#212529] font-medium rounded-xl hover:bg-[#f8f9fa] transition-all"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

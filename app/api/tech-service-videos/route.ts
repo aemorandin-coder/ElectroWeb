@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { AdminPermission } from '@prisma/client';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 // GET /api/tech-service-videos - List all tech service videos (public)
 export async function GET(request: NextRequest) {
@@ -39,22 +39,9 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.userType !== 'admin') {
+    if (!isAuthorized(session, 'MANAGE_CONTENT')) {
       return NextResponse.json(
         { error: 'No autorizado' },
-        { status: 401 }
-      );
-    }
-
-    // Check permissions
-    const adminUser = await prisma.adminUser.findUnique({
-      where: { email: session.user.email! },
-      select: { permissions: true },
-    });
-
-    if (!adminUser?.permissions.includes(AdminPermission.MANAGE_CONTENT)) {
-      return NextResponse.json(
-        { error: 'No tienes permisos para agregar videos' },
         { status: 403 }
       );
     }
@@ -107,22 +94,9 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.userType !== 'admin') {
+    if (!isAuthorized(session, 'MANAGE_CONTENT')) {
       return NextResponse.json(
         { error: 'No autorizado' },
-        { status: 401 }
-      );
-    }
-
-    // Check permissions
-    const adminUser = await prisma.adminUser.findUnique({
-      where: { email: session.user.email! },
-      select: { permissions: true },
-    });
-
-    if (!adminUser?.permissions.includes(AdminPermission.MANAGE_CONTENT)) {
-      return NextResponse.json(
-        { error: 'No tienes permisos para editar videos' },
         { status: 403 }
       );
     }
@@ -169,22 +143,9 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.userType !== 'admin') {
+    if (!isAuthorized(session, 'MANAGE_CONTENT')) {
       return NextResponse.json(
         { error: 'No autorizado' },
-        { status: 401 }
-      );
-    }
-
-    // Check permissions
-    const adminUser = await prisma.adminUser.findUnique({
-      where: { email: session.user.email! },
-      select: { permissions: true },
-    });
-
-    if (!adminUser?.permissions.includes(AdminPermission.MANAGE_CONTENT)) {
-      return NextResponse.json(
-        { error: 'No tienes permisos para eliminar videos' },
         { status: 403 }
       );
     }

@@ -285,7 +285,7 @@ export default function AdminDashboard() {
                     borderRadius: '8px',
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                   }}
-                  formatter={(value: number) => [`$${value.toFixed(2)}`, 'Ventas']}
+                  formatter={(value: any) => [`$${value.toFixed(2)}`, 'Ventas']}
                 />
                 <Area
                   type="monotone"
@@ -367,7 +367,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-      
+
 
     </div>
   );

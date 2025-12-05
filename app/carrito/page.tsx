@@ -116,11 +116,7 @@ export default function CarritoPage() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 60L60 55C120 50 240 40 360 35C480 30 600 30 720 32.5C840 35 960 40 1080 42.5C1200 45 1320 45 1380 45L1440 45V60H1380C1320 60 1200 60 1080 60C960 60 840 60 720 60C600 60 480 60 360 60C240 60 120 60 60 60H0Z" fill="#f8f9fa" />
-          </svg>
-        </div>
+
       </section>
 
       {/* Main Content */}
@@ -132,7 +128,7 @@ export default function CarritoPage() {
               animation: 'fadeInUp 0.6s ease-out both',
             }}
           >
-            <div className="max-w-md mx-auto">
+            <div className="max-w-3xl mx-auto">
               <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                 <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -194,20 +190,45 @@ export default function CarritoPage() {
                       {/* Product Image */}
                       <div className="relative w-32 h-32 flex-shrink-0 bg-gradient-to-br from-[#f8f9fa] to-gray-100 rounded-xl overflow-hidden group">
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-10"></div>
-                        {item.imageUrl ? (
-                          <Image
-                            src={item.imageUrl}
-                            alt={item.name}
-                            fill
-                            className="object-cover group-hover:scale-110 transition-transform duration-700"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
-                          </div>
-                        )}
+                        {(() => {
+                          let imageUrl: string | undefined = item.imageUrl;
+
+                          // Handle JSON string arrays
+                          if (typeof imageUrl === 'string' && (imageUrl.startsWith('[') || imageUrl.includes('","'))) {
+                            try {
+                              const parsed = JSON.parse(imageUrl);
+                              if (Array.isArray(parsed) && parsed.length > 0) {
+                                imageUrl = parsed[0];
+                              }
+                            } catch (e) {
+                              if (imageUrl && imageUrl.startsWith('["') && imageUrl.endsWith('"]')) {
+                                imageUrl = imageUrl.slice(2, -2);
+                              }
+                            }
+                          }
+
+                          // Ensure relative paths start with /
+                          if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                            imageUrl = `/${imageUrl}`;
+                          }
+
+                          return imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={item.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                              </svg>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Product Info */}

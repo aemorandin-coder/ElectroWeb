@@ -13,34 +13,21 @@ export async function GET(request: NextRequest) {
 
         const userId = session.user.id;
 
-        // Get user settings
+        // Get user profile
         const user = await prisma.user.findUnique({
             where: { id: userId },
             select: {
                 profile: {
                     select: {
-                        emailNotifications: true,
-                        orderUpdates: true,
-                        promotions: true,
-                        newsletter: true,
-                        twoFactorAuth: true,
-                        language: true,
-                        currency: true,
-                        theme: true,
+                        isBusinessAccount: true,
+                        businessVerified: true,
+                        businessVerificationStatus: true,
                     },
                 },
             },
         });
 
         return NextResponse.json({
-            emailNotifications: user?.profile?.emailNotifications ?? true,
-            orderUpdates: user?.profile?.orderUpdates ?? true,
-            promotions: user?.profile?.promotions ?? false,
-            newsletter: user?.profile?.newsletter ?? true,
-            twoFactorAuth: user?.profile?.twoFactorAuth ?? false,
-            language: user?.profile?.language || 'es',
-            currency: user?.profile?.currency || 'USD',
-            theme: user?.profile?.theme || 'light',
             // Business fields
             isBusinessAccount: user?.profile?.isBusinessAccount || false,
             businessVerified: user?.profile?.businessVerified || false,
@@ -66,31 +53,17 @@ export async function PATCH(request: NextRequest) {
         const userId = session.user.id;
         const body = await request.json();
 
-        // Update user settings
+        // Update user profile
         await prisma.user.update({
             where: { id: userId },
             data: {
                 profile: {
                     upsert: {
                         create: {
-                            emailNotifications: body.emailNotifications,
-                            orderUpdates: body.orderUpdates,
-                            promotions: body.promotions,
-                            newsletter: body.newsletter,
-                            twoFactorAuth: body.twoFactorAuth,
-                            language: body.language,
-                            currency: body.currency,
-                            theme: body.theme,
+                            isBusinessAccount: body.isBusinessAccount,
                         },
                         update: {
-                            emailNotifications: body.emailNotifications,
-                            orderUpdates: body.orderUpdates,
-                            promotions: body.promotions,
-                            newsletter: body.newsletter,
-                            twoFactorAuth: body.twoFactorAuth,
-                            language: body.language,
-                            currency: body.currency,
-                            theme: body.theme,
+                            isBusinessAccount: body.isBusinessAccount,
                         },
                     },
                 },

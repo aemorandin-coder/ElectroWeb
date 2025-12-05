@@ -52,11 +52,11 @@ export async function POST(req: NextRequest) {
         description: description || `Recarga de saldo - ${paymentMethod}`,
         reference: reference || null,
         paymentMethod,
-        metadata: {
+        metadata: JSON.stringify({
           paymentMethod,
           reference,
           requestedAt: new Date().toISOString(),
-        },
+        }),
       },
     });
 

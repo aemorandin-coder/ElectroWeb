@@ -71,30 +71,14 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                         </div>
                     )}
 
-                    {product.isFeatured && (
-                        <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-[10px] font-bold rounded-full shadow-lg z-20">
-                            ⭐ Destacado
-                        </span>
-                    )}
-
-                    {product.stock === 0 ? (
+                    {product.stock === 0 && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
                             <span className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-full shadow-2xl">Agotado</span>
                         </div>
-                    ) : product.stock <= 5 && (
-                        <span className="absolute top-2 right-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[10px] font-bold rounded-full shadow-lg z-20">
-                            ¡Solo {product.stock}!
-                        </span>
                     )}
                 </div>
 
                 <div className="p-3 flex-1 flex flex-col">
-                    <div className="mb-1.5">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-[#2a63cd]/10 to-[#1e4ba3]/10 rounded-full">
-                            <div className="w-1 h-1 rounded-full bg-[#2a63cd]"></div>
-                            <span className="text-[10px] font-bold text-[#2a63cd]">{product.category.name}</span>
-                        </span>
-                    </div>
 
                     <h3 className="text-sm font-bold text-[#212529] mb-1 line-clamp-2 group-hover:text-[#2a63cd] transition-colors duration-300 min-h-[28px]">
                         {product.name}

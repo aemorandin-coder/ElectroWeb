@@ -215,7 +215,8 @@ export default function AdminLayout({
 
   const hasPermission = (permission?: string) => {
     if (!permission) return true;
-    if (session.user.role === 'SUPER_ADMIN') return true;
+    // Grant full access to ADMIN and SUPER_ADMIN roles
+    if (session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') return true;
     return session.user.permissions?.includes(permission as any);
   };
 
@@ -370,12 +371,12 @@ export default function AdminLayout({
 
                 {/* User Role Badge */}
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-[#f8f9fa] to-white rounded-full border border-[#e9ecef] shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
-                  <div className={`w-2 h-2 rounded-full animate-pulse ${session.user.role === 'SUPER_ADMIN' ? 'bg-[#2a63cd] shadow-sm shadow-[#2a63cd]/50' : 'bg-[#6a6c6b]'
+                  <div className={`w-2 h-2 rounded-full animate-pulse ${session.user.role === 'SUPER_ADMIN' ? 'bg-purple-500 shadow-sm shadow-purple-500/50' : session.user.role === 'ADMIN' ? 'bg-[#2a63cd] shadow-sm shadow-[#2a63cd]/50' : 'bg-[#6a6c6b]'
                     }`} />
                   <span className="text-xs font-semibold text-[#212529]">
                     {session.user.role === 'SUPER_ADMIN' ? 'Super Admin' :
                       session.user.role === 'ADMIN' ? 'Administrador' :
-                        session.user.role === 'EMPLOYEE' ? 'Empleado' : 'Usuario'}
+                        session.user.role === 'SUPPORT' ? 'Soporte' : 'Usuario'}
                   </span>
                 </div>
               </div>

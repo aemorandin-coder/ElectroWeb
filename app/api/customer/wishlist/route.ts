@@ -14,33 +14,51 @@ export async function GET(req: NextRequest) {
 
     const userId = (session.user as any).id;
 
-    // Get or create wishlist
+    // Get or create wishlist with items
     let wishlist = await prisma.wishlist.findUnique({
       where: { userId },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                category: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!wishlist) {
       wishlist = await prisma.wishlist.create({
         data: {
           userId,
-          productIds: [],
+        },
+        include: {
+          items: {
+            include: {
+              product: {
+                include: {
+                  category: true,
+                },
+              },
+            },
+          },
         },
       });
     }
 
-    // Fetch product details
-    const products = await prisma.product.findMany({
-      where: {
-        id: { in: wishlist.productIds },
-        isActive: true,
-      },
-      include: {
-        category: true,
-      },
-    });
+    // Extract products from wishlist items
+    const products = wishlist.items.map(item => item.product);
 
     return NextResponse.json({
-      wishlist,
+      wishlist: {
+        id: wishlist.id,
+        userId: wishlist.userId,
+        createdAt: wishlist.createdAt,
+        updatedAt: wishlist.updatedAt,
+      },
       products,
     });
   } catch (error) {
@@ -74,33 +92,57 @@ export async function POST(req: NextRequest) {
       wishlist = await prisma.wishlist.create({
         data: {
           userId,
-          productIds: [],
         },
       });
     }
 
-    let productIds = [...wishlist.productIds];
-
     if (action === 'add') {
-      // Add product if not already in wishlist
-      if (!productIds.includes(productId)) {
-        productIds.push(productId);
+      // Check if product already in wishlist
+      const existingItem = await prisma.wishlistItem.findUnique({
+        where: {
+          wishlistId_productId: {
+            wishlistId: wishlist.id,
+            productId: productId,
+          },
+        },
+      });
+
+      if (!existingItem) {
+        await prisma.wishlistItem.create({
+          data: {
+            wishlistId: wishlist.id,
+            productId: productId,
+          },
+        });
       }
     } else if (action === 'remove') {
-      // Remove product
-      productIds = productIds.filter(id => id !== productId);
+      // Remove product from wishlist
+      await prisma.wishlistItem.deleteMany({
+        where: {
+          wishlistId: wishlist.id,
+          productId: productId,
+        },
+      });
     }
 
-    // Update wishlist
-    const updatedWishlist = await prisma.wishlist.update({
+    // Get updated wishlist with items
+    const updatedWishlist = await prisma.wishlist.findUnique({
       where: { id: wishlist.id },
-      data: { productIds },
+      include: {
+        items: true,
+      },
     });
+
+    const inWishlist = updatedWishlist?.items.some(item => item.productId === productId) || false;
 
     return NextResponse.json({
       success: true,
-      wishlist: updatedWishlist,
-      inWishlist: productIds.includes(productId),
+      wishlist: {
+        id: updatedWishlist?.id,
+        userId: updatedWishlist?.userId,
+        itemCount: updatedWishlist?.items.length || 0,
+      },
+      inWishlist,
     });
   } catch (error) {
     console.error('Error updating wishlist:', error);

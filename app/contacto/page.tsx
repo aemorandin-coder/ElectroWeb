@@ -156,18 +156,63 @@ export default async function ContactoPage() {
                 Horario de Atención
               </h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-[#6a6c6b]">Lunes - Viernes</span>
-                  <span className="font-semibold text-[#212529]">{settings?.businessHours || '8:00 AM - 5:00 PM'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#6a6c6b]">Sábados</span>
-                  <span className="font-semibold text-[#212529]">9:00 AM - 2:00 PM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#6a6c6b]">Domingos</span>
-                  <span className="font-semibold text-red-600">Cerrado</span>
-                </div>
+                {(() => {
+                  try {
+                    const hours = settings?.businessHours ? JSON.parse(settings.businessHours) : null;
+                    if (hours && typeof hours === 'object') {
+                      const daysMap: Record<string, string> = {
+                        monday: 'Lunes',
+                        tuesday: 'Martes',
+                        wednesday: 'Miércoles',
+                        thursday: 'Jueves',
+                        friday: 'Viernes',
+                        saturday: 'Sábado',
+                        sunday: 'Domingo'
+                      };
+
+                      return Object.entries(hours).map(([day, schedule]: [string, any]) => {
+                        const dayLabel = daysMap[day] || day;
+                        if (schedule?.enabled) {
+                          return (
+                            <div key={day} className="flex justify-between">
+                              <span className="text-[#6a6c6b]">{dayLabel}</span>
+                              <span className="font-semibold text-[#212529]">
+                                {schedule.open} - {schedule.close}
+                              </span>
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div key={day} className="flex justify-between">
+                              <span className="text-[#6a6c6b]">{dayLabel}</span>
+                              <span className="font-semibold text-red-600">Cerrado</span>
+                            </div>
+                          );
+                        }
+                      });
+                    }
+                  } catch (e) {
+                    console.error('Error parsing businessHours:', e);
+                  }
+
+                  // Fallback
+                  return (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-[#6a6c6b]">Lunes - Viernes</span>
+                        <span className="font-semibold text-[#212529]">9:00 AM - 6:00 PM</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#6a6c6b]">Sábado</span>
+                        <span className="font-semibold text-[#212529]">10:00 AM - 2:00 PM</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#6a6c6b]">Domingo</span>
+                        <span className="font-semibold text-red-600">Cerrado</span>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </div>

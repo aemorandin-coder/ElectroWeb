@@ -70,11 +70,15 @@ model Profile {
   userId                      String   @unique
   user                        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userEmail                   String?  @unique
+  avatar                      String?
+  idNumber                    String?  // Cédula o Pasaporte
   phone                       String?
   whatsapp                    String?
   bio                         String?
   birthdate                   String?
   gender                      String?
+  city                        String?
+  country                     String?  @default("Venezuela")
   customerType                String   @default("PERSON") // PERSON or COMPANY
   companyName                 String?
   taxId                       String?
@@ -396,6 +400,10 @@ model CompanySettings {
   heroVideoUrl         String?
   heroVideoTitle       String?
   heroVideoDescription String?
+
+  // Page-Specific Content
+  coursesDescription   String?
+  servicesDescription  String?
 
   // Homepage Display Settings
   maxFeaturedProducts Int @default(8)

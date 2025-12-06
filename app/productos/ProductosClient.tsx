@@ -208,8 +208,8 @@ export default function ProductosClient({ initialProducts, initialCategories }: 
         {/* Products Grid */}
         <div className="flex-1">
           {currentProducts.length === 0 ? (
-            <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/50 p-16 text-center shadow-2xl">
-              <div className="relative">
+            <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/50 px-12 py-12 text-center shadow-2xl w-full">
+              <div className="relative w-full max-w-4xl mx-auto">
                 <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                   <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -218,8 +218,8 @@ export default function ProductosClient({ initialProducts, initialCategories }: 
                 <h3 className="text-2xl font-bold text-[#212529] mb-3">
                   No se encontraron productos
                 </h3>
-                <p className="text-[#6a6c6b] mb-6 max-w-2xl mx-auto">
-                  Intenta ajustar tus filtros o buscar con otros términos. ¿No encuentras lo que buscas?
+                <p className="text-[#6a6c6b] mb-6 text-base leading-normal block w-full">
+                  Ajusta tus filtros o busca con otros términos.
                 </p>
                 <Link
                   href="/solicitar-producto"

@@ -15,9 +15,13 @@ interface CompanySettings {
 }
 
 export default function PublicHeader({ settings }: { settings?: CompanySettings | null }) {
+  // Initialize state with settings to prevent hydration mismatch
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(settings || null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+
     if (settings) return; // Don't fetch if settings are provided
 
     const fetchSettings = async () => {
@@ -45,7 +49,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   const secondaryColor = companySettings?.secondaryColor || '#1e4ba3';
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-[#e9ecef] shadow-sm">
+    <header className="sticky top-0 z-50 bg-white border-b border-[#e9ecef] shadow-sm" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo - Enhanced and Larger */}
@@ -60,6 +64,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                   priority
                   quality={100}
                   sizes="56px"
+                  unoptimized
                 />
               </div>
             )}

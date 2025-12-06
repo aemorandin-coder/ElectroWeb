@@ -122,7 +122,8 @@ export async function PUT(request: NextRequest) {
       'stat2Label', 'stat2Value', 'stat2Icon',
       'stat3Label', 'stat3Value', 'stat3Icon',
       'stat4Label', 'stat4Value', 'stat4Icon',
-      'ctaTitle', 'ctaDescription', 'ctaButtonText', 'ctaButtonLink'
+      'ctaTitle', 'ctaDescription', 'ctaButtonText', 'ctaButtonLink',
+      'coursesDescription', 'servicesDescription'
     ];
 
     stringFields.forEach(field => {

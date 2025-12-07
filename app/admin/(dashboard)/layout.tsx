@@ -393,15 +393,32 @@ export default function AdminLayout({
             </div>
           </header>
 
-          {/* Page Content */}
-          <main className="p-6">
+          {/* Page Content with Smooth Transition */}
+          <main className="p-6 overflow-hidden relative">
+            {/* Shimmer Effect on Transition */}
             <div
-              className={`bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/30 h-[calc(100vh-8rem)] overflow-y-auto p-6 transition-all duration-400 ${isTransitioning
-                ? 'opacity-0 scale-[0.98] translate-y-2'
-                : 'opacity-100 scale-100 translate-y-0'
-                }`}
+              className="absolute inset-6 rounded-xl pointer-events-none z-10 overflow-hidden"
               style={{
-                transition: 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                opacity: isTransitioning ? 1 : 0,
+                transition: 'opacity 0.3s ease-out'
+              }}
+            >
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-[#2a63cd]/5 to-transparent"
+                style={{
+                  transform: isTransitioning ? 'translateX(100%)' : 'translateX(-100%)',
+                  transition: 'transform 0.5s ease-out'
+                }}
+              />
+            </div>
+
+            {/* Content Container with Smooth Transitions */}
+            <div
+              className="bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/30 h-[calc(100vh-8rem)] overflow-y-auto p-6"
+              style={{
+                opacity: isTransitioning ? 0 : 1,
+                transform: isTransitioning ? 'translateY(8px) scale(0.99)' : 'translateY(0) scale(1)',
+                transition: 'opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
               {children}

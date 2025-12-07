@@ -174,7 +174,7 @@ export default function LoginPage() {
   const restName = companyNameParts.slice(1).join(' ') || 'Morandin';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-4 relative overflow-hidden">
       {/* Back to Home Button */}
       <Link
         href="/"
@@ -196,11 +196,11 @@ export default function LoginPage() {
       {/* Grid Pattern Overlay */}
       <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
 
-      <div className="w-full max-w-[450px] relative z-10">
-        {/* Logo and Brand Section */}
-        <div className="text-center mb-8 animate-fadeIn">
+      <div className="w-full max-w-[450px] relative z-10 -mt-[10%]">
+        {/* Logo Section - Only Logo, no text */}
+        <div className="text-center mb-4 animate-fadeIn">
           {companySettings?.logo ? (
-            <div className="relative w-32 h-32 mx-auto mb-6 animate-scaleIn drop-shadow-2xl filter brightness-110">
+            <div className="relative w-36 h-36 mx-auto animate-scaleIn drop-shadow-2xl filter brightness-110">
               <Image
                 src={companySettings.logo}
                 alt={companyName}
@@ -210,18 +210,12 @@ export default function LoginPage() {
               />
             </div>
           ) : (
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-md mb-6 shadow-2xl border border-white/30 animate-scaleIn">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md shadow-2xl border border-white/30 animate-scaleIn">
+              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
           )}
-          <h1 className="text-3xl font-black text-white tracking-tight mb-2 drop-shadow-lg font-[family-name:var(--font-tektur)]">
-            {firstName} <span className="text-cyan-200">{restName}</span>
-          </h1>
-          <p className="text-white/90 text-sm font-medium w-full mx-auto leading-relaxed">
-            Bienvenido de nuevo
-          </p>
         </div>
 
         {/* Login Card - Premium Glass Effect */}

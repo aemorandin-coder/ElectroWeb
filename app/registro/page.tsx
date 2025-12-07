@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import EpicTooltip from '@/components/EpicTooltip';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 const COUNTRY_CODES = [
   { code: '+58', country: 'Venezuela', iso: 've' },
@@ -34,6 +35,7 @@ export default function RegisterPage() {
   const [countryCode, setCountryCode] = useState('+58');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const captchaRef = useRef<HCaptcha>(null);
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +44,7 @@ export default function RegisterPage() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [companySettings, setCompanySettings] = useState<{
     companyName: string;
     logo: string | null;
@@ -90,6 +93,12 @@ export default function RegisterPage() {
       case 'name':
         if (!value || value.trim() === '') return 'Por favor, ingresa tu nombre completo';
         if (value.trim().length < 3) return 'El nombre debe tener al menos 3 caracteres';
+        // Validate: only letters, spaces, and ONE comma allowed
+        const commaCount = (value.match(/,/g) || []).length;
+        if (commaCount > 1) return 'Solo se permite una coma para separar apellidos';
+        // Check for invalid characters (anything that's not a letter, space, accent, or comma)
+        const nameRegex = /^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s,]+$/;
+        if (!nameRegex.test(value)) return 'Solo letras y una coma son permitidos';
         return '';
 
       case 'email':
@@ -100,7 +109,10 @@ export default function RegisterPage() {
 
       case 'phone':
         if (!value || value.trim() === '') return 'Por favor, ingresa tu número de teléfono';
-        if (value.trim().length < 7) return 'Ingresa un número de teléfono válido';
+        if (value.trim().length < 7) return 'Ingresa un número de teléfono válido (mín. 7 dígitos)';
+        if (value.trim().length > 11) return 'El número no puede exceder 11 dígitos';
+        // Phone must be only numbers
+        if (!/^\d+$/.test(value)) return 'Solo se permiten números';
         return '';
 
       case 'password':
@@ -128,12 +140,38 @@ export default function RegisterPage() {
     setValidationErrors(prev => ({ ...prev, [fieldName]: error }));
   };
 
+  // Handler to clear tooltip after auto-hide
+  const handleTooltipHide = (fieldName: string) => {
+    setTouchedFields(prev => ({ ...prev, [fieldName]: false }));
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
 
-    // Name validation: No numbers allowed
+    // Name validation: Only letters, spaces, accents, and ONE comma allowed
     if (name === 'name') {
-      if (/\d/.test(value)) return; // Ignore if contains numbers
+      // Count commas in the new value
+      const commaCount = (value.match(/,/g) || []).length;
+      // Check if last character is invalid
+      const lastChar = value.slice(-1);
+      const isValidChar = /^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s,]$/.test(lastChar) || lastChar === '';
+
+      // Reject if trying to add more than one comma or invalid character
+      if (commaCount > 1 || !isValidChar) {
+        return;
+      }
+    }
+
+    // Phone validation: Only numbers, max 11 characters
+    if (name === 'phone') {
+      // Only allow digits
+      if (value && !/^\d*$/.test(value)) {
+        return;
+      }
+      // Max 11 characters
+      if (value.length > 11) {
+        return;
+      }
     }
 
     const newValue = type === 'checkbox' ? checked : value;
@@ -156,9 +194,23 @@ export default function RegisterPage() {
     setError('');
   };
 
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Check CAPTCHA first
+    if (!captchaToken) {
+      setError('Por favor, completa la verificación de seguridad.');
+      return;
+    }
 
     // Validate fields in order and show only the FIRST error
     const allFields = ['name', 'email', 'phone', 'password', 'confirmPassword', 'acceptTerms'];
@@ -198,6 +250,7 @@ export default function RegisterPage() {
           email: formData.email,
           phone: fullPhone,
           password: formData.password,
+          captchaToken,
         }),
       });
 
@@ -229,20 +282,20 @@ export default function RegisterPage() {
     } catch (err) {
       console.error('Registration error:', err);
       setError(err instanceof Error ? err.message : 'Error al registrar usuario. Intente nuevamente.');
+      // Reset captcha on error
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
   };
 
   const companyName = companySettings?.companyName || 'Electro Shop Morandin';
-  const companyNameParts = companyName.split(' ');
-  const firstName = companyNameParts[0] || 'Electro Shop';
-  const restName = companyNameParts.slice(1).join(' ') || 'Morandin';
 
   const selectedCountry = COUNTRY_CODES.find(c => c.code === countryCode) || COUNTRY_CODES[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-6 relative overflow-hidden">
       {/* Back to Home Button */}
       <Link
         href="/"
@@ -264,11 +317,11 @@ export default function RegisterPage() {
       {/* Grid Pattern Overlay - Using CSS class instead of missing SVG */}
       <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
 
-      <div className="w-full max-w-[500px] relative z-10">
-        {/* Logo and Brand Section */}
-        <div className="text-center mb-8 animate-fadeIn">
+      <div className="w-full max-w-[500px] relative z-10 -mt-[5%]">
+        {/* Logo Section - Only Logo, no text */}
+        <div className="text-center mb-4 animate-fadeIn">
           {companySettings?.logo ? (
-            <div className="relative w-40 h-40 mx-auto mb-6 animate-scaleIn drop-shadow-2xl filter brightness-110">
+            <div className="relative w-36 h-36 mx-auto animate-scaleIn drop-shadow-2xl filter brightness-110">
               <Image
                 src={companySettings.logo}
                 alt={companyName}
@@ -278,18 +331,12 @@ export default function RegisterPage() {
               />
             </div>
           ) : (
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md mb-6 shadow-2xl border border-white/30 animate-scaleIn">
+            <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md shadow-2xl border border-white/30 animate-scaleIn">
               <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
           )}
-          <h1 className="text-4xl font-black text-white tracking-tight mb-3 drop-shadow-lg font-[family-name:var(--font-tektur)]">
-            {firstName} <span className="text-cyan-200">{restName}</span>
-          </h1>
-          <p className="text-white/90 text-base font-medium w-full mx-auto leading-relaxed">
-            Únete a la plataforma líder en tecnología y electrónica.
-          </p>
         </div>
 
         {/* Register Card - Premium Glass Effect matching Homepage Hero Cards */}
@@ -301,11 +348,27 @@ export default function RegisterPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Name Field */}
+              {/* Name Field with Tooltip */}
               <div className="space-y-1.5">
-                <label htmlFor="name" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
-                  Nombre Completo
-                </label>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="name" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                    Nombre Completo
+                  </label>
+                  {/* Info Tooltip for Name Format */}
+                  <div className="relative group/info">
+                    <button type="button" className="w-4 h-4 rounded-full bg-cyan-500/30 text-cyan-200 flex items-center justify-center text-xs font-bold hover:bg-cyan-500/50 transition-colors">
+                      ?
+                    </button>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-[#1e293b] border border-cyan-500/30 rounded-xl shadow-2xl opacity-0 group-hover/info:opacity-100 transition-opacity duration-300 pointer-events-none z-50 backdrop-blur-xl">
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1e293b] border-b border-r border-cyan-500/30 transform rotate-45"></div>
+                      <p className="text-xs text-blue-100 leading-relaxed">
+                        <span className="font-bold text-cyan-300">Formato:</span> Nombre Apellido<br />
+                        <span className="text-white/70">Puedes usar una coma para separar apellidos.</span><br />
+                        <span className="text-cyan-200">Ej: Juan Pérez, García</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <div className="relative group">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200 group-focus-within:text-white transition-colors duration-200">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,6 +382,7 @@ export default function RegisterPage() {
                     value={formData.name}
                     onChange={handleChange}
                     onBlur={() => handleBlur('name')}
+                    autoFocus
                     className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200"
                     placeholder="Ej. Juan Pérez"
                     disabled={isLoading}
@@ -327,6 +391,8 @@ export default function RegisterPage() {
                     message={validationErrors.name || ''}
                     visible={touchedFields.name && !!validationErrors.name}
                     position="bottom"
+                    autoHideDelay={3000}
+                    onHide={() => handleTooltipHide('name')}
                   />
                 </div>
               </div>
@@ -358,15 +424,20 @@ export default function RegisterPage() {
                     message={validationErrors.email || ''}
                     visible={touchedFields.email && !!validationErrors.email}
                     position="bottom"
+                    autoHideDelay={3000}
+                    onHide={() => handleTooltipHide('email')}
                   />
                 </div>
               </div>
 
               {/* Phone Field with Country Picker */}
               <div className="space-y-1.5">
-                <label htmlFor="phone" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
-                  Teléfono
-                </label>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="phone" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                    Teléfono
+                  </label>
+                  <span className="text-[10px] text-blue-200/70">(Solo números, máx. 11 dígitos)</span>
+                </div>
                 <div className="flex gap-2">
                   {/* Country Dropdown */}
                   <div className="relative" ref={dropdownRef}>
@@ -428,18 +499,23 @@ export default function RegisterPage() {
                       id="phone"
                       name="phone"
                       type="tel"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={11}
                       value={formData.phone}
                       onChange={handleChange}
                       onBlur={() => handleBlur('phone')}
                       autoComplete="tel"
                       className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200"
-                      placeholder="412 1234567"
+                      placeholder="4121234567"
                       disabled={isLoading}
                     />
                     <EpicTooltip
                       message={validationErrors.phone || ''}
                       visible={touchedFields.phone && !!validationErrors.phone}
                       position="bottom"
+                      autoHideDelay={3000}
+                      onHide={() => handleTooltipHide('phone')}
                     />
                   </div>
                 </div>
@@ -510,6 +586,8 @@ export default function RegisterPage() {
                     message={validationErrors.password || ''}
                     visible={touchedFields.password && !!validationErrors.password}
                     position="bottom"
+                    autoHideDelay={3000}
+                    onHide={() => handleTooltipHide('password')}
                   />
                 </div>
                 {/* Password Strength Meter */}
@@ -581,6 +659,8 @@ export default function RegisterPage() {
                     message={validationErrors.confirmPassword || ''}
                     visible={touchedFields.confirmPassword && !!validationErrors.confirmPassword}
                     position="bottom"
+                    autoHideDelay={3000}
+                    onHide={() => handleTooltipHide('confirmPassword')}
                   />
                 </div>
               </div>
@@ -604,6 +684,8 @@ export default function RegisterPage() {
                       message={validationErrors.acceptTerms || ''}
                       visible={touchedFields.acceptTerms && !!validationErrors.acceptTerms}
                       position="right"
+                      autoHideDelay={3000}
+                      onHide={() => handleTooltipHide('acceptTerms')}
                     />
                   </div>
                   <span className="text-sm text-blue-100 group-hover:text-white transition-colors">
@@ -630,6 +712,19 @@ export default function RegisterPage() {
                 </label>
               </div>
 
+              {/* hCaptcha */}
+              <div className="flex justify-center pt-2">
+                <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                  <HCaptcha
+                    sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
+                    onVerify={handleCaptchaVerify}
+                    onExpire={handleCaptchaExpire}
+                    ref={captchaRef}
+                    theme="dark"
+                  />
+                </div>
+              </div>
+
               {/* Error Message */}
               {error && (
                 <div className="flex items-start gap-3 p-4 bg-red-500/20 border border-red-500/30 rounded-xl animate-shake backdrop-blur-sm">
@@ -645,7 +740,7 @@ export default function RegisterPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !captchaToken}
                 className="group relative w-full bg-white text-[#2a63cd] font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none overflow-hidden"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2 text-base">
@@ -682,7 +777,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-8 text-center">
+        <div className="mt-6 text-center">
           <p className="text-xs text-blue-200/80">
             &copy; {new Date().getFullYear()} {companyName}. Todos los derechos reservados.
           </p>

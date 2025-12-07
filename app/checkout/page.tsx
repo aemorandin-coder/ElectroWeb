@@ -60,6 +60,14 @@ export default function CheckoutPage() {
   // Tooltip for client data warning
   const [showClientDataTooltip, setShowClientDataTooltip] = useState(false);
 
+  // Success modal state
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successOrderData, setSuccessOrderData] = useState<{
+    orderNumber: string;
+    total: number;
+    items: Array<{ name: string; quantity: number }>;
+  } | null>(null);
+
   // Load company settings for exchange rates
   useEffect(() => {
     fetch('/api/settings/public')
@@ -145,7 +153,25 @@ export default function CheckoutPage() {
   }, [status, router]);
 
   const totalPrice = getTotalPrice();
-  const shippingCost = formData.deliveryMethod === 'SHIPPING' ? 10 : 0;
+
+  // Calculate shipping cost from settings
+  const getShippingCost = () => {
+    if (formData.deliveryMethod !== 'SHIPPING' && formData.deliveryMethod !== 'HOME_DELIVERY') {
+      return 0; // Free for pickup
+    }
+
+    const configuredFee = companySettings?.deliveryFeeUSD ? Number(companySettings.deliveryFeeUSD) : 10;
+    const freeThreshold = companySettings?.freeDeliveryThresholdUSD ? Number(companySettings.freeDeliveryThresholdUSD) : null;
+
+    // Check if order qualifies for free shipping
+    if (freeThreshold && totalPrice >= freeThreshold) {
+      return 0;
+    }
+
+    return configuredFee;
+  };
+
+  const shippingCost = getShippingCost();
   const finalTotal = totalPrice + shippingCost;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -227,8 +253,18 @@ export default function CheckoutPage() {
       // Clear cart
       clearCart();
 
-      // Redirect to success page
-      router.push(`/mis-pedidos`);
+      // Set success data and show modal
+      setSuccessOrderData({
+        orderNumber: order.orderNumber,
+        total: finalTotal,
+        items: items.map(item => ({ name: item.name, quantity: item.quantity }))
+      });
+      setShowSuccessModal(true);
+
+      // Redirect after 5 seconds
+      setTimeout(() => {
+        router.push('/customer/orders');
+      }, 5000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
@@ -1532,6 +1568,168 @@ export default function CheckoutPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Epic Success Modal */}
+      {showSuccessModal && successOrderData && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 animate-fadeIn">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a]/95 via-[#2563eb]/95 to-[#2a63cd]/95 backdrop-blur-xl" />
+
+          {/* Animated Background Particles */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-green-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+          </div>
+
+          <div className="relative z-10 bg-white/10 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl w-full max-w-lg p-8 animate-scaleInBounce">
+            {/* Animated Checkmark */}
+            <div className="w-28 h-28 mx-auto mb-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full animate-pulse shadow-2xl shadow-emerald-500/30"></div>
+              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                <circle
+                  cx="50" cy="50" r="40"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.3)"
+                  strokeWidth="4"
+                />
+                <circle
+                  cx="50" cy="50" r="40"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="4"
+                  strokeDasharray="251.2"
+                  strokeDashoffset="251.2"
+                  strokeLinecap="round"
+                  className="animate-drawCircle"
+                />
+                <path
+                  d="M30 52 L45 67 L70 35"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray="70"
+                  strokeDashoffset="70"
+                  className="animate-drawCheck"
+                />
+              </svg>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-3xl font-black text-white text-center mb-2 animate-slideUp">
+              ¡Gracias por tu compra! 🎉
+            </h2>
+
+            {/* Order Number */}
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-4 mb-6 animate-slideUp" style={{ animationDelay: '0.2s' }}>
+              <p className="text-center text-blue-100 text-sm mb-1">Número de Orden</p>
+              <p className="text-center text-2xl font-black text-white tracking-wider">
+                {successOrderData.orderNumber}
+              </p>
+            </div>
+
+            {/* Products Summary */}
+            <div className="mb-6 animate-slideUp" style={{ animationDelay: '0.3s' }}>
+              <p className="text-white/80 text-sm mb-3 text-center">Productos en tu pedido:</p>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {successOrderData.items.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between px-4 py-2 bg-white/5 rounded-xl">
+                    <span className="text-white text-sm truncate flex-1">{item.name}</span>
+                    <span className="text-cyan-200 text-sm font-bold ml-2">x{item.quantity}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Total */}
+            <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 rounded-2xl border border-white/10 mb-6 animate-slideUp" style={{ animationDelay: '0.4s' }}>
+              <span className="text-white font-medium">Total pagado</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-xs font-bold text-white/60">USD</span>
+                <span className="text-2xl font-black text-white">{successOrderData.total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Info Banner */}
+            <div className="bg-blue-500/20 backdrop-blur-md rounded-xl border border-blue-400/30 p-4 mb-6 animate-slideUp" style={{ animationDelay: '0.5s' }}>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FiCheck className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-medium mb-1">
+                    Recibirás confirmación por correo y notificaciones en la plataforma
+                  </p>
+                  <p className="text-blue-200 text-xs">
+                    Ve a <strong className="text-white">Mi Perfil → Mis Pedidos</strong> para hacer seguimiento
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-4">
+              <p className="text-center text-white/60 text-xs mb-2">Redirigiendo a tus pedidos...</p>
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-white rounded-full animate-progressBar"></div>
+              </div>
+            </div>
+
+            {/* Button */}
+            <button
+              onClick={() => router.push('/customer/orders')}
+              className="w-full py-4 bg-white text-[#2a63cd] font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Ver Mis Pedidos Ahora
+            </button>
+          </div>
+
+          <style jsx>{`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes drawCircle {
+              to { stroke-dashoffset: 0; }
+            }
+            @keyframes drawCheck {
+              to { stroke-dashoffset: 0; }
+            }
+            @keyframes scaleInBounce {
+              0% { opacity: 0; transform: scale(0.8); }
+              50% { transform: scale(1.02); }
+              100% { opacity: 1; transform: scale(1); }
+            }
+            @keyframes slideUp {
+              from { opacity: 0; transform: translateY(20px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes progressBar {
+              from { width: 0%; }
+              to { width: 100%; }
+            }
+            .animate-fadeIn {
+              animation: fadeIn 0.3s ease-out;
+            }
+            .animate-drawCircle {
+              animation: drawCircle 0.8s ease-out 0.3s forwards;
+            }
+            .animate-drawCheck {
+              animation: drawCheck 0.5s ease-out 0.9s forwards;
+            }
+            .animate-scaleInBounce {
+              animation: scaleInBounce 0.5s ease-out;
+            }
+            .animate-slideUp {
+              animation: slideUp 0.6s ease-out both;
+            }
+            .animate-progressBar {
+              animation: progressBar 5s linear;
+            }
+          `}</style>
         </div>
       )}
 

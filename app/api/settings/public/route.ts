@@ -105,6 +105,13 @@ export async function GET() {
       primaryCurrency: settings.primaryCurrency || 'USD',
       exchangeRateVES: settings.exchangeRateVES ? Number(settings.exchangeRateVES) : 36.50,
       exchangeRateEUR: settings.exchangeRateEUR ? Number(settings.exchangeRateEUR) : 0.92,
+      // Shipping & Delivery Settings
+      deliveryEnabled: settings.deliveryEnabled,
+      deliveryFeeUSD: settings.deliveryFeeUSD ? Number(settings.deliveryFeeUSD) : 0,
+      freeDeliveryThresholdUSD: settings.freeDeliveryThresholdUSD ? Number(settings.freeDeliveryThresholdUSD) : null,
+      pickupEnabled: settings.pickupEnabled,
+      pickupAddress: settings.pickupAddress,
+      pickupInstructions: settings.pickupInstructions,
       // Hero Video Settings
       heroVideoEnabled: settings.heroVideoEnabled,
       heroVideoUrl: settings.heroVideoUrl,

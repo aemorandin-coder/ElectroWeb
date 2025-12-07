@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { FiCheck, FiCheckCircle, FiFilter } from 'react-icons/fi';
+import Link from 'next/link';
+import { FiBell, FiCheck, FiCheckCircle, FiFilter } from 'react-icons/fi';
 import { useNotifications } from './NotificationProvider';
 import NotificationItem from './NotificationItem';
 
@@ -38,8 +39,8 @@ export default function NotificationCenter({ onClose }: NotificationCenterProps)
                     <button
                         onClick={() => setFilter('all')}
                         className={`flex-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${filter === 'all'
-                                ? 'bg-white text-[#2a63cd]'
-                                : 'bg-white/10 text-white hover:bg-white/20'
+                            ? 'bg-white text-[#2a63cd]'
+                            : 'bg-white/10 text-white hover:bg-white/20'
                             }`}
                     >
                         Todas
@@ -47,8 +48,8 @@ export default function NotificationCenter({ onClose }: NotificationCenterProps)
                     <button
                         onClick={() => setFilter('unread')}
                         className={`flex-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${filter === 'unread'
-                                ? 'bg-white text-[#2a63cd]'
-                                : 'bg-white/10 text-white hover:bg-white/20'
+                            ? 'bg-white text-[#2a63cd]'
+                            : 'bg-white/10 text-white hover:bg-white/20'
                             }`}
                     >
                         No leídas
@@ -101,12 +102,13 @@ export default function NotificationCenter({ onClose }: NotificationCenterProps)
             {/* Footer */}
             {filteredNotifications.length > 0 && (
                 <div className="p-3 border-t border-gray-200 bg-gray-50">
-                    <button
+                    <Link
+                        href="/customer/notifications"
                         onClick={onClose}
-                        className="w-full px-4 py-2 text-sm font-medium text-[#2a63cd] hover:bg-gray-100 rounded-lg transition-colors"
+                        className="block w-full px-4 py-2 text-sm font-medium text-[#2a63cd] hover:bg-gray-100 rounded-lg transition-colors text-center"
                     >
                         Ver todas las notificaciones
-                    </button>
+                    </Link>
                 </div>
             )}
 
@@ -128,6 +130,3 @@ export default function NotificationCenter({ onClose }: NotificationCenterProps)
         </div>
     );
 }
-
-// Import FiBell
-import { FiBell } from 'react-icons/fi';

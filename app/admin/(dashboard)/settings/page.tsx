@@ -818,6 +818,127 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          {/* Shipping & Delivery */}
+          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+              <FiTruck className="text-blue-600" />
+              <h3 className="font-semibold text-gray-900">Envío y Entrega</h3>
+            </div>
+            <div className="p-6 space-y-5">
+              {/* Delivery Toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-sm font-medium text-gray-700">Habilitar Envío a Domicilio</span>
+                  <p className="text-xs text-gray-500">Permite a los clientes recibir productos en su dirección</p>
+                </div>
+                <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
+                  <input
+                    type="checkbox"
+                    name="deliveryEnabled"
+                    id="deliveryEnabled"
+                    checked={formData.deliveryEnabled}
+                    onChange={handleInputChange}
+                    className="opacity-0 w-0 h-0 peer"
+                  />
+                  <label
+                    htmlFor="deliveryEnabled"
+                    className="absolute top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full cursor-pointer peer-checked:bg-blue-600 transition-all duration-300 before:content-[''] before:absolute before:w-3 before:h-3 before:bg-white before:rounded-full before:left-1 before:bottom-1 peer-checked:before:translate-x-5 before:transition-transform"
+                  ></label>
+                </div>
+              </div>
+
+              {formData.deliveryEnabled && (
+                <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 space-y-4 animate-fadeIn">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Costo de Envío (USD)</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
+                        <input
+                          type="number"
+                          name="deliveryFeeUSD"
+                          value={formData.deliveryFeeUSD}
+                          onChange={handleInputChange}
+                          step="0.01"
+                          min="0"
+                          className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          placeholder="10.00"
+                        />
+                      </div>
+                      <p className="text-[10px] text-gray-500 mt-1">Costo fijo para envíos a domicilio</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Envío Gratis desde (USD)</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
+                        <input
+                          type="number"
+                          name="freeDeliveryThresholdUSD"
+                          value={formData.freeDeliveryThresholdUSD || ''}
+                          onChange={handleInputChange}
+                          step="0.01"
+                          min="0"
+                          className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          placeholder="100.00"
+                        />
+                      </div>
+                      <p className="text-[10px] text-gray-500 mt-1">Dejar vacío para no ofrecer envío gratis</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Pickup Toggle */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div>
+                  <span className="text-sm font-medium text-gray-700">Habilitar Retiro en Tienda</span>
+                  <p className="text-xs text-gray-500">Permite a los clientes recoger sus pedidos</p>
+                </div>
+                <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
+                  <input
+                    type="checkbox"
+                    name="pickupEnabled"
+                    id="pickupEnabled"
+                    checked={formData.pickupEnabled}
+                    onChange={handleInputChange}
+                    className="opacity-0 w-0 h-0 peer"
+                  />
+                  <label
+                    htmlFor="pickupEnabled"
+                    className="absolute top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full cursor-pointer peer-checked:bg-blue-600 transition-all duration-300 before:content-[''] before:absolute before:w-3 before:h-3 before:bg-white before:rounded-full before:left-1 before:bottom-1 peer-checked:before:translate-x-5 before:transition-transform"
+                  ></label>
+                </div>
+              </div>
+
+              {formData.pickupEnabled && (
+                <div className="bg-green-50/50 p-4 rounded-lg border border-green-100 space-y-4 animate-fadeIn">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Dirección de Retiro</label>
+                    <input
+                      type="text"
+                      name="pickupAddress"
+                      value={formData.pickupAddress}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                      placeholder="Av. Principal, Local #123, Ciudad"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Instrucciones de Retiro</label>
+                    <textarea
+                      name="pickupInstructions"
+                      value={formData.pickupInstructions}
+                      onChange={handleInputChange}
+                      rows={2}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                      placeholder="Horario de atención, documentos requeridos, etc."
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Maintenance Mode - High Visibility */}
           <div className={`rounded-xl shadow-md border overflow-hidden transition-all duration-300 ${formData.maintenanceMode ? 'bg-amber-50 border-amber-300 shadow-amber-100' : 'bg-white border-gray-200'}`}>
             <div className="p-4 border-b border-gray-100/50 flex items-center justify-between">

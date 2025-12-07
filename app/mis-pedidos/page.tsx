@@ -20,12 +20,12 @@ interface Order {
   id: string;
   orderNumber: string;
   status: string;
-  total: number;
+  totalUSD: number;
   currency: string;
   createdAt: string;
   items: OrderItem[];
   paymentMethod: string | null;
-  deliveryMethod: string;
+  deliveryMethod: string | null;
 }
 
 export default function MisPedidosPage() {
@@ -57,7 +57,17 @@ export default function MisPedidosPage() {
       if (!response.ok) throw new Error('Error al cargar pedidos');
 
       const data = await response.json();
-      setOrders(data);
+      // Parse numbers correctly
+      const parsedOrders = (data || []).map((order: any) => ({
+        ...order,
+        totalUSD: Number(order.totalUSD) || 0,
+        items: order.items?.map((item: any) => ({
+          ...item,
+          pricePerUnit: Number(item.priceUSD) || 0,
+          subtotal: Number(item.totalUSD) || 0,
+        })) || []
+      }));
+      setOrders(parsedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -171,8 +181,8 @@ export default function MisPedidosPage() {
                   key={status}
                   onClick={() => setFilter(status)}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filter === status
-                      ? 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white shadow-lg'
-                      : 'bg-[#f8f9fa] text-[#6a6c6b] hover:bg-[#e9ecef]'
+                    ? 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white shadow-lg'
+                    : 'bg-[#f8f9fa] text-[#6a6c6b] hover:bg-[#e9ecef]'
                     }`}
                 >
                   {status === 'all' ? 'Todos' : getStatusText(status)}
@@ -223,7 +233,7 @@ export default function MisPedidosPage() {
                         <div className="flex items-baseline gap-1">
                           <span className="text-xs font-bold text-[#212529] opacity-60">USD</span>
                           <span className="text-xl font-bold text-[#212529]">
-                            {Number(order.total).toFixed(2).replace('.', ',')}
+                            {order.totalUSD.toFixed(2).replace('.', ',')}
                           </span>
                         </div>
                       </div>
@@ -277,7 +287,7 @@ export default function MisPedidosPage() {
                         )}
                         <p>
                           <span className="font-semibold">Entrega:</span>{' '}
-                          {order.deliveryMethod.replace('_', ' ').toUpperCase()}
+                          {order.deliveryMethod ? order.deliveryMethod.replace('_', ' ').toUpperCase() : 'N/A'}
                         </p>
                       </div>
                       <button className="px-4 py-2 bg-[#f8f9fa] hover:bg-[#e9ecef] text-[#212529] font-semibold rounded-lg transition-colors border border-[#dee2e6]">

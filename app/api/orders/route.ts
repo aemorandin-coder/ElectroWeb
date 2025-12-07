@@ -392,13 +392,52 @@ export async function PATCH(request: NextRequest) {
       updateData.paidAt = new Date();
     }
 
-    // Handle order status-specific updates
-    if (body.status === OrderStatus.SHIPPED && oldOrder.status !== OrderStatus.SHIPPED) {
-      updateData.shippedAt = new Date();
-    } else if (body.status === OrderStatus.DELIVERED && oldOrder.status !== OrderStatus.DELIVERED) {
-      updateData.deliveredAt = new Date();
-    } else if (body.status === OrderStatus.CANCELLED && oldOrder.status !== OrderStatus.CANCELLED) {
-      updateData.cancelledAt = new Date();
+    // Handle order status-specific updates with timestamps
+    if (body.status && body.status !== oldOrder.status) {
+      switch (body.status) {
+        case 'CONFIRMED':
+          updateData.confirmedAt = new Date();
+          break;
+        case 'PROCESSING':
+          updateData.processingAt = new Date();
+          break;
+        case 'SHIPPED':
+          updateData.shippedAt = new Date();
+          // Validate shipping info is provided when marking as shipped
+          if (!body.trackingNumber && !body.shippingCarrier) {
+            // Allow shipping without tracking for store pickup
+            if ((oldOrder as any).deliveryMethod !== 'STORE_PICKUP') {
+              // We'll allow it but it's recommended
+            }
+          }
+          break;
+        case 'READY_FOR_PICKUP':
+          updateData.shippedAt = new Date(); // Reuse shippedAt for pickup ready
+          break;
+        case 'DELIVERED':
+          updateData.deliveredAt = new Date();
+          break;
+        case 'CANCELLED':
+          updateData.cancelledAt = new Date();
+          break;
+      }
+    }
+
+    // Handle shipping info updates
+    if (body.shippingCarrier !== undefined) {
+      updateData.shippingCarrier = body.shippingCarrier;
+    }
+    if (body.trackingNumber !== undefined) {
+      updateData.trackingNumber = body.trackingNumber;
+    }
+    if (body.trackingUrl !== undefined) {
+      updateData.trackingUrl = body.trackingUrl;
+    }
+    if (body.shippingNotes !== undefined) {
+      updateData.shippingNotes = body.shippingNotes;
+    }
+    if (body.estimatedDelivery !== undefined) {
+      updateData.estimatedDelivery = body.estimatedDelivery ? new Date(body.estimatedDelivery) : null;
     }
 
     const order = await prisma.order.update({
@@ -406,6 +445,7 @@ export async function PATCH(request: NextRequest) {
       data: updateData,
       include: {
         items: true,
+        user: { select: { name: true, email: true } }
       },
     });
 
@@ -414,77 +454,125 @@ export async function PATCH(request: NextRequest) {
       await createNotification({
         userId: oldOrder.userId!,
         type: 'ORDER_PAID',
-        title: '💰 Pago Confirmado',
+        title: 'Pago Confirmado',
         message: `El pago de tu orden #${oldOrder.orderNumber} ha sido confirmado.`,
         link: `/customer/orders`,
-        icon: '💰'
+        icon: 'payment'
       });
     }
 
-    if (body.status && body.status !== oldOrder.status) {
-      if (body.status === OrderStatus.CANCELLED) {
-        await createNotification({
-          userId: oldOrder.userId!,
-          type: 'ORDER_CANCELLED',
-          title: '❌ Orden Cancelada',
-          message: `Tu orden #${oldOrder.orderNumber} ha sido cancelada. ${body.notes || ''}`,
-          link: `/customer/orders`,
-          icon: '❌'
-        });
-
-        // Restore stock if order is cancelled
-        for (const item of order.items) {
-          await prisma.product.update({
-            where: { id: item.productId },
-            data: {
-              stock: {
-                increment: item.quantity,
-              },
-            },
+    if (body.status && body.status !== oldOrder.status && oldOrder.userId) {
+      switch (body.status) {
+        case 'CONFIRMED':
+          await createNotification({
+            userId: oldOrder.userId,
+            type: 'ORDER_CONFIRMED',
+            title: 'Pedido Confirmado',
+            message: `Tu pedido #${oldOrder.orderNumber} ha sido confirmado y está siendo procesado.`,
+            link: `/customer/orders`,
+            icon: 'confirm'
           });
-        }
-      } else if (body.status === OrderStatus.SHIPPED && oldOrder.userId) {
-        await notifyOrderShipped(oldOrder.userId, oldOrder.orderNumber, order.id);
-      } else if (body.status === OrderStatus.DELIVERED && oldOrder.userId) {
-        await notifyOrderDelivered(oldOrder.userId, oldOrder.orderNumber, order.id);
-        // Send review reminder email when order is delivered
-        try {
-          const orderWithUser = await prisma.order.findUnique({
-            where: { id },
-            include: {
-              user: { select: { name: true, email: true } },
-              items: {
-                include: {
-                  product: { select: { name: true, mainImage: true, slug: true } }
+          break;
+
+        case 'PROCESSING':
+          await createNotification({
+            userId: oldOrder.userId,
+            type: 'ORDER_CONFIRMED',
+            title: 'Preparando tu Pedido',
+            message: `Tu pedido #${oldOrder.orderNumber} está siendo preparado.`,
+            link: `/customer/orders`,
+            icon: 'package'
+          });
+          break;
+
+        case 'READY_FOR_PICKUP':
+          await createNotification({
+            userId: oldOrder.userId,
+            type: 'ORDER_CONFIRMED',
+            title: 'Listo para Recoger',
+            message: `Tu pedido #${oldOrder.orderNumber} está listo para recoger en tienda.`,
+            link: `/customer/orders`,
+            icon: 'store'
+          });
+          break;
+
+        case 'SHIPPED':
+          const carrierInfo = body.shippingCarrier ? ` vía ${body.shippingCarrier}` : '';
+          const trackingInfo = body.trackingNumber ? ` - Guía: ${body.trackingNumber}` : '';
+          await notifyOrderShipped(oldOrder.userId, oldOrder.orderNumber, order.id);
+          await createNotification({
+            userId: oldOrder.userId,
+            type: 'ORDER_SHIPPED',
+            title: 'Pedido Enviado',
+            message: `Tu pedido #${oldOrder.orderNumber} ha sido enviado${carrierInfo}${trackingInfo}`,
+            link: `/customer/orders`,
+            icon: 'shipping'
+          });
+          break;
+
+        case 'DELIVERED':
+          await notifyOrderDelivered(oldOrder.userId, oldOrder.orderNumber, order.id);
+          // Send review reminder email when order is delivered
+          try {
+            const orderWithUser = await prisma.order.findUnique({
+              where: { id },
+              include: {
+                user: { select: { name: true, email: true } },
+                items: {
+                  include: {
+                    product: { select: { name: true, mainImage: true, slug: true } }
+                  }
                 }
-              }
-            },
-          });
-
-          if (orderWithUser && orderWithUser.items.length > 0 && orderWithUser.user) {
-            const companySettings = await prisma.companySettings.findFirst();
-            const firstProduct = orderWithUser.items[0].product;
-
-            const emailHtml = generateReviewReminderEmail({
-              companyName: companySettings?.companyName || 'Electro Shop',
-              companyLogo: companySettings?.logo || undefined,
-              customerName: orderWithUser.user?.name || 'Cliente',
-              orderNumber: orderWithUser.orderNumber,
-              productName: firstProduct.name,
-              productImage: firstProduct.mainImage || undefined,
-              reviewUrl: `${process.env.NEXTAUTH_URL}/productos/${firstProduct.slug}#reviews`,
+              },
             });
 
-            await sendEmail({
-              to: orderWithUser.user?.email || '',
-              subject: `¿Qué te pareció tu compra? - ${orderWithUser.orderNumber}`,
-              html: emailHtml,
+            if (orderWithUser && orderWithUser.items.length > 0 && orderWithUser.user) {
+              const companySettings = await prisma.companySettings.findFirst();
+              const firstProduct = orderWithUser.items[0].product;
+
+              const emailHtml = generateReviewReminderEmail({
+                companyName: companySettings?.companyName || 'Electro Shop',
+                companyLogo: companySettings?.logo || undefined,
+                customerName: orderWithUser.user?.name || 'Cliente',
+                orderNumber: orderWithUser.orderNumber,
+                productName: firstProduct.name,
+                productImage: firstProduct.mainImage || undefined,
+                reviewUrl: `${process.env.NEXTAUTH_URL}/productos/${firstProduct.slug}#reviews`,
+              });
+
+              await sendEmail({
+                to: orderWithUser.user?.email || '',
+                subject: `¿Qué te pareció tu compra? - ${orderWithUser.orderNumber}`,
+                html: emailHtml,
+              });
+            }
+          } catch (emailError) {
+            console.error('Error sending review reminder email:', emailError);
+          }
+          break;
+
+        case 'CANCELLED':
+          await createNotification({
+            userId: oldOrder.userId,
+            type: 'ORDER_CANCELLED',
+            title: 'Orden Cancelada',
+            message: `Tu orden #${oldOrder.orderNumber} ha sido cancelada. ${body.notes || ''}`,
+            link: `/customer/orders`,
+            icon: 'cancel'
+          });
+
+          // Restore stock if order is cancelled
+          for (const item of order.items) {
+            await prisma.product.update({
+              where: { id: item.productId },
+              data: {
+                stock: {
+                  increment: item.quantity,
+                },
+              },
             });
           }
-        } catch (emailError) {
-          console.error('Error sending review reminder email:', emailError);
-          // Don't fail the order update if email fails
-        }
+          break;
       }
     }
 

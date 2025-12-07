@@ -1,11 +1,48 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
 interface EpicTooltipProps {
     message: string;
     visible: boolean;
     position?: 'top' | 'bottom' | 'left' | 'right';
+    autoHideDelay?: number; // Delay in ms before auto-hiding (default: 3000ms)
+    onHide?: () => void; // Callback when tooltip hides
 }
 
-export default function EpicTooltip({ message, visible, position = 'bottom' }: EpicTooltipProps) {
-    if (!visible) return null;
+export default function EpicTooltip({
+    message,
+    visible,
+    position = 'bottom',
+    autoHideDelay = 3000,
+    onHide
+}: EpicTooltipProps) {
+    const [isVisible, setIsVisible] = useState(false);
+    const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+
+    useEffect(() => {
+        if (visible && message) {
+            setIsVisible(true);
+            setIsAnimatingOut(false);
+
+            // Auto-hide after delay
+            const timer = setTimeout(() => {
+                setIsAnimatingOut(true);
+                // Wait for animation to complete before fully hiding
+                setTimeout(() => {
+                    setIsVisible(false);
+                    setIsAnimatingOut(false);
+                    onHide?.();
+                }, 300);
+            }, autoHideDelay);
+
+            return () => clearTimeout(timer);
+        } else {
+            setIsVisible(false);
+        }
+    }, [visible, message, autoHideDelay, onHide]);
+
+    if (!isVisible) return null;
 
     const positionClasses = {
         top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
@@ -23,7 +60,8 @@ export default function EpicTooltip({ message, visible, position = 'bottom' }: E
 
     return (
         <div
-            className={`absolute ${positionClasses[position]} z-50 animate-fade-in`}
+            className={`absolute ${positionClasses[position]} z-50 transition-all duration-300 ${isAnimatingOut ? 'opacity-0 scale-95' : 'opacity-100 scale-100 animate-fade-in'
+                }`}
             role="alert"
         >
             <div className="relative px-4 py-2.5 bg-gradient-to-br from-red-500/90 to-red-600/90 backdrop-blur-xl border border-red-400/30 rounded-xl shadow-2xl min-w-[200px] max-w-[300px]">

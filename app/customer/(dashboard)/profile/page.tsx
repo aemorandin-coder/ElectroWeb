@@ -425,7 +425,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-3 overflow-y-auto h-full">
+    <div className="space-y-3">
       {/* Header with Save Button */}
       <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-xl p-4 text-white shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
@@ -875,14 +875,14 @@ export default function ProfilePage() {
                   <div>
                     <h2 className="text-base font-bold text-[#212529] mb-2">Información Adicional</h2>
                     <div>
-                      <label className="block text-xs font-medium text-[#212529] mb-1.5">
+                      <label className="block text-xs font-medium text-[#212529] mb-1">
                         Biografía
                       </label>
                       <textarea
                         value={profile.bio}
                         onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                        rows={2}
-                        className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] resize-none h-16"
+                        rows={1}
+                        className="w-full px-3 py-1.5 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] resize-none h-8"
                         placeholder="Cuéntanos brevemente sobre ti..."
                       />
                     </div>

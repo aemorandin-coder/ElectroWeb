@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 interface ValidationErrors {
     name?: string;
@@ -11,6 +13,7 @@ interface ValidationErrors {
 }
 
 export default function ContactForm() {
+    const { data: session } = useSession();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
@@ -23,12 +26,37 @@ export default function ContactForm() {
     });
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
     const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+    const captchaRef = useRef<HCaptcha>(null);
+    const nameInputRef = useRef<HTMLInputElement>(null);
+
+    // AutoFocus on mount
+    useEffect(() => {
+        nameInputRef.current?.focus();
+    }, []);
+
+    // Pre-fill form with user data if logged in
+    useEffect(() => {
+        if (session?.user) {
+            setFormData(prev => ({
+                ...prev,
+                name: session.user.name || prev.name,
+                email: session.user.email || prev.email,
+                phone: (session.user as { phone?: string }).phone?.replace(/^\+\d+\s*/, '') || prev.phone,
+            }));
+        }
+    }, [session]);
 
     const validateField = (fieldName: string, value: string): string => {
         switch (fieldName) {
             case 'name':
                 if (!value || value.trim() === '') return 'Por favor, ingresa tu nombre';
                 if (value.length < 2) return 'El nombre debe tener al menos 2 caracteres';
+                // Only allow letters, spaces, accents, and ONE comma
+                const commaCount = (value.match(/,/g) || []).length;
+                if (commaCount > 1) return 'Solo se permite una coma para separar apellidos';
+                const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s,]+$/;
+                if (!nameRegex.test(value)) return 'Solo se permiten letras, espacios y una coma';
                 return '';
 
             case 'email':
@@ -39,7 +67,8 @@ export default function ContactForm() {
 
             case 'phone':
                 if (!value || value.trim() === '') return 'Por favor, ingresa tu teléfono';
-                if (value.length < 7) return 'Ingresa un número válido';
+                if (value.length < 7) return 'Ingresa un número válido (mín. 7 dígitos)';
+                if (value.length > 11) return 'Máximo 11 dígitos';
                 return '';
 
             case 'subject':
@@ -66,6 +95,30 @@ export default function ContactForm() {
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
+
+        // Validation rules for specific fields
+        if (name === 'name') {
+            // Only allow letters, spaces, accents, and comma
+            const commaCount = (value.match(/,/g) || []).length;
+            if (commaCount > 1) return; // Block more than 1 comma
+            const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s,]*$/;
+            if (!nameRegex.test(value)) return;
+        }
+
+        if (name === 'phone') {
+            // Only allow numbers, max 11 digits
+            const numbersOnly = value.replace(/[^0-9]/g, '');
+            if (numbersOnly.length > 11) return;
+            setFormData(prev => ({ ...prev, [name]: numbersOnly }));
+
+            if (touchedFields[name]) {
+                const error = validateField(name, numbersOnly);
+                setValidationErrors(prev => ({ ...prev, [name]: error }));
+            }
+            setError('');
+            return;
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
 
         if (touchedFields[name]) {
@@ -75,8 +128,22 @@ export default function ContactForm() {
         setError('');
     };
 
+    const handleCaptchaVerify = (token: string) => {
+        setCaptchaToken(token);
+    };
+
+    const handleCaptchaExpire = () => {
+        setCaptchaToken(null);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Check CAPTCHA first
+        if (!captchaToken) {
+            setError('Por favor, completa la verificación de seguridad.');
+            return;
+        }
 
         // Validate all fields
         const errors: ValidationErrors = {};
@@ -98,7 +165,10 @@ export default function ContactForm() {
             const response = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    ...formData,
+                    captchaToken
+                }),
             });
 
             if (response.ok) {
@@ -112,12 +182,17 @@ export default function ContactForm() {
                 });
                 setTouchedFields({});
                 setValidationErrors({});
+                setCaptchaToken(null);
             } else {
                 const data = await response.json();
                 setError(data.error || 'Error al enviar el mensaje');
+                captchaRef.current?.resetCaptcha();
+                setCaptchaToken(null);
             }
         } catch (err) {
             setError('Error al enviar el mensaje. Por favor intenta nuevamente.');
+            captchaRef.current?.resetCaptcha();
+            setCaptchaToken(null);
         } finally {
             setLoading(false);
         }
@@ -179,9 +254,12 @@ export default function ContactForm() {
 
                     {/* Name Field */}
                     <div className="space-y-1.5">
-                        <label htmlFor="name" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
-                            Nombre Completo
-                        </label>
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="name" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                                Nombre Completo
+                            </label>
+                            <span className="text-[10px] text-blue-200/60">(Solo letras y una coma)</span>
+                        </div>
                         <div className="relative group">
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,6 +267,7 @@ export default function ContactForm() {
                                 </svg>
                             </div>
                             <input
+                                ref={nameInputRef}
                                 type="text"
                                 id="name"
                                 name="name"
@@ -241,9 +320,12 @@ export default function ContactForm() {
 
                         {/* Phone Field */}
                         <div className="space-y-1.5">
-                            <label htmlFor="phone" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
-                                Teléfono
-                            </label>
+                            <div className="flex items-center gap-1">
+                                <label htmlFor="phone" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                                    Teléfono
+                                </label>
+                                <span className="text-[10px] text-blue-200/60">(Solo números)</span>
+                            </div>
                             <div className="relative group">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,6 +336,9 @@ export default function ContactForm() {
                                     type="tel"
                                     id="phone"
                                     name="phone"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={11}
                                     value={formData.phone}
                                     onChange={handleChange}
                                     onBlur={() => handleBlur('phone', formData.phone)}
@@ -261,7 +346,7 @@ export default function ContactForm() {
                                         ? 'border-red-500/50 focus:border-red-500'
                                         : 'border-white/20 focus:border-white/40'
                                         } rounded-xl text-white placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200`}
-                                    placeholder="+58 424 1234567"
+                                    placeholder="04121234567"
                                 />
                                 {touchedFields.phone && validationErrors.phone && (
                                     <p className="absolute -bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.phone}</p>
@@ -342,11 +427,24 @@ export default function ContactForm() {
                         </div>
                     </div>
 
+                    {/* hCaptcha */}
+                    <div className="flex justify-center pt-2">
+                        <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                            <HCaptcha
+                                sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
+                                onVerify={handleCaptchaVerify}
+                                onExpire={handleCaptchaExpire}
+                                ref={captchaRef}
+                                theme="dark"
+                            />
+                        </div>
+                    </div>
+
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={loading}
-                        className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-2xl hover:shadow-[#2a63cd]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-2"
+                        disabled={loading || !captchaToken}
+                        className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white text-[#2a63cd] font-bold rounded-xl hover:bg-white/90 hover:shadow-2xl hover:shadow-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-2"
                     >
                         {loading ? (
                             <>

@@ -274,13 +274,23 @@ model Order {
   exchangeRateVES Decimal?
   exchangeRateEUR Decimal?
 
+  // Delivery Method
+  deliveryMethod  String?   // HOME_DELIVERY, STORE_PICKUP
+
   // Shipping Info
   shippingAddress String
+  shippingCarrier String?   // ZOOM, MRW, TEALCA, DOMESA, OTHER
   trackingNumber  String?
+  trackingUrl     String?   // URL de seguimiento del carrier
+  shippingNotes   String?   // Notas adicionales de envío (oficina, agencia, etc.)
+  estimatedDelivery DateTime? // Fecha estimada de entrega
 
   notes         String?
+  adminNotes    String?     // Notas internas del admin
 
   // Status Timestamps
+  confirmedAt   DateTime?   // Cuando el admin confirma el pedido
+  processingAt  DateTime?   // Cuando comienza a prepararse
   paidAt        DateTime?
   shippedAt     DateTime?
   deliveredAt   DateTime?
@@ -295,12 +305,15 @@ model Order {
 }
 
 enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-  REFUNDED
+  PENDING           // Pedido recibido, esperando confirmación
+  CONFIRMED         // Confirmado por el admin
+  PAID              // Pagado (puede ser antes o después de confirmar)
+  PROCESSING        // En preparación
+  READY_FOR_PICKUP  // Listo para recoger (si es STORE_PICKUP)
+  SHIPPED           // Enviado (con info de guía)
+  DELIVERED         // Entregado
+  CANCELLED         // Cancelado
+  REFUNDED          // Reembolsado
 }
 
 enum PaymentStatus {

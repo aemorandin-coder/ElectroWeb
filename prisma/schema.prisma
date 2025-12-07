@@ -78,6 +78,7 @@ model Profile {
   birthdate                   String?
   gender                      String?
   city                        String?
+  state                       String?
   country                     String?  @default("Venezuela")
   customerType                String   @default("PERSON") // PERSON or COMPANY
   companyName                 String?
@@ -113,22 +114,41 @@ model UserBalance {
 }
 
 model Transaction {
-  id            String      @id @default(cuid())
-  balanceId     String
-  balance       UserBalance @relation(fields: [balanceId], references: [id], onDelete: Cascade)
-  type          String      // DEPOSIT, PURCHASE, REFUND
-  status        String      // PENDING, COMPLETED, FAILED
-  amount        Decimal
-  currency      String
-  description   String?
-  reference     String?
-  paymentMethod String?
-  metadata      String?     // JSON string
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id              String      @id @default(cuid())
+  balanceId       String
+  balance         UserBalance @relation(fields: [balanceId], references: [id], onDelete: Cascade)
+  type            String      // DEPOSIT, PURCHASE, REFUND
+  status          String      // PENDING, COMPLETED, FAILED, CANCELLED
+  amount          Decimal
+  currency        String
+  description     String?
+  reference       String?
+  paymentMethod   String?
+  rejectionReason String?     // Reason for rejection if status is CANCELLED
+  metadata        String?     // JSON string
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   @@index([balanceId])
   @@map("transactions")
+}
+
+model BalanceTermsAcceptance {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  userName        String
+  userEmail       String
+  userIdNumber    String?  // Cédula
+  userPhone       String?
+  userAddress     String?
+  ipAddress       String?
+  userAgent       String?
+  termsVersion    String   @default("1.0")
+  signatureData   String?  // Base64 encoded signature image
+  acceptedAt      DateTime @default(now())
+  documentPath    String?  // Path to generated PDF document
+
+  @@map("balance_terms_acceptances")
 }
 
 model Address {

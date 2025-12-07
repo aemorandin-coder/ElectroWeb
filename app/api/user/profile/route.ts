@@ -45,35 +45,53 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
 
-    // Update user name
+    // Update user name and image
+    const userUpdateData: any = {};
     if (body.name) {
+      userUpdateData.name = body.name;
+    }
+    if (body.image !== undefined) {
+      userUpdateData.image = body.image;
+    }
+
+    if (Object.keys(userUpdateData).length > 0) {
       await prisma.user.update({
         where: { id: session.user.id },
-        data: { name: body.name },
+        data: userUpdateData,
       });
     }
+
+    // Extract profile data from body or body.profile
+    const profileData = body.profile || body;
+
+    // Prepare profile update data
+    const profileUpdateData: any = {};
+
+    if (profileData.phone !== undefined) profileUpdateData.phone = profileData.phone || null;
+    if (profileData.whatsapp !== undefined) profileUpdateData.whatsapp = profileData.whatsapp || null;
+    if (profileData.idNumber !== undefined) profileUpdateData.idNumber = profileData.idNumber || null;
+    if (profileData.bio !== undefined) profileUpdateData.bio = profileData.bio || null;
+    if (profileData.birthdate !== undefined) profileUpdateData.birthdate = profileData.birthdate || null;
+    if (profileData.gender !== undefined) profileUpdateData.gender = profileData.gender || null;
+    if (profileData.avatar !== undefined) profileUpdateData.avatar = profileData.avatar || null;
+    if (profileData.city !== undefined) profileUpdateData.city = profileData.city || null;
+    if (profileData.state !== undefined) profileUpdateData.state = profileData.state || null;
+    if (profileData.country !== undefined) profileUpdateData.country = profileData.country || 'Venezuela';
+    if (profileData.customerType !== undefined) profileUpdateData.customerType = profileData.customerType || 'PERSON';
+    if (profileData.companyName !== undefined) profileUpdateData.companyName = profileData.companyName || null;
+    if (profileData.taxId !== undefined) profileUpdateData.taxId = profileData.taxId || null;
 
     // Update or create profile
     const profile = await prisma.profile.upsert({
       where: { userId: session.user.id },
-      update: {
-        phone: body.phone || null,
-        whatsapp: body.whatsapp || null,
-        customerType: body.customerType || 'PERSON',
-        companyName: body.companyName || null,
-        taxId: body.taxId || null,
-      },
+      update: profileUpdateData,
       create: {
         userId: session.user.id,
-        phone: body.phone || null,
-        whatsapp: body.whatsapp || null,
-        customerType: body.customerType || 'PERSON',
-        companyName: body.companyName || null,
-        taxId: body.taxId || null,
+        ...profileUpdateData,
       },
     });
 
-    // Update or create default address
+    // Update or create default address if provided
     if (body.address) {
       const defaultAddress = await prisma.address.findFirst({
         where: {
@@ -97,7 +115,7 @@ export async function PUT(request: NextRequest) {
           data: {
             userId: session.user.id,
             name: session.user.name || 'Principal',
-            phone: body.phone || '',
+            phone: profileData.phone || '',
             state: body.address.state,
             city: body.address.city,
             street: body.address.street,
@@ -109,10 +127,17 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ profile });
+    return NextResponse.json({
+      success: true,
+      message: 'Perfil actualizado exitosamente',
+      profile
+    });
   } catch (error) {
     console.error('Error updating profile:', error);
-    return NextResponse.json({ error: 'Error al actualizar perfil' }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      error: 'Error al actualizar perfil'
+    }, { status: 500 });
   }
 }
 

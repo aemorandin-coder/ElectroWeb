@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { notifyRechargeApproved, notifyRechargeRejected } from '@/lib/notifications';
 
 // GET - Get all transactions
 export async function GET(request: NextRequest) {
@@ -59,7 +60,7 @@ export async function PATCH(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { id, status } = body;
+        const { id, status, rejectionReason } = body;
 
         if (!id || !status) {
             return NextResponse.json({ error: 'ID y estado requeridos' }, { status: 400 });
@@ -67,7 +68,15 @@ export async function PATCH(request: NextRequest) {
 
         const transaction = await prisma.transaction.findUnique({
             where: { id },
-            include: { balance: true },
+            include: {
+                balance: {
+                    include: {
+                        user: {
+                            select: { id: true }
+                        }
+                    }
+                }
+            },
         });
 
         if (!transaction) {
@@ -81,9 +90,13 @@ export async function PATCH(request: NextRequest) {
         // Start transaction
         const result = await prisma.$transaction(async (tx) => {
             // Update transaction status
+            const updateData: any = { status };
+            if (status === 'CANCELLED' && rejectionReason) {
+                updateData.rejectionReason = rejectionReason;
+            }
             const updatedTransaction = await tx.transaction.update({
                 where: { id },
-                data: { status },
+                data: updateData,
             });
 
             // If approved (COMPLETED) and it's a RECHARGE, update user balance
@@ -99,6 +112,19 @@ export async function PATCH(request: NextRequest) {
 
             return updatedTransaction;
         });
+
+        // Send notification to customer
+        try {
+            const customerId = transaction.balance.user.id;
+            if (status === 'COMPLETED') {
+                await notifyRechargeApproved(customerId, Number(transaction.amount));
+            } else if (status === 'CANCELLED') {
+                await notifyRechargeRejected(customerId, Number(transaction.amount), rejectionReason);
+            }
+        } catch (notifError) {
+            console.error('Error sending notification:', notifError);
+            // Don't fail if notification fails
+        }
 
         return NextResponse.json(result);
     } catch (error) {

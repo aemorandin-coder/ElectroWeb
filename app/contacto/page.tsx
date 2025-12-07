@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import ContactForm from '@/components/contact/ContactForm';
+import BusinessHours from '@/components/contact/BusinessHours';
 
 export const revalidate = 0;
 
@@ -145,76 +146,8 @@ export default async function ContactoPage() {
               </div>
             </div>
 
-            {/* Business Hours */}
-            <div className="relative overflow-hidden bg-white/80 backdrop-blur-xl rounded-2xl border border-[#e9ecef] shadow-xl p-6">
-              <h3 className="text-lg font-bold text-[#212529] mb-4 flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                Horario de Atención
-              </h3>
-              <div className="space-y-2 text-sm">
-                {(() => {
-                  try {
-                    const hours = settings?.businessHours ? JSON.parse(settings.businessHours) : null;
-                    if (hours && typeof hours === 'object') {
-                      const daysMap: Record<string, string> = {
-                        monday: 'Lunes',
-                        tuesday: 'Martes',
-                        wednesday: 'Miércoles',
-                        thursday: 'Jueves',
-                        friday: 'Viernes',
-                        saturday: 'Sábado',
-                        sunday: 'Domingo'
-                      };
-
-                      return Object.entries(hours).map(([day, schedule]: [string, any]) => {
-                        const dayLabel = daysMap[day] || day;
-                        if (schedule?.enabled) {
-                          return (
-                            <div key={day} className="flex justify-between">
-                              <span className="text-[#6a6c6b]">{dayLabel}</span>
-                              <span className="font-semibold text-[#212529]">
-                                {schedule.open} - {schedule.close}
-                              </span>
-                            </div>
-                          );
-                        } else {
-                          return (
-                            <div key={day} className="flex justify-between">
-                              <span className="text-[#6a6c6b]">{dayLabel}</span>
-                              <span className="font-semibold text-red-600">Cerrado</span>
-                            </div>
-                          );
-                        }
-                      });
-                    }
-                  } catch (e) {
-                    console.error('Error parsing businessHours:', e);
-                  }
-
-                  // Fallback
-                  return (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-[#6a6c6b]">Lunes - Viernes</span>
-                        <span className="font-semibold text-[#212529]">9:00 AM - 6:00 PM</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#6a6c6b]">Sábado</span>
-                        <span className="font-semibold text-[#212529]">10:00 AM - 2:00 PM</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#6a6c6b]">Domingo</span>
-                        <span className="font-semibold text-red-600">Cerrado</span>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
+            {/* Business Hours - Compact Collapsible */}
+            <BusinessHours businessHours={settings?.businessHours} />
           </div>
 
           {/* Contact Form - Premium Design */}

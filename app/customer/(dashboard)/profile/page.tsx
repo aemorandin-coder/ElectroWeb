@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { FiUser, FiMail, FiPhone, FiCalendar, FiSave, FiCamera, FiMapPin, FiGlobe, FiAward, FiShoppingBag, FiBriefcase, FiFileText, FiCheckCircle, FiAlertCircle, FiClock, FiTrendingUp, FiPackage } from 'react-icons/fi';
 import { HiMiniBanknotes } from 'react-icons/hi2';
 import DocumentUpload from '@/components/customer/DocumentUpload';
@@ -19,6 +20,7 @@ interface Profile {
   image?: string;
   avatar?: string;
   city?: string;
+  state?: string;
   country?: string;
   receiptType?: string; // PERSON or BUSINESS
   // Business fields
@@ -29,6 +31,26 @@ interface Profile {
   businessRIFDocument?: string;
   businessVerificationNotes?: string;
 }
+
+const COUNTRY_CODES = [
+  { code: '+58', country: 'Venezuela', iso: 've' },
+  { code: '+1', country: 'USA', iso: 'us' },
+  { code: '+57', country: 'Colombia', iso: 'co' },
+  { code: '+55', country: 'Brasil', iso: 'br' },
+  { code: '+34', country: 'España', iso: 'es' },
+  { code: '+507', country: 'Panamá', iso: 'pa' },
+  { code: '+56', country: 'Chile', iso: 'cl' },
+  { code: '+54', country: 'Argentina', iso: 'ar' },
+  { code: '+51', country: 'Perú', iso: 'pe' },
+  { code: '+593', country: 'Ecuador', iso: 'ec' },
+];
+
+const VENEZUELA_STATES = [
+  "Amazonas", "Anzoátegui", "Apure", "Aragua", "Barinas", "Bolívar", "Carabobo", "Cojedes",
+  "Delta Amacuro", "Distrito Capital", "Falcón", "Guárico", "Lara", "Mérida", "Miranda",
+  "Monagas", "Nueva Esparta", "Portuguesa", "Sucre", "Táchira", "Trujillo", "La Guaira",
+  "Yaracuy", "Zulia"
+];
 
 interface UserStats {
   totalOrders: number;
@@ -58,6 +80,7 @@ export default function ProfilePage() {
     gender: '',
     image: '',
     city: '',
+    state: '',
     country: 'Venezuela',
     receiptType: 'PERSON',
     companyName: '',
@@ -66,6 +89,44 @@ export default function ProfilePage() {
     businessConstitutiveAct: '',
     businessRIFDocument: ''
   });
+
+  // Track initial profile state for change detection
+  const [initialProfile, setInitialProfile] = useState<Profile>({
+    name: '',
+    email: '',
+    idNumber: '',
+    phone: '',
+    bio: '',
+    birthdate: '',
+    gender: '',
+    image: '',
+    city: '',
+    state: '',
+    country: 'Venezuela',
+    receiptType: 'PERSON',
+    companyName: '',
+    taxId: '',
+    businessVerificationStatus: 'NONE',
+    businessConstitutiveAct: '',
+    businessRIFDocument: ''
+  });
+
+  const [countryCode, setCountryCode] = useState('+58');
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowCountryDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const [isNameLocked, setIsNameLocked] = useState(false);
 
@@ -87,7 +148,7 @@ export default function ProfilePage() {
       const response = await fetch('/api/user/profile');
       if (response.ok) {
         const data = await response.json();
-        setProfile({
+        const profileData = {
           name: data.user?.name || '',
           email: data.user?.email || '',
           idNumber: data.profile?.idNumber || '',
@@ -95,9 +156,10 @@ export default function ProfilePage() {
           bio: data.profile?.bio || '',
           birthdate: data.profile?.birthdate || '',
           gender: data.profile?.gender || '',
-          image: data.image || '',
+          image: data.user?.image || '',
           avatar: data.profile?.avatar || '',
           city: data.profile?.city || '',
+          state: data.profile?.state || '',
           country: data.profile?.country || 'Venezuela',
           receiptType: data.profile?.receiptType || 'PERSON',
           companyName: data.profile?.companyName || '',
@@ -105,7 +167,23 @@ export default function ProfilePage() {
           businessVerificationStatus: data.profile?.businessVerificationStatus || 'NONE',
           businessConstitutiveAct: data.profile?.businessConstitutiveAct || '',
           businessRIFDocument: data.profile?.businessRIFDocument || ''
-        });
+        };
+
+        setProfile(profileData);
+        setInitialProfile(profileData); // Save initial state
+
+        // Handle Phone splitting
+        if (data.profile?.phone) {
+          const foundCode = COUNTRY_CODES.find(c => data.profile.phone.startsWith(c.code));
+          if (foundCode) {
+            setCountryCode(foundCode.code);
+            // Remove code and update profile phone state with just the number
+            const cleanPhone = data.profile.phone.replace(foundCode.code, '').trim();
+            const updatedProfile = { ...profileData, phone: cleanPhone };
+            setProfile(updatedProfile);
+            setInitialProfile(updatedProfile);
+          }
+        }
         // Lock name if it's already set
         if (data.user?.name) {
           setIsNameLocked(true);
@@ -113,6 +191,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      toast.error('Error al cargar el perfil');
     } finally {
       setLoading(false);
     }
@@ -135,6 +214,27 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
+    // Check if there are any changes
+    const hasChanges =
+      profile.name !== initialProfile.name ||
+      profile.idNumber !== initialProfile.idNumber ||
+      profile.phone !== initialProfile.phone ||
+      profile.bio !== initialProfile.bio ||
+      profile.birthdate !== initialProfile.birthdate ||
+      profile.gender !== initialProfile.gender ||
+      profile.city !== initialProfile.city ||
+      profile.state !== initialProfile.state ||
+      profile.country !== initialProfile.country ||
+      profile.image !== initialProfile.image;
+
+    if (!hasChanges) {
+      toast('No hay cambios para guardar', {
+        icon: 'ℹ️',
+        duration: 3000,
+      });
+      return;
+    }
+
     const confirmed = await confirm({
       title: 'Guardar Cambios',
       message: '¿Estás seguro de que deseas actualizar tu información de perfil?',
@@ -147,28 +247,64 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
+      let imageUrl = profile.image;
+
+      // If image is base64 (new upload), save it first
+      if (profile.image && profile.image.startsWith('data:image/')) {
+        try {
+          const avatarResponse = await fetch('/api/user/avatar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ avatar: profile.image }),
+          });
+
+          const avatarData = await avatarResponse.json();
+
+          if (avatarResponse.ok && avatarData.success) {
+            imageUrl = avatarData.image;
+          } else {
+            toast.error('Error al subir la imagen');
+            setSaving(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Error uploading avatar:', error);
+          toast.error('Error al subir la imagen');
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Now save all profile data
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: profile.name,
+          image: imageUrl,
           profile: {
             idNumber: profile.idNumber,
-            phone: profile.phone,
+            phone: profile.phone ? `${countryCode} ${profile.phone}` : '',
             bio: profile.bio,
             birthdate: profile.birthdate,
             gender: profile.gender,
             city: profile.city,
-            country: profile.country,
-            receiptType: profile.receiptType
+            state: profile.state,
+            country: profile.country
           }
         }),
       });
 
-      if (response.ok) {
-        toast.success('Perfil actualizado exitosamente');
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success(data.message || 'Perfil actualizado exitosamente');
+        // Update initial profile to new values
+        setInitialProfile({ ...profile, image: imageUrl });
+        // Refresh session to update user data in header
+        setTimeout(() => window.location.reload(), 1500);
       } else {
-        toast.error('Error al actualizar el perfil');
+        toast.error(data.error || 'Error al actualizar el perfil');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -194,32 +330,14 @@ export default function ProfilePage() {
       return;
     }
 
-    // Convert to base64
+    // Convert to base64 for preview only - don't save yet
     const reader = new FileReader();
-    reader.onloadend = async () => {
+    reader.onloadend = () => {
       const base64 = reader.result as string;
       setAvatarPreview(base64);
-
-      try {
-        const response = await fetch('/api/user/avatar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ avatar: base64 }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setProfile(prev => ({ ...prev, avatar: data.avatar }));
-          toast.success('Avatar actualizado exitosamente');
-        } else {
-          toast.error('Error al subir avatar');
-          setAvatarPreview(null);
-        }
-      } catch (error) {
-        console.error('Error uploading avatar:', error);
-        toast.error('Error al subir avatar');
-        setAvatarPreview(null);
-      }
+      // Update profile state for preview but don't save to database
+      setProfile(prev => ({ ...prev, image: base64 }));
+      toast.success('Imagen cargada. Presiona "Guardar Cambios" para aplicar');
     };
     reader.readAsDataURL(file);
   };
@@ -325,10 +443,22 @@ export default function ProfilePage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2 bg-white text-[#2a63cd] font-semibold rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+              className="px-6 py-2.5 bg-white text-[#2a63cd] font-bold rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
             >
-              <FiSave className="w-4 h-4" />
-              {saving ? 'Guardando...' : 'Guardar'}
+              {saving ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <FiSave className="w-4 h-4" />
+                  Guardar Cambios
+                </>
+              )}
             </button>
           )}
         </div>
@@ -500,18 +630,69 @@ export default function ProfilePage() {
                           className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg bg-[#f8f9fa] text-[#6a6c6b] cursor-not-allowed"
                         />
                       </div>
-                      <div>
+                      <div className="md:col-span-1">
                         <label className="block text-xs font-medium text-[#212529] mb-1.5">
                           <FiPhone className="inline w-3.5 h-3.5 mr-1" />
                           Teléfono
                         </label>
-                        <input
-                          type="tel"
-                          value={profile.phone}
-                          onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
-                          placeholder="0414-1234567"
-                        />
+                        <div className="flex gap-2">
+                          {/* Country Dropdown */}
+                          <div className="relative" ref={dropdownRef}>
+                            <button
+                              type="button"
+                              onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                              className="h-full px-2 bg-white border border-[#e9ecef] rounded-lg flex items-center gap-1 hover:bg-gray-50 transition-all min-w-[80px]"
+                            >
+                              <div className="relative w-5 h-3.5 shadow-sm rounded-sm overflow-hidden flex-shrink-0">
+                                <Image
+                                  src={`https://flagcdn.com/w40/${COUNTRY_CODES.find(c => c.code === countryCode)?.iso || 've'}.png`}
+                                  alt="Flag"
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                              <span className="text-xs font-medium text-[#212529]">{countryCode}</span>
+                              <svg className={`w-2.5 h-2.5 text-gray-500 transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+
+                            {showCountryDropdown && (
+                              <div className="absolute top-full left-0 mt-1 w-56 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl z-50">
+                                {COUNTRY_CODES.map((country) => (
+                                  <button
+                                    key={country.code}
+                                    type="button"
+                                    onClick={() => {
+                                      setCountryCode(country.code);
+                                      setShowCountryDropdown(false);
+                                    }}
+                                    className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                                  >
+                                    <div className="relative w-5 h-3.5 shadow-sm rounded-sm overflow-hidden flex-shrink-0">
+                                      <Image
+                                        src={`https://flagcdn.com/w40/${country.iso}.png`}
+                                        alt={country.country}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                    <span className="text-sm text-gray-700 flex-1 truncate">{country.country}</span>
+                                    <span className="text-xs text-blue-600 font-mono">{country.code}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <input
+                            type="tel"
+                            value={profile.phone}
+                            onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                            className="flex-1 px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
+                            placeholder="412 1234567"
+                          />
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-[#212529] mb-1.5">
@@ -560,8 +741,8 @@ export default function ProfilePage() {
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <div className="md:col-span-1">
                         <label className="block text-xs font-medium text-[#212529] mb-1.5">
                           <FiMapPin className="inline w-3.5 h-3.5 mr-1" />
                           Ciudad
@@ -574,7 +755,28 @@ export default function ProfilePage() {
                           placeholder="Guanare"
                         />
                       </div>
-                      <div>
+                      <div className="md:col-span-1">
+                        <label className="block text-xs font-medium text-[#212529] mb-1.5">
+                          <FiMapPin className="inline w-3.5 h-3.5 mr-1" />
+                          Estado
+                        </label>
+                        <select
+                          value={profile.state}
+                          onChange={(e) => setProfile({ ...profile, state: e.target.value })}
+                          className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
+                          disabled={profile.country !== 'Venezuela'}
+                        >
+                          <option value="">Seleccionar...</option>
+                          {profile.country === 'Venezuela' ? (
+                            VENEZUELA_STATES.map(state => (
+                              <option key={state} value={state}>{state}</option>
+                            ))
+                          ) : (
+                            <option value="N/A">N/A</option>
+                          )}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
                         <label className="block text-xs font-medium text-[#212529] mb-1.5">
                           <FiGlobe className="inline w-3.5 h-3.5 mr-1" />
                           País
@@ -585,9 +787,6 @@ export default function ProfilePage() {
                           className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
                         >
                           <option value="Venezuela">Venezuela</option>
-                          <option value="Colombia">Colombia</option>
-                          <option value="Panamá">Panamá</option>
-                          <option value="USA">Estados Unidos</option>
                         </select>
                       </div>
                     </div>
@@ -610,11 +809,10 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <label className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                        profile.receiptType === 'PERSON'
-                          ? 'border-[#2a63cd] bg-blue-50'
-                          : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
-                      }`}>
+                      <label className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${profile.receiptType === 'PERSON'
+                        ? 'border-[#2a63cd] bg-blue-50'
+                        : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
+                        }`}>
                         <input
                           type="radio"
                           name="receiptType"
@@ -632,15 +830,13 @@ export default function ProfilePage() {
                         </div>
                       </label>
                       <div className="relative group">
-                        <label className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
-                          profile.receiptType === 'BUSINESS'
-                            ? 'border-[#2a63cd] bg-blue-50'
-                            : 'border-[#e9ecef]'
-                        } ${
-                          profile.businessVerificationStatus !== 'APPROVED'
+                        <label className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${profile.receiptType === 'BUSINESS'
+                          ? 'border-[#2a63cd] bg-blue-50'
+                          : 'border-[#e9ecef]'
+                          } ${profile.businessVerificationStatus !== 'APPROVED'
                             ? 'cursor-not-allowed opacity-60'
                             : 'cursor-pointer hover:border-[#2a63cd]/30'
-                        }`}>
+                          }`}>
                           <input
                             type="radio"
                             name="receiptType"
@@ -685,9 +881,9 @@ export default function ProfilePage() {
                       <textarea
                         value={profile.bio}
                         onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                        rows={3}
-                        className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] resize-none"
-                        placeholder="Cuéntanos sobre ti..."
+                        rows={2}
+                        className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] resize-none h-16"
+                        placeholder="Cuéntanos brevemente sobre ti..."
                       />
                     </div>
                   </div>

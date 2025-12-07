@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { notifyRechargeRequested, notifyAdminsNewRecharge } from '@/lib/notifications';
 
 // Crear solicitud de recarga de saldo (requiere aprobación del admin)
 export async function POST(req: NextRequest) {
@@ -13,6 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = (session.user as any).id;
+    const userName = session.user.name || session.user.email || 'Usuario';
     const { amount, paymentMethod, reference, description } = await req.json();
 
     // Validate amount
@@ -59,6 +61,17 @@ export async function POST(req: NextRequest) {
         }),
       },
     });
+
+    // Send notifications
+    try {
+      // Notify customer
+      await notifyRechargeRequested(userId, parseFloat(amount));
+      // Notify all admins
+      await notifyAdminsNewRecharge(userName, parseFloat(amount));
+    } catch (notifError) {
+      console.error('Error sending notifications:', notifError);
+      // Don't fail the request if notifications fail
+    }
 
     return NextResponse.json({
       success: true,

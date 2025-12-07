@@ -11,7 +11,13 @@ export type NotificationType =
   | 'SYSTEM_UPDATE'
   | 'SYSTEM_MAINTENANCE'
   | 'PROMOTION'
-  | 'STOCK_ALERT';
+  | 'STOCK_ALERT'
+  | 'BALANCE_RECHARGED'
+  | 'BALANCE_PENDING'
+  | 'RECHARGE_APPROVED'
+  | 'RECHARGE_REJECTED'
+  | 'NEW_CUSTOMER'
+  | 'NEW_RECHARGE_REQUEST';
 
 interface CreateNotificationParams {
   userId: string;
@@ -52,10 +58,10 @@ export async function notifyOrderConfirmed(userId: string, orderNumber: string, 
   return createNotification({
     userId,
     type: 'ORDER_CONFIRMED',
-    title: '¡Pedido Confirmado!',
+    title: 'Pedido Confirmado',
     message: `Tu pedido #${orderNumber} ha sido confirmado y está siendo procesado.`,
     link: `/customer/orders`,
-    icon: '✅',
+    icon: 'check-circle',
   });
 }
 
@@ -66,10 +72,10 @@ export async function notifyOrderShipped(userId: string, orderNumber: string, or
   return createNotification({
     userId,
     type: 'ORDER_SHIPPED',
-    title: '📦 Pedido Enviado',
+    title: 'Pedido Enviado',
     message: `Tu pedido #${orderNumber} ha sido enviado y está en camino.`,
     link: `/customer/orders`,
-    icon: '📦',
+    icon: 'package',
   });
 }
 
@@ -80,10 +86,10 @@ export async function notifyOrderDelivered(userId: string, orderNumber: string, 
   return createNotification({
     userId,
     type: 'ORDER_DELIVERED',
-    title: '✅ Pedido Entregado',
-    message: `Tu pedido #${orderNumber} ha sido entregado. ¡Esperamos que lo disfrutes!`,
+    title: 'Pedido Entregado',
+    message: `Tu pedido #${orderNumber} ha sido entregado. Esperamos que lo disfrutes.`,
     link: `/customer/orders`,
-    icon: '✅',
+    icon: 'check-circle',
   });
 }
 
@@ -94,10 +100,10 @@ export async function notifyReviewApproved(userId: string, productName: string, 
   return createNotification({
     userId,
     type: 'REVIEW_APPROVED',
-    title: '⭐ Reseña Publicada',
+    title: 'Reseña Publicada',
     message: `Tu reseña de "${productName}" ha sido aprobada y ahora es visible para otros clientes.`,
     link: `/productos/${productSlug}#reviews`,
-    icon: '⭐',
+    icon: 'star',
   });
 }
 
@@ -111,7 +117,7 @@ export async function notifyPromotion(userId: string, title: string, message: st
     title,
     message,
     link,
-    icon: '🎁',
+    icon: 'gift',
   });
 }
 
@@ -122,11 +128,112 @@ export async function notifyStockAlert(userId: string, productName: string, prod
   return createNotification({
     userId,
     type: 'STOCK_ALERT',
-    title: '🎉 Producto Disponible',
-    message: `"${productName}" está de vuelta en stock. ¡Consíguelo antes de que se agote!`,
+    title: 'Producto Disponible',
+    message: `"${productName}" está de vuelta en stock. Consíguelo antes de que se agote.`,
     link: `/productos/${productSlug}`,
-    icon: '🎉',
+    icon: 'alert-circle',
   });
+}
+
+/**
+ * Notify customer when their recharge request is submitted
+ */
+export async function notifyRechargeRequested(userId: string, amount: number) {
+  return createNotification({
+    userId,
+    type: 'BALANCE_PENDING',
+    title: 'Recarga en Proceso',
+    message: `Tu solicitud de recarga por $${amount.toFixed(2)} ha sido recibida y está pendiente de aprobación.`,
+    link: '/customer/balance',
+    icon: 'clock',
+  });
+}
+
+/**
+ * Notify customer when their recharge is approved
+ */
+export async function notifyRechargeApproved(userId: string, amount: number) {
+  return createNotification({
+    userId,
+    type: 'RECHARGE_APPROVED',
+    title: 'Recarga Aprobada',
+    message: `Tu recarga de $${amount.toFixed(2)} ha sido aprobada. El saldo ya está disponible en tu cuenta.`,
+    link: '/customer/balance',
+    icon: 'dollar-sign',
+  });
+}
+
+/**
+ * Notify customer when their recharge is rejected
+ */
+export async function notifyRechargeRejected(userId: string, amount: number, reason?: string) {
+  const reasonText = reason ? ` Motivo: ${reason}` : '';
+  return createNotification({
+    userId,
+    type: 'RECHARGE_REJECTED',
+    title: 'Recarga Rechazada',
+    message: `Tu solicitud de recarga por $${amount.toFixed(2)} ha sido rechazada.${reasonText}`,
+    link: '/customer/balance',
+    icon: 'x-circle',
+  });
+}
+
+/**
+ * Notify all admins about a new recharge request
+ */
+export async function notifyAdminsNewRecharge(customerName: string, amount: number) {
+  try {
+    const admins = await prisma.user.findMany({
+      where: {
+        role: { in: ['ADMIN', 'SUPER_ADMIN'] }
+      },
+      select: { id: true }
+    });
+
+    const notifications = admins.map(admin =>
+      createNotification({
+        userId: admin.id,
+        type: 'NEW_RECHARGE_REQUEST',
+        title: 'Nueva Solicitud de Recarga',
+        message: `${customerName} ha solicitado una recarga de $${amount.toFixed(2)}. Requiere aprobación.`,
+        link: '/admin/transactions',
+        icon: 'credit-card',
+      })
+    );
+
+    return Promise.all(notifications);
+  } catch (error) {
+    console.error('Error notifying admins about new recharge:', error);
+  }
+}
+
+/**
+ * Notify all admins about a new customer registration
+ */
+export async function notifyAdminsNewCustomer(customerName: string, customerEmail: string) {
+  try {
+    const admins = await prisma.user.findMany({
+      where: {
+        role: { in: ['ADMIN', 'SUPER_ADMIN'] }
+      },
+      select: { id: true }
+    });
+
+    const notifications = admins.map(admin =>
+      createNotification({
+        userId: admin.id,
+        type: 'NEW_CUSTOMER',
+        title: 'Nuevo Cliente Registrado',
+        message: `${customerName || customerEmail} se ha registrado en la tienda.`,
+        link: '/admin/customers',
+        icon: 'user-plus',
+      })
+    );
+
+    return Promise.all(notifications);
+  } catch (error) {
+    console.error('Error notifying admins about new customer:', error);
+  }
 }
 
 /**
@@ -182,4 +289,3 @@ export async function deleteOldNotifications(daysOld: number = 30) {
     },
   });
 }
-

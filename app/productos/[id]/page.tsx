@@ -33,7 +33,7 @@ interface Product {
   hasDiscount: boolean;
   discountPercent?: number;
   brand?: string;
-  specifications?: Record<string, any>;
+  specs?: Record<string, any>;
   features?: string[];
   createdAt: string;
 }
@@ -589,64 +589,36 @@ export default function ProductDetailPage() {
           </div>
         </div >
 
-        {/* Product Specifications */}
-        {
-          product.specifications && Object.keys(product.specifications).length > 0 && (
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6 shadow-xl mb-8">
-              <h3 className="text-lg font-black text-[#212529] mb-6 flex items-center gap-2">
-                <svg className="w-5 h-5 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-                Especificaciones Técnicas
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {Object.entries(product.specifications).slice(0, 10).map(([key, value], index) => (
-                  <div
-                    key={key}
-                    className="group relative overflow-hidden rounded-xl bg-gray-50 p-3 hover:bg-white transition-all border border-transparent hover:border-gray-200 hover:shadow-md"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <div className="absolute top-0 left-0 w-1 h-full bg-[#2a63cd] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="flex flex-col relative z-10 pl-2">
-                      <span className="text-[10px] font-bold text-[#2a63cd] uppercase tracking-wider mb-0.5 opacity-70 group-hover:opacity-100 transition-opacity">{key}</span>
-                      <span className="text-sm font-bold text-gray-800 group-hover:text-[#2a63cd] transition-colors">{String(value)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        }
-
-        {/* Key Features */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6 shadow-xl mb-8">
-          <h3 className="text-lg font-black text-[#212529] mb-4 flex items-center gap-2">
-            <svg className="w-5 h-5 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-            </svg>
-            Características Destacadas
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {(product.features && Array.isArray(product.features) && product.features.length > 0
-              ? product.features
-              : [
-                'Garantía oficial del fabricante',
-                'Envío rápido y seguro',
-                'Soporte técnico 24/7',
-                'Producto 100% original'
-              ]
-            ).map((feature, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50 to-transparent rounded-lg border-l-2 border-green-500">
-                <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        {/* Product Specifications - Clean Readable Design */}
+        {product.specs && Object.keys(product.specs).length > 0 && (
+          <div className="w-[80%] mx-auto bg-white rounded-2xl border border-gray-200 shadow-lg mb-8 overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
                 </div>
-                <p className="text-sm font-semibold text-[#212529]">{feature}</p>
+                <h3 className="text-lg font-bold text-white">Especificaciones Técnicas</h3>
               </div>
-            ))}
+            </div>
+
+            {/* Specs List */}
+            <div className="divide-y divide-gray-100">
+              {Object.entries(product.specs).map(([key, value], index) => (
+                <div
+                  key={key}
+                  className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                  style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both` }}
+                >
+                  <span className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{key}</span>
+                  <span className="text-base font-bold text-[#212529]">{String(value)}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Reviews Section */}
         <div className="mt-8 mb-8">

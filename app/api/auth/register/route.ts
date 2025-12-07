@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
+import { notifyAdminsNewCustomer } from '@/lib/notifications';
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,16 +63,23 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Notify admins about new customer
+    try {
+      await notifyAdminsNewCustomer(name, email);
+    } catch (notifError) {
+      console.error('Error sending notification:', notifError);
+    }
+
     return NextResponse.json(
-      { 
+      {
         message: 'Usuario registrado exitosamente',
-        user 
+        user
       },
       { status: 201 }
     );
   } catch (error: any) {
     console.error('Registration error:', error);
-    
+
     if (error.code === 'P2002') {
       return NextResponse.json(
         { error: 'Este correo electrónico ya está registrado' },

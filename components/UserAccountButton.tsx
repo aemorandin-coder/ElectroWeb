@@ -13,6 +13,8 @@ export default function UserAccountButton() {
   const { clearCart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [imageError, setImageError] = useState(false);
+
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -32,13 +34,11 @@ export default function UserAccountButton() {
 
   const handleSignOut = async () => {
     try {
-      // Clear cart before signing out
       clearCart();
       await signOut({ callbackUrl: '/', redirect: true });
       router.refresh();
     } catch (error) {
       console.error('Error signing out:', error);
-      // Clear cart even if signout fails
       clearCart();
       router.push('/');
       router.refresh();
@@ -78,9 +78,17 @@ export default function UserAccountButton() {
         onClick={() => setIsOpen(!isOpen)}
         className="relative flex items-center gap-2 px-3 py-2 hover:bg-[#f8f9fa] rounded-lg transition-all duration-300 group hover:scale-105"
       >
-        {userImage ? (
-          <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-[#2a63cd]/30 group-hover:border-[#2a63cd] transition-colors">
-            <Image src={userImage} alt={userName} fill className="object-cover" />
+        {userImage && !imageError ? (
+          <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-[#2a63cd]/30 group-hover:border-[#2a63cd] transition-colors select-none">
+            <Image
+              src={userImage}
+              alt={userName}
+              fill
+              className="object-cover"
+              draggable={false}
+              unoptimized
+              onError={() => setImageError(true)}
+            />
           </div>
         ) : (
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center text-white text-xs font-bold shadow-md group-hover:shadow-lg transition-shadow">
@@ -91,10 +99,10 @@ export default function UserAccountButton() {
           <span className="text-xs font-semibold text-[#212529]">{userName}</span>
           <span className="text-xs text-[#6a6c6b]">{userEmail}</span>
         </div>
-        <svg 
-          className={`w-4 h-4 text-[#6a6c6b] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
-          fill="none" 
-          stroke="currentColor" 
+        <svg
+          className={`w-4 h-4 text-[#6a6c6b] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
           viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -108,9 +116,15 @@ export default function UserAccountButton() {
           {/* User Info Header */}
           <div className="px-4 py-3 bg-gradient-to-r from-[#f8f9fa] to-white border-b border-[#e9ecef]">
             <div className="flex items-center gap-3">
-              {userImage ? (
+              {userImage && !imageError ? (
                 <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[#2a63cd]/30">
-                  <Image src={userImage} alt={userName} fill className="object-cover" />
+                  <Image
+                    src={userImage}
+                    alt={userName}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
                 </div>
               ) : (
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center text-white text-sm font-bold shadow-md">
@@ -186,4 +200,3 @@ export default function UserAccountButton() {
     </div>
   );
 }
-

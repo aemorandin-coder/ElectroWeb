@@ -11,13 +11,13 @@ import {
   FiMapPin,
   FiCreditCard,
   FiUser,
-  FiDollarSign,
   FiHeart,
   FiSettings,
   FiLogOut,
   FiMenu,
   FiX
 } from 'react-icons/fi';
+import { FaMoneyCheckAlt } from 'react-icons/fa';
 
 interface CompanySettings {
   companyName: string;
@@ -36,6 +36,7 @@ export default function CustomerDashboardLayout({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
+  const [userImage, setUserImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -58,6 +59,27 @@ export default function CustomerDashboardLayout({
 
     fetchSettings();
   }, []);
+
+  // Fetch user profile image
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch('/api/user/profile');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.profile?.image) {
+            setUserImage(data.profile.image);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    if (session?.user) {
+      fetchUserProfile();
+    }
+  }, [session]);
 
   // Handle page transitions with epic animations
   useEffect(() => {
@@ -87,7 +109,7 @@ export default function CustomerDashboardLayout({
 
   const menuItems = [
     { href: '/customer', icon: FiHome, label: 'Inicio' },
-    { href: '/customer/balance', icon: FiDollarSign, label: 'Saldo y Pagos' },
+    { href: '/customer/balance', icon: FaMoneyCheckAlt, label: 'Saldo y Pagos' },
     { href: '/customer/orders', icon: FiShoppingBag, label: 'Mis Pedidos' },
     { href: '/customer/wishlist', icon: FiHeart, label: 'Lista de Deseos' },
     { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },
@@ -185,10 +207,19 @@ export default function CustomerDashboardLayout({
             {/* User Info & Logout */}
             <div className="border-t border-[#e9ecef] p-4">
               <div className="flex items-center gap-3 mb-3 px-2">
-                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-[#f8f9fa] border border-[#dee2e6]">
-                  <span className="text-sm font-semibold text-[#2a63cd]">
-                    {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                  </span>
+                <div className="relative w-9 h-9 rounded-full bg-[#f8f9fa] border border-[#dee2e6] overflow-hidden flex items-center justify-center">
+                  {userImage ? (
+                    <Image
+                      src={userImage}
+                      alt={session.user?.name || 'Usuario'}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-semibold text-[#2a63cd]">
+                      {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[#212529] truncate">

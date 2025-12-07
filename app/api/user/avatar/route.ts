@@ -67,6 +67,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Update user image (for header display)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { image: publicPath }
+    });
+
+    // Update or create profile avatar
     if (user.profile) {
       await prisma.profile.update({
         where: { userId: user.id },
@@ -76,7 +83,6 @@ export async function POST(request: NextRequest) {
       await prisma.profile.create({
         data: {
           userId: user.id,
-          userEmail: user.email,
           avatar: publicPath
         }
       });
@@ -84,7 +90,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      avatar: publicPath
+      message: 'Avatar actualizado exitosamente',
+      avatar: publicPath,
+      image: publicPath
     });
   } catch (error) {
     console.error('Error uploading avatar:', error);

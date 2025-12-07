@@ -7,7 +7,8 @@ export interface Notification {
     id: string;
     type: 'ORDER_CONFIRMED' | 'ORDER_PAID' | 'ORDER_SHIPPED' | 'ORDER_DELIVERED' |
     'REVIEW_APPROVED' | 'REVIEW_REPLIED' | 'SYSTEM_UPDATE' | 'SYSTEM_MAINTENANCE' |
-    'PROMOTION' | 'STOCK_ALERT';
+    'PROMOTION' | 'STOCK_ALERT' | 'BALANCE_RECHARGED' | 'BALANCE_PENDING' |
+    'RECHARGE_APPROVED' | 'RECHARGE_REJECTED' | 'NEW_CUSTOMER' | 'NEW_RECHARGE_REQUEST';
     title: string;
     message: string;
     link?: string;

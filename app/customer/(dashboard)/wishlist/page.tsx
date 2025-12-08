@@ -46,6 +46,19 @@ export default function WishlistPage() {
   const [discountPercent, setDiscountPercent] = useState(3);
   const [discountMessage, setDiscountMessage] = useState('');
   const [requestingDiscount, setRequestingDiscount] = useState(false);
+  const [showInfoBanner, setShowInfoBanner] = useState(true);
+
+  useEffect(() => {
+    const bannerDismissed = localStorage.getItem('wishlist-info-dismissed');
+    if (bannerDismissed === 'true') {
+      setShowInfoBanner(false);
+    }
+  }, []);
+
+  const dismissInfoBanner = () => {
+    setShowInfoBanner(false);
+    localStorage.setItem('wishlist-info-dismissed', 'true');
+  };
 
   useEffect(() => {
     fetchWishlist();
@@ -57,7 +70,35 @@ export default function WishlistPage() {
       const response = await fetch('/api/customer/wishlist');
       if (response.ok) {
         const data = await response.json();
-        setWishlist(data.items || []);
+        // Map products to WishlistItem format
+        const items: WishlistItem[] = (data.products || []).map((product: any) => {
+          // Parse images if it's a JSON string
+          let images: string[] = [];
+          if (product.images) {
+            if (typeof product.images === 'string') {
+              try {
+                images = JSON.parse(product.images);
+              } catch {
+                images = [];
+              }
+            } else if (Array.isArray(product.images)) {
+              images = product.images;
+            }
+          }
+
+          const imageUrl = product.mainImage || (images.length > 0 ? images[0] : undefined);
+
+          return {
+            id: product.id,
+            productId: product.id,
+            productName: product.name,
+            price: Number(product.priceUSD),
+            imageUrl: imageUrl,
+            inStock: product.stock > 0,
+            createdAt: product.createdAt,
+          };
+        });
+        setWishlist(items);
       }
     } catch (error) {
       console.error('Error fetching wishlist:', error);
@@ -78,14 +119,16 @@ export default function WishlistPage() {
     }
   };
 
-  const removeFromWishlist = async (id: string) => {
-    setRemovingId(id);
+  const removeFromWishlist = async (productId: string) => {
+    setRemovingId(productId);
     try {
-      const response = await fetch(`/api/customer/wishlist?id=${id}`, {
-        method: 'DELETE',
+      const response = await fetch('/api/customer/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, action: 'remove' }),
       });
       if (response.ok) {
-        setWishlist(wishlist.filter(item => item.id !== id));
+        setWishlist(wishlist.filter(item => item.productId !== productId));
         toast.success('Producto eliminado de favoritos');
       }
     } catch (error) {
@@ -103,8 +146,8 @@ export default function WishlistPage() {
       name: item.productName,
       price: item.price,
       imageUrl: item.imageUrl || '',
-      quantity: 1,
-    });
+      stock: 999, // Default max stock since we only know it's in stock
+    }, 1);
     toast.success('Agregado al carrito');
   };
 
@@ -238,28 +281,56 @@ export default function WishlistPage() {
           {/* Stats Pills */}
           <div className="flex flex-wrap gap-2">
             <div className="px-3 py-1.5 bg-white/15 backdrop-blur-md rounded-lg border border-white/20 flex items-center gap-2">
-              <FiDollarSign className="w-3.5 h-3.5 text-cyan-200" />
+              <FiDollarSign className="w-3.5 h-3.5 text-blue-200" />
               <span className="text-xs font-semibold">${totalValue.toFixed(2)}</span>
             </div>
             <div className="px-3 py-1.5 bg-white/15 backdrop-blur-md rounded-lg border border-white/20 flex items-center gap-2">
-              <FiTrendingUp className="w-3.5 h-3.5 text-emerald-300" />
+              <FiTrendingUp className="w-3.5 h-3.5 text-blue-200" />
               <span className="text-xs font-semibold">{inStockCount} disponibles</span>
             </div>
             {approvedDiscounts > 0 && (
-              <div className="px-3 py-1.5 bg-emerald-500/30 backdrop-blur-md rounded-lg border border-emerald-400/30 flex items-center gap-2 animate-pulse">
-                <FiGift className="w-3.5 h-3.5 text-emerald-200" />
+              <div className="px-3 py-1.5 bg-green-500/30 backdrop-blur-md rounded-lg border border-green-400/30 flex items-center gap-2">
+                <FiGift className="w-3.5 h-3.5 text-green-200" />
                 <span className="text-xs font-semibold">{approvedDiscounts} descuento{approvedDiscounts > 1 ? 's' : ''} activo{approvedDiscounts > 1 ? 's' : ''}</span>
               </div>
             )}
             {pendingDiscounts > 0 && (
-              <div className="px-3 py-1.5 bg-amber-500/30 backdrop-blur-md rounded-lg border border-amber-400/30 flex items-center gap-2">
-                <FiClock className="w-3.5 h-3.5 text-amber-200" />
+              <div className="px-3 py-1.5 bg-blue-500/30 backdrop-blur-md rounded-lg border border-blue-400/30 flex items-center gap-2">
+                <FiClock className="w-3.5 h-3.5 text-blue-200" />
                 <span className="text-xs font-semibold">{pendingDiscounts} pendiente{pendingDiscounts > 1 ? 's' : ''}</span>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Info Tooltip - Discount Feature Explanation */}
+      {showInfoBanner && (
+        <div className="relative bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 rounded-xl border border-blue-200/60 p-4 shadow-sm overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative flex items-start gap-3">
+            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <FiPercent className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-gray-800 mb-1 flex items-center gap-2">
+                <span>¡Solicita descuentos exclusivos!</span>
+                <span className="px-2 py-0.5 bg-[#2a63cd] text-white text-[10px] font-bold rounded-full">NUEVO</span>
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Guarda productos aquí y solicita un descuento especial. Nuestro equipo revisará tu solicitud.
+              </p>
+            </div>
+            <button
+              onClick={dismissInfoBanner}
+              className="flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Cerrar"
+            >
+              <FiX className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Toolbar */}
       {wishlist.length > 0 && (
@@ -313,7 +384,7 @@ export default function WishlistPage() {
       {/* Wishlist Content */}
       {filteredAndSortedWishlist.length > 0 ? (
         viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {filteredAndSortedWishlist.map((item, index) => {
               const discountStatus = getDiscountStatus(item.productId);
               const hasActiveDiscount = discountStatus?.status === 'APPROVED' && discountStatus.expiresAt && new Date(discountStatus.expiresAt) > new Date();
@@ -321,21 +392,21 @@ export default function WishlistPage() {
               return (
                 <div
                   key={item.id}
-                  className={`bg-white rounded-xl border shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group relative
-                    ${hasActiveDiscount ? 'border-emerald-300 ring-2 ring-emerald-100' : 'border-[#e9ecef]'}
+                  className={`bg-white rounded-lg border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group relative
+                    ${hasActiveDiscount ? 'border-green-300 ring-1 ring-green-100' : 'border-[#e9ecef]'}
                     ${removingId === item.id ? 'animate-pulse opacity-50' : ''}
                   `}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   {/* Active discount badge */}
                   {hasActiveDiscount && (
-                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-center py-1 text-xs font-bold z-10 animate-pulse">
-                      <FiGift className="inline w-3 h-3 mr-1" />
-                      {discountStatus?.approvedDiscount || discountStatus?.requestedDiscount}% DESCUENTO APROBADO
+                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-green-500 to-green-600 text-white text-center py-0.5 text-[10px] font-bold z-10">
+                      <FiGift className="inline w-2.5 h-2.5 mr-0.5" />
+                      {discountStatus?.approvedDiscount}% OFF
                     </div>
                   )}
 
-                  <div className={`relative aspect-square bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] ${hasActiveDiscount ? 'mt-6' : ''}`}>
+                  <div className={`relative aspect-square bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] ${hasActiveDiscount ? 'mt-4' : ''}`}>
                     {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}
@@ -345,64 +416,64 @@ export default function WishlistPage() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <FiPackage className="w-16 h-16 text-[#adb5bd]" />
+                        <FiPackage className="w-10 h-10 text-[#adb5bd]" />
                       </div>
                     )}
 
                     <button
-                      onClick={() => removeFromWishlist(item.id)}
-                      disabled={removingId === item.id}
-                      className="absolute top-3 right-3 p-2.5 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg hover:bg-red-50 hover:text-red-600 transition-all opacity-0 group-hover:opacity-100"
+                      onClick={() => removeFromWishlist(item.productId)}
+                      disabled={removingId === item.productId}
+                      className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow hover:bg-red-50 hover:text-red-600 transition-all opacity-0 group-hover:opacity-100"
                     >
-                      <FiTrash2 className="w-4 h-4" />
+                      <FiTrash2 className="w-3.5 h-3.5" />
                     </button>
 
                     {!item.inStock && (
                       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                        <span className="px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-xl">Agotado</span>
+                        <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-lg">Agotado</span>
                       </div>
                     )}
 
                     {/* Discount status badge */}
                     {discountStatus && discountStatus.status !== 'APPROVED' && (
-                      <div className="absolute bottom-3 left-3">
+                      <div className="absolute bottom-2 left-2">
                         {getStatusBadge(discountStatus.status)}
                       </div>
                     )}
                   </div>
 
-                  <div className="p-4">
-                    <h3 className="font-bold text-[#212529] mb-2 line-clamp-2 leading-tight">{item.productName}</h3>
+                  <div className="p-2.5">
+                    <h3 className="text-xs font-bold text-[#212529] mb-1.5 line-clamp-2 leading-tight">{item.productName}</h3>
 
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-1.5 mb-2">
                       {hasActiveDiscount ? (
                         <>
-                          <span className="text-sm text-[#6a6c6b] line-through">${item.price.toFixed(2)}</span>
-                          <span className="text-2xl font-black text-emerald-600">
+                          <span className="text-[10px] text-[#6a6c6b] line-through">${item.price.toFixed(2)}</span>
+                          <span className="text-base font-black text-green-600">
                             ${(item.price * (1 - (discountStatus?.approvedDiscount || 0) / 100)).toFixed(2)}
                           </span>
                         </>
                       ) : (
-                        <span className="text-2xl font-black text-[#2a63cd]">${item.price.toFixed(2)}</span>
+                        <span className="text-base font-black text-[#2a63cd]">${item.price.toFixed(2)}</span>
                       )}
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex gap-2 mb-2">
+                    <div className="flex gap-1.5 mb-1.5">
                       <Link
-                        href={`/producto/${item.productId}`}
-                        className="flex-1 px-3 py-2 bg-[#f8f9fa] text-[#212529] text-sm font-semibold rounded-xl hover:bg-[#e9ecef] text-center flex items-center justify-center gap-1"
+                        href={`/productos/${item.productId}`}
+                        className="flex-1 px-2 py-1.5 bg-[#f8f9fa] text-[#212529] text-[10px] font-semibold rounded-lg hover:bg-[#e9ecef] text-center flex items-center justify-center gap-1"
                       >
-                        <FiExternalLink className="w-3.5 h-3.5" />
+                        <FiExternalLink className="w-3 h-3" />
                         Ver
                       </Link>
                       <button
                         onClick={() => handleAddToCart(item)}
                         disabled={!item.inStock}
-                        className="flex-1 px-3 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-semibold rounded-xl hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-1"
+                        className="flex-1 px-2 py-1.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-[10px] font-semibold rounded-lg hover:shadow-md disabled:opacity-50 flex items-center justify-center gap-1"
                       >
-                        <FiShoppingCart className="w-3.5 h-3.5" />
-                        Agregar
+                        <FiShoppingCart className="w-3 h-3" />
+                        Añadir
                       </button>
                     </div>
 
@@ -410,16 +481,16 @@ export default function WishlistPage() {
                     {item.inStock && !discountStatus && (
                       <button
                         onClick={() => openDiscountModal(item)}
-                        className="w-full px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all flex items-center justify-center gap-2"
+                        className="w-full px-2 py-1.5 bg-[#2a63cd]/10 text-[#2a63cd] border border-[#2a63cd]/20 text-[10px] font-semibold rounded-lg hover:bg-[#2a63cd]/20 transition-all flex items-center justify-center gap-1"
                       >
-                        <FiPercent className="w-3.5 h-3.5" />
-                        Solicitar Descuento
+                        <FiPercent className="w-3 h-3" />
+                        Pedir Descuento
                       </button>
                     )}
 
                     {/* Show discount status */}
                     {discountStatus && (
-                      <div className="mt-2 text-center">
+                      <div className="mt-1 text-center">
                         {getStatusBadge(discountStatus.status, discountStatus.expiresAt)}
                       </div>
                     )}

@@ -524,110 +524,140 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Price Section */}
-            <div className="relative group py-2">
-              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-              <div className="relative flex items-baseline gap-4">
-                <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] bg-[length:200%_auto] hover:bg-right transition-all duration-500 tracking-tighter drop-shadow-sm">
+            <div className="flex justify-center py-2">
+              <div className="inline-flex flex-col items-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl border border-blue-100 px-6 py-3 shadow-sm">
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Precio</span>
+                <span className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] tracking-tight leading-none">
                   ${Number(product.priceUSD).toFixed(2)}
                 </span>
                 {product.hasDiscount && product.discountPercent && (
-                  <div className="flex flex-col items-start animate-in fade-in slide-in-from-left-4 duration-700">
-                    <span className="text-lg text-gray-400 line-through font-medium decoration-red-400/50">
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm text-gray-400 line-through">
                       ${formatPrice(product.priceUSD / (1 - product.discountPercent / 100))}
                     </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-red-50 text-red-600 border border-red-100 uppercase tracking-wide">
-                      -{product.discountPercent}% OFF
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-100">
+                      -{product.discountPercent}%
                     </span>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Description */}
-            <div className="prose prose-sm text-gray-600 mt-6 min-h-[60px]">
-              {product.description ? (
-                <>
-                  <p className={`leading-relaxed ${!isDescriptionExpanded ? 'line-clamp-3' : ''}`}>
-                    {product.description}
-                  </p>
-                  {product.description.length > 200 && (
-                    <button
-                      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                      className="inline-flex items-center gap-1 text-[#2a63cd] font-bold text-xs uppercase tracking-wider hover:underline mt-2 group"
-                    >
-                      {isDescriptionExpanded ? 'Leer menos' : 'Leer más'}
-                      <svg
-                        className={`w-3 h-3 transition-transform duration-300 ${isDescriptionExpanded ? 'rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                  )}
-                </>
-              ) : (
-                <div className="flex flex-col gap-2 opacity-60">
-                  <p className="text-sm italic text-gray-400">Descripción por definir</p>
+            {/* Trust Badges - Compact */}
+            <div className="flex justify-center gap-3 py-3">
+              {[
+                { icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>, text: 'Garantía' },
+                { icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>, text: 'Envío 24h' },
+                { icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>, text: 'Pago Seguro' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
+                  <span className="text-[#2a63cd]">{item.icon}</span>
+                  <span className="text-xs font-medium text-gray-600">{item.text}</span>
                 </div>
-              )}
+              ))}
+            </div>
+
+            {/* Description - Premium Collapsible Card */}
+            <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              <button
+                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                className="w-full bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-5 py-3 flex items-center justify-between group hover:from-[#1e4ba3] hover:to-[#2a63cd] transition-all duration-300"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                    </svg>
+                  </div>
+                  <span className="font-bold text-white">Descripción del Producto</span>
+                </div>
+                <div className={`w-6 h-6 bg-white/20 rounded-full flex items-center justify-center transition-transform duration-300 ${isDescriptionExpanded ? 'rotate-180' : ''} group-hover:bg-white/30`}>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </button>
+              <div className={`transition-all duration-300 ease-in-out ${isDescriptionExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="px-5 py-4 border-t border-gray-100">
+                  {product.description ? (
+                    <p className="text-gray-600 leading-relaxed text-sm">{product.description}</p>
+                  ) : (
+                    <p className="text-sm italic text-gray-400">Descripción por definir</p>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Actions Section */}
             <div className="space-y-4 pt-6 border-t border-gray-100">
               {/* Stock Status */}
-              <div className="flex items-center gap-2 text-sm">
-                <div className={`w-2.5 h-2.5 rounded-full ${isOutOfStock ? 'bg-red-500' : isLowStock ? 'bg-orange-500' : 'bg-green-500'}`}></div>
-                <span className={`font-medium ${isOutOfStock ? 'text-red-600' : isLowStock ? 'text-orange-600' : 'text-green-600'}`}>
+              <div className="flex items-center justify-center gap-2 text-sm">
+                <div className={`w-2 h-2 rounded-full ${isOutOfStock ? 'bg-red-500' : isLowStock ? 'bg-[#2a63cd] animate-pulse' : 'bg-green-500'}`}></div>
+                <span className={`font-semibold ${isOutOfStock ? 'text-red-600' : isLowStock ? 'text-[#2a63cd] animate-pulse' : 'text-green-600'}`}>
                   {isOutOfStock ? 'Agotado' : isLowStock ? `¡Solo quedan ${product.stock}!` : 'Disponible en stock'}
                 </span>
               </div>
 
               {!isOutOfStock && (
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Quantity & Add to Cart */}
-                  <div className="flex items-center gap-3 w-full sm:w-[58%]">
-                    <div className="flex items-center border border-gray-200 rounded-xl bg-gray-50">
-                      <button
-                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-[#2a63cd] transition-colors"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min="1"
-                        max={product.stock}
-                        value={quantity}
-                        onChange={(e) => setQuantity(Math.min(product.stock, Math.max(1, parseInt(e.target.value) || 1)))}
-                        className="w-12 text-center bg-transparent font-bold text-gray-900 focus:outline-none"
-                      />
-                      <button
-                        onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                        className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-[#2a63cd] transition-colors"
-                      >
-                        +
-                      </button>
-                    </div>
-
+                <div className="flex items-center gap-2">
+                  {/* Quantity Selector */}
+                  <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50">
                     <button
-                      onClick={handleAddToCart}
-                      disabled={addingToCart}
-                      className="flex-1 h-10 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="w-8 h-10 flex items-center justify-center text-gray-500 hover:text-[#2a63cd] transition-colors text-lg"
                     >
-                      {addingToCart ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <>
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                          <span>Añadir al carrito</span>
-                        </>
-                      )}
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      max={product.stock}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.min(product.stock, Math.max(1, parseInt(e.target.value) || 1)))}
+                      className="w-10 text-center bg-transparent font-bold text-gray-900 focus:outline-none text-sm"
+                    />
+                    <button
+                      onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                      className="w-8 h-10 flex items-center justify-center text-gray-500 hover:text-[#2a63cd] transition-colors text-lg"
+                    >
+                      +
                     </button>
                   </div>
+
+                  {/* Add to Cart */}
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={addingToCart}
+                    className="flex-[1.25] h-10 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-lg shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm"
+                  >
+                    {addingToCart ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span className="hidden sm:inline">Añadir</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Wishlist Button - Icon Only */}
+                  <button
+                    onClick={handleToggleWishlist}
+                    disabled={wishlistLoading}
+                    className={`w-10 h-10 rounded-lg shadow-md transition-all flex items-center justify-center hover:scale-105 ${isInWishlist
+                      ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-red-500/20'
+                      : 'bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200'
+                      }`}
+                    title={isInWishlist ? "En tu lista de deseos" : "Añadir a lista de deseos"}
+                  >
+                    {wishlistLoading ? (
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <FiHeart className={`w-5 h-5 ${isInWishlist ? 'fill-current' : ''}`} />
+                    )}
+                  </button>
 
                   {/* Buy Now */}
                   <button
@@ -636,43 +666,15 @@ export default function ProductDetailPage() {
                       router.push('/checkout');
                     }}
                     disabled={addingToCart}
-                    className="w-full sm:w-[42%] h-10 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                    className="flex-1 h-10 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-lg shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm"
                   >
-                    <HiShoppingBag className="w-5 h-5" />
-                    Comprar Ahora
+                    <HiShoppingBag className="w-4 h-4" />
+                    <span className="hidden sm:inline">Comprar</span>
                   </button>
                 </div>
               )}
             </div>
 
-            <div className="flex justify-center pt-4">
-              <button
-                onClick={handleToggleWishlist}
-                disabled={wishlistLoading}
-                className={`flex items-center gap-2 text-sm font-medium transition-colors ${isInWishlist ? 'text-red-500 hover:text-red-600' : 'text-gray-500 hover:text-[#2a63cd]'
-                  }`}
-              >
-                <FiHeart className={`w-5 h-5 ${isInWishlist ? 'fill-current' : ''}`} />
-                {isInWishlist ? 'Eliminar de mi lista de deseos' : 'Añadir a mi lista de deseos'}
-              </button>
-            </div>
-
-            {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-4 pt-6">
-              {[
-                { icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>, title: 'Garantía Oficial', desc: 'Directa de fabricante' },
-                { icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>, title: 'Envío Rápido', desc: '24-48 horas' },
-                { icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>, title: 'Pago Seguro', desc: 'Protección total' },
-              ].map((item, i) => (
-                <div key={i} className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                  <div className="text-[#2a63cd]">{item.icon}</div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-900">{item.title}</p>
-                    <p className="text-[10px] text-gray-500">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div >
 

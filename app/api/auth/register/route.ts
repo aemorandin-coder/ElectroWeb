@@ -98,6 +98,18 @@ export async function POST(request: NextRequest) {
           icon: 'FiMail',
         },
       });
+
+      // Notification about wishlist discount feature
+      await prisma.notification.create({
+        data: {
+          userId: user.id,
+          type: 'PROMOTION',
+          title: '¡Descubre los descuentos exclusivos!',
+          message: 'Guarda productos en tu Lista de Deseos y solicita descuentos especiales. Nuestro equipo revisará tu solicitud y te notificará cuando sea aprobada.',
+          link: '/customer/wishlist',
+          icon: 'FiPercent',
+        },
+      });
     } catch (notifError) {
       console.error('Error creating welcome notification:', notifError);
     }

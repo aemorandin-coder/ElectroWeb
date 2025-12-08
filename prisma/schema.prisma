@@ -61,6 +61,8 @@ model User {
   wishlist      Wishlist?
   savedPaymentMethods SavedPaymentMethod[]
   passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  discountRequests    DiscountRequest[]
 
   @@map("users")
 }
@@ -649,6 +651,18 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
 model Course {
   id              String   @id @default(cuid())
   title           String
@@ -736,4 +750,28 @@ model ProductRequest {
   updatedAt        DateTime @updatedAt
 
   @@map("product_requests")
+}
+
+// Discount Request from Wishlist
+model DiscountRequest {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId        String
+  productName      String
+  originalPrice    Decimal
+  requestedDiscount Int      // 1-5%
+  customerMessage  String?
+  status           String   @default("PENDING") // PENDING, APPROVED, REJECTED, EXPIRED, USED
+  adminResponse    String?
+  approvedDiscount Int?     // The discount approved by admin (can be different from requested)
+  expiresAt        DateTime? // When the discount expires
+  usedAt           DateTime? // When the customer used the discount
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([productId])
+  @@index([status])
+  @@map("discount_requests")
 }

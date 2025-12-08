@@ -304,8 +304,8 @@ export default function CustomerDashboard() {
           </div>
 
           {/* Stats Summary */}
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100">
-            <h3 className="font-bold text-[#212529] text-sm mb-3 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100 max-h-[200px] overflow-y-auto">
+            <h3 className="font-bold text-[#212529] text-sm mb-3 flex items-center gap-2 sticky top-0 bg-gradient-to-br from-blue-50 to-purple-50 py-1">
               <FiTrendingUp className="w-4 h-4 text-[#2a63cd]" />
               Resumen
             </h3>

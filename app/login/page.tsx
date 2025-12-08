@@ -123,11 +123,10 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError('Credenciales inválidas. Por favor, verifique su información.');
+        setError('Credenciales invalidas. Por favor, verifique su informacion.');
       } else if (result?.ok) {
         // Wait a bit for session to be established
         await new Promise(resolve => setTimeout(resolve, 200));
-        // Redirect based on user type
         // Redirect based on user type or callback
         const callbackUrl = searchParams.get('callbackUrl');
         if (callbackUrl && callbackUrl.startsWith('/')) {

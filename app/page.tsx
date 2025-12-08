@@ -63,7 +63,7 @@ export default async function Home() {
   }));
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" suppressHydrationWarning>
       <PublicHeader settings={companySettings ? JSON.parse(JSON.stringify(companySettings)) : null} />
 
       {/* Hero Section - Premium Design */}
@@ -455,7 +455,7 @@ export default async function Home() {
           {/* Bottom Bar */}
           <div className="pt-6 border-t border-white/10">
             <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-gray-400">
-              <p>&copy; {new Date().getFullYear()} {companySettings?.companyName || 'Electro Shop Morandin C.A.'} Todos los derechos reservados.</p>
+              <p>&copy; 2024 {companySettings?.companyName || 'Electro Shop Morandin C.A.'} Todos los derechos reservados.</p>
               <div className="flex gap-4">
                 <Link href="/terminos" className="hover:text-[#2a63cd] transition-colors">Términos</Link>
                 <Link href="/privacidad" className="hover:text-[#2a63cd] transition-colors">Privacidad</Link>

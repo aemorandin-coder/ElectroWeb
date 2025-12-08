@@ -286,6 +286,21 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Mark discounts as used
+      if (body.appliedDiscountIds && body.appliedDiscountIds.length > 0) {
+        await tx.discountRequest.updateMany({
+          where: {
+            id: { in: body.appliedDiscountIds },
+            userId: body.userId || session.user.id,
+            status: 'APPROVED',
+          },
+          data: {
+            status: 'USED',
+            usedAt: new Date(),
+          },
+        });
+      }
+
       return order;
     });
 
@@ -563,15 +578,22 @@ export async function PATCH(request: NextRequest) {
 
           // Restore stock if order is cancelled
           for (const item of order.items) {
-            await prisma.product.update({
-              where: { id: item.productId },
-              data: {
-                stock: {
-                  increment: item.quantity,
+            const product = await prisma.product.findUnique({ where: { id: item.productId } });
+            if (product) {
+              const newStock = product.stock + item.quantity;
+              await prisma.product.update({
+                where: { id: item.productId },
+                data: {
+                  stock: newStock,
+                  status: newStock <= 0 ? 'OUT_OF_STOCK' : product.status,
                 },
-              },
-            });
+              });
+            }
           }
+
+          // Mark discounts as used
+          // TODO: Logic to restore discounts if needed
+          break;
           break;
       }
     }

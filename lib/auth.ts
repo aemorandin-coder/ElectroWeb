@@ -30,19 +30,22 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (isPasswordValid) {
+            const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+
             return {
               id: user.id,
               email: user.email,
               name: user.name,
               image: user.image,
               role: user.role,
-              userType: (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') ? 'admin' : 'customer',
-              permissions: [], // Add permissions logic if needed based on role
+              userType: isAdmin ? 'admin' : 'customer',
+              emailVerified: user.emailVerified ? true : false,
+              permissions: [],
             };
           }
         }
 
-        throw new Error('Credenciales inválidas');
+        throw new Error('Credenciales invalidas');
       },
     }),
   ],
@@ -62,6 +65,7 @@ export const authOptions: NextAuthOptions = {
         token.role = (user as any).role;
         token.permissions = (user as any).permissions;
         token.userType = (user as any).userType;
+        token.emailVerified = (user as any).emailVerified;
       }
 
       // Refresh token on each request to keep session alive
@@ -75,6 +79,7 @@ export const authOptions: NextAuthOptions = {
             name: true,
             image: true,
             role: true,
+            emailVerified: true,
           },
         });
 
@@ -83,6 +88,7 @@ export const authOptions: NextAuthOptions = {
           token.image = dbUser.image;
           token.role = dbUser.role;
           token.userType = (dbUser.role === 'ADMIN' || dbUser.role === 'SUPER_ADMIN') ? 'admin' : 'customer';
+          token.emailVerified = dbUser.emailVerified ? true : false;
         }
       }
 
@@ -95,6 +101,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).permissions = token.permissions;
         (session.user as any).userType = token.userType;
         (session.user as any).image = token.image;
+        (session.user as any).emailVerified = token.emailVerified;
       }
       return session;
     },

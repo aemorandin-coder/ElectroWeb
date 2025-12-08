@@ -19,6 +19,7 @@ import {
   FiShield
 } from 'react-icons/fi';
 import { FaMoneyCheckAlt } from 'react-icons/fa';
+import { PiListHeartBold } from 'react-icons/pi';
 
 interface CompanySettings {
   companyName: string;
@@ -112,7 +113,7 @@ export default function CustomerDashboardLayout({
     { href: '/customer', icon: FiHome, label: 'Inicio' },
     { href: '/customer/balance', icon: FaMoneyCheckAlt, label: 'Saldo y Pagos' },
     { href: '/customer/orders', icon: FiShoppingBag, label: 'Mis Pedidos' },
-    { href: '/customer/wishlist', icon: FiHeart, label: 'Lista de Deseos' },
+    { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Lista de Deseos' },
     { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },
     { href: '/customer/warranty', icon: FiShield, label: 'Garantía y Devoluciones' },
     { href: '/customer/profile', icon: FiUser, label: 'Mi Perfil' },

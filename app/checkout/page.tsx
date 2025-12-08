@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -68,6 +68,10 @@ export default function CheckoutPage() {
     items: Array<{ name: string; quantity: number }>;
   } | null>(null);
 
+  // Active Discounts
+  const [activeDiscounts, setActiveDiscounts] = useState<any[]>([]);
+  const [appliedDiscountIds, setAppliedDiscountIds] = useState<string[]>([]);
+
   // Load company settings for exchange rates
   useEffect(() => {
     fetch('/api/settings/public')
@@ -99,19 +103,73 @@ export default function CheckoutPage() {
               const addresses = typeof data.profile.savedAddresses === 'string'
                 ? JSON.parse(data.profile.savedAddresses)
                 : data.profile.savedAddresses;
+
               if (Array.isArray(addresses)) {
                 setSavedAddresses(addresses);
+                if (addresses.length > 0) {
+                  setShowAddressSelector(true);
+                  setIsNewAddress(false);
+                  setFormData(prev => ({
+                    ...prev,
+                    ...addresses[0]
+                  }));
+                }
               }
-            } catch (error) {
-              console.error('Error parsing saved addresses:', error);
+            } catch (e) {
+              console.error('Error parsing saved addresses', e);
             }
           }
-        })
-        .catch(err => console.error('Error loading profile:', err));
+        });
 
-      fetchBalance();
+      // Fetch active discounts
+      fetch('/api/customer/discount-requests')
+        .then(res => res.json())
+        .then(data => {
+          if (data.activeDiscounts) {
+            setActiveDiscounts(data.activeDiscounts);
+          }
+        })
+        .catch(err => console.error('Error loading discounts:', err));
     }
   }, [session]);
+
+  // Calculate totals with discounts
+  const { cartSubtotal, cartDiscount, cartTotal, discountIds } = useMemo(() => {
+    let sub = 0;
+    let disc = 0;
+    const ids: string[] = [];
+
+    items.forEach(item => {
+      const itemTotal = item.price * item.quantity;
+      sub += itemTotal;
+
+      const activeDiscount = activeDiscounts.find(d =>
+        d.productId === item.id &&
+        d.status === 'APPROVED' &&
+        d.expiresAt &&
+        new Date(d.expiresAt) > new Date()
+      );
+
+      if (activeDiscount) {
+        const discountVal = activeDiscount.approvedDiscount || activeDiscount.requestedDiscount;
+        const discountAmount = itemTotal * (discountVal / 100);
+        disc += discountAmount;
+        ids.push(activeDiscount.id);
+      }
+    });
+
+    return {
+      cartSubtotal: sub,
+      cartDiscount: disc,
+      cartTotal: sub - disc,
+      discountIds: ids
+    };
+  }, [items, activeDiscounts]);
+
+  // Update applied discount IDs state
+  useEffect(() => {
+    setAppliedDiscountIds(discountIds);
+  }, [discountIds]);
 
   const fetchBalance = async () => {
     try {
@@ -152,8 +210,6 @@ export default function CheckoutPage() {
     }
   }, [status, router]);
 
-  const totalPrice = getTotalPrice();
-
   // Calculate shipping cost from settings
   const getShippingCost = () => {
     if (formData.deliveryMethod !== 'SHIPPING' && formData.deliveryMethod !== 'HOME_DELIVERY') {
@@ -164,7 +220,7 @@ export default function CheckoutPage() {
     const freeThreshold = companySettings?.freeDeliveryThresholdUSD ? Number(companySettings.freeDeliveryThresholdUSD) : null;
 
     // Check if order qualifies for free shipping
-    if (freeThreshold && totalPrice >= freeThreshold) {
+    if (freeThreshold && cartSubtotal >= freeThreshold) {
       return 0;
     }
 
@@ -172,7 +228,9 @@ export default function CheckoutPage() {
   };
 
   const shippingCost = getShippingCost();
-  const finalTotal = totalPrice + shippingCost;
+  // Override finalTotal to include shipping
+  const finalOrderTotal = cartTotal + shippingCost;
+  const finalTotal = finalOrderTotal; // Keep variable name for compatibility with rest of file
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,8 +238,15 @@ export default function CheckoutPage() {
     setError('');
 
     if (!session?.user) {
-      setError('Debes iniciar sesión para realizar un pedido');
+      setError('Debes iniciar sesion para realizar un pedido');
       router.push('/login?redirect=checkout');
+      return;
+    }
+
+    // Check if email is verified
+    if (!(session.user as any).emailVerified) {
+      setError('Debes verificar tu correo electronico antes de realizar compras. Revisa tu bandeja de entrada y haz clic en el enlace de verificacion.');
+      setLoading(false);
       return;
     }
 
@@ -219,10 +284,10 @@ export default function CheckoutPage() {
 
       const orderData = {
         currency: primaryCurrency,
-        subtotal: totalPrice,
+        subtotal: cartSubtotal,
         tax: 0,
         shipping: shippingCost,
-        discount: 0,
+        discount: cartDiscount,
         total: finalTotal,
         exchangeRateVES: exchangeRateVES,
         exchangeRateEUR: exchangeRateEUR,
@@ -230,6 +295,7 @@ export default function CheckoutPage() {
         deliveryMethod: formData.deliveryMethod,
         items: orderItems,
         notes: formData.notes || null,
+        appliedDiscountIds: appliedDiscountIds,
       };
 
       const response = await fetch('/api/orders', {
@@ -517,6 +583,44 @@ export default function CheckoutPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span className="text-sm font-medium">{error}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Email Verification Warning Banner */}
+              {session?.user && !(session.user as any).emailVerified && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                      <FiAlertCircle className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-amber-800 text-sm mb-1">Verifica tu correo electronico</h3>
+                      <p className="text-amber-700 text-sm mb-3">
+                        Para poder realizar compras, necesitas verificar tu email.
+                        Revisa tu bandeja de entrada y haz clic en el enlace de verificacion.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const res = await fetch('/api/auth/resend-verification', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ email: (session.user as any).email }),
+                            });
+                            const data = await res.json();
+                            alert(data.message || 'Email de verificacion enviado');
+                          } catch (err) {
+                            alert('Error al reenviar email');
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors"
+                      >
+                        <FiAlertCircle className="w-4 h-4" />
+                        Reenviar email de verificacion
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1360,44 +1464,66 @@ export default function CheckoutPage() {
               </h2>
 
               <div className="space-y-3 mb-4">
-                {items.map((item) => (
-                  <div key={item.id} className="flex gap-3 pb-3 border-b border-[#e9ecef] last:border-0 last:pb-0">
-                    <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded flex-shrink-0 relative overflow-hidden">
-                      {item.imageUrl ? (
-                        <Image
-                          src={item.imageUrl}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                          </svg>
+                {items.map((item) => {
+                  const originalTotal = item.price * item.quantity;
+                  const finalItemTotal = item.price * item.quantity * (1 - (item.discountPercentage || 0) / 100);
+                  const activeDiscount = item.discountPercentage > 0;
+
+                  return (
+                    <div key={item.id} className="flex items-center gap-3">
+                      <div className="relative flex-shrink-0 w-12 h-12 bg-white rounded-lg border border-[#e9ecef] overflow-hidden">
+                        {item.imageUrl ? (
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.name}
+                            fill
+                            className="object-contain p-1"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                            <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium text-[#212529] line-clamp-1 mb-1">
+                          {item.name}
+                        </h4>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-[#6a6c6b]">x{item.quantity}</span>
+                          <span className="font-semibold text-[#2a63cd]">
+                            {activeDiscount ? (
+                              <div className="flex flex-col items-end">
+                                <span className="text-xs text-gray-400 line-through">{formatPrice(originalTotal)}</span>
+                                <span className="text-green-600 font-bold">{formatPrice(finalItemTotal)}</span>
+                              </div>
+                            ) : formatPrice(originalTotal)}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-[#212529] line-clamp-1 mb-1">
-                        {item.name}
-                      </h4>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-[#6a6c6b]">x{item.quantity}</span>
-                        <span className="font-semibold text-[#2a63cd]">
-                          {formatPrice(item.price * item.quantity)}
-                        </span>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="pt-4 border-t border-[#e9ecef] space-y-2 mb-6">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-[#6a6c6b]">Subtotal</span>
-                  <span className="font-medium text-[#212529]">{formatPrice(totalPrice)}</span>
+                  <span className="font-medium text-[#212529]">{formatPrice(cartSubtotal)}</span>
                 </div>
+                {cartDiscount > 0 && (
+                  <div className="flex items-center justify-between text-sm animate-pulse">
+                    <span className="text-green-600 flex items-center gap-1 font-medium">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                      </svg>
+                      Descuento aplicado
+                    </span>
+                    <span className="font-bold text-green-600">-{formatPrice(cartDiscount)}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-[#6a6c6b]">Envío</span>
                   <span className={`font-medium ${shippingCost > 0 ? 'text-[#212529]' : 'text-green-600'}`}>
@@ -1445,7 +1571,6 @@ export default function CheckoutPage() {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="bg-white border-t border-[#e9ecef] mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-sm text-[#6a6c6b]">
@@ -1461,233 +1586,236 @@ export default function CheckoutPage() {
       />
 
       {/* Terms and Conditions Modal */}
-      {showTermsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">Términos y Condiciones</h2>
+      {
+        showTermsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-white">Términos y Condiciones</h2>
+                  <button
+                    onClick={() => setShowTermsModal(false)}
+                    className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+                  >
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 overflow-y-auto max-h-[calc(80vh-200px)]">
+                <div className="space-y-6 text-sm text-[#212529]">
+                  {/* Critical Warning */}
+                  <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-orange-500 rounded-r-xl">
+                    <h3 className="font-bold text-orange-900 mb-2 flex items-center gap-2">
+                      <FiAlertCircle className="w-5 h-5" />
+                      Responsabilidad del Usuario
+                    </h3>
+                    <p className="text-orange-800 leading-relaxed">
+                      <strong>IMPORTANTE:</strong> El usuario es completamente responsable de verificar que todos los datos de envío (dirección, ciudad, estado, oficina de encomienda, etc.) sean correctos antes de completar su pedido.
+                    </p>
+                    <p className="text-orange-800 mt-2 leading-relaxed font-bold">
+                      Electro Shop Morandin C.A. NO SE HACE RESPONSABLE por pérdidas, retrasos o costos adicionales derivados de datos errados ingresados por el usuario.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">1. Información General</h3>
+                    <p className="leading-relaxed">
+                      Al realizar una compra en Electro Shop Morandin C.A., usted acepta estos términos y condiciones en su totalidad. Por favor, léalos cuidadosamente antes de completar su pedido.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">2. Datos de Envío</h3>
+                    <ul className="list-disc ml-6 space-y-2">
+                      <li>Es responsabilidad del cliente proporcionar una dirección de envío completa y correcta.</li>
+                      <li>Los datos de contacto (nombre, email, teléfono) provienen de su registro y son verificados.</li>
+                      <li>Si selecciona envío a oficina de encomienda (ZOOM o MRW), debe proporcionar el código correcto de la oficina o casillero.</li>
+                      <li>La empresa NO corregirá datos errados después de que el pedido haya sido procesado.</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">3. Envíos mediante ZOOM y MRW</h3>
+                    <ul className="list-disc ml-6 space-y-2">
+                      <li>Los pedidos se envían mediante las empresas certificadas ZOOM o MRW según la selección del cliente.</li>
+                      <li>El cliente debe proporcionar un código de oficina válido o número de casillero.</li>
+                      <li>Para retirar el paquete, debe presentar cédula de identidad.</li>
+                      <li>El tiempo de entrega depende de la empresa de encomienda seleccionada.</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">4. Limitación de Responsabilidad</h3>
+                    <ul className="list-disc ml-6 space-y-2">
+                      <li>La empresa no se hace responsable de direcciones incorrectas o incompletas proporcionadas por el usuario.</li>
+                      <li>No se procesan reembolsos por entregas fallidas debido a datos incorrectos del cliente.</li>
+                      <li>Los costos adicionales de reenvío por datos incorrectos serán asumidos por el cliente.</li>
+                      <li>La empresa verificará la identidad del destinatario al momento de la entrega.</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">5. Métodos de Pago</h3>
+                    <p className="leading-relaxed">
+                      Aceptamos transferencias bancarias, pago móvil, criptomonedas y saldo de billetera. Los pedidos se procesan una vez confirmado el pago.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">6. Política de Cambios y Devoluciones</h3>
+                    <p className="leading-relaxed">
+                      Consulte nuestra política de cambios y devoluciones. No se aceptan devoluciones por datos de envío incorrectos proporcionados por el cliente.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-6 bg-[#f8f9fa] border-t border-[#e9ecef] flex gap-3">
+                <button
+                  onClick={() => {
+                    setAcceptedTerms(true);
+                    setShowTermsModal(false);
+                  }}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg transition-all"
+                >
+                  Aceptar y Continuar
+                </button>
                 <button
                   onClick={() => setShowTermsModal(false)}
-                  className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+                  className="px-6 py-3 bg-white border-2 border-[#e9ecef] text-[#212529] font-medium rounded-xl hover:bg-[#f8f9fa] transition-all"
                 >
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  Cerrar
                 </button>
               </div>
             </div>
-
-            {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(80vh-200px)]">
-              <div className="space-y-6 text-sm text-[#212529]">
-                {/* Critical Warning */}
-                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-orange-500 rounded-r-xl">
-                  <h3 className="font-bold text-orange-900 mb-2 flex items-center gap-2">
-                    <FiAlertCircle className="w-5 h-5" />
-                    Responsabilidad del Usuario
-                  </h3>
-                  <p className="text-orange-800 leading-relaxed">
-                    <strong>IMPORTANTE:</strong> El usuario es completamente responsable de verificar que todos los datos de envío (dirección, ciudad, estado, oficina de encomienda, etc.) sean correctos antes de completar su pedido.
-                  </p>
-                  <p className="text-orange-800 mt-2 leading-relaxed font-bold">
-                    Electro Shop Morandin C.A. NO SE HACE RESPONSABLE por pérdidas, retrasos o costos adicionales derivados de datos errados ingresados por el usuario.
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-lg mb-2">1. Información General</h3>
-                  <p className="leading-relaxed">
-                    Al realizar una compra en Electro Shop Morandin C.A., usted acepta estos términos y condiciones en su totalidad. Por favor, léalos cuidadosamente antes de completar su pedido.
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-lg mb-2">2. Datos de Envío</h3>
-                  <ul className="list-disc ml-6 space-y-2">
-                    <li>Es responsabilidad del cliente proporcionar una dirección de envío completa y correcta.</li>
-                    <li>Los datos de contacto (nombre, email, teléfono) provienen de su registro y son verificados.</li>
-                    <li>Si selecciona envío a oficina de encomienda (ZOOM o MRW), debe proporcionar el código correcto de la oficina o casillero.</li>
-                    <li>La empresa NO corregirá datos errados después de que el pedido haya sido procesado.</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-lg mb-2">3. Envíos mediante ZOOM y MRW</h3>
-                  <ul className="list-disc ml-6 space-y-2">
-                    <li>Los pedidos se envían mediante las empresas certificadas ZOOM o MRW según la selección del cliente.</li>
-                    <li>El cliente debe proporcionar un código de oficina válido o número de casillero.</li>
-                    <li>Para retirar el paquete, debe presentar cédula de identidad.</li>
-                    <li>El tiempo de entrega depende de la empresa de encomienda seleccionada.</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-lg mb-2">4. Limitación de Responsabilidad</h3>
-                  <ul className="list-disc ml-6 space-y-2">
-                    <li>La empresa no se hace responsable de direcciones incorrectas o incompletas proporcionadas por el usuario.</li>
-                    <li>No se procesan reembolsos por entregas fallidas debido a datos incorrectos del cliente.</li>
-                    <li>Los costos adicionales de reenvío por datos incorrectos serán asumidos por el cliente.</li>
-                    <li>La empresa verificará la identidad del destinatario al momento de la entrega.</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-lg mb-2">5. Métodos de Pago</h3>
-                  <p className="leading-relaxed">
-                    Aceptamos transferencias bancarias, pago móvil, criptomonedas y saldo de billetera. Los pedidos se procesan una vez confirmado el pago.
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-lg mb-2">6. Política de Cambios y Devoluciones</h3>
-                  <p className="leading-relaxed">
-                    Consulte nuestra política de cambios y devoluciones. No se aceptan devoluciones por datos de envío incorrectos proporcionados por el cliente.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-6 bg-[#f8f9fa] border-t border-[#e9ecef] flex gap-3">
-              <button
-                onClick={() => {
-                  setAcceptedTerms(true);
-                  setShowTermsModal(false);
-                }}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg transition-all"
-              >
-                Aceptar y Continuar
-              </button>
-              <button
-                onClick={() => setShowTermsModal(false)}
-                className="px-6 py-3 bg-white border-2 border-[#e9ecef] text-[#212529] font-medium rounded-xl hover:bg-[#f8f9fa] transition-all"
-              >
-                Cerrar
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Epic Success Modal */}
-      {showSuccessModal && successOrderData && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 animate-fadeIn">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a]/95 via-[#2563eb]/95 to-[#2a63cd]/95 backdrop-blur-xl" />
+      {
+        showSuccessModal && successOrderData && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 animate-fadeIn">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a]/95 via-[#2563eb]/95 to-[#2a63cd]/95 backdrop-blur-xl" />
 
-          {/* Animated Background Particles */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-            <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-green-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-          </div>
-
-          <div className="relative z-10 bg-white/10 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl w-full max-w-lg p-8 animate-scaleInBounce">
-            {/* Animated Checkmark */}
-            <div className="w-28 h-28 mx-auto mb-6 relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full animate-pulse shadow-2xl shadow-emerald-500/30"></div>
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
-                <circle
-                  cx="50" cy="50" r="40"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.3)"
-                  strokeWidth="4"
-                />
-                <circle
-                  cx="50" cy="50" r="40"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="4"
-                  strokeDasharray="251.2"
-                  strokeDashoffset="251.2"
-                  strokeLinecap="round"
-                  className="animate-drawCircle"
-                />
-                <path
-                  d="M30 52 L45 67 L70 35"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeDasharray="70"
-                  strokeDashoffset="70"
-                  className="animate-drawCheck"
-                />
-              </svg>
+            {/* Animated Background Particles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+              <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-green-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }}></div>
             </div>
 
-            {/* Title */}
-            <h2 className="text-3xl font-black text-white text-center mb-2 animate-slideUp">
-              ¡Gracias por tu compra! 🎉
-            </h2>
+            <div className="relative z-10 bg-white/10 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl w-full max-w-lg p-8 animate-scaleInBounce">
+              {/* Animated Checkmark */}
+              <div className="w-28 h-28 mx-auto mb-6 relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full animate-pulse shadow-2xl shadow-emerald-500/30"></div>
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                  <circle
+                    cx="50" cy="50" r="40"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth="4"
+                  />
+                  <circle
+                    cx="50" cy="50" r="40"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="4"
+                    strokeDasharray="251.2"
+                    strokeDashoffset="251.2"
+                    strokeLinecap="round"
+                    className="animate-drawCircle"
+                  />
+                  <path
+                    d="M30 52 L45 67 L70 35"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeDasharray="70"
+                    strokeDashoffset="70"
+                    className="animate-drawCheck"
+                  />
+                </svg>
+              </div>
 
-            {/* Order Number */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-4 mb-6 animate-slideUp" style={{ animationDelay: '0.2s' }}>
-              <p className="text-center text-blue-100 text-sm mb-1">Número de Orden</p>
-              <p className="text-center text-2xl font-black text-white tracking-wider">
-                {successOrderData.orderNumber}
-              </p>
-            </div>
+              {/* Title */}
+              <h2 className="text-3xl font-black text-white text-center mb-2 animate-slideUp">
+                ¡Gracias por tu compra! 🎉
+              </h2>
 
-            {/* Products Summary */}
-            <div className="mb-6 animate-slideUp" style={{ animationDelay: '0.3s' }}>
-              <p className="text-white/80 text-sm mb-3 text-center">Productos en tu pedido:</p>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {successOrderData.items.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between px-4 py-2 bg-white/5 rounded-xl">
-                    <span className="text-white text-sm truncate flex-1">{item.name}</span>
-                    <span className="text-cyan-200 text-sm font-bold ml-2">x{item.quantity}</span>
+              {/* Order Number */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-4 mb-6 animate-slideUp" style={{ animationDelay: '0.2s' }}>
+                <p className="text-center text-blue-100 text-sm mb-1">Número de Orden</p>
+                <p className="text-center text-2xl font-black text-white tracking-wider">
+                  {successOrderData.orderNumber}
+                </p>
+              </div>
+
+              {/* Products Summary */}
+              <div className="mb-6 animate-slideUp" style={{ animationDelay: '0.3s' }}>
+                <p className="text-white/80 text-sm mb-3 text-center">Productos en tu pedido:</p>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {successOrderData.items.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between px-4 py-2 bg-white/5 rounded-xl">
+                      <span className="text-white text-sm truncate flex-1">{item.name}</span>
+                      <span className="text-cyan-200 text-sm font-bold ml-2">x{item.quantity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 rounded-2xl border border-white/10 mb-6 animate-slideUp" style={{ animationDelay: '0.4s' }}>
+                <span className="text-white font-medium">Total pagado</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xs font-bold text-white/60">USD</span>
+                  <span className="text-2xl font-black text-white">{successOrderData.total.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Info Banner */}
+              <div className="bg-blue-500/20 backdrop-blur-md rounded-xl border border-blue-400/30 p-4 mb-6 animate-slideUp" style={{ animationDelay: '0.5s' }}>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FiCheck className="w-4 h-4 text-white" />
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Total */}
-            <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 rounded-2xl border border-white/10 mb-6 animate-slideUp" style={{ animationDelay: '0.4s' }}>
-              <span className="text-white font-medium">Total pagado</span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-xs font-bold text-white/60">USD</span>
-                <span className="text-2xl font-black text-white">{successOrderData.total.toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* Info Banner */}
-            <div className="bg-blue-500/20 backdrop-blur-md rounded-xl border border-blue-400/30 p-4 mb-6 animate-slideUp" style={{ animationDelay: '0.5s' }}>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FiCheck className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <p className="text-white text-sm font-medium mb-1">
-                    Recibirás confirmación por correo y notificaciones en la plataforma
-                  </p>
-                  <p className="text-blue-200 text-xs">
-                    Ve a <strong className="text-white">Mi Perfil → Mis Pedidos</strong> para hacer seguimiento
-                  </p>
+                  <div>
+                    <p className="text-white text-sm font-medium mb-1">
+                      Recibirás confirmación por correo y notificaciones en la plataforma
+                    </p>
+                    <p className="text-blue-200 text-xs">
+                      Ve a <strong className="text-white">Mi Perfil → Mis Pedidos</strong> para hacer seguimiento
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Progress Bar */}
-            <div className="mb-4">
-              <p className="text-center text-white/60 text-xs mb-2">Redirigiendo a tus pedidos...</p>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-white rounded-full animate-progressBar"></div>
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <p className="text-center text-white/60 text-xs mb-2">Redirigiendo a tus pedidos...</p>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-white rounded-full animate-progressBar"></div>
+                </div>
               </div>
+
+              {/* Button */}
+              <button
+                onClick={() => router.push('/customer/orders')}
+                className="w-full py-4 bg-white text-[#2a63cd] font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Ver Mis Pedidos Ahora
+              </button>
             </div>
 
-            {/* Button */}
-            <button
-              onClick={() => router.push('/customer/orders')}
-              className="w-full py-4 bg-white text-[#2a63cd] font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Ver Mis Pedidos Ahora
-            </button>
-          </div>
-
-          <style jsx>{`
+            <style jsx>{`
             @keyframes fadeIn {
               from { opacity: 0; }
               to { opacity: 1; }
@@ -1730,9 +1858,10 @@ export default function CheckoutPage() {
               animation: progressBar 5s linear;
             }
           `}</style>
-        </div>
-      )}
+          </div>
+        )
+      }
 
-    </div>
+    </div >
   );
 }

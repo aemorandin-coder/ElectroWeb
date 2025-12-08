@@ -217,49 +217,107 @@ export default function CustomersPage() {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Fixed Header Section */}
+      {/* Epic Header Section */}
       <div className="flex-shrink-0 space-y-4">
-        <div className="flex items-center justify-between animate-fadeIn">
-          <div>
-            <h1 className="text-xl font-semibold text-[#212529]">Clientes</h1>
-            <p className="text-xs text-[#6a6c6b] mt-0.5">Administra tu base de clientes</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center shadow-lg shadow-[#2a63cd]/30">
+              <FiUser className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-[#212529]">Gestión de Clientes</h1>
+              <p className="text-sm text-[#6a6c6b]">Administra y analiza tu base de clientes</p>
+            </div>
+          </div>
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={() => fetchCustomers()}
+              className="p-2 bg-white border border-[#e9ecef] rounded-lg hover:bg-[#f8f9fa] transition-colors"
+              title="Actualizar"
+            >
+              <svg className={`w-5 h-5 text-[#6a6c6b] ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             {error}
           </div>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-3 stagger-children">
-          <div className="bg-white rounded-lg border border-[#e9ecef] p-3 shadow-sm hover:shadow-md transition-all duration-300">
-            <p className="text-xs text-[#6a6c6b] font-medium mb-1">Total</p>
-            <p className="text-xl font-semibold text-[#212529]">{stats.total}</p>
+        {/* Epic Stats Cards */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="relative bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl p-4 text-white overflow-hidden group hover:shadow-xl hover:shadow-[#2a63cd]/30 transition-all duration-300 hover:scale-[1.02]">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-white/80">Total Clientes</span>
+              </div>
+              <p className="text-3xl font-black">{stats.total}</p>
+            </div>
           </div>
-          <div className="bg-white rounded-lg border border-[#e9ecef] p-3 shadow-sm hover:shadow-md transition-all duration-300">
-            <p className="text-xs text-[#6a6c6b] font-medium mb-1">Este mes</p>
-            <p className="text-xl font-semibold text-[#212529]">{stats.thisMonth}</p>
+
+          <div className="relative bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-4 text-white overflow-hidden group hover:shadow-xl hover:shadow-green-500/30 transition-all duration-300 hover:scale-[1.02]">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-white/80">Nuevos Este Mes</span>
+              </div>
+              <p className="text-3xl font-black">{stats.thisMonth}</p>
+            </div>
           </div>
-          <div className="bg-white rounded-lg border border-[#e9ecef] p-3 shadow-sm hover:shadow-md transition-all duration-300">
-            <p className="text-xs text-[#6a6c6b] font-medium mb-1">Activos</p>
-            <p className="text-xl font-semibold text-[#212529]">{stats.active}</p>
+
+          <div className="relative bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl p-4 text-white overflow-hidden group hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-300 hover:scale-[1.02]">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-white/80">Clientes Activos</span>
+              </div>
+              <p className="text-3xl font-black">{stats.active}</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Scrollable Table Section */}
       <div className="flex-1 overflow-y-auto pr-2 mt-4">
-        <div className="bg-white rounded-lg border border-[#e9ecef] shadow-sm">
-          <div className="p-3 border-b border-[#e9ecef]">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar clientes por nombre o email..."
-              className="w-full px-3 py-2 text-sm bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-2 focus:ring-[#2a63cd]/10 transition-all"
-            />
+        <div className="bg-white rounded-xl border border-[#e9ecef] shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-[#e9ecef] bg-gradient-to-r from-[#f8f9fa] to-white">
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6a6c6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar clientes por nombre, email..."
+                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-[#dee2e6] rounded-lg focus:outline-none focus:border-[#2a63cd] focus:ring-2 focus:ring-[#2a63cd]/10 transition-all"
+                />
+              </div>
+            </div>
           </div>
 
           {loading ? (
@@ -789,7 +847,7 @@ export default function CustomersPage() {
                           <div className="bg-[#f8f9fa] rounded-lg p-4 text-center border border-[#e9ecef]">
                             <p className="text-xs text-[#6a6c6b] mb-1">Total Gastado</p>
                             <p className="text-xl font-bold text-[#212529]">
-                              ${selectedCustomer.stats?.totalSpent.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') || '0.00'}
+                              ${(Number(selectedCustomer.stats?.totalSpent) || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                             </p>
                           </div>
                           <div className="bg-[#f8f9fa] rounded-lg p-4 text-center border border-[#e9ecef]">

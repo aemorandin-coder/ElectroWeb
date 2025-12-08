@@ -15,14 +15,16 @@ interface CompanySettings {
 }
 
 export default function PublicHeader({ settings }: { settings?: CompanySettings | null }) {
-  // Initialize state with settings to prevent hydration mismatch
+  // State for client-side hydration
+  const [mounted, setMounted] = useState(false);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(settings || null);
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
+    setMounted(true);
+  }, []);
 
-    if (settings) return; // Don't fetch if settings are provided
+  useEffect(() => {
+    if (settings) return;
 
     const fetchSettings = async () => {
       try {
@@ -45,11 +47,29 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
     fetchSettings();
   }, [settings]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && mounted) {
+      const primaryColor = companySettings?.primaryColor || '#2a63cd';
+      const secondaryColor = companySettings?.secondaryColor || '#1e4ba3';
+      document.documentElement.style.setProperty('--primary-color', primaryColor);
+      document.documentElement.style.setProperty('--secondary-color', secondaryColor);
+    }
+  }, [companySettings, mounted]);
+
   const primaryColor = companySettings?.primaryColor || '#2a63cd';
   const secondaryColor = companySettings?.secondaryColor || '#1e4ba3';
 
+  // Render a simple placeholder during SSR to match client
+  if (!mounted) {
+    return (
+      <header className="sticky top-0 z-50 bg-white border-b border-[#e9ecef] shadow-sm h-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full" />
+      </header>
+    );
+  }
+
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-[#e9ecef] shadow-sm" suppressHydrationWarning>
+    <header className="sticky top-0 z-50 bg-white border-b border-[#e9ecef] shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo - Enhanced and Larger */}
@@ -83,30 +103,25 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/productos" className="relative text-sm font-medium text-[#6a6c6b] transition-all duration-300 group" style={{ color: 'var(--hover-color)' }}>
-              <span className="relative z-10 group-hover:text-[color:var(--primary-color)]">Productos</span>
+            <Link href="/productos" className="relative text-sm font-medium text-[#6a6c6b] transition-all duration-300 group">
+              <span className="relative z-10 group-hover:text-[#2a63cd]">Productos</span>
               <span className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style={{ background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})` }}></span>
-              <span className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" style={{ backgroundColor: `${primaryColor}0d` }}></span>
             </Link>
             <Link href="/categorias" className="relative text-sm font-medium text-[#6a6c6b] transition-all duration-300 group">
-              <span className="relative z-10 group-hover:text-[color:var(--primary-color)]">Categorías</span>
+              <span className="relative z-10 group-hover:text-[#2a63cd]">Categorías</span>
               <span className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style={{ background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})` }}></span>
-              <span className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" style={{ backgroundColor: `${primaryColor}0d` }}></span>
             </Link>
             <Link href="/servicios" className="relative text-sm font-medium text-[#6a6c6b] transition-all duration-300 group">
-              <span className="relative z-10 group-hover:text-[color:var(--primary-color)]">Servicios</span>
+              <span className="relative z-10 group-hover:text-[#2a63cd]">Servicios</span>
               <span className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style={{ background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})` }}></span>
-              <span className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" style={{ backgroundColor: `${primaryColor}0d` }}></span>
             </Link>
             <Link href="/cursos" className="relative text-sm font-medium text-[#6a6c6b] transition-all duration-300 group">
-              <span className="relative z-10 group-hover:text-[color:var(--primary-color)]">Cursos Online</span>
+              <span className="relative z-10 group-hover:text-[#2a63cd]">Cursos Online</span>
               <span className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style={{ background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})` }}></span>
-              <span className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" style={{ backgroundColor: `${primaryColor}0d` }}></span>
             </Link>
             <Link href="/contacto" className="relative text-sm font-medium text-[#6a6c6b] transition-all duration-300 group">
-              <span className="relative z-10 group-hover:text-[color:var(--primary-color)]">Contáctanos</span>
+              <span className="relative z-10 group-hover:text-[#2a63cd]">Contáctanos</span>
               <span className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style={{ background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})` }}></span>
-              <span className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" style={{ backgroundColor: `${primaryColor}0d` }}></span>
             </Link>
           </nav>
 
@@ -118,12 +133,6 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
           </div>
         </div>
       </div>
-      <style jsx>{`
-        :global(:root) {
-          --primary-color: ${primaryColor};
-          --secondary-color: ${secondaryColor};
-        }
-      `}</style>
     </header>
   );
 }

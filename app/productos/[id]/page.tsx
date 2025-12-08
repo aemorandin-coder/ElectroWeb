@@ -8,6 +8,9 @@ import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import { FaShoppingBasket } from 'react-icons/fa';
 import { HiShoppingBag } from "react-icons/hi2";
+import { FiHeart } from "react-icons/fi";
+import { useSession } from 'next-auth/react';
+import toast from 'react-hot-toast';
 import ReviewStats from '@/components/reviews/ReviewStats';
 import ReviewList from '@/components/reviews/ReviewList';
 import ReviewForm from '@/components/reviews/ReviewForm';
@@ -57,9 +60,14 @@ export default function ProductDetailPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isSpecsExpanded, setIsSpecsExpanded] = useState(true);
+  const { data: session } = useSession();
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 });
   const [loadingReviews, setLoadingReviews] = useState(true);
+  const [activeTab, setActiveTab] = useState('description');
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -67,7 +75,59 @@ export default function ProductDetailPage() {
       fetchRelatedProducts();
       fetchReviews();
     }
+
   }, [params.id]);
+
+  useEffect(() => {
+    if (session?.user && product) {
+      checkWishlistStatus();
+    }
+  }, [session, product]);
+
+  const checkWishlistStatus = async () => {
+    try {
+      const res = await fetch('/api/customer/wishlist');
+      if (res.ok) {
+        const data = await res.json();
+        const exists = data.products?.some((p: any) => p.id === product?.id);
+        setIsInWishlist(exists);
+      }
+    } catch (error) {
+      console.error('Error checking wishlist:', error);
+    }
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!session) {
+      toast.error('Inicia sesión para guardar favoritos');
+      router.push('/login');
+      return;
+    }
+    if (!product) return;
+
+    setWishlistLoading(true);
+    try {
+      const res = await fetch('/api/customer/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          action: isInWishlist ? 'remove' : 'add'
+        })
+      });
+
+      if (res.ok) {
+        setIsInWishlist(!isInWishlist);
+        toast.success(isInWishlist ? 'Eliminado de favoritos' : 'Añadido a favoritos');
+      } else {
+        toast.error('Error al actualizar favoritos');
+      }
+    } catch (error) {
+      toast.error('Error de conexión');
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
 
   const fetchProduct = async () => {
     try {
@@ -378,10 +438,25 @@ export default function ProductDetailPage() {
 
                   {/* Discount Badge */}
                   {product.hasDiscount && product.discountPercent && (
-                    <div className="absolute top-6 right-6 px-3 py-1.5 bg-red-600 text-white rounded-full shadow-lg font-bold text-sm">
+                    <div className="absolute top-6 right-6 px-3 py-1.5 bg-red-600 text-white rounded-full shadow-lg font-bold text-sm z-10">
                       -{product.discountPercent}%
                     </div>
                   )}
+
+                  {/* Floating Wishlist Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleWishlist();
+                    }}
+                    className="absolute top-6 left-6 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all z-20 group/heart"
+                    title={isInWishlist ? "Eliminar de favoritos" : "Añadir a favoritos"}
+                  >
+                    <FiHeart
+                      className={`w-6 h-6 transition-colors ${isInWishlist ? 'text-red-500 fill-red-500' : 'text-gray-400 group-hover/heart:text-red-500'
+                        }`}
+                    />
+                  </button>
                 </div>
               </div>
 
@@ -570,6 +645,18 @@ export default function ProductDetailPage() {
               )}
             </div>
 
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={handleToggleWishlist}
+                disabled={wishlistLoading}
+                className={`flex items-center gap-2 text-sm font-medium transition-colors ${isInWishlist ? 'text-red-500 hover:text-red-600' : 'text-gray-500 hover:text-[#2a63cd]'
+                  }`}
+              >
+                <FiHeart className={`w-5 h-5 ${isInWishlist ? 'fill-current' : ''}`} />
+                {isInWishlist ? 'Eliminar de mi lista de deseos' : 'Añadir a mi lista de deseos'}
+              </button>
+            </div>
+
             {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-4 pt-6">
               {[
@@ -589,28 +676,41 @@ export default function ProductDetailPage() {
           </div>
         </div >
 
-        {/* Product Specifications - Clean Readable Design */}
+        {/* Product Specifications - Collapsible Design */}
         {product.specs && Object.keys(product.specs).length > 0 && (
-          <div className="w-[80%] mx-auto bg-white rounded-2xl border border-gray-200 shadow-lg mb-8 overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-6 py-4">
+          <div className="w-[55%] mx-auto bg-white rounded-2xl border border-gray-200 shadow-lg mb-8 overflow-hidden transition-all duration-500">
+            {/* Header with Toggle Button */}
+            <button
+              onClick={() => setIsSpecsExpanded(!isSpecsExpanded)}
+              className="w-full bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-6 py-4 flex items-center justify-between group hover:from-[#1e4ba3] hover:to-[#2a63cd] transition-all duration-300"
+            >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-bold text-white">Especificaciones Técnicas</h3>
+                <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs text-white font-medium">
+                  {Object.keys(product.specs).length} specs
+                </span>
               </div>
-            </div>
+              <div className={`w-8 h-8 bg-white/20 rounded-full flex items-center justify-center transition-all duration-300 ${isSpecsExpanded ? 'rotate-180' : ''} group-hover:bg-white/30`}>
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </button>
 
-            {/* Specs List */}
-            <div className="divide-y divide-gray-100">
+            {/* Specs List - Collapsible */}
+            <div
+              className={`divide-y divide-gray-100 transition-all duration-500 ease-in-out ${isSpecsExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}
+            >
               {Object.entries(product.specs).map(([key, value], index) => (
                 <div
                   key={key}
                   className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
-                  style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both` }}
+                  style={{ animation: isSpecsExpanded ? `fadeInUp 0.3s ease-out ${index * 0.05}s both` : 'none' }}
                 >
                   <span className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{key}</span>
                   <span className="text-base font-bold text-[#212529]">{String(value)}</span>

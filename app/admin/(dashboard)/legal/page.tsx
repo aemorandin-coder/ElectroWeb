@@ -360,13 +360,40 @@ export default function LegalDocumentsPage() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button
-                                                onClick={() => setViewingDocument(acceptance)}
-                                                className="p-2 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] text-white rounded-lg hover:shadow-lg hover:scale-110 active:scale-95 transition-all"
-                                                title="Ver Documento"
-                                            >
-                                                <FiEye className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => setViewingDocument(acceptance)}
+                                                    className="p-2 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] text-white rounded-lg hover:shadow-lg hover:scale-110 active:scale-95 transition-all"
+                                                    title="Ver Documento"
+                                                >
+                                                    <FiEye className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (confirm(`¿Solicitar que ${acceptance.userName} vuelva a aceptar los términos? Esto invalidará el documento actual y enviará un correo al usuario.`)) {
+                                                            try {
+                                                                const response = await fetch(`/api/admin/legal/resend-terms`, {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({ userId: acceptance.userId, acceptanceId: acceptance.id })
+                                                                });
+                                                                if (response.ok) {
+                                                                    toast.success(`Solicitud enviada a ${acceptance.userEmail}`);
+                                                                } else {
+                                                                    const error = await response.json();
+                                                                    toast.error(error.error || 'Error al enviar solicitud');
+                                                                }
+                                                            } catch (error) {
+                                                                toast.error('Error de conexión');
+                                                            }
+                                                        }
+                                                    }}
+                                                    className="p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg hover:shadow-lg hover:scale-110 active:scale-95 transition-all"
+                                                    title="Solicitar Reaceptación"
+                                                >
+                                                    <FiRefreshCw className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

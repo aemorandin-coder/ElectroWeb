@@ -392,6 +392,8 @@ model CompanySettings {
   facebook    String?
   twitter     String?
   youtube     String?
+  telegram    String?
+  tiktok      String?
   socialMedia String?
   
   // Business Logic

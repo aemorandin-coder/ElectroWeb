@@ -220,38 +220,6 @@ function LoginPageContent() {
         {/* Login Card - Premium Glass Effect */}
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-slideInUp">
           <div className="p-8">
-            {/* User Type Selector */}
-            <div className="mb-6">
-              <div className="flex items-center gap-1 p-1 bg-black/20 rounded-xl backdrop-blur-sm">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUserType('customer');
-                    setError('');
-                  }}
-                  className={`flex-1 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 ${userType === 'customer'
-                    ? 'bg-white text-[#2a63cd] shadow-lg scale-105'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
-                    }`}
-                >
-                  Cliente
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUserType('admin');
-                    setError('');
-                  }}
-                  className={`flex-1 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 ${userType === 'admin'
-                    ? 'bg-white text-[#2a63cd] shadow-lg scale-105'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
-                    }`}
-                >
-                  Administrador
-                </button>
-              </div>
-            </div>
-
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white mb-1">Iniciar Sesión</h2>
               <p className="text-blue-100 text-sm">Ingresa tus credenciales para continuar</p>
@@ -380,17 +348,15 @@ function LoginPageContent() {
                 </span>
               </button>
 
-              {/* Register Link for Customers */}
-              {userType === 'customer' && (
-                <div className="text-center pt-2 border-t border-white/10 mt-6">
-                  <p className="text-sm text-blue-100">
-                    ¿No tienes cuenta?{' '}
-                    <Link href="/registro" className="text-white font-bold hover:text-cyan-200 transition-colors hover:underline">
-                      Regístrate aquí
-                    </Link>
-                  </p>
-                </div>
-              )}
+              {/* Register Link */}
+              <div className="text-center pt-2 border-t border-white/10 mt-6">
+                <p className="text-sm text-blue-100">
+                  ¿No tienes cuenta?{' '}
+                  <Link href="/registro" className="text-white font-bold hover:text-cyan-200 transition-colors hover:underline">
+                    Regístrate aquí
+                  </Link>
+                </p>
+              </div>
             </form>
           </div>
         </div>

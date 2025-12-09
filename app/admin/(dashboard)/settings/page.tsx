@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { SettingsFormData, SocialMediaItem, CompanySettings, SettingsValidationErrors } from '@/types/settings';
@@ -43,6 +43,8 @@ export default function SettingsPage() {
     facebook: '',
     twitter: '',
     youtube: '',
+    telegram: '',
+    tiktok: '',
     socialMedia: [...DEFAULT_SOCIAL_MEDIA],
     businessHours: {
       monday: { open: '09:00', close: '18:00', enabled: true },
@@ -122,8 +124,15 @@ export default function SettingsPage() {
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<SettingsValidationErrors>({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [initialFormData, setInitialFormData] = useState<SettingsFormData | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if form has changes
+  const hasChanges = useMemo(() => {
+    if (!initialFormData) return false;
+    return JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  }, [formData, initialFormData]);
 
   useEffect(() => {
     fetchSettings();
@@ -141,7 +150,7 @@ export default function SettingsPage() {
       if (response.ok) {
         const data = await response.json();
         setSettings(data);
-        setFormData({
+        const loadedData: SettingsFormData = {
           companyName: data.companyName || '',
           tagline: data.tagline || '',
           rif: data.rif || '',
@@ -160,6 +169,8 @@ export default function SettingsPage() {
           facebook: data.facebook || '',
           twitter: data.twitter || '',
           youtube: data.youtube || '',
+          telegram: data.telegram || '',
+          tiktok: data.tiktok || '',
           socialMedia: Array.isArray(data.socialMedia) ? data.socialMedia : [...DEFAULT_SOCIAL_MEDIA],
           businessHours: data.businessHours || {
             monday: { open: '09:00', close: '18:00', enabled: true },
@@ -232,7 +243,9 @@ export default function SettingsPage() {
           ctaDescription: data.ctaDescription || '',
           ctaButtonText: data.ctaButtonText || '',
           ctaButtonLink: data.ctaButtonLink || '',
-        });
+        };
+        setFormData(loadedData);
+        setInitialFormData(loadedData);
         if (data.logo) setLogoPreview(data.logo);
         if (data.favicon) setFaviconPreview(data.favicon);
       }
@@ -335,6 +348,7 @@ export default function SettingsPage() {
       if (response.ok) {
         const updatedSettings = await response.json();
         setSettings(updatedSettings);
+        setInitialFormData(formData); // Reset initial state to current state
         setSuccessMessage('Configuración guardada exitosamente');
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
@@ -360,11 +374,11 @@ export default function SettingsPage() {
         </div>
         <button
           onClick={handleSave}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg"
+          disabled={isLoading || !hasChanges}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg ${hasChanges ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'} disabled:opacity-50`}
         >
           {isLoading ? <FiLoader className="animate-spin" /> : <FiSave />}
-          {isLoading ? 'Guardando...' : 'Guardar Cambios'}
+          {isLoading ? 'Guardando...' : hasChanges ? 'Guardar Cambios' : 'Sin Cambios'}
         </button>
       </div>
 
@@ -594,8 +608,189 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
-        </div>
 
+          {/* Social Media */}
+          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+              <FiGlobe className="text-purple-600" />
+              <h3 className="font-semibold text-gray-900">Redes Sociales</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Instagram */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-pink-300 transition-colors">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 text-white shadow-md">
+                  <FiInstagram className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Instagram</label>
+                  <input
+                    type="url"
+                    name="instagram"
+                    value={formData.instagram}
+                    onChange={handleInputChange}
+                    placeholder="https://instagram.com/tu_usuario"
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Facebook */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-600 text-white shadow-md">
+                  <FiFacebook className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Facebook</label>
+                  <input
+                    type="url"
+                    name="facebook"
+                    value={formData.facebook}
+                    onChange={handleInputChange}
+                    placeholder="https://facebook.com/tu_pagina"
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Twitter/X */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-sky-300 transition-colors">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-black text-white shadow-md">
+                  <FiTwitter className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Twitter / X</label>
+                  <input
+                    type="url"
+                    name="twitter"
+                    value={formData.twitter}
+                    onChange={handleInputChange}
+                    placeholder="https://twitter.com/tu_usuario"
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* YouTube */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-red-300 transition-colors">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-600 text-white shadow-md">
+                  <FiYoutube className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">YouTube</label>
+                  <input
+                    type="url"
+                    name="youtube"
+                    value={formData.youtube}
+                    onChange={handleInputChange}
+                    placeholder="https://youtube.com/@tu_canal"
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Telegram */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-cyan-300 transition-colors">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-md">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.96 6.504-1.357 8.63-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Telegram</label>
+                  <input
+                    type="url"
+                    name="telegram"
+                    value={formData.telegram || ''}
+                    onChange={handleInputChange}
+                    placeholder="https://t.me/tu_canal"
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* TikTok */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-400 transition-colors">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-black text-white shadow-md">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">TikTok</label>
+                  <input
+                    type="url"
+                    name="tiktok"
+                    value={formData.tiktok || ''}
+                    onChange={handleInputChange}
+                    placeholder="https://tiktok.com/@tu_usuario"
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500/20 focus:border-gray-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-500 italic mt-2">
+                💡 Deja vacío los campos de las redes que no utilices. Solo se mostrarán las que tengan URL.
+              </p>
+            </div>
+          </div>
+
+
+          {/* Business Hours */}
+          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+              <FiClock className="text-orange-600" />
+              <h3 className="font-semibold text-gray-900">Horario de Atención</h3>
+            </div>
+            <div className="p-6 space-y-3">
+              {(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const).map((day) => {
+                const dayNames: Record<string, string> = {
+                  monday: 'Lunes',
+                  tuesday: 'Martes',
+                  wednesday: 'Miércoles',
+                  thursday: 'Jueves',
+                  friday: 'Viernes',
+                  saturday: 'Sábado',
+                  sunday: 'Domingo',
+                };
+                return (
+                  <div key={day} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                    <div className="w-24">
+                      <span className="text-sm font-medium text-gray-700">{dayNames[day]}</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.businessHours[day].enabled}
+                        onChange={(e) => handleBusinessHoursChange(day, 'enabled', e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-300 rounded-full peer peer-checked:bg-green-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
+                    </label>
+                    {formData.businessHours[day].enabled ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <input
+                          type="time"
+                          value={formData.businessHours[day].open}
+                          onChange={(e) => handleBusinessHoursChange(day, 'open', e.target.value)}
+                          className="px-2 py-1 text-xs border border-gray-300 rounded-lg"
+                        />
+                        <span className="text-gray-400">a</span>
+                        <input
+                          type="time"
+                          value={formData.businessHours[day].close}
+                          onChange={(e) => handleBusinessHoursChange(day, 'close', e.target.value)}
+                          className="px-2 py-1 text-xs border border-gray-300 rounded-lg"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">Cerrado</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
         {/* RIGHT COLUMN: Homepage & Logic */}
         <div className="space-y-8">
 

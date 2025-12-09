@@ -39,6 +39,8 @@ export interface CompanySettings {
   facebook?: string | null;
   twitter?: string | null;
   youtube?: string | null;
+  telegram?: string | null;
+  tiktok?: string | null;
   socialMedia?: SocialMediaItem[] | null;
 
   // Business Hours
@@ -150,6 +152,8 @@ export interface SettingsFormData {
   facebook: string;
   twitter: string;
   youtube: string;
+  telegram: string;
+  tiktok: string;
   socialMedia: SocialMediaItem[];
   businessHours: BusinessHours;
   primaryCurrency: 'USD' | 'VES' | 'EUR';

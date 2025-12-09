@@ -26,7 +26,13 @@ async function main() {
   console.log('⚙️  Creating company settings...');
   await prisma.companySettings.upsert({
     where: { id: 'default' },
-    update: {},
+    update: {
+      instagram: 'https://instagram.com/electroshop',
+      facebook: 'https://facebook.com/electroshop',
+      twitter: 'https://twitter.com/electroshop',
+      youtube: 'https://youtube.com/@electroshop',
+      telegram: 'https://t.me/electroshop',
+    },
     create: {
       id: 'default',
       companyName: 'Electro Shop Morandin C.A.',
@@ -38,6 +44,8 @@ async function main() {
       instagram: 'https://instagram.com/electroshop',
       facebook: 'https://facebook.com/electroshop',
       twitter: 'https://twitter.com/electroshop',
+      youtube: 'https://youtube.com/@electroshop',
+      telegram: 'https://t.me/electroshop',
       exchangeRateVES: 36.50,
       exchangeRateEUR: 0.92,
       deliveryEnabled: true,
@@ -133,6 +141,7 @@ async function main() {
       update: {},
       create: {
         name: 'MacBook Pro 14" M3',
+        sku: 'LAP-MAC-PRO14-M3',
         slug: 'macbook-pro-14-m3',
         description: 'MacBook Pro con chip M3, 16GB RAM unificada, 512GB SSD',
         priceUSD: 1999,
@@ -150,6 +159,7 @@ async function main() {
       update: {},
       create: {
         name: 'PC Gaming RTX 4070',
+        sku: 'PC-GAM-RTX4070',
         slug: 'pc-gaming-rtx-4070',
         description: 'PC Gaming armado con Intel i7, RTX 4070, 32GB RAM, 1TB SSD',
         priceUSD: 1599,
@@ -167,6 +177,7 @@ async function main() {
       update: {},
       create: {
         name: 'PlayStation 5 Slim',
+        sku: 'CON-PS5-SLIM',
         slug: 'playstation-5-slim',
         description: 'Consola PlayStation 5 modelo Slim con lector de discos',
         priceUSD: 499,
@@ -182,6 +193,7 @@ async function main() {
       update: {},
       create: {
         name: 'Xbox Series X',
+        sku: 'CON-XBOX-SX',
         slug: 'xbox-series-x',
         description: 'Consola Xbox Series X 1TB con 4K gaming',
         priceUSD: 499,
@@ -196,6 +208,7 @@ async function main() {
       update: {},
       create: {
         name: 'Nintendo Switch OLED',
+        sku: 'CON-NSW-OLED',
         slug: 'nintendo-switch-oled',
         description: 'Nintendo Switch modelo OLED con pantalla de 7 pulgadas',
         priceUSD: 349,
@@ -212,6 +225,7 @@ async function main() {
       update: {},
       create: {
         name: 'Teclado Mecánico Logitech G Pro',
+        sku: 'ACC-KEY-LOGI-GPRO',
         slug: 'teclado-logitech-g-pro',
         description: 'Teclado mecánico gaming con switches GX Blue',
         priceUSD: 129,
@@ -226,6 +240,7 @@ async function main() {
       update: {},
       create: {
         name: 'Mouse Razer DeathAdder V3',
+        sku: 'ACC-MOU-RAZ-DAV3',
         slug: 'mouse-razer-deathadder-v3',
         description: 'Mouse gaming óptico con sensor de 30000 DPI',
         priceUSD: 69,
@@ -240,6 +255,7 @@ async function main() {
       update: {},
       create: {
         name: 'Audífonos HyperX Cloud II',
+        sku: 'ACC-HEAD-HYP-CLD2',
         slug: 'audifonos-hyperx-cloud-ii',
         description: 'Audífonos gaming con sonido 7.1 surround',
         priceUSD: 99,
@@ -256,6 +272,7 @@ async function main() {
       update: {},
       create: {
         name: 'RAM Corsair Vengeance 32GB DDR5',
+        sku: 'COMP-RAM-COR-32D5',
         slug: 'ram-corsair-vengeance-32gb-ddr5',
         description: 'Memoria RAM DDR5 32GB (2x16GB) 6000MHz RGB',
         priceUSD: 149,
@@ -270,6 +287,7 @@ async function main() {
       update: {},
       create: {
         name: 'SSD Samsung 990 Pro 1TB',
+        sku: 'COMP-SSD-SAM-990P',
         slug: 'ssd-samsung-990-pro-1tb',
         description: 'SSD NVMe Gen4 1TB con velocidades de hasta 7450 MB/s',
         priceUSD: 119,

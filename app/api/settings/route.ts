@@ -113,7 +113,7 @@ export async function PUT(request: NextRequest) {
       'companyName', 'tagline', 'rif', 'legalName', 'foundedYear', 'description',
       'logo', 'favicon', 'primaryColor', 'secondaryColor',
       'phone', 'whatsapp', 'email', 'address',
-      'instagram', 'facebook', 'twitter', 'youtube',
+      'instagram', 'facebook', 'twitter', 'youtube', 'telegram', 'tiktok',
       'pickupAddress', 'pickupInstructions', 'maintenanceMessage', 'maintenanceAllowedIPs',
       'metaTitle', 'metaDescription', 'metaKeywords',
       'heroVideoUrl', 'heroVideoTitle', 'heroVideoDescription',

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Tektur } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -19,6 +20,12 @@ const tektur = Tektur({
   display: "swap",
 });
 
+const nakadai = localFont({
+  src: "../public/fonts/Nakadai.otf",
+  variable: "--font-nakadai",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Electro Shop Morandin C.A. | Gaming, Laptops & Tecnología",
   description: "Tienda de tecnología premium en Guanare. Computadoras gaming, laptops, consolas, CCTV y más. Servicio técnico especializado y cursos online.",
@@ -32,7 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" data-scroll-behavior="smooth">
-      <body className={`${inter.variable} ${tektur.variable} antialiased`}>
+      <body className={`${inter.variable} ${tektur.variable} ${nakadai.variable} antialiased`}>
         <Providers>
           <NotificationProvider>
             <div className="page-transition-wrapper">

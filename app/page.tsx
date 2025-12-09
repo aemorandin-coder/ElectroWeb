@@ -202,16 +202,21 @@ export default async function Home() {
       )}
 
       {/* Featured Products Section */}
-      <section className="py-12 bg-[#ededed]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 left-10 w-64 h-64 bg-white rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-80 h-80 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-3xl font-black text-[#212529] mb-1">Ofertas del día</h2>
-              <p className="text-sm text-[#6a6c6b] font-medium">Aprovecha los mejores precios en tecnología</p>
+              <h2 className="text-3xl font-black text-white mb-1">Ofertas del día</h2>
+              <p className="text-sm text-white/80 font-medium">Aprovecha los mejores precios en tecnología</p>
             </div>
             <Link
               href="/productos"
-              className="group px-5 py-2.5 bg-[#2a63cd] text-white text-sm font-bold rounded-lg hover:bg-[#1e4ba3] transition-all shadow-lg hover:shadow-xl hover:scale-105"
+              className="group px-5 py-2.5 bg-white text-[#2a63cd] text-sm font-bold rounded-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl hover:scale-105"
             >
               <span className="flex items-center gap-2">
                 Ver todo
@@ -221,12 +226,12 @@ export default async function Home() {
           </div>
 
           {formattedProducts.length === 0 ? (
-            <div className="text-center py-8 bg-white rounded-lg border border-[#e9ecef]">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-[#f8f9fa] mb-3">
-                <FiClock className="w-6 h-6 text-[#6a6c6b]" />
+            <div className="text-center py-8 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-white/20 mb-3">
+                <FiClock className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-sm font-semibold text-[#212529] mb-1">Próximamente</h3>
-              <p className="text-xs text-[#6a6c6b]">Estamos preparando productos increíbles para ti</p>
+              <h3 className="text-sm font-semibold text-white mb-1">Próximamente</h3>
+              <p className="text-xs text-white/70">Estamos preparando productos increíbles para ti</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -304,18 +309,23 @@ export default async function Home() {
 
       {/* CTA Section - Request Product */}
       {companySettings?.ctaEnabled !== false && (
-        <section className="py-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <section className="py-12 bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] relative overflow-hidden">
+          {/* Background Effects */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-5 left-10 w-48 h-48 bg-white rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-5 right-10 w-64 h-64 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          </div>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="text-white text-center md:text-left">
-                <h2 className="text-xl font-bold mb-1">{companySettings?.ctaTitle || '¿No encuentras lo que buscas?'}</h2>
-                <p className="text-sm text-blue-100">
+                <h2 className="text-2xl font-bold mb-2">{companySettings?.ctaTitle || '¿No encuentras lo que buscas?'}</h2>
+                <p className="text-base text-white/80">
                   {companySettings?.ctaDescription || 'Solicítanos cualquier producto tecnológico al mejor precio'}
                 </p>
               </div>
               <Link
                 href={companySettings?.ctaButtonLink || '/solicitar-producto'}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[#2a63cd] text-sm font-semibold rounded-lg hover:bg-gray-50 transition-all shadow-md whitespace-nowrap"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#2a63cd] text-sm font-bold rounded-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl hover:scale-105 whitespace-nowrap"
               >
                 <FiSearch className="w-4 h-4" />
                 {companySettings?.ctaButtonText || 'Solicitar Producto'}

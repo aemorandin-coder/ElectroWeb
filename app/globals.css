@@ -440,3 +440,50 @@ button, .btn {
 .animate-slideDown {
   animation: slideDown 0.3s ease-out forwards;
 }
+
+/* ============================================
+   REDUCED MOTION PREFERENCES
+   Respects users who prefer reduced motion
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-spin,
+  .animate-fadeIn,
+  .animate-slideInRight,
+  .animate-slideInLeft,
+  .animate-scaleIn,
+  .animate-pulse,
+  .animate-shimmer,
+  .animate-fade-in,
+  .animate-shake,
+  .animate-slideInUp,
+  .animate-pulse-slow,
+  .animate-slideDown {
+    animation: none !important;
+  }
+
+  .page-transition-wrapper {
+    animation: none !important;
+  }
+
+  .stagger-children > * {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .card-hover:hover {
+    transform: none !important;
+  }
+
+  html {
+    scroll-behavior: auto !important;
+  }
+}

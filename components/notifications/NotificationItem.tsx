@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FiPackage, FiStar, FiInfo, FiGift, FiTrendingUp, FiTrash2, FiExternalLink } from 'react-icons/fi';
+import { FiPackage, FiStar, FiInfo, FiGift, FiTrendingUp, FiTrash2, FiExternalLink, FiDollarSign, FiCreditCard } from 'react-icons/fi';
 import { useNotifications, Notification } from './NotificationProvider';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-const iconMap = {
+const iconMap: Record<string, any> = {
     ORDER_CONFIRMED: FiPackage,
     ORDER_PAID: FiPackage,
     ORDER_SHIPPED: FiPackage,
@@ -18,9 +18,15 @@ const iconMap = {
     SYSTEM_MAINTENANCE: FiInfo,
     PROMOTION: FiGift,
     STOCK_ALERT: FiTrendingUp,
+    BALANCE_RECHARGED: FiDollarSign,
+    NEW_RECHARGE_REQUEST: FiCreditCard,
+    RECHARGE_APPROVED: FiDollarSign,
+    RECHARGE_REJECTED: FiCreditCard,
+    DISCOUNT_APPROVED: FiGift,
+    DISCOUNT_REJECTED: FiInfo,
 };
 
-const colorMap = {
+const colorMap: Record<string, string> = {
     ORDER_CONFIRMED: 'bg-blue-100 text-blue-600',
     ORDER_PAID: 'bg-green-100 text-green-600',
     ORDER_SHIPPED: 'bg-indigo-100 text-indigo-600',
@@ -31,6 +37,12 @@ const colorMap = {
     SYSTEM_MAINTENANCE: 'bg-orange-100 text-orange-600',
     PROMOTION: 'bg-pink-100 text-pink-600',
     STOCK_ALERT: 'bg-purple-100 text-purple-600',
+    BALANCE_RECHARGED: 'bg-green-100 text-green-600',
+    NEW_RECHARGE_REQUEST: 'bg-blue-100 text-blue-600',
+    RECHARGE_APPROVED: 'bg-green-100 text-green-600',
+    RECHARGE_REJECTED: 'bg-red-100 text-red-600',
+    DISCOUNT_APPROVED: 'bg-green-100 text-green-600',
+    DISCOUNT_REJECTED: 'bg-red-100 text-red-600',
 };
 
 interface NotificationItemProps {

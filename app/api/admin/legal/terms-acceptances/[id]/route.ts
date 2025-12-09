@@ -7,7 +7,7 @@ import { isAuthorized } from '@/lib/auth-helpers';
 // GET - Get specific terms acceptance by ID
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
@@ -15,8 +15,9 @@ export async function GET(
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
+        const { id } = await params;
         const acceptance = await prisma.balanceTermsAcceptance.findUnique({
-            where: { id: params.id },
+            where: { id },
         });
 
         if (!acceptance) {

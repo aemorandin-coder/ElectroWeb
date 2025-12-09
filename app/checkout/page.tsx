@@ -1466,8 +1466,8 @@ export default function CheckoutPage() {
               <div className="space-y-3 mb-4">
                 {items.map((item) => {
                   const originalTotal = item.price * item.quantity;
-                  const finalItemTotal = item.price * item.quantity * (1 - (item.discountPercentage || 0) / 100);
-                  const activeDiscount = item.discountPercentage > 0;
+                  const finalItemTotal = item.price * item.quantity;
+                  const activeDiscount = false;
 
                   return (
                     <div key={item.id} className="flex items-center gap-3">

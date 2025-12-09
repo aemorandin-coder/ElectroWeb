@@ -585,7 +585,6 @@ export async function PATCH(request: NextRequest) {
                 where: { id: item.productId },
                 data: {
                   stock: newStock,
-                  status: newStock <= 0 ? 'OUT_OF_STOCK' : product.status,
                 },
               });
             }
@@ -593,7 +592,6 @@ export async function PATCH(request: NextRequest) {
 
           // Mark discounts as used
           // TODO: Logic to restore discounts if needed
-          break;
           break;
       }
     }

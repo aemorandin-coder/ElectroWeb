@@ -4,8 +4,10 @@ import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import ProductCard from '@/components/ui/ProductCard';
-import FadeIn from '@/components/ui/FadeIn';
 import PageAnimations from '@/components/public/PageAnimations';
+import HotAdOverlay from '@/components/HotAdOverlay';
+import SubtleParticles from '@/components/SubtleParticles';
+import FloatingTechIcons from '@/components/FloatingTechIcons';
 import {
   FiBox, FiGrid, FiStar, FiHeadphones,
   FiMonitor, FiShield, FiTool, FiBook,
@@ -149,8 +151,9 @@ export default async function Home() {
 
       {/* Categories Section */}
       {companySettings?.showCategories !== false && (
-        <section className="py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-16 bg-white relative overflow-hidden" data-section="light">
+          <SubtleParticles particleCount={15} />
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold text-[#212529] mb-3">Explora por Categoría</h2>
               <p className="text-base text-[#6a6c6b]">
@@ -234,11 +237,11 @@ export default async function Home() {
               <p className="text-xs text-white/70">Estamos preparando productos increíbles para ti</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {formattedProducts.map((product, index) => (
-                <FadeIn key={product.id} delay={index * 0.1} duration={0.6}>
+            <div className="flex flex-wrap justify-center gap-4">
+              {formattedProducts.map((product) => (
+                <div key={product.id} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)] xl:w-[calc(25%-0.75rem)]">
                   <ProductCard product={product as any} />
-                </FadeIn>
+                </div>
               ))}
             </div>
           )}
@@ -246,11 +249,12 @@ export default async function Home() {
       </section>
 
       {/* Services Section */}
-      <section className="py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-[#212529] mb-2">Nuestros Servicios</h2>
-            <p className="text-sm text-[#6a6c6b]">
+      <section className="py-12 bg-white relative overflow-hidden" data-section="light">
+        <SubtleParticles particleCount={15} />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-[#212529] mb-3">Nuestros Servicios</h2>
+            <p className="text-base text-[#6a6c6b]">
               Soluciones completas en tecnología
             </p>
           </div>
@@ -315,6 +319,8 @@ export default async function Home() {
             <div className="absolute top-5 left-10 w-48 h-48 bg-white rounded-full blur-3xl animate-pulse"></div>
             <div className="absolute bottom-5 right-10 w-64 h-64 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
           </div>
+          {/* Floating Tech Icons Animation */}
+          <FloatingTechIcons />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="text-white text-center md:text-left">
@@ -336,32 +342,47 @@ export default async function Home() {
       )}
 
       {/* Footer */}
-      <footer className="bg-[#212529] text-white pt-12 pb-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <footer className="bg-[#212529] text-white pt-12 pb-6 relative overflow-hidden" suppressHydrationWarning>
+        {/* Metallic Grid Background Effect */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '24px 24px',
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.15) 0%, transparent 50%)',
+          }}
+        />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" suppressHydrationWarning>
             {/* Company Info */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
+            <div suppressHydrationWarning>
+              <div className="flex items-center gap-2 mb-3" suppressHydrationWarning>
                 {companySettings?.logo ? (
                   <div className="relative w-8 h-8 rounded-lg overflow-hidden">
-                    <Image src={companySettings.logo} alt={companySettings.companyName} fill className="object-contain" />
+                    <Image src={companySettings.logo} alt={companySettings.companyName || 'Logo'} fill className="object-contain" sizes="32px" unoptimized />
                   </div>
                 ) : (
                   <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#2a63cd] shadow-md">
                     <FiBox className="w-5 h-5 text-white" />
                   </div>
                 )}
-                <div>
-                  <h3 className="text-sm font-bold">
-                    {companySettings?.companyName?.split(' ')[0] || 'Electro Shop'}
-                  </h3>
-                  <p className="text-xs text-gray-400">
-                    {companySettings?.companyName?.split(' ').slice(1).join(' ') || 'Morandin C.A.'}
-                  </p>
-                </div>
+                <h3
+                  className="text-base font-bold text-white"
+                  style={{ fontFamily: 'var(--font-tektrron), sans-serif' }}
+                >
+                  {companySettings?.companyName || 'Electro Shop Morandin C.A.'}
+                </h3>
               </div>
               <p className="text-xs text-gray-400 mb-3">
-                {companySettings?.tagline || 'Tu tienda de confianza en tecnología y gaming en Guanare, Venezuela.'}
+                {companySettings?.tagline || 'Tu tienda de tecnología en Venezuela 🇻🇪'}
               </p>
               <div className="flex gap-2 flex-wrap">
                 {companySettings?.facebook && (
@@ -479,7 +500,7 @@ export default async function Home() {
           {/* Bottom Bar */}
           <div className="pt-6 border-t border-white/10">
             <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-gray-400">
-              <p>&copy; 2024 {companySettings?.companyName || 'Electro Shop Morandin C.A.'} Todos los derechos reservados.</p>
+              <p>&copy; 2025 Electro Shop Morandin C.A. Todos los derechos reservados.</p>
               <div className="flex gap-4">
                 <Link href="/terminos" className="hover:text-[#2a63cd] transition-colors">Términos</Link>
                 <Link href="/privacidad" className="hover:text-[#2a63cd] transition-colors">Privacidad</Link>
@@ -490,6 +511,7 @@ export default async function Home() {
       </footer>
 
       <PageAnimations />
+      <HotAdOverlay />
     </div>
   );
 }

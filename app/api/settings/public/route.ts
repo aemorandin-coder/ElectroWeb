@@ -151,6 +151,16 @@ export async function GET() {
       maintenanceMessage: settings.maintenanceMessage,
       maintenanceStartTime: settings.maintenanceStartTime,
       maintenanceEndTime: settings.maintenanceEndTime,
+      // Hot Ad / Promotional Popup
+      hotAdEnabled: settings.hotAdEnabled,
+      hotAdImage: settings.hotAdImage,
+      hotAdTransparentBg: settings.hotAdTransparentBg,
+      hotAdShadowEnabled: settings.hotAdShadowEnabled,
+      hotAdShadowBlur: settings.hotAdShadowBlur,
+      hotAdShadowOpacity: settings.hotAdShadowOpacity,
+      hotAdBackdropOpacity: settings.hotAdBackdropOpacity,
+      hotAdBackdropColor: settings.hotAdBackdropColor,
+      hotAdLink: settings.hotAdLink,
     };
 
     return NextResponse.json(safeSerialize(publicSettings));

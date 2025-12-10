@@ -485,6 +485,17 @@ model CompanySettings {
   ctaButtonText  String?
   ctaButtonLink  String?
 
+  // Hot Ad / Promotional Popup
+  hotAdEnabled          Boolean @default(false)
+  hotAdImage            String?
+  hotAdTransparentBg    Boolean @default(false)
+  hotAdShadowEnabled    Boolean @default(true)
+  hotAdShadowBlur       Int     @default(20)
+  hotAdShadowOpacity    Int     @default(50)
+  hotAdBackdropOpacity  Int     @default(70)
+  hotAdBackdropColor    String  @default("#000000")
+  hotAdLink             String?
+
   updatedAt DateTime @updatedAt
 
   @@map("company_settings")
@@ -777,3 +788,80 @@ model DiscountRequest {
   @@index([status])
   @@map("discount_requests")
 }
+
+// ============================================
+// ANALYTICS & REPORTING
+// ============================================
+
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  eventType   String   // page_view, click, registration, login, purchase, product_request, security_alert, etc.
+  eventCategory String // interaction, conversion, security, system
+  eventAction String?  // specific action: button_click, form_submit, failed_login, etc.
+  eventLabel  String?  // additional context
+  eventValue  Float?   // numeric value if applicable
+  
+  // Page/Source info
+  page        String?  // URL or page name where event occurred
+  referrer    String?  // Where the user came from
+  
+  // User info (optional, for logged-in users)
+  userId      String?
+  userEmail   String?
+  
+  // Session/Device info
+  sessionId   String?
+  deviceType  String?  // desktop, mobile, tablet
+  browser     String?
+  os          String?
+  
+  // Location info
+  ipAddress   String?
+  country     String?
+  city        String?
+  
+  // Security-related
+  isSuspicious Boolean @default(false)
+  threatLevel  String?  // low, medium, high, critical
+  threatDetails String?
+  
+  // Metadata
+  metadata    Json?    // Additional flexible data
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([eventType])
+  @@index([eventCategory])
+  @@index([createdAt])
+  @@index([userId])
+  @@index([isSuspicious])
+  @@map("analytics_events")
+}
+
+// Security logs for tracking suspicious activities
+model SecurityLog {
+  id          String   @id @default(cuid())
+  eventType   String   // failed_login, brute_force, sql_injection, xss_attempt, unauthorized_access, etc.
+  severity    String   // info, warning, critical
+  
+  ipAddress   String?
+  userAgent   String?
+  userId      String?
+  userEmail   String?
+  
+  endpoint    String?  // API endpoint or page
+  method      String?  // GET, POST, etc.
+  payload     String?  // Sanitized request payload
+  
+  description String
+  blocked     Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([eventType])
+  @@index([severity])
+  @@index([ipAddress])
+  @@index([createdAt])
+  @@map("security_logs")
+}
+

@@ -123,7 +123,8 @@ export async function PUT(request: NextRequest) {
       'stat3Label', 'stat3Value', 'stat3Icon',
       'stat4Label', 'stat4Value', 'stat4Icon',
       'ctaTitle', 'ctaDescription', 'ctaButtonText', 'ctaButtonLink',
-      'coursesDescription', 'servicesDescription'
+      'coursesDescription', 'servicesDescription',
+      'hotAdImage', 'hotAdLink', 'hotAdBackdropColor'
     ];
 
     stringFields.forEach(field => {
@@ -136,7 +137,8 @@ export async function PUT(request: NextRequest) {
     const booleanFields = [
       'autoExchangeRates', 'deliveryEnabled', 'pickupEnabled', 'taxEnabled',
       'maintenanceMode', 'heroVideoEnabled', 'showStats', 'showCategories',
-      'autoHideOutOfStock', 'notifyLowStock', 'notifyOutOfStock', 'ctaEnabled'
+      'autoHideOutOfStock', 'notifyLowStock', 'notifyOutOfStock', 'ctaEnabled',
+      'hotAdEnabled', 'hotAdTransparentBg', 'hotAdShadowEnabled'
     ];
 
     booleanFields.forEach(field => {
@@ -145,11 +147,11 @@ export async function PUT(request: NextRequest) {
       }
     });
 
-    // Number Fields
     const numberFields = [
       'deliveryFeeUSD', 'freeDeliveryThresholdUSD', 'taxPercent',
       'minOrderAmountUSD', 'maxOrderAmountUSD', 'maxFeaturedProducts',
-      'maxCategoriesDisplay', 'lowStockThreshold', 'criticalStockThreshold'
+      'maxCategoriesDisplay', 'lowStockThreshold', 'criticalStockThreshold',
+      'hotAdShadowBlur', 'hotAdShadowOpacity', 'hotAdBackdropOpacity'
     ];
 
     numberFields.forEach(field => {

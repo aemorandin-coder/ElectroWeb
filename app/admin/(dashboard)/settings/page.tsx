@@ -117,6 +117,16 @@ export default function SettingsPage() {
     ctaDescription: '',
     ctaButtonText: '',
     ctaButtonLink: '',
+    // Hot Ad / Promotional Popup
+    hotAdEnabled: false,
+    hotAdImage: null,
+    hotAdTransparentBg: false,
+    hotAdShadowEnabled: true,
+    hotAdShadowBlur: 20,
+    hotAdShadowOpacity: 50,
+    hotAdBackdropOpacity: 70,
+    hotAdBackdropColor: '#000000',
+    hotAdLink: '',
   });
   const [exchangeRates, setExchangeRates] = useState({ VES: 36.50, EUR: 0.92 });
   const [loadingRates, setLoadingRates] = useState(false);
@@ -243,6 +253,16 @@ export default function SettingsPage() {
           ctaDescription: data.ctaDescription || '',
           ctaButtonText: data.ctaButtonText || '',
           ctaButtonLink: data.ctaButtonLink || '',
+          // Hot Ad / Promotional Popup
+          hotAdEnabled: data.hotAdEnabled ?? false,
+          hotAdImage: data.hotAdImage || null,
+          hotAdTransparentBg: data.hotAdTransparentBg ?? false,
+          hotAdShadowEnabled: data.hotAdShadowEnabled ?? true,
+          hotAdShadowBlur: data.hotAdShadowBlur ?? 20,
+          hotAdShadowOpacity: data.hotAdShadowOpacity ?? 50,
+          hotAdBackdropOpacity: data.hotAdBackdropOpacity ?? 70,
+          hotAdBackdropColor: data.hotAdBackdropColor || '#000000',
+          hotAdLink: data.hotAdLink || '',
         };
         setFormData(loadedData);
         setInitialFormData(loadedData);
@@ -1204,6 +1224,223 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Hot Ad / Promotional Popup */}
+          <div className={`rounded-xl shadow-md border overflow-hidden hover:shadow-lg transition-shadow ${formData.hotAdEnabled ? 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200' : 'bg-white border-gray-200'}`}>
+            <div className={`p-4 border-b flex items-center justify-between ${formData.hotAdEnabled ? 'border-orange-200 bg-gradient-to-r from-orange-100 to-red-100' : 'border-gray-100 bg-gray-50/50'}`}>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🔥</span>
+                <h3 className="font-semibold text-gray-900">Publicidad Caliente</h3>
+                {formData.hotAdEnabled && (
+                  <span className="px-2 py-0.5 text-xs bg-red-500 text-white rounded-full font-bold animate-pulse">ACTIVO</span>
+                )}
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="hotAdEnabled"
+                  checked={formData.hotAdEnabled}
+                  onChange={handleInputChange}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-orange-500 peer-checked:to-red-500"></div>
+              </label>
+            </div>
+            <div className="p-6 space-y-5">
+              <p className="text-xs text-gray-600 bg-white/50 p-3 rounded-lg border border-gray-200">
+                ⚡ Muestra una imagen promocional que cubre toda la página principal cuando los visitantes llegan. Ideal para ofertas especiales, lanzamientos o eventos importantes.
+              </p>
+
+              {/* Image Upload */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-2">Imagen Promocional (PNG o JPG)</label>
+                <div className="flex items-start gap-4">
+                  <div className={`w-32 h-24 rounded-xl border-2 border-dashed flex items-center justify-center bg-gray-50 overflow-hidden relative group transition-colors ${formData.hotAdImage ? 'border-green-300' : 'border-gray-300 hover:border-orange-400'}`}>
+                    {formData.hotAdImage ? (
+                      <>
+                        <Image src={formData.hotAdImage} alt="Hot Ad Preview" fill className="object-contain p-1" />
+                        <button
+                          onClick={() => setFormData(prev => ({ ...prev, hotAdImage: null }))}
+                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <FiX className="w-3 h-3" />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="text-center">
+                        <FiUpload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
+                        <span className="text-[10px] text-gray-400">Subir imagen</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="file"
+                      id="hotAdImageInput"
+                      accept="image/png,image/jpeg,image/jpg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 5 * 1024 * 1024) {
+                            alert('El archivo es demasiado grande. Máximo 5MB.');
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setFormData(prev => ({ ...prev, hotAdImage: reader.result as string }));
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => document.getElementById('hotAdImageInput')?.click()}
+                      className="text-xs bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md transition-colors shadow-sm"
+                    >
+                      {formData.hotAdImage ? 'Cambiar Imagen' : 'Seleccionar Imagen'}
+                    </button>
+                    <span className="text-[10px] text-gray-400">Max 5MB (PNG, JPG)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Link */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Link al hacer clic (Opcional)</label>
+                <input
+                  type="url"
+                  name="hotAdLink"
+                  value={formData.hotAdLink}
+                  onChange={handleInputChange}
+                  placeholder="https://tu-tienda.com/oferta-especial"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
+                />
+                <p className="text-[10px] text-gray-500 mt-1">Si se especifica, la imagen será clickeable y redirigirá a esta URL</p>
+              </div>
+
+              {/* Visual Options */}
+              <div className="space-y-4 pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-800">Opciones Visuales</h4>
+
+                {/* Transparent Background */}
+                <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">Fondo Transparente</span>
+                    <p className="text-xs text-gray-500">Muestra la imagen sin borde redondeado</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hotAdTransparentBg"
+                      checked={formData.hotAdTransparentBg}
+                      onChange={handleInputChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
+                  </label>
+                </div>
+
+                {/* Shadow Enabled */}
+                <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">Sombra de Imagen</span>
+                    <p className="text-xs text-gray-500">Agrega profundidad a la imagen</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hotAdShadowEnabled"
+                      checked={formData.hotAdShadowEnabled}
+                      onChange={handleInputChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
+                  </label>
+                </div>
+
+                {/* Shadow Controls */}
+                {formData.hotAdShadowEnabled && (
+                  <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">
+                        Grosor de Sombra: {formData.hotAdShadowBlur}px
+                      </label>
+                      <input
+                        type="range"
+                        name="hotAdShadowBlur"
+                        value={formData.hotAdShadowBlur}
+                        onChange={handleInputChange}
+                        min="5"
+                        max="100"
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">
+                        Opacidad de Sombra: {formData.hotAdShadowOpacity}%
+                      </label>
+                      <input
+                        type="range"
+                        name="hotAdShadowOpacity"
+                        value={formData.hotAdShadowOpacity}
+                        onChange={handleInputChange}
+                        min="10"
+                        max="100"
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Backdrop Opacity */}
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                    Opacidad del Fondo: {formData.hotAdBackdropOpacity}%
+                  </label>
+                  <input
+                    type="range"
+                    name="hotAdBackdropOpacity"
+                    value={formData.hotAdBackdropOpacity}
+                    onChange={handleInputChange}
+                    min="30"
+                    max="95"
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-700"
+                  />
+                </div>
+
+                {/* Backdrop Color */}
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                    Color del Fondo
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      name="hotAdBackdropColor"
+                      value={formData.hotAdBackdropColor}
+                      onChange={handleInputChange}
+                      className="h-10 w-14 rounded-lg cursor-pointer border-2 border-gray-300 p-0"
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-mono text-gray-600">{formData.hotAdBackdropColor}</span>
+                      <p className="text-[10px] text-gray-400 mt-0.5">Color del fondo detrás de la imagen</p>
+                    </div>
+                    {/* Preview */}
+                    <div
+                      className="w-16 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-[8px] text-white font-bold"
+                      style={{
+                        backgroundColor: formData.hotAdBackdropColor,
+                        opacity: formData.hotAdBackdropOpacity / 100
+                      }}
+                    >
+                      PREVIEW
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>

@@ -131,6 +131,17 @@ export interface CompanySettings {
   ctaDescription?: string | null;
   ctaButtonText?: string | null;
   ctaButtonLink?: string | null;
+
+  // Hot Ad / Promotional Popup
+  hotAdEnabled?: boolean;
+  hotAdImage?: string | null;
+  hotAdTransparentBg?: boolean;
+  hotAdShadowEnabled?: boolean;
+  hotAdShadowBlur?: number;
+  hotAdShadowOpacity?: number;
+  hotAdBackdropOpacity?: number;
+  hotAdBackdropColor?: string | null;
+  hotAdLink?: string | null;
 }
 
 export interface SettingsFormData {
@@ -223,6 +234,17 @@ export interface SettingsFormData {
   ctaDescription: string;
   ctaButtonText: string;
   ctaButtonLink: string;
+
+  // Hot Ad / Promotional Popup
+  hotAdEnabled: boolean;
+  hotAdImage: string | null;
+  hotAdTransparentBg: boolean;
+  hotAdShadowEnabled: boolean;
+  hotAdShadowBlur: number;
+  hotAdShadowOpacity: number;
+  hotAdBackdropOpacity: number;
+  hotAdBackdropColor: string;
+  hotAdLink: string;
 }
 
 export interface SettingsValidationErrors {

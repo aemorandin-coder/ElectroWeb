@@ -19,10 +19,17 @@ export default function FadeIn({
     className = '',
     fullWidth = false,
 }: FadeInProps) {
+    const [mounted, setMounted] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const domRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (!mounted) return;
+
         const observer = new IntersectionObserver(entries => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -43,7 +50,7 @@ export default function FadeIn({
                 observer.unobserve(domRef.current);
             }
         };
-    }, []);
+    }, [mounted]);
 
     const getTransform = () => {
         if (!isVisible) {
@@ -57,6 +64,15 @@ export default function FadeIn({
         }
         return 'none';
     };
+
+    // During SSR and initial render, return children without animation wrapper
+    if (!mounted) {
+        return (
+            <div className={`${className} ${fullWidth ? 'w-full' : ''}`}>
+                {children}
+            </div>
+        );
+    }
 
     return (
         <div
@@ -73,3 +89,4 @@ export default function FadeIn({
         </div>
     );
 }
+

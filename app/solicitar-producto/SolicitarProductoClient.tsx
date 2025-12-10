@@ -51,22 +51,10 @@ export default function SolicitarProductoClient() {
     urgency: 'normal' as 'low' | 'normal' | 'high',
   });
 
-  // AutoFocus on mount and load user data if logged in
+  // AutoFocus on mount
   useEffect(() => {
     nameInputRef.current?.focus();
   }, []);
-
-  // Pre-fill form with user data if logged in
-  useEffect(() => {
-    if (session?.user) {
-      setFormData(prev => ({
-        ...prev,
-        customerName: session.user.name || prev.customerName,
-        customerEmail: session.user.email || prev.customerEmail,
-        customerPhone: (session.user as { phone?: string }).phone?.replace(/^\+\d+\s*/, '') || prev.customerPhone,
-      }));
-    }
-  }, [session]);
 
   const validateField = (fieldName: string, value: string): string => {
     switch (fieldName) {

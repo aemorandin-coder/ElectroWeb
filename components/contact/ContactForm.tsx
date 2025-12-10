@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 interface ValidationErrors {
@@ -13,7 +12,6 @@ interface ValidationErrors {
 }
 
 export default function ContactForm() {
-    const { data: session } = useSession();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
@@ -34,18 +32,6 @@ export default function ContactForm() {
     useEffect(() => {
         nameInputRef.current?.focus();
     }, []);
-
-    // Pre-fill form with user data if logged in
-    useEffect(() => {
-        if (session?.user) {
-            setFormData(prev => ({
-                ...prev,
-                name: session.user.name || prev.name,
-                email: session.user.email || prev.email,
-                phone: (session.user as { phone?: string }).phone?.replace(/^\+\d+\s*/, '') || prev.phone,
-            }));
-        }
-    }, [session]);
 
     const validateField = (fieldName: string, value: string): string => {
         switch (fieldName) {

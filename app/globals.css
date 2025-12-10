@@ -84,6 +84,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Hide floating elements when Hot Ad is active */
+body.hot-ad-active .fixed.z-40,
+body.hot-ad-active [class*="z-40"] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 /* Scrollbar Styling (Premium feel) */
 ::-webkit-scrollbar {
   width: 8px;

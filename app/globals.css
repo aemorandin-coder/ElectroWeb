@@ -4,6 +4,11 @@
    ELECTRO SHOP MORANDIN C.A. - DESIGN SYSTEM
    ============================================ */
 
+/* Font Fallbacks - Inter uses system fonts */
+:root {
+  --font-inter: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
 :root {
   /* Brand Colors */
   --primary-blue: #2a63cd;

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter, Tektur } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -9,18 +8,11 @@ import NotificationToast from "@/components/notifications/NotificationToast";
 import DynamicFavicon from "@/components/DynamicFavicon";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 
-
-const inter = Inter({
+// Use local fonts to avoid Google Fonts dependency during build
+// Inter uses system font fallback
+const inter = {
   variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const tektur = Tektur({
-  variable: "--font-tektur",
-  subsets: ["latin"],
-  display: "swap",
-});
+};
 
 const nakadai = localFont({
   src: "../public/fonts/Nakadai.otf",
@@ -47,7 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className={`${inter.variable} ${tektur.variable} ${nakadai.variable} ${tektrron.variable} antialiased`} suppressHydrationWarning>
+      <body className={`${inter.variable} ${nakadai.variable} ${tektrron.variable} antialiased`} suppressHydrationWarning>
         <Providers>
           <NotificationProvider>
             <div className="page-transition-wrapper">

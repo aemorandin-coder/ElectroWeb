@@ -17,12 +17,12 @@
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@fortawesome/react-fontawesome": "^3.1.1",
-    "@hcaptcha/react-hcaptcha": "^1.16.0",
+    "@hcaptcha/react-hcaptcha": "^1.17.1",
     "@prisma/client": "^6.19.0",
     "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
-    "next": "16.0.1",
+    "next": "^16.0.8",
     "next-auth": "^4.24.13",
     "nodemailer": "^7.0.10",
     "prisma": "^6.19.0",
@@ -33,7 +33,7 @@
     "recharts": "^3.4.1",
     "resend": "^6.5.2",
     "sharp": "^0.34.5",
-    "zustand": "^5.0.8"
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -44,7 +44,7 @@
     "@types/react-dom": "^19",
     "baseline-browser-mapping": "^2.9.5",
     "eslint": "^9",
-    "eslint-config-next": "16.0.1",
+    "eslint-config-next": "^16.0.8",
     "tailwindcss": "^4",
     "tsx": "^4.20.6",
     "typescript": "^5"

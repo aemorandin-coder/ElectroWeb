@@ -27,6 +27,7 @@ export default function CheckoutPage() {
     customerName: '',
     customerEmail: '',
     customerPhone: '',
+    customerIdNumber: '',
     shippingAddress: '',
     shippingCity: '',
     shippingState: '',
@@ -89,12 +90,16 @@ export default function CheckoutPage() {
         customerEmail: session.user.email || '',
       }));
 
-      // Load profile for phone and saved addresses
+      // Load profile for phone, idNumber and saved addresses
       fetch('/api/user/profile')
         .then(res => res.json())
         .then(data => {
-          if (data.profile?.phone) {
-            setFormData(prev => ({ ...prev, customerPhone: data.profile.phone }));
+          if (data.profile?.phone || data.profile?.idNumber) {
+            setFormData(prev => ({
+              ...prev,
+              customerPhone: data.profile.phone || prev.customerPhone,
+              customerIdNumber: data.profile.idNumber || prev.customerIdNumber
+            }));
           }
 
           // Load saved addresses
@@ -589,14 +594,14 @@ export default function CheckoutPage() {
 
               {/* Email Verification Warning Banner */}
               {session?.user && !(session.user as any).emailVerified && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                      <FiAlertCircle className="w-5 h-5 text-amber-600" />
+                    <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <FiAlertCircle className="w-5 h-5 text-[#2a63cd]" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-amber-800 text-sm mb-1">Verifica tu correo electronico</h3>
-                      <p className="text-amber-700 text-sm mb-3">
+                      <h3 className="font-bold text-[#1e4ba3] text-sm mb-1">Verifica tu correo electronico</h3>
+                      <p className="text-[#212529] text-sm mb-3">
                         Para poder realizar compras, necesitas verificar tu email.
                         Revisa tu bandeja de entrada y haz clic en el enlace de verificacion.
                       </p>
@@ -615,7 +620,7 @@ export default function CheckoutPage() {
                             alert('Error al reenviar email');
                           }
                         }}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors"
                       >
                         <FiAlertCircle className="w-4 h-4" />
                         Reenviar email de verificacion
@@ -635,48 +640,51 @@ export default function CheckoutPage() {
                     Información de Contacto
                   </h2>
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 border border-green-300 rounded-full">
-                      <FiLock className="w-3.5 h-3.5 text-green-700" />
-                      <span className="text-xs font-bold text-green-700">Verificado</span>
-                    </div>
+                    {/* Show Verified badge only if user is actually verified */}
+                    {(session?.user as any)?.emailVerified && (
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 border border-green-300 rounded-full">
+                        <FiCheckCircle className="w-3.5 h-3.5 text-green-700" />
+                        <span className="text-xs font-bold text-green-700">Verificado</span>
+                      </div>
+                    )}
                     {/* Tooltip Icono */}
                     <div
                       className="relative group"
                       onMouseEnter={() => setShowClientDataTooltip(true)}
                       onMouseLeave={() => setShowClientDataTooltip(false)}
                     >
-                      <div className="w-8 h-8 rounded-full bg-amber-500 hover:bg-amber-600 flex items-center justify-center cursor-help transition-all animate-pulse hover:animate-none shadow-lg">
+                      <div className="w-8 h-8 rounded-full bg-[#2a63cd] hover:bg-[#1e4ba3] flex items-center justify-center cursor-help transition-all animate-pulse hover:animate-none shadow-lg">
                         <FiAlertCircle className="w-4 h-4 text-white" />
                       </div>
                       {/* Epic Tooltip */}
                       {showClientDataTooltip && (
                         <div className="absolute right-0 top-full mt-3 w-80 z-50 animate-scaleIn">
-                          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl shadow-2xl border-2 border-amber-400 p-5 relative">
+                          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-2xl border-2 border-[#2a63cd] p-5 relative">
                             {/* Arrow */}
-                            <div className="absolute -top-2 right-6 w-4 h-4 bg-amber-400 rotate-45 border-t-2 border-l-2 border-amber-400"></div>
-                            <div className="absolute -top-1.5 right-6 w-4 h-4 bg-gradient-to-br from-amber-50 to-orange-50 rotate-45"></div>
+                            <div className="absolute -top-2 right-6 w-4 h-4 bg-[#2a63cd] rotate-45 border-t-2 border-l-2 border-[#2a63cd]"></div>
+                            <div className="absolute -top-1.5 right-6 w-4 h-4 bg-gradient-to-br from-blue-50 to-indigo-50 rotate-45"></div>
 
                             <div className="flex items-start gap-3 mb-3">
-                              <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                              <div className="w-10 h-10 rounded-xl bg-[#2a63cd] flex items-center justify-center flex-shrink-0 shadow-md">
                                 <FiAlertCircle className="w-5 h-5 text-white" />
                               </div>
                               <div>
-                                <h3 className="font-black text-amber-900 text-sm mb-1">
+                                <h3 className="font-black text-[#1e4ba3] text-sm mb-1">
                                   ⚠️ Importante para el Retiro
                                 </h3>
-                                <p className="text-xs text-amber-800 leading-relaxed font-medium">
+                                <p className="text-xs text-[#212529] leading-relaxed font-medium">
                                   Estos datos registrados (nombre, email, teléfono) son los <strong className="font-black">ÚNICOS válidos</strong> para retirar tu producto.
                                 </p>
                               </div>
                             </div>
 
-                            <div className="bg-white/50 rounded-xl p-3 border border-amber-300">
-                              <p className="text-xs text-amber-900 leading-relaxed">
+                            <div className="bg-white/70 rounded-xl p-3 border border-[#2a63cd]/30">
+                              <p className="text-xs text-[#212529] leading-relaxed">
                                 <strong className="font-black">Solo tú, el cliente logeado</strong>, podrás retirar el pedido presentando tu identificación que coincida con estos datos.
                               </p>
                             </div>
 
-                            <div className="mt-3 flex items-center gap-2 text-xs text-amber-700">
+                            <div className="mt-3 flex items-center gap-2 text-xs text-[#2a63cd]">
                               <FiCheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
                               <span className="font-medium">Por seguridad, estos datos no son editables aquí</span>
                             </div>
@@ -754,6 +762,30 @@ export default function CheckoutPage() {
                         <input
                           type="tel"
                           value={formData.customerPhone}
+                          readOnly
+                          disabled
+                          className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] bg-[#f8f9fa] text-[#212529] rounded-xl cursor-not-allowed font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    {/* ID Number / Passport */}
+                    <div className="col-span-1 md:col-span-2">
+                      <label className="block text-sm font-semibold text-[#212529] mb-2 flex items-center gap-2">
+                        Cédula / Pasaporte
+                        <div className="group relative">
+                          <FiInfo className="w-4 h-4 text-[#6a6c6b] cursor-help" />
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-[#212529] text-white text-xs rounded-lg shadow-xl z-20 animate-scaleIn">
+                            Documento de identidad registrado. Este dato se usará para validar el retiro del producto.
+                            <div className="absolute bottom-0 left-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-[#212529]"></div>
+                          </div>
+                        </div>
+                      </label>
+                      <div className="relative">
+                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6c6b] z-20" />
+                        <input
+                          type="text"
+                          value={formData.customerIdNumber || 'No registrado'}
                           readOnly
                           disabled
                           className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] bg-[#f8f9fa] text-[#212529] rounded-xl cursor-not-allowed font-medium"
@@ -1102,7 +1134,6 @@ export default function CheckoutPage() {
                         <li>Tu pedido será enviado a la oficina {formData.courierService || 'ZOOM/MRW'} que indiques</li>
                         <li>Recibirás una notificación cuando tu paquete llegue a la oficina</li>
                         <li>Debes retirar tu paquete con tu cédula de identidad</li>
-                        <li>Si tienes casillero, proporciona el número para envío directo</li>
                       </ul>
                     </div>
                   </div>
@@ -1148,14 +1179,29 @@ export default function CheckoutPage() {
                   <button
                     type="button"
                     onClick={() => setPaymentMode('WALLET')}
-                    className={`relative p-6 rounded-xl border-2 transition-all text-left group ${paymentMode === 'WALLET'
+                    className={`relative p-6 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'WALLET'
                       ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-lg'
-                      : 'border-[#e9ecef] hover:border-[#2a63cd]/50 hover:shadow-md'
+                      : 'border-[#2a63cd]/30 bg-gradient-to-br from-white to-blue-50 hover:border-[#2a63cd]/50 hover:shadow-lg shadow-md'
                       }`}
                   >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${paymentMode === 'WALLET' ? 'bg-[#2a63cd] text-white' : 'bg-[#f8f9fa] text-[#6a6c6b] group-hover:bg-[#2a63cd]/10 group-hover:text-[#2a63cd]'
-                      }`}>
-                      <FontAwesomeIcon icon={faWallet} className="w-6 h-6" />
+                    {/* Animated glow effect - Always active */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#2a63cd]/15 to-transparent animate-shimmer"></div>
+
+                    {/* Sparkle effects */}
+                    <div className="absolute top-2 right-8 w-2 h-2 bg-[#2a63cd] rounded-full animate-ping opacity-40"></div>
+                    <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-[#6366f1] rounded-full animate-ping opacity-30" style={{ animationDelay: '0.5s' }}></div>
+
+                    {/* Icon with epic animation - Always animated */}
+                    <div className={`relative w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${paymentMode === 'WALLET'
+                      ? 'bg-gradient-to-br from-[#2a63cd] to-[#6366f1] text-white shadow-lg shadow-[#2a63cd]/40'
+                      : 'bg-gradient-to-br from-[#2a63cd]/20 to-[#6366f1]/20 text-[#2a63cd]'
+                      }`}
+                    >
+                      {/* Pulse ring animation - Always active */}
+                      <div className="absolute inset-0 rounded-full animate-ping opacity-20 bg-[#2a63cd]"></div>
+                      {/* Rotating ring - Always active */}
+                      <div className="absolute inset-[-3px] rounded-full border-2 border-dashed border-[#2a63cd]/40 animate-spin" style={{ animationDuration: '6s' }}></div>
+                      <FontAwesomeIcon icon={faWallet} className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110" />
                     </div>
                     <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'WALLET' ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
                       Usar Saldo / Recargar
@@ -1163,8 +1209,13 @@ export default function CheckoutPage() {
                     <p className="text-sm text-[#6a6c6b]">
                       Paga con tu saldo disponible en la plataforma
                     </p>
+                    {userBalance > 0 && (
+                      <div className="mt-2 text-xs font-bold text-[#2a63cd] animate-pulse">
+                        💰 Saldo: ${formatPrice(userBalance)}
+                      </div>
+                    )}
                     {paymentMode === 'WALLET' && (
-                      <div className="absolute top-4 right-4 w-6 h-6 bg-[#2a63cd] rounded-full flex items-center justify-center">
+                      <div className="absolute top-4 right-4 w-6 h-6 bg-[#2a63cd] rounded-full flex items-center justify-center animate-bounce">
                         <FiCheck className="w-4 h-4 text-white" />
                       </div>
                     )}
@@ -1259,120 +1310,6 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                     )}
-                  </div>
-                )}
-              </div>
-
-              {/* Delivery Method - Linear and Premium */}
-              <div className="bg-white rounded-xl shadow-lg border border-[#e9ecef] p-6 animate-fadeIn animation-delay-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-[#212529] flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-md">
-                      <FiTruck className="w-5 h-5 text-white" />
-                    </div>
-                    Empresa de Envío
-                  </h2>
-                </div>
-
-                {/* Validation: Ensure address is provided */}
-                {(!formData.shippingAddress && !formData.isOfficeDelivery) || (formData.isOfficeDelivery && !formData.courierService) ? (
-                  <div className="p-6 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl text-center">
-                    <FiAlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-gray-600">
-                      Primero completa tu dirección de envío
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Selecciona la empresa de envío después de ingresar tu dirección
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {/* ZOOM Option */}
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, deliveryMethod: 'SHIPPING', courierService: 'ZOOM' })}
-                      className={`w-full p-4 rounded-xl border-2 transition-all text-left group ${formData.courierService === 'ZOOM' && formData.deliveryMethod === 'SHIPPING'
-                        ? 'border-[#2a63cd] bg-gradient-to-r from-[#2a63cd]/10 to-[#1e4ba3]/5 shadow-md'
-                        : 'border-[#e9ecef] hover:border-[#2a63cd]/50 hover:shadow-sm'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${formData.courierService === 'ZOOM' && formData.deliveryMethod === 'SHIPPING'
-                            ? 'bg-[#2a63cd] shadow-lg'
-                            : 'bg-[#f8f9fa] group-hover:bg-[#2a63cd]/10'
-                            }`}>
-                            <FiTruck className={`w-6 h-6 ${formData.courierService === 'ZOOM' && formData.deliveryMethod === 'SHIPPING'
-                              ? 'text-white'
-                              : 'text-[#6a6c6b] group-hover:text-[#2a63cd]'
-                              }`} />
-                          </div>
-                          <div>
-                            <h3 className={`font-bold text-base mb-0.5 ${formData.courierService === 'ZOOM' && formData.deliveryMethod === 'SHIPPING'
-                              ? 'text-[#2a63cd]'
-                              : 'text-[#212529]'
-                              }`}>
-                              ZOOM
-                            </h3>
-                            <p className="text-xs text-[#6a6c6b]">Envío rápido y seguro</p>
-                          </div>
-                        </div>
-                        {formData.courierService === 'ZOOM' && formData.deliveryMethod === 'SHIPPING' && (
-                          <div className="w-6 h-6 bg-[#2a63cd] rounded-full flex items-center justify-center animate-scaleIn">
-                            <FiCheck className="w-4 h-4 text-white" />
-                          </div>
-                        )}
-                      </div>
-                    </button>
-
-                    {/* MRW Option */}
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, deliveryMethod: 'SHIPPING', courierService: 'MRW' })}
-                      className={`w-full p-4 rounded-xl border-2 transition-all text-left group ${formData.courierService === 'MRW' && formData.deliveryMethod === 'SHIPPING'
-                        ? 'border-[#2a63cd] bg-gradient-to-r from-[#2a63cd]/10 to-[#1e4ba3]/5 shadow-md'
-                        : 'border-[#e9ecef] hover:border-[#2a63cd]/50 hover:shadow-sm'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${formData.courierService === 'MRW' && formData.deliveryMethod === 'SHIPPING'
-                            ? 'bg-[#2a63cd] shadow-lg'
-                            : 'bg-[#f8f9fa] group-hover:bg-[#2a63cd]/10'
-                            }`}>
-                            <FiTruck className={`w-6 h-6 ${formData.courierService === 'MRW' && formData.deliveryMethod === 'SHIPPING'
-                              ? 'text-white'
-                              : 'text-[#6a6c6b] group-hover:text-[#2a63cd]'
-                              }`} />
-                          </div>
-                          <div>
-                            <h3 className={`font-bold text-base mb-0.5 ${formData.courierService === 'MRW' && formData.deliveryMethod === 'SHIPPING'
-                              ? 'text-[#2a63cd]'
-                              : 'text-[#212529]'
-                              }`}>
-                              MRW
-                            </h3>
-                            <p className="text-xs text-[#6a6c6b]">Cobertura nacional garantizada</p>
-                          </div>
-                        </div>
-                        {formData.courierService === 'MRW' && formData.deliveryMethod === 'SHIPPING' && (
-                          <div className="w-6 h-6 bg-[#2a63cd] rounded-full flex items-center justify-center animate-scaleIn">
-                            <FiCheck className="w-4 h-4 text-white" />
-                          </div>
-                        )}
-                      </div>
-                    </button>
-
-                    {/* Info Banner */}
-                    <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl flex items-start gap-3">
-                      <FiCheck className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-green-900 font-medium mb-1">Envío por empresa certificada</p>
-                        <p className="text-xs text-green-700">
-                          Tu pedido será procesado y enviado mediante {formData.courierService || 'la empresa seleccionada'}
-                        </p>
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
@@ -1588,8 +1525,20 @@ export default function CheckoutPage() {
       {/* Terms and Conditions Modal */}
       {
         showTermsModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200">
+          <div
+            className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            style={{ zIndex: 99999 }}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+              style={{
+                width: '100%',
+                maxWidth: '700px',
+                minWidth: '320px',
+                maxHeight: '85vh',
+                animation: 'modalScaleIn 0.3s ease-out'
+              }}
+            >
               {/* Header */}
               <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-6">
                 <div className="flex items-center justify-between">
@@ -1606,7 +1555,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(80vh-200px)]">
+              <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 180px)' }}>
                 <div className="space-y-6 text-sm text-[#212529]">
                   {/* Critical Warning */}
                   <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-orange-500 rounded-r-xl">

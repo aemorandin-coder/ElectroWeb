@@ -238,23 +238,15 @@ body.hot-ad-active [class*="z-40"] {
 /* Shimmer Effect */
 @keyframes shimmer {
   0% {
-    background-position: -1000px 0;
+    transform: translateX(-100%);
   }
   100% {
-    background-position: 1000px 0;
+    transform: translateX(200%);
   }
 }
 
 .animate-shimmer {
-  background: linear-gradient(
-    to right,
-    #f8f9fa 0%,
-    #e9ecef 20%,
-    #f8f9fa 40%,
-    #f8f9fa 100%
-  );
-  background-size: 1000px 100%;
-  animation: shimmer 2s linear infinite;
+  animation: shimmer 2.5s ease-in-out infinite;
 }
 
 /* Staggered Children Animation */

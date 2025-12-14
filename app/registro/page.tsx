@@ -26,11 +26,11 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    idNumber: '',
     phone: '',
     password: '',
     confirmPassword: '',
     acceptTerms: false,
-    isBusiness: false,
   });
   const [countryCode, setCountryCode] = useState('+58');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
@@ -99,6 +99,11 @@ export default function RegisterPage() {
         // Check for invalid characters (anything that's not a letter, space, accent, or comma)
         const nameRegex = /^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s,]+$/;
         if (!nameRegex.test(value)) return 'Solo letras y una coma son permitidos';
+        return '';
+
+      case 'idNumber':
+        if (!value || value.trim() === '') return 'Por favor, ingresa tu cédula o pasaporte';
+        if (value.trim().length < 5) return 'El número de documento debe tener al menos 5 caracteres';
         return '';
 
       case 'email':
@@ -213,7 +218,7 @@ export default function RegisterPage() {
     }
 
     // Validate fields in order and show only the FIRST error
-    const allFields = ['name', 'email', 'phone', 'password', 'confirmPassword', 'acceptTerms'];
+    const allFields = ['name', 'idNumber', 'email', 'phone', 'password', 'confirmPassword', 'acceptTerms'];
     let firstError: { field: string; message: string } | null = null;
 
     for (const field of allFields) {
@@ -248,6 +253,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
+          idNumber: formData.idNumber,
           phone: fullPhone,
           password: formData.password,
           captchaToken,
@@ -276,8 +282,8 @@ export default function RegisterPage() {
       } else if (result?.ok) {
         // Wait a bit for session to be established
         await new Promise(resolve => setTimeout(resolve, 200));
-        // Redirect to profile if they wanted business account, else home
-        window.location.href = formData.isBusiness ? '/customer/profile?tab=business' : '/';
+        // Redirect to home
+        window.location.href = '/';
       }
     } catch (err) {
       console.error('Registration error:', err);
@@ -317,27 +323,7 @@ export default function RegisterPage() {
       {/* Grid Pattern Overlay - Using CSS class instead of missing SVG */}
       <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
 
-      <div className="w-full max-w-[500px] relative z-10 -mt-[5%]">
-        {/* Logo Section - Only Logo, no text */}
-        <div className="text-center mb-4 animate-fadeIn">
-          {companySettings?.logo ? (
-            <div className="relative w-36 h-36 mx-auto animate-scaleIn drop-shadow-2xl filter brightness-110">
-              <Image
-                src={companySettings.logo}
-                alt={companyName}
-                fill
-                className="object-contain"
-                priority
-              />
-            </div>
-          ) : (
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md shadow-2xl border border-white/30 animate-scaleIn">
-              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-          )}
-        </div>
+      <div className="w-full max-w-[500px] relative z-10">
 
         {/* Register Card - Premium Glass Effect matching Homepage Hero Cards */}
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-slideInUp">
@@ -393,6 +379,53 @@ export default function RegisterPage() {
                     position="bottom"
                     autoHideDelay={3000}
                     onHide={() => handleTooltipHide('name')}
+                  />
+                </div>
+              </div>
+
+              {/* ID Number Field */}
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="idNumber" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                    Nro. Cédula o Pasaporte
+                  </label>
+                  {/* Info Tooltip */}
+                  <div className="relative group/info">
+                    <button type="button" className="w-4 h-4 rounded-full bg-cyan-500/30 text-cyan-200 flex items-center justify-center text-xs font-bold hover:bg-cyan-500/50 transition-colors">
+                      ?
+                    </button>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-[#1e293b] border border-cyan-500/30 rounded-xl shadow-2xl opacity-0 group-hover/info:opacity-100 transition-opacity duration-300 pointer-events-none z-50 backdrop-blur-xl">
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1e293b] border-b border-r border-cyan-500/30 transform rotate-45"></div>
+                      <p className="text-xs text-blue-100 leading-relaxed">
+                        <span className="font-bold text-cyan-300">Formato:</span> V-12345678<br />
+                        <span className="text-white/70">Incluye el prefijo V, E, J o P según corresponda.</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="relative group">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200 group-focus-within:text-white transition-colors duration-200">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                    </svg>
+                  </div>
+                  <input
+                    id="idNumber"
+                    name="idNumber"
+                    type="text"
+                    value={formData.idNumber}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('idNumber')}
+                    className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200"
+                    placeholder="V-12345678"
+                    disabled={isLoading}
+                  />
+                  <EpicTooltip
+                    message={validationErrors.idNumber || ''}
+                    visible={touchedFields.idNumber && !!validationErrors.idNumber}
+                    position="bottom"
+                    autoHideDelay={3000}
+                    onHide={() => handleTooltipHide('idNumber')}
                   />
                 </div>
               </div>
@@ -693,23 +726,6 @@ export default function RegisterPage() {
                   </span>
                 </label>
 
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="relative flex items-center">
-                    <input
-                      type="checkbox"
-                      name="isBusiness"
-                      checked={formData.isBusiness}
-                      onChange={handleChange}
-                      className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-white/30 bg-white/10 checked:border-cyan-400 checked:bg-cyan-400 transition-all"
-                    />
-                    <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#1a3b7e] opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="text-sm text-blue-100 group-hover:text-white transition-colors">
-                    Quiero registrar una <span className="text-cyan-200 font-bold">Cuenta Empresarial</span> (Jurídica).
-                  </span>
-                </label>
               </div>
 
               {/* hCaptcha */}

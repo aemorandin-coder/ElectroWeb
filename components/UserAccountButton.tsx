@@ -2,14 +2,19 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 
-export default function UserAccountButton() {
+interface UserAccountButtonProps {
+  useBlueHeader?: boolean;
+}
+
+export default function UserAccountButton({ useBlueHeader = false }: UserAccountButtonProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const { clearCart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -56,11 +61,15 @@ export default function UserAccountButton() {
   }
 
   if (!session) {
+    // Colores dinámicos según el scroll
+    // Cuando useBlueHeader es true (header azul), el botón debe ser blanco con texto azul
+    // Cuando useBlueHeader es false (header blanco), el botón debe ser azul con texto blanco
+    const buttonClasses = useBlueHeader
+      ? "relative px-4 py-2 text-sm font-medium text-[#2a63cd] bg-white hover:bg-gray-100 rounded-lg transition-all duration-300 shadow-md shadow-white/20 hover:shadow-lg hover:shadow-white/30 hover:scale-105"
+      : "relative px-4 py-2 text-sm font-medium text-white bg-[#2a63cd] hover:bg-[#1e4ba3] rounded-lg transition-all duration-300 shadow-md shadow-[#2a63cd]/20 hover:shadow-lg hover:shadow-[#2a63cd]/30 hover:scale-105";
+
     return (
-      <Link
-        href="/login"
-        className="relative px-4 py-2 text-sm font-medium text-white bg-[#2a63cd] hover:bg-[#1e4ba3] rounded-lg transition-all duration-300 shadow-md shadow-[#2a63cd]/20 hover:shadow-lg hover:shadow-[#2a63cd]/30 hover:scale-105"
-      >
+      <Link href="/login" className={buttonClasses}>
         Iniciar Sesión
       </Link>
     );

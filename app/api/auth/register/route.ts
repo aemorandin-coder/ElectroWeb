@@ -8,10 +8,10 @@ import { sendVerificationEmail } from '@/lib/email-service';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, phone, password } = body;
+    const { name, email, phone, password, idNumber } = body;
 
     // Validation
-    if (!name || !email || !phone || !password) {
+    if (!name || !email || !phone || !password || !idNumber) {
       return NextResponse.json(
         { error: 'Todos los campos son requeridos' },
         { status: 400 }
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
         profile: {
           create: {
             phone: phone,
+            idNumber: idNumber,
           }
         }
       },

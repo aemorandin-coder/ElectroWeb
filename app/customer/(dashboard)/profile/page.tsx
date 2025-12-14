@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { FiUser, FiMail, FiPhone, FiCalendar, FiSave, FiCamera, FiMapPin, FiGlobe, FiAward, FiShoppingBag, FiBriefcase, FiFileText, FiCheckCircle, FiAlertCircle, FiClock, FiTrendingUp, FiPackage } from 'react-icons/fi';
@@ -138,10 +139,32 @@ export default function ProfilePage() {
   const [submittingBusiness, setSubmittingBusiness] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
+  // Tutorial for business account
+  const [showBusinessTip, setShowBusinessTip] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
   useEffect(() => {
+    setIsMounted(true);
     fetchProfile();
     fetchStats();
+
+    // Check if user has seen the business tip
+    const hasSeenTip = localStorage.getItem('hasSeenBusinessTip');
+    if (!hasSeenTip) {
+      setTimeout(() => setShowBusinessTip(true), 2500);
+    }
   }, []);
+
+  const dismissBusinessTip = () => {
+    setShowBusinessTip(false);
+    localStorage.setItem('hasSeenBusinessTip', 'true');
+  };
+
+  const goToBusinessAndDismiss = () => {
+    setShowBusinessTip(false);
+    localStorage.setItem('hasSeenBusinessTip', 'true');
+    setActiveTab('business');
+  };
 
   const fetchProfile = async () => {
     try {
@@ -1091,6 +1114,96 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Business Account Tutorial Tip - Using Portal to render outside overflow:hidden container */}
+      {showBusinessTip && isMounted && createPortal(
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          style={{ zIndex: 99999 }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+            style={{
+              width: '100%',
+              maxWidth: '420px',
+              minWidth: '320px',
+              animation: 'modalScaleIn 0.3s ease-out'
+            }}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-5 text-white">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <FiBriefcase className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">¡Sabías que...</h2>
+                  <p className="text-sm text-blue-100">Descubre algo nuevo</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="flex items-start gap-4 mb-5">
+                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <FiFileText className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#212529] text-lg mb-2">¿Necesitas facturación fiscal?</h3>
+                  <p className="text-sm text-[#6a6c6b] leading-relaxed">
+                    Puedes registrar tu empresa y obtener <strong className="text-[#2a63cd]">facturas fiscales automáticas</strong> en todas tus compras.
+                  </p>
+                </div>
+              </div>
+
+              {/* Benefits */}
+              <div className="bg-blue-50 rounded-xl p-4 mb-5 border border-blue-100">
+                <p className="text-sm font-semibold text-[#1e4ba3] mb-2">Beneficios exclusivos:</p>
+                <ul className="text-sm text-[#212529] space-y-1">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-[#2a63cd] rounded-full"></span>
+                    Facturación fiscal automática
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-[#2a63cd] rounded-full"></span>
+                    Descuentos por volumen
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-[#2a63cd] rounded-full"></span>
+                    Condiciones de pago especiales
+                  </li>
+                </ul>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={dismissBusinessTip}
+                  className="flex-1 px-4 py-3 bg-gray-100 text-[#6a6c6b] font-medium rounded-xl hover:bg-gray-200 transition-all"
+                >
+                  Ahora no
+                </button>
+                <button
+                  onClick={goToBusinessAndDismiss}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                >
+                  <FiBriefcase className="w-4 h-4" />
+                  Ver más
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <style jsx>{`
+            @keyframes modalScaleIn {
+              from { opacity: 0; transform: scale(0.95); }
+              to { opacity: 1; transform: scale(1); }
+            }
+          `}</style>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

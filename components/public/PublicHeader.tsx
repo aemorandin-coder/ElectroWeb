@@ -199,10 +199,12 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
           </nav>
 
           {/* Action Buttons */}
-          <div className={`flex items-center gap-4 ${useBlueHeader ? '[&_*]:text-white [&_svg]:text-white' : ''}`}>
-            <NotificationBell />
-            <CartIcon />
-            <UserAccountButton />
+          <div className="flex items-center gap-4">
+            <div className={`flex items-center gap-4 ${useBlueHeader ? '[&_*]:text-white [&_svg]:text-white' : ''}`}>
+              <NotificationBell />
+              <CartIcon />
+            </div>
+            <UserAccountButton useBlueHeader={useBlueHeader} />
           </div>
         </div>
       </div>

@@ -16,6 +16,8 @@ import {
   MdOutlineCategory, MdOutlineBrandingWatermark, MdOutlineModelTraining,
   MdDragIndicator, MdOutlineInventory2, MdOutlineLocalShipping
 } from 'react-icons/md';
+import { FaGlobeAmericas, FaFlagUsa } from 'react-icons/fa';
+import { SiRoblox, SiSteam, SiPlaystation, SiNintendoswitch, SiNetflix, SiSpotify, SiApple } from 'react-icons/si';
 
 interface Category {
   id: string;
@@ -36,12 +38,21 @@ export default function NewProductPage() {
   const priceRef = useRef<HTMLInputElement>(null);
   const imagesContainerRef = useRef<HTMLDivElement>(null);
 
+  // Interfaz para precios de productos digitales
+  interface DigitalAmountPricing {
+    amount: number;      // Monto que ve el cliente (ej: $10, $20)
+    cost: number;        // Costo real (lo que pagas al proveedor)
+    salePrice: number;   // Precio de venta al cliente
+    enabled: boolean;    // Si este monto está habilitado
+  }
+
   // Estado del formulario
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
     description: '',
     categoryId: '',
+    // Precios para productos físicos
     priceUSD: '',
     compareAtPriceUSD: '',
     costPerItem: '',
@@ -55,6 +66,25 @@ export default function NewProductPage() {
     weight: '',
     seoTitle: '',
     seoDescription: '',
+    // Digital Product Fields
+    productType: 'PHYSICAL' as 'PHYSICAL' | 'DIGITAL',
+    digitalPlatform: '',
+    digitalRegion: 'GLOBAL',
+    deliveryMethod: 'MANUAL' as 'MANUAL',
+    // Nuevo sistema de precios digitales con ganancia por monto
+    digitalPricing: [
+      { amount: 10, cost: 9.50, salePrice: 11, enabled: false },
+      { amount: 20, cost: 19, salePrice: 22, enabled: false },
+      { amount: 25, cost: 23.75, salePrice: 27.50, enabled: false },
+      { amount: 30, cost: 28.50, salePrice: 33, enabled: false },
+      { amount: 50, cost: 47.50, salePrice: 55, enabled: false },
+      { amount: 75, cost: 71.25, salePrice: 82.50, enabled: false },
+      { amount: 100, cost: 95, salePrice: 110, enabled: false },
+      { amount: 150, cost: 142.50, salePrice: 165, enabled: false },
+      { amount: 200, cost: 190, salePrice: 220, enabled: false },
+    ] as DigitalAmountPricing[],
+    // Margen global para aplicar rápidamente (opcional)
+    digitalMarginPercent: 10,
   });
 
   // Estados de UI
@@ -182,8 +212,30 @@ export default function NewProductPage() {
     if (!formData.name.trim()) validationErrors.name = 'El nombre es obligatorio';
     if (!formData.sku.trim()) validationErrors.sku = 'El SKU es obligatorio';
     if (!formData.categoryId) validationErrors.categoryId = 'Selecciona una categoría';
-    if (!formData.priceUSD || parseFloat(formData.priceUSD) <= 0) validationErrors.priceUSD = 'Precio inválido';
     if (formData.images.length === 0) validationErrors.images = 'Sube al menos una imagen';
+
+    // Validación de precios según tipo de producto
+    if (formData.productType === 'PHYSICAL') {
+      // Producto físico: requiere precio USD
+      if (!formData.priceUSD || parseFloat(formData.priceUSD) <= 0) {
+        validationErrors.priceUSD = 'Precio inválido';
+      }
+    } else {
+      // Producto digital: requiere al menos un monto habilitado
+      const enabledAmounts = formData.digitalPricing.filter(p => p.enabled);
+      if (enabledAmounts.length === 0) {
+        validationErrors.digitalPricing = 'Habilita al menos un monto';
+      }
+      // Validar que todos los montos habilitados tengan precios válidos
+      const invalidPricing = enabledAmounts.some(p => p.cost <= 0 || p.salePrice <= 0 || p.salePrice < p.cost);
+      if (invalidPricing) {
+        validationErrors.digitalPricing = 'Revisa los precios: el costo y precio de venta deben ser válidos';
+      }
+      // Validar plataforma
+      if (!formData.digitalPlatform) {
+        validationErrors.digitalPlatform = 'Selecciona una plataforma';
+      }
+    }
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -195,7 +247,7 @@ export default function NewProductPage() {
         nameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else if (validationErrors.images) {
         imagesContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else if (validationErrors.priceUSD) {
+      } else if (validationErrors.priceUSD && formData.productType === 'PHYSICAL') {
         priceRef.current?.focus();
         priceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else if (validationErrors.sku) {
@@ -204,6 +256,9 @@ export default function NewProductPage() {
       } else if (validationErrors.categoryId) {
         categoryRef.current?.focus();
         categoryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (validationErrors.digitalPricing || validationErrors.digitalPlatform) {
+        // Scroll al área de tipo de producto para productos digitales
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
       return;
@@ -211,18 +266,32 @@ export default function NewProductPage() {
 
     try {
       // Preparar payload
+      const enabledDigitalPricing = formData.digitalPricing.filter(p => p.enabled);
+
       const productData = {
         name: formData.name.trim(),
         sku: formData.sku.trim(),
         description: formData.description.trim(),
         categoryId: formData.categoryId,
-        priceUSD: parseFloat(formData.priceUSD),
+        // Para productos digitales, el precio base es el menor de los habilitados
+        priceUSD: formData.productType === 'DIGITAL' && enabledDigitalPricing.length > 0
+          ? Math.min(...enabledDigitalPricing.map(p => p.salePrice))
+          : parseFloat(formData.priceUSD),
         stock: parseInt(formData.stock) || 0,
         images: formData.images,
         specifications: Object.keys(formData.specifications).length > 0 ? formData.specifications : null,
         isActive: formData.isActive,
         isFeatured: formData.isFeatured,
         brandId: null,
+        // Digital Product Fields
+        productType: formData.productType,
+        ...(formData.productType === 'DIGITAL' && {
+          digitalPlatform: formData.digitalPlatform,
+          digitalRegion: formData.digitalRegion,
+          deliveryMethod: formData.deliveryMethod,
+          // Nuevo: enviar precios por monto con ganancia
+          digitalPricing: enabledDigitalPricing,
+        }),
       };
 
       const response = await fetch('/api/products', {
@@ -465,76 +534,258 @@ export default function NewProductPage() {
               </div>
             </div>
 
-            {/* Bloque 3: Precios */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-base font-bold text-gray-900 mb-4">Precios</h2>
-              <div className="grid grid-cols-2 gap-6 mb-6">
-                <div className="relative group">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Precio</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                    <input
-                      ref={priceRef}
-                      type="number"
-                      step="0.01"
-                      value={formData.priceUSD}
-                      onChange={(e) => updateFormData('priceUSD', e.target.value)}
-                      onBlur={() => handleBlur('priceUSD')}
-                      className={`w-full pl-7 pr-4 py-2.5 bg-white border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all ${errors.priceUSD ? 'border-red-300' : 'border-gray-300'}`}
-                      placeholder="0.00"
+            {/* Bloque 3: Precios (condicional según tipo de producto) */}
+            {formData.productType === 'PHYSICAL' ? (
+              /* PRECIOS PARA PRODUCTO FÍSICO */
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-base font-bold text-gray-900 mb-4">Precios</h2>
+                <div className="grid grid-cols-2 gap-6 mb-6">
+                  <div className="relative group">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Precio</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input
+                        ref={priceRef}
+                        type="number"
+                        step="0.01"
+                        value={formData.priceUSD}
+                        onChange={(e) => updateFormData('priceUSD', e.target.value)}
+                        onBlur={() => handleBlur('priceUSD')}
+                        className={`w-full pl-7 pr-4 py-2.5 bg-white border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all ${errors.priceUSD ? 'border-red-300' : 'border-gray-300'}`}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <EpicTooltip
+                      message={errors.priceUSD || ''}
+                      visible={!!(touchedFields.priceUSD && errors.priceUSD)}
+                      position="right"
                     />
                   </div>
-                  <EpicTooltip
-                    message={errors.priceUSD || ''}
-                    visible={!!(touchedFields.priceUSD && errors.priceUSD)}
-                    position="right"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Precio de comparación</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.compareAtPriceUSD}
-                      onChange={(e) => updateFormData('compareAtPriceUSD', e.target.value)}
-                      className="w-full pl-7 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                      placeholder="0.00"
-                    />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Precio de comparación</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.compareAtPriceUSD}
+                        onChange={(e) => updateFormData('compareAtPriceUSD', e.target.value)}
+                        className="w-full pl-7 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Para mostrar una rebaja</p>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Para mostrar una rebaja</p>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-100">
-                <div className="col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Costo por artículo</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.costPerItem}
-                      onChange={(e) => updateFormData('costPerItem', e.target.value)}
-                      className="w-full pl-7 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                      placeholder="0.00"
-                    />
+                <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-100">
+                  <div className="col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Costo por artículo</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.costPerItem}
+                        onChange={(e) => updateFormData('costPerItem', e.target.value)}
+                        className="w-full pl-7 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Los clientes no verán esto</p>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Los clientes no verán esto</p>
-                </div>
-                <div className="col-span-2 flex items-center gap-8 pt-6">
-                  <div>
-                    <span className="block text-xs text-gray-500">Margen</span>
-                    <span className="text-sm font-medium text-gray-900">{margin ? `${margin}%` : '-'}</span>
-                  </div>
-                  <div>
-                    <span className="block text-xs text-gray-500">Ganancia</span>
-                    <span className="text-sm font-medium text-gray-900">{profit ? `$${profit}` : '-'}</span>
+                  <div className="col-span-2 flex items-center gap-8 pt-6">
+                    <div>
+                      <span className="block text-xs text-gray-500">Margen</span>
+                      <span className="text-sm font-medium text-gray-900">{margin ? `${margin}%` : '-'}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs text-gray-500">Ganancia</span>
+                      <span className="text-sm font-medium text-gray-900">{profit ? `$${profit}` : '-'}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              /* PRECIOS PARA PRODUCTO DIGITAL - Tabla de montos con ganancia */
+              <div className={`bg-white rounded-2xl shadow-sm border p-6 ${errors.digitalPricing ? 'border-red-300' : 'border-gray-200'}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-base font-bold text-gray-900">Precios por Denominación <span className="text-red-500">*</span></h2>
+                    <p className="text-xs text-gray-500 mt-1">Configura el costo y precio de venta para cada monto</p>
+                    {errors.digitalPricing && (
+                      <p className="text-xs text-red-600 mt-1 font-medium">{errors.digitalPricing}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">Margen global:</span>
+                    <div className="flex items-center bg-purple-50 rounded-lg border border-purple-200 overflow-hidden">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={formData.digitalMarginPercent}
+                        onChange={(e) => {
+                          const marginPercent = parseFloat(e.target.value) || 0;
+                          updateFormData('digitalMarginPercent', marginPercent);
+                        }}
+                        className="w-14 px-2 py-1.5 bg-transparent text-center text-sm font-medium text-purple-700 focus:outline-none"
+                      />
+                      <span className="pr-2 text-sm text-purple-600">%</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const margin = formData.digitalMarginPercent / 100;
+                        const updatedPricing = formData.digitalPricing.map(p => ({
+                          ...p,
+                          salePrice: parseFloat((p.cost * (1 + margin)).toFixed(2))
+                        }));
+                        updateFormData('digitalPricing', updatedPricing);
+                      }}
+                      className="px-3 py-1.5 bg-purple-500 text-white text-xs font-medium rounded-lg hover:bg-purple-600 transition-colors"
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tabla de precios digitales */}
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gradient-to-r from-purple-50 to-indigo-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-purple-900 uppercase tracking-wider">
+                          <input
+                            type="checkbox"
+                            checked={formData.digitalPricing.every(p => p.enabled)}
+                            onChange={(e) => {
+                              const updatedPricing = formData.digitalPricing.map(p => ({
+                                ...p,
+                                enabled: e.target.checked
+                              }));
+                              updateFormData('digitalPricing', updatedPricing);
+                            }}
+                            className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 border-gray-300 mr-2"
+                          />
+                          Monto
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-purple-900 uppercase tracking-wider">Costo (USD)</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-purple-900 uppercase tracking-wider">Precio Venta</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-purple-900 uppercase tracking-wider">Ganancia</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-purple-900 uppercase tracking-wider">Margen</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {formData.digitalPricing.map((pricing, index) => {
+                        const profit = pricing.salePrice - pricing.cost;
+                        const marginPercent = pricing.cost > 0 ? ((profit / pricing.cost) * 100).toFixed(1) : '0';
+                        return (
+                          <tr
+                            key={pricing.amount}
+                            className={`transition-colors ${pricing.enabled ? 'bg-white hover:bg-purple-50/50' : 'bg-gray-50 opacity-60'}`}
+                          >
+                            <td className="px-4 py-3">
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={pricing.enabled}
+                                  onChange={(e) => {
+                                    const updatedPricing = [...formData.digitalPricing];
+                                    updatedPricing[index] = { ...pricing, enabled: e.target.checked };
+                                    updateFormData('digitalPricing', updatedPricing);
+                                  }}
+                                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 border-gray-300"
+                                />
+                                <span className={`font-bold text-lg ${pricing.enabled ? 'text-purple-600' : 'text-gray-400'}`}>
+                                  ${pricing.amount}
+                                </span>
+                              </label>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={pricing.cost}
+                                  onChange={(e) => {
+                                    const updatedPricing = [...formData.digitalPricing];
+                                    updatedPricing[index] = { ...pricing, cost: parseFloat(e.target.value) || 0 };
+                                    updateFormData('digitalPricing', updatedPricing);
+                                  }}
+                                  disabled={!pricing.enabled}
+                                  className="w-24 pl-5 pr-2 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 disabled:bg-gray-100 disabled:text-gray-400"
+                                />
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={pricing.salePrice}
+                                  onChange={(e) => {
+                                    const updatedPricing = [...formData.digitalPricing];
+                                    updatedPricing[index] = { ...pricing, salePrice: parseFloat(e.target.value) || 0 };
+                                    updateFormData('digitalPricing', updatedPricing);
+                                  }}
+                                  disabled={!pricing.enabled}
+                                  className="w-24 pl-5 pr-2 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 disabled:bg-gray-100 disabled:text-gray-400"
+                                />
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`font-medium ${profit > 0 ? 'text-green-600' : profit < 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                                {profit > 0 ? '+' : ''}{profit.toFixed(2)} USD
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${parseFloat(marginPercent) >= 10
+                                ? 'bg-green-100 text-green-700'
+                                : parseFloat(marginPercent) > 0
+                                  ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-red-100 text-red-700'
+                                }`}>
+                                {marginPercent}%
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Resumen de montos habilitados */}
+                <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-medium text-purple-900">Montos habilitados: </span>
+                      <span className="text-sm text-purple-600">
+                        {formData.digitalPricing.filter(p => p.enabled).length > 0
+                          ? formData.digitalPricing.filter(p => p.enabled).map(p => `$${p.amount}`).join(', ')
+                          : 'Ninguno seleccionado'}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-purple-600">Ganancia promedio: </span>
+                      <span className="text-sm font-bold text-purple-900">
+                        {(() => {
+                          const enabled = formData.digitalPricing.filter(p => p.enabled);
+                          if (enabled.length === 0) return '-';
+                          const avgMargin = enabled.reduce((acc, p) => acc + ((p.salePrice - p.cost) / p.cost * 100), 0) / enabled.length;
+                          return `${avgMargin.toFixed(1)}%`;
+                        })()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Bloque 4: Inventario */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
@@ -667,6 +918,148 @@ export default function NewProductPage() {
 
           {/* COLUMNA LATERAL (1/3) */}
           <div className="space-y-6">
+
+            {/* Tipo de Producto */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-base font-bold text-gray-900 mb-4">Tipo de producto</h2>
+
+              {/* Physical vs Digital Toggle */}
+              <div className="flex gap-3 mb-4">
+                <button
+                  type="button"
+                  onClick={() => updateFormData('productType', 'PHYSICAL')}
+                  className={`flex-1 p-4 rounded-xl border-2 transition-all ${formData.productType === 'PHYSICAL'
+                    ? 'border-[#2a63cd] bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <MdOutlineLocalShipping className={`w-6 h-6 ${formData.productType === 'PHYSICAL' ? 'text-[#2a63cd]' : 'text-gray-400'}`} />
+                    <span className={`text-sm font-bold ${formData.productType === 'PHYSICAL' ? 'text-[#2a63cd]' : 'text-gray-600'}`}>Físico</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateFormData('productType', 'DIGITAL')}
+                  className={`flex-1 p-4 rounded-xl border-2 transition-all ${formData.productType === 'DIGITAL'
+                    ? 'border-purple-500 bg-purple-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <FiZap className={`w-6 h-6 ${formData.productType === 'DIGITAL' ? 'text-purple-500' : 'text-gray-400'}`} />
+                    <span className={`text-sm font-bold ${formData.productType === 'DIGITAL' ? 'text-purple-500' : 'text-gray-600'}`}>Digital</span>
+                  </div>
+                </button>
+              </div>
+
+              {/* Digital Product Options - Inspired by Eneba/Coinsbee */}
+              {formData.productType === 'DIGITAL' && (
+                <div className="space-y-4 pt-4 border-t border-gray-100 animate-fadeIn">
+                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FiZap className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-purple-900">Producto Digital</p>
+                        <p className="text-xs text-purple-600 mt-0.5">
+                          Códigos, gift cards o licencias. Entrega manual al procesar el pago.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Plataforma <span className="text-red-500">*</span></label>
+                    <div className="flex items-center gap-3">
+                      {/* Platform Icon Preview */}
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg flex items-center justify-center text-[#2a63cd]">
+                        {formData.digitalPlatform === 'ROBLOX' && <SiRoblox className="w-5 h-5" />}
+                        {formData.digitalPlatform === 'STEAM' && <SiSteam className="w-5 h-5" />}
+                        {formData.digitalPlatform === 'PLAYSTATION' && <SiPlaystation className="w-5 h-5" />}
+                        {formData.digitalPlatform === 'NINTENDO' && <SiNintendoswitch className="w-5 h-5" />}
+                        {formData.digitalPlatform === 'NETFLIX' && <SiNetflix className="w-5 h-5" />}
+                        {formData.digitalPlatform === 'SPOTIFY' && <SiSpotify className="w-5 h-5" />}
+                        {formData.digitalPlatform === 'APPLE' && <SiApple className="w-5 h-5" />}
+                        {!formData.digitalPlatform && <FiZap className="w-5 h-5 text-gray-300" />}
+                        {formData.digitalPlatform && !['ROBLOX', 'STEAM', 'PLAYSTATION', 'NINTENDO', 'NETFLIX', 'SPOTIFY', 'APPLE'].includes(formData.digitalPlatform) && <FiZap className="w-5 h-5" />}
+                      </div>
+                      <select
+                        value={formData.digitalPlatform}
+                        onChange={(e) => updateFormData('digitalPlatform', e.target.value)}
+                        className={`flex-1 appearance-none bg-white border text-gray-900 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#2a63cd] ${errors.digitalPlatform ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                      >
+                        <option value="">Seleccionar plataforma...</option>
+                        <option value="STEAM">Steam</option>
+                        <option value="PLAYSTATION">PlayStation</option>
+                        <option value="XBOX">Xbox</option>
+                        <option value="NINTENDO">Nintendo eShop</option>
+                        <option value="ROBLOX">Roblox</option>
+                        <option value="FREEFIRE">Free Fire</option>
+                        <option value="VALORANT">Valorant</option>
+                        <option value="FORTNITE">Fortnite</option>
+                        <option value="PUBG">PUBG Mobile</option>
+                        <option value="NETFLIX">Netflix</option>
+                        <option value="SPOTIFY">Spotify</option>
+                        <option value="DISNEY">Disney+</option>
+                        <option value="AMAZON">Amazon</option>
+                        <option value="GOOGLE_PLAY">Google Play</option>
+                        <option value="APPLE">Apple / iTunes</option>
+                        <option value="SOFTWARE">Software / Licencia</option>
+                        <option value="GIFT_CARD">Gift Card Genérica</option>
+                        <option value="OTHER">Otro</option>
+                      </select>
+                    </div>
+                    {errors.digitalPlatform && (
+                      <p className="text-xs text-red-600 mt-1">{errors.digitalPlatform}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Región de cuenta</label>
+                    <div className="flex items-center gap-3">
+                      {/* Region Icon Preview */}
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg flex items-center justify-center text-[#2a63cd]">
+                        {formData.digitalRegion === 'USA' ? (
+                          <FaFlagUsa className="w-5 h-5" />
+                        ) : (
+                          <FaGlobeAmericas className="w-5 h-5" />
+                        )}
+                      </div>
+                      <select
+                        value={formData.digitalRegion}
+                        onChange={(e) => updateFormData('digitalRegion', e.target.value)}
+                        className="flex-1 appearance-none bg-white border border-gray-300 text-gray-900 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#2a63cd]"
+                      >
+                        <option value="GLOBAL">Global (Todas las regiones)</option>
+                        <option value="USA">Estados Unidos</option>
+                        <option value="LATAM">Latinoamérica</option>
+                        <option value="EU">Europa</option>
+                        <option value="ASIA">Asia</option>
+                      </select>
+                    </div>
+                  </div>
+
+
+                  {/* Delivery Method - Instant Digital */}
+                  <div className="border-t border-gray-100 pt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de envío</label>
+                    <div className="p-3 rounded-lg border border-blue-200 bg-blue-50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
+                          <FiZap className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <span className="block text-sm font-medium text-[#1e4ba3]">Producto Digital con Envío Instantáneo</span>
+                          <span className="block text-xs text-[#2a63cd]">El código se procesa después de confirmar el pago</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Estado del Producto */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">

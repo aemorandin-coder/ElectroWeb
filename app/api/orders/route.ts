@@ -326,10 +326,10 @@ export async function POST(request: NextRequest) {
         await createNotification({
           userId: body.userId || session.user.id,
           type: 'ORDER_PAID',
-          title: '💰 Pago Confirmado',
+          title: 'Pago Confirmado',
           message: `El pago de tu orden #${orderNumber} ha sido confirmado con Billetera Digital.`,
           link: `/customer/orders`,
-          icon: '💰'
+          icon: 'payment'
         });
       }
 

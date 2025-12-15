@@ -493,23 +493,23 @@ export default function OrdersPage() {
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-2 mb-6">
                 {selectedOrder.status === 'PENDING' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'CONFIRMED')} disabled={updatingStatus} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50">
-                    ✅ Confirmar Pedido
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'CONFIRMED')} disabled={updatingStatus} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+                    <FiCheck className="w-4 h-4" /> Confirmar Pedido
                   </button>
                 )}
                 {selectedOrder.status === 'CONFIRMED' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'PAID')} disabled={updatingStatus} className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50">
-                    💰 Marcar Pagado
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'PAID')} disabled={updatingStatus} className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
+                    <FiDollarSign className="w-4 h-4" /> Marcar Pagado
                   </button>
                 )}
                 {selectedOrder.status === 'PAID' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'PROCESSING')} disabled={updatingStatus} className="px-4 py-2 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3] disabled:opacity-50">
-                    📦 Comenzar Preparación
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'PROCESSING')} disabled={updatingStatus} className="px-4 py-2 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3] disabled:opacity-50 flex items-center gap-2">
+                    <FiPackage className="w-4 h-4" /> Comenzar Preparación
                   </button>
                 )}
                 {selectedOrder.status === 'PROCESSING' && (
-                  <button onClick={openShippingModal} disabled={updatingStatus} className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                    🚚 Marcar Enviado
+                  <button onClick={openShippingModal} disabled={updatingStatus} className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
+                    <FiTruck className="w-4 h-4" /> Marcar Enviado
                   </button>
                 )}
                 {selectedOrder.status === 'SHIPPED' && (
@@ -518,8 +518,8 @@ export default function OrdersPage() {
                   </button>
                 )}
                 {!['CANCELLED', 'DELIVERED', 'REFUNDED'].includes(selectedOrder.status) && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'CANCELLED')} disabled={updatingStatus} className="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 disabled:opacity-50">
-                    ❌ Cancelar Orden
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'CANCELLED')} disabled={updatingStatus} className="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 disabled:opacity-50 flex items-center gap-2">
+                    <FiX className="w-4 h-4" /> Cancelar Orden
                   </button>
                 )}
               </div>

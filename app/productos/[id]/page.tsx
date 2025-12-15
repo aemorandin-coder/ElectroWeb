@@ -6,9 +6,10 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
-import { FaShoppingBasket } from 'react-icons/fa';
+import { FaShoppingBasket, FaGlobeAmericas, FaFlagUsa } from 'react-icons/fa';
 import { HiShoppingBag } from "react-icons/hi2";
-import { FiHeart } from "react-icons/fi";
+import { FiHeart, FiZap } from "react-icons/fi";
+import { SiRoblox, SiSteam, SiPlaystation, SiNintendoswitch, SiNetflix, SiSpotify, SiApple } from 'react-icons/si';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import ReviewStats from '@/components/reviews/ReviewStats';
@@ -39,6 +40,11 @@ interface Product {
   specs?: Record<string, any>;
   features?: string[];
   createdAt: string;
+  // Digital Product Fields
+  productType?: 'PHYSICAL' | 'DIGITAL';
+  digitalPlatform?: string;
+  digitalRegion?: string;
+  deliveryMethod?: string;
 }
 
 interface CartItem {
@@ -59,8 +65,8 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const [isSpecsExpanded, setIsSpecsExpanded] = useState(true);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(true);
+  const [isSpecsExpanded, setIsSpecsExpanded] = useState(false);
   const { data: session } = useSession();
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 });
@@ -68,6 +74,11 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState('description');
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  // Digital Product State
+  const [selectedDigitalAmount, setSelectedDigitalAmount] = useState<{
+    amount: number;
+    salePrice: number;
+  } | null>(null);
 
   useEffect(() => {
     if (params.id) {
@@ -77,6 +88,16 @@ export default function ProductDetailPage() {
     }
 
   }, [params.id]);
+
+  // Auto-select first digital amount when product loads
+  useEffect(() => {
+    if (product?.productType === 'DIGITAL' && product?.specs?.digitalPricing) {
+      const pricing = product.specs.digitalPricing as any[];
+      if (pricing.length > 0 && !selectedDigitalAmount) {
+        setSelectedDigitalAmount(pricing[0]);
+      }
+    }
+  }, [product]);
 
   useEffect(() => {
     if (session?.user && product) {
@@ -244,27 +265,53 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!product) return;
 
-    // Check if adding this quantity would exceed stock
-    const currentCartItem = items.find((item: CartItem) => item.id === product.id);
-    const currentCartQuantity = currentCartItem ? currentCartItem.quantity : 0;
-    const totalQuantity = currentCartQuantity + quantity;
+    // For digital products, must have selected an amount
+    if (product.productType === 'DIGITAL' && product.specs?.digitalPricing) {
+      if (!selectedDigitalAmount) {
+        toast.error('Selecciona un monto');
+        return;
+      }
+    }
 
-    if (totalQuantity > product.stock) {
-      alert(`Solo hay ${product.stock} unidades disponibles. Ya tienes ${currentCartQuantity} en el carrito.`);
-      return;
+    // Check if adding this quantity would exceed stock (only for physical products)
+    if (product.productType !== 'DIGITAL') {
+      const currentCartItem = items.find((item: CartItem) => item.id === product.id);
+      const currentCartQuantity = currentCartItem ? currentCartItem.quantity : 0;
+      const totalQuantity = currentCartQuantity + quantity;
+
+      if (totalQuantity > product.stock) {
+        alert(`Solo hay ${product.stock} unidades disponibles. Ya tienes ${currentCartQuantity} en el carrito.`);
+        return;
+      }
     }
 
     setAddingToCart(true);
 
     const cleanImage = getCleanImageUrl(product.mainImage || (product.images && product.images[0]));
 
+    // For digital products, create unique cart ID with amount
+    const isDigital = product.productType === 'DIGITAL' && selectedDigitalAmount;
+    const cartItemId = isDigital
+      ? `${product.id}-${selectedDigitalAmount.amount}`
+      : product.id;
+    const cartItemName = isDigital
+      ? `${product.name} ($${selectedDigitalAmount.amount})`
+      : product.name;
+    const cartItemPrice = isDigital
+      ? selectedDigitalAmount.salePrice
+      : product.priceUSD;
+
     addItem({
-      id: product.id,
-      name: product.name,
-      price: product.priceUSD,
+      id: cartItemId,
+      name: cartItemName,
+      price: cartItemPrice,
       imageUrl: cleanImage,
-      stock: product.stock
+      stock: isDigital ? 999 : product.stock // Digital products have unlimited stock
     }, quantity);
+
+    toast.success(isDigital
+      ? `Añadido: ${product.name} $${selectedDigitalAmount?.amount}`
+      : 'Añadido al carrito');
 
     setTimeout(() => {
       setAddingToCart(false);
@@ -278,6 +325,38 @@ export default function ProductDetailPage() {
       currency: 'USD',
       minimumFractionDigits: 2
     }).format(price);
+  };
+
+  // Helper para obtener icono de plataforma
+  const getPlatformIcon = (platform: string) => {
+    const icons: Record<string, { icon: React.ReactNode; name: string }> = {
+      'ROBLOX': { icon: <SiRoblox className="w-4 h-4" />, name: 'Roblox' },
+      'STEAM': { icon: <SiSteam className="w-4 h-4" />, name: 'Steam' },
+      'PLAYSTATION': { icon: <SiPlaystation className="w-4 h-4" />, name: 'PlayStation' },
+      'XBOX': { icon: <FiZap className="w-4 h-4" />, name: 'Xbox' },
+      'NINTENDO': { icon: <SiNintendoswitch className="w-4 h-4" />, name: 'Nintendo' },
+      'NETFLIX': { icon: <SiNetflix className="w-4 h-4" />, name: 'Netflix' },
+      'SPOTIFY': { icon: <SiSpotify className="w-4 h-4" />, name: 'Spotify' },
+      'APPLE': { icon: <SiApple className="w-4 h-4" />, name: 'Apple' },
+      'GOOGLE_PLAY': { icon: <FiZap className="w-4 h-4" />, name: 'Google Play' },
+      'FREEFIRE': { icon: <FiZap className="w-4 h-4" />, name: 'Free Fire' },
+      'VALORANT': { icon: <FiZap className="w-4 h-4" />, name: 'Valorant' },
+      'FORTNITE': { icon: <FiZap className="w-4 h-4" />, name: 'Fortnite' },
+      'PUBG': { icon: <FiZap className="w-4 h-4" />, name: 'PUBG Mobile' },
+    };
+    return icons[platform] || { icon: <FiZap className="w-4 h-4" />, name: platform };
+  };
+
+  // Helper para obtener icono de región
+  const getRegionInfo = (region: string) => {
+    const regions: Record<string, { icon: React.ReactNode; name: string }> = {
+      'GLOBAL': { icon: <FaGlobeAmericas className="w-4 h-4" />, name: 'Global' },
+      'USA': { icon: <FaFlagUsa className="w-4 h-4" />, name: 'Estados Unidos' },
+      'LATAM': { icon: <FaGlobeAmericas className="w-4 h-4" />, name: 'Latinoamérica' },
+      'EU': { icon: <FaGlobeAmericas className="w-4 h-4" />, name: 'Europa' },
+      'ASIA': { icon: <FaGlobeAmericas className="w-4 h-4" />, name: 'Asia' },
+    };
+    return regions[region] || { icon: <FaGlobeAmericas className="w-4 h-4" />, name: region };
   };
 
   if (loading) {
@@ -443,20 +522,76 @@ export default function ProductDetailPage() {
                     </div>
                   )}
 
-                  {/* Floating Wishlist Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleWishlist();
-                    }}
-                    className="absolute top-6 left-6 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all z-20 group/heart"
-                    title={isInWishlist ? "Eliminar de favoritos" : "Añadir a favoritos"}
-                  >
-                    <FiHeart
-                      className={`w-6 h-6 transition-colors ${isInWishlist ? 'text-red-500 fill-red-500' : 'text-gray-400 group-hover/heart:text-red-500'
-                        }`}
-                    />
-                  </button>
+                  {/* Floating Share Button */}
+                  <div className="absolute top-6 left-6 z-20">
+                    <div className="relative group/share">
+                      <button
+                        className="p-2.5 bg-white/90 backdrop-blur-md rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all flex items-center justify-center"
+                        title="Compartir producto"
+                      >
+                        <svg className="w-5 h-5 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                        </svg>
+                      </button>
+                      {/* Share Dropdown */}
+                      <div className="absolute left-0 top-full mt-2 opacity-0 invisible group-hover/share:opacity-100 group-hover/share:visible transition-all duration-200 z-30">
+                        <div className="bg-white rounded-xl shadow-2xl border border-gray-100 py-2 min-w-[180px] animate-scaleIn">
+                          <p className="px-4 py-1.5 text-xs font-bold text-gray-400 uppercase tracking-wide">Compartir</p>
+                          {/* WhatsApp */}
+                          <button
+                            onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Mira este producto: ${product.name} - ${window.location.href}`)}`, '_blank')}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-green-50 transition-colors text-left"
+                          >
+                            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+                              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-medium text-gray-700">WhatsApp</span>
+                          </button>
+                          {/* Facebook */}
+                          <button
+                            onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 transition-colors text-left"
+                          >
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
+                              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-medium text-gray-700">Facebook</span>
+                          </button>
+                          {/* Twitter/X */}
+                          <button
+                            onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Mira este producto: ${product.name}`)}&url=${encodeURIComponent(window.location.href)}`, '_blank')}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 transition-colors text-left"
+                          >
+                            <div className="w-8 h-8 bg-gradient-to-br from-gray-800 to-black rounded-lg flex items-center justify-center">
+                              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-medium text-gray-700">X (Twitter)</span>
+                          </button>
+                          {/* Copy Link */}
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(window.location.href);
+                              toast.success('¡Enlace copiado!');
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-purple-50 transition-colors text-left"
+                          >
+                            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-medium text-gray-700">Copiar enlace</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -523,67 +658,129 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Price Section */}
-            <div className="flex justify-center py-2">
-              <div className="inline-flex flex-col items-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl border border-blue-100 px-6 py-3 shadow-sm">
-                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Precio</span>
-                <span className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] tracking-tight leading-none">
-                  ${Number(product.priceUSD).toFixed(2)}
-                </span>
-                {product.hasDiscount && product.discountPercent && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm text-gray-400 line-through">
-                      ${formatPrice(product.priceUSD / (1 - product.discountPercent / 100))}
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-100">
-                      -{product.discountPercent}%
-                    </span>
+            {/* Price Section - Physical vs Digital */}
+            {product.productType === 'DIGITAL' && product.specs?.digitalPricing ? (
+              /* DIGITAL PRODUCT - Amount Selector */
+              <div className="space-y-4">
+                {/* Platform & Region Info */}
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  {product.digitalPlatform && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg">
+                      <span className="text-[#2a63cd]">{getPlatformIcon(product.digitalPlatform).icon}</span>
+                      <span className="text-xs text-gray-500">Plataforma:</span>
+                      <span className="text-xs font-bold text-gray-800">{getPlatformIcon(product.digitalPlatform).name}</span>
+                    </div>
+                  )}
+                  {product.digitalRegion && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg">
+                      <span className="text-[#2a63cd]">{getRegionInfo(product.digitalRegion).icon}</span>
+                      <span className="text-xs text-gray-500">Región de cuenta:</span>
+                      <span className="text-xs font-bold text-gray-800">{getRegionInfo(product.digitalRegion).name}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Amount Selector + Price - Side by Side */}
+                <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl border border-blue-100 p-4">
+                  <div className="flex flex-col md:flex-row items-center gap-4">
+                    {/* Left: Amount Buttons */}
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-purple-500 to-[#2a63cd] mb-2 animate-pulse">
+                        Selecciona el monto a añadir en la plataforma
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {(product.specs.digitalPricing as any[]).map((pricing: any) => (
+                          <button
+                            key={pricing.amount}
+                            onClick={() => setSelectedDigitalAmount(pricing)}
+                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${selectedDigitalAmount?.amount === pricing.amount
+                              ? 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white shadow-lg shadow-blue-500/20'
+                              : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-[#2a63cd] hover:bg-blue-50'
+                              }`}
+                          >
+                            ${pricing.amount}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Right: Selected Price */}
+                    {selectedDigitalAmount && (
+                      <div className="flex-shrink-0 bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl border border-blue-100 px-6 py-3 text-center">
+                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Precio</span>
+                        <span className="block text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] tracking-tight leading-none">
+                          ${selectedDigitalAmount.salePrice.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
-            </div>
-
-            {/* Trust Badges - Compact */}
-            <div className="flex justify-center gap-3 py-3">
-              {[
-                { icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>, text: 'Garantía' },
-                { icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>, text: 'Envío 24h' },
-                { icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>, text: 'Pago Seguro' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
-                  <span className="text-[#2a63cd]">{item.icon}</span>
-                  <span className="text-xs font-medium text-gray-600">{item.text}</span>
+            ) : (
+              /* PHYSICAL PRODUCT - Normal Price */
+              <div className="flex justify-center py-2">
+                <div className="inline-flex flex-col items-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl border border-blue-100 px-6 py-3 shadow-sm">
+                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Precio</span>
+                  <span className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] tracking-tight leading-none">
+                    ${Number(product.priceUSD).toFixed(2)}
+                  </span>
+                  {product.hasDiscount && product.discountPercent && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-sm text-gray-400 line-through">
+                        ${formatPrice(product.priceUSD / (1 - product.discountPercent / 100))}
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-100">
+                        -{product.discountPercent}%
+                      </span>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
 
-            {/* Description - Premium Collapsible Card */}
-            <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <button
-                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                className="w-full bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-5 py-3 flex items-center justify-between group hover:from-[#1e4ba3] hover:to-[#2a63cd] transition-all duration-300"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                    </svg>
-                  </div>
-                  <span className="font-bold text-white">Descripción del Producto</span>
-                </div>
-                <div className={`w-6 h-6 bg-white/20 rounded-full flex items-center justify-center transition-transform duration-300 ${isDescriptionExpanded ? 'rotate-180' : ''} group-hover:bg-white/30`}>
+            {/* Description - Always Visible, Clean Design */}
+            <div className="mt-6">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center shadow-sm">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                   </svg>
                 </div>
-              </button>
-              <div className={`transition-all duration-300 ease-in-out ${isDescriptionExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="px-5 py-4 border-t border-gray-100">
-                  {product.description ? (
-                    <p className="text-gray-600 leading-relaxed text-sm">{product.description}</p>
-                  ) : (
-                    <p className="text-sm italic text-gray-400">Descripción por definir</p>
-                  )}
+                <h3 className="font-bold text-[#212529]">Descripción del Producto</h3>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                {product.description ? (
+                  <p className="text-gray-600 leading-relaxed text-sm">{product.description}</p>
+                ) : (
+                  <p className="text-sm italic text-gray-400">Descripción por definir</p>
+                )}
+              </div>
+
+              {/* Trust Badges - Below Description (conditional for digital) */}
+              <div className="flex flex-wrap justify-center gap-2 mt-4">
+                {/* 100% Original - Always show */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold text-green-600 bg-green-50 border-green-100">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <span>100% Original</span>
+                </div>
+
+                {/* Conditional: Physical = Envío Nacional, Digital = Envío Instantáneo */}
+                {product.productType === 'DIGITAL' ? (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold text-[#2a63cd] bg-blue-50 border-blue-100">
+                    <FiZap className="w-4 h-4" />
+                    <span>Producto digital con envío instantáneo</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold text-[#2a63cd] bg-blue-50 border-blue-100">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Envío Nacional</span>
+                  </div>
+                )}
+
+                {/* Pago Seguro - Always show */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold text-purple-600 bg-purple-50 border-purple-100">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  <span>Pago Seguro</span>
                 </div>
               </div>
             </div>
@@ -678,49 +875,58 @@ export default function ProductDetailPage() {
           </div>
         </div >
 
-        {/* Product Specifications - Collapsible Design */}
-        {product.specs && Object.keys(product.specs).length > 0 && (
-          <div className="w-[55%] mx-auto bg-white rounded-2xl border border-gray-200 shadow-lg mb-8 overflow-hidden transition-all duration-500">
-            {/* Header with Toggle Button */}
-            <button
-              onClick={() => setIsSpecsExpanded(!isSpecsExpanded)}
-              className="w-full bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-6 py-4 flex items-center justify-between group hover:from-[#1e4ba3] hover:to-[#2a63cd] transition-all duration-300"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        {/* Product Specifications - Collapsible Design (Full Width, Secondary) */}
+        {product.specs && (() => {
+          // Filter out digitalPricing and complex objects from specs
+          const filteredSpecs = Object.entries(product.specs).filter(([key, value]) =>
+            key !== 'digitalPricing' && typeof value !== 'object'
+          );
+
+          return filteredSpecs.length > 0 && (
+            <div className="mt-8 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              {/* Header with Toggle Button */}
+              <button
+                onClick={() => setIsSpecsExpanded(!isSpecsExpanded)}
+                className="w-full bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-5 py-3 flex items-center justify-between group hover:from-[#1e4ba3] hover:to-[#2a63cd] transition-all duration-300"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                  </div>
+                  <span className="font-bold text-white text-sm">Especificaciones Técnicas</span>
+                  <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs text-white font-medium">
+                    {filteredSpecs.length} specs
+                  </span>
+                </div>
+                <div className={`w-6 h-6 bg-white/20 rounded-full flex items-center justify-center transition-all duration-300 ${isSpecsExpanded ? 'rotate-180' : ''} group-hover:bg-white/30`}>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-white">Especificaciones Técnicas</h3>
-                <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs text-white font-medium">
-                  {Object.keys(product.specs).length} specs
-                </span>
-              </div>
-              <div className={`w-8 h-8 bg-white/20 rounded-full flex items-center justify-center transition-all duration-300 ${isSpecsExpanded ? 'rotate-180' : ''} group-hover:bg-white/30`}>
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </button>
+              </button>
 
-            {/* Specs List - Collapsible */}
-            <div
-              className={`divide-y divide-gray-100 transition-all duration-500 ease-in-out ${isSpecsExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}
-            >
-              {Object.entries(product.specs).map(([key, value], index) => (
-                <div
-                  key={key}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
-                  style={{ animation: isSpecsExpanded ? `fadeInUp 0.3s ease-out ${index * 0.05}s both` : 'none' }}
-                >
-                  <span className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{key}</span>
-                  <span className="text-base font-bold text-[#212529]">{String(value)}</span>
+              {/* Specs List - Collapsible, Grid Layout */}
+              <div
+                className={`transition-all duration-500 ease-in-out ${isSpecsExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-gray-100 p-px">
+                  {filteredSpecs.map(([key, value], index) => (
+                    <div
+                      key={key}
+                      className="bg-white px-4 py-3 hover:bg-gray-50 transition-colors"
+                      style={{ animation: isSpecsExpanded ? `fadeInUp 0.3s ease-out ${index * 0.03}s both` : 'none' }}
+                    >
+                      <span className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{key}</span>
+                      <span className="text-sm font-bold text-[#212529]">{String(value)}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Reviews Section */}
         <div className="mt-8 mb-8">

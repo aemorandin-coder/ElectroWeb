@@ -109,16 +109,8 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   const secondaryColor = companySettings?.secondaryColor || '#1e4ba3';
 
   // Invertido: cuando está sobre sección azul -> header blanco, sobre blanco -> header azul
-  // Solo en la página principal
-  const useBlueHeader = pathname === '/' && !isOnDarkSection;
-
-  if (!mounted) {
-    return (
-      <header className="sticky top-0 z-50 bg-white border-b border-[#e9ecef] shadow-sm h-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full" />
-      </header>
-    );
-  }
+  // Solo en la página principal - default to false until mounted to prevent hydration issues
+  const useBlueHeader = mounted && pathname === '/' && !isOnDarkSection;
 
   return (
     <header
@@ -163,6 +155,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
             {[
               { href: '/productos', label: 'Productos' },
               { href: '/categorias', label: 'Categorías' },
+              { href: '/gift-cards', label: 'Gift Cards' },
               { href: '/servicios', label: 'Servicios' },
               { href: '/cursos', label: 'Cursos Online' },
               { href: '/contacto', label: 'Contáctanos' },

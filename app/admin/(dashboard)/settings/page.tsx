@@ -748,8 +748,9 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-gray-500 italic mt-2">
-                💡 Deja vacío los campos de las redes que no utilices. Solo se mostrarán las que tengan URL.
+              <p className="text-xs text-gray-500 italic mt-2 flex items-center gap-1">
+                <FiAlertTriangle className="w-3.5 h-3.5 text-yellow-500" />
+                Deja vacío los campos de las redes que no utilices. Solo se mostrarán las que tengan URL.
               </p>
             </div>
           </div>
@@ -1230,7 +1231,7 @@ export default function SettingsPage() {
           <div className={`rounded-xl shadow-md border overflow-hidden hover:shadow-lg transition-shadow ${formData.hotAdEnabled ? 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200' : 'bg-white border-gray-200'}`}>
             <div className={`p-4 border-b flex items-center justify-between ${formData.hotAdEnabled ? 'border-orange-200 bg-gradient-to-r from-orange-100 to-red-100' : 'border-gray-100 bg-gray-50/50'}`}>
               <div className="flex items-center gap-2">
-                <span className="text-2xl">🔥</span>
+                <FiActivity className="w-6 h-6 text-orange-500 animate-pulse" />
                 <h3 className="font-semibold text-gray-900">Publicidad Caliente</h3>
                 {formData.hotAdEnabled && (
                   <span className="px-2 py-0.5 text-xs bg-red-500 text-white rounded-full font-bold animate-pulse">ACTIVO</span>
@@ -1248,8 +1249,9 @@ export default function SettingsPage() {
               </label>
             </div>
             <div className="p-6 space-y-5">
-              <p className="text-xs text-gray-600 bg-white/50 p-3 rounded-lg border border-gray-200">
-                ⚡ Muestra una imagen promocional que cubre toda la página principal cuando los visitantes llegan. Ideal para ofertas especiales, lanzamientos o eventos importantes.
+              <p className="text-xs text-gray-600 bg-white/50 p-3 rounded-lg border border-gray-200 flex items-start gap-2">
+                <FiActivity className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                Muestra una imagen promocional que cubre toda la página principal cuando los visitantes llegan. Ideal para ofertas especiales, lanzamientos o eventos importantes.
               </p>
 
               {/* Image Upload */}

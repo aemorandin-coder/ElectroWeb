@@ -65,7 +65,7 @@ export default async function Home() {
   }));
 
   return (
-    <div className="min-h-screen bg-white" suppressHydrationWarning>
+    <div className="min-h-screen bg-white">
       <PublicHeader settings={companySettings ? JSON.parse(JSON.stringify(companySettings)) : null} />
 
       {/* Hero Section - Premium Design */}

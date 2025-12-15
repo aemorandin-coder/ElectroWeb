@@ -32,6 +32,14 @@ export const authOptions: NextAuthOptions = {
           if (isPasswordValid) {
             const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
 
+            // SUPER_ADMIN single session rule: delete all previous sessions
+            if (user.role === 'SUPER_ADMIN') {
+              await prisma.session.deleteMany({
+                where: { userId: user.id },
+              });
+              console.log(`[AUTH] SUPER_ADMIN session cleared for: ${user.email}`);
+            }
+
             return {
               id: user.id,
               email: user.email,

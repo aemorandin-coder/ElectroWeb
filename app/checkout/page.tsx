@@ -669,8 +669,9 @@ export default function CheckoutPage() {
                                 <FiAlertCircle className="w-5 h-5 text-white" />
                               </div>
                               <div>
-                                <h3 className="font-black text-[#1e4ba3] text-sm mb-1">
-                                  ⚠️ Importante para el Retiro
+                                <h3 className="font-black text-[#1e4ba3] text-sm mb-1 flex items-center gap-2">
+                                  <FiAlertCircle className="w-4 h-4 text-amber-500" />
+                                  Importante para el Retiro
                                 </h3>
                                 <p className="text-xs text-[#212529] leading-relaxed font-medium">
                                   Estos datos registrados (nombre, email, teléfono) son los <strong className="font-black">ÚNICOS válidos</strong> para retirar tu producto.
@@ -950,7 +951,10 @@ export default function CheckoutPage() {
                               <FiMapPin className="w-6 h-6 text-white" />
                             </div>
                             <div className="flex-1">
-                              <h4 className="font-black text-orange-900 text-sm mb-1">📍 Ayuda de Google Maps</h4>
+                              <h4 className="font-black text-orange-900 text-sm mb-1 flex items-center gap-2">
+                                <FiMapPin className="w-4 h-4" />
+                                Ayuda de Google Maps
+                              </h4>
                               <p className="text-xs text-orange-800 leading-relaxed">
                                 Si no conoces tu dirección exacta o quieres copiarla fácilmente desde Google Maps:
                               </p>
@@ -984,7 +988,7 @@ export default function CheckoutPage() {
                             {copiedFromMaps ? (
                               <>
                                 <FiCheckCircle className="w-5 h-5 animate-bounce" />
-                                <span>¡Dirección Pegada! ✨</span>
+                                <span>Dirección Pegada!</span>
                               </>
                             ) : (
                               <>
@@ -1210,8 +1214,9 @@ export default function CheckoutPage() {
                       Paga con tu saldo disponible en la plataforma
                     </p>
                     {userBalance > 0 && (
-                      <div className="mt-2 text-xs font-bold text-[#2a63cd] animate-pulse">
-                        💰 Saldo: ${formatPrice(userBalance)}
+                      <div className="mt-2 text-xs font-bold text-[#2a63cd] animate-pulse flex items-center gap-1">
+                        <FiDollarSign className="w-3.5 h-3.5" />
+                        Saldo: ${formatPrice(userBalance)}
                       </div>
                     )}
                     {paymentMode === 'WALLET' && (
@@ -1696,8 +1701,9 @@ export default function CheckoutPage() {
               </div>
 
               {/* Title */}
-              <h2 className="text-3xl font-black text-white text-center mb-2 animate-slideUp">
-                ¡Gracias por tu compra! 🎉
+              <h2 className="text-3xl font-black text-white text-center mb-2 animate-slideUp flex items-center justify-center gap-3">
+                ¡Gracias por tu compra!
+                <FiCheck className="w-8 h-8 text-cyan-300 animate-bounce" />
               </h2>
 
               {/* Order Number */}

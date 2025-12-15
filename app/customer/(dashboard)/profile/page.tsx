@@ -252,7 +252,7 @@ export default function ProfilePage() {
 
     if (!hasChanges) {
       toast('No hay cambios para guardar', {
-        icon: 'ℹ️',
+        icon: <FiAlertCircle className="w-5 h-5 text-blue-500" />,
         duration: 3000,
       });
       return;

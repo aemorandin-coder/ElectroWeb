@@ -6,6 +6,30 @@ import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
+// Gift Card Designs for thumbnail display
+const GIFT_CARD_DESIGNS: Record<string, { gradient: string; accent: string; name: string }> = {
+  'obsidian-gold': {
+    name: 'Obsidian Gold',
+    gradient: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 30%, #2d2d2d 70%, #1a1a1a 100%)',
+    accent: '#fbbf24',
+  },
+  'aurora-neon': {
+    name: 'Aurora Neon',
+    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 70%, #1a1a2e 100%)',
+    accent: '#00d4ff',
+  },
+  'cosmic-violet': {
+    name: 'Cosmic Violet',
+    gradient: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 30%, #4a1f6e 70%, #2d1b4e 100%)',
+    accent: '#a855f7',
+  },
+  'matrix-green': {
+    name: 'Matrix Green',
+    gradient: 'linear-gradient(135deg, #0a1a0a 0%, #0d2d0d 30%, #1a4a1a 70%, #0d2d0d 100%)',
+    accent: '#22c55e',
+  },
+};
+
 export default function CartIcon() {
   const { items, getTotalItems, getTotalPrice, removeItem, updateQuantity, clearCart } = useCart();
   const { confirm } = useConfirm();
@@ -115,6 +139,62 @@ export default function CartIcon() {
                       {/* Image */}
                       <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded flex-shrink-0 relative overflow-hidden">
                         {(() => {
+                          // Check if it's a Gift Card with design info
+                          const isGiftCard = item.id.startsWith('gift-card-');
+
+                          if (isGiftCard) {
+                            // Extract design ID from item ID (format: gift-card-{designId}-{timestamp})
+                            const idParts = item.id.split('-');
+                            const designId = idParts.length >= 3 ? idParts.slice(2, -1).join('-') : 'aurora-neon';
+                            const design = GIFT_CARD_DESIGNS[designId] || GIFT_CARD_DESIGNS['aurora-neon'];
+
+                            // Epic compact Gift Card thumbnail
+                            return (
+                              <div
+                                className="absolute inset-0 overflow-hidden rounded"
+                                style={{ background: design.gradient }}
+                              >
+                                {/* Shimmer */}
+                                <div
+                                  className="absolute inset-0"
+                                  style={{
+                                    background: `linear-gradient(105deg, transparent 40%, ${design.accent}30 50%, transparent 60%)`,
+                                  }}
+                                />
+
+                                {/* Content */}
+                                <div className="relative w-full h-full p-1.5 flex flex-col justify-between">
+                                  {/* Chip */}
+                                  <div
+                                    className="w-5 h-3.5 rounded-sm"
+                                    style={{
+                                      background: `linear-gradient(145deg, ${design.accent}, ${design.accent}dd)`,
+                                    }}
+                                  />
+
+                                  {/* GIFT text */}
+                                  <div
+                                    className="text-center rounded-sm py-0.5"
+                                    style={{ background: `${design.accent}25` }}
+                                  >
+                                    <span
+                                      className="text-[8px] font-black tracking-wider"
+                                      style={{ color: design.accent }}
+                                    >
+                                      GIFT
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Bottom bar */}
+                                <div
+                                  className="absolute bottom-0 left-0 right-0 h-[3px]"
+                                  style={{ background: design.accent }}
+                                />
+                              </div>
+                            );
+                          }
+
                           let imageUrl: string | undefined = item.imageUrl;
 
                           // Handle JSON string arrays
@@ -133,14 +213,11 @@ export default function CartIcon() {
                           }
 
                           // Ensure relative paths start with /
-                          if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                          if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('http') && !imageUrl.startsWith('/') && !imageUrl.startsWith('gift-card-design:')) {
                             imageUrl = `/${imageUrl}`;
                           }
 
-                          // Debug log
-                          // console.log('Cart Image:', { name: item.name, url: imageUrl });
-
-                          return imageUrl ? (
+                          return imageUrl && !imageUrl.startsWith('gift-card-design:') ? (
                             <img
                               src={imageUrl}
                               alt={item.name}

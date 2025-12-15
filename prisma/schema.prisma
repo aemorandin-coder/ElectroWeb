@@ -193,6 +193,14 @@ model Product {
   features    String?  // JSON string of features
   specs       String?  // JSON string of specifications
 
+  // Product Type: PHYSICAL or DIGITAL
+  productType ProductType @default(PHYSICAL)
+  
+  // Digital Product Fields
+  digitalPlatform   String?  // STEAM, PLAYSTATION, XBOX, NINTENDO, ROBLOX, FREEFIRE, etc.
+  digitalRegion     String?  // GLOBAL, USA, LATAM, EU, etc.
+  deliveryMethod    String?  // INSTANT (code delivered immediately) or MANUAL (admin sends code)
+  
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
 
@@ -205,12 +213,18 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime  @updatedAt
 
-  orderItems  OrderItem[]
-  reviews     Review[]
-  reservations StockReservation[]
+  orderItems    OrderItem[]
+  reviews       Review[]
+  reservations  StockReservation[]
   wishlistItems WishlistItem[]
+  digitalCodes  DigitalCode[]
 
   @@map("products")
+}
+
+enum ProductType {
+  PHYSICAL
+  DIGITAL
 }
 
 enum ProductStatus {
@@ -218,6 +232,168 @@ enum ProductStatus {
   PUBLISHED
   ARCHIVED
 }
+
+// Digital Codes for products like Steam, PlayStation, Xbox cards
+model DigitalCode {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  code        String   // The actual code (encrypted in production)
+  status      DigitalCodeStatus @default(AVAILABLE)
+  
+  // When sold
+  orderId     String?
+  orderItemId String?
+  soldAt      DateTime?
+  
+  // When redeemed/delivered
+  deliveredAt DateTime?
+  redeemedAt  DateTime?
+  
+  // Tracking
+  addedBy     String?  // Admin who added this code
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([productId])
+  @@index([status])
+  @@map("digital_codes")
+}
+
+enum DigitalCodeStatus {
+  AVAILABLE    // Ready to be sold
+  RESERVED     // Reserved during checkout
+  SOLD         // Sold and assigned to an order
+  DELIVERED    // Delivered to customer
+  EXPIRED      // Code expired
+  INVALID      // Code marked as invalid
+}
+
+// Gift Card Designs (templates)
+model GiftCardDesign {
+  id              String   @id @default(cuid())
+  name            String   // "Gaming Theme", "Birthday", "Christmas", etc.
+  slug            String   @unique
+  description     String?
+  
+  // Visual Design
+  backgroundImage String?  // Background image URL
+  backgroundColor String?  // Fallback background color
+  textColor       String?  // Primary text color
+  accentColor     String?  // Accent/highlight color
+  pattern         String?  // Pattern type: dots, lines, gradient, etc.
+  
+  // Design Category
+  category        String   @default("GENERAL") // GENERAL, GAMING, BIRTHDAY, CHRISTMAS, VALENTINES, etc.
+  
+  isActive        Boolean  @default(true)
+  isDefault       Boolean  @default(false)
+  sortOrder       Int      @default(0)
+  
+  giftCards       GiftCard[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("gift_card_designs")
+}
+
+// Electro Shop Gift Cards
+model GiftCard {
+  id              String   @id @default(cuid())
+  
+  // Card Details
+  code            String   @unique  // Format: ESMC-XXXX-XXXX-XXXX
+  pin             String?           // Optional PIN for extra security
+  amountUSD       Decimal           // Original amount
+  balanceUSD      Decimal           // Remaining balance
+  
+  // Status
+  status          GiftCardStatus @default(INACTIVE)
+  
+  // Design
+  designId        String?
+  design          GiftCardDesign? @relation(fields: [designId], references: [id])
+  
+  // Purchase Info
+  purchasedBy     String?         // User ID who purchased
+  purchasedAt     DateTime?
+  orderId         String?         // Order where it was purchased
+  
+  // Recipient Info (if sent as gift)
+  recipientEmail  String?
+  recipientName   String?
+  senderName      String?
+  personalMessage String?
+  
+  // Delivery
+  deliveredAt     DateTime?
+  emailSentAt     DateTime?
+  
+  // Activation & Expiration
+  activatedAt     DateTime?
+  expiresAt       DateTime?
+  
+  // Usage Tracking
+  lastUsedAt      DateTime?
+  usageCount      Int      @default(0)
+  
+  // Redemption (when fully used or redeemed)
+  redeemedBy      String?         // User ID who redeemed
+  redeemedAt      DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Transaction history
+  transactions    GiftCardTransaction[]
+
+  @@index([code])
+  @@index([status])
+  @@index([purchasedBy])
+  @@map("gift_cards")
+}
+
+enum GiftCardStatus {
+  INACTIVE      // Created but not activated
+  ACTIVE        // Ready to use
+  PARTIALLY_USED // Some balance remaining
+  DEPLETED      // Fully used (balance = 0)
+  EXPIRED       // Past expiration date
+  SUSPENDED     // Temporarily disabled
+  CANCELLED     // Cancelled/refunded
+}
+
+// Gift Card Transaction History
+model GiftCardTransaction {
+  id            String   @id @default(cuid())
+  giftCardId    String
+  giftCard      GiftCard @relation(fields: [giftCardId], references: [id], onDelete: Cascade)
+  
+  type          String   // PURCHASE, ACTIVATION, USAGE, REFUND, ADJUSTMENT
+  amountUSD     Decimal
+  balanceBefore Decimal
+  balanceAfter  Decimal
+  
+  // If used for an order
+  orderId       String?
+  orderNumber   String?
+  
+  // Who made the transaction
+  userId        String?
+  userEmail     String?
+  
+  description   String?
+  
+  createdAt     DateTime @default(now())
+
+  @@index([giftCardId])
+  @@map("gift_card_transactions")
+}
+
 
 model Category {
   id          String    @id @default(cuid())

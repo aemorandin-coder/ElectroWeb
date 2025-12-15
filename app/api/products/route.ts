@@ -137,8 +137,28 @@ export async function POST(request: NextRequest) {
         features: body.features ? JSON.stringify(body.features) : null,
         status: body.status || (body.isActive ? 'PUBLISHED' : 'DRAFT'),
         isFeatured: body.isFeatured || false,
+        // Digital Product Fields
+        productType: body.productType || 'PHYSICAL',
+        digitalPlatform: body.productType === 'DIGITAL' ? body.digitalPlatform : null,
+        digitalRegion: body.productType === 'DIGITAL' ? body.digitalRegion : null,
+        deliveryMethod: body.productType === 'DIGITAL' ? (body.deliveryMethod || 'MANUAL') : null,
       },
     });
+
+    // Si es producto digital con precios por denominación, guardarlos en specs
+    if (body.productType === 'DIGITAL' && body.digitalPricing && Array.isArray(body.digitalPricing)) {
+      // Guardamos la configuración de precios digitales en el campo specs
+      const digitalSpecs = {
+        digitalPricing: body.digitalPricing,
+        ...body.specifications
+      };
+      await prisma.product.update({
+        where: { id: product.id },
+        data: {
+          specs: JSON.stringify(digitalSpecs)
+        }
+      });
+    }
 
     // Notifications logic removed as NotificationTemplates is not defined
     // TODO: Implement proper admin notifications

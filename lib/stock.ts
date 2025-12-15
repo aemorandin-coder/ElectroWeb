@@ -66,6 +66,14 @@ export async function reserveStock(userId: string, items: { productId: string; q
 
     // Check availability and create reservations
     for (const item of items) {
+        // Skip virtual products (Gift Cards, wallet recharges, digital products)
+        // These don't have physical stock to reserve
+        if (item.productId.startsWith('gift-card-') ||
+            item.productId.startsWith('wallet-recharge-') ||
+            item.productId.startsWith('digital-')) {
+            continue;
+        }
+
         const availableStock = await getAvailableStock(item.productId);
 
         if (availableStock < item.quantity) {
@@ -84,15 +92,19 @@ export async function reserveStock(userId: string, items: { productId: string; q
         );
     }
 
-    try {
-        await prisma.$transaction(reservations);
-    } catch (error: any) {
-        console.error('Error reserving stock transaction:', error);
-        if (error.code === 'P2003') {
-            throw new Error('Error de sesión o producto no válido. Por favor, cierra sesión y vuelve a ingresar, o vacía tu carrito.');
+    // Only run transaction if there are physical products to reserve
+    if (reservations.length > 0) {
+        try {
+            await prisma.$transaction(reservations);
+        } catch (error: any) {
+            console.error('Error reserving stock transaction:', error);
+            if (error.code === 'P2003') {
+                throw new Error('Error de sesión o producto no válido. Por favor, cierra sesión y vuelve a ingresar, o vacía tu carrito.');
+            }
+            throw error;
         }
-        throw error;
     }
+
     return expiresAt;
 }
 

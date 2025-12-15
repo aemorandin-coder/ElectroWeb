@@ -9,6 +9,31 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import { toast } from 'react-hot-toast';
 
+// Gift Card Designs - Same as gift-cards page
+const GIFT_CARD_DESIGNS: Record<string, { gradient: string; accent: string; name: string }> = {
+  'obsidian-gold': {
+    name: 'Obsidian Gold',
+    gradient: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 30%, #2d2d2d 70%, #1a1a1a 100%)',
+    accent: '#fbbf24',
+  },
+  'aurora-neon': {
+    name: 'Aurora Neon',
+    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 70%, #1a1a2e 100%)',
+    accent: '#00d4ff',
+  },
+  'cosmic-violet': {
+    name: 'Cosmic Violet',
+    gradient: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 30%, #4a1f6e 70%, #2d1b4e 100%)',
+    accent: '#a855f7',
+  },
+  'matrix-green': {
+    name: 'Matrix Green',
+    gradient: 'linear-gradient(135deg, #0a1a0a 0%, #0d2d0d 30%, #1a4a1a 70%, #0d2d0d 100%)',
+    accent: '#22c55e',
+  },
+};
+
+
 export default function CarritoPage() {
   const router = useRouter();
   const { items, removeItem, updateQuantity, clearCart, getTotalPrice } = useCart();
@@ -81,42 +106,47 @@ export default function CarritoPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
       <PublicHeader />
 
-      {/* Hero Section */}
+      {/* Hero Section - Compact */}
       <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
+        {/* Animated Background Orbs */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-64 h-64 bg-white rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-5 left-5 w-32 h-32 bg-white rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-5 right-5 w-48 h-48 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <nav className="flex items-center gap-2 text-sm mb-6">
-            <Link href="/" className="text-white/80 hover:text-white transition-colors font-medium">
-              Inicio
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Epic Breadcrumb with Glassmorphism */}
+          <nav className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 no-scrollbar">
+            {/* Home */}
+            <Link
+              href="/"
+              className="group flex items-center gap-1.5 px-3 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 hover:bg-white/20 transition-all hover:scale-105 shadow-lg flex-shrink-0"
+            >
+              <svg className="w-4 h-4 text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              <span className="text-sm font-semibold text-white">Inicio</span>
             </Link>
-            <svg className="w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+            {/* Separator */}
+            <svg className="w-4 h-4 text-white/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            <span className="text-white font-bold">Carrito de Compras</span>
-          </nav>
 
-          <div className="text-center">
-            <div className="inline-flex items-center gap-3 mb-6">
-              <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h1 className="text-5xl font-black text-white">
-                Mi Carrito
-              </h1>
+            {/* Current Page - Carrito */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-cyan-400/20 to-purple-400/20 backdrop-blur-md rounded-lg border border-white/30 shadow-xl flex-shrink-0">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span className="text-sm font-bold text-white">Carrito de Compras</span>
+              {items.length > 0 && (
+                <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs text-white font-medium">
+                  {items.length}
+                </span>
+              )}
             </div>
-            <p className="text-xl text-white/90">
-              {items.length > 0 ? `${items.length} ${items.length === 1 ? 'producto' : 'productos'} en tu carrito` : 'Tu carrito está vacío'}
-            </p>
-          </div>
+          </nav>
         </div>
-
-
       </section>
 
       {/* Main Content */}
@@ -191,6 +221,104 @@ export default function CarritoPage() {
                       <div className="relative w-32 h-32 flex-shrink-0 bg-gradient-to-br from-[#f8f9fa] to-gray-100 rounded-xl overflow-hidden group">
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-10"></div>
                         {(() => {
+                          // Check if it's a Gift Card
+                          const isGiftCard = item.id.startsWith('gift-card-') || item.name.toLowerCase().includes('gift card');
+                          // Check if it's a Wallet Recharge
+                          const isWalletRecharge = item.id.startsWith('wallet-recharge-') || item.name.toLowerCase().includes('recarga de saldo');
+
+                          if (isGiftCard) {
+                            // Extract design ID from item ID (format: gift-card-{designId}-{timestamp})
+                            const idParts = item.id.split('-');
+                            const designId = idParts.length >= 3 ? idParts.slice(2, -1).join('-') : 'aurora-neon';
+                            const design = GIFT_CARD_DESIGNS[designId] || GIFT_CARD_DESIGNS['aurora-neon'];
+
+                            // Epic Gift Card Mini Card Design
+                            return (
+                              <div
+                                className="absolute inset-0 overflow-hidden rounded-xl"
+                                style={{ background: design.gradient }}
+                              >
+                                {/* Holographic shimmer effect */}
+                                <div
+                                  className="absolute inset-0"
+                                  style={{
+                                    background: `linear-gradient(105deg, transparent 40%, ${design.accent}25 45%, ${design.accent}40 50%, ${design.accent}25 55%, transparent 60%)`,
+                                    animation: 'shimmer 2s ease-in-out infinite',
+                                  }}
+                                />
+
+                                {/* Content layout */}
+                                <div className="relative w-full h-full p-2 flex flex-col justify-between">
+                                  {/* Top row - Logo */}
+                                  <div className="flex items-center gap-1">
+                                    <div
+                                      className="w-5 h-5 rounded flex items-center justify-center"
+                                      style={{ background: `${design.accent}30` }}
+                                    >
+                                      <span className="text-[8px] font-black text-white">ES</span>
+                                    </div>
+                                    <span className="text-[7px] font-bold text-white/80 tracking-tight">ELECTRO</span>
+                                  </div>
+
+                                  {/* Center - Chip */}
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className="w-8 h-6 rounded"
+                                      style={{
+                                        background: `linear-gradient(145deg, ${design.accent} 0%, ${design.accent}cc 50%, ${design.accent} 100%)`,
+                                        boxShadow: `0 2px 4px ${design.accent}50`
+                                      }}
+                                    >
+                                      <div className="w-full h-full grid grid-cols-3 gap-[1px] p-[3px]">
+                                        {[...Array(6)].map((_, i) => (
+                                          <div key={i} className="bg-black/20 rounded-[1px]" />
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Bottom - GIFT CARD text */}
+                                  <div
+                                    className="text-center py-1 rounded"
+                                    style={{ background: `${design.accent}20` }}
+                                  >
+                                    <span
+                                      className="text-[10px] font-black tracking-widest"
+                                      style={{
+                                        color: design.accent,
+                                        textShadow: `0 0 10px ${design.accent}80`
+                                      }}
+                                    >
+                                      GIFT CARD
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Premium accent bar */}
+                                <div
+                                  className="absolute bottom-0 left-0 right-0 h-1"
+                                  style={{
+                                    background: `linear-gradient(90deg, ${design.accent}, ${design.accent}cc, ${design.accent})`,
+                                  }}
+                                />
+                              </div>
+                            );
+                          }
+
+                          if (isWalletRecharge) {
+                            // Show wallet recharge design
+                            return (
+                              <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                                <div className="text-center text-white">
+                                  <svg className="w-12 h-12 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                  </svg>
+                                  <span className="text-xs font-bold">RECARGA</span>
+                                </div>
+                              </div>
+                            );
+                          }
+
                           let imageUrl: string | undefined = item.imageUrl;
 
                           // Handle JSON string arrays
@@ -254,33 +382,76 @@ export default function CarritoPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <label className="text-sm font-semibold text-[#212529]">Cantidad:</label>
-                            <div className="flex items-center gap-3">
-                              <button
-                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl hover:from-[#2a63cd] hover:to-[#1e4ba3] hover:text-white transition-all shadow-md hover:shadow-lg hover:scale-105"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
-                                </svg>
-                              </button>
-                              <span className="w-16 text-center text-xl font-bold text-[#212529]">
-                                {item.quantity}
-                              </span>
-                              <button
-                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                disabled={item.quantity >= item.stock}
-                                className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl hover:from-[#2a63cd] hover:to-[#1e4ba3] hover:text-white transition-all shadow-md hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
-                                </svg>
-                              </button>
-                            </div>
-                            {item.quantity >= item.stock && (
-                              <span className="text-xs text-orange-600 font-semibold">
-                                Stock máximo
-                              </span>
-                            )}
+                            {(() => {
+                              // Check if it's a Gift Card
+                              const isGiftCard = item.id.startsWith('gift-card-') || item.name.toLowerCase().includes('gift card');
+
+                              if (isGiftCard) {
+                                // Gift Cards are locked to quantity 1
+                                return (
+                                  <div className="flex items-center gap-3">
+                                    <button
+                                      disabled
+                                      className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-300 rounded-xl cursor-not-allowed"
+                                      title="Las Gift Cards solo permiten cantidad 1"
+                                    >
+                                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
+                                      </svg>
+                                    </button>
+                                    <div className="w-16 text-center">
+                                      <span className="text-xl font-bold text-[#212529]">1</span>
+                                    </div>
+                                    <button
+                                      disabled
+                                      className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-300 rounded-xl cursor-not-allowed"
+                                      title="Las Gift Cards solo permiten cantidad 1"
+                                    >
+                                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+                                      </svg>
+                                    </button>
+                                    <span className="text-xs text-blue-600 font-semibold flex items-center gap-1">
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                      </svg>
+                                      Cantidad fija
+                                    </span>
+                                  </div>
+                                );
+                              }
+
+                              // Normal products - regular quantity controls
+                              return (
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                    className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl hover:from-[#2a63cd] hover:to-[#1e4ba3] hover:text-white transition-all shadow-md hover:shadow-lg hover:scale-105"
+                                  >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
+                                    </svg>
+                                  </button>
+                                  <span className="w-16 text-center text-xl font-bold text-[#212529]">
+                                    {item.quantity}
+                                  </span>
+                                  <button
+                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                    disabled={item.quantity >= item.stock}
+                                    className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl hover:from-[#2a63cd] hover:to-[#1e4ba3] hover:text-white transition-all shadow-md hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                  >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                  </button>
+                                  {item.quantity >= item.stock && (
+                                    <span className="text-xs text-orange-600 font-semibold">
+                                      Stock máximo
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
 
                           {/* Remove Button */}

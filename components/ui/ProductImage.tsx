@@ -57,7 +57,7 @@ export default function ProductImage({
                 priority={priority}
                 quality={quality}
                 onError={handleError}
-                unoptimized={effectiveSrc === PRODUCT_PLACEHOLDER}
+                unoptimized
             />
         );
     }
@@ -73,7 +73,7 @@ export default function ProductImage({
             priority={priority}
             quality={quality}
             onError={handleError}
-            unoptimized={effectiveSrc === PRODUCT_PLACEHOLDER}
+            unoptimized
         />
     );
 }

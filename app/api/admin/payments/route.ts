@@ -47,6 +47,12 @@ export async function POST(request: NextRequest) {
                 walletAddress: body.walletAddress,
                 network: body.network,
                 instructions: body.instructions,
+                logo: body.logo,
+                qrCodeImage: body.qrCodeImage,
+                sortOrder: body.sortOrder ?? 0,
+                minAmount: body.minAmount,
+                maxAmount: body.maxAmount,
+                displayNote: body.displayNote,
                 isActive: body.isActive ?? true,
             }
         });

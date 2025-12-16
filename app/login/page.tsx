@@ -126,15 +126,25 @@ function LoginPageContent() {
         setError('Credenciales invalidas. Por favor, verifique su informacion.');
       } else if (result?.ok) {
         // Wait a bit for session to be established
-        await new Promise(resolve => setTimeout(resolve, 200));
-        // Redirect based on user type or callback
-        const callbackUrl = searchParams.get('callbackUrl');
-        if (callbackUrl && callbackUrl.startsWith('/')) {
-          window.location.href = callbackUrl;
-        } else if (userType === 'admin') {
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Fetch user role to determine redirect
+        const sessionRes = await fetch('/api/auth/session');
+        const sessionData = await sessionRes.json();
+        const userRole = sessionData?.user?.role;
+        const userTypeFromSession = sessionData?.user?.userType;
+
+        // SUPER_ADMIN and ADMIN always go to admin panel
+        if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userTypeFromSession === 'admin') {
           window.location.href = '/admin';
         } else {
-          window.location.href = '/';
+          // Redirect based on callback or home
+          const callbackUrl = searchParams.get('callbackUrl');
+          if (callbackUrl && callbackUrl.startsWith('/') && !callbackUrl.includes('/admin')) {
+            window.location.href = callbackUrl;
+          } else {
+            window.location.href = '/';
+          }
         }
       }
     } catch (err) {

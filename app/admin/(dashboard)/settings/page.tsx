@@ -417,10 +417,10 @@ export default function SettingsPage() {
       )}
 
       {/* Main Grid Layout - 2 Columns for better spacing */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* LEFT COLUMN: Identity & Branding */}
-        <div className="space-y-8">
+        <div className="space-y-6">
 
           {/* Section Header */}
           <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
@@ -608,22 +608,37 @@ export default function SettingsPage() {
                       name="whatsapp"
                       value={formData.whatsapp}
                       onChange={handleInputChange}
+                      placeholder="+58 412-1234567"
                       className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                     />
                   </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Dirección Física</label>
-                <div className="relative">
-                  <FiMapPin className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-                  />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Teléfono de Contacto</label>
+                  <div className="relative">
+                    <FiPhone className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="+58 257-2511282"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                  <p className="text-[10px] text-gray-500 mt-1">Número para llamadas (diferente a WhatsApp)</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Dirección Física</label>
+                  <div className="relative">
+                    <FiMapPin className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      name="address"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -812,10 +827,11 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-        {/* RIGHT COLUMN: Homepage & Logic */}
-        <div className="space-y-8">
 
-          {/* Section Header */}
+        {/* RIGHT COLUMN */}
+        <div className="space-y-6">
+
+          {/* Section Header - Homepage */}
           <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
             <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
               <FiMonitor className="w-5 h-5" />
@@ -1444,9 +1460,7 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
-
         </div>
-
       </div>
 
       {/* Footer / Copyright */}
@@ -1458,5 +1472,11 @@ export default function SettingsPage() {
 }
 
 function FiLoader({ className }: { className?: string }) {
-  return <svg className={`w-5 h-5 ${className}`} fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
+  return (
+    <svg className={`w-5 h-5 ${className}`} fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  );
 }
+

@@ -98,9 +98,9 @@ export default function CarritoPage() {
     }
   };
 
-  const subtotal = getTotalPrice();
-  const tax = subtotal * 0.16; // 16% IVA
-  const total = subtotal + tax;
+  const total = getTotalPrice(); // El precio ya incluye IVA
+  const subtotal = total / 1.16; // Base sin IVA (desglozado)
+  const tax = total - subtotal; // IVA desglozado (16% del total)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">

@@ -249,32 +249,32 @@ export default function CustomerDashboardLayout({
 
         {/* Main Content */}
         <div className={`transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-0'}`}>
-          {/* Top Bar */}
-          <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 border-b border-white/30 shadow-lg">
-            <div className="flex items-center justify-between px-6 py-4">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="p-2 rounded-lg hover:bg-[#f8f9fa] transition-all duration-200 hover:scale-105"
-                >
-                  <svg className="w-5 h-5 text-[#212529]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-                <h1 className="text-xl font-bold text-[#212529]">
-                  {menuItems.find((item) => item.href === pathname)?.label || 'Mi Cuenta'}
-                </h1>
-              </div>
-
-              <Link
-                href="/"
-                className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-medium text-sm transition-all duration-300 hover:shadow-lg hover:shadow-[#2a63cd]/30 hover:scale-105"
+          {/* Top Bar - Same style as admin */}
+          <header className="bg-white border-b border-[#e9ecef] sticky top-0 z-30 shadow-sm backdrop-blur-sm bg-white/95">
+            <div className="px-6 py-4 flex items-center justify-between">
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="relative p-2 hover:bg-[#f8f9fa] rounded-lg transition-all duration-300 group hover:scale-110"
               >
-                <svg className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                <svg className="w-6 h-6 text-[#6a6c6b] group-hover:text-[#2a63cd] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-                <span>Ir a la Tienda</span>
-              </Link>
+                <span className="absolute inset-0 rounded-lg bg-[#2a63cd]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></span>
+              </button>
+
+              <div className="flex items-center gap-4">
+                {/* Home Button - Same style as admin */}
+                <Link
+                  href="/"
+                  className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-semibold rounded-lg hover:shadow-lg hover:shadow-[#2a63cd]/30 transition-all duration-300 hover:scale-105 group overflow-hidden"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-[#1e4ba3] to-[#2a63cd] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                  <svg className="w-4 h-4 relative z-10 group-hover:translate-x-[-2px] transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <span className="relative z-10">Ir a la Tienda</span>
+                </Link>
+              </div>
             </div>
           </header>
 

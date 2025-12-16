@@ -108,16 +108,30 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   const primaryColor = companySettings?.primaryColor || '#2a63cd';
   const secondaryColor = companySettings?.secondaryColor || '#1e4ba3';
 
-  // Invertido: cuando está sobre sección azul -> header blanco, sobre blanco -> header azul
-  // Solo en la página principal - default to false until mounted to prevent hydration issues
+  // Always use white header for SSR and initial render to avoid hydration mismatch
+  // Only change to blue header after mount and based on scroll position
   const useBlueHeader = mounted && pathname === '/' && !isOnDarkSection;
+
+  // Base header class - always the same for SSR
+  const baseHeaderClass = 'sticky top-0 z-50 transition-all duration-300 backdrop-blur-md';
+
+  // Dynamic styles applied via inline style to avoid className mismatch
+  const headerStyle: React.CSSProperties = useBlueHeader
+    ? {
+      background: 'linear-gradient(to right, rgba(42, 99, 205, 0.95), rgba(30, 75, 163, 0.95))',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+    }
+    : {
+      background: 'rgba(255, 255, 255, 0.95)',
+      borderBottom: '1px solid #e9ecef',
+      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+    };
 
   return (
     <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${useBlueHeader
-        ? 'bg-gradient-to-r from-[#2a63cd]/95 to-[#1e4ba3]/95 backdrop-blur-md border-b border-white/10 shadow-lg'
-        : 'bg-white/95 backdrop-blur-md border-b border-[#e9ecef] shadow-sm'
-        }`}
+      className={baseHeaderClass}
+      style={headerStyle}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
@@ -138,7 +152,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
               </div>
             )}
             <h1
-              className={`text-2xl font-black tracking-wide transition-colors duration-300 ${useBlueHeader ? 'text-white' : 'text-transparent bg-clip-text'
+              className={`text-2xl font-bold tracking-wide transition-colors duration-300 ${useBlueHeader ? 'text-white' : 'text-transparent bg-clip-text'
                 }`}
               style={{
                 backgroundImage: useBlueHeader ? 'none' : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
@@ -165,7 +179,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="relative text-base font-medium transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 rounded-sm"
+                  className="relative text-sm font-normal transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 rounded-sm"
                   style={{
                     color: useBlueHeader
                       ? (isActive ? 'white' : 'rgba(255,255,255,0.8)')
@@ -201,7 +215,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
           </div>
         </div>
       </div>
-    </header>
+    </header >
   );
 }
 

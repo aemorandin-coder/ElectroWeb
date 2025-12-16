@@ -26,10 +26,28 @@ export default function RechargeModal({ isOpen, onClose, onSuccess }: RechargeMo
     const [exchangeRate, setExchangeRate] = useState<number>(0);
     const [hasAcceptedTerms, setHasAcceptedTerms] = useState<boolean | null>(null);
     const [showTermsModal, setShowTermsModal] = useState(false);
+    const [loadingMethods, setLoadingMethods] = useState(true);
+
+    // Dynamic payment methods from database
+    const [companyPaymentMethods, setCompanyPaymentMethods] = useState<Array<{
+        id: string;
+        type: string;
+        name: string;
+        bankName?: string;
+        phone?: string;
+        holderId?: string;
+        holderName?: string;
+        email?: string;
+        walletAddress?: string;
+        network?: string;
+        displayNote?: string;
+        qrCodeImage?: string;
+        isActive: boolean;
+    }>>([]);
 
     const quickAmounts = [10, 25, 50, 100, 200];
 
-    // Fetch exchange rate
+    // Fetch exchange rate and payment methods
     useEffect(() => {
         const fetchRate = async () => {
             try {
@@ -42,10 +60,71 @@ export default function RechargeModal({ isOpen, onClose, onSuccess }: RechargeMo
                 console.error('Error fetching exchange rate:', error);
             }
         };
+
+        const fetchPaymentMethods = async () => {
+            setLoadingMethods(true);
+            try {
+                const response = await fetch('/api/customer/company-payment-methods');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data)) {
+                        setCompanyPaymentMethods(data.filter((m: any) => m.isActive));
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching payment methods:', error);
+            } finally {
+                setLoadingMethods(false);
+            }
+        };
+
         if (isOpen) {
             fetchRate();
+            fetchPaymentMethods();
         }
     }, [isOpen]);
+
+    // Helper function to get icon based on payment type
+    const getMethodIcon = (type: string) => {
+        switch (type) {
+            case 'MOBILE_PAYMENT': return <FiPhone className="w-6 h-6 text-white" />;
+            case 'CRYPTO': return <SiBinance className="w-6 h-6 text-white" />;
+            case 'BANK_TRANSFER': return <BsBank2 className="w-6 h-6 text-white" />;
+            case 'MERCANTIL_PANAMA': return (
+                <svg className="w-6 h-6" viewBox="0 0 24 24">
+                    <path d="M4 12c0-4.4 3.6-8 8-8 2.2 0 4.2.9 5.7 2.3L12 12l5.7 5.7c-1.5 1.4-3.5 2.3-5.7 2.3-4.4 0-8-3.6-8-8z" fill="white" />
+                    <path d="M12 12l5.7-5.7c1.4 1.5 2.3 3.5 2.3 5.7s-.9 4.2-2.3 5.7L12 12z" fill="white" opacity="0.6" />
+                </svg>
+            );
+            case 'ZELLE': return (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="white">
+                    <path d="M5 5h14v2h-9.5l9.5 10v2H5v-2h9.5L5 7V5z" />
+                    <rect x="10" y="2" width="4" height="2" rx="0.5" />
+                    <rect x="10" y="20" width="4" height="2" rx="0.5" />
+                </svg>
+            );
+            case 'PAYPAL': return <FiDollarSign className="w-6 h-6 text-white" />;
+            default: return <FiDollarSign className="w-6 h-6 text-white" />;
+        }
+    };
+
+    // Helper function to get gradient color - all blue for brand consistency
+    const getMethodColor = () => {
+        return 'from-[#2a63cd] to-[#1e4ba3]';
+    };
+
+    // Build details object for display
+    const getMethodDetails = (method: any) => {
+        const details: Record<string, string> = {};
+        if (method.holderId) details['Cédula/RIF'] = method.holderId;
+        if (method.phone) details['Teléfono'] = method.phone;
+        if (method.bankName) details['Banco'] = method.bankName;
+        if (method.holderName) details['Titular'] = method.holderName;
+        if (method.email) details['Email'] = method.email;
+        if (method.walletAddress) details['Wallet'] = method.walletAddress;
+        if (method.network) details['Red'] = method.network;
+        return details;
+    };
 
     // Check if user has accepted terms
     useEffect(() => {
@@ -79,51 +158,6 @@ export default function RechargeModal({ isOpen, onClose, onSuccess }: RechargeMo
         };
     }, [isOpen]);
 
-    const companyPaymentMethods = [
-        {
-            id: 'PAGO_MOVIL',
-            name: 'Pago Móvil',
-            icon: <FiPhone className="w-6 h-6 text-white" />,
-            details: {
-                rif: 'J-405903333',
-                phone: '04245172100',
-                bank: 'Banco Venezuela'
-            },
-            color: 'from-yellow-500 to-orange-500'
-        },
-        {
-            id: 'BINANCE',
-            name: 'Binance',
-            icon: <SiBinance className="w-6 h-6 text-white" />,
-            details: {
-                email: 'aemorandin@gmail.com',
-                network: 'USDT (TRC20)'
-            },
-            color: 'from-yellow-400 to-yellow-600'
-        },
-        {
-            id: 'MERCANTIL_PANAMA',
-            name: 'Mercantil Panamá',
-            icon: <BsBank2 className="w-6 h-6 text-white" />,
-            details: {
-                email: 'aemorandin@gmail.com',
-                type: 'Transferencia Bancaria'
-            },
-            color: 'from-blue-500 to-blue-700'
-        },
-        {
-            id: 'ZELLE',
-            name: 'Zelle',
-            icon: <FiDollarSign className="w-6 h-6 text-white" />,
-            details: {
-                status: 'Por Agregar',
-                note: 'Próximamente disponible'
-            },
-            color: 'from-purple-500 to-purple-700',
-            disabled: true
-        }
-    ];
-
     // Calculate Bs amount
     const amountInBs = amount && exchangeRate ? (parseFloat(amount) * exchangeRate).toFixed(2) : '0.00';
 
@@ -135,7 +169,7 @@ export default function RechargeModal({ isOpen, onClose, onSuccess }: RechargeMo
 
         const confirmed = await confirm({
             title: 'Confirmar Recarga',
-            message: `¿Estás seguro de que deseas recargar $${parseFloat(amount).toFixed(2)} usando ${companyPaymentMethods.find(m => m.id === selectedMethod)?.name}?`,
+            message: `¿Estás seguro de que deseas recargar $${parseFloat(amount).toFixed(2)} usando ${companyPaymentMethods.find(m => m.type === selectedMethod)?.name}?`,
             confirmText: 'Sí, Recargar',
             cancelText: 'Cancelar',
             variant: 'info'
@@ -268,44 +302,57 @@ export default function RechargeModal({ isOpen, onClose, onSuccess }: RechargeMo
                                 <label className="block text-sm font-bold text-[#212529] mb-3 uppercase tracking-wider">
                                     Método de Pago
                                 </label>
-                                <div className="space-y-2">
-                                    {companyPaymentMethods.map((method) => (
-                                        <button
-                                            key={method.id}
-                                            onClick={() => !method.disabled && setSelectedMethod(method.id)}
-                                            disabled={method.disabled}
-                                            className={`w-full p-4 rounded-xl border-2 transition-all duration-300 text-left transform hover:scale-[1.02] active:scale-[0.98] ${selectedMethod === method.id
-                                                ? 'border-[#2a63cd] bg-gradient-to-r from-[#2a63cd]/10 to-[#1e4ba3]/5 shadow-lg'
-                                                : method.disabled
-                                                    ? 'border-[#e9ecef] bg-[#f8f9fa] opacity-50 cursor-not-allowed'
+                                {loadingMethods ? (
+                                    <div className="flex items-center justify-center py-8">
+                                        <div className="w-6 h-6 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                ) : companyPaymentMethods.length === 0 ? (
+                                    <div className="text-center py-6 text-gray-500">
+                                        <p className="text-sm">No hay métodos de pago disponibles</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {companyPaymentMethods.map((method) => (
+                                            <button
+                                                key={method.id}
+                                                onClick={() => setSelectedMethod(method.type)}
+                                                className={`w-full p-4 rounded-xl border-2 transition-all duration-300 text-left transform hover:scale-[1.02] active:scale-[0.98] ${selectedMethod === method.type
+                                                    ? 'border-[#2a63cd] bg-gradient-to-r from-[#2a63cd]/10 to-[#1e4ba3]/5 shadow-lg'
                                                     : 'border-[#e9ecef] hover:border-[#2a63cd]/50 hover:bg-[#f8f9fa]'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${method.color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
-                                                    {method.icon}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-0.5">
-                                                        <h3 className="font-bold text-[#212529]">{method.name}</h3>
-                                                        {selectedMethod === method.id && (
-                                                            <div className="w-5 h-5 bg-[#2a63cd] rounded-full flex items-center justify-center">
-                                                                <FiCheck className="w-3 h-3 text-white" />
-                                                            </div>
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getMethodColor()} flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                                                        {getMethodIcon(method.type)}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-0.5">
+                                                            <h3 className="font-bold text-[#212529]">{method.name}</h3>
+                                                            {method.type === 'MERCANTIL_PANAMA' && (
+                                                                <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-100 text-[#2a63cd] rounded-full">
+                                                                    Internacional
+                                                                </span>
+                                                            )}
+                                                            {selectedMethod === method.type && (
+                                                                <div className="w-5 h-5 bg-[#2a63cd] rounded-full flex items-center justify-center">
+                                                                    <FiCheck className="w-3 h-3 text-white" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        {method.bankName && (
+                                                            <p className="text-xs text-[#6a6c6b]">{method.bankName}</p>
+                                                        )}
+                                                        {method.displayNote && selectedMethod === method.type && (
+                                                            <p className="text-xs text-[#2a63cd] mt-1 font-medium">
+                                                                💡 {method.displayNote}
+                                                            </p>
                                                         )}
                                                     </div>
-                                                    {method.disabled ? (
-                                                        <p className="text-xs text-orange-600 font-medium">Próximamente</p>
-                                                    ) : (
-                                                        <p className="text-xs text-[#6a6c6b]">
-                                                            {selectedMethod === method.id ? 'Seleccionado' : 'Click para seleccionar'}
-                                                        </p>
-                                                    )}
                                                 </div>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -321,22 +368,42 @@ export default function RechargeModal({ isOpen, onClose, onSuccess }: RechargeMo
                                 {selectedMethod ? (
                                     <div className="space-y-2">
                                         {(() => {
-                                            const method = companyPaymentMethods.find(m => m.id === selectedMethod);
+                                            const method = companyPaymentMethods.find(m => m.type === selectedMethod);
                                             if (!method) return null;
-                                            return Object.entries(method.details).map(([key, value]) => (
+                                            const details = getMethodDetails(method);
+                                            return Object.entries(details).map(([key, value]) => (
                                                 <div key={key} className="flex items-center justify-between py-1 border-b border-[#e9ecef] last:border-0">
                                                     <div className="flex flex-col">
                                                         <span className="text-[10px] text-[#6a6c6b] uppercase font-bold tracking-wider">{key}</span>
                                                         <span className="text-sm font-medium text-[#212529]">{value}</span>
                                                     </div>
                                                     <button
-                                                        onClick={() => navigator.clipboard.writeText(value as string)}
+                                                        onClick={() => navigator.clipboard.writeText(value)}
                                                         className="text-[#2a63cd] hover:bg-blue-50 px-2 py-1 rounded transition-colors text-[10px] font-bold"
                                                     >
                                                         COPIAR
                                                     </button>
                                                 </div>
                                             ));
+                                        })()}
+                                        {/* QR Code if available */}
+                                        {(() => {
+                                            const method = companyPaymentMethods.find(m => m.type === selectedMethod);
+                                            if (method?.qrCodeImage) {
+                                                return (
+                                                    <div className="mt-3 pt-3 border-t border-gray-200">
+                                                        <p className="text-xs text-gray-500 mb-2">Escanea el código QR:</p>
+                                                        <Image
+                                                            src={method.qrCodeImage}
+                                                            alt="QR Code"
+                                                            width={120}
+                                                            height={120}
+                                                            className="rounded-lg border border-gray-200"
+                                                        />
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
                                         })()}
                                     </div>
                                 ) : (
@@ -349,8 +416,8 @@ export default function RechargeModal({ isOpen, onClose, onSuccess }: RechargeMo
                                 )}
                             </div>
 
-                            {/* Bs Conversion (Only for Pago Movil) - Compact */}
-                            {selectedMethod === 'PAGO_MOVIL' && (
+                            {/* Bs Conversion (Only for Mobile Payment) - Compact */}
+                            {selectedMethod === 'MOBILE_PAYMENT' && (
                                 <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-3 border border-yellow-200 shadow-sm animate-fadeIn">
                                     <div className="flex items-center gap-2 mb-2">
                                         <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-500 rounded flex items-center justify-center">

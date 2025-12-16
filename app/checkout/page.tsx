@@ -23,6 +23,22 @@ export default function CheckoutPage() {
   const [showRechargeModal, setShowRechargeModal] = useState(false);
   const [paymentMode, setPaymentMode] = useState<'DIRECT' | 'WALLET' | null>(null);
 
+  // Dynamic payment methods from database
+  const [paymentMethods, setPaymentMethods] = useState<Array<{
+    id: string;
+    type: string;
+    name: string;
+    bankName?: string;
+    phone?: string;
+    holderId?: string;
+    email?: string;
+    walletAddress?: string;
+    network?: string;
+    displayNote?: string;
+    qrCodeImage?: string;
+    isActive: boolean;
+  }>>([]);
+
   const [formData, setFormData] = useState({
     customerName: '',
     customerEmail: '',
@@ -32,7 +48,7 @@ export default function CheckoutPage() {
     shippingCity: '',
     shippingState: '',
     notes: '',
-    paymentMethod: '' as 'BANK_TRANSFER' | 'MOBILE_PAYMENT' | 'ZELLE' | 'PAYPAL' | 'CREDIT_CARD' | 'CRYPTO' | 'WALLET',
+    paymentMethod: '' as string, // Dynamic from database
     deliveryMethod: 'HOME_DELIVERY' as 'PICKUP' | 'HOME_DELIVERY' | 'SHIPPING',
     courierService: '' as 'ZOOM' | 'MRW' | '',
     courierOfficeId: '',
@@ -79,6 +95,16 @@ export default function CheckoutPage() {
       .then(res => res.json())
       .then(data => setCompanySettings(data))
       .catch(err => console.error('Error loading settings:', err));
+
+    // Load payment methods from database
+    fetch('/api/customer/company-payment-methods')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setPaymentMethods(data.filter((m: any) => m.isActive));
+        }
+      })
+      .catch(err => console.error('Error loading payment methods:', err));
   }, []);
 
   // Load user data if logged in
@@ -1230,50 +1256,89 @@ export default function CheckoutPage() {
                 {/* Direct Payment Options */}
                 {paymentMode === 'DIRECT' && (
                   <div className="space-y-3 animate-fadeIn">
-                    <label className="flex items-center p-4 border border-[#e9ecef] rounded-xl hover:bg-[#f8f9fa] cursor-pointer transition-all hover:shadow-sm">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="BANK_TRANSFER"
-                        checked={formData.paymentMethod === 'BANK_TRANSFER'}
-                        onChange={handleChange}
-                        className="w-5 h-5 text-[#2a63cd] focus:ring-[#2a63cd]"
-                      />
-                      <div className="ml-4">
-                        <span className="block text-sm font-bold text-[#212529]">Transferencia Bancaria</span>
-                        <span className="block text-xs text-[#6a6c6b]">Paga directamente desde tu banco</span>
+                    {paymentMethods.length === 0 ? (
+                      <div className="p-6 text-center text-gray-500 border border-dashed border-gray-300 rounded-xl">
+                        <p>Cargando métodos de pago...</p>
                       </div>
-                    </label>
-
-                    <label className="flex items-center p-4 border border-[#e9ecef] rounded-xl hover:bg-[#f8f9fa] cursor-pointer transition-all hover:shadow-sm">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="MOBILE_PAYMENT"
-                        checked={formData.paymentMethod === 'MOBILE_PAYMENT'}
-                        onChange={handleChange}
-                        className="w-5 h-5 text-[#2a63cd] focus:ring-[#2a63cd]"
-                      />
-                      <div className="ml-4">
-                        <span className="block text-sm font-bold text-[#212529]">Pago Móvil</span>
-                        <span className="block text-xs text-[#6a6c6b]">Pago móvil venezolano</span>
-                      </div>
-                    </label>
-
-                    <label className="flex items-center p-4 border border-[#e9ecef] rounded-xl hover:bg-[#f8f9fa] cursor-pointer transition-all hover:shadow-sm">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="CRYPTO"
-                        checked={formData.paymentMethod === 'CRYPTO'}
-                        onChange={handleChange}
-                        className="w-5 h-5 text-[#2a63cd] focus:ring-[#2a63cd]"
-                      />
-                      <div className="ml-4">
-                        <span className="block text-sm font-bold text-[#212529]">Criptomoneda</span>
-                        <span className="block text-xs text-[#6a6c6b]">USDT, Bitcoin, etc.</span>
-                      </div>
-                    </label>
+                    ) : (
+                      paymentMethods.map((method) => (
+                        <label
+                          key={method.id}
+                          className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all hover:shadow-md ${formData.paymentMethod === method.type
+                            ? 'border-[#2a63cd] bg-blue-50/50 shadow-sm'
+                            : 'border-[#e9ecef] hover:border-[#2a63cd]/50 hover:bg-[#f8f9fa]'
+                            }`}
+                        >
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value={method.type}
+                            checked={formData.paymentMethod === method.type}
+                            onChange={handleChange}
+                            className="w-5 h-5 mt-0.5 text-[#2a63cd] focus:ring-[#2a63cd]"
+                          />
+                          <div className="ml-4 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-[#212529]">{method.name}</span>
+                              {method.type === 'MERCANTIL_PANAMA' && (
+                                <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-100 text-[#2a63cd] rounded-full">
+                                  Internacional
+                                </span>
+                              )}
+                            </div>
+                            {method.bankName && (
+                              <span className="block text-xs text-[#6a6c6b]">{method.bankName}</span>
+                            )}
+                            {method.displayNote && (
+                              <span className="block text-xs text-[#2a63cd] mt-1 font-medium">
+                                💡 {method.displayNote}
+                              </span>
+                            )}
+                            {/* Show details when selected */}
+                            {formData.paymentMethod === method.type && (
+                              <div className="mt-3 pt-3 border-t border-gray-200 space-y-1 animate-fadeIn">
+                                {method.phone && (
+                                  <p className="text-xs text-gray-600">
+                                    <strong>Teléfono:</strong> {method.phone}
+                                  </p>
+                                )}
+                                {method.holderId && (
+                                  <p className="text-xs text-gray-600">
+                                    <strong>Cédula/RIF:</strong> {method.holderId}
+                                  </p>
+                                )}
+                                {method.email && (
+                                  <p className="text-xs text-gray-600">
+                                    <strong>Email:</strong> {method.email}
+                                  </p>
+                                )}
+                                {method.walletAddress && (
+                                  <p className="text-xs text-gray-600 font-mono break-all">
+                                    <strong>Wallet:</strong> {method.walletAddress}
+                                  </p>
+                                )}
+                                {method.network && (
+                                  <p className="text-xs text-gray-600">
+                                    <strong>Red:</strong> {method.network}
+                                  </p>
+                                )}
+                                {method.qrCodeImage && (
+                                  <div className="mt-2">
+                                    <Image
+                                      src={method.qrCodeImage}
+                                      alt="QR Code"
+                                      width={120}
+                                      height={120}
+                                      className="rounded-lg border border-gray-200"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </label>
+                      ))
+                    )}
                   </div>
                 )}
 

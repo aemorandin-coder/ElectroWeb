@@ -1,12 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import toast from 'react-hot-toast';
 
 interface WhatsAppButtonProps {
   phoneNumber?: string;
   message?: string;
 }
+
+// Seed/placeholder phone numbers that should trigger warnings
+const SEED_PHONE_NUMBERS = [
+  '584241234567',
+  '+584241234567',
+  '+58 424-1234567',
+  '+58 424 1234567',
+  '4241234567',
+  '+58-424-1234567',
+];
 
 export default function WhatsAppButton({
   phoneNumber,
@@ -15,8 +27,11 @@ export default function WhatsAppButton({
   const [isHovered, setIsHovered] = useState(false);
   const [settings, setSettings] = useState<{ whatsapp: string | null; companyName: string | null } | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session } = useSession();
   const isAdminPanel = pathname?.startsWith('/admin');
   const isCustomerPanel = pathname?.startsWith('/customer');
+  const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN';
 
   useEffect(() => {
     if (!isAdminPanel) {
@@ -40,9 +55,38 @@ export default function WhatsAppButton({
     return null;
   }
 
+  // Check if the number is a seed/placeholder number
+  const isSeedNumber = SEED_PHONE_NUMBERS.some(seed =>
+    whatsappNumber.replace(/[\s\-\+]/g, '').includes(seed.replace(/[\s\-\+]/g, ''))
+  );
+
   const defaultMessage = message || `Hola! Tengo una consulta sobre los productos de ${settings?.companyName || 'Electro Shop'}`;
 
   const handleClick = () => {
+    if (isSeedNumber) {
+      if (isAdmin) {
+        // Admin sees: redirect to settings page to change it
+        toast.error('El número de WhatsApp es provisional. Redirigiendo a configuración...', {
+          icon: '⚠️',
+          duration: 3000,
+        });
+        setTimeout(() => {
+          router.push('/admin/settings');
+        }, 1500);
+      } else {
+        // Customer/public sees: notification that it's provisional
+        toast('El número de WhatsApp es provisional. Pronto estará disponible el número oficial.', {
+          icon: '📱',
+          duration: 4000,
+          style: {
+            background: '#f97316',
+            color: 'white',
+          },
+        });
+      }
+      return;
+    }
+
     const encodedMessage = encodeURIComponent(defaultMessage);
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');

@@ -699,6 +699,14 @@ model CompanyPaymentMethod {
 
   instructions  String?
 
+  // NEW: Enhanced fields
+  logo          String?   // Custom logo/image URL
+  qrCodeImage   String?   // QR code image for mobile payments
+  sortOrder     Int       @default(0) // Display order priority
+  minAmount     Decimal?  // Minimum amount for this method
+  maxAmount     Decimal?  // Maximum amount for this method
+  displayNote   String?   // Note visible to customer in checkout
+
   isActive      Boolean @default(true)
 
   createdAt     DateTime @default(now())
@@ -714,6 +722,7 @@ enum PaymentMethodType {
   PAYPAL
   CRYPTO
   CASH
+  MERCANTIL_PANAMA
   OTHER
 }
 

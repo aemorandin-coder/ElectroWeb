@@ -346,7 +346,9 @@ export default function CarritoPage() {
                               alt={item.name}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                               onError={(e) => {
-                                e.currentTarget.style.display = 'none';
+                                const target = e.currentTarget;
+                                target.onerror = null; // Prevent infinite loop
+                                target.src = '/images/no-image.png';
                               }}
                             />
                           ) : (

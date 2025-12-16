@@ -759,15 +759,13 @@ export default function ProductsPage() {
                             onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                           />
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                          <div className="w-full h-full flex flex-col items-center justify-center p-0 bg-gray-100">
                             <Image
-                              src="/favicon.ico"
+                              src="/images/no-image.png"
                               alt="Sin imagen"
-                              width={32}
-                              height={32}
-                              className="opacity-40 mb-1"
+                              fill
+                              className="object-cover opacity-60"
                             />
-                            <p className="text-[8px] text-gray-400 text-center leading-tight">Producto sin Imagen</p>
                           </div>
                         )}
                       </div>
@@ -922,15 +920,13 @@ export default function ProductsPage() {
                                   onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                                 />
                               ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center bg-[#f8f9fa] p-1">
+                                <div className="w-full h-full relative bg-gray-100">
                                   <Image
-                                    src="/favicon.ico"
+                                    src="/images/no-image.png"
                                     alt="Sin imagen"
-                                    width={20}
-                                    height={20}
-                                    className="opacity-40"
+                                    fill
+                                    className="object-cover opacity-60"
                                   />
-                                  <span className="text-[8px] text-gray-400 leading-none mt-0.5">Sin Img</span>
                                 </div>
                               )}
                             </div>

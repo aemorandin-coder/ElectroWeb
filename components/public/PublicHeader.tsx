@@ -116,13 +116,19 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   const baseHeaderClass = 'sticky top-0 z-50 transition-all duration-300 backdrop-blur-md';
 
   // Dynamic styles applied via inline style to avoid className mismatch
-  const headerStyle: React.CSSProperties = useBlueHeader
+  // Dynamic styles applied via inline style
+  // We initialize with the light theme (SSR default) to match server
+  const headerStyle: React.CSSProperties = (mounted && useBlueHeader)
     ? {
       background: 'linear-gradient(to right, rgba(42, 99, 205, 0.95), rgba(30, 75, 163, 0.95))',
       borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
     }
     : {
+      // Default / Light theme styles (matches server-side rendering for non-blue header)
+      // If server rendered it as light (default), we must match.
+      // However, if we want to avoid ANY mismatch, we should apply these classes via Tailwind/CSS if possible, or ensure the condition is exactly what SSR sees.
+      // Since SSR sees 'useBlueHeader = false', this else block is what SSR renders.
       background: 'rgba(255, 255, 255, 0.95)',
       borderBottom: '1px solid #e9ecef',
       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
@@ -132,6 +138,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
     <header
       className={baseHeaderClass}
       style={headerStyle}
+      suppressHydrationWarning
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">

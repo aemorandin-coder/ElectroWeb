@@ -64,12 +64,75 @@ async function main() {
   console.log('📁 Creating categories...');
   const categories = await Promise.all([
     prisma.category.upsert({
-      where: { slug: 'laptops' },
-      update: {},
+      where: { slug: 'computadores-portatiles' },
+      update: {
+        name: 'Computadores y Portátiles',
+        description: 'Laptops, PCs de escritorio, All-in-One y más',
+      },
       create: {
-        name: 'Laptops',
-        slug: 'laptops',
-        description: 'Laptops para gaming, trabajo y estudio',
+        name: 'Computadores y Portátiles',
+        slug: 'computadores-portatiles',
+        description: 'Laptops, PCs de escritorio, All-in-One y más',
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'codigos-digitales' },
+      update: {
+        name: 'Códigos Digitales',
+        description: 'Tarjetas de regalo, juegos y recargas digitales',
+      },
+      create: {
+        name: 'Códigos Digitales',
+        slug: 'codigos-digitales',
+        description: 'Tarjetas de regalo, juegos y recargas digitales',
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'redes-conectividad' },
+      update: {
+        name: 'Redes y Conectividad',
+        description: 'Routers, switches, antenas y equipos de red',
+      },
+      create: {
+        name: 'Redes y Conectividad',
+        slug: 'redes-conectividad',
+        description: 'Routers, switches, antenas y equipos de red',
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'cables-adaptadores' },
+      update: {
+        name: 'Cables y Adaptadores',
+        description: 'Todo tipo de cables, convertidores y adaptadores',
+      },
+      create: {
+        name: 'Cables y Adaptadores',
+        slug: 'cables-adaptadores',
+        description: 'Todo tipo de cables, convertidores y adaptadores',
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'energia-proteccion' },
+      update: {
+        name: 'Energía y Protección',
+        description: 'UPS, protectores de voltaje, regletas y baterías',
+      },
+      create: {
+        name: 'Energía y Protección',
+        slug: 'energia-proteccion',
+        description: 'UPS, protectores de voltaje, regletas y baterías',
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'software-licencias' },
+      update: {
+        name: 'Software y Licencias Originales',
+        description: 'Sistemas operativos, antivirus y ofimática',
+      },
+      create: {
+        name: 'Software y Licencias Originales',
+        slug: 'software-licencias',
+        description: 'Sistemas operativos, antivirus y ofimática',
       },
     }),
     prisma.category.upsert({
@@ -116,184 +179,79 @@ async function main() {
   // Helper to get category ID
   const getCatId = (slug: string) => categories.find(c => c.slug === slug)?.id || categories[0].id;
 
+  // Clear existing products to avoid conflicts/duplicates if rerunning without reset
+  // Note: upsert handles updates, but we want to simulate a clean state for these 3 specific items or just ensure they exist.
+  // Since we are replacing the whole list, we just define the new ones.
+
   const products = await Promise.all([
-    // Laptops
+    // 1. Códigos Digitales - Gift Card
     prisma.product.upsert({
-      where: { slug: 'laptop-asus-rog-strix-g15' },
-      update: {},
+      where: { slug: 'gift-card-playstation-50' },
+      update: {
+        images: JSON.stringify(['/images/no-image.png']),
+        mainImage: '/images/no-image.png',
+      },
       create: {
-        name: 'Laptop ASUS ROG Strix G15',
-        sku: 'LAP-ASUS-ROG-G15',
-        slug: 'laptop-asus-rog-strix-g15',
-        description: 'Laptop gaming con procesador AMD Ryzen 7, RTX 3060, 16GB RAM, 512GB SSD',
-        priceUSD: 1299,
-        stock: 5,
-        categoryId: getCatId('laptops'),
-        images: JSON.stringify(['/images/products/laptop-asus-rog.jpg']),
-        mainImage: '/images/products/laptop-asus-rog.jpg',
-        features: JSON.stringify(['AMD Ryzen 7 5800H', 'NVIDIA RTX 3060 6GB', '16GB DDR4', '512GB NVMe SSD']),
+        name: 'Gift Card PlayStation Network $50',
+        sku: 'DIG-PSN-50',
+        slug: 'gift-card-playstation-50',
+        description: 'Tarjeta de regalo digital para PlayStation Store. Código canjeable por $50 USD.',
+        priceUSD: 50,
+        stock: 999, // Digital unlimited ish
+        categoryId: getCatId('codigos-digitales'),
+        productType: 'DIGITAL',
+        digitalPlatform: 'PLAYSTATION',
+        digitalRegion: 'USA',
+        deliveryMethod: 'INSTANT',
+        images: JSON.stringify(['/images/no-image.png']),
+        mainImage: '/images/no-image.png',
+        features: JSON.stringify(['Saldo instantáneo', 'Región USA', 'Sin fecha de expiración']),
         isFeatured: true,
         status: 'PUBLISHED',
       },
     }),
+
+    // 2. Redes y Conectividad - Router
     prisma.product.upsert({
-      where: { slug: 'macbook-pro-14-m3' },
-      update: {},
-      create: {
-        name: 'MacBook Pro 14" M3',
-        sku: 'LAP-MAC-PRO14-M3',
-        slug: 'macbook-pro-14-m3',
-        description: 'MacBook Pro con chip M3, 16GB RAM unificada, 512GB SSD',
-        priceUSD: 1999,
-        stock: 3,
-        categoryId: getCatId('laptops'),
-        images: JSON.stringify(['/images/products/macbook-pro-m3.jpg']),
-        features: JSON.stringify(['Apple M3', '16GB Unified Memory', '512GB SSD', '14.2" Liquid Retina XDR']),
-        isFeatured: true,
-        status: 'PUBLISHED',
+      where: { slug: 'router-tp-link-archer-ax50' },
+      update: {
+        images: JSON.stringify(['/images/no-image.png']),
+        mainImage: '/images/no-image.png',
       },
-    }),
-    // Gaming
-    prisma.product.upsert({
-      where: { slug: 'pc-gaming-rtx-4070' },
-      update: {},
       create: {
-        name: 'PC Gaming RTX 4070',
-        sku: 'PC-GAM-RTX4070',
-        slug: 'pc-gaming-rtx-4070',
-        description: 'PC Gaming armado con Intel i7, RTX 4070, 32GB RAM, 1TB SSD',
-        priceUSD: 1599,
-        stock: 2,
-        categoryId: getCatId('gaming'),
-        images: JSON.stringify(['/images/products/pc-gaming-rtx4070.jpg']),
-        features: JSON.stringify(['Intel Core i7-13700K', 'NVIDIA RTX 4070 12GB', '32GB DDR5', '1TB NVMe Gen4']),
-        isFeatured: true,
-        status: 'PUBLISHED',
-      },
-    }),
-    // Consolas
-    prisma.product.upsert({
-      where: { slug: 'playstation-5-slim' },
-      update: {},
-      create: {
-        name: 'PlayStation 5 Slim',
-        sku: 'CON-PS5-SLIM',
-        slug: 'playstation-5-slim',
-        description: 'Consola PlayStation 5 modelo Slim con lector de discos',
-        priceUSD: 499,
-        stock: 8,
-        categoryId: getCatId('consolas'),
-        images: JSON.stringify(['/images/products/ps5-slim.jpg']),
-        isFeatured: true,
-        status: 'PUBLISHED',
-      },
-    }),
-    prisma.product.upsert({
-      where: { slug: 'xbox-series-x' },
-      update: {},
-      create: {
-        name: 'Xbox Series X',
-        sku: 'CON-XBOX-SX',
-        slug: 'xbox-series-x',
-        description: 'Consola Xbox Series X 1TB con 4K gaming',
-        priceUSD: 499,
-        stock: 6,
-        categoryId: getCatId('consolas'),
-        images: JSON.stringify(['/images/products/xbox-series-x.jpg']),
-        status: 'PUBLISHED',
-      },
-    }),
-    prisma.product.upsert({
-      where: { slug: 'nintendo-switch-oled' },
-      update: {},
-      create: {
-        name: 'Nintendo Switch OLED',
-        sku: 'CON-NSW-OLED',
-        slug: 'nintendo-switch-oled',
-        description: 'Nintendo Switch modelo OLED con pantalla de 7 pulgadas',
-        priceUSD: 349,
-        stock: 10,
-        categoryId: getCatId('consolas'),
-        images: JSON.stringify(['/images/products/switch-oled.jpg']),
-        isFeatured: true,
-        status: 'PUBLISHED',
-      },
-    }),
-    // Accesorios
-    prisma.product.upsert({
-      where: { slug: 'teclado-logitech-g-pro' },
-      update: {},
-      create: {
-        name: 'Teclado Mecánico Logitech G Pro',
-        sku: 'ACC-KEY-LOGI-GPRO',
-        slug: 'teclado-logitech-g-pro',
-        description: 'Teclado mecánico gaming con switches GX Blue',
-        priceUSD: 129,
-        stock: 15,
-        categoryId: getCatId('accesorios'),
-        images: JSON.stringify(['/images/products/teclado-logitech-g-pro.jpg']),
-        status: 'PUBLISHED',
-      },
-    }),
-    prisma.product.upsert({
-      where: { slug: 'mouse-razer-deathadder-v3' },
-      update: {},
-      create: {
-        name: 'Mouse Razer DeathAdder V3',
-        sku: 'ACC-MOU-RAZ-DAV3',
-        slug: 'mouse-razer-deathadder-v3',
-        description: 'Mouse gaming óptico con sensor de 30000 DPI',
-        priceUSD: 69,
-        stock: 20,
-        categoryId: getCatId('accesorios'),
-        images: JSON.stringify(['/images/products/mouse-razer-deathadder.jpg']),
-        status: 'PUBLISHED',
-      },
-    }),
-    prisma.product.upsert({
-      where: { slug: 'audifonos-hyperx-cloud-ii' },
-      update: {},
-      create: {
-        name: 'Audífonos HyperX Cloud II',
-        sku: 'ACC-HEAD-HYP-CLD2',
-        slug: 'audifonos-hyperx-cloud-ii',
-        description: 'Audífonos gaming con sonido 7.1 surround',
-        priceUSD: 99,
+        name: 'Router Wi-Fi 6 TP-Link Archer AX50',
+        sku: 'NET-TPL-AX50',
+        slug: 'router-tp-link-archer-ax50',
+        description: 'Router Gigabit de doble banda AX3000 con tecnología Wi-Fi 6 para baja latencia.',
+        priceUSD: 149.99,
         stock: 12,
-        categoryId: getCatId('accesorios'),
-        images: JSON.stringify(['/images/products/audifonos-hyperx.jpg']),
+        categoryId: getCatId('redes-conectividad'),
+        images: JSON.stringify(['/images/no-image.png']),
+        mainImage: '/images/no-image.png',
+        features: JSON.stringify(['Wi-Fi 6 AX3000', 'Baja Latencia', 'Intel Home Wi-Fi Chipset', 'Cobertura Amplia']),
+        status: 'PUBLISHED',
+      },
+    }),
+
+    // 3. Gaming - Control (Generico para probar)
+    prisma.product.upsert({
+      where: { slug: 'control-xbox-carbon-black' },
+      update: {
+        images: JSON.stringify(['/images/no-image.png']),
+        mainImage: '/images/no-image.png',
+      },
+      create: {
+        name: 'Control Inalámbrico Xbox - Carbon Black',
+        sku: 'GAM-XBX-CTRL-BLK',
+        slug: 'control-xbox-carbon-black',
+        description: 'Control moderno con geometría refinada para mayor comodidad durante el juego.',
+        priceUSD: 59.99,
+        stock: 25,
+        categoryId: getCatId('gaming'), // Using Gaming category as requested, though could be Accesorios
+        images: JSON.stringify(['/images/no-image.png']),
+        mainImage: '/images/no-image.png',
+        features: JSON.stringify(['Tecnología Xbox Wireless', 'Bluetooth', 'Mapeo de botones', 'Agarre texturizado']),
         isFeatured: true,
-        status: 'PUBLISHED',
-      },
-    }),
-    // Componentes
-    prisma.product.upsert({
-      where: { slug: 'ram-corsair-vengeance-32gb-ddr5' },
-      update: {},
-      create: {
-        name: 'RAM Corsair Vengeance 32GB DDR5',
-        sku: 'COMP-RAM-COR-32D5',
-        slug: 'ram-corsair-vengeance-32gb-ddr5',
-        description: 'Memoria RAM DDR5 32GB (2x16GB) 6000MHz RGB',
-        priceUSD: 149,
-        stock: 8,
-        categoryId: getCatId('componentes'),
-        images: JSON.stringify(['/images/products/ram-corsair-vengeance.jpg']),
-        status: 'PUBLISHED',
-      },
-    }),
-    prisma.product.upsert({
-      where: { slug: 'ssd-samsung-990-pro-1tb' },
-      update: {},
-      create: {
-        name: 'SSD Samsung 990 Pro 1TB',
-        sku: 'COMP-SSD-SAM-990P',
-        slug: 'ssd-samsung-990-pro-1tb',
-        description: 'SSD NVMe Gen4 1TB con velocidades de hasta 7450 MB/s',
-        priceUSD: 119,
-        stock: 10,
-        categoryId: getCatId('componentes'),
-        images: JSON.stringify(['/images/products/ssd-samsung-990.jpg']),
         status: 'PUBLISHED',
       },
     }),

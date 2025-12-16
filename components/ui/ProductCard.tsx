@@ -59,16 +59,13 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                             onError={() => setImageError(true)}
                         />
                     ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-6">
-                            <Image
-                                src="/favicon.ico"
-                                alt="Logo"
-                                width={80}
-                                height={80}
-                                className="mb-3 opacity-40"
-                            />
-                            <p className="text-xs text-gray-400 font-medium text-center">Imagen de Producto</p>
-                        </div>
+                        <Image
+                            src="/images/no-image.png"
+                            alt="Imagen no disponible"
+                            fill
+                            className="object-cover"
+                            unoptimized
+                        />
                     )}
 
                     {product.stock === 0 && (
@@ -80,13 +77,13 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
                 <div className="p-3 flex-1 flex flex-col">
 
-                    <h3 className="text-sm font-bold text-[#212529] mb-1 line-clamp-2 group-hover:text-[#2a63cd] transition-colors duration-300 min-h-[28px]">
+                    <h3 className="text-sm font-bold text-[#212529] mb-1 line-clamp-2 group-hover:text-[#2a63cd] transition-colors duration-300 h-[40px]">
                         {product.name}
                     </h3>
 
-                    {product.description && (
-                        <p className="text-xs text-[#6a6c6b] mb-2 line-clamp-1">{product.description}</p>
-                    )}
+                    <p className="text-xs text-[#6a6c6b] mb-2 line-clamp-1 h-[16px]">
+                        {product.description || '\u00A0'}
+                    </p>
 
                     <div className="mt-auto">
                         <div className="flex items-center justify-between pt-2 border-t border-gray-100">

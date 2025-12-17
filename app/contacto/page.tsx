@@ -22,20 +22,20 @@ export default async function ContactoPage() {
           <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-purple-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
           {/* Premium Badge */}
-          <div className="inline-flex items-center gap-3 mb-6">
-            <div className="h-1 w-16 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-            <div className="px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <span className="text-sm font-semibold text-white">Estamos para ayudarte</span>
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
+            <div className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+              <span className="text-xs font-semibold text-white">Estamos para ayudarte</span>
             </div>
-            <div className="h-1 w-16 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
+            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-black text-white mb-6 tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight">
             Contáctanos
           </h1>
-          <p className="text-xl text-white/90 max-w-4xl mx-auto">
+          <p className="text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
             Comunícate con nosotros por cualquiera de nuestros canales
           </p>
         </div>

@@ -32,22 +32,22 @@ export default async function ProductosPage() {
           <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-purple-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-3 mb-6 animate-fadeIn">
-              <div className="h-1 w-16 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-              <div className="px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                <span className="text-sm font-semibold text-white">Catálogo Premium</span>
-              </div>
-              <div className="h-1 w-16 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
+          {/* Premium Badge */}
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
+            <div className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+              <span className="text-xs font-semibold text-white">Catálogo Premium</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-black text-white mb-6 tracking-tight">
-              Nuestros <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Productos</span>
-            </h1>
-            <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8">
-              Explora nuestra colección de tecnología de vanguardia con las mejores marcas y precios competitivos
-            </p>
+            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
           </div>
+
+          <h1 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight">
+            Nuestros <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Productos</span>
+          </h1>
+          <p className="text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
+            Explora nuestra colección de tecnología de vanguardia con las mejores marcas y precios competitivos
+          </p>
         </div>
 
         {/* Animated Wave Divider */}
@@ -110,6 +110,15 @@ export default async function ProductosPage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f1a] text-white py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-gray-400 text-sm">
+            © {new Date().getFullYear()} Electro Shop - Todos los derechos reservados
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

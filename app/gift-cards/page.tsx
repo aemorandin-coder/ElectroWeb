@@ -381,15 +381,19 @@ export default function GiftCardsPage() {
                 </div>
                 <FloatingTechIcons />
 
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-6">
-                        <FiGift className="w-5 h-5 text-white" />
-                        <span className="text-white text-sm font-semibold">El regalo perfecto</span>
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
+                    <div className="inline-flex items-center gap-3 mb-4">
+                        <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full">
+                            <FiGift className="w-4 h-4 text-white" />
+                            <span className="text-white text-xs font-semibold">El regalo perfecto</span>
+                        </div>
+                        <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                        Regala Tecnología
+                    <h1 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight">
+                        Regala <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Tecnología</span>
                     </h1>
-                    <p className="text-lg text-white/80 max-w-4xl mx-auto leading-relaxed">
+                    <p className="text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
                         Ellos eligen, tú regalas felicidad. Gift Cards instantáneas para cualquier ocasión.
                     </p>
                 </div>

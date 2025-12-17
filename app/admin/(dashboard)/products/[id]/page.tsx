@@ -130,22 +130,33 @@ export default function EditProductPage() {
 
         // Parse specs safely
         let parsedSpecs: Record<string, any> = {};
+        let savedDigitalPricing: any = null;
         try {
           if (typeof product.specs === 'string') {
-            parsedSpecs = JSON.parse(product.specs);
+            parsedSpecs = JSON.parse(product.specs) || {};
           } else if (product.specs && typeof product.specs === 'object') {
             parsedSpecs = product.specs;
           } else if (typeof product.specifications === 'string') {
             // Fallback for old field name
-            parsedSpecs = JSON.parse(product.specifications);
+            parsedSpecs = JSON.parse(product.specifications) || {};
           } else if (product.specifications) {
             parsedSpecs = product.specifications;
           }
+
+          // Ensure parsedSpecs is an object
+          if (!parsedSpecs || typeof parsedSpecs !== 'object') {
+            parsedSpecs = {};
+          }
+
+          // Save digitalPricing before removing it
+          savedDigitalPricing = parsedSpecs.digitalPricing;
+
           // Filter out digitalPricing from editable specs (it's a different UI)
           const { digitalPricing, ...cleanSpecs } = parsedSpecs;
           parsedSpecs = cleanSpecs;
         } catch (e) {
           console.error('Error parsing specs:', e);
+          parsedSpecs = {};
         }
 
         // Parse digital pricing from specs
@@ -161,9 +172,9 @@ export default function EditProductPage() {
           { amount: 200, cost: 190, salePrice: 220, enabled: false },
         ];
 
-        // If product has digitalPricing in specs, merge it
-        if (parsedSpecs.digitalPricing && Array.isArray(parsedSpecs.digitalPricing)) {
-          const existingPricing = parsedSpecs.digitalPricing as DigitalAmountPricing[];
+        // If product has savedDigitalPricing, merge it
+        if (savedDigitalPricing && Array.isArray(savedDigitalPricing)) {
+          const existingPricing = savedDigitalPricing as DigitalAmountPricing[];
           digitalPricingFromProduct = digitalPricingFromProduct.map(defaultPrice => {
             const found = existingPricing.find(p => p.amount === defaultPrice.amount);
             return found ? { ...found, enabled: true } : defaultPrice;

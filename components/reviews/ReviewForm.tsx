@@ -100,22 +100,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
     };
 
     if (!session) {
-        return (
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 text-center border border-blue-100">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                </div>
-                <p className="text-gray-700 font-medium mb-4">Inicia sesión para dejar una reseña</p>
-                <a
-                    href="/login"
-                    className="inline-block px-6 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-                >
-                    Iniciar Sesión
-                </a>
-            </div>
-        );
+        return null; // Login prompt is shown in ReviewList component
     }
 
     if (checkingEligibility) {

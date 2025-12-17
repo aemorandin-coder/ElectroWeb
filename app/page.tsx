@@ -10,10 +10,14 @@ import SubtleParticles from '@/components/SubtleParticles';
 import FloatingTechIcons from '@/components/FloatingTechIcons';
 import {
   FiBox, FiGrid, FiStar, FiHeadphones,
-  FiMonitor, FiShield, FiTool, FiBook,
+  FiShield, FiTool, FiBook,
   FiSearch, FiArrowRight, FiClock,
   FiMail
 } from 'react-icons/fi';
+import { PiSecurityCameraDuotone, PiStudentDuotone } from 'react-icons/pi';
+import { FaEthernet } from 'react-icons/fa';
+import { SiPcgamingwiki } from 'react-icons/si';
+import { FaScrewdriverWrench } from 'react-icons/fa6';
 
 // Helper to get YouTube Embed URL
 const getYouTubeEmbedUrl = (url: string | null) => {
@@ -272,25 +276,25 @@ export default async function Home() {
               {
                 title: 'PC Gaming',
                 description: 'Equipos gaming personalizados de alta gama',
-                icon: <FiMonitor className="w-8 h-8" />,
+                icon: <SiPcgamingwiki className="w-8 h-8" />,
                 color: 'from-blue-600 to-indigo-600',
               },
               {
                 title: 'Sistemas CCTV',
                 description: 'Seguridad y videovigilancia profesional',
-                icon: <FiShield className="w-8 h-8" />,
+                icon: <PiSecurityCameraDuotone className="w-8 h-8" />,
                 color: 'from-cyan-600 to-blue-600',
               },
               {
                 title: 'Servicio Técnico',
                 description: 'Reparación y mantenimiento especializado',
-                icon: <FiTool className="w-8 h-8" />,
+                icon: <FaScrewdriverWrench className="w-8 h-8" />,
                 color: 'from-blue-500 to-cyan-500',
               },
               {
                 title: 'Cursos Online',
                 description: 'Formación en tecnología y programación',
-                icon: <FiBook className="w-8 h-8" />,
+                icon: <PiStudentDuotone className="w-8 h-8" />,
                 color: 'from-indigo-500 to-purple-500',
               },
             ].map((service, index) => (

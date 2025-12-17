@@ -22,6 +22,14 @@ interface ProductCardProps {
     index?: number;
 }
 
+// Formatear precio en formato venezolano: 1.234.567,89
+const formatVESPrice = (price: number): string => {
+    return price.toLocaleString('es-VE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+};
+
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
     const { settings } = useSettings();
     const [imageError, setImageError] = useState(false);
@@ -46,6 +54,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             <div className="relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-gray-100 h-full flex flex-col hover:shadow-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#2a63cd]/20 via-purple-500/20 to-pink-500/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl -z-10"></div>
 
+                {/* Imagen del producto */}
                 <div className="relative aspect-square bg-gradient-to-br from-[#f8f9fa] to-gray-100 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-10"></div>
 
@@ -75,45 +84,50 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                     )}
                 </div>
 
-                <div className="p-3 flex-1 flex flex-col">
-
-                    <h3 className="text-sm font-bold text-[#212529] mb-1 line-clamp-2 group-hover:text-[#2a63cd] transition-colors duration-300 h-[40px]">
+                {/* Contenido de la tarjeta */}
+                <div className="p-4 flex-1 flex flex-col">
+                    {/* Nombre del producto - más grande y centrado */}
+                    <h3 className="text-base font-bold text-[#212529] text-center line-clamp-2 group-hover:text-[#2a63cd] transition-colors duration-300 min-h-[48px] flex items-center justify-center leading-tight">
                         {product.name}
                     </h3>
 
-                    <p className="text-xs text-[#6a6c6b] mb-2 line-clamp-1 h-[16px]">
-                        {product.description || '\u00A0'}
-                    </p>
+                    {/* Descripción - sin espacio extra */}
+                    {product.description && (
+                        <p className="text-xs text-[#6a6c6b] text-center line-clamp-1 mb-3">
+                            {product.description}
+                        </p>
+                    )}
 
+                    {/* Sección de precios - centrada y protagonista */}
                     <div className="mt-auto">
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                            <div>
-                                <p className="text-[10px] text-[#6a6c6b] mb-0.5">Precio</p>
-                                <div className="flex flex-col">
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-xs font-bold text-[#212529] opacity-60">USD</span>
-                                        <span className="text-xl font-black text-[#212529]">{priceUSD.toFixed(2)}</span>
-                                    </div>
-                                    {priceVES && (
-                                        <div className="flex items-baseline gap-1 -mt-1">
-                                            <span className="text-[10px] font-bold text-gray-500">Bs</span>
-                                            <span className="text-sm font-bold text-gray-500">{priceVES.toFixed(2)}</span>
-                                        </div>
-                                    )}
-                                </div>
+                        <div className="flex flex-col items-center pt-3 border-t border-gray-100">
+                            {/* Precio USD - protagonista */}
+                            <div className="flex items-baseline gap-1.5 mb-1">
+                                <span className="text-2xl font-black text-[#2a63cd]">${priceUSD.toFixed(2)}</span>
                             </div>
+
+                            {/* Precio Bs - formato venezolano */}
+                            {priceVES && (
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-xs font-semibold text-gray-500">Bs.</span>
+                                    <span className="text-sm font-bold text-gray-500">{formatVESPrice(priceVES)}</span>
+                                </div>
+                            )}
+
+                            {/* Stock indicator */}
                             {product.stock > 0 && (
-                                <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-full">
+                                <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 rounded-full mt-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                                    <span className="text-[10px] text-green-700 font-bold">Stock: {product.stock}</span>
+                                    <span className="text-[10px] text-green-700 font-bold">Disponible ({product.stock})</span>
                                 </div>
                             )}
                         </div>
 
-                        <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <div className="w-full px-3 py-1.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-xs font-bold rounded-xl text-center shadow-lg flex items-center justify-center gap-1.5">
+                        {/* Botón Ver Detalles */}
+                        <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="w-full px-3 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-xs font-bold rounded-xl text-center shadow-lg flex items-center justify-center gap-1.5">
                                 Ver Detalles
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                 </svg>
                             </div>

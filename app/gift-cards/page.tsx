@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
 
-import { FiGift, FiCheck, FiAlertCircle, FiMail, FiArrowRight, FiClock, FiShoppingCart, FiCreditCard, FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi } from 'react-icons/fi';
+import { FiGift, FiCheck, FiAlertCircle, FiMail, FiArrowRight, FiClock, FiShoppingCart, FiCreditCard, FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi, FiLock, FiCalendar, FiEye, FiUser, FiStar } from 'react-icons/fi';
 import { AiOutlineDeliveredProcedure } from 'react-icons/ai';
 
 // Predefined amounts
@@ -17,6 +17,7 @@ const PRESET_AMOUNTS = [25, 50, 100, 200];
 
 // Epic card designs with mosaic patterns
 const CARD_DESIGNS = [
+    // Original designs
     {
         id: 'obsidian-gold',
         name: 'Obsidian Gold',
@@ -55,6 +56,48 @@ const CARD_DESIGNS = [
         secondAccent: '#22d3d1',
         pattern: 'diamond',
         chipColor: '#4ade80',
+        holographic: true
+    },
+    // Christmas themes
+    {
+        id: 'christmas-classic',
+        name: 'Navidad Clásica',
+        gradient: 'linear-gradient(135deg, #1a472a 0%, #2d5a3d 25%, #c41e3a 50%, #8b0000 75%, #1a472a 100%)',
+        accent: '#ffd700',
+        secondAccent: '#ff6b6b',
+        pattern: 'christmas',
+        chipColor: '#ffd700',
+        holographic: true
+    },
+    {
+        id: 'winter-wonderland',
+        name: 'Invierno Mágico',
+        gradient: 'linear-gradient(135deg, #0c2340 0%, #1e3a5f 25%, #4a90b5 50%, #87ceeb 75%, #1e3a5f 100%)',
+        accent: '#ffffff',
+        secondAccent: '#b8d4e8',
+        pattern: 'snowflake',
+        chipColor: '#ffffff',
+        holographic: true
+    },
+    // Brand themes - Electro Shop blue
+    {
+        id: 'electro-premium',
+        name: 'Electro Premium',
+        gradient: 'linear-gradient(135deg, #1a3b7e 0%, #1e4ba3 25%, #2a63cd 50%, #1e4ba3 75%, #1a3b7e 100%)',
+        accent: '#ffffff',
+        secondAccent: '#60a5fa',
+        pattern: 'brand',
+        chipColor: '#ffffff',
+        holographic: true
+    },
+    {
+        id: 'electro-dark',
+        name: 'Electro Dark',
+        gradient: 'linear-gradient(135deg, #0a1628 0%, #0f172a 25%, #1e3a5f 50%, #2a63cd 75%, #0f172a 100%)',
+        accent: '#2a63cd',
+        secondAccent: '#38bdf8',
+        pattern: 'brand',
+        chipColor: '#2a63cd',
         holographic: true
     },
 ];
@@ -98,25 +141,100 @@ const CardPattern = ({ pattern, accent, secondAccent }: { pattern: string; accen
                 }}
             />
 
-            {/* Circuit lines */}
+            {/* Pattern-specific decorations */}
             <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 400 250">
-                {/* Horizontal lines */}
-                <line x1="0" y1="60" x2="120" y2="60" stroke={accent} strokeWidth="0.5" opacity="0.5" />
-                <line x1="280" y1="60" x2="400" y2="60" stroke={accent} strokeWidth="0.5" opacity="0.5" />
-                <line x1="0" y1="190" x2="80" y2="190" stroke={accent} strokeWidth="0.5" opacity="0.5" />
-                <line x1="320" y1="190" x2="400" y2="190" stroke={accent} strokeWidth="0.5" opacity="0.5" />
+                {/* Circuit lines - default */}
+                {(pattern === 'tech' || pattern === 'circuit' || pattern === 'golden' || pattern === 'diamond') && (
+                    <>
+                        <line x1="0" y1="60" x2="120" y2="60" stroke={accent} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="280" y1="60" x2="400" y2="60" stroke={accent} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="0" y1="190" x2="80" y2="190" stroke={accent} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="320" y1="190" x2="400" y2="190" stroke={accent} strokeWidth="0.5" opacity="0.5" />
+                        <circle cx="120" cy="60" r="3" fill={accent} opacity="0.6" />
+                        <circle cx="280" cy="60" r="3" fill={accent} opacity="0.6" />
+                        <circle cx="80" cy="190" r="3" fill={accent} opacity="0.6" />
+                        <circle cx="320" cy="190" r="3" fill={accent} opacity="0.6" />
+                        <path d="M10 10 L40 10 L40 30" stroke={accent} strokeWidth="1" fill="none" opacity="0.4" />
+                        <path d="M390 10 L360 10 L360 30" stroke={accent} strokeWidth="1" fill="none" opacity="0.4" />
+                        <path d="M10 240 L40 240 L40 220" stroke={accent} strokeWidth="1" fill="none" opacity="0.4" />
+                        <path d="M390 240 L360 240 L360 220" stroke={accent} strokeWidth="1" fill="none" opacity="0.4" />
+                    </>
+                )}
 
-                {/* Connection nodes */}
-                <circle cx="120" cy="60" r="3" fill={accent} opacity="0.6" />
-                <circle cx="280" cy="60" r="3" fill={accent} opacity="0.6" />
-                <circle cx="80" cy="190" r="3" fill={accent} opacity="0.6" />
-                <circle cx="320" cy="190" r="3" fill={accent} opacity="0.6" />
+                {/* Christmas pattern - stars and ornaments */}
+                {pattern === 'christmas' && (
+                    <>
+                        {/* Stars */}
+                        <polygon points="30,15 33,25 43,25 35,32 38,42 30,36 22,42 25,32 17,25 27,25" fill={accent} opacity="0.6" />
+                        <polygon points="370,20 372,27 380,27 374,32 376,40 370,36 364,40 366,32 360,27 368,27" fill={accent} opacity="0.5" />
+                        <polygon points="350,200 352,207 360,207 354,212 356,220 350,216 344,220 346,212 340,207 348,207" fill={accent} opacity="0.4" />
+                        {/* Ornament circles */}
+                        <circle cx="50" cy="200" r="12" stroke={secondAccent || accent} strokeWidth="2" fill="none" opacity="0.5" />
+                        <line x1="50" y1="188" x2="50" y2="182" stroke={secondAccent || accent} strokeWidth="1.5" opacity="0.5" />
+                        <circle cx="350" cy="60" r="10" stroke={secondAccent || accent} strokeWidth="2" fill="none" opacity="0.4" />
+                        {/* Holly leaves */}
+                        <ellipse cx="380" cy="230" rx="8" ry="4" fill="#2d5a3d" opacity="0.6" transform="rotate(-30 380 230)" />
+                        <ellipse cx="388" cy="235" rx="8" ry="4" fill="#2d5a3d" opacity="0.6" transform="rotate(30 388 235)" />
+                        <circle cx="384" cy="238" r="3" fill="#c41e3a" opacity="0.8" />
+                    </>
+                )}
 
-                {/* Decorative corner circuits */}
-                <path d="M10 10 L40 10 L40 30" stroke={accent} strokeWidth="1" fill="none" opacity="0.4" />
-                <path d="M390 10 L360 10 L360 30" stroke={accent} strokeWidth="1" fill="none" opacity="0.4" />
-                <path d="M10 240 L40 240 L40 220" stroke={accent} strokeWidth="1" fill="none" opacity="0.4" />
-                <path d="M390 240 L360 240 L360 220" stroke={accent} strokeWidth="1" fill="none" opacity="0.4" />
+                {/* Snowflake pattern */}
+                {pattern === 'snowflake' && (
+                    <>
+                        {/* Snowflakes */}
+                        <g transform="translate(35, 35)" opacity="0.6">
+                            <line x1="0" y1="-12" x2="0" y2="12" stroke={accent} strokeWidth="1.5" />
+                            <line x1="-10" y1="-6" x2="10" y2="6" stroke={accent} strokeWidth="1.5" />
+                            <line x1="-10" y1="6" x2="10" y2="-6" stroke={accent} strokeWidth="1.5" />
+                            <line x1="-4" y1="-10" x2="4" y2="-6" stroke={accent} strokeWidth="1" />
+                            <line x1="4" y1="-10" x2="-4" y2="-6" stroke={accent} strokeWidth="1" />
+                        </g>
+                        <g transform="translate(365, 200)" opacity="0.5">
+                            <line x1="0" y1="-10" x2="0" y2="10" stroke={accent} strokeWidth="1.5" />
+                            <line x1="-8" y1="-5" x2="8" y2="5" stroke={accent} strokeWidth="1.5" />
+                            <line x1="-8" y1="5" x2="8" y2="-5" stroke={accent} strokeWidth="1.5" />
+                        </g>
+                        <g transform="translate(360, 40)" opacity="0.4">
+                            <line x1="0" y1="-8" x2="0" y2="8" stroke={accent} strokeWidth="1" />
+                            <line x1="-7" y1="-4" x2="7" y2="4" stroke={accent} strokeWidth="1" />
+                            <line x1="-7" y1="4" x2="7" y2="-4" stroke={accent} strokeWidth="1" />
+                        </g>
+                        <g transform="translate(50, 210)" opacity="0.5">
+                            <line x1="0" y1="-10" x2="0" y2="10" stroke={accent} strokeWidth="1.5" />
+                            <line x1="-8" y1="-5" x2="8" y2="5" stroke={accent} strokeWidth="1.5" />
+                            <line x1="-8" y1="5" x2="8" y2="-5" stroke={accent} strokeWidth="1.5" />
+                        </g>
+                        {/* Small dots like snow */}
+                        <circle cx="100" cy="50" r="2" fill={accent} opacity="0.4" />
+                        <circle cx="300" cy="80" r="1.5" fill={accent} opacity="0.3" />
+                        <circle cx="150" cy="200" r="2" fill={accent} opacity="0.4" />
+                        <circle cx="250" cy="180" r="1.5" fill={accent} opacity="0.3" />
+                    </>
+                )}
+
+                {/* Brand pattern - Electro Shop style */}
+                {pattern === 'brand' && (
+                    <>
+                        {/* Stylized "E" shape */}
+                        <g transform="translate(340, 30)" opacity="0.5">
+                            <path d="M0 0 L20 0 L20 4 L4 4 L4 10 L16 10 L16 14 L4 14 L4 20 L20 20 L20 24 L0 24 Z" fill={accent} />
+                        </g>
+                        {/* Tech lines */}
+                        <line x1="20" y1="40" x2="100" y2="40" stroke={accent} strokeWidth="1" opacity="0.4" strokeDasharray="4 2" />
+                        <line x1="300" y1="210" x2="380" y2="210" stroke={accent} strokeWidth="1" opacity="0.4" strokeDasharray="4 2" />
+                        {/* Corner accents */}
+                        <path d="M10 10 L30 10 M10 10 L10 30" stroke={accent} strokeWidth="2" fill="none" opacity="0.5" />
+                        <path d="M390 10 L370 10 M390 10 L390 30" stroke={accent} strokeWidth="2" fill="none" opacity="0.5" />
+                        <path d="M10 240 L30 240 M10 240 L10 220" stroke={accent} strokeWidth="2" fill="none" opacity="0.5" />
+                        <path d="M390 240 L370 240 M390 240 L390 220" stroke={accent} strokeWidth="2" fill="none" opacity="0.5" />
+                        {/* Grid dots */}
+                        <circle cx="60" cy="200" r="2" fill={accent} opacity="0.3" />
+                        <circle cx="80" cy="200" r="2" fill={accent} opacity="0.3" />
+                        <circle cx="60" cy="220" r="2" fill={accent} opacity="0.3" />
+                        <circle cx="80" cy="220" r="2" fill={accent} opacity="0.3" />
+                    </>
+                )}
             </svg>
 
             {/* Holographic shimmer */}
@@ -167,6 +285,21 @@ export default function GiftCardsPage() {
     const [personalMessage, setPersonalMessage] = useState('');
     const [isFlipped, setIsFlipped] = useState(false);
 
+    // NEW: Gift for myself checkbox
+    const [isForMyself, setIsForMyself] = useState(false);
+
+    // NEW: Scheduled delivery date
+    const [scheduledDate, setScheduledDate] = useState<string>('');
+
+    // NEW: Design category tabs
+    const [designCategory, setDesignCategory] = useState<'all' | 'premium' | 'christmas' | 'brand'>('all');
+
+    // NEW: Show email preview modal
+    const [showEmailPreview, setShowEmailPreview] = useState(false);
+
+    // NEW: Exchange rate for Bs display
+    const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+
     // Form refs for validation focus
     const recipientNameRef = useRef<HTMLInputElement>(null);
     const recipientEmailRef = useRef<HTMLInputElement>(null);
@@ -187,6 +320,41 @@ export default function GiftCardsPage() {
     // Calculate final amount
     const finalAmount = selectedAmount || (customAmount ? parseFloat(customAmount) : 0);
     const canPayWithBalance = userBalance >= finalAmount && finalAmount > 0;
+    const finalAmountBs = exchangeRate ? finalAmount * exchangeRate : null;
+
+    // Filter designs by category
+    const filteredDesigns = designCategory === 'all'
+        ? CARD_DESIGNS
+        : CARD_DESIGNS.filter(d => {
+            if (designCategory === 'premium') return ['obsidian-gold', 'aurora-neon', 'cosmic-violet', 'matrix-green'].includes(d.id);
+            if (designCategory === 'christmas') return ['christmas-classic', 'winter-wonderland'].includes(d.id);
+            if (designCategory === 'brand') return ['electro-premium', 'electro-dark'].includes(d.id);
+            return true;
+        });
+
+    // NEW: Fetch exchange rate
+    useEffect(() => {
+        fetch('/api/exchange-rates')
+            .then(res => res.json())
+            .then(data => {
+                if (data.rateVES) setExchangeRate(data.rateVES);
+            })
+            .catch(console.error);
+    }, []);
+
+    // NEW: Handle "for myself" checkbox
+    useEffect(() => {
+        if (isForMyself && session?.user) {
+            setRecipientName(session.user.name || '');
+            setRecipientEmail(session.user.email || '');
+        } else if (!isForMyself) {
+            // Only clear if switching OFF
+            if (recipientEmail === session?.user?.email) {
+                setRecipientName('');
+                setRecipientEmail('');
+            }
+        }
+    }, [isForMyself, session]);
 
     // Fetch user balance
     useEffect(() => {
@@ -579,9 +747,31 @@ export default function GiftCardsPage() {
 
                         <p className="text-gray-500 text-sm mb-6">Clic en la tarjeta para voltear</p>
 
+                        {/* Design Category Tabs */}
+                        <div className="flex justify-center gap-2 mb-4">
+                            {[
+                                { id: 'all', label: 'Todos', icon: null },
+                                { id: 'premium', label: 'Premium', icon: <FiStar className="w-3 h-3" /> },
+                                { id: 'christmas', label: 'Navidad', icon: <FiGift className="w-3 h-3" /> },
+                                { id: 'brand', label: 'Electro', icon: <FiMonitor className="w-3 h-3" /> },
+                            ].map((cat) => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => setDesignCategory(cat.id as typeof designCategory)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${designCategory === cat.id
+                                        ? 'bg-blue-600 text-white shadow-md'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    {cat.icon}
+                                    {cat.label}
+                                </button>
+                            ))}
+                        </div>
+
                         {/* Design Selection */}
                         <div className="flex flex-wrap justify-center gap-3">
-                            {CARD_DESIGNS.map((design) => (
+                            {filteredDesigns.map((design) => (
                                 <button
                                     key={design.id}
                                     onClick={() => setSelectedDesign(design)}
@@ -608,180 +798,258 @@ export default function GiftCardsPage() {
                     </div>
 
                     {/* Right: Configuration Form */}
-                    <div className="bg-white rounded-2xl p-6 lg:p-8 shadow-xl border border-gray-100">
+                    <div className="bg-white rounded-2xl p-5 shadow-xl border border-gray-100">
                         {/* Step 1: Amount */}
-                        <div className="mb-8">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <span className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-sm font-bold shadow-lg">1</span>
+                        <div className="mb-5">
+                            <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-bold shadow-lg">1</span>
                                 Selecciona el monto
                             </h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                                {PRESET_AMOUNTS.map((amount, index) => (
+                            <div className="grid grid-cols-5 gap-2 mb-2">
+                                {PRESET_AMOUNTS.map((amount) => (
                                     <div key={amount} className="relative">
-                                        {/* Popular badge OUTSIDE the button */}
                                         {amount === 50 && (
-                                            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[9px] font-bold rounded-full shadow-lg z-20 whitespace-nowrap">
+                                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[8px] font-bold rounded-full shadow-lg z-20 whitespace-nowrap">
                                                 ⭐ Popular
                                             </span>
                                         )}
                                         <button
                                             onClick={() => { setSelectedAmount(amount); setCustomAmount(''); }}
-                                            className={`w-full group relative py-5 rounded-2xl font-bold text-xl transition-all duration-300 overflow-hidden ${selectedAmount === amount
-                                                ? 'text-white shadow-xl scale-105 ring-4 ring-blue-400/30'
-                                                : 'bg-white text-gray-700 hover:scale-105 hover:shadow-lg border-2 border-gray-100 hover:border-blue-300'
+                                            className={`w-full group relative py-3 rounded-xl font-bold text-base transition-all duration-300 overflow-hidden ${selectedAmount === amount
+                                                ? 'text-white shadow-lg scale-105 ring-2 ring-blue-400/30'
+                                                : 'bg-white text-gray-700 hover:scale-105 hover:shadow-md border border-gray-200 hover:border-blue-300'
                                                 }`}
-                                            style={{
-                                                animationDelay: `${index * 100}ms`,
-                                            }}
                                         >
-                                            {/* Animated gradient background for selected */}
                                             {selectedAmount === amount && (
                                                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 animate-gradient-x" />
                                             )}
-                                            {/* Shimmer effect on hover */}
-                                            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                                            {/* Sparkle decoration for selected */}
-                                            {selectedAmount === amount && (
-                                                <>
-                                                    <div className="absolute top-2 right-2 w-2 h-2 bg-white rounded-full animate-ping" />
-                                                    <div className="absolute bottom-3 left-3 w-1.5 h-1.5 bg-white/60 rounded-full animate-pulse" />
-                                                </>
-                                            )}
-                                            {/* Amount text */}
-                                            <span className="relative z-10 flex items-center justify-center gap-1">
-                                                <span className={`text-sm ${selectedAmount === amount ? 'text-blue-200' : 'text-gray-400'}`}>$</span>
+                                            <span className="relative z-10 flex items-center justify-center gap-0.5">
+                                                <span className={`text-xs ${selectedAmount === amount ? 'text-blue-200' : 'text-gray-400'}`}>$</span>
                                                 <span>{amount}</span>
                                             </span>
                                         </button>
                                     </div>
                                 ))}
+                                {/* Custom Amount Input - in the same row */}
+                                <div className="relative">
+                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-xs">$</span>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        placeholder="Otro"
+                                        value={customAmount}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            // Only allow numbers
+                                            if (!/^\d*$/.test(value)) return;
+                                            // Convert to number for validation
+                                            const numValue = parseInt(value, 10);
+                                            // Don't allow values greater than 1000
+                                            if (numValue > 1000) return;
+                                            setCustomAmount(value);
+                                            setSelectedAmount(null);
+                                        }}
+                                        onBlur={(e) => {
+                                            const value = parseInt(e.target.value, 10);
+                                            // If value is less than 5 and not empty, set to 5
+                                            if (e.target.value && value < 5) {
+                                                setCustomAmount('5');
+                                            }
+                                        }}
+                                        className={`w-full pl-5 pr-2 py-3 rounded-xl border text-center font-bold text-base transition-all duration-300 outline-none ${customAmount
+                                            ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                                            : 'border-gray-200 text-gray-700 hover:border-blue-300'
+                                            }`}
+                                    />
+                                </div>
                             </div>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
-                                <input
-                                    type="number"
-                                    placeholder="Monto personalizado"
-                                    value={customAmount}
-                                    onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(null); }}
-                                    className="w-full pl-8 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 outline-none transition-colors"
-                                    min="5"
-                                    max="1000"
-                                />
-                            </div>
+                            {/* Min/Max indicator */}
+                            <p className="text-[10px] text-gray-400 text-center">Mínimo $5 — Máximo $1,000</p>
                         </div>
 
                         {/* Step 2: Recipient Info */}
-                        <div className="mb-8">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <span className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-sm font-bold">2</span>
-                                Datos del destinatario
+                        <div className="mb-5">
+                            <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-bold">2</span>
+                                Destinatario
                             </h3>
 
-                            {/* Gift badge */}
-                            <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white mb-4 shadow-lg">
-                                <FiGift className="w-6 h-6 animate-bounce" style={{ animationDuration: '2s' }} />
-                                <span className="font-bold">Es un regalo especial</span>
-                                <FiGift className="w-5 h-5 animate-pulse" />
-                            </div>
-
-                            {/* Recipient Name Input */}
-                            <div className="relative mb-3">
-                                <input
-                                    ref={recipientNameRef}
-                                    type="text"
-                                    placeholder="Nombre del destinatario"
-                                    value={recipientName}
-                                    onChange={(e) => { setRecipientName(e.target.value); setErrors(prev => ({ ...prev, name: undefined })); }}
-                                    className={`w-full px-4 py-4 rounded-xl border-2 outline-none transition-colors ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-500'
+                            {/* Gift Type Selection - Two buttons in a row */}
+                            <div className="grid grid-cols-2 gap-2 mb-3">
+                                {/* For Someone Else */}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsForMyself(false)}
+                                    className={`flex items-center justify-center gap-2 p-2.5 rounded-lg font-semibold text-sm transition-all ${!isForMyself
+                                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
-                                />
-                                {errors.name && (
-                                    <div className="absolute -bottom-6 left-0 text-xs text-red-500 flex items-center gap-1">
-                                        <FiAlertCircle className="w-3 h-3" />
-                                        {errors.name}
-                                    </div>
+                                >
+                                    <FiGift className="w-4 h-4" />
+                                    Es un regalo
+                                </button>
+
+                                {/* For Myself */}
+                                {session && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsForMyself(true)}
+                                        className={`flex items-center justify-center gap-2 p-2.5 rounded-lg font-semibold text-sm transition-all ${isForMyself
+                                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                            }`}
+                                    >
+                                        <FiUser className="w-4 h-4" />
+                                        Para mí mismo
+                                    </button>
                                 )}
                             </div>
 
-                            {/* Recipient Email Input */}
-                            <div className="relative mt-6">
-                                <input
-                                    ref={recipientEmailRef}
-                                    type="email"
-                                    placeholder="Email del destinatario"
-                                    value={recipientEmail}
-                                    onChange={(e) => { setRecipientEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); }}
-                                    className={`w-full px-4 py-4 pr-12 rounded-xl border-2 outline-none transition-colors ${errors.email ? 'border-red-400 bg-red-50' :
-                                        recipientExists === false ? 'border-amber-400' :
-                                            recipientExists === true ? 'border-green-500' :
-                                                'border-gray-200 focus:border-blue-500'
-                                        }`}
-                                />
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                    {isCheckingEmail && <span className="text-gray-400">...</span>}
-                                    {!isCheckingEmail && recipientExists === true && <FiCheck className="w-5 h-5 text-green-500" />}
-                                    {!isCheckingEmail && recipientExists === false && <FiAlertCircle className="w-5 h-5 text-amber-500" />}
+                            {/* Recipient Name & Email Inputs - Same row */}
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* Name */}
+                                <div className="relative">
+                                    <input
+                                        ref={recipientNameRef}
+                                        type="text"
+                                        placeholder="Nombre"
+                                        value={recipientName}
+                                        onChange={(e) => { setRecipientName(e.target.value); setErrors(prev => ({ ...prev, name: undefined })); }}
+                                        className={`w-full px-3 py-2.5 rounded-lg border outline-none transition-colors text-sm ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-500'
+                                            }`}
+                                    />
+                                    {errors.name && (
+                                        <div className="absolute -bottom-4 left-0 text-[10px] text-red-500 flex items-center gap-1">
+                                            <FiAlertCircle className="w-2.5 h-2.5" />
+                                            {errors.name}
+                                        </div>
+                                    )}
                                 </div>
-                                {errors.email && (
-                                    <div className="absolute -bottom-6 left-0 text-xs text-red-500 flex items-center gap-1">
-                                        <FiAlertCircle className="w-3 h-3" />
-                                        {errors.email}
+
+                                {/* Email */}
+                                <div className="relative">
+                                    <input
+                                        ref={recipientEmailRef}
+                                        type="email"
+                                        placeholder="Email"
+                                        value={recipientEmail}
+                                        onChange={(e) => { setRecipientEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); }}
+                                        className={`w-full px-3 py-2.5 pr-8 rounded-lg border outline-none transition-colors text-sm ${errors.email ? 'border-red-400 bg-red-50' :
+                                            recipientExists === false ? 'border-amber-400' :
+                                                recipientExists === true ? 'border-green-500' :
+                                                    'border-gray-200 focus:border-blue-500'
+                                            }`}
+                                    />
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                        {isCheckingEmail && <span className="text-gray-400 text-xs">...</span>}
+                                        {!isCheckingEmail && recipientExists === true && <FiCheck className="w-3.5 h-3.5 text-green-500" />}
+                                        {!isCheckingEmail && recipientExists === false && <FiAlertCircle className="w-3.5 h-3.5 text-amber-500" />}
                                     </div>
-                                )}
+                                    {errors.email && (
+                                        <div className="absolute -bottom-4 left-0 text-[10px] text-red-500 flex items-center gap-1">
+                                            <FiAlertCircle className="w-2.5 h-2.5" />
+                                            {errors.email}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             {recipientExists === false && !errors.email && (
-                                <p className="text-sm text-amber-600 mt-2">
-                                    Este usuario no está registrado. Podrás enviarle una invitación.
+                                <p className="text-xs text-amber-600 mt-1">
+                                    Usuario no registrado. Se enviará invitación.
                                 </p>
                             )}
                         </div>
 
                         {/* Step 3: Personal Message */}
-                        <div className="mb-8">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <span className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-sm font-bold">3</span>
+                        <div className="mb-4">
+                            <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-bold">3</span>
                                 Mensaje personal (opcional)
                             </h3>
                             <textarea
                                 placeholder="Escribe un mensaje especial..."
                                 value={personalMessage}
                                 onChange={(e) => setPersonalMessage(e.target.value)}
-                                className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 outline-none resize-none"
-                                rows={3}
+                                className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-0 outline-none resize-none text-sm"
+                                rows={2}
                                 maxLength={200}
                             />
-                            <p className="text-xs text-gray-400 text-right mt-1">{personalMessage.length}/200</p>
+                            <p className="text-[10px] text-gray-400 text-right">{personalMessage.length}/200</p>
                         </div>
 
+                        {/* Step 4: Scheduled Delivery (optional) */}
+                        {!isForMyself && (
+                            <div className="mb-4">
+                                <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                    <FiCalendar className="w-4 h-4 text-blue-600" />
+                                    Programar envío (opcional)
+                                </h3>
+                                <input
+                                    type="date"
+                                    value={scheduledDate}
+                                    onChange={(e) => setScheduledDate(e.target.value)}
+                                    min={new Date().toISOString().split('T')[0]}
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-0 outline-none text-sm"
+                                />
+                                <p className="text-[10px] text-gray-400 mt-1">
+                                    {scheduledDate ? `Se enviará el ${new Date(scheduledDate + 'T12:00:00').toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' })}` : 'Dejar vacío para envío inmediato'}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Preview Email Button */}
+                        {!isForMyself && recipientName && recipientEmail && (
+                            <button
+                                type="button"
+                                onClick={() => setShowEmailPreview(true)}
+                                className="w-full mb-4 py-2 rounded-lg border border-blue-200 text-blue-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors"
+                            >
+                                <FiEye className="w-4 h-4" />
+                                Ver cómo lucirá el email
+                            </button>
+                        )}
+
                         {/* Summary */}
-                        <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                            <div className="flex justify-between mb-3">
-                                <span className="text-gray-600">Gift Card</span>
-                                <span className="font-bold text-gray-900">${finalAmount.toFixed(2)}</span>
+                        <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                            <div className="flex justify-between mb-1">
+                                <span className="text-gray-600 text-sm">Gift Card</span>
+                                <div className="text-right">
+                                    <span className="font-bold text-gray-900">${finalAmount.toFixed(2)}</span>
+                                    {finalAmountBs && (
+                                        <p className="text-[10px] text-gray-500">≈ Bs. {finalAmountBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                    )}
+                                </div>
                             </div>
                             {session && (
-                                <div className="flex justify-between pt-3 border-t border-gray-200">
-                                    <span className="text-gray-600">Tu saldo</span>
-                                    <span className={`font-bold ${canPayWithBalance ? 'text-green-600' : 'text-amber-600'}`}>
+                                <div className="flex justify-between pt-2 border-t border-gray-200">
+                                    <span className="text-gray-600 text-sm">Tu saldo</span>
+                                    <span className={`font-bold text-sm ${canPayWithBalance ? 'text-green-600' : 'text-amber-600'}`}>
                                         ${(typeof userBalance === 'number' ? userBalance : 0).toFixed(2)}
                                     </span>
                                 </div>
                             )}
                         </div>
 
+                        {/* Security Badge */}
+                        <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500 mb-3">
+                            <FiLock className="w-3 h-3" />
+                            <span>Pago 100% seguro — Entrega garantizada</span>
+                        </div>
+
                         {/* Purchase Button */}
                         <button
                             onClick={handlePurchase}
                             disabled={isLoading || finalAmount < 5}
-                            className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all ${finalAmount >= 5
+                            className={`w-full py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all ${finalAmount >= 5
                                 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl hover:scale-[1.02]'
                                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                 }`}
                         >
                             {isLoading ? '...' : canPayWithBalance ? (
-                                <><FiCreditCard className="w-5 h-5" /> Pagar con saldo</>
+                                <><FiCreditCard className="w-4 h-4" /> Pagar con saldo</>
                             ) : (
-                                <><FiShoppingCart className="w-5 h-5" /> Agregar al carrito</>
+                                <><FiShoppingCart className="w-4 h-4" /> Agregar al carrito</>
                             )}
                         </button>
                     </div>
@@ -792,7 +1060,7 @@ export default function GiftCardsPage() {
                     <h2 className="text-xl font-bold text-center text-gray-900 mb-6">
                         ¿Por qué elegir nuestras Gift Cards?
                     </h2>
-                    <div className="grid md:grid-cols-3 gap-4">
+                    <div className="grid md:grid-cols-4 gap-4">
                         {[
                             {
                                 icon: <AiOutlineDeliveredProcedure className="w-5 h-5" />,
@@ -808,6 +1076,11 @@ export default function GiftCardsPage() {
                                 icon: <FiGift className="w-5 h-5" />,
                                 title: 'Personalizable',
                                 description: 'Añade un mensaje personal.',
+                            },
+                            {
+                                icon: <FiLock className="w-5 h-5" />,
+                                title: '100% Seguro',
+                                description: 'Transacciones protegidas y garantizadas.',
                             },
                         ].map((feature, i) => (
                             <div key={i} className="bg-white rounded-xl p-4 shadow-md border border-gray-100 text-center hover:shadow-lg transition-shadow">
@@ -897,6 +1170,67 @@ export default function GiftCardsPage() {
                         <p className="mt-4 text-xs text-gray-400">
                             La invitación incluirá un enlace para registrarse y recibir el regalo automáticamente.
                         </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Email Preview Modal */}
+            {showEmailPreview && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl">
+                        {/* Email Header */}
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 text-white">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                                    <FiGift className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="font-bold">¡Tienes un regalo de Electro Shop!</p>
+                                    <p className="text-xs text-white/70">De: {session?.user?.name || 'Tu amigo'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Email Body */}
+                        <div className="p-6 text-center">
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                ¡Hola {recipientName}! 🎉
+                            </h3>
+                            <p className="text-gray-600 mb-4">
+                                {session?.user?.name || 'Alguien especial'} te ha enviado una Gift Card de Electro Shop por:
+                            </p>
+
+                            {/* Gift Card Preview Mini */}
+                            <div
+                                className="w-48 h-28 mx-auto rounded-xl mb-4 relative overflow-hidden shadow-lg"
+                                style={{ background: selectedDesign.gradient }}
+                            >
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-3xl font-black text-white drop-shadow-lg">${finalAmount}</span>
+                                </div>
+                            </div>
+
+                            {personalMessage && (
+                                <div className="bg-gray-50 rounded-lg p-3 mb-4 text-sm italic text-gray-600">
+                                    "{personalMessage}"
+                                </div>
+                            )}
+
+                            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                                <p className="text-xs text-gray-500 mb-2">Tu código único:</p>
+                                <p className="font-mono font-bold text-blue-600 text-lg tracking-wider">XXXX-XXXX-XXXX-XXXX</p>
+                            </div>
+                        </div>
+
+                        {/* Close Button */}
+                        <div className="px-6 pb-6">
+                            <button
+                                onClick={() => setShowEmailPreview(false)}
+                                className="w-full py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+                            >
+                                Cerrar vista previa
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

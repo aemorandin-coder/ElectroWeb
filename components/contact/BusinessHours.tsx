@@ -32,6 +32,32 @@ const fallbackHours = [
     { abbr: 'DOM', name: 'Domingo', time: '', isOpen: false },
 ];
 
+// Convert 24h format to 12h AM/PM format
+const convertTo12Hour = (time24: string): string => {
+    if (!time24 || typeof time24 !== 'string') return time24;
+
+    // If already in AM/PM format, return as is
+    if (time24.toLowerCase().includes('am') || time24.toLowerCase().includes('pm')) {
+        return time24;
+    }
+
+    // Parse 24h format (e.g., "09:00", "18:00", "9:00")
+    const match = time24.match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return time24;
+
+    let hours = parseInt(match[1], 10);
+    const minutes = match[2];
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    if (hours === 0) {
+        hours = 12;
+    } else if (hours > 12) {
+        hours = hours - 12;
+    }
+
+    return `${hours}:${minutes} ${ampm}`;
+};
+
 export default function BusinessHours({ businessHours }: BusinessHoursProps) {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -42,10 +68,12 @@ export default function BusinessHours({ businessHours }: BusinessHoursProps) {
                 if (hours && typeof hours === 'object') {
                     return Object.entries(hours).map(([day, schedule]: [string, any]) => {
                         const dayInfo = daysMap[day] || { name: day, abbr: day.substring(0, 3).toUpperCase() };
+                        const openTime = convertTo12Hour(schedule?.open);
+                        const closeTime = convertTo12Hour(schedule?.close);
                         return {
                             abbr: dayInfo.abbr,
                             name: dayInfo.name,
-                            time: schedule?.enabled ? `${schedule.open} - ${schedule.close}` : '',
+                            time: schedule?.enabled ? `${openTime} - ${closeTime}` : '',
                             isOpen: schedule?.enabled || false
                         };
                     });

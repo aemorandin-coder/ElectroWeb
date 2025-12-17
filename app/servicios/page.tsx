@@ -3,10 +3,14 @@ import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import {
-  FiMonitor, FiShield, FiTool, FiCreditCard,
-  FiActivity, FiAward, FiUsers, FiCheckCircle,
-  FiMail, FiClock, FiVideo, FiCamera
+  FiMonitor, FiShield, FiCreditCard,
+  FiAward, FiUsers, FiCheckCircle,
+  FiMail, FiClock, FiVideo
 } from 'react-icons/fi';
+import { PiSecurityCameraDuotone } from 'react-icons/pi';
+import { FaEthernet } from 'react-icons/fa';
+import { SiPcgamingwiki } from 'react-icons/si';
+import { FaScrewdriverWrench } from 'react-icons/fa6';
 
 export const revalidate = 0;
 
@@ -66,7 +70,7 @@ export default async function ServiciosPage() {
 
             <div className="relative p-12 text-center text-white">
               <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/20">
-                <FiTool className="w-10 h-10 text-white" />
+                <FaScrewdriverWrench className="w-10 h-10 text-white" />
               </div>
 
               <h2 className="text-4xl font-black mb-4">Servicios de Excelencia</h2>
@@ -78,7 +82,7 @@ export default async function ServiciosPage() {
                   {/* CCTV */}
                   <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
                     <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <FiCamera className="w-6 h-6 text-white" />
+                      <PiSecurityCameraDuotone className="w-6 h-6 text-white" />
                     </div>
                     <h3 className="font-bold text-xl mb-2">Sistemas CCTV</h3>
                     <p className="text-sm text-white/80">
@@ -89,7 +93,7 @@ export default async function ServiciosPage() {
                   {/* Redes */}
                   <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
                     <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <FiActivity className="w-6 h-6 text-white" />
+                      <FaEthernet className="w-6 h-6 text-white" />
                     </div>
                     <h3 className="font-bold text-xl mb-2">Diseño de Redes</h3>
                     <p className="text-sm text-white/80">
@@ -111,7 +115,7 @@ export default async function ServiciosPage() {
                   {/* Gaming */}
                   <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
                     <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <FiMonitor className="w-6 h-6 text-white" />
+                      <SiPcgamingwiki className="w-6 h-6 text-white" />
                     </div>
                     <h3 className="font-bold text-xl mb-2">PCs Gaming de Alto Rendimiento</h3>
                     <p className="text-sm text-white/80">

@@ -83,15 +83,16 @@ export default async function Home() {
       {/* Hero Section - Premium Design */}
       <section className="relative overflow-hidden min-h-[600px] flex items-center justify-center">
         {/* Background: Video or Gradient */}
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0" suppressHydrationWarning>
           {companySettings?.heroVideoEnabled && companySettings?.heroVideoUrl ? (
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full" suppressHydrationWarning>
               {companySettings.heroVideoUrl.includes('youtube') || companySettings.heroVideoUrl.includes('youtu.be') ? (
                 <iframe
                   className="absolute top-1/2 left-1/2 w-[150%] h-[150%] -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-60"
                   src={getYouTubeEmbedUrl(companySettings.heroVideoUrl) || ''}
                   allow="autoplay; encrypted-media"
                   allowFullScreen
+                  suppressHydrationWarning
                 />
               ) : (
                 <video
@@ -101,6 +102,7 @@ export default async function Home() {
                   muted
                   loop
                   playsInline
+                  suppressHydrationWarning
                 />
               )}
               {/* Overlay to ensure text readability */}
@@ -173,8 +175,8 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-5">
-              {categories.slice(0, companySettings?.maxCategoriesDisplay || 6).map((category) => {
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {categories.slice(0, companySettings?.maxCategoriesDisplay || 12).map((category) => {
                 // Gradiente azul tenue y suave para todas las categorías
                 const gradient = 'from-[#6b9edd] via-[#5a8ad0] to-[#4a7dc4]';
 
@@ -182,12 +184,12 @@ export default async function Home() {
                   <Link
                     key={category.id}
                     href={`/categorias/${category.slug}`}
-                    className="group relative w-40 sm:w-48 bg-[#f8f9fa] hover:bg-white border border-[#e9ecef] rounded-2xl p-6 transition-all hover:shadow-xl hover:border-[#2a63cd]/40 hover:-translate-y-2"
+                    className="group relative bg-[#f8f9fa] hover:bg-white border border-[#e9ecef] rounded-2xl p-4 transition-all hover:shadow-xl hover:border-[#2a63cd]/40 hover:-translate-y-2"
                   >
                     <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity`}></div>
-                    <div className="relative flex flex-col items-center gap-4">
+                    <div className="relative flex flex-col items-center gap-3">
                       {/* 3D Glossy Icon with Shine Effect */}
-                      <div className="relative w-24 h-24">
+                      <div className="relative w-16 h-16">
                         <div
                           className={`
                             relative w-full h-full rounded-2xl flex items-center justify-center
@@ -229,12 +231,12 @@ export default async function Home() {
                               <Image
                                 src={category.image}
                                 alt={category.name}
-                                width={80}
-                                height={80}
+                                width={56}
+                                height={56}
                                 className="w-full h-full object-cover drop-shadow-md"
                               />
                             ) : (
-                              <FiGrid className="w-10 h-10 text-white" />
+                              <FiGrid className="w-7 h-7 text-white" />
                             )}
                           </div>
                           {/* Bottom glow */}
@@ -247,7 +249,7 @@ export default async function Home() {
                           />
                         </div>
                       </div>
-                      <h3 className="text-base font-bold text-[#212529] group-hover:text-[#2a63cd] transition-colors text-center line-clamp-2">{category.name}</h3>
+                      <h3 className="text-sm font-bold text-[#212529] group-hover:text-[#2a63cd] transition-colors text-center line-clamp-2">{category.name}</h3>
                     </div>
                   </Link>
                 );

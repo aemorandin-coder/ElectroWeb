@@ -500,7 +500,7 @@ export default function ProductDetailPage() {
                       alt={product.name}
                       fill
                       className="object-contain p-6 group-hover:scale-105 transition-transform duration-700"
-                      onLoadingComplete={() => setImageLoading(false)}
+                      onLoad={() => setImageLoading(false)}
                       priority
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;

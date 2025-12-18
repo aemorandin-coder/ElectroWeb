@@ -77,6 +77,9 @@ export default function CheckoutPage() {
   // Tooltip for client data warning
   const [showClientDataTooltip, setShowClientDataTooltip] = useState(false);
 
+  // Notes section collapsible
+  const [showNotesSection, setShowNotesSection] = useState(false);
+
   // Success modal state
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successOrderData, setSuccessOrderData] = useState<{
@@ -568,17 +571,17 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
       <PublicHeader />
 
-      {/* Premium Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] py-12">
+      {/* Premium Hero Section - Compact */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] py-8">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 -left-4 w-72 h-72 bg-white rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
           <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-3 animate-fadeInUp">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-3xl md:text-4xl font-black text-white mb-2 animate-fadeInUp">
             Finalizar Compra
           </h1>
-          <p className="text-lg text-blue-100 animate-fadeInUp animation-delay-200">
+          <p className="text-base text-blue-100 animate-fadeInUp animation-delay-200">
             Completa tus datos para procesar tu pedido
           </p>
         </div>
@@ -618,240 +621,63 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {/* Email Verification Warning Banner */}
+              {/* Email Verification Warning Banner - Compact */}
               {session?.user && !(session.user as any).emailVerified && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <FiAlertCircle className="w-5 h-5 text-[#2a63cd]" />
+                <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <FiAlertCircle className="w-4 h-4 text-[#2a63cd]" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-[#1e4ba3] text-sm mb-1">Verifica tu correo electronico</h3>
-                      <p className="text-[#212529] text-sm mb-3">
-                        Para poder realizar compras, necesitas verificar tu email.
-                        Revisa tu bandeja de entrada y haz clic en el enlace de verificacion.
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-[#212529]">
+                        <strong className="font-bold text-[#1e4ba3]">Verifica tu email</strong> para realizar compras. Revisa tu bandeja de entrada.
                       </p>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const res = await fetch('/api/auth/resend-verification', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ email: (session.user as any).email }),
-                            });
-                            const data = await res.json();
-                            alert(data.message || 'Email de verificacion enviado');
-                          } catch (err) {
-                            alert('Error al reenviar email');
-                          }
-                        }}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors"
-                      >
-                        <FiAlertCircle className="w-4 h-4" />
-                        Reenviar email de verificacion
-                      </button>
                     </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch('/api/auth/resend-verification', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: (session.user as any).email }),
+                          });
+                          const data = await res.json();
+                          alert(data.message || 'Email de verificacion enviado');
+                        } catch (err) {
+                          alert('Error al reenviar email');
+                        }
+                      }}
+                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2a63cd] text-white text-xs font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors"
+                    >
+                      <FiAlertCircle className="w-3 h-3" />
+                      Reenviar
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* Contact Information - Read Only */}
-              <div className="bg-gradient-to-br from-white to-blue-50/30 rounded-xl shadow-lg border border-blue-100 p-6 animate-fadeIn relative">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-[#212529] flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-md">
-                      <FiUser className="w-5 h-5 text-white" />
-                    </div>
-                    Información de Contacto
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    {/* Show Verified badge only if user is actually verified */}
-                    {(session?.user as any)?.emailVerified && (
-                      <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 border border-green-300 rounded-full">
-                        <FiCheckCircle className="w-3.5 h-3.5 text-green-700" />
-                        <span className="text-xs font-bold text-green-700">Verificado</span>
-                      </div>
-                    )}
-                    {/* Tooltip Icono */}
-                    <div
-                      className="relative group"
-                      onMouseEnter={() => setShowClientDataTooltip(true)}
-                      onMouseLeave={() => setShowClientDataTooltip(false)}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-[#2a63cd] hover:bg-[#1e4ba3] flex items-center justify-center cursor-help transition-all animate-pulse hover:animate-none shadow-lg">
-                        <FiAlertCircle className="w-4 h-4 text-white" />
-                      </div>
-                      {/* Epic Tooltip */}
-                      {showClientDataTooltip && (
-                        <div className="absolute right-0 top-full mt-3 w-80 z-50 animate-scaleIn">
-                          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-2xl border-2 border-[#2a63cd] p-5 relative">
-                            {/* Arrow */}
-                            <div className="absolute -top-2 right-6 w-4 h-4 bg-[#2a63cd] rotate-45 border-t-2 border-l-2 border-[#2a63cd]"></div>
-                            <div className="absolute -top-1.5 right-6 w-4 h-4 bg-gradient-to-br from-blue-50 to-indigo-50 rotate-45"></div>
 
-                            <div className="flex items-start gap-3 mb-3">
-                              <div className="w-10 h-10 rounded-xl bg-[#2a63cd] flex items-center justify-center flex-shrink-0 shadow-md">
-                                <FiAlertCircle className="w-5 h-5 text-white" />
-                              </div>
-                              <div>
-                                <h3 className="font-black text-[#1e4ba3] text-sm mb-1 flex items-center gap-2">
-                                  <FiAlertCircle className="w-4 h-4 text-amber-500" />
-                                  Importante para el Retiro
-                                </h3>
-                                <p className="text-xs text-[#212529] leading-relaxed font-medium">
-                                  Estos datos registrados (nombre, email, teléfono) son los <strong className="font-black">ÚNICOS válidos</strong> para retirar tu producto.
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="bg-white/70 rounded-xl p-3 border border-[#2a63cd]/30">
-                              <p className="text-xs text-[#212529] leading-relaxed">
-                                <strong className="font-black">Solo tú, el cliente logeado</strong>, podrás retirar el pedido presentando tu identificación que coincida con estos datos.
-                              </p>
-                            </div>
-
-                            <div className="mt-3 flex items-center gap-2 text-xs text-[#2a63cd]">
-                              <FiCheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                              <span className="font-medium">Por seguridad, estos datos no son editables aquí</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="relative">
-                  {/* Security Shield Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent rounded-lg pointer-events-none z-10"></div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
-                    <div className="col-span-1 md:col-span-2">
-                      <label className="block text-sm font-semibold text-[#212529] mb-2 flex items-center gap-2">
-                        Nombre Completo
-                        <div className="group relative">
-                          <FiInfo className="w-4 h-4 text-[#6a6c6b] cursor-help" />
-                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-[#212529] text-white text-xs rounded-lg shadow-xl z-20 animate-scaleIn">
-                            Dato protegido de tu registro. No se puede modificar aquí por seguridad.
-                            <div className="absolute bottom-0 left-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-[#212529]"></div>
-                          </div>
-                        </div>
-                      </label>
-                      <div className="relative">
-                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6c6b] z-20" />
-                        <input
-                          type="text"
-                          value={formData.customerName}
-                          readOnly
-                          disabled
-                          className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] bg-[#f8f9fa] text-[#212529] rounded-xl cursor-not-allowed font-medium"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-[#212529] mb-2 flex items-center gap-2">
-                        Email
-                        <div className="group relative">
-                          <FiInfo className="w-4 h-4 text-[#6a6c6b] cursor-help" />
-                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-[#212529] text-white text-xs rounded-lg shadow-xl z-20 animate-scaleIn">
-                            Email registrado y verificado. Para cambiarlo dirígete a tu perfil.
-                            <div className="absolute bottom-0 left-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-[#212529]"></div>
-                          </div>
-                        </div>
-                      </label>
-                      <div className="relative">
-                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6c6b] z-20" />
-                        <input
-                          type="email"
-                          value={formData.customerEmail}
-                          readOnly
-                          disabled
-                          className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] bg-[#f8f9fa] text-[#212529] rounded-xl cursor-not-allowed font-medium"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-[#212529] mb-2 flex items-center gap-2">
-                        Teléfono
-                        <div className="group relative">
-                          <FiInfo className="w-4 h-4 text-[#6a6c6b] cursor-help" />
-                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-[#212529] text-white text-xs rounded-lg shadow-xl z-20 animate-scaleIn">
-                            Teléfono de contacto registrado. Actualízalo desde tu perfil si es necesario.
-                            <div className="absolute bottom-0 left-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-[#212529]"></div>
-                          </div>
-                        </div>
-                      </label>
-                      <div className="relative">
-                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6c6b] z-20" />
-                        <input
-                          type="tel"
-                          value={formData.customerPhone}
-                          readOnly
-                          disabled
-                          className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] bg-[#f8f9fa] text-[#212529] rounded-xl cursor-not-allowed font-medium"
-                        />
-                      </div>
-                    </div>
-
-                    {/* ID Number / Passport */}
-                    <div className="col-span-1 md:col-span-2">
-                      <label className="block text-sm font-semibold text-[#212529] mb-2 flex items-center gap-2">
-                        Cédula / Pasaporte
-                        <div className="group relative">
-                          <FiInfo className="w-4 h-4 text-[#6a6c6b] cursor-help" />
-                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-[#212529] text-white text-xs rounded-lg shadow-xl z-20 animate-scaleIn">
-                            Documento de identidad registrado. Este dato se usará para validar el retiro del producto.
-                            <div className="absolute bottom-0 left-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-[#212529]"></div>
-                          </div>
-                        </div>
-                      </label>
-                      <div className="relative">
-                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6c6b] z-20" />
-                        <input
-                          type="text"
-                          value={formData.customerIdNumber || 'No registrado'}
-                          readOnly
-                          disabled
-                          className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] bg-[#f8f9fa] text-[#212529] rounded-xl cursor-not-allowed font-medium"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Info Banner */}
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
-                    <FiInfo className="w-5 h-5 text-[#2a63cd] flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-[#212529] leading-relaxed">
-                      <strong className="font-bold">Datos protegidos:</strong> Esta información proviene de tu registro y no puede modificarse durante el checkout por seguridad.
-                      Para actualizar tus datos, ve a tu <Link href="/customer/profile" className="text-[#2a63cd] hover:underline font-bold">perfil de usuario</Link>.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Shipping Information - Enhanced */}
+              {/* Shipping Information */}
               <div className="bg-white rounded-xl shadow-lg border border-[#e9ecef] p-6 animate-fadeIn animation-delay-100">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-[#212529] flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-md">
-                      <FiMapPin className="w-5 h-5 text-white" />
+                  <h2 className="text-lg font-bold text-[#212529] flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+                      <FiMapPin className="w-4 h-4 text-white" />
                     </div>
                     Dirección de Envío
                   </h2>
-                </div>
-
-                {/* Critical Warning Banner */}
-                <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-orange-400 rounded-r-xl shadow-sm animate-pulse-slow">
-                  <div className="flex items-start gap-3">
-                    <FiAlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-bold text-orange-900 mb-1 text-sm">¡Importante! Verifica tus datos</h3>
+                  {/* Compact Warning Badge with Tooltip */}
+                  <div className="relative group">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-100 to-orange-100 border border-orange-300 rounded-full cursor-help">
+                      <FiAlertCircle className="w-3.5 h-3.5 text-orange-600" />
+                      <span className="text-xs font-bold text-orange-700">Verifica tus datos</span>
+                    </div>
+                    {/* Tooltip on hover */}
+                    <div className="absolute right-0 top-full mt-2 w-72 p-3 bg-orange-50 border border-orange-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                      <div className="absolute -top-1.5 right-6 w-3 h-3 bg-orange-50 border-l border-t border-orange-200 transform rotate-45"></div>
                       <p className="text-xs text-orange-800 leading-relaxed">
-                        Verifica que tus datos de envío sean correctos, porque serán usados a la hora de envío de tus productos comprados.
-                        <strong className="font-bold"> La empresa no se hace responsable de datos errados ingresados por el usuario.</strong>
+                        Los datos de envío serán usados para entregar tus productos. <strong className="font-bold">La empresa no se hace responsable de datos errados.</strong>
                       </p>
                     </div>
                   </div>
@@ -1172,10 +998,12 @@ export default function CheckoutPage() {
 
               {/* Payment Method */}
               <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] p-6">
-                <h2 className="text-xl font-semibold text-[#212529] mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
+                <h2 className="text-lg font-bold text-[#212529] mb-4 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                  </div>
                   Método de Pago
                 </h2>
 
@@ -1384,24 +1212,40 @@ export default function CheckoutPage() {
                 )}
               </div>
 
-              {/* Notes */}
-              <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] p-6">
-                <h2 className="text-xl font-semibold text-[#212529] mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+              {/* Notes - Collapsible */}
+              <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowNotesSection(!showNotesSection)}
+                  className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                  <h2 className="text-lg font-bold text-[#212529] flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                      </svg>
+                    </div>
+                    Notas Adicionales
+                    <span className="text-xs text-[#6a6c6b] font-normal">(Opcional)</span>
+                  </h2>
+                  <svg className={`w-5 h-5 text-[#6a6c6b] transition-transform duration-200 ${showNotesSection ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
-                  Notas Adicionales (Opcional)
-                </h2>
+                </button>
 
-                <textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent text-sm resize-none"
-                  placeholder="Instrucciones especiales de entrega, preferencias de horario, etc."
-                />
+                {showNotesSection && (
+                  <div className="px-5 pb-5 animate-fadeIn">
+                    <textarea
+                      id="notes"
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleChange}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent text-sm resize-none"
+                      placeholder="Instrucciones especiales de entrega, preferencias de horario, etc."
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Terms and Conditions */}
@@ -1463,10 +1307,83 @@ export default function CheckoutPage() {
             </form>
           </div>
 
-          {/* Order Summary */}
-          <div className="lg:col-span-1">
+          {/* Right Column - Contact Info + Order Summary */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Contact Information - Compact Version */}
+            <div className="bg-gradient-to-br from-white to-blue-50/30 rounded-xl shadow-lg border border-blue-100 p-5 animate-fadeIn">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-[#212529] flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+                    <FiUser className="w-4 h-4 text-white" />
+                  </div>
+                  Información de Contacto
+                </h2>
+                {(session?.user as any)?.emailVerified && (
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-green-100 border border-green-300 rounded-full">
+                    <FiCheckCircle className="w-3 h-3 text-green-700" />
+                    <span className="text-[10px] font-bold text-green-700">Verificado</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {/* Name */}
+                <div>
+                  <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Nombre</label>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
+                    <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
+                    <span className="text-sm text-[#212529] font-medium truncate">{formData.customerName}</span>
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Email</label>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
+                    <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
+                    <span className="text-sm text-[#212529] font-medium truncate">{formData.customerEmail}</span>
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Teléfono</label>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
+                    <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
+                    <span className="text-sm text-[#212529] font-medium">{formData.customerPhone || 'No registrado'}</span>
+                  </div>
+                </div>
+
+                {/* ID */}
+                <div>
+                  <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Cédula</label>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
+                    <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
+                    <span className="text-sm text-[#212529] font-medium">{formData.customerIdNumber || 'No registrado'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Edit Profile Link */}
+              <div className="mt-4 pt-3 border-t border-blue-100">
+                <Link
+                  href="/customer/profile"
+                  className="flex items-center justify-center gap-2 text-xs text-[#2a63cd] hover:text-[#1e4ba3] font-semibold transition-colors"
+                >
+                  <FiInfo className="w-3.5 h-3.5" />
+                  Editar datos en mi perfil
+                </Link>
+              </div>
+            </div>
+
+            {/* Order Summary */}
             <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] p-6 sticky top-24">
-              <h2 className="text-xl font-semibold text-[#212529] mb-4">
+              <h2 className="text-lg font-bold text-[#212529] mb-4 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
                 Resumen del Pedido
               </h2>
 

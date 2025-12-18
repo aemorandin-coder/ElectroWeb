@@ -63,17 +63,10 @@ export default async function CategoriasPage() {
           </div>
         ) : (
           /* Categories Grid */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-            {categories.map((category, index) => {
-              // Professional Blue/Slate Gradients
-              const gradients = [
-                'from-blue-600 to-blue-800',
-                'from-sky-600 to-blue-700',
-                'from-indigo-600 to-blue-800',
-                'from-slate-600 to-slate-800',
-                'from-cyan-600 to-blue-700',
-              ];
-              const gradient = gradients[index % gradients.length];
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-16">
+            {categories.map((category) => {
+              // Gradiente azul tenue uniforme para todas las categorías
+              const gradient = 'from-[#6b9edd] via-[#5a8ad0] to-[#4a7dc4]';
 
               return (
                 <Link
@@ -83,8 +76,8 @@ export default async function CategoriasPage() {
                 >
                   {/* Card Content */}
                   <div className="p-6">
-                    {/* 3D Glossy Icon - Enhanced */}
-                    <div className="relative w-20 h-20 mx-auto mb-4">
+                    {/* 3D Glossy Icon - Enhanced & Larger */}
+                    <div className="relative w-24 h-24 mx-auto mb-4">
                       <div
                         className={`
                           relative w-full h-full rounded-2xl flex items-center justify-center
@@ -95,13 +88,13 @@ export default async function CategoriasPage() {
                         `}
                         style={{
                           boxShadow: `
-                            0 15px 50px -12px rgba(0, 0, 0, 0.6),
-                            0 8px 20px -8px rgba(0, 0, 0, 0.4),
+                            0 15px 50px -12px rgba(107, 158, 221, 0.5),
+                            0 8px 20px -8px rgba(74, 125, 196, 0.4),
                             inset 0 2px 0 rgba(255, 255, 255, 0.7),
-                            inset 0 -2px 0 rgba(0, 0, 0, 0.3),
+                            inset 0 -2px 0 rgba(0, 0, 0, 0.2),
                             inset 0 0 60px rgba(255, 255, 255, 0.1)
                           `,
-                          border: '1px solid rgba(255, 255, 255, 0.2)'
+                          border: '1px solid rgba(255, 255, 255, 0.3)'
                         }}
                       >
                         <div
@@ -119,21 +112,21 @@ export default async function CategoriasPage() {
                             animation: 'shine 2s infinite'
                           }}
                         />
-                        <div className="relative z-10 group-hover:rotate-12 transition-transform duration-500 drop-shadow-lg w-full h-full p-4 flex items-center justify-center">
+                        <div className="relative z-10 group-hover:rotate-12 transition-transform duration-500 drop-shadow-lg w-full h-full p-2 flex items-center justify-center">
                           {category.image ? (
                             <Image
                               src={category.image}
                               alt={category.name}
-                              width={48}
-                              height={48}
+                              width={80}
+                              height={80}
                               className="w-full h-full object-contain drop-shadow-md"
                             />
                           ) : (
-                            <FiGrid className="w-8 h-8 text-white" />
+                            <FiGrid className="w-10 h-10 text-white" />
                           )}
                         </div>
                         <div
-                          className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4/5 h-3 bg-black/40 blur-lg rounded-full"
+                          className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4/5 h-3 bg-black/30 blur-lg rounded-full"
                           style={{ filter: 'blur(10px)' }}
                         />
                         <div

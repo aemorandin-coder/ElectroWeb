@@ -173,40 +173,81 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-4">
-              {categories.slice(0, companySettings?.maxCategoriesDisplay || 6).map((category, index) => {
-                const gradients = [
-                  'from-blue-600 to-indigo-600',
-                  'from-cyan-500 to-blue-500',
-                  'from-indigo-500 to-purple-500',
-                  'from-purple-600 to-pink-600',
-                  'from-emerald-500 to-teal-600',
-                  'from-orange-500 to-red-500',
-                ];
-                const gradient = gradients[index % gradients.length];
+            <div className="flex flex-wrap justify-center gap-5">
+              {categories.slice(0, companySettings?.maxCategoriesDisplay || 6).map((category) => {
+                // Gradiente azul tenue y suave para todas las categorías
+                const gradient = 'from-[#6b9edd] via-[#5a8ad0] to-[#4a7dc4]';
 
                 return (
                   <Link
                     key={category.id}
                     href={`/categorias/${category.slug}`}
-                    className="group relative w-32 sm:w-36 bg-[#f8f9fa] hover:bg-white border border-[#e9ecef] rounded-xl p-6 transition-all hover:shadow-lg hover:border-[#2a63cd]/30 hover:-translate-y-1"
+                    className="group relative w-40 sm:w-48 bg-[#f8f9fa] hover:bg-white border border-[#e9ecef] rounded-2xl p-6 transition-all hover:shadow-xl hover:border-[#2a63cd]/40 hover:-translate-y-2"
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-5 rounded-xl transition-opacity`}></div>
-                    <div className="relative flex flex-col items-center gap-3">
-                      <div className={`flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br ${gradient} text-white shadow-md group-hover:scale-110 transition-transform duration-300 overflow-hidden`}>
-                        {category.image ? (
-                          <Image
-                            src={category.image}
-                            alt={category.name}
-                            width={56}
-                            height={56}
-                            className="w-full h-full object-cover"
+                    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity`}></div>
+                    <div className="relative flex flex-col items-center gap-4">
+                      {/* 3D Glossy Icon with Shine Effect */}
+                      <div className="relative w-24 h-24">
+                        <div
+                          className={`
+                            relative w-full h-full rounded-2xl flex items-center justify-center
+                            bg-gradient-to-br ${gradient}
+                            shadow-xl
+                            group-hover:scale-110 transition-all duration-500
+                            overflow-hidden
+                          `}
+                          style={{
+                            boxShadow: `
+                              0 10px 40px -10px rgba(107, 158, 221, 0.5),
+                              0 6px 16px -6px rgba(74, 125, 196, 0.4),
+                              inset 0 2px 0 rgba(255, 255, 255, 0.6),
+                              inset 0 -2px 0 rgba(0, 0, 0, 0.15)
+                            `,
+                            border: '1px solid rgba(255, 255, 255, 0.3)'
+                          }}
+                        >
+                          {/* Glossy overlay */}
+                          <div
+                            className="absolute inset-0 rounded-2xl"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.1) 100%)',
+                              pointerEvents: 'none'
+                            }}
                           />
-                        ) : (
-                          <FiGrid className="w-7 h-7" />
-                        )}
+                          {/* Shine effect on hover */}
+                          <div
+                            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                            style={{
+                              background: 'linear-gradient(45deg, transparent 20%, rgba(255,255,255,0.5) 50%, transparent 80%)',
+                              backgroundSize: '200% 200%',
+                              animation: 'shine 2s infinite'
+                            }}
+                          />
+                          {/* Icon/Image with rotation */}
+                          <div className="relative z-10 group-hover:rotate-12 transition-transform duration-500 drop-shadow-lg w-full h-full p-2 flex items-center justify-center">
+                            {category.image ? (
+                              <Image
+                                src={category.image}
+                                alt={category.name}
+                                width={80}
+                                height={80}
+                                className="w-full h-full object-cover drop-shadow-md"
+                              />
+                            ) : (
+                              <FiGrid className="w-10 h-10 text-white" />
+                            )}
+                          </div>
+                          {/* Bottom glow */}
+                          <div
+                            className="absolute inset-0 rounded-2xl opacity-40"
+                            style={{
+                              background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25) 0%, transparent 50%)',
+                              pointerEvents: 'none'
+                            }}
+                          />
+                        </div>
                       </div>
-                      <h3 className="text-sm font-bold text-[#212529] group-hover:text-[#2a63cd] transition-colors text-center line-clamp-1">{category.name}</h3>
+                      <h3 className="text-base font-bold text-[#212529] group-hover:text-[#2a63cd] transition-colors text-center line-clamp-2">{category.name}</h3>
                     </div>
                   </Link>
                 );

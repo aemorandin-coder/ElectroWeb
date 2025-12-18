@@ -149,7 +149,11 @@ export default function HotAdOverlay() {
                 height: '100vh',
                 backgroundColor: hexToRgba(settings.hotAdBackdropColor, settings.hotAdBackdropOpacity / 100),
                 backdropFilter: 'blur(8px)',
+                overscrollBehavior: 'contain',
+                touchAction: 'none',
             }}
+            onWheel={(e) => e.preventDefault()}
+            onTouchMove={(e) => e.preventDefault()}
             onClick={(e) => e.stopPropagation()}
         >
             {/* Close Button */}

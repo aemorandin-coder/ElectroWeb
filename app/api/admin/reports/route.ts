@@ -55,11 +55,18 @@ export async function GET(request: NextRequest) {
                 securityAlerts,
                 criticalAlerts,
             ] = await Promise.all([
-                // Total users
-                prisma.user.count(),
-                // New users in period
+                // Total users (excluding ADMIN and SUPER_ADMIN)
                 prisma.user.count({
-                    where: { createdAt: { gte: startDate } },
+                    where: {
+                        role: { notIn: ['ADMIN', 'SUPER_ADMIN'] },
+                    },
+                }),
+                // New users in period (excluding ADMIN and SUPER_ADMIN)
+                prisma.user.count({
+                    where: {
+                        createdAt: { gte: startDate },
+                        role: { notIn: ['ADMIN', 'SUPER_ADMIN'] },
+                    },
                 }),
                 // Total orders
                 prisma.order.count(),

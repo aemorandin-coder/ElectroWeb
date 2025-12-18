@@ -923,6 +923,14 @@ export default function ProductDetailPage() {
                   {/* Buy Now */}
                   <button
                     onClick={() => {
+                      // Check if user is logged in before proceeding to checkout
+                      if (!session) {
+                        // Save the current product URL for redirect after login
+                        const currentUrl = `/productos/${product.slug}`;
+                        toast.error('Inicia sesión para continuar con la compra');
+                        router.push(`/login?callbackUrl=${encodeURIComponent(currentUrl)}&action=buy`);
+                        return;
+                      }
                       handleAddToCart();
                       router.push('/checkout');
                     }}

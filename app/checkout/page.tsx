@@ -273,7 +273,7 @@ export default function CheckoutPage() {
 
     if (!session?.user) {
       setError('Debes iniciar sesion para realizar un pedido');
-      router.push('/login?redirect=checkout');
+      router.push('/login?callbackUrl=%2Fcheckout');
       return;
     }
 

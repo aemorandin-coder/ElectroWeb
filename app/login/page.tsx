@@ -31,6 +31,7 @@ function LoginPageContent() {
     logo: string | null;
     tagline: string | null;
   } | null>(null);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   // Captcha state
   const captchaRef = useRef<HCaptcha>(null);
@@ -104,7 +105,8 @@ function LoginPageContent() {
           tagline: data.tagline,
         });
       })
-      .catch(err => console.error('Error loading company settings:', err));
+      .catch(err => console.error('Error loading company settings:', err))
+      .finally(() => setSettingsLoaded(true));
   }, []);
 
   // Check if redirect is for admin and handle errors
@@ -216,9 +218,13 @@ function LoginPageContent() {
         if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userTypeFromSession === 'admin') {
           window.location.href = '/admin';
         } else {
-          // Redirect based on callback or home
+          // Redirect based on callback URL or home
           const callbackUrl = searchParams.get('callbackUrl');
+          const action = searchParams.get('action');
+
           if (callbackUrl && callbackUrl.startsWith('/') && !callbackUrl.includes('/admin')) {
+            // If action was 'buy', go to the product then they can checkout
+            // For regular flows, just go to the callback URL
             window.location.href = callbackUrl;
           } else {
             window.location.href = '/';
@@ -286,7 +292,12 @@ function LoginPageContent() {
       <div className="w-full max-w-[450px] relative z-10 -mt-[10%]">
         {/* Logo Section - Only Logo, no text */}
         <div className="text-center mb-4 animate-fadeIn">
-          {companySettings?.logo ? (
+          {!settingsLoaded ? (
+            /* Loading skeleton while settings load */
+            <div className="relative w-36 h-36 mx-auto animate-pulse">
+              <div className="w-full h-full bg-white/20 rounded-2xl" />
+            </div>
+          ) : companySettings?.logo ? (
             <div className="relative w-36 h-36 mx-auto animate-scaleIn drop-shadow-2xl filter brightness-110">
               <Image
                 src={companySettings.logo}
@@ -297,9 +308,10 @@ function LoginPageContent() {
               />
             </div>
           ) : (
+            /* Fallback: shopping bag icon instead of lightning bolt */
             <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md shadow-2xl border border-white/30 animate-scaleIn">
               <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
             </div>
           )}

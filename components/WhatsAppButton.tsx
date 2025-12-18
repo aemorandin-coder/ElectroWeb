@@ -20,17 +20,24 @@ const SEED_PHONE_NUMBERS = [
   '+58-424-1234567',
 ];
 
+// Clean phone number - remove all non-digit characters except leading +
+const cleanPhoneNumber = (phone: string): string => {
+  // Remove all characters except digits
+  const digits = phone.replace(/\D/g, '');
+  return digits;
+};
+
 export default function WhatsAppButton({
   phoneNumber,
   message
 }: WhatsAppButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [settings, setSettings] = useState<{ whatsapp: string | null; companyName: string | null } | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
   const isAdminPanel = pathname?.startsWith('/admin');
-  const isCustomerPanel = pathname?.startsWith('/customer');
   const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN';
 
   useEffect(() => {
@@ -44,6 +51,28 @@ export default function WhatsAppButton({
     }
   }, [isAdminPanel]);
 
+  // Auto-minimize after 3 seconds
+  useEffect(() => {
+    if (!isAdminPanel) {
+      const timer = setTimeout(() => {
+        setIsMinimized(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAdminPanel]);
+
+  // When user hovers, expand; when they leave, wait a bit then minimize again
+  useEffect(() => {
+    if (isHovered) {
+      setIsMinimized(false);
+    } else {
+      const timer = setTimeout(() => {
+        setIsMinimized(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isHovered]);
+
   // Don't render WhatsApp button in admin panel
   if (isAdminPanel) {
     return null;
@@ -55,9 +84,12 @@ export default function WhatsAppButton({
     return null;
   }
 
+  // Clean the number for comparison and URL
+  const cleanedNumber = cleanPhoneNumber(whatsappNumber);
+
   // Check if the number is a seed/placeholder number
   const isSeedNumber = SEED_PHONE_NUMBERS.some(seed =>
-    whatsappNumber.replace(/[\s\-\+]/g, '').includes(seed.replace(/[\s\-\+]/g, ''))
+    cleanedNumber.includes(cleanPhoneNumber(seed))
   );
 
   const defaultMessage = message || `Hola! Tengo una consulta sobre los productos de ${settings?.companyName || 'Electro Shop'}`;
@@ -87,20 +119,23 @@ export default function WhatsAppButton({
       return;
     }
 
+    // Use the cleaned number in the URL
     const encodedMessage = encodeURIComponent(defaultMessage);
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${cleanedNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-40 transition-all duration-500 ease-out ${isCustomerPanel && !isHovered ? 'scale-50 opacity-60' : 'scale-100 opacity-100'
+      className={`fixed bottom-6 right-6 z-40 transition-all duration-500 ease-out ${isMinimized && !isHovered
+          ? 'scale-50 opacity-60'
+          : 'scale-100 opacity-100'
         }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Epic Tooltip - Only show when hovered and not minimized */}
-      {isHovered && (
+      {isHovered && !isMinimized && (
         <div className="absolute bottom-full right-0 mb-3 animate-fade-in">
           <div className="relative px-4 py-2.5 bg-gradient-to-br from-green-500/90 to-green-600/90 backdrop-blur-xl border border-green-400/30 rounded-xl shadow-2xl min-w-[200px]">
             {/* Glow effect */}
@@ -122,8 +157,8 @@ export default function WhatsAppButton({
         </div>
       )}
 
-      {/* Minimized indicator - pulse when minimized in customer panel */}
-      {isCustomerPanel && !isHovered && (
+      {/* Minimized indicator - pulse when minimized */}
+      {isMinimized && !isHovered && (
         <div className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-30"></div>
       )}
 
@@ -147,7 +182,7 @@ export default function WhatsAppButton({
         </svg>
 
         {/* Notification badge - hide when minimized */}
-        {(!isCustomerPanel || isHovered) && (
+        {!isMinimized && (
           <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
             <span className="text-[10px] text-white font-bold">1</span>
           </div>

@@ -63,4 +63,44 @@ fetch('/api/admin/promote-super-admin', {
 
 ---
 
+## Actualización 18/12/2024 - Sesión 2
+
+### 🛒 Página de Carrito (`/carrito`)
+1. **Precios en Bs.**: Ahora se muestran en USD y Bs. con la tasa de cambio
+2. **Animaciones Premium**: Entrada de items, hover effects, botón "Vaciar" con shake
+3. **React Icons**: Reemplazados emojis por iconos premium (FiShield, HiBadgeCheck, FiTruck)
+4. **Footer**: Agregado footer con copyright dinámico
+5. **Estado vacío mejorado**: Diseño más amplio y centrado
+
+### 🏠 Homepage
+1. **Productos Destacados**: Cambiado texto de "Ofertas del día" a "Productos Destacados"
+
+### ⚙️ Panel del Cliente - Configuración (`/customer/settings`)
+**Refactorización completa con backend funcional:**
+
+#### Nuevos campos en DB (Profile):
+- `lastLoginAt`, `lastLoginDevice`, `lastLoginIp` (sesión)
+- `allowSurveys`, `shareAnonymousData` (privacidad)
+- `accountStatus`, `deactivatedAt`, `deletionRequestedAt`, `deletionReason` (estado de cuenta)
+
+#### Nuevas funcionalidades:
+1. **Información de Sesión**: Último acceso, dispositivo, cerrar todas las sesiones
+2. **Preferencias de Privacidad**: Encuestas y datos anónimos (guardado en DB)
+3. **Zona de Peligro**: Desactivar cuenta temporal, solicitar eliminación permanente
+4. **Cambio de Contraseña**: Ahora funcional con validación real
+5. **Notificaciones**: Conectadas al modelo NotificationPreference
+
+#### Layout mejorado:
+- 3 columnas flexibles (estilo Marketing)
+- Toggle switches compactos
+- Iconos React Icons premium
+
+### 🔧 Migración de Base de Datos
+Ejecutar después del despliegue:
+```bash
+npx prisma db push
+```
+
+---
+
 *Generado automáticamente - Antigravity AI*

@@ -269,7 +269,7 @@ export default async function Home() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-3xl font-black text-white mb-1">Ofertas del día</h2>
+              <h2 className="text-3xl font-black text-white mb-1">Productos Destacados</h2>
               <p className="text-sm text-white/80 font-medium">Aprovecha los mejores precios en tecnología</p>
             </div>
             <Link

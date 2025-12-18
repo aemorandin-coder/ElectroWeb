@@ -1050,3 +1050,44 @@ model SecurityLog {
   @@map("security_logs")
 }
 
+// Email Configuration for SMTP providers (GoDaddy, Gmail, etc)
+model EmailSettings {
+  id                    String   @id @default("default")
+  
+  // Provider Selection
+  provider              String   @default("godaddy") // godaddy, gmail, outlook, custom
+  
+  // SMTP Configuration
+  smtpHost              String?  // e.g., smtpout.secureserver.net for GoDaddy
+  smtpPort              Int      @default(465)
+  smtpSecure            Boolean  @default(true) // true for SSL/TLS
+  smtpUser              String?  // Email address
+  smtpPassword          String?  // Encrypted password
+  
+  // From Details
+  fromName              String?  // Display name
+  fromEmail             String?  // Sender email
+  replyTo               String?  // Reply-to email
+  
+  // Features Toggle
+  notificationsEnabled  Boolean  @default(true)  // Order updates, confirmations
+  marketingEnabled      Boolean  @default(false) // Promotional emails
+  transactionalEnabled  Boolean  @default(true)  // Password reset, verification
+  
+  // Status
+  isConfigured          Boolean  @default(false)
+  lastTestAt            DateTime?
+  lastTestStatus        String?  // success, failed
+  lastTestError         String?
+  
+  // Rate Limiting
+  dailyLimit            Int      @default(500)  // Daily email limit
+  sentToday             Int      @default(0)    // Emails sent today
+  lastResetAt           DateTime?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("email_settings")
+}
+

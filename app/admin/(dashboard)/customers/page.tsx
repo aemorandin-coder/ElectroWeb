@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
 import Image from 'next/image';
-import { FiUser, FiBriefcase, FiBarChart2, FiCheck, FiX, FiFileText, FiDownload } from 'react-icons/fi';
+import Link from 'next/link';
+import { FiUser, FiBriefcase, FiBarChart2, FiCheck, FiX, FiFileText, FiDownload, FiShield } from 'react-icons/fi';
 
 interface Customer {
   id: string;
@@ -58,6 +59,7 @@ export default function CustomersPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<'PERSONAL' | 'COMPANY' | 'STATS'>('PERSONAL');
+  const [pendingVerifications, setPendingVerifications] = useState(0);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -77,6 +79,22 @@ export default function CustomersPage() {
   useEffect(() => {
     fetchCustomers();
   }, [search]);
+
+  useEffect(() => {
+    // Fetch pending verifications count
+    const fetchPendingCount = async () => {
+      try {
+        const res = await fetch('/api/admin/verifications/pending-count');
+        if (res.ok) {
+          const data = await res.json();
+          setPendingVerifications(data.count || 0);
+        }
+      } catch (e) {
+        console.error('Error fetching pending count:', e);
+      }
+    };
+    fetchPendingCount();
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -230,6 +248,22 @@ export default function CustomersPage() {
             </div>
           </div>
           <div className="hidden md:flex items-center gap-2">
+            <Link
+              href="/admin/verifications"
+              className={`relative flex items-center gap-2 px-3 py-2 border rounded-lg transition-all text-sm font-medium ${pendingVerifications > 0
+                  ? 'bg-gradient-to-r from-orange-500 to-red-500 border-red-400 text-white animate-pulse hover:from-orange-600 hover:to-red-600'
+                  : 'bg-white border-[#e9ecef] text-[#6a6c6b] hover:bg-[#f8f9fa] hover:text-[#2a63cd]'
+                }`}
+              title="Verificaciones Empresariales"
+            >
+              <FiShield className="w-4 h-4" />
+              <span>Verificaciones</span>
+              {pendingVerifications > 0 && (
+                <span className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1.5 bg-red-600 text-white text-[10px] font-bold rounded-full shadow-lg animate-bounce">
+                  {pendingVerifications > 99 ? '99+' : pendingVerifications}
+                </span>
+              )}
+            </Link>
             <button
               onClick={() => fetchCustomers()}
               className="p-2 bg-white border border-[#e9ecef] rounded-lg hover:bg-[#f8f9fa] transition-colors"

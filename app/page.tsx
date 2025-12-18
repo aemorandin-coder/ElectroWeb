@@ -454,7 +454,6 @@ export default async function Home() {
                 <li><Link href="/productos" className="hover:text-[#2a63cd] transition-colors">Productos</Link></li>
                 <li><Link href="/categorias" className="hover:text-[#2a63cd] transition-colors">Categorías</Link></li>
                 <li><Link href="/ofertas" className="hover:text-[#2a63cd] transition-colors">Ofertas</Link></li>
-                <li><Link href="/nuevos" className="hover:text-[#2a63cd] transition-colors">Nuevos Ingresos</Link></li>
               </ul>
             </div>
 

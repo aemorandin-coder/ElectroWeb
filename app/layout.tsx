@@ -7,6 +7,7 @@ import { NotificationProvider } from "@/components/notifications/NotificationPro
 import NotificationToast from "@/components/notifications/NotificationToast";
 import DynamicFavicon from "@/components/DynamicFavicon";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import { getSiteSettings } from "@/lib/site-settings";
 
 // Use local fonts to avoid Google Fonts dependency during build
 // Inter uses system font fallback
@@ -26,11 +27,29 @@ const tektrron = localFont({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Electro Shop Morandin C.A. | Gaming, Laptops & Tecnología",
-  description: "Tienda de tecnología premium en Guanare. Computadoras gaming, laptops, consolas, CCTV y más. Servicio técnico especializado y cursos online.",
-  keywords: ["gaming", "laptops", "tecnología", "Guanare", "Venezuela", "servicio técnico", "cursos online"],
-};
+// Generate dynamic metadata with favicon from database
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+
+  const icons: Metadata['icons'] = {};
+
+  if (settings.favicon) {
+    icons.icon = [
+      { url: settings.favicon, type: 'image/png' },
+      { url: settings.favicon, sizes: '16x16', type: 'image/png' },
+      { url: settings.favicon, sizes: '32x32', type: 'image/png' },
+    ];
+    icons.apple = settings.favicon;
+    icons.shortcut = settings.favicon;
+  }
+
+  return {
+    title: settings.companyName || "Electro Shop Morandin C.A. | Gaming, Laptops & Tecnología",
+    description: settings.tagline || "Tienda de tecnología premium en Guanare. Computadoras gaming, laptops, consolas, CCTV y más. Servicio técnico especializado y cursos online.",
+    keywords: ["gaming", "laptops", "tecnología", "Guanare", "Venezuela", "servicio técnico", "cursos online"],
+    icons,
+  };
+}
 
 export default function RootLayout({
   children,

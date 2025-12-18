@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiCheckCircle, FiXCircle, FiClock, FiFileText, FiDownload, FiSearch, FiFilter, FiEye } from 'react-icons/fi';
+import Link from 'next/link';
+import { FiCheckCircle, FiXCircle, FiClock, FiFileText, FiDownload, FiSearch, FiFilter, FiEye, FiUsers } from 'react-icons/fi';
 import Image from 'next/image';
 
 interface VerificationRequest {
@@ -96,16 +97,25 @@ export default function VerificationsPage() {
 
     return (
         <div className="p-6 space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">Verificación de Empresas</h1>
+            <div className="flex justify-between items-center flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/admin/customers"
+                        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm text-gray-600 hover:text-blue-600"
+                    >
+                        <FiUsers className="w-4 h-4" />
+                        <span>Clientes</span>
+                    </Link>
+                    <h1 className="text-2xl font-bold text-gray-800">Verificación de Empresas</h1>
+                </div>
                 <div className="flex gap-2">
                     {['PENDING', 'APPROVED', 'REJECTED', 'ALL'].map((status) => (
                         <button
                             key={status}
                             onClick={() => setFilter(status)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === status
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                                 }`}
                         >
                             {status === 'ALL' ? 'Todos' : status === 'PENDING' ? 'Pendientes' : status === 'APPROVED' ? 'Aprobados' : 'Rechazados'}

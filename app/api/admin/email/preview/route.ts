@@ -9,6 +9,7 @@ const EMAIL_TEMPLATES = [
     { id: 'verification', name: 'Verificacion de Email', description: 'Verificar cuenta nueva' },
     { id: 'password_reset', name: 'Recuperar Contrasena', description: 'Enlace para restablecer contrasena' },
     { id: 'order_confirmation', name: 'Confirmacion de Pedido', description: 'Nuevo pedido creado' },
+    { id: 'order_pending_payment', name: 'Pedido Pendiente de Pago', description: 'Compra en revision por completar pago' },
     { id: 'order_shipped', name: 'Pedido Enviado', description: 'Notificacion de envio' },
     { id: 'order_delivered', name: 'Pedido Entregado', description: 'Confirmacion de entrega' },
     { id: 'marketing', name: 'Campana de Marketing', description: 'Email promocional' },
@@ -213,6 +214,38 @@ const generateEmailHtml = async (templateId: string, settings: any) => {
                     <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:10px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(42,99,205,0.3);">
                         Ver mi Pedido
                     </a>
+                </div>
+            `,
+        },
+        order_pending_payment: {
+            preheader: 'Tu pedido esta siendo revisado',
+            content: `
+                <div style="text-align:center;margin-bottom:30px;">
+                    <div style="width:80px;height:80px;background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(245,158,11,0.3);">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <h2 style="margin:0 0 10px;color:#212529;font-size:26px;font-weight:700;">Pedido en Revision</h2>
+                    <p style="color:#f59e0b;font-size:18px;font-weight:600;margin:0;">Orden #ORD-XXXXX</p>
+                </div>
+                <div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:16px;padding:25px;margin:25px 0;border:1px solid #f59e0b;">
+                    <p style="margin:0 0 8px;color:#92400e;font-size:15px;font-weight:700;">Estamos revisando tu pago</p>
+                    <p style="margin:0;color:#78350f;font-size:14px;line-height:1.6;">Tu pedido ha sido recibido y esta pendiente de confirmacion de pago. Nuestro equipo esta verificando tu transaccion. Este proceso puede tomar hasta 24 horas habiles.</p>
+                </div>
+                <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
+                    Hola <strong style="color:#212529;">Cliente</strong>,<br><br>
+                    Gracias por tu compra. Hemos recibido tu pedido y actualmente estamos verificando el pago. Una vez confirmado, te enviaremos un email de confirmacion y comenzaremos a preparar tu envio.
+                </p>
+                <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:20px 0;">
+                    <p style="margin:0 0 10px;color:#212529;font-size:14px;font-weight:600;">Que sigue?</p>
+                    <ul style="margin:0;padding-left:20px;color:#6a6c6b;font-size:13px;line-height:1.8;">
+                        <li>Verificaremos tu comprobante de pago</li>
+                        <li>Una vez aprobado, prepararemos tu pedido</li>
+                        <li>Recibiras un email cuando tu pedido sea enviado</li>
+                    </ul>
+                </div>
+                <p style="color:#6a6c6b;font-size:14px;margin:20px 0;">Si ya realizaste el pago y aun no has enviado el comprobante, puedes hacerlo desde tu cuenta o contactarnos directamente.</p>
+                <div style="text-align:center;">
+                    <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:10px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(42,99,205,0.3);">Ver Estado de mi Pedido</a>
                 </div>
             `,
         },

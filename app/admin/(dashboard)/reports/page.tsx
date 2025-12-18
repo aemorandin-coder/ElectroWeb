@@ -330,13 +330,9 @@ export default function ReportsPage() {
                     {activeTab === 'interactions' && (
                         <div className="w-full space-y-6">
                             {!interactions || (interactions.byDevice.length === 0 && interactions.byType.length === 0 && interactions.topPages.length === 0) ? (
-                                <div className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-                                    <FiMousePointer className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                                    <h3 className="text-xl font-semibold text-gray-700 mb-2">No hay datos de interacciones aún</h3>
-                                    <p className="text-gray-500 max-w-lg mx-auto">
-                                        Los datos de interacciones se recopilan automáticamente cuando los usuarios navegan por la web.
-                                        Navega por las diferentes páginas para generar datos.
-                                    </p>
+                                <div className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+                                    <FiMousePointer className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                    <p className="text-gray-500">No hay datos de interacciones. Los datos se recopilan automáticamente cuando los usuarios navegan por la tienda.</p>
                                 </div>
                             ) : (
                                 <>

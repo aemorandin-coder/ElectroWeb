@@ -1,11 +1,18 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import EpicTooltip from '@/components/EpicTooltip';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
+
+// Constants for failed attempts
+const FAILED_ATTEMPTS_KEY = 'login_failed_attempts';
+const FAILED_ATTEMPTS_EXPIRY_KEY = 'login_failed_attempts_expiry';
+const MAX_ATTEMPTS_BEFORE_CAPTCHA = 2;
+const ATTEMPTS_EXPIRY_TIME = 15 * 60 * 1000; // 15 minutes
 
 function LoginPageContent() {
   const router = useRouter();
@@ -24,6 +31,67 @@ function LoginPageContent() {
     logo: string | null;
     tagline: string | null;
   } | null>(null);
+
+  // Captcha state
+  const captchaRef = useRef<HCaptcha>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [requiresCaptcha, setRequiresCaptcha] = useState(false);
+
+  // Load failed attempts from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedAttempts = localStorage.getItem(FAILED_ATTEMPTS_KEY);
+      const expiry = localStorage.getItem(FAILED_ATTEMPTS_EXPIRY_KEY);
+
+      if (storedAttempts && expiry) {
+        if (Date.now() > parseInt(expiry)) {
+          // Expired, reset
+          localStorage.removeItem(FAILED_ATTEMPTS_KEY);
+          localStorage.removeItem(FAILED_ATTEMPTS_EXPIRY_KEY);
+          setFailedAttempts(0);
+          setRequiresCaptcha(false);
+        } else {
+          const attempts = parseInt(storedAttempts);
+          setFailedAttempts(attempts);
+          setRequiresCaptcha(attempts >= MAX_ATTEMPTS_BEFORE_CAPTCHA);
+        }
+      }
+    }
+  }, []);
+
+  // Captcha handlers
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+  };
+
+  // Helper to update failed attempts
+  const incrementFailedAttempts = () => {
+    const newAttempts = failedAttempts + 1;
+    setFailedAttempts(newAttempts);
+    localStorage.setItem(FAILED_ATTEMPTS_KEY, String(newAttempts));
+    localStorage.setItem(FAILED_ATTEMPTS_EXPIRY_KEY, String(Date.now() + ATTEMPTS_EXPIRY_TIME));
+
+    if (newAttempts >= MAX_ATTEMPTS_BEFORE_CAPTCHA) {
+      setRequiresCaptcha(true);
+    }
+
+    // Reset captcha for next attempt
+    captchaRef.current?.resetCaptcha();
+    setCaptchaToken(null);
+  };
+
+  // Helper to reset failed attempts on successful login
+  const resetFailedAttempts = () => {
+    setFailedAttempts(0);
+    setRequiresCaptcha(false);
+    localStorage.removeItem(FAILED_ATTEMPTS_KEY);
+    localStorage.removeItem(FAILED_ATTEMPTS_EXPIRY_KEY);
+  };
 
   // Load company settings
   useEffect(() => {
@@ -112,6 +180,13 @@ function LoginPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Check captcha if required
+    if (requiresCaptcha && !captchaToken) {
+      setError('Por favor, completa la verificación de seguridad.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -123,8 +198,11 @@ function LoginPageContent() {
       });
 
       if (result?.error) {
+        incrementFailedAttempts();
         setError('Credenciales invalidas. Por favor, verifique su informacion.');
       } else if (result?.ok) {
+        // Reset failed attempts on success
+        resetFailedAttempts();
         // Wait a bit for session to be established
         await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -320,6 +398,38 @@ function LoginPageContent() {
                 </div>
               </div>
 
+              {/* Captcha - Shows after 2 failed attempts */}
+              <div className={`space-y-2 transition-all duration-300 ${requiresCaptcha ? 'opacity-100 max-h-[200px]' : 'opacity-0 max-h-0 overflow-hidden'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20">
+                    <svg className="w-3 h-3 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <p className="text-xs text-amber-200">
+                    Verificación de seguridad requerida
+                  </p>
+                </div>
+                <div className="flex justify-center rounded-xl overflow-hidden bg-white/5 p-2">
+                  <HCaptcha
+                    sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
+                    onVerify={handleCaptchaVerify}
+                    onExpire={handleCaptchaExpire}
+                    ref={captchaRef}
+                    theme="dark"
+                    size={requiresCaptcha ? 'normal' : 'invisible'}
+                  />
+                </div>
+                {captchaToken && (
+                  <div className="flex items-center gap-1.5 text-xs text-green-300">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Verificación completada
+                  </div>
+                )}
+              </div>
+
               {/* Error Message */}
               {error && (
                 <div className="flex items-start gap-3 p-4 bg-red-500/20 border border-red-500/30 rounded-xl animate-shake backdrop-blur-sm">
@@ -335,7 +445,7 @@ function LoginPageContent() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || (requiresCaptcha && !captchaToken)}
                 className="group relative w-full bg-white text-[#2a63cd] font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none overflow-hidden"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2 text-base">

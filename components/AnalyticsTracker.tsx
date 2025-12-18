@@ -67,17 +67,23 @@ export default function AnalyticsTracker() {
     const pathname = usePathname();
     const lastPathname = useRef<string>('');
 
-    // Track page views
+    // Track page views - exclude admin paths
     useEffect(() => {
         if (pathname && pathname !== lastPathname.current) {
+            // Don't track admin panel interactions
+            if (pathname.startsWith('/admin')) return;
+
             lastPathname.current = pathname;
             trackPageView(pathname);
         }
     }, [pathname]);
 
-    // Track clicks on interactive elements
+    // Track clicks on interactive elements - exclude admin paths
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
+            // Don't track admin panel clicks
+            if (window.location.pathname.startsWith('/admin')) return;
+
             const target = e.target as HTMLElement;
 
             // Track button clicks
@@ -108,9 +114,12 @@ export default function AnalyticsTracker() {
         return () => document.removeEventListener('click', handleClick);
     }, []);
 
-    // Track form submissions
+    // Track form submissions - exclude admin paths
     useEffect(() => {
         const handleSubmit = (e: Event) => {
+            // Don't track admin form submissions
+            if (window.location.pathname.startsWith('/admin')) return;
+
             const form = e.target as HTMLFormElement;
             const formId = form.id || form.getAttribute('name') || 'unknown_form';
             trackEvent({

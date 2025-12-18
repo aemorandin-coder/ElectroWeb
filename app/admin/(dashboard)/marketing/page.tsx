@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import { EmptyState } from '@/components/ui/EmptyState';
+import EmailSettingsPanel from '@/components/admin/EmailSettingsPanel';
+import SocialMediaGenerator from '@/components/admin/SocialMediaGenerator';
 import {
     FiMail, FiSend, FiImage, FiSettings, FiUsers, FiCheck, FiX,
     FiRefreshCw, FiEdit3, FiTrash2, FiPlus, FiEye, FiTarget,
@@ -200,7 +202,7 @@ function PreviewTab() {
 
 
 export default function MarketingPage() {
-    const [activeTab, setActiveTab] = useState<'email' | 'preview' | 'campaigns' | 'settings'>('email');
+    const [activeTab, setActiveTab] = useState<'email' | 'preview' | 'campaigns' | 'social' | 'settings'>('email');
     const [emailConfig, setEmailConfig] = useState<EmailConfig | null>(null);
     const [loading, setLoading] = useState(true);
     const [testEmail, setTestEmail] = useState('');
@@ -318,6 +320,7 @@ export default function MarketingPage() {
         { id: 'email', label: 'Email', icon: FiMail },
         { id: 'preview', label: 'Plantillas', icon: FiEye },
         { id: 'campaigns', label: 'Campanas', icon: FiTarget },
+        { id: 'social', label: 'Redes Sociales', icon: FiImage },
         { id: 'settings', label: 'Configuracion', icon: FiSettings },
     ];
 
@@ -581,43 +584,14 @@ export default function MarketingPage() {
                 </div>
             )}
 
+            {/* SOCIAL TAB */}
+            {activeTab === 'social' && (
+                <SocialMediaGenerator />
+            )}
+
             {/* SETTINGS TAB */}
             {activeTab === 'settings' && (
-                <div className="bg-white rounded-xl border border-[#e9ecef] overflow-hidden">
-                    <div className="px-4 py-3 border-b border-[#e9ecef]">
-                        <h2 className="font-bold text-sm text-[#212529]">Configuración de Email</h2>
-                    </div>
-
-                    <div className="p-4 space-y-4">
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
-                            <FiAlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                            <p className="text-xs text-amber-800">
-                                La configuración SMTP se realiza mediante variables de entorno en el archivo <code className="bg-amber-100 px-1 rounded">.env</code>
-                            </p>
-                        </div>
-
-                        <div>
-                            <h3 className="font-bold text-sm text-[#212529] mb-3">Notificaciones Automáticas</h3>
-                            <div className="grid grid-cols-2 gap-2">
-                                {[
-                                    { label: 'Al crear pedido', enabled: true },
-                                    { label: 'Cambio de estado', enabled: true },
-                                    { label: 'Pago confirmado', enabled: true },
-                                    { label: 'Envío actualizado', enabled: true },
-                                    { label: 'Reseña aprobada', enabled: false },
-                                    { label: 'Bienvenida', enabled: true },
-                                ].map((item, index) => (
-                                    <div key={index} className="flex items-center justify-between p-3 bg-[#f8f9fa] rounded-lg">
-                                        <span className="text-xs font-medium text-[#212529]">{item.label}</span>
-                                        <div className={`w-8 h-5 rounded-full relative cursor-pointer transition-colors ${item.enabled ? 'bg-[#2a63cd]' : 'bg-gray-300'}`}>
-                                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${item.enabled ? 'right-0.5' : 'left-0.5'}`} />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <EmailSettingsPanel />
             )}
 
             {/* Campaign Modal */}

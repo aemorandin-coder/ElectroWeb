@@ -213,9 +213,16 @@ model Product {
   productType ProductType @default(PHYSICAL)
   
   // Digital Product Fields
-  digitalPlatform   String?  // STEAM, PLAYSTATION, XBOX, NINTENDO, ROBLOX, FREEFIRE, etc.
-  digitalRegion     String?  // GLOBAL, USA, LATAM, EU, etc.
-  deliveryMethod    String?  // INSTANT (code delivered immediately) or MANUAL (admin sends code)
+  digitalPlatform       String?  // STEAM, PLAYSTATION, XBOX, NINTENDO, ROBLOX, FREEFIRE, etc.
+  digitalRegion         String?  // GLOBAL, USA, LATAM, EU, etc.
+  deliveryMethod        String?  // INSTANT (code delivered immediately) or MANUAL (admin sends code)
+  redemptionInstructions String? // Custom instructions for redeeming the digital code
+  
+  // Shipping Fields (for PHYSICAL products only)
+  weightKg        Decimal?  @default(0)     // Weight in kilograms
+  dimensions      String?                    // JSON: {length, width, height} in cm
+  isConsolidable  Boolean   @default(true)  // Can be shipped with other products in same box
+  shippingCost    Decimal?  @default(0)     // Fixed shipping cost (for non-consolidable items)
   
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
@@ -598,8 +605,11 @@ model CompanySettings {
   
   // Shipping & Delivery
   deliveryEnabled Boolean @default(true)
-  deliveryFeeUSD Decimal?
-  freeDeliveryThresholdUSD Decimal?
+  deliveryFeeUSD Decimal?                    // Legacy: flat delivery fee (deprecated, use per-product)
+  freeDeliveryThresholdUSD Decimal?          // Free shipping if order total >= this amount
+  shippingCostPerKg Decimal? @default(2)     // Cost per kg for consolidable products
+  minConsolidatedShipping Decimal? @default(3) // Minimum shipping for consolidated items
+  packagingFeeUSD Decimal? @default(2.5)     // Fixed packaging/handling fee
   pickupEnabled Boolean @default(true)
   pickupAddress String?
   pickupInstructions String?

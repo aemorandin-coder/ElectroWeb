@@ -592,8 +592,9 @@ export default function ProfilePage() {
                   {/* Basic Info */}
                   <div>
                     <h2 className="text-base font-bold text-[#212529] mb-2">Información Básica</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="relative group">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {/* Nombre - 2 columnas */}
+                      <div className="col-span-2 relative group">
                         <label className="block text-xs font-medium text-[#212529] mb-1.5">
                           <FiUser className="inline w-3.5 h-3.5 mr-1" />
                           Nombre Completo *
@@ -617,23 +618,26 @@ export default function ProfilePage() {
                           </div>
                         )}
                       </div>
-                      <div className="relative group">
+
+                      {/* Cédula - 1 columna (compacto) */}
+                      <div className="col-span-1 relative group">
                         <label className="block text-xs font-medium text-[#212529] mb-1.5">
                           <FiFileText className="inline w-3.5 h-3.5 mr-1" />
-                          Cédula / Pasaporte *
+                          Cédula *
                         </label>
                         <input
                           type="text"
                           value={profile.idNumber}
                           onChange={(e) => !profile.idNumber && setProfile({ ...profile, idNumber: e.target.value })}
                           disabled={!!profile.idNumber}
-                          className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] disabled:bg-gray-100 disabled:cursor-not-allowed"
-                          placeholder="Ej: V-12345678"
+                          maxLength={12}
+                          className="w-full px-2 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] disabled:bg-gray-100 disabled:cursor-not-allowed uppercase"
+                          placeholder="V-12345678"
                         />
                         {profile.idNumber && (
-                          <div className="absolute hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-xs rounded-lg px-3 py-2 z-20 shadow-xl">
+                          <div className="absolute hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-xs rounded-lg px-3 py-2 z-20 shadow-xl">
                             <div className="relative">
-                              <strong>Información bloqueada:</strong> Contacta al administrador para cambiar este campo
+                              <strong>Bloqueado:</strong> Contacta al admin
                             </div>
                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
                               <div className="border-4 border-transparent border-t-[#1e4ba3]"></div>
@@ -641,7 +645,75 @@ export default function ProfilePage() {
                           </div>
                         )}
                       </div>
-                      <div>
+
+                      {/* Teléfono - 1 columna (compacto) */}
+                      <div className="col-span-1">
+                        <label className="block text-xs font-medium text-[#212529] mb-1.5">
+                          <FiPhone className="inline w-3.5 h-3.5 mr-1" />
+                          Teléfono
+                        </label>
+                        <div className="flex gap-1">
+                          {/* Country Dropdown - Compacto */}
+                          <div className="relative" ref={dropdownRef}>
+                            <button
+                              type="button"
+                              onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                              className="h-full px-1.5 py-2 bg-white border border-[#e9ecef] rounded-lg flex items-center gap-0.5 hover:bg-gray-50 transition-all"
+                            >
+                              <div className="relative w-4 h-3 shadow-sm rounded-sm overflow-hidden flex-shrink-0">
+                                <Image
+                                  src={`https://flagcdn.com/w40/${COUNTRY_CODES.find(c => c.code === countryCode)?.iso || 've'}.png`}
+                                  alt="Flag"
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                              <svg className={`w-2 h-2 text-gray-500 transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+
+                            {showCountryDropdown && (
+                              <div className="absolute top-full left-0 mt-1 w-48 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl z-50">
+                                {COUNTRY_CODES.map((country) => (
+                                  <button
+                                    key={country.code}
+                                    type="button"
+                                    onClick={() => {
+                                      setCountryCode(country.code);
+                                      setShowCountryDropdown(false);
+                                    }}
+                                    className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                                  >
+                                    <div className="relative w-4 h-3 shadow-sm rounded-sm overflow-hidden flex-shrink-0">
+                                      <Image
+                                        src={`https://flagcdn.com/w40/${country.iso}.png`}
+                                        alt={country.country}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                    <span className="text-xs text-gray-700 flex-1 truncate">{country.country}</span>
+                                    <span className="text-[10px] text-blue-600 font-mono">{country.code}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <input
+                            type="tel"
+                            value={profile.phone}
+                            onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                            maxLength={11}
+                            className="flex-1 min-w-0 px-2 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
+                            placeholder="4121234567"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Email - 2 columnas */}
+                      <div className="col-span-2">
                         <label className="block text-xs font-medium text-[#212529] mb-1.5">
                           <FiMail className="inline w-3.5 h-3.5 mr-1" />
                           Email
@@ -653,90 +725,30 @@ export default function ProfilePage() {
                           className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg bg-[#f8f9fa] text-[#6a6c6b] cursor-not-allowed"
                         />
                       </div>
-                      <div className="md:col-span-1">
-                        <label className="block text-xs font-medium text-[#212529] mb-1.5">
-                          <FiPhone className="inline w-3.5 h-3.5 mr-1" />
-                          Teléfono
-                        </label>
-                        <div className="flex gap-2">
-                          {/* Country Dropdown */}
-                          <div className="relative" ref={dropdownRef}>
-                            <button
-                              type="button"
-                              onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                              className="h-full px-2 bg-white border border-[#e9ecef] rounded-lg flex items-center gap-1 hover:bg-gray-50 transition-all min-w-[80px]"
-                            >
-                              <div className="relative w-5 h-3.5 shadow-sm rounded-sm overflow-hidden flex-shrink-0">
-                                <Image
-                                  src={`https://flagcdn.com/w40/${COUNTRY_CODES.find(c => c.code === countryCode)?.iso || 've'}.png`}
-                                  alt="Flag"
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                              <span className="text-xs font-medium text-[#212529]">{countryCode}</span>
-                              <svg className={`w-2.5 h-2.5 text-gray-500 transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </button>
 
-                            {showCountryDropdown && (
-                              <div className="absolute top-full left-0 mt-1 w-56 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl z-50">
-                                {COUNTRY_CODES.map((country) => (
-                                  <button
-                                    key={country.code}
-                                    type="button"
-                                    onClick={() => {
-                                      setCountryCode(country.code);
-                                      setShowCountryDropdown(false);
-                                    }}
-                                    className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
-                                  >
-                                    <div className="relative w-5 h-3.5 shadow-sm rounded-sm overflow-hidden flex-shrink-0">
-                                      <Image
-                                        src={`https://flagcdn.com/w40/${country.iso}.png`}
-                                        alt={country.country}
-                                        fill
-                                        className="object-cover"
-                                      />
-                                    </div>
-                                    <span className="text-sm text-gray-700 flex-1 truncate">{country.country}</span>
-                                    <span className="text-xs text-blue-600 font-mono">{country.code}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          <input
-                            type="tel"
-                            value={profile.phone}
-                            onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                            className="flex-1 px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
-                            placeholder="412 1234567"
-                          />
-                        </div>
-                      </div>
-                      <div>
+                      {/* Fecha de Nacimiento - 1 columna */}
+                      <div className="col-span-1">
                         <label className="block text-xs font-medium text-[#212529] mb-1.5">
                           <FiCalendar className="inline w-3.5 h-3.5 mr-1" />
-                          Fecha de Nacimiento
+                          Nacimiento
                         </label>
                         <input
                           type="date"
                           value={profile.birthdate}
                           onChange={(e) => setProfile({ ...profile, birthdate: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
+                          className="w-full px-2 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
                         />
                       </div>
-                      <div>
+
+                      {/* Género - 1 columna */}
+                      <div className="col-span-1">
                         <label className="block text-xs font-medium text-[#212529] mb-1.5">
                           Género
                         </label>
                         <select
                           value={profile.gender}
                           onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
+                          className="w-full px-2 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
                         >
                           <option value="">Seleccionar...</option>
                           <option value="male">Masculino</option>
@@ -894,22 +906,6 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Additional Info */}
-                  <div>
-                    <h2 className="text-base font-bold text-[#212529] mb-2">Información Adicional</h2>
-                    <div>
-                      <label className="block text-xs font-medium text-[#212529] mb-1">
-                        Biografía
-                      </label>
-                      <textarea
-                        value={profile.bio}
-                        onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                        rows={1}
-                        className="w-full px-3 py-1.5 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] resize-none h-8"
-                        placeholder="Cuéntanos brevemente sobre ti..."
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>

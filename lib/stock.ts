@@ -1,5 +1,19 @@
 import { prisma } from './prisma';
 
+/**
+ * STOCK RESERVATION LOGIC (Updated Dec 2024):
+ * 
+ * - WALLET Payment: Stock is deducted IMMEDIATELY upon order creation.
+ *   No reservation needed since payment is confirmed instantly.
+ * 
+ * - DIRECT Payment: Stock is RESERVED for 15 minutes while admin verifies payment.
+ *   Stock is NOT deducted until admin confirms payment (paymentStatus = PAID).
+ *   When admin confirms: stock is deducted and reservation is deleted.
+ *   If reservation expires: stock becomes available again.
+ * 
+ * Priority is given to WALLET users since they prepaid (the future business model).
+ */
+
 // Reservation duration in minutes
 const RESERVATION_DURATION_MINUTES = 15;
 
@@ -66,18 +80,47 @@ export async function reserveStock(userId: string, items: { productId: string; q
 
     // Check availability and create reservations
     for (const item of items) {
-        // Skip virtual products (Gift Cards, wallet recharges, digital products)
-        // These don't have physical stock to reserve
+        // Skip virtual products (Gift Cards, wallet recharges) by ID prefix
         if (item.productId.startsWith('gift-card-') ||
-            item.productId.startsWith('wallet-recharge-') ||
-            item.productId.startsWith('digital-')) {
+            item.productId.startsWith('wallet-recharge-')) {
+            continue;
+        }
+
+        // Check if product exists and get its type
+        const product = await prisma.product.findUnique({
+            where: { id: item.productId },
+            select: {
+                id: true,
+                stock: true,
+                productType: true,
+                name: true,
+            },
+        });
+
+        // Skip if product doesn't exist
+        if (!product) {
+            console.warn(`[STOCK] Product not found: ${item.productId}, skipping reservation`);
+            continue;
+        }
+
+        // Skip digital products (they don't have physical stock)
+        // Digital products may have productType='DIGITAL' or their name may indicate it's digital
+        if (product.productType === 'DIGITAL' ||
+            product.name?.toLowerCase().includes('digital') ||
+            product.name?.toLowerCase().includes('código') ||
+            product.name?.toLowerCase().includes('codigo') ||
+            product.name?.toLowerCase().includes('licencia') ||
+            product.name?.toLowerCase().includes('key') ||
+            product.name?.toLowerCase().includes('suscripción') ||
+            product.name?.toLowerCase().includes('suscripcion')) {
+            console.log(`[STOCK] Skipping digital product: ${product.name}`);
             continue;
         }
 
         const availableStock = await getAvailableStock(item.productId);
 
         if (availableStock < item.quantity) {
-            throw new Error(`Stock insuficiente para el producto ID: ${item.productId}`);
+            throw new Error(`Stock insuficiente para "${product.name}". Disponible: ${availableStock}, Solicitado: ${item.quantity}`);
         }
 
         reservations.push(

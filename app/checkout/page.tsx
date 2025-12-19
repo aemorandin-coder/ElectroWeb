@@ -244,24 +244,145 @@ export default function CheckoutPage() {
     }
   }, [status, router]);
 
-  // Calculate shipping cost from settings
-  const getShippingCost = () => {
-    if (formData.deliveryMethod !== 'SHIPPING' && formData.deliveryMethod !== 'HOME_DELIVERY') {
-      return 0; // Free for pickup
+  // Calculate volumetric weight from dimensions (L x W x H in cm / 5000)
+  const calculateVolumetricWeight = (dimensions: string | undefined): number => {
+    if (!dimensions) return 0;
+    try {
+      const dims = typeof dimensions === 'string' ? JSON.parse(dimensions) : dimensions;
+      const { length = 0, width = 0, height = 0 } = dims;
+      // Volumetric weight formula: L × W × H / 5000 (standard for courier companies)
+      return (length * width * height) / 5000;
+    } catch {
+      return 0;
+    }
+  };
+
+  // Calculate shipping cost with detailed breakdown
+  interface ShippingBreakdown {
+    total: number;
+    packagingFee: number;
+    consolidatedCost: number;
+    bulkyCost: number;
+    totalWeight: number;
+    isFreeShipping: boolean;
+    consolidableItems: Array<{ name: string; quantity: number; weight: number; volumetricWeight: number; usedWeight: number }>;
+    bulkyItems: Array<{ name: string; quantity: number; cost: number }>;
+    digitalItems: Array<{ name: string; quantity: number }>;
+  }
+
+  const getShippingBreakdown = (): ShippingBreakdown => {
+    const breakdown: ShippingBreakdown = {
+      total: 0,
+      packagingFee: 0,
+      consolidatedCost: 0,
+      bulkyCost: 0,
+      totalWeight: 0,
+      isFreeShipping: false,
+      consolidableItems: [],
+      bulkyItems: [],
+      digitalItems: [],
+    };
+
+    // No shipping for pickup
+    if (formData.deliveryMethod === 'PICKUP') {
+      return breakdown;
     }
 
-    const configuredFee = companySettings?.deliveryFeeUSD ? Number(companySettings.deliveryFeeUSD) : 10;
+    // Check if all items are digital - no shipping needed
+    const allDigital = items.every(item => item.productType === 'DIGITAL');
+    if (allDigital) {
+      items.forEach(item => {
+        breakdown.digitalItems.push({ name: item.name, quantity: item.quantity });
+      });
+      return breakdown;
+    }
+
+    // Get shipping config from company settings
+    const packagingFee = companySettings?.packagingFeeUSD ? Number(companySettings.packagingFeeUSD) : 2.50;
+    const shippingCostPerKg = companySettings?.shippingCostPerKg ? Number(companySettings.shippingCostPerKg) : 2;
+    const minConsolidatedShipping = companySettings?.minConsolidatedShipping ? Number(companySettings.minConsolidatedShipping) : 3;
     const freeThreshold = companySettings?.freeDeliveryThresholdUSD ? Number(companySettings.freeDeliveryThresholdUSD) : null;
+
+    breakdown.packagingFee = packagingFee;
 
     // Check if order qualifies for free shipping
     if (freeThreshold && cartSubtotal >= freeThreshold) {
-      return 0;
+      breakdown.isFreeShipping = true;
+      breakdown.total = packagingFee; // Only charge packaging fee
+      items.forEach(item => {
+        if (item.productType === 'DIGITAL') {
+          breakdown.digitalItems.push({ name: item.name, quantity: item.quantity });
+        } else if (item.isConsolidable !== false) {
+          breakdown.consolidableItems.push({
+            name: item.name,
+            quantity: item.quantity,
+            weight: (item.weightKg || 0.1) * item.quantity,
+            volumetricWeight: 0,
+            usedWeight: 0
+          });
+        } else {
+          breakdown.bulkyItems.push({ name: item.name, quantity: item.quantity, cost: 0 });
+        }
+      });
+      return breakdown;
     }
 
-    return configuredFee;
+    // Separate items by shipping type
+    let consolidatedWeight = 0;
+    let bulkyItemsShipping = 0;
+
+    items.forEach(item => {
+      // Digital products
+      if (item.productType === 'DIGITAL') {
+        breakdown.digitalItems.push({ name: item.name, quantity: item.quantity });
+        return;
+      }
+
+      // Physical products
+      if (item.isConsolidable !== false) {
+        // Consolidable: use the greater of real weight vs volumetric weight
+        const realWeight = (item.weightKg || 0.1) * item.quantity;
+        const volumetricWeight = calculateVolumetricWeight((item as any).dimensions) * item.quantity;
+        const usedWeight = Math.max(realWeight, volumetricWeight);
+
+        consolidatedWeight += usedWeight;
+        breakdown.consolidableItems.push({
+          name: item.name,
+          quantity: item.quantity,
+          weight: realWeight,
+          volumetricWeight: volumetricWeight,
+          usedWeight: usedWeight
+        });
+      } else {
+        // Non-consolidable (bulky): add fixed shipping cost
+        const itemShipping = (item.shippingCost || 0) * item.quantity;
+        bulkyItemsShipping += itemShipping;
+        breakdown.bulkyItems.push({
+          name: item.name,
+          quantity: item.quantity,
+          cost: itemShipping
+        });
+      }
+    });
+
+    // Calculate consolidated shipping (by weight)
+    let consolidatedShipping = 0;
+    if (consolidatedWeight > 0) {
+      consolidatedShipping = Math.max(consolidatedWeight * shippingCostPerKg, minConsolidatedShipping);
+    }
+
+    breakdown.consolidatedCost = Math.round(consolidatedShipping * 100) / 100;
+    breakdown.bulkyCost = Math.round(bulkyItemsShipping * 100) / 100;
+    breakdown.totalWeight = Math.round(consolidatedWeight * 100) / 100;
+    breakdown.total = Math.round((consolidatedShipping + bulkyItemsShipping + packagingFee) * 100) / 100;
+
+    return breakdown;
   };
 
-  const shippingCost = getShippingCost();
+  // Memoize the shipping breakdown
+  const shippingBreakdown = getShippingBreakdown();
+  const shippingCost = shippingBreakdown.total;
+
   // Override finalTotal to include shipping
   const finalOrderTotal = cartTotal + shippingCost;
   const finalTotal = finalOrderTotal; // Keep variable name for compatibility with rest of file
@@ -1307,189 +1428,432 @@ export default function CheckoutPage() {
             </form>
           </div>
 
-          {/* Right Column - Contact Info + Order Summary */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Contact Information - Compact Version */}
-            <div className="bg-gradient-to-br from-white to-blue-50/30 rounded-xl shadow-lg border border-blue-100 p-5 animate-fadeIn">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-[#212529] flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
-                    <FiUser className="w-4 h-4 text-white" />
+          {/* Order Summary - Premium Design matching Cart */}
+          <div className="lg:col-span-1 space-y-5">
+            <div className="sticky top-24 space-y-5">
+              {/* Contact Information - Compact Version */}
+              <div className="bg-gradient-to-br from-white to-blue-50/30 rounded-2xl shadow-lg border border-blue-100 p-5 animate-fadeIn">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-[#212529] flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+                      <FiUser className="w-4 h-4 text-white" />
+                    </div>
+                    Información de Contacto
+                  </h2>
+                  {(session?.user as any)?.emailVerified && (
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-green-100 border border-green-300 rounded-full">
+                      <FiCheckCircle className="w-3 h-3 text-green-700" />
+                      <span className="text-[10px] font-bold text-green-700">Verificado</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  {/* Name */}
+                  <div>
+                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Nombre</label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
+                      <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
+                      <span className="text-sm text-[#212529] font-medium truncate">{formData.customerName}</span>
+                    </div>
                   </div>
-                  Información de Contacto
-                </h2>
-                {(session?.user as any)?.emailVerified && (
-                  <div className="flex items-center gap-1.5 px-2 py-1 bg-green-100 border border-green-300 rounded-full">
-                    <FiCheckCircle className="w-3 h-3 text-green-700" />
-                    <span className="text-[10px] font-bold text-green-700">Verificado</span>
+
+                  {/* Email */}
+                  <div>
+                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Email</label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
+                      <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
+                      <span className="text-sm text-[#212529] font-medium truncate">{formData.customerEmail}</span>
+                    </div>
                   </div>
-                )}
+
+                  {/* Phone */}
+                  <div>
+                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Teléfono</label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
+                      <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
+                      <span className="text-sm text-[#212529] font-medium">{formData.customerPhone || 'No registrado'}</span>
+                    </div>
+                  </div>
+
+                  {/* ID */}
+                  <div>
+                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Cédula</label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
+                      <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
+                      <span className="text-sm text-[#212529] font-medium">{formData.customerIdNumber || 'No registrado'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Edit Profile Link */}
+                <div className="mt-4 pt-3 border-t border-blue-100">
+                  <Link
+                    href="/customer/profile"
+                    className="flex items-center justify-center gap-2 text-xs text-[#2a63cd] hover:text-[#1e4ba3] font-semibold transition-colors"
+                  >
+                    <FiInfo className="w-3.5 h-3.5" />
+                    Editar datos en mi perfil
+                  </Link>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                {/* Name */}
-                <div>
-                  <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Nombre</label>
-                  <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
-                    <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
-                    <span className="text-sm text-[#212529] font-medium truncate">{formData.customerName}</span>
+              {/* Summary Card */}
+              <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl animate-slideUp">
+                {/* Premium Header */}
+                <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-6 py-4">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Resumen del Pedido
+                  </h2>
+                </div>
+
+                <div className="p-6">
+                  {/* Products List */}
+                  <div className="space-y-3 mb-4 max-h-[250px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200">
+                    {items.map((item) => {
+                      const originalTotal = item.price * item.quantity;
+                      const activeDiscount = activeDiscounts.find(d =>
+                        d.productId === item.id &&
+                        d.status === 'APPROVED' &&
+                        d.expiresAt &&
+                        new Date(d.expiresAt) > new Date()
+                      );
+                      const discountVal = activeDiscount ? (activeDiscount.approvedDiscount || activeDiscount.requestedDiscount) : 0;
+                      const finalItemTotal = activeDiscount ? originalTotal * (1 - discountVal / 100) : originalTotal;
+
+                      return (
+                        <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                          <div className="relative flex-shrink-0 w-14 h-14 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                            {item.imageUrl ? (
+                              <Image
+                                src={item.imageUrl}
+                                alt={item.name}
+                                fill
+                                className="object-contain p-1"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <svg className="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-semibold text-slate-800 line-clamp-1">
+                              {item.name}
+                            </h4>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="text-xs text-slate-500 font-medium">x{item.quantity}</span>
+                              <div className="text-right">
+                                {activeDiscount ? (
+                                  <div className="flex flex-col items-end">
+                                    <span className="text-[10px] text-slate-400 line-through">{formatPrice(originalTotal)}</span>
+                                    <span className="text-sm font-bold text-green-600">{formatPrice(finalItemTotal)}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-sm font-bold text-slate-800">{formatPrice(originalTotal)}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
 
-                {/* Email */}
-                <div>
-                  <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Email</label>
-                  <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
-                    <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
-                    <span className="text-sm text-[#212529] font-medium truncate">{formData.customerEmail}</span>
-                  </div>
-                </div>
+                  {/* Divider */}
+                  <div className="border-t border-slate-200 my-4"></div>
 
-                {/* Phone */}
-                <div>
-                  <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Teléfono</label>
-                  <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
-                    <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
-                    <span className="text-sm text-[#212529] font-medium">{formData.customerPhone || 'No registrado'}</span>
-                  </div>
-                </div>
-
-                {/* ID */}
-                <div>
-                  <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Cédula</label>
-                  <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
-                    <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
-                    <span className="text-sm text-[#212529] font-medium">{formData.customerIdNumber || 'No registrado'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Edit Profile Link */}
-              <div className="mt-4 pt-3 border-t border-blue-100">
-                <Link
-                  href="/customer/profile"
-                  className="flex items-center justify-center gap-2 text-xs text-[#2a63cd] hover:text-[#1e4ba3] font-semibold transition-colors"
-                >
-                  <FiInfo className="w-3.5 h-3.5" />
-                  Editar datos en mi perfil
-                </Link>
-              </div>
-            </div>
-
-            {/* Order Summary */}
-            <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] p-6 sticky top-24">
-              <h2 className="text-lg font-bold text-[#212529] mb-4 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                  </svg>
-                </div>
-                Resumen del Pedido
-              </h2>
-
-              <div className="space-y-3 mb-4">
-                {items.map((item) => {
-                  const originalTotal = item.price * item.quantity;
-                  const finalItemTotal = item.price * item.quantity;
-                  const activeDiscount = false;
-
-                  return (
-                    <div key={item.id} className="flex items-center gap-3">
-                      <div className="relative flex-shrink-0 w-12 h-12 bg-white rounded-lg border border-[#e9ecef] overflow-hidden">
-                        {item.imageUrl ? (
-                          <Image
-                            src={item.imageUrl}
-                            alt={item.name}
-                            fill
-                            className="object-contain p-1"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                            <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
+                  {/* Price Breakdown */}
+                  <div className="space-y-3">
+                    {/* Subtotal */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 text-sm">Subtotal:</span>
+                      <div className="text-right">
+                        <div className="flex items-baseline gap-1 justify-end">
+                          <span className="text-xs text-slate-400">USD</span>
+                          <span className="text-base font-bold text-slate-700">{formatPrice(cartSubtotal).replace('$', '')}</span>
+                        </div>
+                        {companySettings?.exchangeRateVES && (
+                          <div className="text-xs text-[#2a63cd] font-medium">
+                            Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cartSubtotal * Number(companySettings.exchangeRateVES))}
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-[#212529] line-clamp-1 mb-1">
-                          {item.name}
-                        </h4>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-[#6a6c6b]">x{item.quantity}</span>
-                          <span className="font-semibold text-[#2a63cd]">
-                            {activeDiscount ? (
-                              <div className="flex flex-col items-end">
-                                <span className="text-xs text-gray-400 line-through">{formatPrice(originalTotal)}</span>
-                                <span className="text-green-600 font-bold">{formatPrice(finalItemTotal)}</span>
+                    </div>
+
+                    {/* Discount */}
+                    {cartDiscount > 0 && (
+                      <div className="flex justify-between items-center animate-pulse">
+                        <span className="text-green-600 flex items-center gap-1 text-sm font-medium">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                          </svg>
+                          Descuento:
+                        </span>
+                        <div className="text-right">
+                          <span className="text-base font-bold text-green-600">-{formatPrice(cartDiscount)}</span>
+                          {companySettings?.exchangeRateVES && (
+                            <div className="text-xs text-green-500 font-medium">
+                              -Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cartDiscount * Number(companySettings.exchangeRateVES))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Shipping with Detailed Breakdown */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-slate-500 text-sm">Envío:</span>
+                          {/* Info tooltip */}
+                          <div className="group relative">
+                            <FiInfo className="w-3.5 h-3.5 text-slate-400 cursor-help" />
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-72 z-50">
+                              <div className="font-semibold mb-1">📦 Sobre el envío</div>
+                              <p className="text-slate-300 leading-relaxed">
+                                Los costos de envío son manejados por las empresas de encomienda (ZOOM, MRW, TEALCA). Solo cobramos <strong className="text-white">${shippingBreakdown.packagingFee.toFixed(2)}</strong> por embalaje.
+                              </p>
+                              {shippingBreakdown.totalWeight > 0 && (
+                                <p className="text-slate-300 mt-1">
+                                  Peso total: <strong className="text-white">{shippingBreakdown.totalWeight.toFixed(2)} kg</strong>
+                                </p>
+                              )}
+                              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          {shippingCost > 0 ? (
+                            <>
+                              <div className="flex items-baseline gap-1 justify-end">
+                                <span className="text-xs text-slate-400">USD</span>
+                                <span className="text-base font-bold text-slate-700">{formatPrice(shippingCost).replace('$', '')}</span>
                               </div>
-                            ) : formatPrice(originalTotal)}
-                          </span>
+                              {companySettings?.exchangeRateVES && (
+                                <div className="text-xs text-[#2a63cd] font-medium">
+                                  Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(shippingCost * Number(companySettings.exchangeRateVES))}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-sm font-bold text-green-600">Gratis</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Shipping Breakdown Details (expandable) */}
+                      {shippingCost > 0 && formData.deliveryMethod !== 'PICKUP' && (
+                        <details className="group">
+                          <summary className="text-[10px] text-[#2a63cd] font-medium cursor-pointer hover:text-[#1e4ba3] flex items-center gap-1">
+                            <svg className="w-3 h-3 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                            Ver desglose de envío
+                          </summary>
+                          <div className="mt-2 p-3 bg-slate-50 rounded-lg text-xs space-y-2">
+                            {/* Free shipping badge */}
+                            {shippingBreakdown.isFreeShipping && (
+                              <div className="flex items-center gap-2 text-green-600 bg-green-50 px-2 py-1.5 rounded-lg">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span className="font-semibold">¡Envío gratis por compras mayores!</span>
+                              </div>
+                            )}
+
+                            {/* Digital items */}
+                            {shippingBreakdown.digitalItems.length > 0 && (
+                              <div className="space-y-1">
+                                <div className="font-semibold text-purple-600 flex items-center gap-1">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                  </svg>
+                                  Digitales (sin envío):
+                                </div>
+                                {shippingBreakdown.digitalItems.map((item, idx) => (
+                                  <div key={idx} className="flex justify-between text-slate-500 pl-4">
+                                    <span className="truncate max-w-[60%]">{item.name} x{item.quantity}</span>
+                                    <span className="text-green-600 font-medium">$0.00</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Consolidable items */}
+                            {shippingBreakdown.consolidableItems.length > 0 && !shippingBreakdown.isFreeShipping && (
+                              <div className="space-y-1">
+                                <div className="font-semibold text-blue-600 flex items-center gap-1">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                  </svg>
+                                  Consolidables (por peso):
+                                </div>
+                                {shippingBreakdown.consolidableItems.map((item, idx) => (
+                                  <div key={idx} className="flex justify-between text-slate-500 pl-4">
+                                    <span className="truncate max-w-[55%]">{item.name} x{item.quantity}</span>
+                                    <span className="text-slate-600">
+                                      {item.volumetricWeight > item.weight ? (
+                                        <span className="text-amber-600" title="Se usa peso volumétrico">
+                                          {item.usedWeight.toFixed(2)} kg*
+                                        </span>
+                                      ) : (
+                                        <span>{item.usedWeight.toFixed(2)} kg</span>
+                                      )}
+                                    </span>
+                                  </div>
+                                ))}
+                                <div className="flex justify-between pt-1 border-t border-slate-200 font-medium">
+                                  <span className="text-slate-600">Subtotal ({shippingBreakdown.totalWeight.toFixed(2)} kg × $2/kg):</span>
+                                  <span className="text-blue-600">${shippingBreakdown.consolidatedCost.toFixed(2)}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Bulky items */}
+                            {shippingBreakdown.bulkyItems.length > 0 && !shippingBreakdown.isFreeShipping && (
+                              <div className="space-y-1">
+                                <div className="font-semibold text-amber-600 flex items-center gap-1">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                  </svg>
+                                  Productos grandes (envío individual):
+                                </div>
+                                {shippingBreakdown.bulkyItems.map((item, idx) => (
+                                  <div key={idx} className="flex justify-between text-slate-500 pl-4">
+                                    <span className="truncate max-w-[60%]">{item.name} x{item.quantity}</span>
+                                    <span className="text-amber-600 font-medium">${item.cost.toFixed(2)}</span>
+                                  </div>
+                                ))}
+                                <div className="flex justify-between pt-1 border-t border-slate-200 font-medium">
+                                  <span className="text-slate-600">Subtotal envío individual:</span>
+                                  <span className="text-amber-600">${shippingBreakdown.bulkyCost.toFixed(2)}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Packaging fee */}
+                            <div className="flex justify-between pt-1 border-t border-slate-200 text-slate-600">
+                              <span className="flex items-center gap-1">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" />
+                                </svg>
+                                Embalaje y preparación:
+                              </span>
+                              <span className="font-medium">${shippingBreakdown.packagingFee.toFixed(2)}</span>
+                            </div>
+
+                            {/* Volumetric weight note */}
+                            {shippingBreakdown.consolidableItems.some(item => item.volumetricWeight > item.weight) && (
+                              <div className="text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded flex items-start gap-1">
+                                <span className="font-bold">*</span>
+                                <span>Se usó peso volumétrico (L×A×H÷5000) por ser mayor al peso real.</span>
+                              </div>
+                            )}
+                          </div>
+                        </details>
+                      )}
+                    </div>
+
+                    {/* Total - Premium Style */}
+                    <div className="pt-4 border-t-2 border-dashed border-slate-200">
+                      <div className="flex justify-between items-start">
+                        <span className="text-lg font-bold text-slate-800">Total:</span>
+                        <div className="text-right">
+                          <div className="flex items-baseline gap-1 justify-end">
+                            <span className="text-sm font-bold text-slate-400">USD</span>
+                            <span className="text-3xl font-black text-slate-800">{formatPrice(finalTotal).replace('$', '')}</span>
+                          </div>
+                          {companySettings?.exchangeRateVES && (
+                            <div className="mt-1 px-3 py-1 bg-[#2a63cd]/10 rounded-lg inline-block">
+                              <span className="text-sm font-bold text-[#2a63cd]">
+                                Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(finalTotal * Number(companySettings.exchangeRateVES))}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
 
-              <div className="pt-4 border-t border-[#e9ecef] space-y-2 mb-6">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#6a6c6b]">Subtotal</span>
-                  <span className="font-medium text-[#212529]">{formatPrice(cartSubtotal)}</span>
-                </div>
-                {cartDiscount > 0 && (
-                  <div className="flex items-center justify-between text-sm animate-pulse">
-                    <span className="text-green-600 flex items-center gap-1 font-medium">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                      </svg>
-                      Descuento aplicado
-                    </span>
-                    <span className="font-bold text-green-600">-{formatPrice(cartDiscount)}</span>
+                    {/* Exchange Rate Note */}
+                    {companySettings?.exchangeRateVES && (
+                      <div className="text-[10px] text-slate-400 text-center pt-2">
+                        Tasa de cambio: 1 USD = Bs. {Number(companySettings.exchangeRateVES).toFixed(2)}
+                      </div>
+                    )}
                   </div>
-                )}
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#6a6c6b]">Envío</span>
-                  <span className={`font-medium ${shippingCost > 0 ? 'text-[#212529]' : 'text-green-600'}`}>
-                    {shippingCost > 0 ? formatPrice(shippingCost) : 'Gratis'}
-                  </span>
                 </div>
-                <div className="flex items-center justify-between text-lg font-bold pt-2 border-t border-[#e9ecef]">
-                  <span className="text-[#212529]">Total</span>
-                  <span className="text-[#2a63cd]">{formatPrice(finalTotal)}</span>
+
+                {/* Checkout Button */}
+                <div className="px-6 pb-6 space-y-3">
+                  <button
+                    type="submit"
+                    onClick={handleSubmit}
+                    disabled={loading || !acceptedTerms || (paymentMode === 'WALLET' && userBalance < finalTotal)}
+                    className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-base font-bold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 group"
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Confirmar Pedido
+                        <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </>
+                    )}
+                  </button>
+
+                  <Link
+                    href="/productos"
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-all duration-300 text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Seguir Comprando
+                  </Link>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                onClick={handleSubmit}
-                disabled={loading || (paymentMode === 'WALLET' && userBalance < finalTotal)}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#2a63cd] text-white font-semibold rounded-lg hover:bg-[#1e4ba3] transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Confirmar Pedido
-                  </>
-                )}
-              </button>
-
-              <Link
-                href="/productos"
-                className="w-full mt-3 flex items-center justify-center gap-2 px-6 py-2.5 bg-white text-[#2a63cd] text-sm font-medium border border-[#e9ecef] rounded-lg hover:bg-[#f8f9fa] transition-all"
-              >
-                Seguir Comprando
-              </Link>
+              {/* Trust Badges */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-lg animate-slideUp" style={{ animationDelay: '0.1s' }}>
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Compra Segura</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 text-sm text-slate-600 group hover:text-[#2a63cd] transition-colors">
+                    <div className="w-8 h-8 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <FiLock className="w-4 h-4 text-[#2a63cd]" />
+                    </div>
+                    <span className="font-medium">Pago Seguro SSL</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-slate-600 group hover:text-[#2a63cd] transition-colors">
+                    <div className="w-8 h-8 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <FiCheckCircle className="w-4 h-4 text-[#2a63cd]" />
+                    </div>
+                    <span className="font-medium">Garantía Oficial</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-slate-600 group hover:text-[#2a63cd] transition-colors">
+                    <div className="w-8 h-8 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <FiTruck className="w-4 h-4 text-[#2a63cd]" />
+                    </div>
+                    <span className="font-medium">Envío Rápido</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -85,6 +85,15 @@ export default function NewProductPage() {
     ] as DigitalAmountPricing[],
     // Margen global para aplicar rápidamente (opcional)
     digitalMarginPercent: 10,
+    // Instrucciones de redención para el cliente
+    redemptionInstructions: '',
+    // Shipping Fields (for PHYSICAL products)
+    weightKg: '',
+    dimensionLength: '',
+    dimensionWidth: '',
+    dimensionHeight: '',
+    isConsolidable: true,
+    shippingCost: '',
   });
 
   // Estados de UI
@@ -221,10 +230,10 @@ export default function NewProductPage() {
         validationErrors.priceUSD = 'Precio inválido';
       }
     } else {
-      // Producto digital: requiere al menos un monto habilitado
+      // Producto digital: requiere al menos DOS montos habilitados
       const enabledAmounts = formData.digitalPricing.filter(p => p.enabled);
-      if (enabledAmounts.length === 0) {
-        validationErrors.digitalPricing = 'Habilita al menos un monto';
+      if (enabledAmounts.length < 2) {
+        validationErrors.digitalPricing = 'Debes habilitar al menos 2 denominaciones para productos digitales';
       }
       // Validar que todos los montos habilitados tengan precios válidos
       const invalidPricing = enabledAmounts.some(p => p.cost <= 0 || p.salePrice <= 0 || p.salePrice < p.cost);
@@ -289,8 +298,20 @@ export default function NewProductPage() {
           digitalPlatform: formData.digitalPlatform,
           digitalRegion: formData.digitalRegion,
           deliveryMethod: formData.deliveryMethod,
+          redemptionInstructions: formData.redemptionInstructions || null,
           // Nuevo: enviar precios por monto con ganancia
           digitalPricing: enabledDigitalPricing,
+        }),
+        // Shipping Fields (only for PHYSICAL products)
+        ...(formData.productType === 'PHYSICAL' && {
+          weightKg: formData.weightKg ? parseFloat(formData.weightKg) : 0,
+          dimensions: (formData.dimensionLength || formData.dimensionWidth || formData.dimensionHeight) ? JSON.stringify({
+            length: parseFloat(formData.dimensionLength) || 0,
+            width: parseFloat(formData.dimensionWidth) || 0,
+            height: parseFloat(formData.dimensionHeight) || 0,
+          }) : null,
+          isConsolidable: formData.isConsolidable,
+          shippingCost: formData.isConsolidable ? 0 : (formData.shippingCost ? parseFloat(formData.shippingCost) : 0),
         }),
       };
 
@@ -1057,9 +1078,191 @@ export default function NewProductPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Redemption Instructions */}
+                  <div className="border-t border-gray-100 pt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Instrucciones de canje <span className="text-gray-400 font-normal">(opcional)</span>
+                    </label>
+                    <textarea
+                      value={formData.redemptionInstructions}
+                      onChange={(e) => updateFormData('redemptionInstructions', e.target.value)}
+                      rows={4}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-y text-sm"
+                      placeholder={`Ej: 
+1. Abre la tienda de ${formData.digitalPlatform || 'la plataforma'}
+2. Ve a "Canjear código"
+3. Ingresa el código que recibiste
+4. ¡Listo! Tu saldo estará disponible`}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Estas instrucciones se mostrarán al cliente junto con su código. Si dejas vacío, se mostrará un enlace de ayuda genérico.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
+
+            {/* Sección de Envío (solo para productos físicos) */}
+            {formData.productType === 'PHYSICAL' && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 animate-fadeIn">
+                <div className="flex items-center gap-2 mb-4">
+                  <MdOutlineLocalShipping className="w-5 h-5 text-[#2a63cd]" />
+                  <h2 className="text-base font-bold text-gray-900">Envío</h2>
+                </div>
+
+                {/* Info Banner */}
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 rounded-xl p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <FiInfo className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">Cálculo de envío inteligente</p>
+                      <p className="text-xs text-blue-600 mt-0.5">
+                        Los costos de envío son manejados por las empresas de encomienda (ZOOM, MRW, TEALCA).
+                        Solo cobramos <strong>$2.50</strong> por embalaje.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Peso del producto */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Peso del producto (kg)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.weightKg}
+                      onChange={(e) => updateFormData('weightKg', e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-4 py-2.5 pr-12 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">kg</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Peso utilizado para calcular el costo de envío consolidado</p>
+                </div>
+
+                {/* Dimensiones */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Dimensiones (cm)</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={formData.dimensionLength}
+                        onChange={(e) => updateFormData('dimensionLength', e.target.value)}
+                        placeholder="Largo"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">L</span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={formData.dimensionWidth}
+                        onChange={(e) => updateFormData('dimensionWidth', e.target.value)}
+                        placeholder="Ancho"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">A</span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={formData.dimensionHeight}
+                        onChange={(e) => updateFormData('dimensionHeight', e.target.value)}
+                        placeholder="Alto"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">H</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tipo de envío */}
+                <div className="border-t border-gray-100 pt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Tipo de envío</label>
+
+                  {/* Consolidable */}
+                  <div
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all mb-3 ${formData.isConsolidable
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    onClick={() => updateFormData('isConsolidable', true)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${formData.isConsolidable ? 'border-green-500 bg-green-500' : 'border-gray-300'
+                        }`}>
+                        {formData.isConsolidable && <FiCheck className="w-3 h-3 text-white" />}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Consolidable (Recomendado)</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Productos pequeños que pueden enviarse junto con otros en la misma caja.
+                          Costo calculado por peso total.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* No consolidable (producto grande) */}
+                  <div
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${!formData.isConsolidable
+                      ? 'border-amber-500 bg-amber-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    onClick={() => updateFormData('isConsolidable', false)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${!formData.isConsolidable ? 'border-amber-500 bg-amber-500' : 'border-gray-300'
+                        }`}>
+                        {!formData.isConsolidable && <FiCheck className="w-3 h-3 text-white" />}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">Envío individual (Producto grande)</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Para TVs, electrodomésticos, etc. Se envía por separado con costo fijo.
+                        </p>
+
+                        {/* Campo de costo fijo */}
+                        {!formData.isConsolidable && (
+                          <div className="mt-3 animate-fadeIn">
+                            <label className="block text-xs font-medium text-amber-700 mb-1">
+                              Costo de envío fijo (USD)
+                            </label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-600">$</span>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={formData.shippingCost}
+                                onChange={(e) => updateFormData('shippingCost', e.target.value)}
+                                placeholder="15.00"
+                                className="w-full pl-7 pr-4 py-2 bg-white border border-amber-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Estado del Producto */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">

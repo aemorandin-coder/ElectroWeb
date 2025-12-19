@@ -103,4 +103,37 @@ npx prisma db push
 
 ---
 
+## 🔍 Sentry - Monitoreo de Errores (NUEVO)
+
+Se ha integrado Sentry para monitoreo de errores en producción.
+
+### Configuración Requerida:
+
+1. **Crear cuenta en Sentry**: https://sentry.io
+2. **Crear un nuevo proyecto** de tipo "Next.js"
+3. **Agregar variables de entorno** en producción:
+
+```env
+# Sentry Configuration
+NEXT_PUBLIC_SENTRY_DSN=https://your-key@o1234567.ingest.sentry.io/1234567
+SENTRY_ORG=your-org-slug
+SENTRY_PROJECT=electroweb
+SENTRY_AUTH_TOKEN=sntrys_your-auth-token
+```
+
+### Cómo obtener los valores:
+- **DSN**: Settings → Client Keys (DSN)
+- **ORG**: Settings → Organization Settings → Organization Slug
+- **PROJECT**: Nombre del proyecto en Sentry
+- **AUTH_TOKEN**: Settings → Auth Tokens → Create New Token
+
+### Funcionalidades activas:
+- ✅ Captura automática de errores de cliente y servidor
+- ✅ Session Replay (reproduce lo que hacía el usuario)
+- ✅ Stack traces con source maps
+- ✅ Tunnel route `/monitoring` (evita ad-blockers)
+- ✅ Página de error global con diseño profesional
+
+---
+
 *Generado automáticamente - Antigravity AI*

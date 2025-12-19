@@ -496,7 +496,7 @@ export default async function Home() {
               <ul className="space-y-1.5 text-xs text-gray-400">
                 <li><Link href="/productos" className="hover:text-[#2a63cd] transition-colors">Productos</Link></li>
                 <li><Link href="/categorias" className="hover:text-[#2a63cd] transition-colors">Categorías</Link></li>
-                <li><Link href="/ofertas" className="hover:text-[#2a63cd] transition-colors">Ofertas</Link></li>
+                <li><Link href="/contacto" className="hover:text-[#2a63cd] transition-colors">Contacto</Link></li>
               </ul>
             </div>
 
@@ -504,9 +504,9 @@ export default async function Home() {
             <div>
               <h4 className="text-sm font-semibold text-white mb-3">Servicios</h4>
               <ul className="space-y-1.5 text-xs text-gray-400">
-                <li><Link href="/servicios/gaming" className="hover:text-[#2a63cd] transition-colors">PC Gaming</Link></li>
-                <li><Link href="/servicios/cctv" className="hover:text-[#2a63cd] transition-colors">Sistemas CCTV</Link></li>
-                <li><Link href="/servicios/tecnico" className="hover:text-[#2a63cd] transition-colors">Servicio Técnico</Link></li>
+                <li><Link href="/servicios" className="hover:text-[#2a63cd] transition-colors">PC Gaming</Link></li>
+                <li><Link href="/servicios" className="hover:text-[#2a63cd] transition-colors">Sistemas CCTV</Link></li>
+                <li><Link href="/servicios" className="hover:text-[#2a63cd] transition-colors">Servicio Técnico</Link></li>
                 <li><Link href="/cursos" className="hover:text-[#2a63cd] transition-colors">Cursos Online</Link></li>
               </ul>
             </div>

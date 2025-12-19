@@ -147,6 +147,11 @@ export default function WishlistPage() {
       price: item.price,
       imageUrl: item.imageUrl || '',
       stock: 999, // Default max stock since we only know it's in stock
+      // Default shipping fields - these products don't have full info
+      productType: 'PHYSICAL',
+      weightKg: 0.1, // Default weight
+      isConsolidable: true,
+      shippingCost: 0,
     }, 1);
     toast.success('Agregado al carrito');
   };

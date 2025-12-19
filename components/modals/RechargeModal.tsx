@@ -416,8 +416,8 @@ export default function RechargeModal({ isOpen, onClose, onSuccess }: RechargeMo
                                 )}
                             </div>
 
-                            {/* Bs Conversion (Only for Mobile Payment) - Compact */}
-                            {selectedMethod === 'MOBILE_PAYMENT' && (
+                            {/* Bs Conversion (For Mobile Payment and Bank Transfer) - Compact */}
+                            {(selectedMethod === 'MOBILE_PAYMENT' || selectedMethod === 'BANK_TRANSFER') && (
                                 <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-3 border border-yellow-200 shadow-sm animate-fadeIn">
                                     <div className="flex items-center gap-2 mb-2">
                                         <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-500 rounded flex items-center justify-center">

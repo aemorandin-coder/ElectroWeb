@@ -262,7 +262,26 @@ export default function CustomerDashboardLayout({
                 <span className="absolute inset-0 rounded-lg bg-[#2a63cd]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></span>
               </button>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                {/* Email Verification Warning - Compact Button */}
+                {!(session?.user as any)?.emailVerified && (
+                  <Link
+                    href="/customer/settings"
+                    className="relative flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 animate-pulse-slow group overflow-hidden"
+                  >
+                    <span className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    <svg className="w-4 h-4 relative z-10 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span className="relative z-10 hidden sm:inline">Verificar Email</span>
+                    <span className="relative z-10 sm:hidden">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </span>
+                  </Link>
+                )}
+
                 {/* Home Button - Same style as admin */}
                 <Link
                   href="/"

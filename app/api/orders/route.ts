@@ -10,7 +10,7 @@ import {
   notifyOrderDelivered
 } from '@/lib/notifications';
 import { OrderStatus, PaymentStatus } from '@prisma/client';
-import { sendEmail } from '@/lib/email';
+import { sendEmail } from '@/lib/email-service';
 import { generateOrderConfirmationEmail } from '@/lib/email-templates/OrderConfirmation';
 import { generateReviewReminderEmail } from '@/lib/email-templates/ReviewReminder';
 import { format } from 'date-fns';
@@ -267,22 +267,49 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Update product stock
-      for (const item of body.items) {
-        const product = await tx.product.findUnique({
-          where: { id: item.productId },
-        });
+      // STOCK LOGIC BASED ON PAYMENT METHOD:
+      // - WALLET: Deduct stock immediately (payment is confirmed)
+      // - DIRECT: Create reservation (payment pending verification, stock not deducted yet)
 
-        if (product) {
-          const newStock = product.stock - item.quantity;
-
-          await tx.product.update({
+      if (body.paymentMethod === 'WALLET') {
+        // WALLET PAYMENT: Deduct stock immediately since payment is confirmed
+        for (const item of body.items) {
+          const product = await tx.product.findUnique({
             where: { id: item.productId },
-            data: { stock: newStock },
+            select: { stock: true, productType: true }
           });
 
-          // Check stock levels and create notifications (Note: Notifications usually shouldn't block transaction, but for simplicity here)
-          // Ideally, notifications should be handled outside the transaction or via events
+          if (product && product.productType !== 'DIGITAL') {
+            const newStock = product.stock - item.quantity;
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stock: Math.max(0, newStock) },
+            });
+          }
+        }
+      } else {
+        // DIRECT PAYMENT: Create stock reservation (15 minutes while admin verifies payment)
+        // Stock is NOT deducted - it will be deducted when admin confirms payment
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+        for (const item of body.items) {
+          const product = await tx.product.findUnique({
+            where: { id: item.productId },
+            select: { productType: true }
+          });
+
+          // Only reserve physical products
+          if (product && product.productType !== 'DIGITAL') {
+            await tx.stockReservation.create({
+              data: {
+                userId: body.userId || session.user.id,
+                productId: item.productId,
+                quantity: item.quantity,
+                expiresAt,
+              },
+            });
+          }
         }
       }
 
@@ -304,11 +331,8 @@ export async function POST(request: NextRequest) {
       return order;
     });
 
-    // Release reservations for this user as the order is now created (stock deducted)
-    // We import dynamically to avoid circular deps if any, or just use the prisma call directly
-    await prisma.stockReservation.deleteMany({
-      where: { userId: body.userId || session.user.id },
-    });
+    // Note: For DIRECT payment, reservations are NOT deleted here - they expire after 15 mins
+    // or are deleted when admin confirms payment and stock is actually deducted
 
     // Send notifications (outside transaction to avoid failures)
     if (result) {
@@ -466,6 +490,31 @@ export async function PATCH(request: NextRequest) {
 
     // Create notifications for status changes
     if (body.paymentStatus === PaymentStatus.PAID && oldOrder.paymentStatus !== PaymentStatus.PAID) {
+      // PAYMENT CONFIRMED: Now deduct stock (for DIRECT payment orders that had reservations)
+      // This happens when admin confirms the payment was received
+      for (const item of order.items) {
+        const product = await prisma.product.findUnique({
+          where: { id: item.productId },
+          select: { stock: true, productType: true }
+        });
+
+        // Only deduct stock for physical products
+        if (product && product.productType !== 'DIGITAL') {
+          const newStock = product.stock - item.quantity;
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: { stock: Math.max(0, newStock) },
+          });
+        }
+      }
+
+      // Release the stock reservation since stock is now actually deducted
+      if (oldOrder.userId) {
+        await prisma.stockReservation.deleteMany({
+          where: { userId: oldOrder.userId },
+        });
+      }
+
       await createNotification({
         userId: oldOrder.userId!,
         type: 'ORDER_PAID',

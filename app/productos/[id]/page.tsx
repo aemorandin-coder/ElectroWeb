@@ -45,6 +45,11 @@ interface Product {
   digitalPlatform?: string;
   digitalRegion?: string;
   deliveryMethod?: string;
+  // Shipping Fields
+  weightKg?: number;
+  dimensions?: string; // JSON: {length, width, height} in cm
+  isConsolidable?: boolean;
+  shippingCost?: number;
 }
 
 interface CartItem {
@@ -305,7 +310,13 @@ export default function ProductDetailPage() {
       name: cartItemName,
       price: cartItemPrice,
       imageUrl: cleanImage,
-      stock: isDigital ? 999 : product.stock // Digital products have unlimited stock
+      stock: isDigital ? 999 : product.stock, // Digital products have unlimited stock
+      // Shipping fields for checkout calculation
+      productType: product.productType || 'PHYSICAL',
+      weightKg: product.weightKg || 0,
+      dimensions: product.dimensions, // For volumetric weight calculation
+      isConsolidable: product.isConsolidable !== false,
+      shippingCost: product.shippingCost || 0,
     }, quantity);
 
     toast.success(isDigital

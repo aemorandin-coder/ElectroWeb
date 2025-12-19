@@ -62,6 +62,9 @@ export default function SettingsPage() {
     deliveryEnabled: true,
     deliveryFeeUSD: 0,
     freeDeliveryThresholdUSD: null,
+    shippingCostPerKg: 2,
+    minConsolidatedShipping: 3,
+    packagingFeeUSD: 2.50,
     pickupEnabled: true,
     pickupAddress: '',
     pickupInstructions: '',
@@ -198,6 +201,9 @@ export default function SettingsPage() {
           deliveryEnabled: data.deliveryEnabled ?? true,
           deliveryFeeUSD: data.deliveryFeeUSD ? Number(data.deliveryFeeUSD) : 0,
           freeDeliveryThresholdUSD: data.freeDeliveryThresholdUSD ? Number(data.freeDeliveryThresholdUSD) : null,
+          shippingCostPerKg: data.shippingCostPerKg ? Number(data.shippingCostPerKg) : 2,
+          minConsolidatedShipping: data.minConsolidatedShipping ? Number(data.minConsolidatedShipping) : 3,
+          packagingFeeUSD: data.packagingFeeUSD ? Number(data.packagingFeeUSD) : 2.50,
           pickupEnabled: data.pickupEnabled ?? true,
           pickupAddress: data.pickupAddress || '',
           pickupInstructions: data.pickupInstructions || '',
@@ -1079,29 +1085,88 @@ export default function SettingsPage() {
                 </div>
               </div>
 
+
               {formData.deliveryEnabled && (
                 <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 space-y-4 animate-fadeIn">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Costo de Envío (USD)</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
-                        <input
-                          type="number"
-                          name="deliveryFeeUSD"
-                          value={formData.deliveryFeeUSD}
-                          onChange={handleInputChange}
-                          step="0.01"
-                          min="0"
-                          className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                          placeholder="10.00"
-                        />
+                  {/* Info Banner */}
+                  <div className="flex items-start gap-2 p-3 bg-blue-100/50 rounded-lg">
+                    <FiTruck className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-blue-700">
+                      El envío se calcula por el peso de productos consolidables + tarifa de embalaje.
+                      Los productos grandes (no consolidables) tienen su costo fijo definido en cada producto.
+                    </p>
+                  </div>
+
+                  {/* Tarifas de Envío */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      Tarifas por Peso (Productos Consolidables)
+                    </h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Costo por Kg (USD)</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
+                          <input
+                            type="number"
+                            name="shippingCostPerKg"
+                            value={formData.shippingCostPerKg}
+                            onChange={handleInputChange}
+                            step="0.01"
+                            min="0"
+                            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            placeholder="2.00"
+                          />
+                        </div>
+                        <p className="text-[10px] text-gray-500 mt-1">Por cada kg de peso</p>
                       </div>
-                      <p className="text-[10px] text-gray-500 mt-1">Costo fijo para envíos a domicilio</p>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Mínimo de Envío (USD)</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
+                          <input
+                            type="number"
+                            name="minConsolidatedShipping"
+                            value={formData.minConsolidatedShipping}
+                            onChange={handleInputChange}
+                            step="0.01"
+                            min="0"
+                            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            placeholder="3.00"
+                          />
+                        </div>
+                        <p className="text-[10px] text-gray-500 mt-1">Cargo mínimo de envío</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Embalaje (USD)</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
+                          <input
+                            type="number"
+                            name="packagingFeeUSD"
+                            value={formData.packagingFeeUSD}
+                            onChange={handleInputChange}
+                            step="0.01"
+                            min="0"
+                            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            placeholder="2.50"
+                          />
+                        </div>
+                        <p className="text-[10px] text-gray-500 mt-1">Tarifa fija de embalaje</p>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Envío Gratis */}
+                  <div className="pt-3 border-t border-blue-200 space-y-3">
+                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      Promoción de Envío Gratis
+                    </h4>
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">Envío Gratis desde (USD)</label>
-                      <div className="relative">
+                      <div className="relative max-w-[200px]">
                         <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
                         <input
                           type="number"
@@ -1110,11 +1175,72 @@ export default function SettingsPage() {
                           onChange={handleInputChange}
                           step="0.01"
                           min="0"
-                          className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
                           placeholder="100.00"
                         />
                       </div>
-                      <p className="text-[10px] text-gray-500 mt-1">Dejar vacío para no ofrecer envío gratis</p>
+                      <p className="text-[10px] text-gray-500 mt-1">
+                        Si el subtotal supera este monto, solo se cobra la tarifa de embalaje. Dejar vacío para no ofrecer envío gratis.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Mini Tutorial */}
+                  <div className="pt-3 border-t border-blue-200">
+                    <div className="bg-white p-4 rounded-lg border border-blue-200">
+                      <p className="text-xs font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FiTruck className="w-4 h-4 text-blue-500" />
+                        ¿Cómo funciona el cálculo de envío?
+                      </p>
+
+                      <div className="space-y-3 text-xs text-gray-600">
+                        {/* Tipo 1: Consolidables */}
+                        <div className="flex gap-2">
+                          <span className="font-bold text-blue-600 w-4">1.</span>
+                          <div>
+                            <p className="font-semibold text-gray-700">Productos Consolidables (se envían juntos)</p>
+                            <p className="text-gray-500 mt-0.5">
+                              Se suman los pesos de todos los productos y se multiplica por el <strong>Costo por Kg</strong>.
+                              Si el resultado es menor al <strong>Mínimo de Envío</strong>, se cobra el mínimo.
+                            </p>
+                            <p className="text-blue-600 mt-1 font-medium">
+                              Ejemplo: 2kg × ${formData.shippingCostPerKg}/kg = ${(2 * formData.shippingCostPerKg).toFixed(2)} USD
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Tipo 2: Grandes */}
+                        <div className="flex gap-2">
+                          <span className="font-bold text-orange-600 w-4">2.</span>
+                          <div>
+                            <p className="font-semibold text-gray-700">Productos Grandes (no consolidables)</p>
+                            <p className="text-gray-500 mt-0.5">
+                              Cada producto tiene su propio costo de envío fijo definido al crearlo.
+                              Ideal para artículos voluminosos como monitores, refrigeradores, etc.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Tipo 3: Embalaje */}
+                        <div className="flex gap-2">
+                          <span className="font-bold text-purple-600 w-4">3.</span>
+                          <div>
+                            <p className="font-semibold text-gray-700">Tarifa de Embalaje</p>
+                            <p className="text-gray-500 mt-0.5">
+                              Se cobra <strong>${formData.packagingFeeUSD} USD</strong> por la preparación y empaque del pedido.
+                              Se aplica siempre que haya productos físicos.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Fórmula final */}
+                        <div className="mt-3 p-2 bg-slate-50 rounded-lg">
+                          <p className="font-semibold text-gray-700 mb-1">Fórmula Total:</p>
+                          <p className="text-gray-600 font-mono text-[11px]">
+                            (Peso × Costo/kg) + Envío productos grandes + ${formData.packagingFeeUSD} embalaje
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

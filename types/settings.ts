@@ -55,8 +55,11 @@ export interface CompanySettings {
 
   // Delivery Settings
   deliveryEnabled?: boolean;
-  deliveryFeeUSD?: number;
+  deliveryFeeUSD?: number; // Legacy field
   freeDeliveryThresholdUSD?: number | null;
+  shippingCostPerKg?: number;        // Cost per kg for consolidable products
+  minConsolidatedShipping?: number;  // Minimum shipping for consolidated items
+  packagingFeeUSD?: number;          // Fixed packaging/handling fee
 
   // Pickup Settings
   pickupEnabled?: boolean;
@@ -174,6 +177,9 @@ export interface SettingsFormData {
   deliveryEnabled: boolean;
   deliveryFeeUSD: number;
   freeDeliveryThresholdUSD: number | null;
+  shippingCostPerKg: number;
+  minConsolidatedShipping: number;
+  packagingFeeUSD: number;
   pickupEnabled: boolean;
   pickupAddress: string;
   pickupInstructions: string;

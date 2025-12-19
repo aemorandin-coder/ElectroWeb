@@ -20,6 +20,7 @@
     "@google/generative-ai": "^0.24.1",
     "@hcaptcha/react-hcaptcha": "^1.17.1",
     "@prisma/client": "^6.19.0",
+    "@sentry/nextjs": "^10.32.0",
     "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",

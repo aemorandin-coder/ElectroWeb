@@ -27,9 +27,11 @@ const tektrron = localFont({
   display: "swap",
 });
 
-// Generate dynamic metadata with favicon from database
+// Generate dynamic metadata with favicon and Open Graph from database
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshop.com';
 
   const icons: Metadata['icons'] = {};
 
@@ -38,16 +40,53 @@ export async function generateMetadata(): Promise<Metadata> {
       { url: settings.favicon, type: 'image/png' },
       { url: settings.favicon, sizes: '16x16', type: 'image/png' },
       { url: settings.favicon, sizes: '32x32', type: 'image/png' },
+      { url: settings.favicon, sizes: '192x192', type: 'image/png' },
     ];
     icons.apple = settings.favicon;
     icons.shortcut = settings.favicon;
+  } else {
+    // Fallback to static favicon
+    icons.icon = '/favicon.ico';
   }
 
+  // Open Graph image - use logo if available
+  const ogImage = settings.logo || settings.favicon || `${baseUrl}/og-image.png`;
+
   return {
-    title: settings.companyName || "Electro Shop Morandin C.A. | Gaming, Laptops & Tecnología",
+    title: {
+      default: settings.companyName || "Electro Shop Morandin C.A. | Gaming, Laptops & Tecnología",
+      template: `%s | ${settings.companyName || 'Electro Shop'}`,
+    },
     description: settings.tagline || "Tienda de tecnología premium en Guanare. Computadoras gaming, laptops, consolas, CCTV y más. Servicio técnico especializado y cursos online.",
-    keywords: ["gaming", "laptops", "tecnología", "Guanare", "Venezuela", "servicio técnico", "cursos online"],
+    keywords: ["gaming", "laptops", "tecnología", "Guanare", "Venezuela", "servicio técnico", "cursos online", "electro shop"],
     icons,
+    metadataBase: new URL(baseUrl),
+    openGraph: {
+      title: settings.companyName || "Electro Shop Morandin C.A.",
+      description: settings.tagline || "Tienda de tecnología premium en Guanare",
+      url: baseUrl,
+      siteName: settings.companyName || "Electro Shop",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: settings.companyName || "Electro Shop",
+        },
+      ],
+      locale: 'es_VE',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: settings.companyName || "Electro Shop Morandin C.A.",
+      description: settings.tagline || "Tienda de tecnología premium en Guanare",
+      images: [ogImage],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
   };
 }
 

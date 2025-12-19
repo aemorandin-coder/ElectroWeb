@@ -9,6 +9,12 @@ interface CartItem {
   quantity: number;
   imageUrl?: string;
   stock: number;
+  // Shipping fields
+  productType?: 'PHYSICAL' | 'DIGITAL';
+  weightKg?: number;
+  isConsolidable?: boolean;
+  shippingCost?: number;
+  dimensions?: string; // JSON string: {length, width, height} in cm
 }
 
 interface CartContextType {

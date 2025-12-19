@@ -108,21 +108,8 @@ export default function CarritoPage() {
   const handleCheckout = async () => {
     setIsCheckingOut(true);
     try {
-      const response = await fetch('/api/cart/reserve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: items.map(i => ({ productId: i.id, quantity: i.quantity }))
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al reservar stock');
-      }
-
-      toast.success('Stock reservado por 15 minutos');
+      // No longer reserving stock here - stock will be reserved only when order is created with DIRECT payment
+      // For WALLET payments, stock is deducted immediately upon order creation
       router.push('/checkout');
     } catch (error: any) {
       console.error('Checkout error:', error);

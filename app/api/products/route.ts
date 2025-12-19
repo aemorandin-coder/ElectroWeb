@@ -142,6 +142,11 @@ export async function POST(request: NextRequest) {
         digitalPlatform: body.productType === 'DIGITAL' ? body.digitalPlatform : null,
         digitalRegion: body.productType === 'DIGITAL' ? body.digitalRegion : null,
         deliveryMethod: body.productType === 'DIGITAL' ? (body.deliveryMethod || 'MANUAL') : null,
+        // Shipping Fields (only for PHYSICAL products)
+        weightKg: body.productType === 'PHYSICAL' ? (body.weightKg || 0) : null,
+        dimensions: body.productType === 'PHYSICAL' ? (body.dimensions || null) : null,
+        isConsolidable: body.productType === 'PHYSICAL' ? (body.isConsolidable !== false) : false,
+        shippingCost: body.productType === 'PHYSICAL' && !body.isConsolidable ? (body.shippingCost || 0) : 0,
       },
     });
 

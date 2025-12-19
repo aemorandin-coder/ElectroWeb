@@ -21,6 +21,32 @@ export interface SendEmailOptions {
   }>;
 }
 
+// Cache for email settings from database
+let cachedEmailSettings: any = null;
+let emailSettingsCacheTime = 0;
+const EMAIL_SETTINGS_CACHE_DURATION = 60 * 1000; // 1 minute - shorter for email settings
+
+// Get email settings from database
+const getEmailSettings = async () => {
+  const now = Date.now();
+  if (cachedEmailSettings && (now - emailSettingsCacheTime) < EMAIL_SETTINGS_CACHE_DURATION) {
+    return cachedEmailSettings;
+  }
+
+  try {
+    // Dynamic import to avoid circular dependencies
+    const { prisma } = await import('./prisma');
+    cachedEmailSettings = await prisma.emailSettings.findFirst({
+      where: { id: 'default' },
+    });
+    emailSettingsCacheTime = now;
+    return cachedEmailSettings;
+  } catch (error) {
+    console.error('[EMAIL] Error loading email settings from DB:', error);
+    return null;
+  }
+};
+
 // RESEND CLIENT (API HTTP - no se bloquea por ISP)
 const getResendClient = () => {
   const apiKey = process.env.RESEND_API_KEY;
@@ -28,9 +54,31 @@ const getResendClient = () => {
   return new Resend(apiKey);
 };
 
-// NODEMAILER TRANSPORTER (SMTP - puede ser bloqueado)
-const getTransporter = () => {
+// NODEMAILER TRANSPORTER - Now uses DB settings first, then falls back to env vars
+const getTransporterWithSettings = async () => {
+  const dbSettings = await getEmailSettings();
+
+  // If we have database settings and they're configured, use them
+  if (dbSettings && dbSettings.isConfigured && dbSettings.smtpHost && dbSettings.smtpUser && dbSettings.smtpPassword) {
+    console.log('[EMAIL] Using database SMTP configuration:', dbSettings.smtpHost);
+    return nodemailer.createTransport({
+      host: dbSettings.smtpHost,
+      port: dbSettings.smtpPort || 465,
+      secure: dbSettings.smtpSecure ?? true,
+      auth: {
+        user: dbSettings.smtpUser,
+        pass: dbSettings.smtpPassword,
+      },
+      connectionTimeout: 10000,
+      tls: {
+        rejectUnauthorized: false, // For self-signed certificates
+      },
+    });
+  }
+
+  // Fallback to environment variables
   const provider = process.env.EMAIL_PROVIDER || 'gmail';
+  console.log('[EMAIL] Using environment variable configuration:', provider);
 
   const baseConfig = {
     auth: {
@@ -44,11 +92,18 @@ const getTransporter = () => {
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: Number(process.env.SMTP_PORT) || 465,
       secure: process.env.SMTP_SECURE === 'true',
-      connectionTimeout: 10000, // 10 segundos timeout
+      connectionTimeout: 10000,
       ...baseConfig,
     },
     contabo: {
       host: process.env.SMTP_HOST || 'mail.contabo.net',
+      port: Number(process.env.SMTP_PORT) || 465,
+      secure: true,
+      connectionTimeout: 10000,
+      ...baseConfig,
+    },
+    godaddy: {
+      host: process.env.SMTP_HOST || 'smtpout.secureserver.net',
       port: Number(process.env.SMTP_PORT) || 465,
       secure: true,
       connectionTimeout: 10000,
@@ -66,12 +121,24 @@ const getTransporter = () => {
   return nodemailer.createTransport(providerConfigs[provider] || providerConfigs.custom);
 };
 
-// CORE EMAIL FUNCTION
+// CORE EMAIL FUNCTION - Now uses database settings
 
 export const sendEmail = async (options: SendEmailOptions): Promise<{ success: boolean; messageId?: string; error?: string }> => {
   const { to, subject, html, text, replyTo } = options;
-  const fromEmail = process.env.SMTP_FROM_EMAIL || 'onboarding@resend.dev';
-  const fromName = process.env.SMTP_FROM_NAME || 'Electro Shop';
+
+  // Get email settings from database first
+  const dbSettings = await getEmailSettings();
+
+  // Determine from email/name - prioritize DB settings
+  const fromEmail = dbSettings?.fromEmail || dbSettings?.smtpUser || process.env.SMTP_FROM_EMAIL || 'onboarding@resend.dev';
+  const fromName = dbSettings?.fromName || process.env.SMTP_FROM_NAME || 'Electro Shop';
+  const replyToEmail = replyTo || dbSettings?.replyTo || fromEmail;
+
+  // Check if transactional emails are enabled (for things like password reset, verification)
+  // We don't block here because some emails are critical, but we log a warning
+  if (dbSettings && !dbSettings.transactionalEnabled) {
+    console.warn('[EMAIL] Transactional emails are disabled in settings, but sending anyway for critical emails');
+  }
 
   // OPCION 1: Usar Resend si esta configurado (recomendado)
   const resend = getResendClient();
@@ -109,14 +176,18 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
     }
   }
 
-  // OPCION 2: Usar SMTP (nodemailer)
-  if (!process.env.SMTP_HOST && !process.env.EMAIL_PROVIDER) {
+  // OPCION 2: Usar SMTP (nodemailer) with database settings
+  // Check if we have any SMTP configuration (either from DB or env vars)
+  const hasDbConfig = dbSettings?.isConfigured && dbSettings?.smtpHost;
+  const hasEnvConfig = process.env.SMTP_HOST || process.env.EMAIL_PROVIDER;
+
+  if (!hasDbConfig && !hasEnvConfig) {
     console.warn('[EMAIL] SMTP no configurado. Email simulado:', { to, subject });
     return { success: true, messageId: 'simulated-' + Date.now() };
   }
 
   try {
-    const transporter = getTransporter();
+    const transporter = await getTransporterWithSettings();
 
     const mailOptions = {
       from: `"${fromName}" <${fromEmail}>`,
@@ -124,7 +195,7 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
       subject,
       html,
       text: text || html.replace(/<[^>]*>/g, ''),
-      replyTo: replyTo || fromEmail,
+      replyTo: replyToEmail,
     };
 
     const info = await transporter.sendMail(mailOptions);

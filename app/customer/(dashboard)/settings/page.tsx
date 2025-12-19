@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import {
   FiSettings, FiBell, FiShield, FiEye, FiEyeOff, FiSave, FiUser, FiLock,
   FiAlertCircle, FiMail, FiPackage, FiTag, FiVolume2, FiCheck, FiMonitor,
-  FiClock, FiLogOut, FiTrash2, FiAlertTriangle, FiActivity, FiX
+  FiClock, FiLogOut, FiTrash2, FiAlertTriangle, FiActivity, FiX, FiSend
 } from 'react-icons/fi';
 import { HiOutlineShieldCheck } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
@@ -27,6 +28,7 @@ const ToggleSwitch = ({ checked, onChange, disabled = false }: { checked: boolea
 );
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
   const { confirm } = useConfirm();
 
   const [settings, setSettings] = useState({
@@ -54,6 +56,8 @@ export default function SettingsPage() {
   });
 
   const [accountStatus, setAccountStatus] = useState('ACTIVE');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -73,7 +77,11 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetchSettings();
-  }, []);
+    // Check email verification status from session
+    if (session?.user) {
+      setEmailVerified(!!(session.user as any).emailVerified);
+    }
+  }, [session]);
 
   const fetchSettings = async () => {
     try {
@@ -267,6 +275,26 @@ export default function SettingsPage() {
     }
   };
 
+  const handleResendVerification = async () => {
+    setResendingVerification(true);
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        toast.success(data.message || 'Correo de verificación enviado');
+      } else {
+        toast.error(data.error || 'Error al enviar correo');
+      }
+    } catch (error) {
+      toast.error('Error al enviar correo de verificación');
+    } finally {
+      setResendingVerification(false);
+    }
+  };
+
   const formatLastLogin = (dateString: string | null) => {
     if (!dateString) return 'Nunca';
     const date = new Date(dateString);
@@ -335,6 +363,53 @@ export default function SettingsPage() {
             <FiX className="w-3 h-3" />
             Cancelar solicitud
           </button>
+        </div>
+      )}
+
+      {/* Email Verification Status */}
+      {!emailVerified && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+              <FiMail className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-amber-800">Verificación de correo pendiente</p>
+              <p className="text-xs text-amber-700">
+                Para poder realizar compras, debes verificar tu correo electrónico.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleResendVerification}
+            disabled={resendingVerification}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {resendingVerification ? (
+              <>
+                <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
+                Enviando...
+              </>
+            ) : (
+              <>
+                <FiSend className="w-3.5 h-3.5" />
+                Reenviar verificación
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Email Verified Success Badge */}
+      {emailVerified && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+            <FiCheck className="w-4 h-4 text-green-600" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-green-800">Correo verificado</p>
+            <p className="text-xs text-green-700">Tu cuenta está verificada y lista para comprar.</p>
+          </div>
         </div>
       )}
 

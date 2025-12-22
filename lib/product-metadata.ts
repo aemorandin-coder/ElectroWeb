@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { getSiteSettings } from '@/lib/site-settings';
 
 interface ProductPageProps {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }
 
 // Helper to clean image URL
@@ -16,6 +16,7 @@ function cleanImageUrl(url: string | null | undefined): string | null {
 }
 
 export async function generateProductMetadata({ params }: ProductPageProps): Promise<Metadata> {
+    const { id } = await params; // Await params in Next.js 15+
     const settings = await getSiteSettings();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshop.com';
 
@@ -24,8 +25,8 @@ export async function generateProductMetadata({ params }: ProductPageProps): Pro
         const product = await prisma.product.findFirst({
             where: {
                 OR: [
-                    { slug: params.id },
-                    { id: params.id }
+                    { slug: id },
+                    { id: id }
                 ],
                 status: 'PUBLISHED'
             },
@@ -82,7 +83,7 @@ export async function generateProductMetadata({ params }: ProductPageProps): Pro
             openGraph: {
                 title: `${title} - $${price.toFixed(2)} USD`,
                 description: description,
-                url: `${baseUrl}/productos/${params.id}`,
+                url: `${baseUrl}/productos/${id}`,
                 siteName: settings.companyName || 'Electro Shop',
                 images: [
                     {

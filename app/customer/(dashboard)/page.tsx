@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FiShoppingBag, FiDollarSign, FiHeart, FiTrendingUp, FiPackage, FiClock, FiActivity, FiArrowUp, FiArrowDown, FiStar, FiChevronRight, FiShield, FiGift, FiZap, FiCheck, FiTruck } from 'react-icons/fi';
+import { FiShoppingBag, FiDollarSign, FiHeart, FiTrendingUp, FiPackage, FiClock, FiActivity, FiArrowUp, FiArrowDown, FiChevronRight, FiShield, FiZap, FiCheck, FiTruck, FiUser, FiLogIn } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 
 interface DashboardStats {
@@ -24,12 +24,10 @@ export default function CustomerDashboard() {
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
-    // Set greeting based on time of day
     const hour = new Date().getHours();
     if (hour < 12) setGreeting('Buenos días');
     else if (hour < 18) setGreeting('Buenas tardes');
     else setGreeting('Buenas noches');
-
     fetchDashboardData();
   }, []);
 
@@ -72,153 +70,132 @@ export default function CustomerDashboard() {
   }
 
   return (
-    <div className="space-y-4 pb-20">
-      {/* Hero Welcome Section */}
-      <div className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#162d6b] rounded-2xl p-6 text-white overflow-hidden">
-        {/* Decorative elements */}
+    <div className="h-full flex flex-col gap-3">
+      {/* Hero Welcome Section - Compact */}
+      <div className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#162d6b] rounded-xl p-4 text-white overflow-hidden flex-shrink-0">
         <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-56 h-56 bg-blue-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
-        <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-white/5 rounded-full blur-xl -translate-x-1/2 -translate-y-1/2" />
 
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="w-full h-full" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-        </div>
-
-        <div className="relative z-10">
-          <div className="flex items-start justify-between">
-            <div className="text-left">
-              <h1 className="text-2xl font-black mb-1">
-                {greeting}, {session?.user?.name?.split(' ')[0] || 'Cliente'}
-              </h1>
-              <p className="text-blue-100 text-sm">
-                Gestiona tus pedidos, saldo y preferencias desde tu panel personal
-              </p>
-            </div>
-            <div className="hidden sm:flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-blue-200 text-xs">Saldo disponible</p>
-                <p className="text-2xl font-black">${stats?.balance.toFixed(2) || '0.00'}</p>
-              </div>
-              <Link
-                href="/customer/balance"
-                className="w-12 h-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl flex items-center justify-center transition-all hover:scale-105"
-              >
-                <FiDollarSign className="w-6 h-6" />
-              </Link>
-            </div>
+        <div className="relative z-10 flex items-center justify-between">
+          {/* Greeting */}
+          <div className="flex-shrink-0">
+            <h1 className="text-xl font-black mb-0.5">
+              {greeting}, {session?.user?.name?.split(' ')[0] || 'Cliente'}
+            </h1>
+            <p className="text-blue-100 text-xs">Gestiona tus pedidos, saldo y preferencias</p>
           </div>
 
-          {/* Quick stats row */}
-          <div className="grid grid-cols-3 gap-3 mt-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-              <div className="flex items-center gap-2 mb-1">
-                <FiShoppingBag className="w-4 h-4 text-blue-200" />
-                <span className="text-xs text-blue-200">Pedidos</span>
+          {/* Stats Row - All in one line */}
+          <div className="flex items-center gap-3">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10 text-center">
+              <div className="flex items-center gap-1.5 justify-center mb-0.5">
+                <FiShoppingBag className="w-3 h-3 text-blue-200" />
+                <span className="text-[10px] text-blue-200">Pedidos</span>
               </div>
-              <p className="text-xl font-bold">{stats?.orders || 0}</p>
+              <p className="text-lg font-bold">{stats?.orders || 0}</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-              <div className="flex items-center gap-2 mb-1">
-                <FiClock className="w-4 h-4 text-amber-300" />
-                <span className="text-xs text-blue-200">En proceso</span>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10 text-center">
+              <div className="flex items-center gap-1.5 justify-center mb-0.5">
+                <FiClock className="w-3 h-3 text-amber-300" />
+                <span className="text-[10px] text-blue-200">En proceso</span>
               </div>
-              <p className="text-xl font-bold">{stats?.pending || 0}</p>
+              <p className="text-lg font-bold">{stats?.pending || 0}</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-              <div className="flex items-center gap-2 mb-1">
-                <FiHeart className="w-4 h-4 text-pink-300" />
-                <span className="text-xs text-blue-200">Favoritos</span>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10 text-center">
+              <div className="flex items-center gap-1.5 justify-center mb-0.5">
+                <FiHeart className="w-3 h-3 text-pink-300" />
+                <span className="text-[10px] text-blue-200">Favoritos</span>
               </div>
-              <p className="text-xl font-bold">{stats?.wishlist || 0}</p>
+              <p className="text-lg font-bold">{stats?.wishlist || 0}</p>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20 text-center">
+              <p className="text-blue-200 text-[10px]">Saldo disponible</p>
+              <p className="text-xl font-black">${stats?.balance?.toFixed(2) || '0.00'}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* Quick Actions Grid - Compact */}
+      <div className="grid grid-cols-4 gap-2 flex-shrink-0">
         <Link href="/customer/orders" className="group">
-          <div className="bg-white rounded-xl p-4 border border-[#e9ecef] hover:border-[#2a63cd]/30 hover:shadow-lg transition-all duration-300">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/20">
-              <FiPackage className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="font-bold text-[#212529] text-sm mb-0.5">Mis Pedidos</h3>
-            <p className="text-xs text-[#6a6c6b]">Ver historial completo</p>
-            <div className="flex items-center gap-1 mt-2 text-[#2a63cd] text-xs font-semibold">
-              <span>Acceder</span>
-              <FiChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+          <div className="bg-white rounded-lg p-2.5 border border-[#e9ecef] hover:border-[#2a63cd]/30 hover:shadow-md transition-all">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <FiPackage className="w-3.5 h-3.5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-[#212529] text-[11px]">Mis Pedidos</h3>
+                <p className="text-[9px] text-[#6a6c6b]">Ver historial</p>
+              </div>
             </div>
           </div>
         </Link>
-
         <Link href="/customer/balance" className="group">
-          <div className="bg-white rounded-xl p-4 border border-[#e9ecef] hover:border-green-200 hover:shadow-lg transition-all duration-300">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-green-500/20">
-              <FiDollarSign className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="font-bold text-[#212529] text-sm mb-0.5">Mi Saldo</h3>
-            <p className="text-xs text-[#6a6c6b]">Recargar y ver movimientos</p>
-            <div className="flex items-center gap-1 mt-2 text-green-600 text-xs font-semibold">
-              <span>Gestionar</span>
-              <FiChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+          <div className="bg-white rounded-lg p-2.5 border border-[#e9ecef] hover:border-green-200 hover:shadow-md transition-all">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <FiDollarSign className="w-3.5 h-3.5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-[#212529] text-[11px]">Mi Saldo</h3>
+                <p className="text-[9px] text-[#6a6c6b]">Recargar</p>
+              </div>
             </div>
           </div>
         </Link>
-
         <Link href="/customer/wishlist" className="group">
-          <div className="bg-white rounded-xl p-4 border border-[#e9ecef] hover:border-pink-200 hover:shadow-lg transition-all duration-300">
-            <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-pink-500/20">
-              <FiHeart className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="font-bold text-[#212529] text-sm mb-0.5">Favoritos</h3>
-            <p className="text-xs text-[#6a6c6b]">Productos guardados</p>
-            <div className="flex items-center gap-1 mt-2 text-pink-600 text-xs font-semibold">
-              <span>Ver lista</span>
-              <FiChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+          <div className="bg-white rounded-lg p-2.5 border border-[#e9ecef] hover:border-pink-200 hover:shadow-md transition-all">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-gradient-to-br from-pink-500 to-rose-600 rounded-md flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <FiHeart className="w-3.5 h-3.5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-[#212529] text-[11px]">Favoritos</h3>
+                <p className="text-[9px] text-[#6a6c6b]">Ver lista</p>
+              </div>
             </div>
           </div>
         </Link>
-
         <Link href="/customer/warranty" className="group">
-          <div className="bg-white rounded-xl p-4 border border-[#e9ecef] hover:border-purple-200 hover:shadow-lg transition-all duration-300">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/20">
-              <FiShield className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="font-bold text-[#212529] text-sm mb-0.5">Garantía</h3>
-            <p className="text-xs text-[#6a6c6b]">Soporte y devoluciones</p>
-            <div className="flex items-center gap-1 mt-2 text-purple-600 text-xs font-semibold">
-              <span>Solicitar</span>
-              <FiChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+          <div className="bg-white rounded-lg p-2.5 border border-[#e9ecef] hover:border-purple-200 hover:shadow-md transition-all">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-violet-600 rounded-md flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <FiShield className="w-3.5 h-3.5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-[#212529] text-[11px]">Garantía</h3>
+                <p className="text-[9px] text-[#6a6c6b]">Soporte</p>
+              </div>
             </div>
           </div>
         </Link>
       </div>
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 flex-1 min-h-0">
         {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-[#e9ecef] overflow-hidden">
-          <div className="px-4 py-3 border-b border-[#e9ecef] flex items-center justify-between">
+        <div className="lg:col-span-2 bg-white rounded-lg border border-[#e9ecef] overflow-hidden flex flex-col">
+          <div className="px-3 py-2 border-b border-[#e9ecef] flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center">
-                <FiPackage className="w-4 h-4 text-[#2a63cd]" />
+              <div className="w-6 h-6 bg-[#2a63cd]/10 rounded-md flex items-center justify-center">
+                <FiPackage className="w-3 h-3 text-[#2a63cd]" />
               </div>
-              <h2 className="font-bold text-[#212529]">Pedidos Recientes</h2>
+              <h2 className="font-bold text-[#212529] text-base">Pedidos Recientes</h2>
             </div>
-            <Link href="/customer/orders" className="text-xs text-[#2a63cd] hover:underline font-semibold flex items-center gap-1">
-              Ver todos <FiChevronRight className="w-3 h-3" />
+            <Link href="/customer/orders" className="text-[10px] text-[#2a63cd] hover:underline font-semibold flex items-center gap-1">
+              Ver todos <FiChevronRight className="w-2.5 h-2.5" />
             </Link>
           </div>
-          <div className="p-3">
+          <div className="p-2 flex-1 overflow-y-auto">
             {stats?.recentOrders && stats.recentOrders.length > 0 ? (
-              <div className="space-y-2">
-                {stats.recentOrders.slice(0, 4).map((order) => {
+              <div className="space-y-1">
+                {stats.recentOrders.slice(0, 3).map((order) => {
                   const statusConfig = getStatusConfig(order.status);
                   const StatusIcon = statusConfig.icon;
                   return (
-                    <Link href="/customer/orders" key={order.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#f8f9fa] transition-colors group">
-                      <div className="w-10 h-10 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/5 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Link href="/customer/orders" key={order.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#f8f9fa] transition-colors">
+                      <div className="w-10 h-10 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/5 rounded-lg flex items-center justify-center flex-shrink-0">
                         <FiPackage className="w-5 h-5 text-[#2a63cd]" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -232,7 +209,7 @@ export default function CustomerDashboard() {
                         <p className="text-xs text-[#6a6c6b]">{order.itemCount} productos</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-[#212529]">${order.total.toFixed(2)}</p>
+                        <p className="font-bold text-[#212529] text-base">${order.total.toFixed(2)}</p>
                         <p className="text-[10px] text-[#6a6c6b]">
                           {new Date(order.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                         </p>
@@ -242,13 +219,13 @@ export default function CustomerDashboard() {
                 })}
               </div>
             ) : (
-              <div className="text-center py-10">
-                <div className="w-16 h-16 bg-[#f8f9fa] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <FiPackage className="w-8 h-8 text-[#adb5bd]" />
+              <div className="text-center py-6">
+                <div className="w-12 h-12 bg-[#f8f9fa] rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <FiPackage className="w-6 h-6 text-[#adb5bd]" />
                 </div>
-                <p className="text-[#6a6c6b] mb-4">No tienes pedidos recientes</p>
-                <Link href="/productos" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2a63cd] text-white rounded-xl hover:bg-[#1e4ba3] transition-colors font-medium text-sm">
-                  <FiZap className="w-4 h-4" />
+                <p className="text-[#6a6c6b] text-xs mb-2">No tienes pedidos recientes</p>
+                <Link href="/productos" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2a63cd] text-white rounded-lg hover:bg-[#1e4ba3] transition-colors font-medium text-xs">
+                  <FiZap className="w-3 h-3" />
                   Explorar Productos
                 </Link>
               </div>
@@ -257,46 +234,64 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Activity & Stats */}
-        <div className="space-y-4 max-h-[450px] overflow-y-auto">
+        <div className="flex flex-col gap-2">
           {/* Activity Feed */}
-          <div className="bg-white rounded-xl border border-[#e9ecef] overflow-hidden">
-            <div className="px-4 py-3 border-b border-[#e9ecef]">
+          <div className="bg-white rounded-lg border border-[#e9ecef] overflow-hidden flex flex-col flex-1">
+            <div className="px-3 py-2 border-b border-[#e9ecef] flex-shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <div className="w-7 h-7 bg-green-100 rounded-md flex items-center justify-center">
                   <FiActivity className="w-4 h-4 text-green-600" />
                 </div>
-                <h2 className="font-bold text-[#212529]">Actividad</h2>
+                <h2 className="font-bold text-[#212529] text-base">Actividad</h2>
               </div>
             </div>
-            <div className="p-3 max-h-[150px] overflow-y-auto">
+            <div className="p-3 flex-1 overflow-y-auto">
               {stats?.recentActivity && stats.recentActivity.length > 0 ? (
                 <div className="space-y-2">
-                  {stats.recentActivity.slice(0, 4).map((activity) => (
-                    <div key={activity.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#f8f9fa] transition-colors">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${activity.type === 'RECHARGE' ? 'bg-green-100' : 'bg-red-100'
-                        }`}>
-                        {activity.type === 'RECHARGE' ? (
-                          <FiArrowUp className="w-3.5 h-3.5 text-green-600" />
-                        ) : (
-                          <FiArrowDown className="w-3.5 h-3.5 text-red-600" />
+                  {stats.recentActivity.slice(0, 4).map((activity) => {
+                    // Determine icon and color based on activity type
+                    const getActivityStyle = (type: string) => {
+                      switch (type) {
+                        case 'LOGIN':
+                          return { bg: 'bg-blue-100', icon: <FiLogIn className="w-3.5 h-3.5 text-blue-600" />, color: 'text-blue-600' };
+                        case 'ORDER':
+                          return { bg: 'bg-purple-100', icon: <FiPackage className="w-3.5 h-3.5 text-purple-600" />, color: 'text-purple-600' };
+                        case 'ACCOUNT':
+                          return { bg: 'bg-green-100', icon: <FiUser className="w-3.5 h-3.5 text-green-600" />, color: 'text-green-600' };
+                        case 'RECHARGE':
+                        case 'DEPOSIT':
+                          return { bg: 'bg-emerald-100', icon: <FiArrowUp className="w-3.5 h-3.5 text-emerald-600" />, color: 'text-emerald-600' };
+                        case 'PURCHASE':
+                          return { bg: 'bg-red-100', icon: <FiArrowDown className="w-3.5 h-3.5 text-red-600" />, color: 'text-red-600' };
+                        default:
+                          return { bg: 'bg-gray-100', icon: <FiActivity className="w-3.5 h-3.5 text-gray-600" />, color: 'text-gray-600' };
+                      }
+                    };
+                    const style = getActivityStyle(activity.type);
+
+                    return (
+                      <div key={activity.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#f8f9fa] transition-colors">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${style.bg}`}>
+                          {style.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-[#212529] truncate">{activity.description}</p>
+                          <p className="text-[10px] text-[#6a6c6b]">
+                            {new Date(activity.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                          </p>
+                        </div>
+                        {activity.amount && (
+                          <span className={`text-xs font-bold ${style.color}`}>
+                            {activity.type === 'RECHARGE' || activity.type === 'DEPOSIT' ? '+' : activity.type === 'PURCHASE' ? '-' : ''}${activity.amount?.toFixed(2) || ''}
+                          </span>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-[#212529] truncate">{activity.description}</p>
-                        <p className="text-[10px] text-[#6a6c6b]">
-                          {new Date(activity.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                        </p>
-                      </div>
-                      <span className={`text-xs font-bold ${activity.type === 'RECHARGE' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                        {activity.type === 'RECHARGE' ? '+' : '-'}${activity.amount.toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
-                <div className="text-center py-6">
-                  <FiActivity className="w-10 h-10 text-[#adb5bd] mx-auto mb-2" />
+                <div className="text-center py-4">
+                  <FiActivity className="w-8 h-8 text-[#adb5bd] mx-auto mb-2" />
                   <p className="text-xs text-[#6a6c6b]">Sin actividad reciente</p>
                 </div>
               )}
@@ -304,34 +299,28 @@ export default function CustomerDashboard() {
           </div>
 
           {/* Stats Summary */}
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100 max-h-[200px] overflow-y-auto">
-            <h3 className="font-bold text-[#212529] text-sm mb-3 flex items-center gap-2 sticky top-0 bg-gradient-to-br from-blue-50 to-purple-50 py-1">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-100 flex-shrink-0">
+            <h3 className="font-bold text-[#212529] text-base mb-3 flex items-center gap-2">
               <FiTrendingUp className="w-4 h-4 text-[#2a63cd]" />
               Resumen
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-[#6a6c6b]">Total Recargado</span>
-                <span className="font-bold text-green-600">${stats?.totalRecharges.toFixed(2) || '0.00'}</span>
+                <span className="font-bold text-green-600 text-sm">${stats?.totalRecharges?.toFixed(2) || '0.00'}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-[#6a6c6b]">Total Gastado</span>
-                <span className="font-bold text-purple-600">${stats?.totalSpent.toFixed(2) || '0.00'}</span>
+                <span className="font-bold text-purple-600 text-sm">${stats?.totalSpent?.toFixed(2) || '0.00'}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-[#6a6c6b]">Este Mes</span>
-                <span className="font-bold text-[#2a63cd]">${stats?.totalSpentThisMonth?.toFixed(2) || '0.00'}</span>
-              </div>
-              <div className="pt-2 border-t border-blue-200">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[#212529]">Completados</span>
-                  <span className="font-black text-[#2a63cd] text-lg">{(stats?.orders || 0) - (stats?.pending || 0)}</span>
-                </div>
+                <span className="font-bold text-[#2a63cd] text-sm">${stats?.totalSpentThisMonth?.toFixed(2) || '0.00'}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

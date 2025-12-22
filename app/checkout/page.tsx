@@ -82,6 +82,7 @@ export default function CheckoutPage() {
 
   // Success modal state
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [orderCompleted, setOrderCompleted] = useState(false); // Track if order was just completed
   const [successOrderData, setSuccessOrderData] = useState<{
     orderNumber: string;
     total: number;
@@ -474,7 +475,10 @@ export default function CheckoutPage() {
       // Clear cart
       clearCart();
 
-      // Set success data and show modal
+      // Mark order as completed to prevent showing empty cart message
+      setOrderCompleted(true);
+
+      // Set success data
       setSuccessOrderData({
         orderNumber: order.orderNumber,
         total: finalTotal,
@@ -482,7 +486,7 @@ export default function CheckoutPage() {
       });
       setShowSuccessModal(true);
 
-      // Redirect after 5 seconds
+      // Redirect after 5 seconds (comfortable delay)
       setTimeout(() => {
         router.push('/customer/orders');
       }, 5000);
@@ -567,6 +571,118 @@ export default function CheckoutPage() {
           <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-lg font-medium">Cargando...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show processing/success screen if order was just completed
+  if (orderCompleted && successOrderData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 relative overflow-hidden">
+        {/* Animated Background Orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-cyan-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-purple-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
+
+        {/* Success Card */}
+        <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6">
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 sm:p-12 shadow-2xl animate-slideInUp text-center">
+            {/* Success Icon with Animation */}
+            <div className="relative w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-8">
+              <div className="absolute inset-0 bg-green-500/30 rounded-full animate-ping"></div>
+              <div className="relative w-full h-full bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-2xl">
+                <svg className="w-14 h-14 sm:w-16 sm:h-16 text-white animate-scaleIn" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 font-[family-name:var(--font-tektur)]">
+              ¡Pedido Realizado!
+            </h2>
+
+            {/* Order Number */}
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/20 backdrop-blur-md rounded-full border border-white/30 mb-6">
+              <span className="text-base font-medium text-white/80">Orden:</span>
+              <span className="text-lg font-bold text-white">{successOrderData.orderNumber}</span>
+            </div>
+
+            {/* Order Summary */}
+            <div className="bg-white/10 rounded-2xl p-6 sm:p-8 mb-8 border border-white/20">
+              <p className="text-white/90 text-base sm:text-lg mb-3">
+                {successOrderData.items.length} producto{successOrderData.items.length > 1 ? 's' : ''}
+              </p>
+              <p className="text-3xl sm:text-4xl font-black text-white">
+                ${successOrderData.total.toFixed(2)} USD
+              </p>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <p className="text-base text-white/70 mb-3">Redirigiendo a tus pedidos...</p>
+              <div className="h-3 bg-white/20 rounded-full overflow-hidden max-w-md mx-auto">
+                <div className="h-full bg-gradient-to-r from-cyan-400 to-white rounded-full animate-progressBar"></div>
+              </div>
+            </div>
+
+            {/* Manual Link */}
+            <button
+              onClick={() => router.push('/customer/orders')}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 text-white text-base font-semibold rounded-full transition-all border border-white/30"
+            >
+              <FiArrowRight className="w-5 h-5" />
+              Ir ahora a mis pedidos
+            </button>
+          </div>
+        </div>
+
+        <style jsx>{`
+          @keyframes slideInUp {
+            from {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes scaleIn {
+            from {
+              opacity: 0;
+              transform: scale(0.5);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+
+          @keyframes progressBar {
+            from {
+              width: 0%;
+            }
+            to {
+              width: 100%;
+            }
+          }
+
+          .animate-slideInUp {
+            animation: slideInUp 0.6s ease-out;
+          }
+
+          .animate-scaleIn {
+            animation: scaleIn 0.4s ease-out 0.3s both;
+          }
+
+          .animate-progressBar {
+            animation: progressBar 5s linear;
+          }
+        `}</style>
       </div>
     );
   }
@@ -792,7 +908,7 @@ export default function CheckoutPage() {
                   <div className="relative group">
                     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-100 to-orange-100 border border-orange-300 rounded-full cursor-help">
                       <FiAlertCircle className="w-3.5 h-3.5 text-orange-600" />
-                      <span className="text-xs font-bold text-orange-700">Verifica tus datos</span>
+                      <span className="text-xs font-bold text-orange-700">Recuerda verificar tus datos</span>
                     </div>
                     {/* Tooltip on hover */}
                     <div className="absolute right-0 top-full mt-2 w-72 p-3 bg-orange-50 border border-orange-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
@@ -813,31 +929,35 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, isOfficeDelivery: false, courierOfficeId: '' })}
-                      className={`p-4 rounded-xl border-2 transition-all ${!formData.isOfficeDelivery
+                      className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${!formData.isOfficeDelivery
                         ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
                         : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
                         }`}
                     >
-                      <FiMapPin className={`w-6 h-6 mx-auto mb-2 ${!formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
-                      <p className={`text-sm font-bold ${!formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
-                        Dirección Personal
-                      </p>
-                      <p className="text-xs text-[#6a6c6b] mt-1">Envío a domicilio</p>
+                      <FiMapPin className={`w-5 h-5 flex-shrink-0 ${!formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
+                      <div className="text-left">
+                        <p className={`text-sm font-bold ${!formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                          Dirección Personal
+                        </p>
+                        <p className="text-xs text-[#6a6c6b]">Envío a domicilio</p>
+                      </div>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, isOfficeDelivery: true })}
-                      className={`p-4 rounded-xl border-2 transition-all ${formData.isOfficeDelivery
+                      className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.isOfficeDelivery
                         ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
                         : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
                         }`}
                     >
-                      <FiPackage className={`w-6 h-6 mx-auto mb-2 ${formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
-                      <p className={`text-sm font-bold ${formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
-                        Oficina Courier
-                      </p>
-                      <p className="text-xs text-[#6a6c6b] mt-1">ZOOM o MRW</p>
+                      <FiPackage className={`w-5 h-5 flex-shrink-0 ${formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
+                      <div className="text-left">
+                        <p className={`text-sm font-bold ${formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                          Oficina Courier
+                        </p>
+                        <p className="text-xs text-[#6a6c6b]">ZOOM o MRW</p>
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -1500,12 +1620,14 @@ export default function CheckoutPage() {
 
               {/* Summary Card */}
               <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl animate-slideUp">
-                {/* Premium Header */}
-                <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-6 py-4">
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
+                {/* Header - Same style as other sections */}
+                <div className="px-6 py-4 border-b border-slate-200">
+                  <h2 className="text-lg font-bold text-[#212529] flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    </div>
                     Resumen del Pedido
                   </h2>
                 </div>

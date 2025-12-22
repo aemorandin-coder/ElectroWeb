@@ -263,8 +263,15 @@ export default function CustomerDashboardLayout({
               </button>
 
               <div className="flex items-center gap-3">
-                {/* Email Verification Warning - Compact Button */}
-                {!(session?.user as any)?.emailVerified && (
+                {/* Email Verification Status */}
+                {(session?.user as any)?.emailVerified ? (
+                  <div className="flex items-center gap-1.5 px-3 py-2 bg-green-50 border border-green-200 text-green-700 text-xs font-medium rounded-lg">
+                    <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="hidden sm:inline">Verificado</span>
+                  </div>
+                ) : (
                   <Link
                     href="/customer/settings"
                     className="relative flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 animate-pulse-slow group overflow-hidden"
@@ -318,7 +325,7 @@ export default function CustomerDashboardLayout({
 
             {/* Content Container with Smooth Transitions */}
             <div
-              className="bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/30 h-[calc(100vh-8rem)] overflow-hidden p-6"
+              className="bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/30 h-[calc(100vh-8rem)] overflow-y-auto p-6"
               style={{
                 opacity: isTransitioning ? 0 : 1,
                 transform: isTransitioning ? 'translateY(8px) scale(0.99)' : 'translateY(0) scale(1)',

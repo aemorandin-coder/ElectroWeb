@@ -115,24 +115,20 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   // Base header class - always the same for SSR
   const baseHeaderClass = 'sticky top-0 z-50 transition-all duration-300 backdrop-blur-md';
 
-  // Dynamic styles applied via inline style to avoid className mismatch
   // Dynamic styles applied via inline style
   // We initialize with the light theme (SSR default) to match server
-  const headerStyle: React.CSSProperties = (mounted && useBlueHeader)
-    ? {
-      background: 'linear-gradient(to right, rgba(42, 99, 205, 0.95), rgba(30, 75, 163, 0.95))',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-    }
-    : {
-      // Default / Light theme styles (matches server-side rendering for non-blue header)
-      // If server rendered it as light (default), we must match.
-      // However, if we want to avoid ANY mismatch, we should apply these classes via Tailwind/CSS if possible, or ensure the condition is exactly what SSR sees.
-      // Since SSR sees 'useBlueHeader = false', this else block is what SSR renders.
-      background: 'rgba(255, 255, 255, 0.95)',
-      borderBottom: '1px solid #e9ecef',
-      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-    };
+  // IMPORTANT: Use consistent property structure to avoid hydration mismatch
+  const headerStyle: React.CSSProperties = {
+    background: (mounted && useBlueHeader)
+      ? 'linear-gradient(to right, rgba(42, 99, 205, 0.95), rgba(30, 75, 163, 0.95))'
+      : 'rgba(255, 255, 255, 0.95)',
+    borderBottom: (mounted && useBlueHeader)
+      ? '1px solid rgba(255, 255, 255, 0.1)'
+      : '1px solid #e9ecef',
+    boxShadow: (mounted && useBlueHeader)
+      ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+      : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+  };
 
   return (
     <header
@@ -214,7 +210,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-4 ${useBlueHeader ? '[&_*]:text-white [&_svg]:text-white' : ''}`}>
+            <div className={`flex items-center gap-4 ${useBlueHeader ? '[&>div>button>svg]:text-white [&>div>button]:hover:bg-white/20' : ''}`}>
               <NotificationBell />
               <CartIcon />
             </div>

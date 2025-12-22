@@ -80,13 +80,13 @@ export async function GET(request: NextRequest) {
         );
 
         // Get recent activity (last 10 transactions)
-        const recentActivity = await prisma.transaction.findMany({
+        const recentTransactions = await prisma.transaction.findMany({
             where: {
                 balance: {
                     userId,
                 },
             },
-            take: 10,
+            take: 5,
             orderBy: { createdAt: 'desc' },
             select: {
                 id: true,
@@ -97,6 +97,88 @@ export async function GET(request: NextRequest) {
                 status: true,
             },
         });
+
+        // Get user profile for last login
+        const profile = await prisma.profile.findUnique({
+            where: { userId },
+            select: {
+                lastLoginAt: true,
+            },
+        });
+
+        // Get last order
+        const lastOrder = await prisma.order.findFirst({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                orderNumber: true,
+                createdAt: true,
+                totalUSD: true,
+            },
+        });
+
+        // Get account creation date
+        const userAccount = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                createdAt: true,
+            },
+        });
+
+        // Build activity array
+        const recentActivity: any[] = [];
+
+        // Add last login
+        if (profile?.lastLoginAt) {
+            recentActivity.push({
+                id: 'login-' + profile.lastLoginAt.getTime(),
+                type: 'LOGIN',
+                description: 'Inicio de sesión',
+                createdAt: profile.lastLoginAt,
+            });
+        }
+
+        // Add last order
+        if (lastOrder) {
+            recentActivity.push({
+                id: 'order-' + lastOrder.id,
+                type: 'ORDER',
+                description: `Pedido #${lastOrder.orderNumber}`,
+                amount: Number(lastOrder.totalUSD),
+                createdAt: lastOrder.createdAt,
+            });
+        }
+
+        // Add account creation if recent (within last 30 days)
+        if (userAccount?.createdAt) {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            if (userAccount.createdAt > thirtyDaysAgo) {
+                recentActivity.push({
+                    id: 'account-created',
+                    type: 'ACCOUNT',
+                    description: 'Cuenta creada',
+                    createdAt: userAccount.createdAt,
+                });
+            }
+        }
+
+        // Add transactions (recharges and purchases)
+        recentTransactions.forEach((tx) => {
+            recentActivity.push({
+                id: tx.id,
+                type: tx.type,
+                amount: Number(tx.amount),
+                description: tx.description,
+                createdAt: tx.createdAt,
+                status: tx.status,
+            });
+        });
+
+        // Sort by date and limit to 5
+        recentActivity.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const limitedActivity = recentActivity.slice(0, 5);
 
         return NextResponse.json({
             balance: Number(userBalance?.balance || 0),
@@ -115,14 +197,7 @@ export async function GET(request: NextRequest) {
                 itemCount: order.items.length,
                 items: order.items.slice(0, 3),
             })),
-            recentActivity: recentActivity.map(activity => ({
-                id: activity.id,
-                type: activity.type,
-                amount: Number(activity.amount),
-                description: activity.description,
-                createdAt: activity.createdAt,
-                status: activity.status,
-            })),
+            recentActivity: limitedActivity,
         });
     } catch (error) {
         console.error('Error fetching dashboard data:', error);

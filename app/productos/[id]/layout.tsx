@@ -6,8 +6,7 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const resolvedParams = await params;
-    return generateProductMetadata({ params: resolvedParams });
+    return generateProductMetadata({ params });
 }
 
 export default function ProductLayout({

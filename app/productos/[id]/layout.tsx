@@ -2,11 +2,12 @@ import { Metadata } from 'next';
 import { generateProductMetadata } from '@/lib/product-metadata';
 
 interface Props {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    return generateProductMetadata({ params });
+    const resolvedParams = await params;
+    return generateProductMetadata({ params: resolvedParams });
 }
 
 export default function ProductLayout({

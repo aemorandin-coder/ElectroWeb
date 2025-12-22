@@ -247,6 +247,9 @@ export const getBaseTemplate = async (content: string, preheader?: string) => {
   const email = settings?.email || '';
   const instagram = settings?.instagram || '';
   const facebook = settings?.facebook || '';
+  const telegram = settings?.telegram || '';
+  const tiktok = settings?.tiktok || '';
+  const twitter = settings?.twitter || '';
 
   return `
 <!DOCTYPE html>
@@ -263,58 +266,60 @@ export const getBaseTemplate = async (content: string, preheader?: string) => {
       <td align="center">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
           
-          <!-- HEADER PREMIUM -->
+          <!-- HEADER - Simple text-based (no images that might not load) -->
           <tr>
-            <td style="background:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);padding:40px;border-radius:20px 20px 0 0;text-align:center;">
-              ${logo ? `
-              <div style="margin-bottom:20px;">
-                <img src="${logo}" alt="${companyName}" style="max-height:60px;max-width:200px;border-radius:12px;">
-              </div>
-              ` : `
-              <div style="width:70px;height:70px;background:rgba(255,255,255,0.2);border-radius:16px;margin:0 auto 15px;">
-                <span style="font-size:32px;font-weight:bold;color:white;line-height:70px;">${companyName.charAt(0)}</span>
-              </div>
-              `}
-              <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;letter-spacing:-0.5px;">${companyName.toUpperCase()}</h1>
-              <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:14px;font-weight:500;">${tagline}</p>
-              <div style="margin-top:15px;height:2px;width:60px;background:rgba(255,255,255,0.4);margin-left:auto;margin-right:auto;border-radius:1px;"></div>
+            <td style="background:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);padding:25px 40px;border-radius:20px 20px 0 0;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">${companyName.toUpperCase()}</h1>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;">${tagline}</p>
             </td>
           </tr>
           
-          <!-- CONTENT -->
+          <!-- CONTENT - Main focus -->
           <tr>
-            <td style="background-color:#ffffff;padding:45px 40px;border-left:1px solid #e9ecef;border-right:1px solid #e9ecef;">
+            <td style="background-color:#ffffff;padding:40px;border-left:1px solid #e9ecef;border-right:1px solid #e9ecef;">
               ${content}
             </td>
           </tr>
           
-          <!-- FOOTER -->
+          <!-- FOOTER with Company Logo and Social Links -->
           <tr>
-            <td style="background:linear-gradient(180deg,#f8f9fa 0%,#e9ecef 100%);padding:35px 40px;border-radius:0 0 20px 20px;border:1px solid #e9ecef;border-top:none;">
+            <td style="background:linear-gradient(180deg,#f8f9fa 0%,#e9ecef 100%);padding:30px 40px;border-radius:0 0 20px 20px;border:1px solid #e9ecef;border-top:none;">
               
-              <!-- Social Links -->
+              <!-- Company Logo at bottom (optional, won't break if it doesn't load) -->
+              ${logo ? `
               <div style="text-align:center;margin-bottom:20px;">
-                ${instagram ? `<a href="${instagram}" style="display:inline-block;margin:0 6px;width:36px;height:36px;background:${primaryColor};border-radius:8px;text-decoration:none;line-height:36px;color:white;font-size:16px;">ig</a>` : ''}
-                ${facebook ? `<a href="${facebook}" style="display:inline-block;margin:0 6px;width:36px;height:36px;background:${primaryColor};border-radius:8px;text-decoration:none;line-height:36px;color:white;font-size:16px;">fb</a>` : ''}
-                ${whatsapp ? `<a href="https://wa.me/${whatsapp}" style="display:inline-block;margin:0 6px;width:36px;height:36px;background:#25D366;border-radius:8px;text-decoration:none;line-height:36px;color:white;font-size:16px;">wa</a>` : ''}
+                <img src="${logo}" alt="${companyName}" style="max-height:50px;max-width:160px;border-radius:8px;" onerror="this.style.display='none'">
+              </div>
+              ` : ''}
+              
+              <!-- Social Links - All configured networks -->
+              <div style="text-align:center;margin-bottom:15px;">
+                ${instagram ? `<a href="${instagram}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">IG</a>` : ''}
+                ${facebook ? `<a href="${facebook}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#1877f2;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">FB</a>` : ''}
+                ${whatsapp ? `<a href="https://wa.me/${whatsapp}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#25D366;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">WA</a>` : ''}
+                ${telegram ? `<a href="${telegram}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#0088cc;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">TG</a>` : ''}
+                ${tiktok ? `<a href="${tiktok}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#000000;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">TK</a>` : ''}
+                ${twitter ? `<a href="${twitter}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#1da1f2;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">X</a>` : ''}
               </div>
               
               <!-- Contact Info -->
-              <div style="text-align:center;margin-bottom:15px;">
-                ${phone ? `<p style="margin:4px 0;color:#6a6c6b;font-size:12px;">Tel: ${phone}</p>` : ''}
-                ${email ? `<p style="margin:4px 0;color:#6a6c6b;font-size:12px;">Email: ${email}</p>` : ''}
+              <div style="text-align:center;margin-bottom:12px;">
+                ${phone ? `<p style="margin:3px 0;color:#6a6c6b;font-size:12px;">📞 ${phone}</p>` : ''}
+                ${email ? `<p style="margin:3px 0;color:#6a6c6b;font-size:12px;">✉️ ${email}</p>` : ''}
               </div>
               
-              <!-- Copyright -->
-              <p style="margin:0;text-align:center;color:#adb5bd;font-size:11px;">
-                2024 ${companyName}. Todos los derechos reservados.
-              </p>
-              <p style="margin:8px 0 0;text-align:center;">
+              <!-- Links -->
+              <p style="margin:10px 0;text-align:center;">
+                <a href="${appUrl}" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:600;">Visitar Tienda</a>
+                <span style="color:#adb5bd;margin:0 8px;">•</span>
                 <a href="${appUrl}/contacto" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:500;">Contacto</a>
-                <span style="color:#adb5bd;margin:0 8px;">|</span>
-                <a href="${appUrl}/terminos" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:500;">Terminos</a>
-                <span style="color:#adb5bd;margin:0 8px;">|</span>
-                <a href="${appUrl}/privacidad" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:500;">Privacidad</a>
+                <span style="color:#adb5bd;margin:0 8px;">•</span>
+                <a href="${appUrl}/terminos" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:500;">Términos</a>
+              </p>
+              
+              <!-- Copyright -->
+              <p style="margin:12px 0 0;text-align:center;color:#adb5bd;font-size:10px;">
+                © ${new Date().getFullYear()} ${companyName}. Todos los derechos reservados.
               </p>
             </td>
           </tr>
@@ -332,24 +337,24 @@ export const sendPasswordResetEmail = async (email: string, token: string, userN
   const resetUrl = `${process.env.NEXTAUTH_URL}/recuperar-contrasena/${token}`;
 
   const content = `
-    <h2 style="margin:0 0 20px;color:#212529;font-size:24px;font-weight:600;">Recuperacion de Contrasena</h2>
+    <h2 style="margin:0 0 20px;color:#212529;font-size:24px;font-weight:600;">Recuperación de Contraseña</h2>
     <p style="color:#6a6c6b;font-size:16px;line-height:1.6;margin:0 0 20px;">
       ${userName ? `Hola ${userName},` : 'Hola,'}<br><br>
-      Hemos recibido una solicitud para restablecer tu contrasena.
+      Hemos recibido una solicitud para restablecer tu contraseña.
     </p>
     <div style="text-align:center;margin:30px 0;">
       <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        Restablecer Contrasena
+        Restablecer Contraseña
       </a>
     </div>
     <p style="color:#adb5bd;font-size:12px;margin:30px 0 0;border-top:1px solid #e9ecef;padding-top:20px;">
-      Este enlace expirara en 1 hora.
+      Este enlace expirará en 1 hora.
     </p>`;
 
   return sendEmail({
     to: email,
-    subject: 'Recupera tu contrasena - Electro Shop',
-    html: await getBaseTemplate(content, 'Restablece tu contrasena'),
+    subject: 'Recupera tu contraseña - Electro Shop',
+    html: await getBaseTemplate(content, 'Restablece tu contraseña'),
   });
 };
 
@@ -557,3 +562,195 @@ export const sendTestEmail = async (email: string) => {
     html: await getBaseTemplate(content),
   });
 };
+
+// ORDER PENDING PAYMENT EMAIL
+export const sendOrderPendingPaymentEmail = async (
+  email: string,
+  orderData: { orderNumber: string; total: number; customerName: string; }
+) => {
+  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
+  const content = `
+    <div style="text-align:center;margin-bottom:30px;">
+      <div style="width:70px;height:70px;background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
+        <span style="color:white;font-size:28px;">⏳</span>
+      </div>
+      <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">Pedido en Revisión</h2>
+      <p style="color:#f59e0b;font-size:16px;font-weight:600;">Orden #${orderData.orderNumber}</p>
+    </div>
+    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
+      Hola <strong style="color:#212529;">${orderData.customerName}</strong>,<br><br>
+      Gracias por tu compra. Hemos recibido tu pedido y está pendiente de confirmación de pago.
+    </p>
+    <div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:12px;padding:20px;margin:20px 0;border-left:4px solid #f59e0b;">
+      <p style="margin:0 0 8px;color:#92400e;font-size:14px;font-weight:600;">Estamos revisando tu pago</p>
+      <p style="margin:0;color:#78350f;font-size:13px;line-height:1.6;">
+        Nuestro equipo está verificando tu transacción. Este proceso puede tomar hasta 24 horas hábiles.
+      </p>
+    </div>
+    <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:20px 0;">
+      <p style="margin:0;color:#6a6c6b;font-size:14px;">
+        <strong>Total a pagar:</strong> $${orderData.total.toFixed(2)} USD
+      </p>
+    </div>
+    <div style="text-align:center;margin:30px 0;">
+      <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
+        Ver Estado del Pedido
+      </a>
+    </div>`;
+
+  return sendEmail({
+    to: email,
+    subject: `Pedido Pendiente de Pago - ${orderData.orderNumber}`,
+    html: await getBaseTemplate(content, 'Tu pedido está siendo revisado'),
+  });
+};
+
+// ORDER SHIPPED EMAIL
+export const sendOrderShippedEmail = async (
+  email: string,
+  orderData: { orderNumber: string; customerName: string; trackingNumber?: string; shippingCarrier?: string; }
+) => {
+  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
+  const content = `
+    <div style="text-align:center;margin-bottom:30px;">
+      <div style="width:70px;height:70px;background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
+        <span style="color:white;font-size:28px;">🚚</span>
+      </div>
+      <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Tu Pedido Está en Camino!</h2>
+      <p style="color:#3b82f6;font-size:16px;font-weight:600;">Orden #${orderData.orderNumber}</p>
+    </div>
+    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
+      Hola <strong style="color:#212529;">${orderData.customerName}</strong>,<br><br>
+      ¡Buenas noticias! Tu pedido ha sido enviado y está en camino hacia ti.
+    </p>
+    ${orderData.trackingNumber ? `
+    <div style="background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);border-radius:12px;padding:20px;margin:20px 0;text-align:center;border:1px solid #3b82f6;">
+      <p style="margin:0 0 5px;color:#6a6c6b;font-size:13px;">Número de Guía</p>
+      <p style="margin:0;color:#1d4ed8;font-size:22px;font-weight:700;letter-spacing:2px;">${orderData.trackingNumber}</p>
+      ${orderData.shippingCarrier ? `<p style="margin:10px 0 0;color:#6a6c6b;font-size:12px;">Transportista: ${orderData.shippingCarrier}</p>` : ''}
+    </div>
+    ` : ''}
+    <div style="text-align:center;margin:30px 0;">
+      <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
+        Seguir mi Pedido
+      </a>
+    </div>`;
+
+  return sendEmail({
+    to: email,
+    subject: `¡Tu Pedido Ha Sido Enviado! - ${orderData.orderNumber}`,
+    html: await getBaseTemplate(content, 'Tu pedido está en camino'),
+  });
+};
+
+// ORDER DELIVERED EMAIL
+export const sendOrderDeliveredEmail = async (
+  email: string,
+  orderData: { orderNumber: string; customerName: string; }
+) => {
+  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
+  const content = `
+    <div style="text-align:center;margin-bottom:30px;">
+      <div style="width:70px;height:70px;background:linear-gradient(135deg,#10b981 0%,#059669 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
+        <span style="color:white;font-size:28px;">✓</span>
+      </div>
+      <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Pedido Entregado!</h2>
+      <p style="color:#10b981;font-size:16px;font-weight:600;">Orden #${orderData.orderNumber}</p>
+    </div>
+    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
+      Hola <strong style="color:#212529;">${orderData.customerName}</strong>,<br><br>
+      Tu pedido ha sido entregado exitosamente. Esperamos que disfrutes tu compra.
+    </p>
+    <div style="background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-radius:12px;padding:20px;margin:20px 0;text-align:center;border:1px solid #10b981;">
+      <p style="margin:0 0 10px;color:#065f46;font-size:14px;font-weight:600;">Tu opinión es muy importante</p>
+      <p style="margin:0;color:#047857;font-size:13px;">
+        ¿Qué te pareció tu experiencia de compra? Déjanos tu reseña.
+      </p>
+    </div>
+    <div style="text-align:center;margin:30px 0;">
+      <a href="${appUrl}/customer/reviews" style="display:inline-block;background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
+        Dejar Reseña
+      </a>
+    </div>
+    <p style="color:#adb5bd;font-size:12px;margin:20px 0 0;text-align:center;">
+      Si tienes algún problema con tu pedido, <a href="${appUrl}/contacto" style="color:#2a63cd;">contáctanos</a>.
+    </p>`;
+
+  return sendEmail({
+    to: email,
+    subject: `¡Tu Pedido Ha Sido Entregado! - ${orderData.orderNumber}`,
+    html: await getBaseTemplate(content, 'Tu pedido ha llegado'),
+  });
+};
+
+// DIGITAL CODE DELIVERED EMAIL
+export const sendDigitalCodeEmail = async (
+  email: string,
+  codeData: {
+    orderNumber: string;
+    customerName: string;
+    productName: string;
+    code: string;
+    platform?: string;
+    redemptionInstructions?: string;
+  }
+) => {
+  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
+  const platformColors: Record<string, string> = {
+    STEAM: '#1b2838',
+    PLAYSTATION: '#003791',
+    PSN: '#003791',
+    XBOX: '#107c10',
+    NINTENDO: '#e60012',
+    ROBLOX: '#e31b1b',
+  };
+
+  const platformBg = codeData.platform ? (platformColors[codeData.platform.toUpperCase()] || '#6366f1') : '#6366f1';
+
+  const content = `
+    <div style="text-align:center;margin-bottom:30px;">
+      <div style="width:80px;height:80px;background:linear-gradient(135deg,${platformBg} 0%,#4f46e5 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(99,102,241,0.3);">
+        <span style="color:white;font-size:32px;">🎮</span>
+      </div>
+      <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Tu Código Digital Está Listo!</h2>
+      <p style="color:#6366f1;font-size:16px;font-weight:600;margin:0;">Orden #${codeData.orderNumber}</p>
+    </div>
+    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 25px;">
+      Hola <strong style="color:#212529;">${codeData.customerName}</strong>,<br><br>
+      Aquí tienes tu código digital para <strong>${codeData.productName}</strong>:
+    </p>
+    <div style="background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border-radius:16px;padding:25px;margin:25px 0;text-align:center;border:2px dashed #3b82f6;">
+      <p style="margin:0 0 8px;color:#6a6c6b;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Tu Código</p>
+      <p style="margin:0;color:#1e40af;font-size:28px;font-weight:800;font-family:monospace;letter-spacing:3px;word-break:break-all;">
+        ${codeData.code}
+      </p>
+      ${codeData.platform ? `<p style="margin:12px 0 0;color:#6a6c6b;font-size:13px;">Plataforma: <strong>${codeData.platform}</strong></p>` : ''}
+    </div>
+    ${codeData.redemptionInstructions ? `
+    <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:25px 0;border-left:4px solid #6366f1;">
+      <p style="margin:0 0 10px;color:#212529;font-size:14px;font-weight:600;">📋 Instrucciones de Canje:</p>
+      <p style="margin:0;color:#6a6c6b;font-size:13px;line-height:1.7;">${codeData.redemptionInstructions}</p>
+    </div>
+    ` : ''}
+    <div style="background:#fef3c7;border-radius:12px;padding:15px;margin:25px 0;border:1px solid #f59e0b;">
+      <p style="margin:0;color:#92400e;font-size:12px;text-align:center;">
+        ⚠️ <strong>Importante:</strong> Guarda este código en un lugar seguro. No lo compartas con nadie.
+      </p>
+    </div>
+    <div style="text-align:center;margin:30px 0;">
+      <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
+        Ver Mis Códigos
+      </a>
+    </div>`;
+
+  return sendEmail({
+    to: email,
+    subject: `🎮 ¡Tu Código Digital Está Listo! - ${codeData.productName}`,
+    html: await getBaseTemplate(content, 'Tu código digital ha llegado'),
+  });
+};
+

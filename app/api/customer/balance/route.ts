@@ -20,7 +20,7 @@ export async function GET() {
       include: {
         transactions: {
           orderBy: { createdAt: 'desc' },
-          take: 10,
+          take: 20, // Get more transactions for better history
         },
       },
     });
@@ -40,12 +40,27 @@ export async function GET() {
       });
     }
 
+    // Convert Decimal fields to numbers for proper JSON serialization
+    const formattedTransactions = userBalance.transactions.map((tx) => ({
+      id: tx.id,
+      type: tx.type,
+      status: tx.status,
+      amount: Number(tx.amount),
+      currency: tx.currency,
+      description: tx.description,
+      reference: tx.reference,
+      paymentMethod: tx.paymentMethod,
+      rejectionReason: tx.rejectionReason,
+      createdAt: tx.createdAt,
+      updatedAt: tx.updatedAt,
+    }));
+
     return NextResponse.json({
-      balance: userBalance.balance,
+      balance: Number(userBalance.balance),
       currency: userBalance.currency,
-      totalRecharges: userBalance.totalRecharges,
-      totalSpent: userBalance.totalSpent,
-      recentTransactions: userBalance.transactions,
+      totalRecharges: Number(userBalance.totalRecharges),
+      totalSpent: Number(userBalance.totalSpent),
+      recentTransactions: formattedTransactions,
       createdAt: userBalance.createdAt,
       updatedAt: userBalance.updatedAt,
     });
@@ -54,3 +69,4 @@ export async function GET() {
     return NextResponse.json({ error: 'Error al obtener el saldo' }, { status: 500 });
   }
 }
+

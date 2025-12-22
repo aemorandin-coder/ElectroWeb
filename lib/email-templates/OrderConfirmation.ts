@@ -1,47 +1,47 @@
 import { getEmailStyles, getEmailHeader, getEmailFooter } from './base';
 
 interface OrderConfirmationData {
-    companyName: string;
-    companyLogo?: string;
-    orderNumber: string;
-    customerName: string;
-    orderDate: string;
-    items: Array<{
-        name: string;
-        quantity: number;
-        price: string;
-    }>;
-    subtotal: string;
-    shipping: string;
-    tax: string;
-    total: string;
-    currency: string;
-    paymentMethod: string;
-    deliveryMethod: string;
-    deliveryAddress?: string;
-    trackingUrl?: string;
+  companyName: string;
+  companyLogo?: string;
+  orderNumber: string;
+  customerName: string;
+  orderDate: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: string;
+  }>;
+  subtotal: string;
+  shipping: string;
+  tax: string;
+  total: string;
+  currency: string;
+  paymentMethod: string;
+  deliveryMethod: string;
+  deliveryAddress?: string;
+  trackingUrl?: string;
 }
 
 export function generateOrderConfirmationEmail(data: OrderConfirmationData): string {
-    const {
-        companyName,
-        companyLogo,
-        orderNumber,
-        customerName,
-        orderDate,
-        items,
-        subtotal,
-        shipping,
-        tax,
-        total,
-        currency,
-        paymentMethod,
-        deliveryMethod,
-        deliveryAddress,
-        trackingUrl,
-    } = data;
+  const {
+    companyName,
+    companyLogo,
+    orderNumber,
+    customerName,
+    orderDate,
+    items,
+    subtotal,
+    shipping,
+    tax,
+    total,
+    currency,
+    paymentMethod,
+    deliveryMethod,
+    deliveryAddress,
+    trackingUrl,
+  } = data;
 
-    return `
+  return `
     <!DOCTYPE html>
     <html lang="es">
     <head>
@@ -52,7 +52,7 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
     </head>
     <body>
       <div class="email-container">
-        ${getEmailHeader({ companyName, companyLogo })}
+        ${getEmailHeader({ companyName })}
         
         <div class="email-body">
           <h2>¡Gracias por tu pedido, ${customerName}!</h2>
@@ -93,7 +93,7 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
           <p style="margin-top: 30px;">Si tienes alguna pregunta sobre tu pedido, no dudes en contactarnos.</p>
         </div>
 
-        ${getEmailFooter({ companyName })}
+        ${getEmailFooter({ companyName, companyLogo })}
       </div>
     </body>
     </html>

@@ -30,7 +30,16 @@ export async function GET(request: NextRequest) {
       take: limit ? parseInt(limit) : undefined,
     });
 
-    return NextResponse.json(products);
+    // Convert Decimal fields to Number for proper JSON serialization
+    const formattedProducts = products.map(p => ({
+      ...p,
+      priceUSD: Number(p.priceUSD),
+      priceVES: p.priceVES ? Number(p.priceVES) : null,
+      weightKg: p.weightKg ? Number(p.weightKg) : null,
+      shippingCost: p.shippingCost ? Number(p.shippingCost) : null,
+    }));
+
+    return NextResponse.json(formattedProducts);
   } catch (error) {
     console.error('Error fetching public products:', error);
     return NextResponse.json(

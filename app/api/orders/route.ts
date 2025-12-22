@@ -10,11 +10,17 @@ import {
   notifyOrderDelivered
 } from '@/lib/notifications';
 import { OrderStatus, PaymentStatus } from '@prisma/client';
-import { sendEmail } from '@/lib/email-service';
+import {
+  sendEmail,
+  sendOrderShippedEmail,
+  sendOrderDeliveredEmail,
+  sendOrderPendingPaymentEmail
+} from '@/lib/email-service';
 import { generateOrderConfirmationEmail } from '@/lib/email-templates/OrderConfirmation';
 import { generateReviewReminderEmail } from '@/lib/email-templates/ReviewReminder';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+
 
 // GET - Get all orders
 export async function GET(request: NextRequest) {
@@ -68,6 +74,7 @@ export async function GET(request: NextRequest) {
                 name: true,
                 sku: true,
                 mainImage: true,
+                productType: true,
               },
             },
           },
@@ -387,6 +394,19 @@ export async function POST(request: NextRequest) {
           subject: `Confirmación de Pedido - ${result.orderNumber}`,
           html: emailHtml,
         });
+
+        // If payment method is DIRECT (not WALLET), also send pending payment email
+        if (body.paymentMethod !== 'WALLET' && result.user?.email) {
+          try {
+            await sendOrderPendingPaymentEmail(result.user.email, {
+              orderNumber: result.orderNumber,
+              total: Number(result.totalUSD),
+              customerName: result.user.name || 'Cliente',
+            });
+          } catch (pendingEmailError) {
+            console.error('Error sending pending payment email:', pendingEmailError);
+          }
+        }
       } catch (emailError) {
         console.error('Error sending order confirmation email:', emailError);
         // Don't fail the order creation if email fails
@@ -433,6 +453,16 @@ export async function PATCH(request: NextRequest) {
 
     // Handle order status-specific updates with timestamps
     if (body.status && body.status !== oldOrder.status) {
+      // VALIDATION: Require cancellation note for CANCELLED status
+      if (body.status === 'CANCELLED') {
+        if (!body.notes || body.notes.trim().length < 10) {
+          return NextResponse.json(
+            { error: 'Se requiere una nota de cancelación con al menos 10 caracteres para informar al cliente del motivo.' },
+            { status: 400 }
+          );
+        }
+      }
+
       switch (body.status) {
         case 'CONFIRMED':
           updateData.confirmedAt = new Date();
@@ -458,6 +488,7 @@ export async function PATCH(request: NextRequest) {
           break;
         case 'CANCELLED':
           updateData.cancelledAt = new Date();
+          updateData.notes = body.notes; // Save cancellation reason
           break;
       }
     }
@@ -572,11 +603,37 @@ export async function PATCH(request: NextRequest) {
             link: `/customer/orders`,
             icon: 'shipping'
           });
+          // Send shipped email to customer
+          if (order.user?.email) {
+            try {
+              await sendOrderShippedEmail(order.user.email, {
+                orderNumber: oldOrder.orderNumber,
+                customerName: order.user.name || 'Cliente',
+                trackingNumber: body.trackingNumber || order.trackingNumber || undefined,
+                shippingCarrier: body.shippingCarrier || order.shippingCarrier || undefined,
+              });
+            } catch (emailError) {
+              console.error('Error sending shipped email:', emailError);
+            }
+          }
           break;
 
         case 'DELIVERED':
           await notifyOrderDelivered(oldOrder.userId, oldOrder.orderNumber, order.id);
-          // Send review reminder email when order is delivered
+
+          // Send delivered email to customer
+          if (order.user?.email) {
+            try {
+              await sendOrderDeliveredEmail(order.user.email, {
+                orderNumber: oldOrder.orderNumber,
+                customerName: order.user.name || 'Cliente',
+              });
+            } catch (emailError) {
+              console.error('Error sending delivered email:', emailError);
+            }
+          }
+
+          // Send review reminder email when order is delivered (optional, additional reminder)
           try {
             const orderWithUser = await prisma.order.findUnique({
               where: { id },
@@ -625,6 +682,61 @@ export async function PATCH(request: NextRequest) {
             icon: 'cancel'
           });
 
+          // Send cancellation email to customer
+          try {
+            const companySettings = await prisma.companySettings.findFirst();
+            const cancellationEmailContent = `
+              <h2 style="margin:0 0 20px;color:#dc3545;font-size:24px;font-weight:600;">Orden Cancelada</h2>
+              <p style="color:#6a6c6b;font-size:16px;line-height:1.6;">
+                Hola <strong>${order.user?.name || 'Cliente'}</strong>,
+              </p>
+              <p style="color:#6a6c6b;font-size:16px;line-height:1.6;">
+                Lamentamos informarte que tu orden <strong>#${oldOrder.orderNumber}</strong> ha sido cancelada.
+              </p>
+              
+              <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:15px 20px;margin:20px 0;border-radius:0 8px 8px 0;">
+                <p style="margin:0;color:#856404;font-size:14px;font-weight:600;">Motivo de la cancelación:</p>
+                <p style="margin:8px 0 0;color:#856404;font-size:14px;">${body.notes}</p>
+              </div>
+              
+              <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:20px 0;">
+                <p style="margin:0;color:#6a6c6b;font-size:14px;">
+                  <strong>Número de orden:</strong> ${oldOrder.orderNumber}<br>
+                  <strong>Total:</strong> $${Number(oldOrder.totalUSD).toFixed(2)}<br>
+                  <strong>Fecha de cancelación:</strong> ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+              
+              <p style="color:#6a6c6b;font-size:14px;line-height:1.6;">
+                Si realizaste algún pago, el reembolso será procesado según nuestras políticas.
+                Si tienes alguna pregunta, no dudes en contactarnos.
+              </p>
+              
+              <div style="text-align:center;margin:30px 0;">
+                <a href="${process.env.NEXTAUTH_URL || ''}/contacto" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
+                  Contactar Soporte
+                </a>
+              </div>
+              
+              <p style="color:#adb5bd;font-size:12px;margin:30px 0 0;border-top:1px solid #e9ecef;padding-top:20px;">
+                Gracias por tu comprensión. Esperamos poder atenderte en otra oportunidad.
+              </p>
+            `;
+
+            const { getBaseTemplate } = await import('@/lib/email-service');
+            const emailHtml = await getBaseTemplate(cancellationEmailContent, 'Tu orden ha sido cancelada');
+
+            await sendEmail({
+              to: order.user?.email || '',
+              subject: `Orden Cancelada - ${oldOrder.orderNumber}`,
+              html: emailHtml,
+            });
+            console.log('[ORDER] Cancellation email sent for order:', oldOrder.orderNumber);
+          } catch (emailError) {
+            console.error('Error sending cancellation email:', emailError);
+            // Don't fail the cancellation if email fails
+          }
+
           // Restore stock if order is cancelled
           for (const item of order.items) {
             const product = await prisma.product.findUnique({ where: { id: item.productId } });
@@ -637,6 +749,13 @@ export async function PATCH(request: NextRequest) {
                 },
               });
             }
+          }
+
+          // Also release any stock reservations for this user
+          if (oldOrder.userId) {
+            await prisma.stockReservation.deleteMany({
+              where: { userId: oldOrder.userId },
+            });
           }
 
           // Mark discounts as used

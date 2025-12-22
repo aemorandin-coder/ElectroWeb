@@ -319,9 +319,9 @@ export default function MarketingPage() {
     const tabs = [
         { id: 'email', label: 'Email', icon: FiMail },
         { id: 'preview', label: 'Plantillas', icon: FiEye },
-        { id: 'campaigns', label: 'Campanas', icon: FiTarget },
+        { id: 'campaigns', label: 'Campañas', icon: FiTarget },
         { id: 'social', label: 'Redes Sociales', icon: FiImage },
-        { id: 'settings', label: 'Configuracion', icon: FiSettings },
+        { id: 'settings', label: 'Configuración', icon: FiSettings },
     ];
 
     return (
@@ -627,7 +627,7 @@ export default function MarketingPage() {
                         }}
                     >
                         <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-6 py-4 flex items-center justify-between">
-                            <h2 className="font-bold text-white text-lg">Nueva Campana</h2>
+                            <h2 className="font-bold text-white text-lg">Nueva Campaña</h2>
                             <button
                                 onClick={() => setShowCampaignModal(false)}
                                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
@@ -637,7 +637,7 @@ export default function MarketingPage() {
                         </div>
                         <div className="p-6 space-y-4 overflow-y-auto max-h-[60vh]">
                             <div>
-                                <label className="block text-sm font-semibold text-[#212529] mb-2">Titulo de la Campana</label>
+                                <label className="block text-sm font-semibold text-[#212529] mb-2">Título de la Campaña</label>
                                 <input
                                     type="text"
                                     value={campaignForm.title}
@@ -701,7 +701,7 @@ export default function MarketingPage() {
                                 className="flex items-center gap-2 px-6 py-2 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3]"
                             >
                                 <FiSend className="w-4 h-4" />
-                                Enviar Campana
+                                Enviar Campaña
                             </button>
                         </div>
                     </div>

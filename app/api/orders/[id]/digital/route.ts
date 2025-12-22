@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { sendDigitalCodeEmail } from '@/lib/email-service';
 
 // GET - Get digital codes for a specific order
 export async function GET(request: NextRequest) {
@@ -187,6 +188,33 @@ export async function POST(request: NextRequest) {
                     link: `/customer/orders/${orderId}/digital`,
                 }
             });
+        }
+
+        // Send email notification to customer
+        if (order.user?.email) {
+            try {
+                // Get product details for email
+                const productDetails = await prisma.product.findUnique({
+                    where: { id: productId },
+                    select: {
+                        name: true,
+                        digitalPlatform: true,
+                        redemptionInstructions: true,
+                    }
+                }) as any;
+
+                await sendDigitalCodeEmail(order.user.email, {
+                    orderNumber: order.orderNumber,
+                    customerName: order.user.name || 'Cliente',
+                    productName: productDetails?.name || orderItem.product.name,
+                    code: code,
+                    platform: productDetails?.digitalPlatform || undefined,
+                    redemptionInstructions: productDetails?.redemptionInstructions || undefined,
+                });
+            } catch (emailError) {
+                console.error('Error sending digital code email:', emailError);
+                // Don't fail the operation if email fails
+            }
         }
 
         return NextResponse.json({

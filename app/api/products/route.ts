@@ -45,7 +45,16 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(products);
+    // Convert Decimal fields to Number for proper JSON serialization
+    const formattedProducts = products.map(p => ({
+      ...p,
+      priceUSD: Number(p.priceUSD),
+      priceVES: p.priceVES ? Number(p.priceVES) : null,
+      weightKg: p.weightKg ? Number(p.weightKg) : null,
+      shippingCost: p.shippingCost ? Number(p.shippingCost) : null,
+    }));
+
+    return NextResponse.json(formattedProducts);
   } catch (error) {
     return NextResponse.json({ error: 'Error al obtener productos' }, { status: 500 });
   }

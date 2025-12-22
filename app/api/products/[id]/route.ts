@@ -31,7 +31,16 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(product);
+    // Convert Decimal fields to Number for proper JSON serialization
+    const formattedProduct = {
+      ...product,
+      priceUSD: Number(product.priceUSD),
+      priceVES: product.priceVES ? Number(product.priceVES) : null,
+      weightKg: product.weightKg ? Number(product.weightKg) : null,
+      shippingCost: product.shippingCost ? Number(product.shippingCost) : null,
+    };
+
+    return NextResponse.json(formattedProduct);
   } catch (error) {
     console.error('Error fetching product:', error);
     return NextResponse.json(
@@ -116,7 +125,16 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json(product);
+    // Convert Decimal fields to Number for proper JSON serialization
+    const formattedProduct = {
+      ...product,
+      priceUSD: Number(product.priceUSD),
+      priceVES: product.priceVES ? Number(product.priceVES) : null,
+      weightKg: product.weightKg ? Number(product.weightKg) : null,
+      shippingCost: product.shippingCost ? Number(product.shippingCost) : null,
+    };
+
+    return NextResponse.json(formattedProduct);
   } catch (error: any) {
     console.error('Error updating product:', error);
 

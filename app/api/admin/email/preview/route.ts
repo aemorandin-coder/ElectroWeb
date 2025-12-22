@@ -6,15 +6,16 @@ import { prisma } from '@/lib/prisma';
 // Template types available for preview
 const EMAIL_TEMPLATES = [
     { id: 'welcome', name: 'Bienvenida', description: 'Email de bienvenida al registrarse' },
-    { id: 'verification', name: 'Verificacion de Email', description: 'Verificar cuenta nueva' },
-    { id: 'password_reset', name: 'Recuperar Contrasena', description: 'Enlace para restablecer contrasena' },
-    { id: 'order_confirmation', name: 'Confirmacion de Pedido', description: 'Nuevo pedido creado' },
-    { id: 'order_pending_payment', name: 'Pedido Pendiente de Pago', description: 'Compra en revision por completar pago' },
-    { id: 'order_shipped', name: 'Pedido Enviado', description: 'Notificacion de envio' },
-    { id: 'order_delivered', name: 'Pedido Entregado', description: 'Confirmacion de entrega' },
-    { id: 'marketing', name: 'Campana de Marketing', description: 'Email promocional' },
-    { id: 'notification', name: 'Notificacion General', description: 'Avisos del sistema' },
-    { id: 'test', name: 'Email de Prueba', description: 'Verificar configuracion' },
+    { id: 'verification', name: 'Verificación de Email', description: 'Verificar cuenta nueva' },
+    { id: 'password_reset', name: 'Recuperar Contraseña', description: 'Enlace para restablecer contraseña' },
+    { id: 'order_confirmation', name: 'Confirmación de Pedido', description: 'Nuevo pedido creado' },
+    { id: 'order_pending_payment', name: 'Pedido Pendiente de Pago', description: 'Compra en revisión por completar pago' },
+    { id: 'order_shipped', name: 'Pedido Enviado', description: 'Notificación de envío' },
+    { id: 'order_delivered', name: 'Pedido Entregado', description: 'Confirmación de entrega' },
+    { id: 'order_cancelled', name: 'Orden Cancelada', description: 'Notificación de cancelación de pedido' },
+    { id: 'marketing', name: 'Campaña de Marketing', description: 'Email promocional' },
+    { id: 'notification', name: 'Notificación General', description: 'Avisos del sistema' },
+    { id: 'test', name: 'Email de Prueba', description: 'Verificar configuración' },
 ];
 
 // Generate email HTML with company settings
@@ -34,7 +35,8 @@ const generateEmailHtml = async (templateId: string, settings: any) => {
     const instagram = settings?.instagram || '';
     const facebook = settings?.facebook || '';
 
-    // Base template with company branding
+    // Base template with company branding - UPDATED DESIGN
+    // Header uses text only, logo is at the bottom in footer
     const getTemplate = (content: string, preheader: string = '') => `
 <!DOCTYPE html>
 <html lang="es">
@@ -50,59 +52,61 @@ const generateEmailHtml = async (templateId: string, settings: any) => {
       <td align="center">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
           
-          <!-- HEADER PREMIUM -->
+          <!-- HEADER - Simple text-based (no images that might not load) -->
           <tr>
-            <td style="background:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);padding:40px;border-radius:20px 20px 0 0;text-align:center;">
-              ${logo ? `
-              <div style="margin-bottom:20px;">
-                <img src="${logo}" alt="${companyName}" style="max-height:60px;max-width:200px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.2);">
-              </div>
-              ` : `
-              <div style="width:70px;height:70px;background:rgba(255,255,255,0.2);border-radius:16px;margin:0 auto 15px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.3);">
-                <span style="font-size:32px;font-weight:bold;color:white;">${companyName.charAt(0)}</span>
-              </div>
-              `}
-              <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;letter-spacing:-0.5px;text-shadow:0 2px 4px rgba(0,0,0,0.1);">${companyName.toUpperCase()}</h1>
-              <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:14px;font-weight:500;">${tagline}</p>
-              <div style="margin-top:15px;height:2px;width:60px;background:rgba(255,255,255,0.4);margin-left:auto;margin-right:auto;border-radius:1px;"></div>
+            <td style="background:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);padding:25px 40px;border-radius:20px 20px 0 0;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">${companyName.toUpperCase()}</h1>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;">${tagline}</p>
             </td>
           </tr>
           
-          <!-- CONTENT -->
+          <!-- CONTENT - Main focus -->
           <tr>
-            <td style="background-color:#ffffff;padding:45px 40px;border-left:1px solid #e9ecef;border-right:1px solid #e9ecef;">
+            <td style="background-color:#ffffff;padding:40px;border-left:1px solid #e9ecef;border-right:1px solid #e9ecef;">
               ${content}
             </td>
           </tr>
           
-          <!-- FOOTER -->
+          <!-- FOOTER with Company Logo and Social Links -->
           <tr>
-            <td style="background:linear-gradient(180deg,#f8f9fa 0%,#e9ecef 100%);padding:35px 40px;border-radius:0 0 20px 20px;border:1px solid #e9ecef;border-top:none;">
+            <td style="background:linear-gradient(180deg,#f8f9fa 0%,#e9ecef 100%);padding:30px 40px;border-radius:0 0 20px 20px;border:1px solid #e9ecef;border-top:none;">
               
-              <!-- Social Links -->
+              <!-- Company Logo at bottom (optional, won't break if it doesn't load) -->
+              ${logo ? `
               <div style="text-align:center;margin-bottom:20px;">
-                ${instagram ? `<a href="${instagram}" style="display:inline-block;margin:0 6px;width:36px;height:36px;background:${primaryColor};border-radius:8px;text-decoration:none;line-height:36px;"><img src="https://cdn-icons-png.flaticon.com/32/174/174855.png" alt="Instagram" style="width:18px;height:18px;margin-top:9px;filter:brightness(0) invert(1);"></a>` : ''}
-                ${facebook ? `<a href="${facebook}" style="display:inline-block;margin:0 6px;width:36px;height:36px;background:${primaryColor};border-radius:8px;text-decoration:none;line-height:36px;"><img src="https://cdn-icons-png.flaticon.com/32/733/733547.png" alt="Facebook" style="width:18px;height:18px;margin-top:9px;filter:brightness(0) invert(1);"></a>` : ''}
-                ${whatsapp ? `<a href="https://wa.me/${whatsapp}" style="display:inline-block;margin:0 6px;width:36px;height:36px;background:#25D366;border-radius:8px;text-decoration:none;line-height:36px;"><img src="https://cdn-icons-png.flaticon.com/32/733/733585.png" alt="WhatsApp" style="width:18px;height:18px;margin-top:9px;filter:brightness(0) invert(1);"></a>` : ''}
+                <img src="${logo}" alt="${companyName}" style="max-height:50px;max-width:160px;border-radius:8px;" onerror="this.style.display='none'">
+              </div>
+              ` : ''}
+              
+              <!-- Social Links - All configured networks -->
+              <div style="text-align:center;margin-bottom:15px;">
+                ${instagram ? `<a href="${instagram}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">IG</a>` : ''}
+                ${facebook ? `<a href="${facebook}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#1877f2;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">FB</a>` : ''}
+                ${whatsapp ? `<a href="https://wa.me/${whatsapp}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#25D366;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">WA</a>` : ''}
+                ${settings?.telegram ? `<a href="${settings.telegram}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#0088cc;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">TG</a>` : ''}
+                ${settings?.tiktok ? `<a href="${settings.tiktok}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#000000;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">TK</a>` : ''}
+                ${settings?.twitter ? `<a href="${settings.twitter}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#1da1f2;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">X</a>` : ''}
               </div>
               
               <!-- Contact Info -->
-              <div style="text-align:center;margin-bottom:15px;">
-                ${phone ? `<p style="margin:4px 0;color:#6a6c6b;font-size:12px;">Tel: ${phone}</p>` : ''}
-                ${email ? `<p style="margin:4px 0;color:#6a6c6b;font-size:12px;">Email: ${email}</p>` : ''}
-                ${address ? `<p style="margin:4px 0;color:#6a6c6b;font-size:12px;">${address}</p>` : ''}
+              <div style="text-align:center;margin-bottom:12px;">
+                ${phone ? `<p style="margin:3px 0;color:#6a6c6b;font-size:12px;">📞 ${phone}</p>` : ''}
+                ${email ? `<p style="margin:3px 0;color:#6a6c6b;font-size:12px;">✉️ ${email}</p>` : ''}
+                ${address ? `<p style="margin:3px 0;color:#6a6c6b;font-size:12px;">📍 ${address}</p>` : ''}
               </div>
               
-              <!-- Copyright -->
-              <p style="margin:0;text-align:center;color:#adb5bd;font-size:11px;">
-                &copy; ${year} ${companyName}. Todos los derechos reservados.
-              </p>
-              <p style="margin:8px 0 0;text-align:center;">
+              <!-- Links -->
+              <p style="margin:10px 0;text-align:center;">
+                <a href="${appUrl}" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:600;">Visitar Tienda</a>
+                <span style="color:#adb5bd;margin:0 8px;">•</span>
                 <a href="${appUrl}/contacto" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:500;">Contacto</a>
-                <span style="color:#adb5bd;margin:0 8px;">|</span>
-                <a href="${appUrl}/terminos" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:500;">Terminos</a>
-                <span style="color:#adb5bd;margin:0 8px;">|</span>
-                <a href="${appUrl}/privacidad" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:500;">Privacidad</a>
+                <span style="color:#adb5bd;margin:0 8px;">•</span>
+                <a href="${appUrl}/terminos" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:500;">Términos</a>
+              </p>
+              
+              <!-- Copyright -->
+              <p style="margin:12px 0 0;text-align:center;color:#adb5bd;font-size:10px;">
+                © ${new Date().getFullYear()} ${companyName}. Todos los derechos reservados.
               </p>
             </td>
           </tr>
@@ -113,6 +117,7 @@ const generateEmailHtml = async (templateId: string, settings: any) => {
   </table>
 </body>
 </html>`;
+
 
     // Generate content based on template type
     const templates: Record<string, { content: string; preheader: string }> = {
@@ -169,26 +174,26 @@ const generateEmailHtml = async (templateId: string, settings: any) => {
             `,
         },
         password_reset: {
-            preheader: 'Solicitud de restablecimiento de contrasena',
+            preheader: 'Solicitud de restablecimiento de contraseña',
             content: `
                 <div style="text-align:center;margin-bottom:30px;">
                     <div style="width:80px;height:80px;background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(245,158,11,0.3);">
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                     </div>
-                    <h2 style="margin:0 0 10px;color:#212529;font-size:26px;font-weight:700;">Restablecer Contrasena</h2>
+                    <h2 style="margin:0 0 10px;color:#212529;font-size:26px;font-weight:700;">Restablecer Contraseña</h2>
                 </div>
                 <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 25px;">
                     Hola <strong style="color:#212529;">{{nombre}}</strong>,<br><br>
-                    Recibimos una solicitud para restablecer la contrasena de tu cuenta. Haz clic en el boton para crear una nueva:
+                    Recibimos una solicitud para restablecer la contraseña de tu cuenta. Haz clic en el botón para crear una nueva:
                 </p>
                 <div style="text-align:center;margin:35px 0;">
                     <a href="${appUrl}/recuperar-contrasena/{{token}}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:10px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(245,158,11,0.3);">
-                        Restablecer Contrasena
+                        Restablecer Contraseña
                     </a>
                 </div>
                 <div style="background:#fef3c7;border-radius:12px;padding:20px;margin:25px 0;border-left:4px solid #f59e0b;">
                     <p style="margin:0;color:#92400e;font-size:13px;">
-                        <strong>Importante:</strong> Este enlace expirara en 1 hora. Si no solicitaste este cambio, ignora este mensaje y tu contrasena permanecera igual.
+                        <strong>Importante:</strong> Este enlace expirará en 1 hora. Si no solicitaste este cambio, ignora este mensaje y tu contraseña permanecerá igual.
                     </p>
                 </div>
             `,
@@ -359,6 +364,35 @@ const generateEmailHtml = async (templateId: string, settings: any) => {
                 <p style="color:#6a6c6b;font-size:14px;text-align:center;margin:0;">
                     Este correo confirma que tu configuracion de email esta funcionando correctamente.
                 </p>
+            `,
+        },
+        order_cancelled: {
+            preheader: 'Tu pedido ha sido cancelado',
+            content: `
+                <div style="text-align:center;margin-bottom:30px;">
+                    <div style="width:80px;height:80px;background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(220,53,69,0.3);">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                    </div>
+                    <h2 style="margin:0 0 10px;color:#dc3545;font-size:26px;font-weight:700;">Orden Cancelada</h2>
+                    <p style="color:#6a6c6b;font-size:16px;margin:0;">Orden #ORD-XXXXX</p>
+                </div>
+                <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 25px;">
+                    Hola <strong style="color:#212529;">Cliente</strong>,<br><br>
+                    Lamentamos informarte que tu orden ha sido cancelada.
+                </p>
+                <div style="background:linear-gradient(135deg,#fee2e2 0%,#fecaca 100%);border-radius:12px;padding:20px;margin:25px 0;border-left:4px solid #dc3545;">
+                    <p style="margin:0 0 8px;color:#991b1b;font-size:14px;font-weight:600;">Motivo de la cancelación:</p>
+                    <p style="margin:0;color:#7f1d1d;font-size:13px;line-height:1.6;">{{motivo_cancelacion}}</p>
+                </div>
+                <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:25px 0;">
+                    <p style="margin:0 0 10px;color:#212529;font-size:14px;font-weight:600;">¿Tienes dudas?</p>
+                    <p style="margin:0;color:#6a6c6b;font-size:13px;line-height:1.6;">Si tienes alguna pregunta sobre la cancelación o necesitas ayuda, no dudes en contactarnos.</p>
+                </div>
+                <div style="text-align:center;margin:30px 0;">
+                    <a href="${appUrl}/contacto" style="display:inline-block;background:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:10px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(42,99,205,0.3);">
+                        Contactar Soporte
+                    </a>
+                </div>
             `,
         },
     };

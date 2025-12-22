@@ -47,12 +47,16 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
     orderBy: { createdAt: 'desc' }
   });
 
-  // Transform products for client component (ensure images is string[])
+  // Transform products for client component (convert Decimal fields to Number)
   const formattedProducts = products.map(p => ({
     ...p,
     priceUSD: Number(p.priceUSD),
+    priceVES: p.priceVES ? Number(p.priceVES) : null,
+    weightKg: p.weightKg ? Number(p.weightKg) : null,
+    shippingCost: p.shippingCost ? Number(p.shippingCost) : null,
     images: typeof p.images === 'string' ? JSON.parse(p.images) : p.images,
   }));
+
 
   const gradient = getGradient(category.name);
 

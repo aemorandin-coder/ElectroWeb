@@ -13,10 +13,11 @@ export async function GET(request: NextRequest) {
 
         const userId = session.user.id;
 
-        // Get user balance
+        // Get user balance (include id for transaction lookup)
         const userBalance = await prisma.userBalance.findUnique({
             where: { userId },
             select: {
+                id: true,
                 balance: true,
                 totalRecharges: true,
                 totalSpent: true,
@@ -79,24 +80,26 @@ export async function GET(request: NextRequest) {
             0
         );
 
-        // Get recent activity (last 10 transactions)
-        const recentTransactions = await prisma.transaction.findMany({
-            where: {
-                balance: {
-                    userId,
+        // Get recent transactions - use balanceId directly if userBalance exists
+        let recentTransactions: any[] = [];
+        if (userBalance) {
+            recentTransactions = await prisma.transaction.findMany({
+                where: {
+                    balanceId: userBalance.id,
                 },
-            },
-            take: 5,
-            orderBy: { createdAt: 'desc' },
-            select: {
-                id: true,
-                type: true,
-                amount: true,
-                description: true,
-                createdAt: true,
-                status: true,
-            },
-        });
+                take: 10,
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true,
+                    type: true,
+                    amount: true,
+                    description: true,
+                    createdAt: true,
+                    status: true,
+                },
+            });
+        }
+
 
         // Get user profile for last login
         const profile = await prisma.profile.findUnique({

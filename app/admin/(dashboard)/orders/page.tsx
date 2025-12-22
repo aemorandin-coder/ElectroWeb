@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { FiPrinter, FiBriefcase, FiUser, FiFileText, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiMapPin, FiExternalLink, FiArrowRight, FiCheckCircle } from 'react-icons/fi';
+import { FiPrinter, FiBriefcase, FiUser, FiFileText, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiMapPin, FiExternalLink, FiArrowRight, FiCheckCircle, FiZap } from 'react-icons/fi';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 
@@ -37,9 +37,11 @@ interface Order {
   paidAt?: string;
   shippedAt?: string;
   deliveredAt?: string;
-  items: any[];
+  items: Array<{ id: string; product?: { productType?: string } }>;
   paymentMethod: string;
   adminNotes: string | null;
+  hasDigital?: boolean;
+  isOnlyDigital?: boolean; // All items are digital (no physical products)
 }
 
 // Shipping carriers with their tracking URL patterns
@@ -51,13 +53,22 @@ const SHIPPING_CARRIERS = [
   { id: 'OTHER', name: 'Otro', trackingUrl: '' },
 ];
 
-// Order flow statuses in sequence
+// Order flow statuses in sequence - PHYSICAL PRODUCTS
 const ORDER_FLOW = [
   { status: 'PENDING', label: 'Pedido', icon: FiPackage },
   { status: 'CONFIRMED', label: 'Confirmado', icon: FiCheckCircle },
   { status: 'PAID', label: 'Pagado', icon: FiDollarSign },
   { status: 'PROCESSING', label: 'Preparando', icon: FiPackage },
   { status: 'SHIPPED', label: 'Enviado', icon: FiTruck },
+  { status: 'DELIVERED', label: 'Entregado', icon: FiCheck },
+];
+
+// Order flow for DIGITAL ONLY products (no shipping step)
+const DIGITAL_ORDER_FLOW = [
+  { status: 'PENDING', label: 'Pedido', icon: FiPackage },
+  { status: 'CONFIRMED', label: 'Confirmado', icon: FiCheckCircle },
+  { status: 'PAID', label: 'Pagado', icon: FiDollarSign },
+  { status: 'PROCESSING', label: 'Preparando', icon: FiZap },
   { status: 'DELIVERED', label: 'Entregado', icon: FiCheck },
 ];
 
@@ -102,10 +113,16 @@ export default function OrdersPage() {
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
-        const normalizedOrders = data.map((order: any) => ({
-          ...order,
-          totalUSD: Number(order.totalUSD) || 0,
-        }));
+        const normalizedOrders = data.map((order: any) => {
+          const digitalCount = order.items?.filter((item: any) => item.product?.productType === 'DIGITAL').length || 0;
+          const totalCount = order.items?.length || 0;
+          return {
+            ...order,
+            totalUSD: Number(order.totalUSD) || 0,
+            hasDigital: digitalCount > 0,
+            isOnlyDigital: totalCount > 0 && digitalCount === totalCount,
+          };
+        });
         setOrders(normalizedOrders);
       }
     } catch (error) {
@@ -255,8 +272,14 @@ export default function OrdersPage() {
     setShowShippingModal(true);
   };
 
-  const getCurrentFlowIndex = (status: string) => {
-    return ORDER_FLOW.findIndex(item => item.status === status);
+  const getCurrentFlowIndex = (status: string, isDigitalOnly = false) => {
+    const flow = isDigitalOnly ? DIGITAL_ORDER_FLOW : ORDER_FLOW;
+    return flow.findIndex(item => item.status === status);
+  };
+
+  // Get the appropriate flow for an order
+  const getOrderFlow = (isDigitalOnly = false) => {
+    return isDigitalOnly ? DIGITAL_ORDER_FLOW : ORDER_FLOW;
   };
 
   return (
@@ -370,6 +393,12 @@ export default function OrdersPage() {
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
                         {getStatusText(order.status)}
                       </span>
+                      {order.hasDigital && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 flex items-center gap-1">
+                          <FiZap className="w-2.5 h-2.5" />
+                          Digital
+                        </span>
+                      )}
                       {order.trackingNumber && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700">
                           {order.shippingCarrier}: {order.trackingNumber}
@@ -411,6 +440,19 @@ export default function OrdersPage() {
                         <FiArrowRight className="w-3 h-3" />
                         {nextAction.label}
                       </button>
+                    )}
+
+                    {/* Digital Codes button - VISIBLE for orders with digital products */}
+                    {order.hasDigital && order.paymentStatus === 'PAID' && (
+                      <a
+                        href={`/admin/orders/${order.id}/digital`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/25"
+                        title="Enviar códigos digitales"
+                      >
+                        <FiZap className="w-3.5 h-3.5" />
+                        Códigos
+                      </a>
                     )}
 
                     <button
@@ -458,30 +500,39 @@ export default function OrdersPage() {
             {/* Content */}
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
               {/* Order Flow Progress */}
-              <div className="mb-6 p-4 bg-[#f8f9fa] rounded-xl">
-                <h4 className="text-xs font-bold text-[#6a6c6b] uppercase mb-3">Progreso del Pedido</h4>
+              <div className={`mb-6 p-4 rounded-xl ${selectedOrder.isOnlyDigital ? 'bg-gradient-to-r from-purple-50 to-blue-50' : 'bg-[#f8f9fa]'}`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <h4 className="text-xs font-bold text-[#6a6c6b] uppercase">Progreso del Pedido</h4>
+                  {selectedOrder.isOnlyDigital && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-purple-500 to-blue-500 text-white flex items-center gap-1">
+                      <FiZap className="w-2.5 h-2.5" /> Solo Digital
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center justify-between relative">
                   {/* Progress bar background */}
                   <div className="absolute top-4 left-0 right-0 h-1 bg-[#e9ecef] mx-8" />
                   {/* Progress bar fill */}
                   <div
-                    className="absolute top-4 left-0 h-1 bg-[#2a63cd] mx-8 transition-all duration-500"
-                    style={{ width: `${(getCurrentFlowIndex(selectedOrder.status) / (ORDER_FLOW.length - 1)) * 100}%` }}
+                    className={`absolute top-4 left-0 h-1 mx-8 transition-all duration-500 ${selectedOrder.isOnlyDigital ? 'bg-gradient-to-r from-purple-500 to-blue-500' : 'bg-[#2a63cd]'}`}
+                    style={{
+                      width: `${(getCurrentFlowIndex(selectedOrder.status, selectedOrder.isOnlyDigital) / (getOrderFlow(selectedOrder.isOnlyDigital).length - 1)) * 100}%`
+                    }}
                   />
 
-                  {ORDER_FLOW.map((step, index) => {
-                    const isCompleted = getCurrentFlowIndex(selectedOrder.status) >= index;
+                  {getOrderFlow(selectedOrder.isOnlyDigital).map((step, index) => {
+                    const isCompleted = getCurrentFlowIndex(selectedOrder.status, selectedOrder.isOnlyDigital) >= index;
                     const isCurrent = selectedOrder.status === step.status;
                     const IconComponent = step.icon;
                     return (
                       <div key={step.status} className="relative z-10 flex flex-col items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isCompleted
-                          ? 'bg-[#2a63cd] text-white'
+                          ? selectedOrder.isOnlyDigital ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white' : 'bg-[#2a63cd] text-white'
                           : 'bg-white border-2 border-[#e9ecef] text-[#6a6c6b]'
-                          } ${isCurrent ? 'ring-4 ring-[#2a63cd]/20' : ''}`}>
+                          } ${isCurrent ? selectedOrder.isOnlyDigital ? 'ring-4 ring-purple-500/20' : 'ring-4 ring-[#2a63cd]/20' : ''}`}>
                           <IconComponent className="w-4 h-4" />
                         </div>
-                        <span className={`mt-2 text-[10px] font-medium ${isCompleted ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`}>
+                        <span className={`mt-2 text-[10px] font-medium ${isCompleted ? selectedOrder.isOnlyDigital ? 'text-purple-600' : 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`}>
                           {step.label}
                         </span>
                       </div>
@@ -507,9 +558,14 @@ export default function OrdersPage() {
                     <FiPackage className="w-4 h-4" /> Comenzar Preparación
                   </button>
                 )}
-                {selectedOrder.status === 'PROCESSING' && (
+                {selectedOrder.status === 'PROCESSING' && !selectedOrder.isOnlyDigital && (
                   <button onClick={openShippingModal} disabled={updatingStatus} className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
                     <FiTruck className="w-4 h-4" /> Marcar Enviado
+                  </button>
+                )}
+                {selectedOrder.status === 'PROCESSING' && selectedOrder.isOnlyDigital && (
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'DELIVERED')} disabled={updatingStatus} className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 flex items-center gap-2">
+                    <FiZap className="w-4 h-4" /> Marcar Completado (Digital)
                   </button>
                 )}
                 {selectedOrder.status === 'SHIPPED' && (
@@ -521,6 +577,15 @@ export default function OrdersPage() {
                   <button onClick={() => handleStatusUpdate(selectedOrder.id, 'CANCELLED')} disabled={updatingStatus} className="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 disabled:opacity-50 flex items-center gap-2">
                     <FiX className="w-4 h-4" /> Cancelar Orden
                   </button>
+                )}
+                {/* Digital Codes Button */}
+                {selectedOrder.hasDigital && selectedOrder.paymentStatus === 'PAID' && (
+                  <a
+                    href={`/admin/orders/${selectedOrder.id}/digital`}
+                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 flex items-center gap-2 shadow-lg shadow-purple-500/25"
+                  >
+                    <FiZap className="w-4 h-4" /> Enviar Códigos Digitales
+                  </a>
                 )}
               </div>
 

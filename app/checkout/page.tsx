@@ -427,48 +427,143 @@ export default function CheckoutPage() {
       const exchangeRateEUR = companySettings?.exchangeRateEUR || 1;
       const primaryCurrency = companySettings?.primaryCurrency || 'USD';
 
-      // Create order items in the format expected by the API
-      const orderItems = items.map(item => ({
-        productId: item.id,
-        productName: item.name,
-        productSku: item.id, // You might want to add SKU to CartItem
-        productImage: item.imageUrl || null,
-        pricePerUnit: item.price,
-        quantity: item.quantity,
-        subtotal: item.price * item.quantity,
-      }));
+      // SEPARATE ITEMS INTO PHYSICAL AND DIGITAL
+      const physicalItems = items.filter(item => item.productType !== 'DIGITAL');
+      const digitalItems = items.filter(item => item.productType === 'DIGITAL');
 
-      const orderData = {
-        currency: primaryCurrency,
-        subtotal: cartSubtotal,
-        tax: 0,
-        shipping: shippingCost,
-        discount: cartDiscount,
-        total: finalTotal,
-        exchangeRateVES: exchangeRateVES,
-        exchangeRateEUR: exchangeRateEUR,
-        paymentMethod: finalPaymentMethod,
-        deliveryMethod: formData.deliveryMethod,
-        items: orderItems,
-        notes: formData.notes || null,
-        appliedDiscountIds: appliedDiscountIds,
-      };
+      const hasPhysical = physicalItems.length > 0;
+      const hasDigital = digitalItems.length > 0;
 
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
+      const createdOrders: Array<{ orderNumber: string; type: 'physical' | 'digital'; total: number; itemCount: number }> = [];
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Error al crear la orden');
+      // CREATE ORDER FOR PHYSICAL PRODUCTS (if any)
+      if (hasPhysical) {
+        const physicalOrderItems = physicalItems.map(item => ({
+          productId: item.id,
+          productName: item.name,
+          productSku: item.id,
+          productImage: item.imageUrl || null,
+          pricePerUnit: item.price,
+          quantity: item.quantity,
+          subtotal: item.price * item.quantity,
+        }));
+
+        const physicalSubtotal = physicalItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const physicalDiscount = physicalItems.reduce((sum, item) => {
+          const discount = activeDiscounts.find(d =>
+            d.productId === item.id && d.status === 'APPROVED' && d.expiresAt && new Date(d.expiresAt) > new Date()
+          );
+          if (discount) {
+            const discountVal = discount.approvedDiscount || discount.requestedDiscount;
+            return sum + ((item.price * item.quantity) * (discountVal / 100));
+          }
+          return sum;
+        }, 0);
+        const physicalTotal = (physicalSubtotal - physicalDiscount) + shippingCost;
+
+        const physicalOrderData = {
+          currency: primaryCurrency,
+          subtotal: physicalSubtotal,
+          tax: 0,
+          shipping: shippingCost,
+          discount: physicalDiscount,
+          total: physicalTotal,
+          exchangeRateVES,
+          exchangeRateEUR,
+          paymentMethod: finalPaymentMethod,
+          deliveryMethod: formData.deliveryMethod,
+          items: physicalOrderItems,
+          notes: formData.notes ? `${formData.notes} [Productos Físicos]` : '[Productos Físicos]',
+          appliedDiscountIds: appliedDiscountIds.filter(id => physicalItems.some(item =>
+            activeDiscounts.find(d => d.id === id && d.productId === item.id)
+          )),
+        };
+
+        const physicalResponse = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(physicalOrderData),
+        });
+
+        if (!physicalResponse.ok) {
+          const data = await physicalResponse.json();
+          throw new Error(data.error || 'Error al crear la orden de productos físicos');
+        }
+
+        const physicalOrder = await physicalResponse.json();
+        createdOrders.push({
+          orderNumber: physicalOrder.orderNumber,
+          type: 'physical',
+          total: physicalTotal,
+          itemCount: physicalItems.length,
+        });
       }
 
-      const order = await response.json();
+      // CREATE ORDER FOR DIGITAL PRODUCTS (if any)
+      if (hasDigital) {
+        const digitalOrderItems = digitalItems.map(item => ({
+          productId: item.id,
+          productName: item.name,
+          productSku: item.id,
+          productImage: item.imageUrl || null,
+          pricePerUnit: item.price,
+          quantity: item.quantity,
+          subtotal: item.price * item.quantity,
+        }));
 
-      // Save address to profile if it's a new address
-      if (isNewAddress && formData.shippingAddress && formData.shippingCity && formData.shippingState) {
+        const digitalSubtotal = digitalItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const digitalDiscount = digitalItems.reduce((sum, item) => {
+          const discount = activeDiscounts.find(d =>
+            d.productId === item.id && d.status === 'APPROVED' && d.expiresAt && new Date(d.expiresAt) > new Date()
+          );
+          if (discount) {
+            const discountVal = discount.approvedDiscount || discount.requestedDiscount;
+            return sum + ((item.price * item.quantity) * (discountVal / 100));
+          }
+          return sum;
+        }, 0);
+        const digitalTotal = digitalSubtotal - digitalDiscount; // No shipping for digital
+
+        const digitalOrderData = {
+          currency: primaryCurrency,
+          subtotal: digitalSubtotal,
+          tax: 0,
+          shipping: 0, // No shipping for digital products
+          discount: digitalDiscount,
+          total: digitalTotal,
+          exchangeRateVES,
+          exchangeRateEUR,
+          paymentMethod: finalPaymentMethod,
+          deliveryMethod: 'DIGITAL', // Special delivery method for digital
+          items: digitalOrderItems,
+          notes: formData.notes ? `${formData.notes} [Productos Digitales]` : '[Productos Digitales]',
+          appliedDiscountIds: appliedDiscountIds.filter(id => digitalItems.some(item =>
+            activeDiscounts.find(d => d.id === id && d.productId === item.id)
+          )),
+        };
+
+        const digitalResponse = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(digitalOrderData),
+        });
+
+        if (!digitalResponse.ok) {
+          const data = await digitalResponse.json();
+          throw new Error(data.error || 'Error al crear la orden de productos digitales');
+        }
+
+        const digitalOrder = await digitalResponse.json();
+        createdOrders.push({
+          orderNumber: digitalOrder.orderNumber,
+          type: 'digital',
+          total: digitalTotal,
+          itemCount: digitalItems.length,
+        });
+      }
+
+      // Save address to profile if it's a new address (only if there were physical items)
+      if (hasPhysical && isNewAddress && formData.shippingAddress && formData.shippingCity && formData.shippingState) {
         await saveAddressToProfile(formData);
       }
 
@@ -478,10 +573,13 @@ export default function CheckoutPage() {
       // Mark order as completed to prevent showing empty cart message
       setOrderCompleted(true);
 
-      // Set success data
+      // Set success data - handle multiple orders
+      const totalAmount = createdOrders.reduce((sum, o) => sum + o.total, 0);
+      const orderNumbers = createdOrders.map(o => o.orderNumber).join(', ');
+
       setSuccessOrderData({
-        orderNumber: order.orderNumber,
-        total: finalTotal,
+        orderNumber: orderNumbers,
+        total: totalAmount,
         items: items.map(item => ({ name: item.name, quantity: item.quantity }))
       });
       setShowSuccessModal(true);

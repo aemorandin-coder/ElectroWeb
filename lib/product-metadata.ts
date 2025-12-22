@@ -15,10 +15,21 @@ function cleanImageUrl(url: string | null | undefined): string | null {
     return url;
 }
 
+// Helper to ensure absolute URL
+function ensureAbsoluteUrl(url: string | null, baseUrl: string): string | null {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    }
+    // Handle relative URLs
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    return `${baseUrl}${cleanUrl}`;
+}
+
 export async function generateProductMetadata({ params }: ProductPageProps): Promise<Metadata> {
     const { id } = await params; // Await params in Next.js 15+
     const settings = await getSiteSettings();
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshop.com';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || 'https://electroshop.com';
 
     try {
         // Find product by slug or ID
@@ -63,27 +74,31 @@ export async function generateProductMetadata({ params }: ProductPageProps): Pro
             }
         }
 
-        // Make sure image URL is absolute
-        if (productImage && !productImage.startsWith('http')) {
-            productImage = `${baseUrl}${productImage.startsWith('/') ? '' : '/'}${productImage}`;
-        }
+        // Ensure image URL is absolute (critical for WhatsApp)
+        productImage = ensureAbsoluteUrl(productImage, baseUrl);
 
-        // Fallback to company logo or default
-        const ogImage = productImage || settings.logo || `${baseUrl}/og-image.png`;
+        // Get company logo as fallback
+        const companyLogo = ensureAbsoluteUrl(settings.logo, baseUrl);
+
+        // Final fallback to default OG image
+        const ogImage = productImage || companyLogo || `${baseUrl}/og-image.png`;
 
         const price = Number(product.priceUSD);
         const title = product.name;
+        const categoryName = product.category?.name || 'Productos';
         const description = product.description
             ? product.description.substring(0, 155) + (product.description.length > 155 ? '...' : '')
             : `${product.name} - Disponible en ${settings.companyName}`;
 
+        const productUrl = `${baseUrl}/productos/${id}`;
+
         return {
-            title: title,
+            title: `${title} | ${settings.companyName || 'Electro Shop'}`,
             description: description,
             openGraph: {
                 title: `${title} - $${price.toFixed(2)} USD`,
                 description: description,
-                url: `${baseUrl}/productos/${id}`,
+                url: productUrl,
                 siteName: settings.companyName || 'Electro Shop',
                 images: [
                     {
@@ -91,6 +106,7 @@ export async function generateProductMetadata({ params }: ProductPageProps): Pro
                         width: 1200,
                         height: 630,
                         alt: title,
+                        type: 'image/jpeg',
                     },
                 ],
                 locale: 'es_VE',
@@ -101,6 +117,15 @@ export async function generateProductMetadata({ params }: ProductPageProps): Pro
                 title: `${title} - $${price.toFixed(2)} USD`,
                 description: description,
                 images: [ogImage],
+                site: settings.companyName || '@ElectroShop',
+            },
+            // Additional metadata for better sharing
+            other: {
+                'og:price:amount': price.toFixed(2),
+                'og:price:currency': 'USD',
+                'product:price:amount': price.toFixed(2),
+                'product:price:currency': 'USD',
+                'product:category': categoryName,
             },
         };
     } catch (error) {
@@ -111,3 +136,4 @@ export async function generateProductMetadata({ params }: ProductPageProps): Pro
         };
     }
 }
+

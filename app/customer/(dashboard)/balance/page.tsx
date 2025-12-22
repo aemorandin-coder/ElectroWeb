@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiPlus, FiDownload } from 'react-icons/fi';
-import RechargeModal from '@/components/modals/RechargeModal';
+import RechargeModal from '@/components/modals/RechargeModalV2';
 
 interface Transaction {
   id: string;

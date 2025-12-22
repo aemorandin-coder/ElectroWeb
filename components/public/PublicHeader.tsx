@@ -118,14 +118,19 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   // Dynamic styles applied via inline style
   // We initialize with the light theme (SSR default) to match server
   // IMPORTANT: Use consistent property structure to avoid hydration mismatch
-  const headerStyle: React.CSSProperties = {
-    background: (mounted && useBlueHeader)
+  // Only apply dynamic styles after mount to prevent hydration mismatch
+  const headerStyle: React.CSSProperties = !mounted ? {
+    background: 'rgba(255, 255, 255, 0.95)',
+    borderBottom: '1px solid #e9ecef',
+    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+  } : {
+    background: useBlueHeader
       ? 'linear-gradient(to right, rgba(42, 99, 205, 0.95), rgba(30, 75, 163, 0.95))'
       : 'rgba(255, 255, 255, 0.95)',
-    borderBottom: (mounted && useBlueHeader)
+    borderBottom: useBlueHeader
       ? '1px solid rgba(255, 255, 255, 0.1)'
       : '1px solid #e9ecef',
-    boxShadow: (mounted && useBlueHeader)
+    boxShadow: useBlueHeader
       ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
       : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
   };

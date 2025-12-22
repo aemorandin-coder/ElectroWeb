@@ -1117,3 +1117,42 @@ model EmailSettings {
   @@map("email_settings")
 }
 
+// ============================================
+// PAGO MOVIL - VERIFICACION BDV
+// ============================================
+
+// Registro de verificaciones de Pago Móvil con la API del BDV
+model PagoMovilVerificacion {
+  id                  String   @id @default(cuid())
+  userId              String
+  
+  // Datos del pago enviados para verificación
+  telefonoPagador     String
+  bancoOrigen         String   // Código del banco (4 dígitos)
+  referencia          String
+  fechaPago           DateTime
+  importeSolicitado   Decimal
+  
+  // Resultado de la verificación
+  importeVerificado   Decimal? // Monto devuelto por la API (si fue exitoso)
+  codigoRespuesta     Int
+  mensajeRespuesta    String
+  verificado          Boolean  @default(false)
+  
+  // Contexto de la verificación
+  contexto            String   @default("GENERAL") // RECHARGE, ORDER, GENERAL
+  transactionId       String?  // Referencia a Transaction (recarga)
+  orderId             String?  // Referencia a Order (compra)
+  
+  // Datos raw de respuesta
+  rawResponse         String?  // JSON de la respuesta completa
+  
+  createdAt           DateTime @default(now())
+  
+  @@index([userId])
+  @@index([referencia])
+  @@index([verificado])
+  @@index([contexto])
+  @@map("pago_movil_verificaciones")
+}
+

@@ -256,7 +256,7 @@ export default function AdminDashboard() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2a63cd]"></div>
             </div>
           ) : stats?.sales?.history && stats.sales.history.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={300} minWidth={200}>
               <AreaChart data={stats.sales.history}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">

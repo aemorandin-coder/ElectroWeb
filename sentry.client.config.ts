@@ -13,20 +13,13 @@ Sentry.init({
     // Setting this option to true will print useful information to the console while you're setting up Sentry.
     debug: false,
 
-    replaysOnErrorSampleRate: 1.0,
+    // DISABLED: Session Replay causes "Cannot read properties of null (reading 'ref')" errors
+    // because it modifies the DOM in a way that conflicts with React's reconciliation
+    replaysOnErrorSampleRate: 0,
+    replaysSessionSampleRate: 0,
 
-    // This sets the sample rate to be 10%. You may want this to be 100% while
-    // in development and sample at a lower rate in production
-    replaysSessionSampleRate: 0.1,
-
-    // You can remove this option if you're not planning to use the Sentry Session Replay feature:
-    integrations: [
-        Sentry.replayIntegration({
-            // Additional Replay configuration goes in here, for example:
-            maskAllText: true,
-            blockAllMedia: true,
-        }),
-    ],
+    // NO replay integration - removed to prevent ref errors
+    integrations: [],
 
     // Configure which errors to ignore
     ignoreErrors: [
@@ -40,6 +33,8 @@ Sentry.init({
         "Load failed",
         // Browser extensions
         "ResizeObserver loop",
+        // Ref errors from Sentry replay (in case any slip through)
+        "Cannot read properties of null (reading 'ref')",
     ],
 
     // Set environment

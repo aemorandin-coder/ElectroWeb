@@ -8,7 +8,8 @@ import { useSession } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import RechargeModal from '@/components/modals/RechargeModal';
-import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle } from 'react-icons/fi';
+import CheckoutPagoMovilForm from '@/components/checkout/CheckoutPagoMovilForm';
+import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle, FiZap } from 'react-icons/fi';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWallet } from '@fortawesome/free-solid-svg-icons';
 
@@ -93,6 +94,17 @@ export default function CheckoutPage() {
   const [activeDiscounts, setActiveDiscounts] = useState<any[]>([]);
   const [appliedDiscountIds, setAppliedDiscountIds] = useState<string[]>([]);
 
+  // Mobile Payment Verification State
+  const [mobilePaymentVerified, setMobilePaymentVerified] = useState(false);
+  const [mobilePaymentData, setMobilePaymentData] = useState<{
+    referencia: string;
+    telefonoPagador: string;
+    bancoOrigen: string;
+    fechaPago: string;
+    comprobante?: string;
+  } | null>(null);
+  const [exchangeRate, setExchangeRate] = useState<number>(0);
+
   // Load company settings for exchange rates
   useEffect(() => {
     fetch('/api/settings/public')
@@ -109,6 +121,12 @@ export default function CheckoutPage() {
         }
       })
       .catch(err => console.error('Error loading payment methods:', err));
+
+    // Load exchange rate
+    fetch('/api/exchange-rates')
+      .then(res => res.json())
+      .then(data => setExchangeRate(data.VES || 0))
+      .catch(err => console.error('Error loading exchange rate:', err));
   }, []);
 
   // Load user data if logged in
@@ -418,6 +436,13 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Validate mobile payment verification
+    if (paymentMode === 'DIRECT' && formData.paymentMethod === 'MOBILE_PAYMENT' && !mobilePaymentVerified) {
+      setError('Debes verificar tu pago móvil antes de continuar');
+      setLoading(false);
+      return;
+    }
+
     // If wallet mode, set payment method to WALLET
     const finalPaymentMethod = paymentMode === 'WALLET' ? 'WALLET' : formData.paymentMethod;
 
@@ -452,6 +477,8 @@ export default function CheckoutPage() {
         items: orderItems,
         notes: formData.notes || null,
         appliedDiscountIds: appliedDiscountIds,
+        // Mobile payment verification data
+        mobilePaymentData: mobilePaymentData || null,
       };
 
       const response = await fetch('/api/orders', {
@@ -1343,7 +1370,12 @@ export default function CheckoutPage() {
                             name="paymentMethod"
                             value={method.type}
                             checked={formData.paymentMethod === method.type}
-                            onChange={handleChange}
+                            onChange={(e) => {
+                              setFormData(prev => ({ ...prev, paymentMethod: e.target.value }));
+                              // Reset mobile payment verification when changing method
+                              setMobilePaymentVerified(false);
+                              setMobilePaymentData(null);
+                            }}
                             className="w-5 h-5 mt-0.5 text-[#2a63cd] focus:ring-[#2a63cd]"
                           />
                           <div className="ml-4 flex-1">
@@ -1359,8 +1391,9 @@ export default function CheckoutPage() {
                               <span className="block text-xs text-[#6a6c6b]">{method.bankName}</span>
                             )}
                             {method.displayNote && (
-                              <span className="block text-xs text-[#2a63cd] mt-1 font-medium">
-                                💡 {method.displayNote}
+                              <span className="block text-xs text-[#2a63cd] mt-1 font-medium flex items-center gap-1">
+                                <FiZap className="w-3 h-3" />
+                                {method.displayNote}
                               </span>
                             )}
                             {/* Show details when selected */}
@@ -1407,6 +1440,30 @@ export default function CheckoutPage() {
                           </div>
                         </label>
                       ))
+                    )}
+
+                    {/* Mobile Payment Verification Form */}
+                    {formData.paymentMethod === 'MOBILE_PAYMENT' && (
+                      <div className="mt-4 animate-fadeIn">
+                        <CheckoutPagoMovilForm
+                          montoEsperado={finalTotal}
+                          montoEnBs={finalTotal * exchangeRate}
+                          datosComercio={{
+                            telefono: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.phone,
+                            cedula: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderId,
+                            banco: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.bankName,
+                          }}
+                          onVerified={(data) => {
+                            setMobilePaymentVerified(true);
+                            setMobilePaymentData(data);
+                          }}
+                          onReset={() => {
+                            setMobilePaymentVerified(false);
+                            setMobilePaymentData(null);
+                          }}
+                          isVerified={mobilePaymentVerified}
+                        />
+                      </div>
                     )}
                   </div>
                 )}
@@ -1520,7 +1577,7 @@ export default function CheckoutPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || !acceptedTerms || (paymentMode === 'WALLET' && userBalance < finalTotal)}
+                disabled={loading || !acceptedTerms || (paymentMode === 'WALLET' && userBalance < finalTotal) || (paymentMode === 'DIRECT' && formData.paymentMethod === 'MOBILE_PAYMENT' && !mobilePaymentVerified)}
                 className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold text-lg rounded-xl hover:from-[#1e4ba3] hover:to-[#2a63cd] transition-all shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:scale-[1.02] active:scale-[0.98]"
               >
                 {loading ? (
@@ -1543,6 +1600,12 @@ export default function CheckoutPage() {
               {!acceptedTerms && (
                 <p className="text-center text-xs text-red-600 -mt-2 animate-pulse">
                   Debes aceptar los términos y condiciones para continuar
+                </p>
+              )}
+              {paymentMode === 'DIRECT' && formData.paymentMethod === 'MOBILE_PAYMENT' && !mobilePaymentVerified && (
+                <p className="text-center text-xs text-orange-600 -mt-2 animate-pulse flex items-center justify-center gap-1">
+                  <FiAlertCircle className="w-3 h-3" />
+                  Debes verificar tu pago móvil antes de continuar
                 </p>
               )}
             </form>

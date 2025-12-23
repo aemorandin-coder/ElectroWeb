@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import EpicTooltip from '@/components/EpicTooltip';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
+import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 
 // Constants for failed attempts
 const FAILED_ATTEMPTS_KEY = 'login_failed_attempts';
@@ -34,7 +34,7 @@ function LoginPageContent() {
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   // Captcha state
-  const captchaRef = useRef<HCaptcha>(null);
+  const captchaRef = useRef<any>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [requiresCaptcha, setRequiresCaptcha] = useState(false);
@@ -423,7 +423,7 @@ function LoginPageContent() {
                   </p>
                 </div>
                 <div className="flex justify-center rounded-xl overflow-hidden bg-white/5 p-2">
-                  <HCaptcha
+                  <HCaptchaWrapper
                     sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
                     onVerify={handleCaptchaVerify}
                     onExpire={handleCaptchaExpire}

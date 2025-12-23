@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import EpicTooltip from '@/components/EpicTooltip';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
+import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 
 const COUNTRY_CODES = [
   { code: '+58', country: 'Venezuela', iso: 've' },
@@ -35,7 +35,7 @@ export default function RegisterPage() {
   const [countryCode, setCountryCode] = useState('+58');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const captchaRef = useRef<HCaptcha>(null);
+  const captchaRef = useRef<any>(null);
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -746,7 +746,7 @@ export default function RegisterPage() {
               {/* hCaptcha */}
               <div className="flex justify-center pt-2">
                 <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                  <HCaptcha
+                  <HCaptchaWrapper
                     sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
                     onVerify={handleCaptchaVerify}
                     onExpire={handleCaptchaExpire}

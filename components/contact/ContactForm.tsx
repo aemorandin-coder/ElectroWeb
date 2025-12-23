@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
+import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 
 interface ValidationErrors {
     name?: string;
@@ -25,7 +25,7 @@ export default function ContactForm() {
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
     const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
     const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-    const captchaRef = useRef<HCaptcha>(null);
+    const captchaRef = useRef<any>(null);
     const nameInputRef = useRef<HTMLInputElement>(null);
 
     // AutoFocus on mount
@@ -416,7 +416,7 @@ export default function ContactForm() {
                     {/* hCaptcha */}
                     <div className="flex justify-center pt-2">
                         <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                            <HCaptcha
+                            <HCaptchaWrapper
                                 sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
                                 onVerify={handleCaptchaVerify}
                                 onExpire={handleCaptchaExpire}

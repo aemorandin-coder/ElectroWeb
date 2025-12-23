@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { FiUser, FiMail, FiPhone, FiPackage, FiDollarSign, FiClock, FiCheck, FiShield, FiTruck } from 'react-icons/fi';
 import { IoMdPricetags } from 'react-icons/io';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
+import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import AnimatedWave from '@/components/AnimatedWave';
 
 const categories = [
@@ -35,7 +35,7 @@ export default function SolicitarProductoClient() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const captchaRef = useRef<HCaptcha>(null);
+  const captchaRef = useRef<any>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
@@ -543,7 +543,7 @@ export default function SolicitarProductoClient() {
                     {/* hCaptcha */}
                     <div className="flex justify-center pt-4">
                       <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                        <HCaptcha
+                        <HCaptchaWrapper
                           sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
                           onVerify={handleCaptchaVerify}
                           onExpire={handleCaptchaExpire}

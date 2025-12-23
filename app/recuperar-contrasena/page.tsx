@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiMail, FiArrowLeft, FiCheck, FiShield } from 'react-icons/fi';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
+import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 
 export default function RecuperarContrasenaPage() {
     const [email, setEmail] = useState('');
@@ -12,7 +12,7 @@ export default function RecuperarContrasenaPage() {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
     const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-    const captchaRef = useRef<HCaptcha>(null);
+    const captchaRef = useRef<any>(null);
     const [companySettings, setCompanySettings] = useState<{
         companyName: string;
         logo: string | null;
@@ -220,7 +220,7 @@ export default function RecuperarContrasenaPage() {
                                     {/* hCaptcha */}
                                     <div className="flex justify-center">
                                         <div className="bg-white/5 p-2 rounded-xl border border-white/10 inline-block">
-                                            <HCaptcha
+                                            <HCaptchaWrapper
                                                 sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
                                                 onVerify={handleCaptchaVerify}
                                                 onExpire={handleCaptchaExpire}

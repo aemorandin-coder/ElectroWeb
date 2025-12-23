@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiCreditCard, FiUpload, FiImage, FiX, FiShield } from 'react-icons/fi';
+import { HiOutlineQrcode } from 'react-icons/hi';
 import Image from 'next/image';
 import { BANCOS_VENEZUELA, type BancoVenezuela } from '@/lib/pago-movil/bancos-venezuela';
 
@@ -69,7 +71,14 @@ export default function CheckoutPagoMovilForm({
     // Image upload state
     const [comprobante, setComprobante] = useState<string | null>(null);
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // For portal
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Filtrar bancos por término de búsqueda
     useEffect(() => {
@@ -296,10 +305,10 @@ export default function CheckoutPagoMovilForm({
                     </div>
 
                     {/* Grid of payment details */}
-                    <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                         {/* Teléfono */}
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-                            <div className="flex items-center gap-2 mb-1">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-1">
                                 <FiPhone className="w-3.5 h-3.5 text-blue-200" />
                                 <span className="text-[10px] font-medium text-blue-200 uppercase">Teléfono</span>
                             </div>
@@ -307,8 +316,8 @@ export default function CheckoutPagoMovilForm({
                         </div>
 
                         {/* Cédula/RIF */}
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-                            <div className="flex items-center gap-2 mb-1">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-1">
                                 <FiCreditCard className="w-3.5 h-3.5 text-blue-200" />
                                 <span className="text-[10px] font-medium text-blue-200 uppercase">CI/RIF</span>
                             </div>
@@ -316,15 +325,33 @@ export default function CheckoutPagoMovilForm({
                         </div>
 
                         {/* Banco */}
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-                            <div className="flex items-center gap-2 mb-1">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-1">
                                 <svg className="w-3.5 h-3.5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                                 <span className="text-[10px] font-medium text-blue-200 uppercase">Banco</span>
                             </div>
-                            <p className="text-sm font-bold text-white leading-tight">{datosComercio.banco || 'BDV'}</p>
+                            <p className="text-sm font-bold text-white leading-tight">{(datosComercio.banco || 'BDV').replace('Banco de ', '')}</p>
                         </div>
+
+                        {/* QR Button */}
+                        <button
+                            type="button"
+                            onClick={() => setShowQRModal(true)}
+                            className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 hover:bg-white/20 transition-all group cursor-pointer text-center"
+                        >
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                                <HiOutlineQrcode className="w-3.5 h-3.5 text-blue-200" />
+                                <span className="text-[10px] font-medium text-blue-200 uppercase">Código QR</span>
+                            </div>
+                            <p className="text-sm font-bold text-white group-hover:text-blue-200 transition-colors flex items-center justify-center gap-1">
+                                Ver QR
+                                <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </p>
+                        </button>
                     </div>
 
                     {/* Monto destacado */}
@@ -620,6 +647,79 @@ export default function CheckoutPagoMovilForm({
             <p className="text-[10px] text-center text-[#6a6c6b]">
                 La verificacion se realiza en tiempo real. No podras continuar sin verificar el pago.
             </p>
+
+            {/* QR Modal - Using Portal to render outside of parent constraints */}
+            {showQRModal && mounted && createPortal(
+                <div
+                    className="fixed inset-0 flex items-center justify-center p-4"
+                    style={{ zIndex: 99999 }}
+                    onClick={() => setShowQRModal(false)}
+                >
+                    {/* Backdrop */}
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+                    {/* Modal Content */}
+                    <div
+                        className="relative bg-white rounded-2xl shadow-2xl overflow-hidden"
+                        style={{ width: '95%', maxWidth: '550px' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-6 py-5 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <HiOutlineQrcode className="w-7 h-7 text-white" />
+                                <div>
+                                    <h3 className="text-white font-bold text-lg">Código QR</h3>
+                                    <p className="text-blue-200 text-sm">Escanea con tu banco para pagar</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowQRModal(false)}
+                                className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
+                            >
+                                <FiX className="w-6 h-6 text-white" />
+                            </button>
+                        </div>
+
+                        {/* QR Image */}
+                        <div className="p-10 flex flex-col items-center bg-gray-50">
+                            <div className="bg-white p-6 rounded-2xl shadow-xl border-2 border-gray-100">
+                                <Image
+                                    src="/images/qrbdv.png"
+                                    alt="Código QR Pago Móvil BDV"
+                                    width={400}
+                                    height={400}
+                                    className="rounded-xl"
+                                />
+                            </div>
+                            <p className="mt-4 text-sm text-gray-600 text-center">
+                                Escanea este código QR con tu app bancaria o VeQR para realizar el pago
+                            </p>
+                            <div className="mt-3 flex items-center gap-2 text-xs text-[#2a63cd] bg-blue-50 px-3 py-2 rounded-lg">
+                                <FiShield className="w-4 h-4" />
+                                <span className="font-medium">Pago seguro con Banco de Venezuela</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            <style jsx>{`
+                @keyframes scaleIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.9);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+                .animate-scaleIn {
+                    animation: scaleIn 0.2s ease-out;
+                }
+            `}</style>
         </div>
     );
 }

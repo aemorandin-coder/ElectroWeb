@@ -7,6 +7,7 @@ import ProductCard from '@/components/ui/ProductCard';
 import PageAnimations from '@/components/public/PageAnimations';
 import HotAdOverlay from '@/components/HotAdOverlay';
 import SubtleParticles from '@/components/SubtleParticles';
+import YouTubeEmbed from '@/components/YouTubeEmbed';
 import FloatingTechIcons from '@/components/FloatingTechIcons';
 import {
   FiBox, FiGrid, FiStar, FiHeadphones,
@@ -19,19 +20,7 @@ import { FaEthernet } from 'react-icons/fa';
 import { SiPcgamingwiki } from 'react-icons/si';
 import { FaScrewdriverWrench } from 'react-icons/fa6';
 
-// Helper to get YouTube Embed URL
-const getYouTubeEmbedUrl = (url: string | null) => {
-  if (!url) return null;
-  let videoId = null;
-  if (url.includes('youtube.com/watch?v=')) {
-    videoId = url.split('v=')[1]?.split('&')[0];
-  } else if (url.includes('youtu.be/')) {
-    videoId = url.split('youtu.be/')[1]?.split('?')[0];
-  } else if (url.includes('youtube.com/embed/')) {
-    return url;
-  }
-  return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&showinfo=0&rel=0` : null;
-};
+
 
 // Helper to get Icon by name
 const getIconByName = (iconName: string | null) => {
@@ -90,12 +79,9 @@ export default async function Home() {
           {companySettings?.heroVideoEnabled && companySettings?.heroVideoUrl ? (
             <div className="relative w-full h-full" suppressHydrationWarning>
               {companySettings.heroVideoUrl.includes('youtube') || companySettings.heroVideoUrl.includes('youtu.be') ? (
-                <iframe
+                <YouTubeEmbed
+                  videoUrl={companySettings.heroVideoUrl}
                   className="absolute top-1/2 left-1/2 w-[150%] h-[150%] -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-60"
-                  src={getYouTubeEmbedUrl(companySettings.heroVideoUrl) || ''}
-                  allow="autoplay; encrypted-media"
-                  allowFullScreen
-                  suppressHydrationWarning
                 />
               ) : (
                 <video

@@ -40,10 +40,25 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
+// Default values for when the hook is used outside the provider
+const defaultContextValue: NotificationContextType = {
+    notifications: [],
+    toasts: [],
+    unreadCount: 0,
+    showToast: () => { },
+    dismissToast: () => { },
+    markAsRead: async () => { },
+    markAllAsRead: async () => { },
+    deleteNotification: async () => { },
+    fetchNotifications: async () => { },
+    isLoading: false,
+};
+
 export function useNotifications() {
     const context = useContext(NotificationContext);
+    // Return default values instead of throwing error - safer for SSR
     if (!context) {
-        throw new Error('useNotifications must be used within NotificationProvider');
+        return defaultContextValue;
     }
     return context;
 }

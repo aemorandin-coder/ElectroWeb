@@ -10,6 +10,7 @@ import PublicHeader from '@/components/public/PublicHeader';
 import RechargeModal from '@/components/modals/RechargeModal';
 import CheckoutPagoMovilForm from '@/components/checkout/CheckoutPagoMovilForm';
 import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle, FiZap } from 'react-icons/fi';
+import { FaMobileScreen } from 'react-icons/fa6';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWallet } from '@fortawesome/free-solid-svg-icons';
 
@@ -103,7 +104,6 @@ export default function CheckoutPage() {
     fechaPago: string;
     comprobante?: string;
   } | null>(null);
-  const [exchangeRate, setExchangeRate] = useState<number>(0);
 
   // Load company settings for exchange rates
   useEffect(() => {
@@ -121,12 +121,6 @@ export default function CheckoutPage() {
         }
       })
       .catch(err => console.error('Error loading payment methods:', err));
-
-    // Load exchange rate
-    fetch('/api/exchange-rates')
-      .then(res => res.json())
-      .then(data => setExchangeRate(data.VES || 0))
-      .catch(err => console.error('Error loading exchange rate:', err));
   }, []);
 
   // Load user data if logged in
@@ -1477,25 +1471,29 @@ export default function CheckoutPage() {
                             className="w-5 h-5 mt-0.5 text-[#2a63cd] focus:ring-[#2a63cd]"
                           />
                           <div className="ml-4 flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {method.type === 'MOBILE_PAYMENT' && (
+                                <FaMobileScreen className="w-4 h-4 text-[#2a63cd]" />
+                              )}
                               <span className="text-sm font-bold text-[#212529]">{method.name}</span>
+                              {method.bankName && (
+                                <span className="text-xs text-[#6a6c6b]">• {method.bankName}</span>
+                              )}
                               {method.type === 'MERCANTIL_PANAMA' && (
                                 <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-100 text-[#2a63cd] rounded-full">
                                   Internacional
                                 </span>
                               )}
+                              {/* Show displayNote only for non-MOBILE_PAYMENT methods */}
+                              {method.displayNote && method.type !== 'MOBILE_PAYMENT' && (
+                                <span className="text-xs text-[#2a63cd] font-medium flex items-center gap-1">
+                                  <FiZap className="w-3 h-3" />
+                                  {method.displayNote}
+                                </span>
+                              )}
                             </div>
-                            {method.bankName && (
-                              <span className="block text-xs text-[#6a6c6b]">{method.bankName}</span>
-                            )}
-                            {method.displayNote && (
-                              <span className="block text-xs text-[#2a63cd] mt-1 font-medium flex items-center gap-1">
-                                <FiZap className="w-3 h-3" />
-                                {method.displayNote}
-                              </span>
-                            )}
-                            {/* Show details when selected */}
-                            {formData.paymentMethod === method.type && (
+                            {/* Show details when selected - but NOT for MOBILE_PAYMENT (shown in verification form) */}
+                            {formData.paymentMethod === method.type && method.type !== 'MOBILE_PAYMENT' && (
                               <div className="mt-3 pt-3 border-t border-gray-200 space-y-1 animate-fadeIn">
                                 {method.phone && (
                                   <p className="text-xs text-gray-600">
@@ -1545,7 +1543,7 @@ export default function CheckoutPage() {
                       <div className="mt-4 animate-fadeIn">
                         <CheckoutPagoMovilForm
                           montoEsperado={finalTotal}
-                          montoEnBs={finalTotal * exchangeRate}
+                          montoEnBs={finalTotal * Number(companySettings?.exchangeRateVES || 0)}
                           datosComercio={{
                             telefono: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.phone,
                             cedula: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderId,
@@ -2072,35 +2070,8 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Checkout Button */}
-                <div className="px-6 pb-6 space-y-3">
-                  <button
-                    type="submit"
-                    onClick={handleSubmit}
-                    disabled={loading || !acceptedTerms || (paymentMode === 'WALLET' && userBalance < finalTotal)}
-                    className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-base font-bold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 group"
-                  >
-                    {loading ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Procesando...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Confirmar Pedido
-                        <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </>
-                    )}
-                  </button>
-
+                {/* Continue Shopping Link */}
+                <div className="px-6 pb-6">
                   <Link
                     href="/productos"
                     className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-all duration-300 text-sm"

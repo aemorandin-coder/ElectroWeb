@@ -11,6 +11,7 @@ import RechargeModal from '@/components/modals/RechargeModal';
 import CheckoutPagoMovilForm from '@/components/checkout/CheckoutPagoMovilForm';
 import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle, FiZap } from 'react-icons/fi';
 import { FaMobileScreen } from 'react-icons/fa6';
+import { FaCheck } from 'react-icons/fa';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWallet } from '@fortawesome/free-solid-svg-icons';
 
@@ -177,6 +178,9 @@ export default function CheckoutPage() {
           }
         })
         .catch(err => console.error('Error loading discounts:', err));
+
+      // Fetch user balance
+      fetchBalance();
     }
   }, [session]);
 
@@ -521,15 +525,23 @@ export default function CheckoutPage() {
 
       // CREATE ORDER FOR DIGITAL PRODUCTS (if any)
       if (hasDigital) {
-        const digitalOrderItems = digitalItems.map(item => ({
-          productId: item.id,
-          productName: item.name,
-          productSku: item.id,
-          productImage: item.imageUrl || null,
-          pricePerUnit: item.price,
-          quantity: item.quantity,
-          subtotal: item.price * item.quantity,
-        }));
+        const digitalOrderItems = digitalItems.map(item => {
+          // For digital products, the cart ID has format: "productId-amount" (e.g., "abc123-10")
+          // We need to extract the original product ID for the database
+          const originalProductId = item.productType === 'DIGITAL' && item.id.includes('-')
+            ? item.id.substring(0, item.id.lastIndexOf('-'))
+            : item.id;
+
+          return {
+            productId: originalProductId,
+            productName: item.name,
+            productSku: originalProductId, // Use original ID as SKU too
+            productImage: item.imageUrl || null,
+            pricePerUnit: item.price,
+            quantity: item.quantity,
+            subtotal: item.price * item.quantity,
+          };
+        });
 
         const digitalSubtotal = digitalItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         const digitalDiscount = digitalItems.reduce((sum, item) => {
@@ -626,10 +638,19 @@ export default function CheckoutPage() {
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-VE', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
+    // Format: USD 1.200,00$
+    const formatted = new Intl.NumberFormat('de-DE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price);
+    return `USD ${formatted}$`;
+  };
+
+  // Format number only (without USD prefix and $ suffix) - for places that show USD separately
+  const formatNumber = (price: number) => {
+    return new Intl.NumberFormat('de-DE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(price);
   };
 
@@ -1427,12 +1448,6 @@ export default function CheckoutPage() {
                     <p className="text-sm text-[#6a6c6b]">
                       Paga con tu saldo disponible en la plataforma
                     </p>
-                    {userBalance > 0 && (
-                      <div className="mt-2 text-xs font-bold text-[#2a63cd] animate-pulse flex items-center gap-1">
-                        <FiDollarSign className="w-3.5 h-3.5" />
-                        Saldo: ${formatPrice(userBalance)}
-                      </div>
-                    )}
                     {paymentMode === 'WALLET' && (
                       <div className="absolute top-4 right-4 w-6 h-6 bg-[#2a63cd] rounded-full flex items-center justify-center animate-bounce">
                         <FiCheck className="w-4 h-4 text-white" />
@@ -1564,42 +1579,143 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* Wallet Payment Options */}
+                {/* Wallet Payment Options - Premium Circle Progress Design */}
                 {paymentMode === 'WALLET' && (
-                  <div className="bg-[#f8f9fa] rounded-xl p-6 border border-[#e9ecef] animate-fadeIn">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <p className="text-sm text-[#6a6c6b] font-medium">Saldo Disponible</p>
-                        <p className="text-3xl font-black text-[#212529]">${formatPrice(userBalance)}</p>
+                  <div className="bg-gradient-to-br from-[#f8f9fa] to-white rounded-2xl p-6 border border-[#e9ecef] animate-fadeIn shadow-sm overflow-hidden relative">
+                    {/* Subtle animated background */}
+                    <div className="absolute inset-0 opacity-30">
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#2a63cd]/10 to-transparent rounded-full blur-3xl animate-pulse" />
+                      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#2a63cd]/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+                    </div>
+
+                    {/* Main Content - Circle + Info */}
+                    <div className="relative flex flex-col md:flex-row items-center gap-6">
+                      {/* Animated Circle Progress */}
+                      <div className="relative flex-shrink-0">
+                        {/* Outer rotating ring */}
+                        <div className="absolute inset-[-8px] rounded-full border-2 border-dashed border-[#2a63cd]/20 animate-spin" style={{ animationDuration: '20s' }} />
+
+                        {/* Pulse ring effect */}
+                        <div className="absolute inset-[-4px] rounded-full animate-ping opacity-20 bg-[#2a63cd]" style={{ animationDuration: '2s' }} />
+
+                        <svg className="w-36 h-36 transform -rotate-90 relative z-10" viewBox="0 0 100 100">
+                          {/* Background circle with subtle gradient */}
+                          <defs>
+                            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#2a63cd" />
+                              <stop offset="100%" stopColor="#1e4ba3" />
+                            </linearGradient>
+                          </defs>
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="42"
+                            fill="none"
+                            stroke="#e9ecef"
+                            strokeWidth="8"
+                          />
+                          {/* Progress circle with gradient and animation */}
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="42"
+                            fill="none"
+                            stroke="url(#progressGradient)"
+                            strokeWidth="8"
+                            strokeLinecap="round"
+                            strokeDasharray={`${Math.min((userBalance / finalTotal) * 264, 264)} 264`}
+                            className="transition-all duration-1000 ease-out"
+                            style={{
+                              filter: 'drop-shadow(0 0 8px rgba(42, 99, 205, 0.4))'
+                            }}
+                          />
+                        </svg>
+
+                        <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-all duration-500 bg-gradient-to-br from-[#2a63cd]/10 to-[#2a63cd]/20 text-[#2a63cd]">
+                            {userBalance >= finalTotal ? (
+                              <FiCheckCircle className="w-6 h-6 animate-bounce" style={{ animationDuration: '2s' }} />
+                            ) : (
+                              <FontAwesomeIcon icon={faWallet} className="w-5 h-5" />
+                            )}
+                          </div>
+                          <span className="text-sm font-bold text-[#2a63cd]">
+                            {Math.min(Math.round((userBalance / finalTotal) * 100), 100)}%
+                          </span>
+                        </div>
                       </div>
-                      <div className={`px-4 py-2 rounded-full text-sm font-bold ${userBalance >= finalTotal ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                        }`}>
-                        {userBalance >= finalTotal ? 'Saldo Suficiente' : 'Saldo Insuficiente'}
+
+                      {/* Balance Info */}
+                      <div className="flex-1 text-center md:text-left">
+                        <p className="text-sm text-[#6a6c6b] font-medium mb-1">Tu saldo disponible</p>
+                        <p className="text-4xl font-black text-[#212529] mb-3 tracking-tight">
+                          {formatPrice(userBalance)}
+                        </p>
+
+                        {/* Status Badge */}
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${userBalance >= finalTotal
+                          ? 'bg-[#2a63cd]/10 text-[#2a63cd] border border-[#2a63cd]/20'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                          }`}>
+                          {userBalance >= finalTotal ? (
+                            <>
+                              <FiCheck className="w-4 h-4" />
+                              Saldo suficiente
+                            </>
+                          ) : (
+                            <>
+                              <FiAlertCircle className="w-4 h-4" />
+                              Faltan {formatPrice(finalTotal - userBalance)}
+                            </>
+                          )}
+                        </div>
+
+                        {/* Order Total & Remaining Balance */}
+                        <div className="mt-4 space-y-2">
+                          <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-[#6a6c6b]">
+                            <FiPackage className="w-4 h-4" />
+                            <span>Total del pedido: <strong className="text-[#212529]">{formatPrice(finalTotal)}</strong></span>
+                          </div>
+                          {userBalance >= finalTotal && (
+                            <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-[#2a63cd] font-medium animate-fadeIn">
+                              <FiDollarSign className="w-4 h-4" />
+                              <span>Saldo restante después de la compra: <strong className="text-[#212529]">{formatPrice(userBalance - finalTotal)}</strong></span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    {userBalance < finalTotal && (
-                      <div className="text-center">
-                        <p className="text-sm text-[#6a6c6b] mb-4">
-                          Necesitas <strong>${formatPrice(finalTotal - userBalance)}</strong> adicionales para completar tu compra.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setShowRechargeModal(true)}
-                          className="inline-flex items-center gap-2 px-6 py-3 bg-[#2a63cd] text-white font-bold rounded-xl hover:bg-[#1e4ba3] transition-all shadow-lg hover:shadow-xl hover:scale-105"
-                        >
-                          <FiPlus className="w-5 h-5" />
-                          Recargar Saldo
-                        </button>
+                    {/* Action Section */}
+                    {userBalance < finalTotal ? (
+                      <div className="relative mt-6 pt-6 border-t border-[#e9ecef]">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                          <p className="text-sm text-[#6a6c6b]">
+                            Recarga tu saldo para completar esta compra
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setShowRechargeModal(true)}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
+                          >
+                            <FiPlus className="w-5 h-5" />
+                            Recargar Saldo
+                          </button>
+                        </div>
                       </div>
-                    )}
-
-                    {userBalance >= finalTotal && (
-                      <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800">
-                        <FiCheck className="w-5 h-5 flex-shrink-0" />
-                        <p className="text-sm font-medium">
-                          ¡Genial! Tienes saldo suficiente para realizar esta compra inmediatamente.
-                        </p>
+                    ) : (
+                      <div className="relative mt-6 pt-6 border-t border-[#e9ecef]">
+                        <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-[#2a63cd]/5 to-[#1e4ba3]/10 border border-[#2a63cd]/20 rounded-xl">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#2a63cd]/30 animate-pulse">
+                            <FaCheck className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-[#2a63cd] text-lg">Listo para pagar</p>
+                            <p className="text-sm text-[#6a6c6b]">
+                              Tu saldo cubre el total. Completa el pedido ahora.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1857,7 +1973,7 @@ export default function CheckoutPage() {
                       <div className="text-right">
                         <div className="flex items-baseline gap-1 justify-end">
                           <span className="text-xs text-slate-400">USD</span>
-                          <span className="text-base font-bold text-slate-700">{formatPrice(cartSubtotal).replace('$', '')}</span>
+                          <span className="text-base font-bold text-slate-700">{formatNumber(cartSubtotal)}$</span>
                         </div>
                         {companySettings?.exchangeRateVES && (
                           <div className="text-xs text-[#2a63cd] font-medium">
@@ -1914,7 +2030,7 @@ export default function CheckoutPage() {
                             <>
                               <div className="flex items-baseline gap-1 justify-end">
                                 <span className="text-xs text-slate-400">USD</span>
-                                <span className="text-base font-bold text-slate-700">{formatPrice(shippingCost).replace('$', '')}</span>
+                                <span className="text-base font-bold text-slate-700">{formatNumber(shippingCost)}$</span>
                               </div>
                               {companySettings?.exchangeRateVES && (
                                 <div className="text-xs text-[#2a63cd] font-medium">
@@ -2048,7 +2164,7 @@ export default function CheckoutPage() {
                         <div className="text-right">
                           <div className="flex items-baseline gap-1 justify-end">
                             <span className="text-sm font-bold text-slate-400">USD</span>
-                            <span className="text-3xl font-black text-slate-800">{formatPrice(finalTotal).replace('$', '')}</span>
+                            <span className="text-3xl font-black text-slate-800">{formatNumber(finalTotal)}$</span>
                           </div>
                           {companySettings?.exchangeRateVES && (
                             <div className="mt-1 px-3 py-1 bg-[#2a63cd]/10 rounded-lg inline-block">

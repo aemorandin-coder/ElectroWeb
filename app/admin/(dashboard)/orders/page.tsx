@@ -428,17 +428,31 @@ export default function OrdersPage() {
                           e.stopPropagation();
                           const nextStatus = getNextStatus(order.status);
                           if (nextStatus === 'SHIPPED') {
-                            setSelectedOrder(order);
-                            openShippingModal();
+                            // For digital-only orders, skip shipping and go to DELIVERED
+                            if (order.isOnlyDigital) {
+                              handleStatusUpdate(order.id, 'DELIVERED');
+                            } else {
+                              setSelectedOrder(order);
+                              openShippingModal();
+                            }
                           } else if (nextStatus) {
                             handleStatusUpdate(order.id, nextStatus);
                           }
                         }}
                         disabled={updatingStatus}
-                        className={`hidden sm:flex items-center gap-1 px-3 py-1.5 text-white text-xs font-medium rounded-lg ${nextAction.color} disabled:opacity-50`}
+                        className={`hidden sm:flex items-center gap-1 px-3 py-1.5 text-white text-xs font-medium rounded-lg ${order.isOnlyDigital && order.status === 'PROCESSING' ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700' : nextAction.color} disabled:opacity-50`}
                       >
-                        <FiArrowRight className="w-3 h-3" />
-                        {nextAction.label}
+                        {order.isOnlyDigital && order.status === 'PROCESSING' ? (
+                          <>
+                            <FiZap className="w-3 h-3" />
+                            Completar (Digital)
+                          </>
+                        ) : (
+                          <>
+                            <FiArrowRight className="w-3 h-3" />
+                            {nextAction.label}
+                          </>
+                        )}
                       </button>
                     )}
 

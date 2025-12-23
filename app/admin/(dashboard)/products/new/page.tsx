@@ -286,7 +286,10 @@ export default function NewProductPage() {
         priceUSD: formData.productType === 'DIGITAL' && enabledDigitalPricing.length > 0
           ? Math.min(...enabledDigitalPricing.map(p => p.salePrice))
           : parseFloat(formData.priceUSD),
-        stock: parseInt(formData.stock) || 0,
+        // Digital products get 999 stock if not set (no physical inventory limit)
+        stock: formData.productType === 'DIGITAL'
+          ? (parseInt(formData.stock) || 999)
+          : (parseInt(formData.stock) || 0),
         images: formData.images,
         specifications: Object.keys(formData.specifications).length > 0 ? formData.specifications : null,
         isActive: formData.isActive,
@@ -961,7 +964,13 @@ export default function NewProductPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => updateFormData('productType', 'DIGITAL')}
+                  onClick={() => {
+                    updateFormData('productType', 'DIGITAL');
+                    // Digital products get high stock by default (no physical inventory limit)
+                    if (parseInt(formData.stock) === 0) {
+                      updateFormData('stock', '999');
+                    }
+                  }}
                   className={`flex-1 p-4 rounded-xl border-2 transition-all ${formData.productType === 'DIGITAL'
                     ? 'border-purple-500 bg-purple-50'
                     : 'border-gray-200 hover:border-gray-300'

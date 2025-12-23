@@ -12,6 +12,7 @@ const EMAIL_TEMPLATES = [
     { id: 'order_pending_payment', name: 'Pedido Pendiente de Pago', description: 'Compra en revisión por completar pago' },
     { id: 'order_shipped', name: 'Pedido Enviado', description: 'Notificación de envío' },
     { id: 'order_delivered', name: 'Pedido Entregado', description: 'Confirmación de entrega' },
+    { id: 'digital_code', name: 'Código Digital', description: 'Entrega de código digital (juegos, tarjetas)' },
     { id: 'order_cancelled', name: 'Orden Cancelada', description: 'Notificación de cancelación de pedido' },
     { id: 'marketing', name: 'Campaña de Marketing', description: 'Email promocional' },
     { id: 'notification', name: 'Notificación General', description: 'Avisos del sistema' },
@@ -298,6 +299,43 @@ const generateEmailHtml = async (templateId: string, settings: any) => {
                 <div style="text-align:center;">
                     <a href="${appUrl}/productos" style="display:inline-block;background:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:10px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(42,99,205,0.3);">
                         Seguir Comprando
+                    </a>
+                </div>
+            `,
+        },
+        digital_code: {
+            preheader: 'Tu código digital ha llegado',
+            content: `
+                <div style="text-align:center;margin-bottom:30px;">
+                    <div style="width:80px;height:80px;background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(99,102,241,0.3);">
+                        <span style="color:white;font-size:32px;">🎮</span>
+                    </div>
+                    <h2 style="margin:0 0 10px;color:#212529;font-size:26px;font-weight:700;">¡Tu Código Digital Está Listo!</h2>
+                    <p style="color:#6366f1;font-size:16px;font-weight:600;margin:0;">Orden #ORD-2025-0001</p>
+                </div>
+                <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 25px;">
+                    Hola <strong style="color:#212529;">Cliente</strong>,<br><br>
+                    Aquí tienes tu código digital para <strong>PlayStation Store $20</strong>:
+                </p>
+                <div style="background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border-radius:16px;padding:25px;margin:25px 0;text-align:center;border:2px dashed #3b82f6;">
+                    <p style="margin:0 0 8px;color:#6a6c6b;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Tu Código</p>
+                    <p style="margin:0;color:#1e40af;font-size:28px;font-weight:800;font-family:monospace;letter-spacing:3px;word-break:break-all;">
+                        XXXX-XXXX-XXXX-XXXX
+                    </p>
+                    <p style="margin:12px 0 0;color:#6a6c6b;font-size:13px;">Plataforma: <strong>PlayStation</strong></p>
+                </div>
+                <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:25px 0;border-left:4px solid #6366f1;">
+                    <p style="margin:0 0 10px;color:#212529;font-size:14px;font-weight:600;">📋 Instrucciones de Canje:</p>
+                    <p style="margin:0;color:#6a6c6b;font-size:13px;line-height:1.7;">1. Inicia sesión en tu cuenta de PlayStation<br>2. Ve a PlayStation Store<br>3. Selecciona "Canjear códigos"<br>4. Introduce el código y confirma</p>
+                </div>
+                <div style="background:#fef3c7;border-radius:12px;padding:15px;margin:25px 0;border:1px solid #f59e0b;">
+                    <p style="margin:0;color:#92400e;font-size:12px;text-align:center;">
+                        ⚠️ <strong>Importante:</strong> Guarda este código en un lugar seguro. No lo compartas con nadie.
+                    </p>
+                </div>
+                <div style="text-align:center;">
+                    <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:10px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(99,102,241,0.3);">
+                        Ver Mis Códigos
                     </a>
                 </div>
             `,

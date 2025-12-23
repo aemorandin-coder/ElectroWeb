@@ -7,8 +7,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
     FiCopy, FiCheck, FiArrowLeft, FiExternalLink, FiClock,
-    FiLock, FiShield, FiZap, FiAlertTriangle, FiPackage
+    FiLock, FiShield, FiAlertTriangle, FiPackage
 } from 'react-icons/fi';
+import { BsCardList } from 'react-icons/bs';
 import { SiSteam, SiPlaystation, SiNintendoswitch, SiRoblox, SiNetflix, SiSpotify, SiApple } from 'react-icons/si';
 import { FaGamepad } from 'react-icons/fa';
 import toast from 'react-hot-toast';
@@ -140,9 +141,9 @@ export default function DigitalCodesPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
+                    <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
                     <p className="text-white/60">Cargando tus códigos...</p>
                 </div>
             </div>
@@ -151,12 +152,12 @@ export default function DigitalCodesPage() {
 
     if (!data) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] flex items-center justify-center p-4">
                 <div className="text-center">
-                    <FiAlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+                    <FiAlertTriangle className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
                     <h1 className="text-2xl font-bold text-white mb-2">Orden no encontrada</h1>
                     <p className="text-white/60 mb-6">No pudimos encontrar los códigos de esta orden.</p>
-                    <Link href="/customer/orders" className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl transition-colors">
+                    <Link href="/customer/orders" className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl transition-colors">
                         <FiArrowLeft /> Volver a mis pedidos
                     </Link>
                 </div>
@@ -167,9 +168,9 @@ export default function DigitalCodesPage() {
     const hasPendingCodes = data.digitalItems.some(item => item.codes.length < item.quantity);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd]">
             {/* Header */}
-            <div className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
+            <div className="sticky top-0 z-50 bg-[#1e4ba3]/90 backdrop-blur-xl border-b border-white/10">
                 <div className="max-w-4xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <Link href="/customer/orders" className="flex items-center gap-2 text-white/70 hover:text-white transition-colors">
@@ -188,8 +189,8 @@ export default function DigitalCodesPage() {
             <div className="max-w-4xl mx-auto px-4 py-8">
                 {/* Title */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-2xl border border-purple-500/20 mb-4">
-                        <FiZap className="w-6 h-6 text-yellow-400" />
+                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 rounded-2xl border border-white/20 mb-4">
+                        <BsCardList className="w-6 h-6 text-yellow-400" />
                         <span className="text-white font-semibold">Entrega Digital</span>
                     </div>
                     <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
@@ -287,15 +288,21 @@ export default function DigitalCodesPage() {
                                             <div className="flex items-center gap-3">
                                                 <div
                                                     onClick={() => toggleReveal(code.id)}
-                                                    className="flex-1 bg-slate-900/50 rounded-lg px-4 py-3 font-mono text-lg text-center cursor-pointer hover:bg-slate-900/70 transition-colors border border-white/5"
+                                                    className={`flex-1 relative rounded-lg px-4 py-3 font-mono text-lg text-center cursor-pointer transition-all duration-500 border overflow-hidden ${revealedCodes[code.id]
+                                                        ? 'bg-white/10 border-emerald-500/50'
+                                                        : 'bg-gradient-to-r from-amber-500/80 to-yellow-500/80 border-amber-400 hover:from-amber-500 hover:to-yellow-500'}`}
                                                 >
                                                     {revealedCodes[code.id] ? (
-                                                        <span className="text-white select-all">{code.code}</span>
+                                                        <span className="text-white select-all animate-fade-in">{code.code}</span>
                                                     ) : (
-                                                        <span className="text-white/30 flex items-center justify-center gap-2">
-                                                            <FiLock className="w-4 h-4" />
-                                                            Click para revelar
-                                                        </span>
+                                                        <>
+                                                            {/* Scratch effect overlay */}
+                                                            <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,rgba(255,255,255,0.1)_2px,rgba(255,255,255,0.1)_4px)]" />
+                                                            <span className="text-white font-bold flex items-center justify-center gap-2 relative z-10">
+                                                                <span className="animate-wiggle">🎫</span>
+                                                                ¡Raspa aquí para revelar!
+                                                            </span>
+                                                        </>
                                                     )}
                                                 </div>
 
@@ -305,8 +312,8 @@ export default function DigitalCodesPage() {
                                                     className={`p-3 rounded-lg transition-all ${copiedCodes[code.id]
                                                         ? 'bg-emerald-600 text-white'
                                                         : revealedCodes[code.id]
-                                                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                                            : 'bg-slate-700/50 text-white/30 cursor-not-allowed'
+                                                            ? 'bg-white/20 hover:bg-white/30 text-white'
+                                                            : 'bg-white/5 text-white/30 cursor-not-allowed'
                                                         }`}
                                                     title={copiedCodes[code.id] ? 'Copiado' : 'Copiar código'}
                                                 >
@@ -372,6 +379,23 @@ export default function DigitalCodesPage() {
                     </p>
                 </div>
             </div>
+            {/* Animations */}
+            <style jsx>{`
+                @keyframes wiggle {
+                    0%, 100% { transform: rotate(-3deg); }
+                    50% { transform: rotate(3deg); }
+                }
+                @keyframes fade-in {
+                    from { opacity: 0; transform: scale(0.95); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                .animate-wiggle {
+                    animation: wiggle 0.5s ease-in-out infinite;
+                }
+                .animate-fade-in {
+                    animation: fade-in 0.3s ease-out;
+                }
+            `}</style>
         </div>
     );
 }

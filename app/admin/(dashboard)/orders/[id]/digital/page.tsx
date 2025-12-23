@@ -90,11 +90,11 @@ export default function AdminDigitalCodesPage() {
                 const result = await response.json();
                 setData(result);
 
-                // Initialize newCodes state for items without codes
+                // Initialize newCodes state for items without codes (using orderItemId as key)
                 const initialCodes: Record<string, { code: string; notes: string }> = {};
                 result.digitalItems.forEach((item: DigitalItem) => {
                     if (item.codes.length < item.quantity) {
-                        initialCodes[item.productId] = { code: '', notes: '' };
+                        initialCodes[item.orderItemId] = { code: '', notes: '' };
                     }
                 });
                 setNewCodes(initialCodes);
@@ -110,21 +110,21 @@ export default function AdminDigitalCodesPage() {
         }
     };
 
-    const sendCode = async (productId: string) => {
-        const codeData = newCodes[productId];
+    const sendCode = async (orderItemId: string) => {
+        const codeData = newCodes[orderItemId];
         if (!codeData?.code.trim()) {
             toast.error('Ingresa un código válido');
             return;
         }
 
-        setSending(productId);
+        setSending(orderItemId);
         try {
             const response = await fetch(`/api/orders/${orderId}/digital`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     orderId,
-                    productId,
+                    orderItemId,
                     code: codeData.code.trim(),
                     notes: codeData.notes.trim() || null,
                 }),
@@ -135,7 +135,7 @@ export default function AdminDigitalCodesPage() {
                 // Clear the form and refresh data
                 setNewCodes(prev => ({
                     ...prev,
-                    [productId]: { code: '', notes: '' }
+                    [orderItemId]: { code: '', notes: '' }
                 }));
                 fetchOrderData();
             } else {
@@ -324,14 +324,14 @@ export default function AdminDigitalCodesPage() {
                                             </label>
                                             <input
                                                 type="text"
-                                                value={newCodes[item.productId]?.code || ''}
+                                                value={newCodes[item.orderItemId]?.code || ''}
                                                 onChange={(e) => setNewCodes(prev => ({
                                                     ...prev,
-                                                    [item.productId]: { ...prev[item.productId], code: e.target.value }
+                                                    [item.orderItemId]: { ...prev[item.orderItemId], code: e.target.value }
                                                 }))}
                                                 placeholder="Ej: XXXX-XXXX-XXXX-XXXX"
                                                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                                disabled={!isPaid || sending === item.productId}
+                                                disabled={!isPaid || sending === item.orderItemId}
                                             />
                                         </div>
 
@@ -341,26 +341,26 @@ export default function AdminDigitalCodesPage() {
                                             </label>
                                             <input
                                                 type="text"
-                                                value={newCodes[item.productId]?.notes || ''}
+                                                value={newCodes[item.orderItemId]?.notes || ''}
                                                 onChange={(e) => setNewCodes(prev => ({
                                                     ...prev,
-                                                    [item.productId]: { ...prev[item.productId], notes: e.target.value }
+                                                    [item.orderItemId]: { ...prev[item.orderItemId], notes: e.target.value }
                                                 }))}
                                                 placeholder="Ej: Código de Steam, válido hasta..."
                                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                                disabled={!isPaid || sending === item.productId}
+                                                disabled={!isPaid || sending === item.orderItemId}
                                             />
                                         </div>
 
                                         <button
-                                            onClick={() => sendCode(item.productId)}
-                                            disabled={!isPaid || sending === item.productId || !newCodes[item.productId]?.code}
-                                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${isPaid && newCodes[item.productId]?.code
+                                            onClick={() => sendCode(item.orderItemId)}
+                                            disabled={!isPaid || sending === item.orderItemId || !newCodes[item.orderItemId]?.code}
+                                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${isPaid && newCodes[item.orderItemId]?.code
                                                 ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/25'
                                                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                                 }`}
                                         >
-                                            {sending === item.productId ? (
+                                            {sending === item.orderItemId ? (
                                                 <>
                                                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                                     Enviando...

@@ -61,6 +61,7 @@ export async function GET(request: NextRequest) {
                 code: true,
                 status: true,
                 productId: true,
+                orderItemId: true, // Added to filter by order item
                 deliveredAt: true,
                 soldAt: true,
                 notes: true,
@@ -91,7 +92,8 @@ export async function GET(request: NextRequest) {
             region: item.product.digitalRegion,
             image: item.productImage || item.product.mainImage,
             quantity: item.quantity,
-            codes: filteredCodes.filter(dc => dc.productId === item.productId),
+            // Filter codes by orderItemId to ensure each order item has independent codes
+            codes: filteredCodes.filter(dc => dc.orderItemId === item.id),
             redemptionInstructions: item.product.redemptionInstructions || null,
         }));
 
@@ -118,11 +120,11 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { orderId, productId, code, notes } = body;
+        const { orderId, orderItemId, code, notes } = body;
 
-        if (!orderId || !productId || !code) {
+        if (!orderId || !orderItemId || !code) {
             return NextResponse.json({
-                error: 'Faltan campos requeridos: orderId, productId, code'
+                error: 'Faltan campos requeridos: orderId, orderItemId, code'
             }, { status: 400 });
         }
 
@@ -132,10 +134,11 @@ export async function POST(request: NextRequest) {
             include: {
                 user: true,
                 items: {
-                    where: { productId },
+                    where: { id: orderItemId }, // Find by orderItemId
                     include: {
                         product: {
                             select: {
+                                id: true,
                                 name: true,
                                 productType: true,
                             }
@@ -158,18 +161,18 @@ export async function POST(request: NextRequest) {
         const orderItem = order.items[0];
         if (!orderItem || orderItem.product.productType !== 'DIGITAL') {
             return NextResponse.json({
-                error: 'Producto no encontrado o no es digital'
+                error: 'Item de orden no encontrado o no es digital'
             }, { status: 400 });
         }
 
-        // Create or update digital code
+        // Create digital code linked to specific order item
         const digitalCode = await prisma.digitalCode.create({
             data: {
-                productId,
+                productId: orderItem.product.id, // Get productId from the order item
                 code,
                 status: 'DELIVERED',
                 orderId,
-                orderItemId: orderItem.id,
+                orderItemId, // Use the specific order item ID
                 soldAt: new Date(),
                 deliveredAt: new Date(),
                 addedBy: session.user.email || session.user.id,
@@ -193,9 +196,9 @@ export async function POST(request: NextRequest) {
         // Send email notification to customer
         if (order.user?.email) {
             try {
-                // Get product details for email
+                // Get product details for email (we already have them from orderItem)
                 const productDetails = await prisma.product.findUnique({
-                    where: { id: productId },
+                    where: { id: orderItem.product.id },
                     select: {
                         name: true,
                         digitalPlatform: true,

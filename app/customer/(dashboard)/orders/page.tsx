@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { FiPackage, FiClock, FiCheck, FiX, FiTruck, FiShoppingBag, FiEye, FiSearch, FiRefreshCw, FiCalendar, FiArrowLeft, FiInfo, FiDownload, FiRepeat, FiDollarSign, FiTrendingUp } from 'react-icons/fi';
+import { BsCardList } from 'react-icons/bs';
 import Link from 'next/link';
 import OrderTracking from '@/components/orders/OrderTracking';
 
@@ -14,6 +15,9 @@ interface OrderItem {
   priceUSD: number;
   totalUSD: number;
   productImage?: string;
+  product?: {
+    productType?: string;
+  };
 }
 
 interface Order {
@@ -28,6 +32,7 @@ interface Order {
   items: OrderItem[];
   address?: any;
   paymentMethod?: string;
+  paymentStatus?: string;
   deliveryMethod?: string;
   notes?: string;
   // Shipping info
@@ -36,6 +41,8 @@ interface Order {
   trackingUrl?: string;
   shippingNotes?: string;
   estimatedDelivery?: string;
+  // Digital products
+  hasDigital?: boolean;
 }
 
 export default function OrdersPage() {
@@ -92,15 +99,20 @@ export default function OrdersPage() {
       const response = await fetch('/api/orders');
       if (response.ok) {
         const data = await response.json();
-        const ordersWithNumbers = (data || []).map((order: any) => ({
-          ...order,
-          totalUSD: Number(order.totalUSD) || 0,
-          items: order.items?.map((item: any) => ({
-            ...item,
-            priceUSD: Number(item.priceUSD) || 0,
-            totalUSD: Number(item.totalUSD) || 0,
-          })) || []
-        }));
+        const ordersWithNumbers = (data || []).map((order: any) => {
+          // Check if order has digital products
+          const hasDigital = order.items?.some((item: any) => item.product?.productType === 'DIGITAL') || false;
+          return {
+            ...order,
+            totalUSD: Number(order.totalUSD) || 0,
+            hasDigital,
+            items: order.items?.map((item: any) => ({
+              ...item,
+              priceUSD: Number(item.priceUSD) || 0,
+              totalUSD: Number(item.totalUSD) || 0,
+            })) || []
+          };
+        });
         setOrders(ordersWithNumbers);
       }
     } catch (error) {
@@ -333,11 +345,23 @@ export default function OrdersPage() {
                   </div>
 
                   {/* Price & Actions */}
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     <div className="text-right">
                       <p className="text-lg font-black text-[#212529]">${order.totalUSD.toFixed(2)}</p>
                       <p className="text-[10px] text-[#6a6c6b] uppercase tracking-wide">USD</p>
                     </div>
+
+                    {/* Digital Codes Button */}
+                    {order.hasDigital && order.paymentStatus === 'PAID' && (
+                      <Link
+                        href={`/customer/orders/${order.id}/digital`}
+                        className="p-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all shadow-lg shadow-purple-500/20"
+                        title="Ver códigos digitales"
+                      >
+                        <BsCardList className="w-4 h-4" />
+                      </Link>
+                    )}
+
                     <div className="relative group/tooltip">
                       <button
                         onClick={() => {

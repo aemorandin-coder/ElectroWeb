@@ -140,22 +140,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate stock availability for all items BEFORE creating order
-    // Now using getAvailableStock to account for reservations
     const stockErrors: string[] = [];
     for (const item of body.items) {
-      // Use getAvailableStock from lib/stock to check real availability
-      // Note: If the user has a reservation, we need to check if it covers this quantity
-      // For simplicity in this iteration, we'll assume the reservation logic handles the "hold"
-      // and here we just verify the final state or if no reservation exists.
-
-      // However, if the USER has a reservation, getAvailableStock subtracts it from the total.
-      // So we need to be careful.
-      // Better approach: Release the user's reservation JUST BEFORE creating the order in the transaction.
-      // But for validation here, we can check raw stock if we assume the user holds the reservation.
-
       const product = await prisma.product.findUnique({
         where: { id: item.productId },
-        select: { stock: true, name: true, status: true },
+        select: { stock: true, name: true, status: true, productType: true },
       });
 
       if (!product) {
@@ -165,6 +154,11 @@ export async function POST(request: NextRequest) {
 
       if (product.status !== 'PUBLISHED') {
         stockErrors.push(`El producto "${product.name}" no está disponible`);
+        continue;
+      }
+
+      // Skip stock validation for digital products - they don't have physical inventory limits
+      if (product.productType === 'DIGITAL') {
         continue;
       }
 

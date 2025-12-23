@@ -56,9 +56,11 @@ export default function MisPedidosPage() {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Error al cargar pedidos');
 
-      const data = await response.json();
+      const result = await response.json();
+      // Handle both paginated format { orders: [...] } and legacy array format
+      const data = Array.isArray(result) ? result : (result.orders || []);
       // Parse numbers correctly
-      const parsedOrders = (data || []).map((order: any) => ({
+      const parsedOrders = data.map((order: any) => ({
         ...order,
         totalUSD: Number(order.totalUSD) || 0,
         items: order.items?.map((item: any) => ({

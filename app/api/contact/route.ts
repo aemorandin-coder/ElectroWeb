@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
+import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 
 // POST /api/contact - Submit contact form
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting - standard for contact form (prevents spam)
+    const clientIP = getClientIP(request);
+    const rateLimit = checkRateLimit(clientIP, 'contact:submit', RATE_LIMITS.STANDARD);
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Has enviado demasiados mensajes. Intenta más tarde.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimit, RATE_LIMITS.STANDARD)
+        }
+      );
+    }
+
     const body = await request.json();
     const { name, email, phone, subject, message } = body;
 

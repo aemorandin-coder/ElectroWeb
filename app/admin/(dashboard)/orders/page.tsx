@@ -112,7 +112,9 @@ export default function OrdersPage() {
       const url = filterStatus === 'all' ? '/api/orders' : `/api/orders?status=${filterStatus}`;
       const response = await fetch(url);
       if (response.ok) {
-        const data = await response.json();
+        const result = await response.json();
+        // Handle both paginated format { orders: [...] } and legacy array format
+        const data = Array.isArray(result) ? result : (result.orders || []);
         const normalizedOrders = data.map((order: any) => {
           const digitalCount = order.items?.filter((item: any) => item.product?.productType === 'DIGITAL').length || 0;
           const totalCount = order.items?.length || 0;

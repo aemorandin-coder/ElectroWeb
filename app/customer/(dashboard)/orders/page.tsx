@@ -98,8 +98,10 @@ export default function OrdersPage() {
     try {
       const response = await fetch('/api/orders');
       if (response.ok) {
-        const data = await response.json();
-        const ordersWithNumbers = (data || []).map((order: any) => {
+        const result = await response.json();
+        // Handle both paginated format { orders: [...] } and legacy array format
+        const data = Array.isArray(result) ? result : (result.orders || []);
+        const ordersWithNumbers = data.map((order: any) => {
           // Check if order has digital products
           const hasDigital = order.items?.some((item: any) => item.product?.productType === 'DIGITAL') || false;
           return {

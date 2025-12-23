@@ -215,6 +215,10 @@ export default function AdminLayout({
 
   const hasPermission = (permission?: string) => {
     if (!permission) return true;
+    // Special permission: only SUPER_ADMIN can access
+    if (permission === 'SUPER_ADMIN_ONLY') {
+      return session.user.role === 'SUPER_ADMIN';
+    }
     // Grant full access to ADMIN and SUPER_ADMIN roles
     if (session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') return true;
     return session.user.permissions?.includes(permission as any);

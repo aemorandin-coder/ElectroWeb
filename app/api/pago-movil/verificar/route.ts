@@ -7,6 +7,7 @@ import {
     validarTelefonoVenezolano,
     validarReferencia,
 } from '@/lib/pago-movil/bancos-venezuela';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 
 /**
  * POST /api/pago-movil/verificar
@@ -25,6 +26,23 @@ export async function POST(req: NextRequest) {
         }
 
         const userId = (session.user as any).id;
+
+        // Rate limiting por usuario - SENSITIVO para verificaciones de pago
+        const rateLimit = checkRateLimit(userId, 'pago-movil:verificar', RATE_LIMITS.SENSITIVE);
+
+        if (!rateLimit.success) {
+            return NextResponse.json(
+                {
+                    error: 'Has realizado demasiadas verificaciones. Espera unos minutos antes de intentar nuevamente.',
+                    retryAfter: rateLimit.resetIn
+                },
+                {
+                    status: 429,
+                    headers: getRateLimitHeaders(rateLimit, RATE_LIMITS.SENSITIVE)
+                }
+            );
+        }
+
         const body = await req.json();
 
         const {

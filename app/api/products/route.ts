@@ -9,14 +9,17 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     // GET is public, but we might use session for user-specific logic later
-    // if (!session) {
-    //   return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    // }
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
     const category = searchParams.get('category');
     const status = searchParams.get('status');
+
+    // PERFORMANCE: Pagination support
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')));
+    const all = searchParams.get('all') === 'true'; // For admin panel that needs all products
+    const skip = (page - 1) * limit;
 
     const where: any = {
       OR: search ? [
@@ -37,12 +40,17 @@ export async function GET(request: NextRequest) {
       where.stock = 0;
     }
 
+    // Count total for pagination metadata
+    const total = await prisma.product.count({ where });
+
     const products = await prisma.product.findMany({
       where,
       include: {
         category: true,
       },
       orderBy: { createdAt: 'desc' },
+      // Only apply pagination if not requesting all
+      ...(all ? {} : { take: limit, skip }),
     });
 
     // Convert Decimal fields to Number for proper JSON serialization
@@ -54,8 +62,24 @@ export async function GET(request: NextRequest) {
       shippingCost: p.shippingCost ? Number(p.shippingCost) : null,
     }));
 
-    return NextResponse.json(formattedProducts);
+    // BACKWARD COMPATIBILITY: Return array directly when all=true (for admin panel)
+    // New paginated format otherwise
+    if (all) {
+      return NextResponse.json(formattedProducts);
+    }
+
+    return NextResponse.json({
+      products: formattedProducts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasMore: page * limit < total,
+      },
+    });
   } catch (error) {
+    console.error('Error fetching products:', error);
     return NextResponse.json({ error: 'Error al obtener productos' }, { status: 500 });
   }
 }
@@ -224,22 +248,58 @@ export async function PATCH(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const newStock = body.stock !== undefined ? parseInt(body.stock) : oldProduct.stock;
+    // SECURITY: Whitelist of allowed fields to prevent mass assignment
+    const allowedFields = [
+      'name', 'description', 'sku', 'slug', 'priceUSD', 'priceVES',
+      'stock', 'minStock', 'categoryId', 'brandId', 'images', 'mainImage',
+      'specs', 'features', 'status', 'isFeatured', 'productType',
+      'digitalPlatform', 'digitalRegion', 'deliveryMethod',
+      'weightKg', 'dimensions', 'isConsolidable', 'shippingCost', 'tags'
+    ];
+
+    // Filter body to only include allowed fields
+    const filteredData: Record<string, any> = {};
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        filteredData[field] = body[field];
+      }
+    }
+
+    // Parse numeric fields safely
+    if (filteredData.priceUSD !== undefined) {
+      filteredData.priceUSD = parseFloat(filteredData.priceUSD);
+      if (isNaN(filteredData.priceUSD) || filteredData.priceUSD < 0) {
+        return NextResponse.json({ error: 'Precio inválido' }, { status: 400 });
+      }
+    }
+
+    if (filteredData.stock !== undefined) {
+      filteredData.stock = parseInt(filteredData.stock);
+      if (isNaN(filteredData.stock) || filteredData.stock < 0) {
+        return NextResponse.json({ error: 'Stock inválido' }, { status: 400 });
+      }
+    }
+
+    if (filteredData.minStock !== undefined) {
+      filteredData.minStock = parseInt(filteredData.minStock);
+      if (isNaN(filteredData.minStock) || filteredData.minStock < 0) {
+        filteredData.minStock = 0;
+      }
+    }
+
+    // Validate status if provided
+    if (filteredData.status && !['PUBLISHED', 'DRAFT', 'ARCHIVED'].includes(filteredData.status)) {
+      return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
+    }
 
     const product = await prisma.product.update({
       where: { id },
-      data: {
-        ...body,
-        priceUSD: body.priceUSD ? parseFloat(body.priceUSD) : undefined,
-        stock: body.stock !== undefined ? newStock : undefined,
-      },
+      data: filteredData,
     });
-
-    // Notifications logic removed as NotificationTemplates is not defined
-    // TODO: Implement proper admin notifications
 
     return NextResponse.json(product);
   } catch (error) {
+    console.error('Error updating product:', error);
     return NextResponse.json({ error: 'Error al actualizar producto' }, { status: 500 });
   }
 }

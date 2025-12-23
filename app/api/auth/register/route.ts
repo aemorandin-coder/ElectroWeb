@@ -4,26 +4,66 @@ import * as bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { notifyAdminsNewCustomer } from '@/lib/notifications';
 import { sendVerificationEmail } from '@/lib/email-service';
+import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { z } from 'zod';
+import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
+
+// Validation schema for registration
+const registerSchema = z.object({
+  name: z.string()
+    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .max(100, 'El nombre es demasiado largo')
+    .transform(val => val.trim().replace(/<[^>]*>/g, '')), // Strip HTML
+  email: z.string()
+    .email('Correo electrónico inválido')
+    .max(255, 'El correo es demasiado largo')
+    .transform(val => val.toLowerCase().trim()),
+  phone: z.string()
+    .min(10, 'Teléfono inválido')
+    .max(20, 'Teléfono demasiado largo')
+    .regex(/^[\d+\-\s()]+$/, 'Formato de teléfono inválido'),
+  password: z.string()
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .max(128, 'La contraseña es demasiado larga')
+    .regex(/[A-Z]/, 'La contraseña debe contener al menos una mayúscula')
+    .regex(/[a-z]/, 'La contraseña debe contener al menos una minúscula')
+    .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
+  idNumber: z.string()
+    .min(5, 'Cédula inválida')
+    .max(20, 'Cédula demasiado larga')
+    .regex(/^[VvEeJjGg]?-?\d{5,12}$/, 'Formato de cédula inválido'),
+});
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting - strict for registration
+    const clientIP = getClientIP(request);
+    const rateLimit = checkRateLimit(clientIP, 'auth:register', RATE_LIMITS.AUTH);
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Demasiados intentos. Espera unos minutos antes de intentar nuevamente.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimit, RATE_LIMITS.AUTH)
+        }
+      );
+    }
+
     const body = await request.json();
-    const { name, email, phone, password, idNumber } = body;
 
-    // Validation
-    if (!name || !email || !phone || !password || !idNumber) {
+    // Validate with Zod
+    const validationResult = registerSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      const firstError = validationResult.error.issues[0];
       return NextResponse.json(
-        { error: 'Todos los campos son requeridos' },
+        { error: firstError.message, field: firstError.path[0] },
         { status: 400 }
       );
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'La contrasena debe tener al menos 6 caracteres' },
-        { status: 400 }
-      );
-    }
+    const { name, email, phone, password, idNumber } = validationResult.data;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -32,13 +72,13 @@ export async function POST(request: NextRequest) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Este correo electronico ya esta registrado' },
+        { error: 'Este correo electrónico ya está registrado' },
         { status: 400 }
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password with strong work factor
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user with profile (emailVerified = null means not verified)
     const user = await prisma.user.create({

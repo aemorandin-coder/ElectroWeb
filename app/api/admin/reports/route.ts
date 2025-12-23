@@ -96,14 +96,14 @@ export async function GET(request: NextRequest) {
                         createdAt: { gte: startDate },
                     },
                 }),
-                // Security alerts in period
-                prisma.securityLog.count({
+                // Security alerts in period (from AuditLog)
+                prisma.auditLog.count({
                     where: { createdAt: { gte: startDate } },
                 }),
                 // Critical security alerts
-                prisma.securityLog.count({
+                prisma.auditLog.count({
                     where: {
-                        severity: 'critical',
+                        severity: 'CRITICAL',
                         createdAt: { gte: startDate },
                     },
                 }),
@@ -200,12 +200,12 @@ export async function GET(request: NextRequest) {
 
             // Daily events for chart
             const dailyEvents = await prisma.$queryRaw`
-        SELECT DATE(created_at) as date, COUNT(*) as count
-        FROM analytics_events
-        WHERE created_at >= ${startDate}
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-      `;
+                SELECT DATE("createdAt") as date, COUNT(*)::integer as count
+                FROM "analytics_events"
+                WHERE "createdAt" >= ${startDate}
+                GROUP BY DATE("createdAt")
+                ORDER BY date ASC
+            `;
 
             return NextResponse.json({
                 interactions: {
@@ -220,34 +220,35 @@ export async function GET(request: NextRequest) {
         }
 
         if (type === 'security') {
-            // Security events
-            const securityByType = await prisma.securityLog.groupBy({
-                by: ['eventType'],
+            // Security events from AuditLog (using action field)
+            const securityByType = await prisma.auditLog.groupBy({
+                by: ['action'],
                 _count: true,
                 where: { createdAt: { gte: startDate } },
-                orderBy: { _count: { eventType: 'desc' } },
+                orderBy: { _count: { action: 'desc' } },
             });
 
-            const securityBySeverity = await prisma.securityLog.groupBy({
+            const securityBySeverity = await prisma.auditLog.groupBy({
                 by: ['severity'],
                 _count: true,
                 where: { createdAt: { gte: startDate } },
             });
 
-            // Recent security logs
-            const recentSecurityLogs = await prisma.securityLog.findMany({
+            // Recent audit logs
+            const recentSecurityLogs = await prisma.auditLog.findMany({
                 where: { createdAt: { gte: startDate } },
                 orderBy: { createdAt: 'desc' },
                 take: 50,
             });
 
-            // Top suspicious IPs
-            const suspiciousIPs = await prisma.securityLog.groupBy({
+            // Top IPs with warning/critical events
+            const suspiciousIPs = await prisma.auditLog.groupBy({
                 by: ['ipAddress'],
                 _count: true,
                 where: {
                     createdAt: { gte: startDate },
-                    severity: { in: ['warning', 'critical'] },
+                    severity: { in: ['WARNING', 'CRITICAL'] },
+                    ipAddress: { not: null },
                 },
                 orderBy: { _count: { ipAddress: 'desc' } },
                 take: 10,

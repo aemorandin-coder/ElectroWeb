@@ -2,9 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/email-service';
+import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting - strict for password reset (prevents email enumeration abuse)
+        const clientIP = getClientIP(request);
+        const rateLimit = checkRateLimit(clientIP, 'auth:forgot-password', RATE_LIMITS.AUTH);
+
+        if (!rateLimit.success) {
+            return NextResponse.json(
+                { message: 'Demasiadas solicitudes. Intenta de nuevo más tarde.' },
+                {
+                    status: 429,
+                    headers: getRateLimitHeaders(rateLimit, RATE_LIMITS.AUTH)
+                }
+            );
+        }
+
         const { email } = await request.json();
 
         if (!email) {

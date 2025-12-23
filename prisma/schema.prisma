@@ -1156,3 +1156,24 @@ model PagoMovilVerificacion {
   @@map("pago_movil_verificaciones")
 }
 
+// Audit Log for admin actions and security events
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String   // Type of action performed
+  userId      String?  // User who performed the action
+  userEmail   String?  // Email for quick reference
+  targetType  String?  // Type of entity affected (USER, PRODUCT, ORDER, etc.)
+  targetId    String?  // ID of the affected entity
+  details     String?  // JSON with additional details
+  ipAddress   String?  // Client IP address
+  userAgent   String?  // Client user agent
+  severity    String   @default("INFO") // INFO, WARNING, CRITICAL
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([targetType])
+  @@index([severity])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

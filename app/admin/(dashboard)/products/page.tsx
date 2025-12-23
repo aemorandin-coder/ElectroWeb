@@ -113,7 +113,7 @@ export default function ProductsPage() {
 
       if (response.ok) {
         // Refresh products
-        const productsRes = await fetch('/api/products');
+        const productsRes = await fetch('/api/products?all=true');
         if (productsRes.ok) {
           const productsData = await productsRes.json();
           const parsedProducts = productsData.map((p: any) => ({
@@ -138,7 +138,7 @@ export default function ProductsPage() {
     const fetchData = async () => {
       try {
         const [productsRes, categoriesRes, statsRes, settingsRes] = await Promise.all([
-          fetch('/api/products'),
+          fetch('/api/products?all=true'),
           fetch('/api/categories'),
           fetch('/api/stats'),
           fetch('/api/settings')
@@ -372,7 +372,7 @@ export default function ProductsPage() {
         setBulkUploadResults(results);
 
         // Refresh products list
-        const productsRes = await fetch('/api/products');
+        const productsRes = await fetch('/api/products?all=true');
         if (productsRes.ok) {
           const productsData = await productsRes.json();
           setProducts(productsData);
@@ -446,7 +446,7 @@ export default function ProductsPage() {
 
       if (response.ok) {
         // Refresh products
-        const productsRes = await fetch('/api/products');
+        const productsRes = await fetch('/api/products?all=true');
         if (productsRes.ok) {
           const productsData = await productsRes.json();
           setProducts(productsData);

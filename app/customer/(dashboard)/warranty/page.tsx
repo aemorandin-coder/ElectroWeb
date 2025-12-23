@@ -42,7 +42,9 @@ export default function WarrantyPage() {
         try {
             const response = await fetch('/api/orders?status=DELIVERED');
             if (response.ok) {
-                const data = await response.json();
+                const result = await response.json();
+                // Handle both paginated format { orders: [...] } and legacy array format
+                const data = Array.isArray(result) ? result : (result.orders || []);
                 setOrders(data.filter((o: any) => o.status === 'DELIVERED').slice(0, 5));
             }
         } catch (error) {
@@ -87,8 +89,8 @@ export default function WarrantyPage() {
                         key={tab.id}
                         onClick={() => setSelectedTab(tab.id as any)}
                         className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${selectedTab === tab.id
-                                ? 'border-[#2a63cd] text-[#2a63cd]'
-                                : 'border-transparent text-[#6a6c6b] hover:text-[#212529]'
+                            ? 'border-[#2a63cd] text-[#2a63cd]'
+                            : 'border-transparent text-[#6a6c6b] hover:text-[#212529]'
                             }`}
                     >
                         <tab.icon className="w-3.5 h-3.5" />
@@ -218,8 +220,8 @@ export default function WarrantyPage() {
                                         <div
                                             key={order.id}
                                             className={`bg-white rounded-xl border p-3 transition-all ${withinWarranty
-                                                    ? 'border-[#e9ecef] hover:border-[#2a63cd]/30 hover:shadow-md cursor-pointer'
-                                                    : 'border-red-100 bg-red-50/50 opacity-60'
+                                                ? 'border-[#e9ecef] hover:border-[#2a63cd]/30 hover:shadow-md cursor-pointer'
+                                                : 'border-red-100 bg-red-50/50 opacity-60'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3">

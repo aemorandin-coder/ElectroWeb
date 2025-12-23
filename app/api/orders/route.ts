@@ -20,6 +20,7 @@ import { generateOrderConfirmationEmail } from '@/lib/email-templates/OrderConfi
 import { generateReviewReminderEmail } from '@/lib/email-templates/ReviewReminder';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 
 
 // GET - Get all orders
@@ -35,6 +36,12 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
     const userRole = (session.user as any)?.role;
 
+    // PERFORMANCE: Pagination
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '25')));
+    const all = searchParams.get('all') === 'true'; // For exports
+    const skip = (page - 1) * limit;
+
     const where: any = {};
 
     // If user is a customer (not admin), only show their orders
@@ -48,6 +55,9 @@ export async function GET(request: NextRequest) {
     if (status && status !== 'all') {
       where.status = status;
     }
+
+    // Count total for pagination
+    const total = await prisma.order.count({ where });
 
     const orders = await prisma.order.findMany({
       where,
@@ -81,9 +91,20 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { createdAt: 'desc' },
+      ...(all ? {} : { take: limit, skip }),
     });
 
-    return NextResponse.json(orders);
+    // Return with pagination metadata
+    return NextResponse.json({
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasMore: page * limit < total,
+      },
+    });
   } catch (error) {
     console.error('Error fetching orders:', error);
     return NextResponse.json({ error: 'Error al obtener órdenes' }, { status: 500 });
@@ -96,6 +117,21 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+
+    // Rate limiting - sensitive for order creation
+    const rateLimit = checkRateLimit(userId, 'orders:create', RATE_LIMITS.SENSITIVE);
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Has realizado demasiadas operaciones. Espera unos minutos.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimit, RATE_LIMITS.SENSITIVE)
+        }
+      );
     }
 
     const body = await request.json();
@@ -140,12 +176,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate stock availability for all items BEFORE creating order
+    // PERFORMANCE: Batch query instead of N+1 queries
+    const productIds = body.items.map((item: any) => item.productId);
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, stock: true, name: true, status: true, productType: true },
+    });
+
+    // Create a map for O(1) lookup
+    const productMap = new Map(products.map(p => [p.id, p]));
+
     const stockErrors: string[] = [];
     for (const item of body.items) {
-      const product = await prisma.product.findUnique({
-        where: { id: item.productId },
-        select: { stock: true, name: true, status: true, productType: true },
-      });
+      const product = productMap.get(item.productId);
 
       if (!product) {
         stockErrors.push(`Producto no encontrado: ${item.productName}`);

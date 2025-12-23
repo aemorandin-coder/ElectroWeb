@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
+import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { logAdminAction, createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 
 /**
  * POST /api/admin/promote-super-admin
@@ -17,6 +19,31 @@ import * as bcrypt from 'bcryptjs';
  */
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting - very strict for this critical endpoint
+        const clientIP = getClientIP(request);
+        const rateLimit = checkRateLimit(clientIP, 'admin:promote-super-admin', { maxRequests: 3, windowSeconds: 3600 });
+
+        if (!rateLimit.success) {
+            // Log suspicious activity
+            await createAuditLog({
+                action: 'SECURITY_SUSPICIOUS_ACTIVITY',
+                details: {
+                    reason: 'Rate limit exceeded on promote-super-admin',
+                    ip: clientIP,
+                },
+                ipAddress: clientIP,
+                severity: 'CRITICAL',
+            });
+
+            return NextResponse.json(
+                { error: 'Too many attempts. Please wait before trying again.' },
+                {
+                    status: 429,
+                    headers: getRateLimitHeaders(rateLimit, { maxRequests: 3, windowSeconds: 3600 })
+                }
+            );
+        }
+
         const body = await request.json();
         const { email, currentPassword, secretKey } = body;
 
@@ -31,6 +58,17 @@ export async function POST(request: NextRequest) {
         // Validate secret key - use environment variable or a fallback for first-time setup
         const validSecretKey = process.env.SUPER_ADMIN_PROMOTION_KEY || 'PROMOTE_TO_SUPER_ADMIN_2024';
         if (secretKey !== validSecretKey) {
+            // Log failed attempt
+            await createAuditLog({
+                action: 'SECURITY_SUSPICIOUS_ACTIVITY',
+                userEmail: email,
+                details: {
+                    reason: 'Invalid secret key in promotion attempt',
+                },
+                ...getRequestMetadata(request),
+                severity: 'CRITICAL',
+            });
+
             console.warn(`[SECURITY] Invalid promotion attempt for email: ${email}`);
             return NextResponse.json(
                 { error: 'Invalid secret key' },
@@ -67,6 +105,18 @@ export async function POST(request: NextRequest) {
 
         const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
         if (!isPasswordValid) {
+            // Log failed password attempt
+            await createAuditLog({
+                action: 'AUTH_LOGIN_FAILED',
+                userId: user.id,
+                userEmail: email,
+                details: {
+                    context: 'promote-super-admin',
+                },
+                ...getRequestMetadata(request),
+                severity: 'WARNING',
+            });
+
             console.warn(`[SECURITY] Invalid password in promotion attempt for: ${email}`);
             return NextResponse.json(
                 { error: 'Invalid password' },
@@ -100,6 +150,21 @@ export async function POST(request: NextRequest) {
                 name: true,
                 role: true,
             },
+        });
+
+        // Log the critical action
+        await createAuditLog({
+            action: 'USER_ROLE_CHANGED',
+            userId: user.id,
+            userEmail: email,
+            targetType: 'USER',
+            targetId: user.id,
+            details: {
+                previousRole: 'ADMIN',
+                newRole: 'SUPER_ADMIN',
+            },
+            ...getRequestMetadata(request),
+            severity: 'CRITICAL',
         });
 
         console.log(`[SUCCESS] User ${email} promoted to SUPER_ADMIN`);

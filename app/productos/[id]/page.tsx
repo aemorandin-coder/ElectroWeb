@@ -89,10 +89,15 @@ export default function ProductDetailPage() {
     if (params.id) {
       fetchProduct();
       fetchRelatedProducts();
-      fetchReviews();
     }
-
   }, [params.id]);
+
+  // Fetch reviews after product is loaded (need product.id)
+  useEffect(() => {
+    if (product?.id) {
+      fetchReviews(product.id);
+    }
+  }, [product?.id]);
 
   // Auto-select first digital amount when product loads
   useEffect(() => {
@@ -228,9 +233,10 @@ export default function ProductDetailPage() {
     }
   };
 
-  const fetchReviews = async () => {
+  const fetchReviews = async (productId: string) => {
     try {
-      const response = await fetch(`/api/reviews?productId=${params.id}&publishedOnly=true`);
+      setLoadingReviews(true);
+      const response = await fetch(`/api/reviews?productId=${productId}&publishedOnly=true`);
       if (response.ok) {
         const data = await response.json();
         setReviews(data.reviews || []);
@@ -984,7 +990,7 @@ export default function ProductDetailPage() {
                   <ReviewList reviews={reviews} showLoginPrompt={!session} />
                   <ReviewForm
                     productId={product.id}
-                    onReviewSubmitted={() => fetchReviews()}
+                    onReviewSubmitted={() => fetchReviews(product.id)}
                   />
                 </>
               )}

@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSiteSettings } from '@/lib/site-settings';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // Debug endpoint to check OG metadata for a product
+// SECURITY: Only accessible in development OR by authenticated admins
 export async function GET(request: NextRequest) {
+    // Security check: Block in production unless admin
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (isProduction) {
+        const session = await getServerSession(authOptions);
+        const userRole = (session?.user as any)?.role;
+
+        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
+            return NextResponse.json({
+                error: 'Este endpoint solo está disponible para administradores en producción.',
+                hint: 'Inicia sesión como admin para acceder.'
+            }, { status: 403 });
+        }
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const slug = searchParams.get('slug');
 

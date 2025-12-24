@@ -25,9 +25,10 @@ export async function POST() {
         }
 
         // Create initial payment methods
-        const methodsData = [
+        // Using 'as any' for type field to support new types before Prisma client regeneration
+        const methodsData: any[] = [
             {
-                type: 'BANK_TRANSFER' as const,
+                type: 'BANK_TRANSFER',
                 name: 'Transferencia Bancaria',
                 bankName: 'Banco de Venezuela',
                 accountNumber: '',
@@ -40,7 +41,7 @@ export async function POST() {
                 isActive: true,
             },
             {
-                type: 'MOBILE_PAYMENT' as const,
+                type: 'MOBILE_PAYMENT',
                 name: 'Pago Móvil',
                 bankName: 'Banco de Venezuela',
                 phone: '0412-1234567',
@@ -51,7 +52,7 @@ export async function POST() {
                 isActive: true,
             },
             {
-                type: 'CRYPTO' as const,
+                type: 'CRYPTO',
                 name: 'Criptomonedas (USDT)',
                 walletAddress: '',
                 network: 'USDT-TRC20',
@@ -61,7 +62,7 @@ export async function POST() {
                 isActive: true,
             },
             {
-                type: 'MERCANTIL_PANAMA' as const,
+                type: 'MERCANTIL_PANAMA',
                 name: 'Mercantil Panamá',
                 bankName: 'Banco Mercantil Panamá',
                 accountNumber: '',
@@ -74,7 +75,7 @@ export async function POST() {
                 isActive: true,
             },
             {
-                type: 'ZELLE' as const,
+                type: 'ZELLE',
                 name: 'Zelle',
                 email: '',
                 holderName: '',
@@ -84,7 +85,7 @@ export async function POST() {
                 isActive: false, // Disabled by default
             },
             {
-                type: 'ZINLI' as const,
+                type: 'ZINLI',
                 name: 'Zinli',
                 email: '',
                 holderName: '',

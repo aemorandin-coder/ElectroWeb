@@ -106,11 +106,11 @@ export async function generateProductMetadata({ params }: ProductPageProps): Pro
                         width: 1200,
                         height: 630,
                         alt: title,
-                        type: 'image/jpeg',
+                        type: 'image/png',
                     },
                 ],
                 locale: 'es_VE',
-                type: 'website',
+                type: 'website', // 'product' type added via 'other' for compatibility
             },
             twitter: {
                 card: 'summary_large_image',
@@ -119,13 +119,22 @@ export async function generateProductMetadata({ params }: ProductPageProps): Pro
                 images: [ogImage],
                 site: settings.companyName || '@ElectroShop',
             },
-            // Additional metadata for better sharing
+            // Additional metadata for better sharing (WhatsApp, Facebook, etc.)
             other: {
+                // Explicit og: tags for maximum compatibility
+                'og:image': ogImage,
+                'og:image:secure_url': ogImage,
+                'og:image:type': 'image/png',
+                'og:image:width': '1200',
+                'og:image:height': '630',
+                'og:image:alt': title,
+                // Product specific tags
                 'og:price:amount': price.toFixed(2),
                 'og:price:currency': 'USD',
                 'product:price:amount': price.toFixed(2),
                 'product:price:currency': 'USD',
                 'product:category': categoryName,
+                'product:availability': 'in stock',
             },
         };
     } catch (error) {

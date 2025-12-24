@@ -49,17 +49,29 @@ const PAYMENT_TYPE_CONFIG: Record<string, { icon: React.ReactNode; label: string
         bgColor: 'bg-blue-100'
     },
     ZELLE: {
-        // Zelle logo real: Z con líneas horizontales atravesándola (como símbolo de dólar)
+        // Zelle official logo - stylized Z with clean lines
         icon: (
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M5 5h14v2h-9.5l9.5 10v2H5v-2h9.5L5 7V5z" />
-                <rect x="10" y="2" width="4" height="2" rx="0.5" />
-                <rect x="10" y="20" width="4" height="2" rx="0.5" />
+                <path d="M13.559 24H6.108c-.911 0-1.396-1.053-.79-1.716l8.487-9.313H5.835a.835.835 0 01-.835-.835v-2.272c0-.461.374-.834.835-.834h7.401c.912 0 1.397 1.053.79 1.716L5.574 20.03h7.985c.461 0 .835.374.835.835v2.301a.835.835 0 01-.835.834z" />
+                <path d="M10.452 0h7.45c.912 0 1.397 1.053.79 1.716L10.23 11.033h7.949c.46 0 .834.373.834.834v2.272a.835.835 0 01-.834.835h-7.451c-.912 0-1.396-1.053-.79-1.716l8.417-9.284H10.452a.835.835 0 01-.835-.835V.835c0-.461.373-.835.835-.835z" />
             </svg>
         ),
         label: 'Zelle',
-        color: 'text-[#2a63cd]',
-        bgColor: 'bg-blue-100'
+        color: 'text-[#6D1ED4]',
+        bgColor: 'bg-purple-100'
+    },
+    ZINLI: {
+        // Zinli official logo - stylized Z with dots
+        icon: (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 6h12l-8 12h12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                <circle cx="19" cy="6" r="2" fill="currentColor" />
+                <circle cx="5" cy="18" r="2" fill="currentColor" />
+            </svg>
+        ),
+        label: 'Zinli',
+        color: 'text-[#00D4AA]',
+        bgColor: 'bg-teal-100'
     },
     PAYPAL: {
         icon: <SiPaypal className="w-5 h-5" />,
@@ -697,7 +709,7 @@ export default function PaymentsPage() {
                                         </div>
                                     )}
 
-                                    {(formData.type === 'ZELLE' || formData.type === 'PAYPAL') && (
+                                    {(formData.type === 'ZELLE' || formData.type === 'PAYPAL' || formData.type === 'ZINLI') && (
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-900 mb-2">Email</label>
                                             <input

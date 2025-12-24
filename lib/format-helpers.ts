@@ -7,11 +7,13 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
     MOBILE_PAYMENT: 'Pago Móvil',
     BANK_TRANSFER: 'Transferencia Bancaria',
     ZELLE: 'Zelle',
+    ZINLI: 'Zinli',
     PAYPAL: 'PayPal',
     CRYPTO: 'Criptomonedas',
     CASH: 'Efectivo',
     CREDIT_CARD: 'Tarjeta de Crédito',
     BALANCE: 'Saldo de Cuenta',
+    MERCANTIL_PANAMA: 'Mercantil Panamá',
     OTHER: 'Otro',
 };
 
@@ -19,11 +21,13 @@ export const PAYMENT_METHOD_ICONS: Record<string, string> = {
     MOBILE_PAYMENT: '📱',
     BANK_TRANSFER: '🏦',
     ZELLE: '💸',
+    ZINLI: '💚',
     PAYPAL: '🅿️',
     CRYPTO: '₿',
     CASH: '💵',
     CREDIT_CARD: '💳',
     BALANCE: '👛',
+    MERCANTIL_PANAMA: '🇵🇦',
     OTHER: '💰',
 };
 

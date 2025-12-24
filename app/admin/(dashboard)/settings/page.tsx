@@ -573,7 +573,8 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3">
                     <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden relative group hover:border-blue-400 transition-colors">
                       {faviconPreview ? (
-                        <Image src={faviconPreview} alt="Favicon" fill className="object-contain p-2" />
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={faviconPreview} alt="Favicon" className="w-full h-full object-contain p-2" />
                       ) : (
                         <FiGlobe className="text-gray-400 w-6 h-6" />
                       )}

@@ -83,6 +83,16 @@ export async function POST() {
                 sortOrder: 5,
                 isActive: false, // Disabled by default
             },
+            {
+                type: 'ZINLI' as const,
+                name: 'Zinli',
+                email: '',
+                holderName: '',
+                instructions: 'Pago via Zinli (Wallet Digital USD)',
+                displayNote: 'Recarga tu wallet Zinli y envía el pago al correo indicado',
+                sortOrder: 6,
+                isActive: false, // Disabled by default
+            },
         ];
 
         // Create all methods

@@ -215,13 +215,31 @@ export default function ProductsPage() {
         method: 'DELETE',
       });
 
+      const result = await response.json();
+
       if (response.ok) {
-        setProducts(products.filter(p => p.id !== selectedProduct.id));
+        if (result.archived) {
+          // Product was archived instead of deleted (has order history)
+          // Update the local state to reflect the archived status
+          setProducts(products.map(p =>
+            p.id === selectedProduct.id
+              ? { ...p, isActive: false, status: 'ARCHIVED' }
+              : p
+          ));
+          alert(result.message || 'El producto fue archivado porque tiene órdenes asociadas.');
+        } else {
+          // Product was actually deleted
+          setProducts(products.filter(p => p.id !== selectedProduct.id));
+        }
         setShowDeleteModal(false);
         setSelectedProduct(null);
+      } else {
+        // Handle error response
+        alert(result.error || 'Error al eliminar el producto');
       }
     } catch (error) {
       console.error('Error deleting product:', error);
+      alert('Error de conexión al intentar eliminar el producto');
     } finally {
       setDeleteLoading(false);
     }

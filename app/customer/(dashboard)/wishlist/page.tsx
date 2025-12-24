@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FiShoppingCart, FiTrash2, FiPackage, FiExternalLink, FiSearch, FiGrid, FiList, FiFilter, FiTrendingUp, FiClock, FiDollarSign, FiPercent, FiX, FiCheck, FiSend, FiGift } from 'react-icons/fi';
 import { PiListHeartBold, PiHeartBreakBold, PiSparkle } from 'react-icons/pi';
 import Link from 'next/link';
@@ -588,12 +589,37 @@ export default function WishlistPage() {
         </div>
       )}
 
-      {/* Discount Request Modal */}
-      {showDiscountModal && selectedItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowDiscountModal(false)}>
+      {/* Discount Request Modal - Using Portal to escape overflow:hidden */}
+      {showDiscountModal && selectedItem && typeof document !== 'undefined' && createPortal(
+        <div
+          onClick={() => setShowDiscountModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '16px',
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+        >
           <div
-            className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden animate-slideInUp"
             onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '512px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              overflow: 'hidden',
+              animation: 'slideUp 0.3s ease-out'
+            }}
           >
             {/* Modal Header */}
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-5 text-white">
@@ -705,7 +731,8 @@ export default function WishlistPage() {
               </p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Styles */}

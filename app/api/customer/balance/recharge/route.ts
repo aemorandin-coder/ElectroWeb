@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { notifyRechargeRequested, notifyAdminsNewRecharge } from '@/lib/notifications';
+import { formatPaymentMethod } from '@/lib/format-helpers';
 
 // Crear solicitud de recarga de saldo (requiere aprobación del admin)
 export async function POST(req: NextRequest) {
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
         status: 'PENDING',
         amount: parseFloat(amount),
         currency: 'USD',
-        description: description || `Recarga de saldo - ${paymentMethod}`,
+        description: description || `Recarga de saldo - ${formatPaymentMethod(paymentMethod)}`,
         reference: reference || null,
         paymentMethod,
         metadata: JSON.stringify({

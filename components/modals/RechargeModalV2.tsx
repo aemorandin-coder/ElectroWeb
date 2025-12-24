@@ -167,8 +167,23 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         };
     }, [isOpen]);
 
-    // Reset state when modal closes
+    // Function to cancel pending transaction
+    const cancelPendingTransaction = async (transactionId: string) => {
+        try {
+            await fetch(`/api/customer/balance/recharge/${transactionId}/cancel`, {
+                method: 'POST',
+            });
+        } catch (error) {
+            console.error('Error cancelling pending transaction:', error);
+        }
+    };
+
+    // Reset state when modal closes - also cancel pending transaction
     useEffect(() => {
+        if (!isOpen && pendingTransactionId) {
+            // Cancel the pending transaction if modal is closed without completion
+            cancelPendingTransaction(pendingTransactionId);
+        }
         if (!isOpen) {
             setStep('SELECT_METHOD');
             setAmount('');
@@ -176,7 +191,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             setSelectedMethod('');
             setPendingTransactionId(null);
         }
-    }, [isOpen]);
+    }, [isOpen, pendingTransactionId]);
 
     // Calculate Bs amount
     const amountInBs = amount && exchangeRate ? (parseFloat(amount) * exchangeRate) : 0;
@@ -200,7 +215,10 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                 body: JSON.stringify({
                     amount: parseFloat(amount),
                     paymentMethod: selectedMethod,
-                    reference: 'PENDIENTE_VERIFICACION',
+                    reference: 'PM-' + Date.now().toString(36).toUpperCase(), // Referencia temporal única
+                    description: selectedMethod === 'MOBILE_PAYMENT'
+                        ? 'Recarga Pago Móvil - Verificación automática'
+                        : `Recarga de saldo`,
                 }),
             });
 
@@ -298,7 +316,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl w-full max-w-4xl shadow-2xl animate-scaleIn max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="relative bg-white rounded-2xl w-full max-w-3xl shadow-2xl animate-scaleIn max-h-[90vh] flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-6 rounded-t-2xl flex-shrink-0">
                     <div className="flex items-center justify-between">

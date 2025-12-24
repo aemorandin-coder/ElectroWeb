@@ -1153,6 +1153,8 @@ model PagoMovilVerificacion {
   @@index([referencia])
   @@index([verificado])
   @@index([contexto])
+  // TODO: Aplicar en próxima migración planificada
+  // @@unique([referencia, verificado]) // SEGURIDAD: Prevenir race condition
   @@map("pago_movil_verificaciones")
 }
 

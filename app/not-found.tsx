@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { FiHome, FiPackage, FiSettings, FiBookOpen, FiMessageCircle, FiBox } from 'react-icons/fi';
 
 export default function NotFound() {
   return (
@@ -6,18 +7,16 @@ export default function NotFound() {
       <div className="w-full max-w-2xl mx-auto text-center py-12">
         {/* 404 Visual */}
         <div className="mb-10">
-          <div className="relative inline-block mb-8">
-            {/* Background 404 */}
-            <span className="text-[150px] sm:text-[200px] font-black bg-gradient-to-br from-[#e9ecef] to-[#dee2e6] bg-clip-text text-transparent leading-none select-none block" aria-hidden="true">
+          <div className="flex flex-col items-center gap-4 mb-8">
+            {/* 404 Text */}
+            <span className="text-[120px] sm:text-[180px] font-black bg-gradient-to-br from-[#e9ecef] to-[#dee2e6] bg-clip-text text-transparent leading-none select-none" aria-hidden="true">
               404
             </span>
-            {/* Centered Icon */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-[#2a63cd]/20 shadow-lg">
-                <svg className="w-12 h-12 sm:w-16 sm:h-16 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
+            {/* Icon below */}
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-[#2a63cd]/20 shadow-lg -mt-10">
+              <svg className="w-10 h-10 sm:w-12 sm:h-12 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
           </div>
 
@@ -58,27 +57,27 @@ export default function NotFound() {
           <div className="flex flex-wrap justify-center gap-3">
             <Link
               href="/categorias"
-              className="px-5 py-2.5 bg-gradient-to-r from-slate-50 to-gray-50 rounded-full border border-[#e9ecef] text-[#495057] hover:border-[#2a63cd] hover:text-[#2a63cd] hover:from-blue-50 hover:to-indigo-50 transition-all font-medium"
+              className="px-5 py-2.5 bg-gradient-to-r from-slate-50 to-gray-50 rounded-full border border-[#e9ecef] text-[#495057] hover:border-[#2a63cd] hover:text-[#2a63cd] hover:from-blue-50 hover:to-indigo-50 transition-all font-medium flex items-center gap-2"
             >
-              📦 Categorías
+              <FiBox className="w-4 h-4" /> Categorías
             </Link>
             <Link
               href="/servicios"
-              className="px-5 py-2.5 bg-gradient-to-r from-slate-50 to-gray-50 rounded-full border border-[#e9ecef] text-[#495057] hover:border-[#2a63cd] hover:text-[#2a63cd] hover:from-blue-50 hover:to-indigo-50 transition-all font-medium"
+              className="px-5 py-2.5 bg-gradient-to-r from-slate-50 to-gray-50 rounded-full border border-[#e9ecef] text-[#495057] hover:border-[#2a63cd] hover:text-[#2a63cd] hover:from-blue-50 hover:to-indigo-50 transition-all font-medium flex items-center gap-2"
             >
-              🔧 Servicios
+              <FiSettings className="w-4 h-4" /> Servicios
             </Link>
             <Link
               href="/cursos"
-              className="px-5 py-2.5 bg-gradient-to-r from-slate-50 to-gray-50 rounded-full border border-[#e9ecef] text-[#495057] hover:border-[#2a63cd] hover:text-[#2a63cd] hover:from-blue-50 hover:to-indigo-50 transition-all font-medium"
+              className="px-5 py-2.5 bg-gradient-to-r from-slate-50 to-gray-50 rounded-full border border-[#e9ecef] text-[#495057] hover:border-[#2a63cd] hover:text-[#2a63cd] hover:from-blue-50 hover:to-indigo-50 transition-all font-medium flex items-center gap-2"
             >
-              📚 Cursos
+              <FiBookOpen className="w-4 h-4" /> Cursos
             </Link>
             <Link
               href="/contacto"
-              className="px-5 py-2.5 bg-gradient-to-r from-slate-50 to-gray-50 rounded-full border border-[#e9ecef] text-[#495057] hover:border-[#2a63cd] hover:text-[#2a63cd] hover:from-blue-50 hover:to-indigo-50 transition-all font-medium"
+              className="px-5 py-2.5 bg-gradient-to-r from-slate-50 to-gray-50 rounded-full border border-[#e9ecef] text-[#495057] hover:border-[#2a63cd] hover:text-[#2a63cd] hover:from-blue-50 hover:to-indigo-50 transition-all font-medium flex items-center gap-2"
             >
-              💬 Contacto
+              <FiMessageCircle className="w-4 h-4" /> Contacto
             </Link>
           </div>
         </div>

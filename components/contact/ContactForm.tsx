@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 
 interface ValidationErrors {
@@ -12,6 +13,7 @@ interface ValidationErrors {
 }
 
 export default function ContactForm() {
+    const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
@@ -27,11 +29,38 @@ export default function ContactForm() {
     const [captchaToken, setCaptchaToken] = useState<string | null>(null);
     const captchaRef = useRef<any>(null);
     const nameInputRef = useRef<HTMLInputElement>(null);
+    const [hasPrefilledData, setHasPrefilledData] = useState(false);
 
-    // AutoFocus on mount
+    // Precargar datos desde URL params (ej: mensaje de soporte de pago móvil)
     useEffect(() => {
-        nameInputRef.current?.focus();
-    }, []);
+        const nombre = searchParams.get('nombre');
+        const email = searchParams.get('email');
+        const asunto = searchParams.get('asunto');
+        const mensaje = searchParams.get('mensaje');
+
+        if (nombre || email || asunto || mensaje) {
+            setFormData(prev => ({
+                ...prev,
+                name: nombre || prev.name,
+                email: email || prev.email,
+                subject: asunto || prev.subject,
+                message: mensaje || prev.message,
+            }));
+            setHasPrefilledData(true);
+        }
+    }, [searchParams]);
+
+    // AutoFocus on mount (en el campo apropiado si hay datos precargados)
+    useEffect(() => {
+        if (hasPrefilledData) {
+            // Si hay datos precargados, enfocar en nombre si está vacío
+            if (!formData.name) {
+                nameInputRef.current?.focus();
+            }
+        } else {
+            nameInputRef.current?.focus();
+        }
+    }, [hasPrefilledData]);
 
     const validateField = (fieldName: string, value: string): string => {
         switch (fieldName) {
@@ -227,6 +256,24 @@ export default function ContactForm() {
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Banner para datos precargados (desde soporte de pago móvil) */}
+                    {hasPrefilledData && (
+                        <div className="p-4 bg-orange-500/20 border border-orange-400/50 rounded-xl animate-fadeIn">
+                            <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="text-orange-200 font-semibold text-sm">Solicitud de Soporte</p>
+                                    <p className="text-orange-200/80 text-xs mt-1">
+                                        Los datos de tu pago han sido precargados. Por favor completa tu nombre y email para que podamos ayudarte.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {error && (
                         <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl animate-shake">
                             <div className="flex items-center gap-2 text-red-400">

@@ -112,33 +112,15 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   // Only change to blue header after mount and based on scroll position
   const useBlueHeader = mounted && pathname === '/' && !isOnDarkSection;
 
-  // Base header class - always the same for SSR
-  const baseHeaderClass = 'sticky top-0 z-50 transition-all duration-300 backdrop-blur-md';
-
-  // Dynamic styles applied via inline style
-  // We initialize with the light theme (SSR default) to match server
-  // IMPORTANT: Use consistent property structure to avoid hydration mismatch
-  // Only apply dynamic styles after mount to prevent hydration mismatch
-  const headerStyle: React.CSSProperties = !mounted ? {
-    background: 'rgba(255, 255, 255, 0.95)',
-    borderBottom: '1px solid #e9ecef',
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-  } : {
-    background: useBlueHeader
-      ? 'linear-gradient(to right, rgba(42, 99, 205, 0.95), rgba(30, 75, 163, 0.95))'
-      : 'rgba(255, 255, 255, 0.95)',
-    borderBottom: useBlueHeader
-      ? '1px solid rgba(255, 255, 255, 0.1)'
-      : '1px solid #e9ecef',
-    boxShadow: useBlueHeader
-      ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-      : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-  };
+  // Use CSS classes instead of inline styles to avoid hydration mismatch
+  const headerClasses = `sticky top-0 z-50 transition-all duration-300 backdrop-blur-md ${useBlueHeader
+      ? 'bg-gradient-to-r from-[#2a63cd]/95 to-[#1e4ba3]/95 border-b border-white/10 shadow-lg'
+      : 'bg-white/95 border-b border-[#e9ecef] shadow-sm'
+    }`;
 
   return (
     <header
-      className={baseHeaderClass}
-      style={headerStyle}
+      className={headerClasses}
       suppressHydrationWarning
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

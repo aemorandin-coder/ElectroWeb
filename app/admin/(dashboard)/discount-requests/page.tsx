@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FiPercent, FiCheck, FiX, FiClock, FiUser, FiPackage, FiDollarSign, FiSearch, FiFilter, FiChevronDown, FiAlertCircle } from 'react-icons/fi';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
@@ -196,8 +197,8 @@ export default function DiscountRequestsPage() {
                                 key={tab.value}
                                 onClick={() => setFilter(tab.value as any)}
                                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${filter === tab.value
-                                        ? 'bg-white shadow text-amber-600'
-                                        : 'text-[#6a6c6b] hover:text-[#212529]'
+                                    ? 'bg-white shadow text-amber-600'
+                                    : 'text-[#6a6c6b] hover:text-[#212529]'
                                     }`}
                             >
                                 {tab.label}
@@ -304,12 +305,37 @@ export default function DiscountRequestsPage() {
                 </div>
             )}
 
-            {/* Action Modal */}
-            {showActionModal && selectedRequest && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowActionModal(false)}>
+            {/* Action Modal - Using Portal */}
+            {showActionModal && selectedRequest && typeof document !== 'undefined' && createPortal(
+                <div
+                    onClick={() => setShowActionModal(false)}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        backdropFilter: 'blur(4px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999,
+                        padding: '16px',
+                        animation: 'fadeIn 0.2s ease-out'
+                    }}
+                >
                     <div
-                        className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden"
                         onClick={(e) => e.stopPropagation()}
+                        style={{
+                            backgroundColor: 'white',
+                            borderRadius: '16px',
+                            width: '100%',
+                            maxWidth: '448px',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                            overflow: 'hidden',
+                            animation: 'slideUp 0.3s ease-out'
+                        }}
                     >
                         {/* Header */}
                         <div className={`p-5 text-white ${actionType === 'approve' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : 'bg-gradient-to-r from-red-500 to-rose-500'}`}>
@@ -357,8 +383,8 @@ export default function DiscountRequestsPage() {
                                                     key={percent}
                                                     onClick={() => setApprovedDiscount(percent)}
                                                     className={`flex-1 py-3 rounded-xl font-bold transition-all ${approvedDiscount === percent
-                                                            ? 'bg-emerald-500 text-white shadow-lg'
-                                                            : 'bg-[#f8f9fa] text-[#212529] hover:bg-[#e9ecef]'
+                                                        ? 'bg-emerald-500 text-white shadow-lg'
+                                                        : 'bg-[#f8f9fa] text-[#212529] hover:bg-[#e9ecef]'
                                                         }`}
                                                 >
                                                     {percent}%
@@ -376,8 +402,8 @@ export default function DiscountRequestsPage() {
                                                     key={hours}
                                                     onClick={() => setExpirationHours(hours)}
                                                     className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${expirationHours === hours
-                                                            ? 'bg-[#2a63cd] text-white'
-                                                            : 'bg-[#f8f9fa] text-[#212529] hover:bg-[#e9ecef]'
+                                                        ? 'bg-[#2a63cd] text-white'
+                                                        : 'bg-[#f8f9fa] text-[#212529] hover:bg-[#e9ecef]'
                                                         }`}
                                                 >
                                                     {hours}h
@@ -418,8 +444,8 @@ export default function DiscountRequestsPage() {
                                 onClick={handleAction}
                                 disabled={processing}
                                 className={`w-full py-4 font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${actionType === 'approve'
-                                        ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white hover:shadow-lg'
-                                        : 'bg-gradient-to-r from-red-500 to-rose-500 text-white hover:shadow-lg'
+                                    ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white hover:shadow-lg'
+                                    : 'bg-gradient-to-r from-red-500 to-rose-500 text-white hover:shadow-lg'
                                     }`}
                             >
                                 {processing ? (
@@ -438,7 +464,8 @@ export default function DiscountRequestsPage() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

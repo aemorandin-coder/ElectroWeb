@@ -189,7 +189,7 @@ export function interpretarErrorBDV(code: number, message: string): string {
     }
 
     if (code === 1010 || code === BDV_RESPONSE_CODES.NOT_FOUND) {
-        return 'Pago no encontrado. Verifica que todos los datos coincidan exactamente con tu comprobante de pago.';
+        return 'Pago no encontrado en el sistema bancario. Posibles causas: (1) Datos incorrectos (referencia, fecha, monto o teléfono), (2) El pago aún no ha sido procesado por el banco, o (3) El pago se realizó hace más de 30 días. Verifica los datos con tu comprobante.';
     }
 
     // Mensaje genérico con el código para debugging

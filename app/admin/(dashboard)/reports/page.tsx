@@ -471,13 +471,52 @@ export default function ReportsPage() {
                     {/* Security Tab */}
                     {activeTab === 'security' && security && (
                         <div className="space-y-4 animate-fadeIn">
+                            {/* Banner de Alertas Críticas */}
+                            {(security.bySeverity.find(s => s.severity === 'CRITICAL')?._count ?? 0) > 0 && (
+                                <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-4 shadow-lg">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                                            <FiAlertTriangle className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-white font-bold text-sm">⚠️ Alertas Críticas de Seguridad</h3>
+                                            <p className="text-red-100 text-xs">
+                                                {security.bySeverity.find(s => s.severity === 'CRITICAL')?._count || 0} eventos críticos detectados -
+                                                Incluye intentos de fraude, referencias duplicadas e intentos IDOR
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {/* Eventos críticos recientes */}
+                                    {security.recentLogs.filter(log => log.severity === 'critical').length > 0 && (
+                                        <div className="mt-3 pt-3 border-t border-white/20">
+                                            <p className="text-red-100 text-[10px] uppercase tracking-wider mb-2">Últimos eventos críticos:</p>
+                                            <div className="space-y-1">
+                                                {security.recentLogs
+                                                    .filter(log => log.severity === 'critical')
+                                                    .slice(0, 3)
+                                                    .map((log) => (
+                                                        <div key={log.id} className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-1.5">
+                                                            <span className="text-white text-[10px] font-mono truncate max-w-[200px]">
+                                                                {log.eventType.replace(/_/g, ' ')}
+                                                            </span>
+                                                            <span className="text-red-100 text-[10px]">
+                                                                {new Date(log.createdAt).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' })}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-3 gap-3">
-                                {['info', 'warning', 'critical'].map((sev) => {
+                                {['INFO', 'WARNING', 'CRITICAL'].map((sev) => {
                                     const count = security.bySeverity.find(s => s.severity === sev)?._count || 0;
                                     const config = {
-                                        info: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-[#2a63cd]', label: 'Info' },
-                                        warning: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', label: 'Advertencias' },
-                                        critical: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-600', label: 'Críticos' },
+                                        INFO: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-[#2a63cd]', label: 'Info' },
+                                        WARNING: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', label: 'Advertencias' },
+                                        CRITICAL: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-600', label: 'Críticos' },
                                     };
                                     const c = config[sev as keyof typeof config];
                                     return (

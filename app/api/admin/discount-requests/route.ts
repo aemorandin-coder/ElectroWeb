@@ -96,7 +96,7 @@ export async function PATCH(request: NextRequest) {
                     type: 'DISCOUNT_APPROVED',
                     title: '¡Descuento Aprobado!',
                     message: `Tu descuento de ${updateData.approvedDiscount}% ($${discountAmount}) para "${discountRequest.productName}" ha sido aprobado. Tienes ${hours} horas para usarlo.`,
-                    link: `/producto/${discountRequest.productId}`,
+                    link: `/productos/${discountRequest.productId}`,
                     icon: 'FiCheckCircle',
                 },
             });

@@ -38,7 +38,11 @@ export type AuditAction =
     | 'SECURITY_RATE_LIMIT_HIT'
     | 'SECURITY_SUSPICIOUS_ACTIVITY'
     | 'SECURITY_ADMIN_ACTION'
-    | 'SECURITY_ACCESS_DENIED';
+    | 'SECURITY_ACCESS_DENIED'
+    | 'SECURITY_DUPLICATE_PAYMENT_REFERENCE'
+    // Balance
+    | 'BALANCE_RECHARGE_APPROVED'
+    | 'BALANCE_RECHARGE_REJECTED';
 
 export type AuditSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
 
@@ -143,6 +147,7 @@ function getSeverityForAction(action: AuditAction): AuditSeverity {
         'ORDER_REFUNDED',
         'SETTINGS_UPDATED',
         'SECURITY_SUSPICIOUS_ACTIVITY',
+        'SECURITY_DUPLICATE_PAYMENT_REFERENCE',
     ];
 
     const warningActions: AuditAction[] = [

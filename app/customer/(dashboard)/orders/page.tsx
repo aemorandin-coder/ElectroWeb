@@ -6,6 +6,7 @@ import { FiPackage, FiClock, FiCheck, FiX, FiTruck, FiShoppingBag, FiEye, FiSear
 import { BsCardList } from 'react-icons/bs';
 import Link from 'next/link';
 import OrderTracking from '@/components/orders/OrderTracking';
+import { formatPaymentMethod } from '@/lib/format-helpers';
 
 interface OrderItem {
   id: string;
@@ -510,7 +511,7 @@ export default function OrdersPage() {
             <div style={{ padding: '20px', backgroundColor: '#f8f9fa', borderTop: '1px solid #e9ecef' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div style={{ fontSize: '12px', color: '#6a6c6b' }}>
-                  {selectedOrder.paymentMethod && <span>Pago: <strong style={{ color: '#212529' }}>{selectedOrder.paymentMethod.replace('_', ' ')}</strong></span>}
+                  {selectedOrder.paymentMethod && <span>Pago: <strong style={{ color: '#212529' }}>{formatPaymentMethod(selectedOrder.paymentMethod)}</strong></span>}
                 </div>
                 <div style={{ backgroundColor: '#2a63cd', color: 'white', padding: '8px 16px', borderRadius: '12px' }}>
                   <p style={{ fontSize: '12px', opacity: 0.7, margin: 0 }}>Total</p>

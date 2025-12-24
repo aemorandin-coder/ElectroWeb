@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiPlus, FiDownload } from 'react-icons/fi';
 import RechargeModal from '@/components/modals/RechargeModalV2';
+import { formatPaymentMethod, formatTransactionStatus } from '@/lib/format-helpers';
 
 interface Transaction {
   id: string;
@@ -181,15 +182,25 @@ export default function BalancePage() {
                     </div>
                     <div>
                       <p className="font-semibold text-[#212529]">{transaction.description}</p>
-                      <p className="text-sm text-[#6a6c6b]">
-                        {new Date(transaction.createdAt).toLocaleDateString('es-ES', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
+                      <div className="flex items-center gap-2 text-sm text-[#6a6c6b]">
+                        <span>
+                          {new Date(transaction.createdAt).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        {transaction.paymentMethod && (
+                          <>
+                            <span className="text-gray-300">•</span>
+                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                              {formatPaymentMethod(transaction.paymentMethod)}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -198,10 +209,10 @@ export default function BalancePage() {
                     </p>
                     <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
                       transaction.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
-                        'bg-red-100 text-red-700'
+                        transaction.status === 'CANCELLED' ? 'bg-gray-100 text-gray-600' :
+                          'bg-red-100 text-red-700'
                       }`}>
-                      {transaction.status === 'COMPLETED' ? 'Completado' :
-                        transaction.status === 'PENDING' ? 'Pendiente' : 'Rechazado'}
+                      {formatTransactionStatus(transaction.status)}
                     </span>
                   </div>
                 </div>

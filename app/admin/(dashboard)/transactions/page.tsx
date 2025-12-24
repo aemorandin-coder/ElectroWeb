@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { FiDownload, FiCheck, FiX, FiFilter, FiRefreshCw, FiAlertCircle } from 'react-icons/fi';
+import { formatPaymentMethod } from '@/lib/format-helpers';
 
 interface Transaction {
     id: string;
@@ -188,7 +189,7 @@ export default function TransactionsPage() {
             t.currency,
             t.description,
             t.reference || '',
-            t.paymentMethod || '',
+            formatPaymentMethod(t.paymentMethod),
             t.rejectionReason || '',
             format(new Date(t.createdAt), 'yyyy-MM-dd HH:mm:ss')
         ]);
@@ -460,7 +461,7 @@ export default function TransactionsPage() {
                                                     <span className="text-sm text-[#6a6c6b]">{transaction.description}</span>
                                                     {transaction.paymentMethod && (
                                                         <span className="text-xs text-[#868e96] bg-[#f1f3f5] px-2 py-0.5 rounded w-fit">
-                                                            {transaction.paymentMethod}
+                                                            {formatPaymentMethod(transaction.paymentMethod)}
                                                         </span>
                                                     )}
                                                 </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import { FaShoppingBasket, FaGlobeAmericas, FaFlagUsa } from 'react-icons/fa';
 import { HiShoppingBag } from "react-icons/hi2";
@@ -59,10 +60,19 @@ interface CartItem {
   // e.g., name: string; price: number; imageUrl: string; stock: number;
 }
 
+// Formatear precio en formato venezolano: 1.234.567,89
+const formatVESPrice = (price: number): string => {
+  return price.toLocaleString('es-VE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { addItem, items } = useCart();
+  const { settings } = useSettings();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -670,9 +680,9 @@ export default function ProductDetailPage() {
           {/* Right Column - Product Details */}
           <div className="space-y-6">
             {/* Header Section - Name, Rating & Price in same row */}
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-4">
               {/* Left: Name & Rating */}
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-xl border border-gray-100 px-6 py-3 shadow-lg flex flex-col justify-center">
                 {product.brand && (
                   <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-500">
                     <span className="uppercase tracking-wider">{product.brand}</span>
@@ -690,7 +700,7 @@ export default function ProductDetailPage() {
                 </h1>
 
                 {/* Rating & Stock Status in same row */}
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap mt-1">
                   <div className="flex items-center gap-2">
                     <div className="flex text-yellow-400">
                       {[...Array(5)].map((_, i) => (
@@ -718,17 +728,27 @@ export default function ProductDetailPage() {
               <div className="flex-shrink-0">
                 {product.productType === 'DIGITAL' && product.specs?.digitalPricing && selectedDigitalAmount ? (
                   <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl border border-blue-100 px-6 py-3 text-center shadow-lg">
-
                     <span className="block text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] tracking-tight leading-none">
                       ${selectedDigitalAmount.salePrice.toFixed(2)}
                     </span>
+                    {settings?.exchangeRateVES && (
+                      <div className="flex items-center justify-center gap-1 mt-1">
+                        <span className="text-xs font-semibold text-gray-500">Bs.</span>
+                        <span className="text-sm font-bold text-gray-500">{formatVESPrice(selectedDigitalAmount.salePrice * settings.exchangeRateVES)}</span>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl border border-blue-100 px-6 py-3 text-center shadow-lg">
-
                     <span className="block text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] tracking-tight leading-none">
                       ${Number(product.priceUSD).toFixed(2)}
                     </span>
+                    {settings?.exchangeRateVES && (
+                      <div className="flex items-center justify-center gap-1 mt-1">
+                        <span className="text-xs font-semibold text-gray-500">Bs.</span>
+                        <span className="text-sm font-bold text-gray-500">{formatVESPrice(Number(product.priceUSD) * settings.exchangeRateVES)}</span>
+                      </div>
+                    )}
                     {product.hasDiscount && product.discountPercent && (
                       <div className="flex items-center justify-center gap-2 mt-1">
                         <span className="text-sm text-gray-400 line-through">

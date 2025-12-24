@@ -108,19 +108,25 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   const primaryColor = companySettings?.primaryColor || '#2a63cd';
   const secondaryColor = companySettings?.secondaryColor || '#1e4ba3';
 
-  // Always use white header for SSR and initial render to avoid hydration mismatch
-  // Only change to blue header after mount and based on scroll position
-  const useBlueHeader = mounted && pathname === '/' && !isOnDarkSection;
+  // Determine header style - ONLY change after mount to avoid hydration mismatch
+  // SSR always renders white header, client switches based on scroll
+  const isBlueHeader = mounted && pathname === '/' && !isOnDarkSection;
 
-  // Use CSS classes instead of inline styles to avoid hydration mismatch
-  const headerClasses = `sticky top-0 z-50 transition-all duration-300 backdrop-blur-md ${useBlueHeader
-      ? 'bg-gradient-to-r from-[#2a63cd]/95 to-[#1e4ba3]/95 border-b border-white/10 shadow-lg'
-      : 'bg-white/95 border-b border-[#e9ecef] shadow-sm'
-    }`;
+  // Base classes that don't change between SSR and client
+  const baseClasses = 'sticky top-0 z-50 transition-all duration-300 backdrop-blur-md border-b';
 
   return (
     <header
-      className={headerClasses}
+      className={baseClasses}
+      // Use data attribute for styling to avoid hydration mismatch
+      data-header-style={mounted ? (isBlueHeader ? 'blue' : 'white') : 'white'}
+      style={{
+        // Apply styles based on mounted state to match SSR
+        backgroundColor: isBlueHeader ? 'rgba(30, 75, 163, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        backgroundImage: isBlueHeader ? 'linear-gradient(to right, rgba(42, 99, 205, 0.95), rgba(30, 75, 163, 0.95))' : 'none',
+        borderColor: isBlueHeader ? 'rgba(255, 255, 255, 0.1)' : '#e9ecef',
+        boxShadow: isBlueHeader ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+      }}
       suppressHydrationWarning
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -142,12 +148,12 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
               </div>
             )}
             <h1
-              className={`text-2xl font-bold tracking-wide transition-colors duration-300 ${useBlueHeader ? 'text-white' : 'text-transparent bg-clip-text'
+              className={`text-2xl font-bold tracking-wide transition-colors duration-300 ${isBlueHeader ? 'text-white' : 'text-transparent bg-clip-text'
                 }`}
               style={{
-                backgroundImage: useBlueHeader ? 'none' : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
+                backgroundImage: isBlueHeader ? 'none' : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
                 fontFamily: 'var(--font-tektrron), sans-serif',
-                WebkitBackgroundClip: useBlueHeader ? 'unset' : 'text',
+                WebkitBackgroundClip: isBlueHeader ? 'unset' : 'text',
               }}
             >
               {companySettings?.companyName || 'Electro Shop'}
@@ -171,12 +177,12 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                   href={link.href}
                   className="relative text-sm font-normal transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 rounded-sm"
                   style={{
-                    color: useBlueHeader
+                    color: isBlueHeader
                       ? (isActive ? 'white' : 'rgba(255,255,255,0.8)')
                       : (isActive ? primaryColor : '#6a6c6b')
                   }}
                 >
-                  <span className={`relative z-10 ${useBlueHeader
+                  <span className={`relative z-10 ${isBlueHeader
                     ? 'group-hover:text-white'
                     : (!isActive ? 'group-hover:text-[#2a63cd]' : '')
                     }`}>
@@ -185,7 +191,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                   <span
                     className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}
                     style={{
-                      background: useBlueHeader
+                      background: isBlueHeader
                         ? 'white'
                         : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
                     }}
@@ -197,11 +203,11 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-4 ${useBlueHeader ? '[&>div>button>svg]:text-white [&>div>button]:hover:bg-white/20' : ''}`}>
+            <div className={`flex items-center gap-4 ${isBlueHeader ? '[&>div>button>svg]:text-white [&>div>button]:hover:bg-white/20' : ''}`}>
               <NotificationBell />
               <CartIcon />
             </div>
-            <UserAccountButton useBlueHeader={useBlueHeader} />
+            <UserAccountButton useBlueHeader={isBlueHeader} />
           </div>
         </div>
       </div>

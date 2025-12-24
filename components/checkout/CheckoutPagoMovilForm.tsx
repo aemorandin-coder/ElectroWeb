@@ -26,6 +26,7 @@ interface CheckoutPagoMovilFormProps {
         telefonoPagador: string;
         bancoOrigen: string;
         fechaPago: string;
+        cedulaPagador: string; // Agregado para trazabilidad
         comprobante?: string;
     }) => void;
     /** Callback para resetear verificación */
@@ -60,6 +61,7 @@ export default function CheckoutPagoMovilForm({
         bancoOrigen: '',
         referencia: '',
         fechaPago: new Date().toISOString().split('T')[0],
+        cedulaPagador: '', // Requerido para validación de seguridad
     });
 
     const [verificando, setVerificando] = useState(false);
@@ -160,9 +162,22 @@ export default function CheckoutPagoMovilForm({
     };
 
     const handleVerificar = async () => {
-        // Validaciones básicas
+        // Validaciones básicas - mismas que en VerificarPagoMovilForm
+        if (!formData.cedulaPagador) {
+            setResultado({ success: false, verified: false, message: 'Ingresa la cédula del titular de la cuenta' });
+            return;
+        }
+
+        // Validar formato de cédula
+        const cedulaRegex = /^[VvEe]?\d{6,9}$/;
+        const cedulaLimpia = formData.cedulaPagador.trim().replace(/[.-]/g, '');
+        if (!cedulaRegex.test(cedulaLimpia)) {
+            setResultado({ success: false, verified: false, message: 'Formato de cédula inválido. Ejemplo: V12345678' });
+            return;
+        }
+
         if (!formData.telefonoPagador) {
-            setResultado({ success: false, verified: false, message: 'Ingresa el telefono desde donde realizaste el pago' });
+            setResultado({ success: false, verified: false, message: 'Ingresa el teléfono desde donde realizaste el pago' });
             return;
         }
         if (!formData.bancoOrigen) {
@@ -170,7 +185,7 @@ export default function CheckoutPagoMovilForm({
             return;
         }
         if (!formData.referencia) {
-            setResultado({ success: false, verified: false, message: 'Ingresa el numero de referencia del pago' });
+            setResultado({ success: false, verified: false, message: 'Ingresa el número de referencia del pago' });
             return;
         }
         if (!formData.fechaPago) {
@@ -189,6 +204,7 @@ export default function CheckoutPagoMovilForm({
                     ...formData,
                     importe: montoEnBs, // Enviar monto en Bs para verificación
                     contexto: 'ORDER',
+                    reqCed: true, // Validar cédula para mayor seguridad
                 }),
             });
 
@@ -213,6 +229,7 @@ export default function CheckoutPagoMovilForm({
                     telefonoPagador: formData.telefonoPagador,
                     bancoOrigen: formData.bancoOrigen,
                     fechaPago: formData.fechaPago,
+                    cedulaPagador: formData.cedulaPagador, // Agregado para trazabilidad
                     comprobante: comprobante || undefined,
                 });
             }
@@ -234,6 +251,7 @@ export default function CheckoutPagoMovilForm({
             bancoOrigen: '',
             referencia: '',
             fechaPago: new Date().toISOString().split('T')[0],
+            cedulaPagador: '',
         });
         setResultado(null);
         setComprobante(null);
@@ -242,6 +260,7 @@ export default function CheckoutPagoMovilForm({
 
     const canSubmit =
         !verificando &&
+        formData.cedulaPagador &&
         formData.telefonoPagador &&
         formData.bancoOrigen &&
         formData.referencia &&
@@ -277,13 +296,13 @@ export default function CheckoutPagoMovilForm({
 
     return (
         <div className={`space-y-4 ${className}`}>
-            {/* Header con icono */}
-            <div className="flex items-center gap-3 mb-4">
+            {/* Header con icono - CENTRADO */}
+            <div className="flex flex-col items-center text-center gap-2 mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                     <FiShield className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-lg font-bold text-[#212529]">Verificacion de Pago Movil</h3>
+                    <h3 className="text-lg font-bold text-[#212529]">Verificación de Pago Móvil</h3>
                     <p className="text-xs text-[#6a6c6b]">Completa los datos para validar tu pago</p>
                 </div>
             </div>
@@ -377,10 +396,33 @@ export default function CheckoutPagoMovilForm({
 
             {/* Formulario de verificación */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Cédula del pagador */}
+                <div>
+                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                        Tu Cédula <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
+                            <FiCreditCard className="w-4 h-4" />
+                        </div>
+                        <input
+                            type="text"
+                            name="cedulaPagador"
+                            value={formData.cedulaPagador}
+                            onChange={handleChange}
+                            placeholder="V12345678"
+                            maxLength={10}
+                            disabled={verificando}
+                            className="w-full pl-10 pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        />
+                    </div>
+                    <p className="text-[10px] text-[#6a6c6b] mt-1">Cédula del titular de la cuenta</p>
+                </div>
+
                 {/* Teléfono del pagador */}
                 <div>
                     <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
-                        Tu Telefono
+                        Tu Teléfono <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
@@ -478,7 +520,7 @@ export default function CheckoutPagoMovilForm({
                 {/* Fecha del pago */}
                 <div>
                     <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
-                        Fecha del Pago
+                        Fecha del Pago <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
@@ -495,59 +537,58 @@ export default function CheckoutPagoMovilForm({
                         />
                     </div>
                 </div>
-            </div>
 
-            {/* Subida de comprobante */}
-            <div>
-                <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
-                    Comprobante de Pago (Opcional)
-                </label>
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                />
+                {/* Subida de comprobante */}
+                <div>
+                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                        Comprobante (Opcional)
+                    </label>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                    />
 
-                {!comprobante ? (
-                    <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingImage}
-                        className="w-full p-4 border-2 border-dashed border-[#e9ecef] rounded-xl hover:border-[#2a63cd] hover:bg-blue-50/50 transition-all flex flex-col items-center justify-center gap-2 group"
-                    >
-                        {uploadingImage ? (
-                            <FiLoader className="w-6 h-6 text-[#2a63cd] animate-spin" />
-                        ) : (
-                            <>
-                                <div className="w-10 h-10 bg-[#f8f9fa] rounded-full flex items-center justify-center group-hover:bg-[#2a63cd] group-hover:text-white transition-colors">
-                                    <FiUpload className="w-5 h-5" />
-                                </div>
-                                <span className="text-sm text-[#6a6c6b] group-hover:text-[#2a63cd]">
-                                    Subir captura del pago
-                                </span>
-                            </>
-                        )}
-                    </button>
-                ) : (
-                    <div className="relative inline-block">
-                        <Image
-                            src={comprobante}
-                            alt="Comprobante"
-                            width={120}
-                            height={120}
-                            className="rounded-xl border-2 border-green-200 object-cover"
-                        />
+                    {!comprobante ? (
                         <button
                             type="button"
-                            onClick={removeImage}
-                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingImage}
+                            className="w-full py-2.5 px-4 border-2 border-dashed border-[#e9ecef] rounded-xl hover:border-[#2a63cd] hover:bg-blue-50/50 transition-all flex items-center justify-center gap-2 group"
                         >
-                            <FiX className="w-4 h-4" />
+                            {uploadingImage ? (
+                                <FiLoader className="w-4 h-4 text-[#2a63cd] animate-spin" />
+                            ) : (
+                                <>
+                                    <FiUpload className="w-4 h-4 text-[#6a6c6b] group-hover:text-[#2a63cd]" />
+                                    <span className="text-sm text-[#6a6c6b] group-hover:text-[#2a63cd]">
+                                        Subir captura
+                                    </span>
+                                </>
+                            )}
                         </button>
-                    </div>
-                )}
+                    ) : (
+                        <div className="relative inline-flex items-center gap-2">
+                            <Image
+                                src={comprobante}
+                                alt="Comprobante"
+                                width={40}
+                                height={40}
+                                className="rounded-lg border-2 border-green-200 object-cover"
+                            />
+                            <span className="text-xs text-green-600 font-medium">Subido</span>
+                            <button
+                                type="button"
+                                onClick={removeImage}
+                                className="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
+                            >
+                                <FiX className="w-3 h-3" />
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Resultado de la verificación */}

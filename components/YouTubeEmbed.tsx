@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface YouTubeEmbedProps {
     videoUrl: string;
@@ -23,32 +23,48 @@ const getYouTubeEmbedUrl = (url: string | null) => {
 
 export default function YouTubeEmbed({ videoUrl, className = '' }: YouTubeEmbedProps) {
     const [isMounted, setIsMounted] = useState(false);
+    const [hasError, setHasError] = useState(false);
 
     // Only render iframe on client side to avoid hydration mismatch
     useEffect(() => {
-        setIsMounted(true);
+        // Delay mounting slightly to ensure DOM is ready
+        const timer = setTimeout(() => {
+            setIsMounted(true);
+        }, 100);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const handleError = useCallback(() => {
+        console.warn('YouTubeEmbed: Error loading video, showing fallback');
+        setHasError(true);
     }, []);
 
     const embedUrl = getYouTubeEmbedUrl(videoUrl);
 
-    if (!isMounted || !embedUrl) {
-        // Return a placeholder with same dimensions during SSR
+    // Show placeholder during SSR, initial mount, or on error
+    if (!isMounted || !embedUrl || hasError) {
         return (
             <div
                 className={`bg-gradient-to-br from-[#1a3b7e] to-[#2a63cd] ${className}`}
                 aria-hidden="true"
+                suppressHydrationWarning
             />
         );
     }
 
     return (
-        <iframe
-            className={className}
-            src={embedUrl}
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-            loading="lazy"
-            title="Background Video"
-        />
+        <div className={className} suppressHydrationWarning>
+            <iframe
+                className="w-full h-full"
+                src={embedUrl}
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                loading="lazy"
+                title="Background Video"
+                onError={handleError}
+                style={{ border: 'none' }}
+                suppressHydrationWarning
+            />
+        </div>
     );
 }

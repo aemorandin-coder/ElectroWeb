@@ -7,8 +7,8 @@ import ProductCard from '@/components/ui/ProductCard';
 import PageAnimations from '@/components/public/PageAnimations';
 import HotAdOverlay from '@/components/HotAdOverlay';
 import SubtleParticles from '@/components/SubtleParticles';
-import YouTubeEmbed from '@/components/YouTubeEmbed';
 import FloatingTechIcons from '@/components/FloatingTechIcons';
+import YouTubeEmbed from '@/components/YouTubeEmbed';
 import {
   FiBox, FiGrid, FiStar, FiHeadphones,
   FiShield, FiTool, FiBook,

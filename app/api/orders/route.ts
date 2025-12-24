@@ -136,6 +136,32 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
+    // =============================================
+    // SEGURIDAD: Verificar pago móvil en servidor
+    // =============================================
+    // NUNCA confiar en body.mobilePaymentData.verified del cliente
+    // Debemos verificar en la base de datos que el pago realmente fue verificado
+    let serverVerifiedMobilePayment = false;
+    if (body.paymentMethod === 'MOBILE_PAYMENT' && body.mobilePaymentData?.referencia) {
+      const verificacion = await prisma.pagoMovilVerificacion.findFirst({
+        where: {
+          userId,
+          referencia: body.mobilePaymentData.referencia,
+          verificado: true,
+          contexto: 'ORDER',
+          orderId: null,  // Solo verificaciones no usadas
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (verificacion) {
+        serverVerifiedMobilePayment = true;
+        console.log(`[ORDERS] Pago móvil verificado en servidor: ${verificacion.referencia}`);
+      } else {
+        console.warn(`[SECURITY] Intento de orden con pago móvil no verificado: ${body.mobilePaymentData.referencia} por usuario ${userId}`);
+      }
+    }
+
     // Validate required fields
     if (!body.items || body.items.length === 0) {
       return NextResponse.json(
@@ -283,9 +309,17 @@ export async function POST(request: NextRequest) {
           exchangeRateVES: body.exchangeRateVES,
           exchangeRateEUR: body.exchangeRateEUR,
           paymentMethod: body.paymentMethod,
-          status: body.paymentMethod === 'WALLET' ? OrderStatus.PROCESSING : OrderStatus.PENDING,
-          paymentStatus: body.paymentMethod === 'WALLET' ? 'PAID' : 'PENDING',
-          paidAt: body.paymentMethod === 'WALLET' ? new Date() : null,
+          // MOBILE_PAYMENT verificado se trata como pagado (verificado con BDV)
+          // SEGURIDAD: Usamos serverVerifiedMobilePayment que se verificó en la BD, no el valor del cliente
+          status: (body.paymentMethod === 'WALLET' || (body.paymentMethod === 'MOBILE_PAYMENT' && serverVerifiedMobilePayment))
+            ? OrderStatus.PROCESSING
+            : OrderStatus.PENDING,
+          paymentStatus: (body.paymentMethod === 'WALLET' || (body.paymentMethod === 'MOBILE_PAYMENT' && serverVerifiedMobilePayment))
+            ? 'PAID'
+            : 'PENDING',
+          paidAt: (body.paymentMethod === 'WALLET' || (body.paymentMethod === 'MOBILE_PAYMENT' && serverVerifiedMobilePayment))
+            ? new Date()
+            : null,
           trackingNumber: body.trackingNumber,
           notes: body.notes,
           items: {
@@ -313,10 +347,15 @@ export async function POST(request: NextRequest) {
 
       // STOCK LOGIC BASED ON PAYMENT METHOD:
       // - WALLET: Deduct stock immediately (payment is confirmed)
-      // - DIRECT: Create reservation (payment pending verification, stock not deducted yet)
+      // - MOBILE_PAYMENT (verified): Deduct stock immediately (payment verified with BDV)
+      // - DIRECT (not verified): Create reservation (payment pending verification, stock not deducted yet)
 
-      if (body.paymentMethod === 'WALLET') {
-        // WALLET PAYMENT: Deduct stock immediately since payment is confirmed
+      // SEGURIDAD: Usar serverVerifiedMobilePayment que se verificó en BD, no el valor del cliente
+      const isPaymentConfirmed = body.paymentMethod === 'WALLET' ||
+        (body.paymentMethod === 'MOBILE_PAYMENT' && serverVerifiedMobilePayment);
+
+      if (isPaymentConfirmed) {
+        // CONFIRMED PAYMENT: Deduct stock immediately since payment is confirmed
         for (const item of body.items) {
           const product = await tx.product.findUnique({
             where: { id: item.productId },
@@ -332,10 +371,10 @@ export async function POST(request: NextRequest) {
           }
         }
       } else {
-        // DIRECT PAYMENT: Create stock reservation (15 minutes while admin verifies payment)
+        // UNCONFIRMED PAYMENT: Create stock reservation (5 minutes while admin verifies payment)
         // Stock is NOT deducted - it will be deducted when admin confirms payment
         const expiresAt = new Date();
-        expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+        expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 minutos de reservación
 
         for (const item of body.items) {
           const product = await tx.product.findUnique({
@@ -368,6 +407,22 @@ export async function POST(request: NextRequest) {
           data: {
             status: 'USED',
             usedAt: new Date(),
+          },
+        });
+      }
+
+      // SEGURIDAD: Vincular la verificación de pago móvil con la orden para prevenir reutilización
+      if (serverVerifiedMobilePayment && body.mobilePaymentData?.referencia) {
+        await tx.pagoMovilVerificacion.updateMany({
+          where: {
+            userId,
+            referencia: body.mobilePaymentData.referencia,
+            verificado: true,
+            contexto: 'ORDER',
+            orderId: null,
+          },
+          data: {
+            orderId: order.id,
           },
         });
       }

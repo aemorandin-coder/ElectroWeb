@@ -103,6 +103,7 @@ export default function CheckoutPage() {
     telefonoPagador: string;
     bancoOrigen: string;
     fechaPago: string;
+    cedulaPagador: string; // Agregado para trazabilidad
     comprobante?: string;
   } | null>(null);
 

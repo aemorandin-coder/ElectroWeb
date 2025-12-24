@@ -146,50 +146,108 @@ export function interpretarErrorBDV(code: number, message: string): string {
 
     const lowerMessage = message.toLowerCase();
 
-    // Mensajes personalizados según el contenido del mensaje
-    if (lowerMessage.includes('registro solicitado no existe') || lowerMessage.includes('no encontrado')) {
+    // =============================================
+    // ERRORES DE REFERENCIA DUPLICADA/USADA
+    // =============================================
+    if (lowerMessage.includes('ya fue utilizada') || lowerMessage.includes('duplicada') || lowerMessage.includes('usada anteriormente')) {
+        return 'Esta referencia de pago ya fue utilizada. No puedes usar la misma referencia para múltiples transacciones.';
+    }
+
+    // =============================================
+    // ERRORES DE PAGO NO ENCONTRADO
+    // =============================================
+    if (lowerMessage.includes('registro solicitado no existe') || lowerMessage.includes('no encontrado') || lowerMessage.includes('not found')) {
         return 'No se encontró el pago. Verifica que los datos ingresados sean correctos: referencia, fecha, monto y teléfono de origen.';
     }
 
-    if (lowerMessage.includes('datos mandatorios') || lowerMessage.includes('null')) {
+    // =============================================
+    // ERRORES DE DATOS INCOMPLETOS
+    // =============================================
+    if (lowerMessage.includes('datos mandatorios') || lowerMessage.includes('null') || lowerMessage.includes('required')) {
         return 'Faltan datos obligatorios. Por favor, completa todos los campos correctamente.';
     }
 
-    if (lowerMessage.includes('cliente no afiliado')) {
-        return 'Error de configuración del comercio. Por favor, contacta al soporte.';
+    // =============================================
+    // ERRORES DE CONFIGURACIÓN DEL COMERCIO
+    // =============================================
+    if (lowerMessage.includes('cliente no afiliado') || lowerMessage.includes('no afiliado al producto') || lowerMessage.includes('comercio no registrado')) {
+        return 'Error de configuración del comercio. Por favor, contacta al soporte técnico.';
     }
 
+    // =============================================
+    // ERRORES DE CÉDULA
+    // =============================================
+    if (lowerMessage.includes('cedula') || lowerMessage.includes('cédula') || lowerMessage.includes('identificacion') || lowerMessage.includes('ci invalid')) {
+        return 'La cédula ingresada no coincide con la del titular de la cuenta. Verifica que sea correcta.';
+    }
+
+    // =============================================
+    // ERRORES DE MONTO/TRANSACCIÓN
+    // =============================================
     if (lowerMessage.includes('transacción realizada') || lowerMessage.includes('transaccion realizada')) {
-        // Este mensaje aparece cuando la transacción existe pero no coinciden algunos datos
         return 'La transacción existe pero no coincide con los datos proporcionados. Verifica el monto, referencia y fecha del pago.';
     }
 
-    if (lowerMessage.includes('importe no coincide') || lowerMessage.includes('monto')) {
-        return 'El monto del pago no coincide con el verificado. Verifica que el monto transferido sea exacto.';
+    if (lowerMessage.includes('importe no coincide') || lowerMessage.includes('monto') || lowerMessage.includes('amount')) {
+        return 'El monto del pago no coincide. Verifica que el monto transferido sea exactamente el indicado.';
     }
 
+    // =============================================
+    // ERRORES DE FECHA
+    // =============================================
     if (lowerMessage.includes('fecha') || lowerMessage.includes('date')) {
-        return 'La fecha del pago no coincide. Verifica que la fecha ingresada sea la correcta.';
+        return 'La fecha del pago no coincide. Verifica que la fecha ingresada sea la del día que realizaste el pago.';
     }
 
-    if (lowerMessage.includes('referencia')) {
-        return 'La referencia del pago no fue encontrada. Verifica el número de referencia ingresado.';
+    // =============================================
+    // ERRORES DE REFERENCIA
+    // =============================================
+    if (lowerMessage.includes('referencia') || lowerMessage.includes('reference')) {
+        return 'La referencia del pago no fue encontrada. Verifica el número de referencia de tu comprobante.';
     }
 
+    // =============================================
+    // ERRORES DE TELÉFONO
+    // =============================================
     if (lowerMessage.includes('teléfono') || lowerMessage.includes('telefono') || lowerMessage.includes('phone')) {
         return 'El número de teléfono no coincide. Verifica que sea el teléfono desde donde realizaste el pago.';
     }
 
-    if (lowerMessage.includes('banco')) {
-        return 'El banco de origen no coincide. Verifica que hayas seleccionado el banco correcto.';
+    // =============================================
+    // ERRORES DE BANCO
+    // =============================================
+    if (lowerMessage.includes('banco') || lowerMessage.includes('bank') || lowerMessage.includes('entidad')) {
+        return 'El banco de origen no coincide. Verifica que hayas seleccionado el banco correcto desde donde realizaste el pago.';
     }
 
+    // =============================================
+    // ERRORES DE CONEXIÓN/TIMEOUT
+    // =============================================
+    if (lowerMessage.includes('timeout') || lowerMessage.includes('tiempo de espera') || lowerMessage.includes('connection')) {
+        return 'Error de conexión con el banco. Por favor, espera unos segundos e intenta nuevamente.';
+    }
+
+    if (lowerMessage.includes('servicio no disponible') || lowerMessage.includes('service unavailable') || lowerMessage.includes('maintenance')) {
+        return 'El servicio de verificación bancaria no está disponible en este momento. Por favor, intenta más tarde.';
+    }
+
+    // =============================================
+    // CÓDIGOS ESPECÍFICOS
+    // =============================================
     if (code === 400 || code === BDV_RESPONSE_CODES.BAD_REQUEST) {
         return 'Error en los datos enviados. Por favor, verifica que todos los campos estén correctos.';
     }
 
     if (code === 1010 || code === BDV_RESPONSE_CODES.NOT_FOUND) {
         return 'Pago no encontrado en el sistema bancario. Posibles causas: (1) Datos incorrectos (referencia, fecha, monto o teléfono), (2) El pago aún no ha sido procesado por el banco, o (3) El pago se realizó hace más de 30 días. Verifica los datos con tu comprobante.';
+    }
+
+    if (code === 401 || code === 403) {
+        return 'Error de autenticación con el banco. Por favor, contacta al soporte técnico.';
+    }
+
+    if (code >= 500) {
+        return 'Error interno del banco. Por favor, intenta nuevamente en unos minutos.';
     }
 
     // Mensaje genérico con el código para debugging

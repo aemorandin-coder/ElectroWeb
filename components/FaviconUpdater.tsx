@@ -36,6 +36,18 @@ export default function FaviconUpdater({ favicon, companyName }: FaviconUpdaterP
     useEffect(() => {
         if (!favicon) return;
 
+        // SECURITY: Skip data URIs entirely - they should be server URLs
+        if (favicon.startsWith('data:')) {
+            console.warn('FaviconUpdater: Skipping data URI favicon. Use a proper URL instead.');
+            return;
+        }
+
+        // Validate URL format
+        if (!favicon.startsWith('/') && !favicon.startsWith('http://') && !favicon.startsWith('https://')) {
+            console.warn('FaviconUpdater: Invalid favicon URL format:', favicon.substring(0, 50));
+            return;
+        }
+
         isMountedRef.current = true;
 
         const imageType = getImageType(favicon);

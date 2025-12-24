@@ -331,22 +331,66 @@ export default function SettingsPage() {
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'favicon') => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'favicon') => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        alert('El archivo es demasiado grande. Máximo 2MB.');
+    if (!file) return;
+
+    // Validate file size
+    if (file.size > 2 * 1024 * 1024) {
+      alert('El archivo es demasiado grande. Máximo 2MB.');
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/x-icon'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Tipo de archivo no permitido. Solo se permiten imágenes JPG, PNG, WEBP, GIF e ICO.');
+      return;
+    }
+
+    // Show preview immediately using local URL
+    const localPreview = URL.createObjectURL(file);
+    if (field === 'logo') setLogoPreview(localPreview);
+    else setFaviconPreview(localPreview);
+
+    try {
+      // Upload file to server
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      formDataUpload.append('type', field);
+
+      const response = await fetch('/api/upload/settings', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || 'Error al subir el archivo');
+        // Revert preview
+        if (field === 'logo') setLogoPreview(formData.logo);
+        else setFaviconPreview(formData.favicon);
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setFormData(prev => ({ ...prev, [field]: result }));
-        if (field === 'logo') setLogoPreview(result);
-        else setFaviconPreview(result);
-      };
-      reader.readAsDataURL(file);
+      const result = await response.json();
+
+      // Update form data with the server URL (not base64!)
+      setFormData(prev => ({ ...prev, [field]: result.url }));
+
+      // Update preview with server URL
+      if (field === 'logo') setLogoPreview(result.url);
+      else setFaviconPreview(result.url);
+
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Error de conexión al subir el archivo');
+      // Revert preview
+      if (field === 'logo') setLogoPreview(formData.logo);
+      else setFaviconPreview(formData.favicon);
+    } finally {
+      // Clean up the local preview URL
+      URL.revokeObjectURL(localPreview);
     }
   };
 
@@ -1423,18 +1467,36 @@ export default function SettingsPage() {
                       type="file"
                       id="hotAdImageInput"
                       accept="image/png,image/jpeg,image/jpg"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
-                        if (file) {
-                          if (file.size > 5 * 1024 * 1024) {
-                            alert('El archivo es demasiado grande. Máximo 5MB.');
+                        if (!file) return;
+
+                        if (file.size > 5 * 1024 * 1024) {
+                          alert('El archivo es demasiado grande. Máximo 5MB.');
+                          return;
+                        }
+
+                        try {
+                          const formDataUpload = new FormData();
+                          formDataUpload.append('file', file);
+                          formDataUpload.append('type', 'hotAd');
+
+                          const response = await fetch('/api/upload/settings', {
+                            method: 'POST',
+                            body: formDataUpload,
+                          });
+
+                          if (!response.ok) {
+                            const error = await response.json();
+                            alert(error.error || 'Error al subir el archivo');
                             return;
                           }
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setFormData(prev => ({ ...prev, hotAdImage: reader.result as string }));
-                          };
-                          reader.readAsDataURL(file);
+
+                          const result = await response.json();
+                          setFormData(prev => ({ ...prev, hotAdImage: result.url }));
+                        } catch (error) {
+                          console.error('Error uploading hot ad image:', error);
+                          alert('Error de conexión al subir el archivo');
                         }
                       }}
                       className="hidden"

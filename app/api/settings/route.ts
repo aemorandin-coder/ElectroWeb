@@ -6,6 +6,7 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { validateSettings, normalizeSocialMedia, normalizeExchangeRate } from '@/lib/validations/settings';
 import { SettingsFormData } from '@/types/settings';
 import { Decimal } from '@prisma/client/runtime/library';
+import { clearSettingsCache } from '@/lib/site-settings';
 
 // Helper to safely serialize Prisma objects (handle Decimals, Dates, etc.)
 function safeSerialize(obj: any): any {
@@ -215,6 +216,9 @@ export async function PUT(request: NextRequest) {
         ...updateData,
       },
     });
+
+    // Clear cache so new settings (including favicon) take effect immediately
+    await clearSettingsCache();
 
     // Return parsed settings
     let socialMedia = [];

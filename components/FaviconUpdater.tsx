@@ -32,7 +32,7 @@ export default function FaviconUpdater({ favicon, companyName }: FaviconUpdaterP
         }
     }, [companyName]);
 
-    // Safe favicon update - only update href, don't remove/add elements
+    // Safe favicon update - verify image exists before updating
     useEffect(() => {
         if (!favicon) return;
 
@@ -43,43 +43,63 @@ export default function FaviconUpdater({ favicon, companyName }: FaviconUpdaterP
             ? `${favicon}&v=${Date.now()}`
             : `${favicon}?v=${Date.now()}`;
 
-        // Instead of removing existing links, just update their href
-        // This avoids the React DOM reconciliation error
-        const updateExistingFavicons = () => {
-            const existingIcons = document.querySelectorAll<HTMLLinkElement>(
-                "link[rel='icon'], link[rel='shortcut icon']"
-            );
-
-            if (existingIcons.length > 0) {
-                // Update existing favicon links
-                existingIcons.forEach(icon => {
-                    icon.href = cacheBustUrl;
-                    icon.type = imageType;
+        // Verify the favicon image actually exists before updating
+        const verifyAndUpdateFavicon = async () => {
+            try {
+                // Pre-load the image to verify it exists
+                const img = new Image();
+                const loadPromise = new Promise<boolean>((resolve) => {
+                    img.onload = () => resolve(true);
+                    img.onerror = () => resolve(false);
+                    // Timeout after 5 seconds
+                    setTimeout(() => resolve(false), 5000);
                 });
-            } else {
-                // Only create a new link if none exist
-                // Use a single link to minimize DOM manipulation
-                const iconLink = document.createElement('link');
-                iconLink.rel = 'icon';
-                iconLink.type = imageType;
-                iconLink.href = cacheBustUrl;
-                iconLink.setAttribute('data-dynamic', 'true');
-                document.head.appendChild(iconLink);
-                createdLinksRef.current.push(iconLink);
+                img.src = cacheBustUrl;
+
+                const imageLoaded = await loadPromise;
+
+                if (!imageLoaded || !isMountedRef.current) {
+                    console.warn('FaviconUpdater: Failed to load favicon image, keeping default');
+                    return;
+                }
+
+                // Image loaded successfully, now update the favicon links
+                const existingIcons = document.querySelectorAll<HTMLLinkElement>(
+                    "link[rel='icon'], link[rel='shortcut icon']"
+                );
+
+                if (existingIcons.length > 0) {
+                    // Update existing favicon links
+                    existingIcons.forEach(icon => {
+                        icon.href = cacheBustUrl;
+                        icon.type = imageType;
+                    });
+                } else {
+                    // Only create a new link if none exist
+                    const iconLink = document.createElement('link');
+                    iconLink.rel = 'icon';
+                    iconLink.type = imageType;
+                    iconLink.href = cacheBustUrl;
+                    iconLink.setAttribute('data-dynamic', 'true');
+                    document.head.appendChild(iconLink);
+                    createdLinksRef.current.push(iconLink);
+                }
+            } catch (error) {
+                console.warn('FaviconUpdater: Error updating favicon', error);
             }
         };
 
         // Apply favicon after a small delay to ensure React has finished rendering
         const timeoutId = setTimeout(() => {
             if (isMountedRef.current) {
-                updateExistingFavicons();
+                verifyAndUpdateFavicon();
             }
         }, 100);
 
         // Handle visibility change
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && isMountedRef.current) {
-                updateExistingFavicons();
+                verifyAndUpdateFavicon();
             }
         };
 

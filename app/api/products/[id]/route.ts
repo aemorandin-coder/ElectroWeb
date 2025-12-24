@@ -17,6 +17,14 @@ export async function GET(
 
     const { id } = await params;
 
+    // Validate ID format
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json(
+        { error: 'ID de producto inválido' },
+        { status: 400 }
+      );
+    }
+
     const product = await prisma.product.findUnique({
       where: { id },
       include: {
@@ -31,20 +39,35 @@ export async function GET(
       );
     }
 
-    // Convert Decimal fields to Number for proper JSON serialization
+    // Safely convert Decimal fields to Number for proper JSON serialization
+    const safeNumber = (val: any): number | null => {
+      if (val === null || val === undefined) return null;
+      const num = Number(val);
+      return isNaN(num) ? null : num;
+    };
+
     const formattedProduct = {
       ...product,
-      priceUSD: Number(product.priceUSD),
-      priceVES: product.priceVES ? Number(product.priceVES) : null,
-      weightKg: product.weightKg ? Number(product.weightKg) : null,
-      shippingCost: product.shippingCost ? Number(product.shippingCost) : null,
+      priceUSD: safeNumber(product.priceUSD) ?? 0,
+      priceVES: safeNumber(product.priceVES),
+      weightKg: safeNumber(product.weightKg),
+      shippingCost: safeNumber(product.shippingCost),
     };
 
     return NextResponse.json(formattedProduct);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching product:', error);
+
+    // Handle specific Prisma errors
+    if (error.code === 'P2023') {
+      return NextResponse.json(
+        { error: 'ID de producto inválido' },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Error al obtener el producto' },
+      { error: 'Error al obtener el producto', details: error.message },
       { status: 500 }
     );
   }
@@ -92,14 +115,31 @@ export async function PATCH(
     if (body.images !== undefined) {
       if (Array.isArray(body.images)) {
         updateData.images = JSON.stringify(body.images);
+        // Also update mainImage to the first image
+        if (body.images.length > 0) {
+          updateData.mainImage = body.images[0];
+        }
       } else {
         updateData.images = body.images;
       }
     }
 
     // Handle specs: map specifications -> specs and stringify
-    if (body.specifications !== undefined) {
-      updateData.specs = JSON.stringify(body.specifications);
+    // For digital products, include digitalPricing in specs
+    if (body.specifications !== undefined || body.digitalPricing !== undefined) {
+      const specsToSave: Record<string, any> = {};
+
+      // Add regular specifications
+      if (body.specifications && typeof body.specifications === 'object') {
+        Object.assign(specsToSave, body.specifications);
+      }
+
+      // Add digitalPricing for digital products
+      if (body.digitalPricing && Array.isArray(body.digitalPricing)) {
+        specsToSave.digitalPricing = body.digitalPricing;
+      }
+
+      updateData.specs = JSON.stringify(specsToSave);
     } else if (body.specs !== undefined) {
       // Fallback if sent as specs
       updateData.specs = typeof body.specs === 'string' ? body.specs : JSON.stringify(body.specs);
@@ -116,6 +156,19 @@ export async function PATCH(
 
     // Fields that might not exist in current schema or need specific handling
     if (body.brandId !== undefined) updateData.brandId = body.brandId;
+
+    // Digital Product Fields
+    if (body.productType !== undefined) updateData.productType = body.productType;
+    if (body.digitalPlatform !== undefined) updateData.digitalPlatform = body.digitalPlatform;
+    if (body.digitalRegion !== undefined) updateData.digitalRegion = body.digitalRegion;
+    if (body.deliveryMethod !== undefined) updateData.deliveryMethod = body.deliveryMethod;
+    if (body.redemptionInstructions !== undefined) updateData.redemptionInstructions = body.redemptionInstructions;
+
+    // Shipping Fields (for PHYSICAL products)
+    if (body.weightKg !== undefined) updateData.weightKg = body.weightKg !== null ? parseFloat(body.weightKg) : null;
+    if (body.dimensions !== undefined) updateData.dimensions = body.dimensions;
+    if (body.isConsolidable !== undefined) updateData.isConsolidable = body.isConsolidable;
+    if (body.shippingCost !== undefined) updateData.shippingCost = body.shippingCost !== null ? parseFloat(body.shippingCost) : null;
 
     const product = await prisma.product.update({
       where: { id },
@@ -165,21 +218,82 @@ export async function DELETE(
 
     const { id } = await params;
 
+    // Check if product exists and get relations
     const product = await prisma.product.findUnique({
       where: { id },
+      include: {
+        orderItems: { select: { id: true }, take: 1 },
+        reviews: { select: { id: true } },
+        reservations: { select: { id: true } },
+        wishlistItems: { select: { id: true } },
+        digitalCodes: { select: { id: true } },
+      },
     });
 
     if (!product) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
-    await prisma.product.delete({
-      where: { id },
+    // Check if product has orders - we can't delete if it has order history
+    if (product.orderItems && product.orderItems.length > 0) {
+      // Instead of deleting, archive the product
+      await prisma.product.update({
+        where: { id },
+        data: { status: 'ARCHIVED' },
+      });
+      return NextResponse.json({
+        message: 'El producto tiene órdenes asociadas. Ha sido archivado en lugar de eliminado.',
+        archived: true
+      });
+    }
+
+    // Delete related records that don't have critical data
+    // Use a transaction to ensure atomicity
+    await prisma.$transaction(async (tx) => {
+      // Delete reviews
+      if (product.reviews && product.reviews.length > 0) {
+        await tx.review.deleteMany({ where: { productId: id } });
+      }
+
+      // Delete stock reservations
+      if (product.reservations && product.reservations.length > 0) {
+        await tx.stockReservation.deleteMany({ where: { productId: id } });
+      }
+
+      // Delete wishlist items
+      if (product.wishlistItems && product.wishlistItems.length > 0) {
+        await tx.wishlistItem.deleteMany({ where: { productId: id } });
+      }
+
+      // Delete digital codes (only if not sold/delivered)
+      if (product.digitalCodes && product.digitalCodes.length > 0) {
+        await tx.digitalCode.deleteMany({
+          where: {
+            productId: id,
+            status: { in: ['AVAILABLE', 'RESERVED', 'EXPIRED', 'INVALID'] }
+          }
+        });
+      }
+
+      // Now delete the product
+      await tx.product.delete({ where: { id } });
     });
 
     return NextResponse.json({ message: 'Producto eliminado correctamente' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting product:', error);
-    return NextResponse.json({ error: 'Error al eliminar el producto' }, { status: 500 });
+
+    // Handle foreign key constraint errors
+    if (error.code === 'P2003') {
+      return NextResponse.json({
+        error: 'No se puede eliminar el producto porque tiene datos relacionados. Intenta archivarlo.',
+        details: 'El producto tiene registros asociados que no pueden ser eliminados.'
+      }, { status: 400 });
+    }
+
+    return NextResponse.json({
+      error: 'Error al eliminar el producto',
+      details: error.message
+    }, { status: 500 });
   }
 }

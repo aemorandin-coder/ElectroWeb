@@ -31,26 +31,35 @@ const tektrron = localFont({
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshop.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
+
+  // Helper to ensure absolute URL
+  const ensureAbsoluteUrl = (url: string | null): string | null => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    return `${baseUrl}${cleanUrl}`;
+  };
 
   const icons: Metadata['icons'] = {};
+  const absoluteFavicon = ensureAbsoluteUrl(settings.favicon);
 
-  if (settings.favicon) {
+  if (absoluteFavicon) {
     icons.icon = [
-      { url: settings.favicon, type: 'image/png' },
-      { url: settings.favicon, sizes: '16x16', type: 'image/png' },
-      { url: settings.favicon, sizes: '32x32', type: 'image/png' },
-      { url: settings.favicon, sizes: '192x192', type: 'image/png' },
+      { url: absoluteFavicon, type: 'image/png' },
+      { url: absoluteFavicon, sizes: '16x16', type: 'image/png' },
+      { url: absoluteFavicon, sizes: '32x32', type: 'image/png' },
+      { url: absoluteFavicon, sizes: '192x192', type: 'image/png' },
     ];
-    icons.apple = settings.favicon;
-    icons.shortcut = settings.favicon;
+    icons.apple = absoluteFavicon;
+    icons.shortcut = absoluteFavicon;
   } else {
     // Fallback to static favicon
     icons.icon = '/favicon.ico';
   }
 
-  // Open Graph image - use logo if available
-  const ogImage = settings.logo || settings.favicon || `${baseUrl}/og-image.png`;
+  // Open Graph image - use logo if available (ensure absolute URL)
+  const ogImage = ensureAbsoluteUrl(settings.logo) || ensureAbsoluteUrl(settings.favicon) || `${baseUrl}/og-image.png`;
 
   return {
     title: {

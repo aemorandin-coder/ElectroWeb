@@ -30,6 +30,20 @@ export async function GET(request: NextRequest) {
         const reviews = await prisma.review.findMany({
             where,
             orderBy: { createdAt: 'desc' },
+            include: {
+                product: {
+                    select: {
+                        name: true,
+                        slug: true,
+                    },
+                },
+                user: {
+                    select: {
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
         });
 
         if (productId) {

@@ -10,8 +10,12 @@ interface RecentReview {
     comment: string;
     createdAt: string;
     isApproved: boolean;
-    userName: string;
-    product: {
+    userName?: string;
+    user?: {
+        name: string | null;
+        email: string;
+    };
+    product?: {
         name: string;
         slug: string;
     };
@@ -125,7 +129,7 @@ export default function ReviewsWidget() {
                 {recentReviews.length === 0 ? (
                     <p className="text-sm text-gray-500 text-center py-4">No hay reseñas recientes</p>
                 ) : (
-                    recentReviews.map((review) => (
+                    recentReviews.filter((review) => review.product?.name).map((review) => (
                         <div
                             key={review.id}
                             className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
@@ -133,17 +137,17 @@ export default function ReviewsWidget() {
                             <div className="flex items-start justify-between mb-2">
                                 <div className="flex-1">
                                     <p className="text-sm font-semibold text-gray-900 line-clamp-1">
-                                        {review.product.name}
+                                        {review.product?.name || 'Producto eliminado'}
                                     </p>
-                                    <p className="text-xs text-gray-500">{review.userName}</p>
+                                    <p className="text-xs text-gray-500">{review.user?.name || review.userName || 'Usuario'}</p>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     {[...Array(5)].map((_, i) => (
                                         <FiStar
                                             key={i}
                                             className={`w-3 h-3 ${i < review.rating
-                                                    ? 'fill-yellow-400 text-yellow-400'
-                                                    : 'text-gray-300'
+                                                ? 'fill-yellow-400 text-yellow-400'
+                                                : 'text-gray-300'
                                                 }`}
                                         />
                                     ))}

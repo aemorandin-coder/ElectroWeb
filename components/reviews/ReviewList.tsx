@@ -10,8 +10,12 @@ interface Review {
     rating: number;
     title?: string;
     comment: string;
-    userName: string;
+    userName?: string;
     userImage?: string;
+    user?: {
+        name: string | null;
+        email: string;
+    };
     isVerifiedPurchase: boolean;
     createdAt: string;
 }
@@ -59,12 +63,12 @@ export default function ReviewList({ reviews, showLoginPrompt = false }: ReviewL
                         <div className="flex-shrink-0">
                             {review.userImage ? (
                                 <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                                    <Image src={review.userImage} alt={review.userName} fill className="object-cover" />
+                                    <Image src={review.userImage} alt={review.user?.name || review.userName || 'Usuario'} fill className="object-cover" />
                                 </div>
                             ) : (
                                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center">
                                     <span className="text-white font-bold text-lg">
-                                        {review.userName.charAt(0).toUpperCase()}
+                                        {(review.user?.name || review.userName || 'U').charAt(0).toUpperCase()}
                                     </span>
                                 </div>
                             )}
@@ -75,7 +79,7 @@ export default function ReviewList({ reviews, showLoginPrompt = false }: ReviewL
                             <div className="flex items-start justify-between gap-4 mb-2">
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="font-semibold text-gray-900">{review.userName}</h4>
+                                        <h4 className="font-semibold text-gray-900">{review.user?.name || review.userName || 'Usuario'}</h4>
                                         {review.isVerifiedPurchase && (
                                             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full">
                                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">

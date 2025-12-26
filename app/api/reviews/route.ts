@@ -152,7 +152,8 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: 'Reseña no encontrada' }, { status: 404 });
         }
 
-        const isAdmin = (session.user as any).role === 'ADMIN' || (session.user as any).permissions?.includes('MANAGE_CONTENT');
+        const userRole = (session.user as any).role;
+        const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || (session.user as any).permissions?.includes('MANAGE_CONTENT');
         const isOwner = review.userId === session.user.id;
 
         if (!isAdmin && !isOwner) {
@@ -168,6 +169,8 @@ export async function PATCH(request: NextRequest) {
 
         if (isAdmin) {
             if (isApproved !== undefined) updateData.isApproved = isApproved;
+            // Also handle isPublished if sent
+            if (body.isPublished !== undefined) updateData.isPublished = body.isPublished;
         }
 
         const updatedReview = await prisma.review.update({
@@ -252,7 +255,8 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'Reseña no encontrada' }, { status: 404 });
         }
 
-        const isAdmin = (session.user as any).role === 'ADMIN' || (session.user as any).permissions?.includes('MANAGE_CONTENT');
+        const userRole = (session.user as any).role;
+        const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || (session.user as any).permissions?.includes('MANAGE_CONTENT');
         const isOwner = review.userId === session.user.id;
 
         if (!isAdmin && !isOwner) {

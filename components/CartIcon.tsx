@@ -77,27 +77,77 @@ export default function CartIcon() {
     }
   };
 
+  // Badge styles as a complete inline style object - immune to CSS overrides
+  const badgeStyles: React.CSSProperties = {
+    position: 'absolute',
+    top: '0px',
+    right: '0px',
+    width: '16px',
+    height: '16px',
+    minWidth: '16px',
+    maxWidth: '16px',
+    minHeight: '16px',
+    maxHeight: '16px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #2a63cd 0%, #1e4ba3 100%)',
+    color: 'white',
+    fontSize: '9px',
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: 1,
+    padding: 0,
+    margin: 0,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+    zIndex: 10,
+    pointerEvents: 'none' as const,
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Cart Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-[#6a6c6b] hover:text-[#2a63cd] transition-all duration-300 group hover:scale-110"
+        className="relative p-2 hover:bg-white/10 rounded-lg transition-all duration-300"
+        style={{ overflow: 'visible' }}
       >
-        <svg className="w-6 h-6 transition-transform duration-300 group-hover:rotate-[-5deg]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          style={{
+            width: '20px',
+            height: '20px',
+            color: 'rgba(255,255,255,0.9)',
+            transition: 'transform 0.3s'
+          }}
+        >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
+
+        {/* Badge Counter - Pure inline styles */}
         {totalItems > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg shadow-[#2a63cd]/30 animate-pulse">
-            {totalItems}
+          <span style={badgeStyles}>
+            {totalItems > 9 ? '9+' : totalItems}
           </span>
         )}
-        <span className="absolute inset-0 rounded-lg bg-[#2a63cd]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></span>
       </button>
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-[#e9ecef] z-50">
+        <div
+          className="cart-dropdown bg-white rounded-lg shadow-lg border border-[#e9ecef] z-50"
+          style={{
+            position: 'fixed',
+            left: '12px',
+            right: '12px',
+            top: '54px',
+            width: 'auto',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+          }}
+        >
           {items.length === 0 ? (
             <div className="p-6 text-center">
               <svg className="w-16 h-16 text-[#e9ecef] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -111,14 +111,16 @@ export default async function Home() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
           <div className="text-center">
-            {/* Premium Badge */}
-            <div className="inline-flex items-center gap-3 mb-6 animate-fadeIn">
-              <div className="h-1 w-16 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-              <div className="px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                <span className="text-sm font-semibold text-white">Bienvenido a {companySettings?.companyName || 'Electro Shop'}</span>
+            {/* Premium Badge - Only show if companyName is set */}
+            {companySettings?.companyName && companySettings.companyName.trim() !== '' && (
+              <div className="inline-flex items-center gap-3 mb-6 animate-fadeIn hero-welcome-badge">
+                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
+                <div className="px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+                  <span className="text-sm font-semibold text-white">Bienvenido a {companySettings.companyName}</span>
+                </div>
+                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
               </div>
-              <div className="h-1 w-16 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-            </div>
+            )}
 
             {/* Title with Gradient */}
             <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight drop-shadow-lg">
@@ -489,8 +491,8 @@ export default async function Home() {
               </ul>
             </div>
 
-            {/* Services */}
-            <div>
+            {/* Services - Hidden on mobile via CSS */}
+            <div className="footer-servicios">
               <h4 className="text-sm font-semibold text-white mb-3">Servicios</h4>
               <ul className="space-y-1.5 text-xs text-gray-400">
                 <li><Link href="/servicios" className="hover:text-[#2a63cd] transition-colors">PC Gaming</Link></li>
@@ -501,7 +503,7 @@ export default async function Home() {
             </div>
 
             {/* Contact */}
-            <div>
+            <div className="footer-contacto">
               <h4 className="text-sm font-semibold text-white mb-3">Contacto</h4>
               <ul className="space-y-2 text-xs text-gray-400">
                 {companySettings?.address && (

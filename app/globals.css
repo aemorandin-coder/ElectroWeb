@@ -606,3 +606,1230 @@ button,
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================
+   🚀 MOBILE-ONLY PREMIUM REDESIGN
+   ============================================
+   Designed for:
+   - iPhone 16 Pro Max: 430 x 932 pixels
+   - Samsung S24 Ultra: 412 x 915 pixels
+   
+   These styles ONLY apply on mobile devices.
+   Desktop remains completely untouched.
+   ============================================ */
+
+/* ============================================
+   MOBILE BREAKPOINT: 480px and below
+   ============================================ */
+@media (max-width: 480px) {
+
+  /* ========================================
+     ROOT MOBILE VARIABLES
+     ======================================== */
+  :root {
+    --mobile-padding: 16px;
+    --mobile-radius: 14px;
+    --mobile-gap: 12px;
+    --header-height: 48px;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(0, 0, 0, 0.06);
+    --glass-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  /* ========================================
+     BODY & GLOBAL MOBILE ENHANCEMENTS
+     ======================================== */
+  body {
+    font-size: 15px;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Compact touch targets - e-commerce optimized */
+  button,
+  a,
+  [role="button"] {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  /* ========================================
+     MOBILE HEADER - AMAZON/ENEBA STYLE
+     Ultra-compact, 48px height, clean
+     ======================================== */
+  #homepage-root header,
+  header {
+    height: var(--header-height) !important;
+    min-height: var(--header-height) !important;
+    max-height: var(--header-height) !important;
+    backdrop-filter: blur(12px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(150%) !important;
+    background: rgba(33, 37, 41, 0.97) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  /* Header inner container - spread content */
+  header>div {
+    height: 100% !important;
+    padding: 0 8px !important;
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  /* Header flex container - maximize spread */
+  header>div>div {
+    gap: 0 !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+
+  /* Logo/brand container - push to left */
+  header a[href="/"] {
+    gap: 4px !important;
+    margin-left: -4px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Logo/Brand text - WHITE and compact */
+  header h1,
+  header span,
+  header .font-bold,
+  header [class*="font-bold"],
+  header a>div>h3,
+  header a>div>span {
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+  }
+
+  /* Logo image container */
+  header .w-8,
+  header .w-9,
+  header .w-10 {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  /* Mobile navigation icons - compact 32px */
+  header button,
+  header>div>a,
+  header>div>div>button {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 4px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+  }
+
+  /* Header icons - white color */
+  header svg {
+    width: 18px !important;
+    height: 18px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  /* Hide ping animation on mobile to avoid visual noise */
+  header .animate-ping {
+    display: none !important;
+  }
+
+  header button:active,
+  header a:active {
+    transform: scale(0.92) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  /* Action buttons container - push to right */
+  header>div>div>div:last-child {
+    gap: 2px !important;
+    margin-right: -4px !important;
+  }
+
+  /* Login button - icon only on mobile, properly sized */
+  header a[href="/login"],
+  header #login-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    flex-shrink: 0 !important;
+  }
+
+  header a[href="/login"] svg,
+  header #login-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+    color: white !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ========================================
+     PROFILE BUTTON (LOGGED IN) - MOBILE
+     ======================================== */
+
+  /* Profile button container when logged in */
+  header>div>div>div:last-child>div.relative {
+    flex-shrink: 0 !important;
+  }
+
+  /* The actual button with avatar */
+  header>div>div>div:last-child>div.relative>button {
+    width: auto !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 4px !important;
+    gap: 0 !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  /* Avatar container - proper size */
+  header>div>div>div:last-child>div.relative>button>div:first-child {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+  }
+
+  /* Avatar image */
+  header>div>div>div:last-child>div.relative>button>div:first-child img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  /* Hide user name/email on mobile */
+  header>div>div>div:last-child>div.relative>button>div.hidden {
+    display: none !important;
+  }
+
+  /* Hide chevron on mobile */
+  header>div>div>div:last-child>div.relative>button>svg {
+    display: none !important;
+  }
+
+  /* Hide the hover glow span */
+  header>div>div>div:last-child>div.relative>button>span.absolute {
+    display: none !important;
+  }
+
+  /* ========================================
+     MOBILE DROPDOWNS - FULL SCREEN STYLE
+     ======================================== */
+
+  /* Dropdowns ONLY - target large dropdown containers, NOT small badges */
+  /* Dropdowns are typically > 100px wide, badges are ~16-20px */
+  header .absolute[class*="w-"]:not([class*="w-4"]):not([class*="w-5"]):not([class*="h-4"]):not([class*="h-5"]),
+  header .notification-dropdown,
+  header .profile-dropdown,
+  header .cart-dropdown,
+  header>div>div>div:last-child>div.relative>.absolute:not(span) {
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    top: 56px !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.25) !important;
+    z-index: 9999 !important;
+  }
+
+  /* Badge counters use component-level inline styles - no global overrides */
+
+  /* ========================================
+     NOTIFICATION CENTER - MOBILE PREMIUM STYLE
+     Centrado perfecto y diseño premium
+     ======================================== */
+  header .absolute>div[class*="w-96"],
+  .notification-center-mobile {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 16px !important;
+  }
+
+  /* Notification header - centered on mobile */
+  header .absolute div[class*="bg-gradient-to-r"] h3,
+  header .absolute div[class*="from-"] h3 {
+    color: white !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  /* Notification badge count - centered */
+  header .absolute span[class*="bg-white/20"] {
+    color: white !important;
+  }
+
+  /* Notification filter buttons - white text when active */
+  header .absolute button[class*="bg-white/10"] {
+    color: white !important;
+  }
+
+  header .absolute button[class*="bg-white text-"] {
+    color: var(--primary-blue) !important;
+  }
+
+  /* Notification items - proper colors */
+  header .absolute .divide-y>div {
+    color: #212529 !important;
+  }
+
+  /* ========================================
+     CART DROPDOWN - PREMIUM MOBILE STYLE
+     Mantiene colores azul del proyecto
+     ======================================== */
+
+  /* Cart header */
+  header .absolute h3[class*="text-sm"] {
+    color: #212529 !important;
+  }
+
+  /* Cart item name - dark text */
+  header .absolute h4[class*="text-sm"] {
+    color: #212529 !important;
+  }
+
+  /* Cart item price - BLUE not black */
+  header .absolute p[class*="text-"][class*="2a63cd"],
+  header .absolute .text-\[\#2a63cd\] {
+    color: var(--primary-blue) !important;
+  }
+
+  /* Cart quantity text */
+  header .absolute span[class*="text-xs"][class*="font-medium"] {
+    color: #212529 !important;
+  }
+
+  /* Cart total label */
+  header .absolute span[class*="text-sm"][class*="font-semibold"] {
+    color: #212529 !important;
+  }
+
+  /* Cart total price - BLUE */
+  header .absolute span[class*="text-lg"][class*="font-bold"] {
+    color: var(--primary-blue) !important;
+  }
+
+  /* Cart primary button - blue bg, white text */
+  header .absolute a[class*="bg-\[\#2a63cd\]"] {
+    background: var(--primary-blue) !important;
+    color: white !important;
+  }
+
+  /* Cart secondary button - white bg, blue text */
+  header .absolute a[class*="bg-white"][class*="text-\[\#2a63cd\]"] {
+    background: white !important;
+    color: var(--primary-blue) !important;
+  }
+
+  /* Empty cart text */
+  header .absolute p[class*="text-\[\#6a6c6b\]"] {
+    color: #6a6c6b !important;
+  }
+
+  /* Cart clear button - red */
+  header .absolute button[class*="text-red-600"],
+  header .absolute .text-red-600 {
+    color: #dc2626 !important;
+  }
+
+  /* Profile dropdown uses component-level styles */
+
+  /* ========================================
+     HERO SECTION - ULTRA COMPACT
+     ======================================== */
+  section:first-of-type {
+    min-height: 40vh !important;
+    max-height: 45vh !important;
+    padding-top: 48px !important;
+    padding-bottom: 16px !important;
+  }
+
+  /* Hero content container */
+  section:first-of-type>div.relative {
+    padding: 0 var(--mobile-padding) !important;
+  }
+
+  /* Hero welcome badge - HIDE on mobile */
+  section:first-of-type .hero-welcome-badge,
+  section:first-of-type .inline-flex:has(.rounded-full) {
+    display: none !important;
+  }
+
+  /* Hero main title - very compact */
+  section:first-of-type h1 {
+    font-size: 1.5rem !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.02em !important;
+    margin-bottom: 6px !important;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* Hero subtitle - compact */
+  section:first-of-type h1+p {
+    font-size: 0.8rem !important;
+    line-height: 1.35 !important;
+    opacity: 0.85 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* Hero CTA button - compact */
+  section:first-of-type a[href*="productos"],
+  section:first-of-type .inline-flex+div a {
+    width: auto !important;
+    max-width: none !important;
+    padding: 8px 20px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  section:first-of-type a[href*="productos"]:active {
+    transform: scale(0.97) !important;
+  }
+
+  /* ========================================
+     CATEGORIES - HORIZONTAL CAROUSEL
+     ======================================== */
+  section[data-section="light"]:first-of-type,
+  section:nth-of-type(2) {
+    padding: 20px 0 !important;
+    background: #ffffff !important;
+  }
+
+  /* Categories header - compact */
+  section:nth-of-type(2)>div>div:first-child {
+    padding: 0 var(--mobile-padding) !important;
+    margin-bottom: 12px !important;
+  }
+
+  section:nth-of-type(2) h2 {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 0 !important;
+  }
+
+  section:nth-of-type(2) h2+p {
+    display: none !important;
+  }
+
+  /* Categories grid - horizontal scroll carousel */
+  section:nth-of-type(2) .grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 10px !important;
+    padding: 8px var(--mobile-padding) !important;
+  }
+
+  section:nth-of-type(2) .grid::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Category cards - compact pills */
+  section:nth-of-type(2) .grid>a {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 72px !important;
+    min-width: 72px !important;
+    padding: 10px 8px !important;
+    border-radius: 14px !important;
+    background: #f8f9fa !important;
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    box-shadow: none !important;
+    scroll-snap-align: start !important;
+    transition: all 0.2s ease !important;
+  }
+
+  section:nth-of-type(2) .grid>a:active {
+    transform: scale(0.95) !important;
+    background: rgba(42, 99, 205, 0.1) !important;
+  }
+
+  /* Category icon - smaller */
+  section:nth-of-type(2) .grid>a .w-16 {
+    width: 36px !important;
+    height: 36px !important;
+    margin-bottom: 6px !important;
+  }
+
+  section:nth-of-type(2) .grid>a .w-16>div {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 8px rgba(42, 99, 205, 0.2) !important;
+  }
+
+  section:nth-of-type(2) .grid>a .w-16>div svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Category name - tiny */
+  section:nth-of-type(2) .grid>a h3 {
+    font-size: 0.6rem !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    color: #495057 !important;
+    max-width: 64px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+  }
+
+  /* ========================================
+     PRODUCTS - COMPACT HORIZONTAL CAROUSEL
+     ======================================== */
+  section:nth-of-type(3) {
+    padding: 20px 0 !important;
+    /* Keep the blue gradient background on mobile too */
+    background: linear-gradient(135deg, #2a63cd 0%, #1e4ba3 50%, #1a3b7e 100%) !important;
+  }
+
+  /* Products section header - compact */
+  section:nth-of-type(3)>div>div:first-child {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+    padding: 0 var(--mobile-padding) !important;
+  }
+
+  /* Products title - WHITE on blue background */
+  section:nth-of-type(3) h2 {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: white !important;
+  }
+
+  section:nth-of-type(3) h2+p {
+    display: none !important;
+  }
+
+  /* "Ver todo" link - white button style on blue bg */
+  section:nth-of-type(3)>div>div:first-child>a {
+    width: auto !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    font-size: 0.75rem !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: var(--primary-blue) !important;
+    font-weight: 600 !important;
+  }
+
+  /* Products grid - horizontal scroll */
+  section:nth-of-type(3) .flex.flex-wrap {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 8px var(--mobile-padding) !important;
+    gap: 10px !important;
+  }
+
+  section:nth-of-type(3) .flex.flex-wrap::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Product card wrapper - COMPACT 150px width */
+  section:nth-of-type(3) .flex.flex-wrap>div {
+    flex: 0 0 140px !important;
+    width: 140px !important;
+    max-width: 140px !important;
+    scroll-snap-align: start !important;
+  }
+
+  /* Product cards - minimal compact design */
+  section:nth-of-type(3) .flex.flex-wrap>div>a>div {
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    overflow: hidden !important;
+    background: white !important;
+  }
+
+  /* Product image - square compact */
+  section:nth-of-type(3) .aspect-square {
+    border-radius: 12px 12px 0 0 !important;
+    aspect-ratio: 1 !important;
+  }
+
+  /* Product info - minimal */
+  section:nth-of-type(3) .flex.flex-wrap>div .p-4 {
+    padding: 8px !important;
+  }
+
+  /* Product name - 1 line max */
+  section:nth-of-type(3) .flex.flex-wrap>div h3 {
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    min-height: auto !important;
+    margin-bottom: 4px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 1 !important;
+    line-clamp: 1 !important;
+    -webkit-box-orient: vertical !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Product price - compact */
+  section:nth-of-type(3) .flex.flex-wrap>div .text-2xl {
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    color: var(--primary-blue) !important;
+    -webkit-text-fill-color: unset !important;
+    background: none !important;
+  }
+
+  /* Hide extra product info on mobile */
+  section:nth-of-type(3) .flex.flex-wrap>div .text-sm,
+  section:nth-of-type(3) .flex.flex-wrap>div .text-xs:not(.text-2xl),
+  section:nth-of-type(3) .flex.flex-wrap>div .flex.items-center.gap-1 {
+    display: none !important;
+  }
+
+  /* ========================================
+     SERVICES - ICON ROW STRIP (ENEBA STYLE)
+     Horizontal scrollable icon bar, ultra-compact
+     ======================================== */
+  section:nth-of-type(4) {
+    padding: 20px 0 !important;
+    background: #ffffff !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  }
+
+  /* Hide section title on mobile */
+  section:nth-of-type(4)>div>div.text-center {
+    display: none !important;
+  }
+
+  /* Services grid - horizontal scroll */
+  section:nth-of-type(4) .grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 0 !important;
+    padding: 0 var(--mobile-padding) !important;
+  }
+
+  section:nth-of-type(4) .grid::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Service cards - ICON ONLY, vertical compact */
+  section:nth-of-type(4) .grid>div {
+    flex: 0 0 auto !important;
+    width: 80px !important;
+    min-width: 80px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 12px 8px !important;
+    border-radius: 12px !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    scroll-snap-align: start !important;
+    transition: all 0.2s ease !important;
+  }
+
+  section:nth-of-type(4) .grid>div:active {
+    transform: scale(0.95) !important;
+    background: rgba(42, 99, 205, 0.08) !important;
+  }
+
+  /* Service icon - centered, prominent */
+  section:nth-of-type(4) .grid>div .inline-flex {
+    flex-shrink: 0 !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 12px !important;
+    margin-bottom: 0 !important;
+  }
+
+  section:nth-of-type(4) .grid>div .inline-flex svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  /* Service title - tiny label */
+  section:nth-of-type(4) .grid>div h3 {
+    font-size: 0.65rem !important;
+    font-weight: 600 !important;
+    color: var(--foreground) !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    max-width: 72px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+  }
+
+  /* Hide description and "Conocer más" link */
+  section:nth-of-type(4) .grid>div p,
+  section:nth-of-type(4) .grid>div .relative>a,
+  section:nth-of-type(4) .grid>div .relative {
+    display: none !important;
+  }
+
+  /* Re-enable icon and title containers */
+  section:nth-of-type(4) .grid>div>.relative:has(.inline-flex) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  /* ========================================
+     CTA SECTION - ULTRA COMPACT
+     ======================================== */
+  section:nth-of-type(5) {
+    padding: 16px var(--mobile-padding) !important;
+  }
+
+  section:nth-of-type(5)>div>div {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  section:nth-of-type(5) h2 {
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    flex: 1 !important;
+    line-height: 1.3 !important;
+  }
+
+  section:nth-of-type(5) p {
+    display: none !important;
+  }
+
+  section:nth-of-type(5) a {
+    width: auto !important;
+    flex-shrink: 0 !important;
+    padding: 8px 14px !important;
+    border-radius: 8px !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+    min-height: auto !important;
+  }
+
+  /* ========================================
+     FOOTER - ENHANCED COMPACT STYLE
+     Shows more info while staying compact
+     ======================================== */
+  footer {
+    padding: 20px var(--mobile-padding) 16px !important;
+    background: #1a1a1a !important;
+  }
+
+  /* Show the grid but make it compact */
+  footer>div>.grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* Company section - centered with social */
+  footer .grid>div:first-child {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* Company logo + name */
+  footer .grid>div:first-child>div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+
+  footer .grid>div:first-child>div:first-child h3 {
+    font-size: 0.9rem !important;
+  }
+
+  footer .grid>div:first-child>div:first-child .w-8 {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  /* Show tagline - compact */
+  footer .grid>div:first-child>p {
+    display: block !important;
+    font-size: 0.65rem !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    text-align: center !important;
+    margin: 0 !important;
+  }
+
+  /* Social icons - compact row */
+  footer .flex.gap-2 {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+
+  footer .flex.gap-2 a {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  footer .flex.gap-2 a svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* Quick links section - horizontal pills */
+  footer .grid>div:nth-child(2) {
+    display: block !important;
+    text-align: center !important;
+  }
+
+  footer .grid>div:nth-child(2) h4 {
+    font-size: 0.7rem !important;
+    margin-bottom: 8px !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  footer .grid>div:nth-child(2) ul {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+
+  footer .grid>div:nth-child(2) li {
+    padding: 0 !important;
+  }
+
+  footer .grid>div:nth-child(2) li a {
+    font-size: 0.65rem !important;
+    padding: 4px 10px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    display: inline-block !important;
+    min-height: auto !important;
+    min-width: auto !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+
+  /* HIDE Servicios section on mobile (nth-child 3) */
+  footer .footer-servicios,
+  footer .grid>div:nth-child(3) {
+    display: none !important;
+  }
+
+  /* HIDE Contacto section on mobile (nth-child 4) */
+  footer .footer-contacto,
+  footer .grid>div:nth-child(4) {
+    display: none !important;
+  }
+
+  /* Bottom bar */
+  footer>div>div:last-child {
+    padding-top: 12px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    text-align: center !important;
+  }
+
+  footer>div>div:last-child p {
+    font-size: 0.6rem !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    margin: 0 !important;
+  }
+
+  footer>div>div:last-child .flex {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 12px !important;
+  }
+
+  footer>div>div:last-child .flex a {
+    font-size: 0.65rem !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    min-height: auto !important;
+    min-width: auto !important;
+  }
+
+  /* ========================================
+     MOBILE NAVIGATION BAR - ANIMATED
+     ======================================== */
+
+  /* Toggle button - positioned below header */
+  .mobile-nav-toggle {
+    position: fixed !important;
+    top: 56px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 999 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 6px 14px !important;
+    background: rgba(33, 37, 41, 0.95) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    min-height: auto !important;
+    min-width: auto !important;
+  }
+
+  .mobile-nav-toggle:active {
+    transform: translateX(-50%) scale(0.95) !important;
+  }
+
+  .mobile-nav-toggle-icon {
+    width: 16px !important;
+    height: 16px !important;
+    color: white !important;
+    transition: transform 0.3s ease !important;
+  }
+
+  .mobile-nav-toggle-icon.rotated {
+    transform: rotate(90deg) !important;
+  }
+
+  .mobile-nav-toggle-text {
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    color: white !important;
+    letter-spacing: 0.3px !important;
+  }
+
+  /* Navigation panel - slides down */
+  .mobile-nav-panel {
+    position: fixed !important;
+    top: 92px !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateY(-10px) !important;
+    z-index: 998 !important;
+    width: calc(100% - 32px) !important;
+    max-width: 380px !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+    padding: 16px !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  .mobile-nav-panel.expanded {
+    transform: translateX(-50%) translateY(0) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* Navigation grid */
+  .mobile-nav-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* Navigation item */
+  .mobile-nav-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 12px 8px !important;
+    border-radius: 12px !important;
+    background: #f8f9fa !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    min-height: auto !important;
+    min-width: auto !important;
+  }
+
+  .mobile-nav-item:active {
+    transform: scale(0.95) !important;
+    background: rgba(42, 99, 205, 0.1) !important;
+  }
+
+  .mobile-nav-item.active {
+    background: rgba(42, 99, 205, 0.15) !important;
+  }
+
+  .mobile-nav-item.active .mobile-nav-icon-wrapper {
+    background: var(--primary-blue) !important;
+  }
+
+  .mobile-nav-item.active .mobile-nav-icon {
+    color: white !important;
+  }
+
+  /* Icon wrapper */
+  .mobile-nav-icon-wrapper {
+    width: 36px !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, #e8f0fe 0%, #dbeafe 100%) !important;
+    border-radius: 10px !important;
+  }
+
+  .mobile-nav-icon {
+    width: 18px !important;
+    height: 18px !important;
+    color: var(--primary-blue) !important;
+  }
+
+  /* Navigation label */
+  .mobile-nav-label {
+    font-size: 0.65rem !important;
+    font-weight: 600 !important;
+    color: #495057 !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Backdrop */
+  .mobile-nav-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    z-index: 997 !important;
+    animation: fadeIn 0.2s ease !important;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* ========================================
+     WHATSAPP FLOATING BUTTON - ENHANCED
+     ======================================== */
+  [class*="whatsapp"],
+  a[href*="wa.me"] {
+    width: 56px !important;
+    height: 56px !important;
+    bottom: 16px !important;
+    right: 16px !important;
+    border-radius: 16px !important;
+    box-shadow:
+      0 6px 24px rgba(37, 211, 102, 0.4),
+      0 3px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* ========================================
+     MOBILE ANIMATIONS
+     ======================================== */
+
+  /* Entrance animation for sections */
+  @keyframes mobileSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  section {
+    animation: mobileSlideUp 0.6s ease-out both;
+  }
+
+  section:nth-of-type(2) {
+    animation-delay: 0.1s;
+  }
+
+  section:nth-of-type(3) {
+    animation-delay: 0.2s;
+  }
+
+  section:nth-of-type(4) {
+    animation-delay: 0.3s;
+  }
+
+  section:nth-of-type(5) {
+    animation-delay: 0.4s;
+  }
+
+  /* Tap feedback animation */
+  @keyframes tapPulse {
+    0% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(0.97);
+    }
+
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .tap-active {
+    animation: tapPulse 0.2s ease-out;
+  }
+
+  /* Card shimmer on load */
+  @keyframes cardShimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  /* ========================================
+     SCROLL ENHANCEMENTS
+     ======================================== */
+
+  /* Smooth momentum scrolling */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hide scrollbars but keep functionality */
+  ::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+  }
+
+  /* Scroll snap for horizontal sections */
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+  }
+
+  .scroll-snap-x>* {
+    scroll-snap-align: start;
+  }
+
+  /* ========================================
+     TYPOGRAPHY REFINEMENTS
+     ======================================== */
+
+  h1 {
+    font-weight: 900 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  h2 {
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  h3 {
+    font-weight: 700 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  /* Better readability */
+  p,
+  span,
+  li {
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+  }
+
+  /* ========================================
+     INTERACTIVE STATES
+     ======================================== */
+
+  /* Remove tap delay */
+  a,
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* Active state feedback */
+  a:active,
+  button:active,
+  [role="button"]:active {
+    opacity: 0.85;
+    transition: opacity 0.1s ease;
+  }
+
+  /* Focus states for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--primary-blue) !important;
+    outline-offset: 2px !important;
+  }
+}

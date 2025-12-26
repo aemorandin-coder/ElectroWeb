@@ -15,9 +15,9 @@ interface VerificationRequest {
     businessVerificationNotes: string;
     updatedAt: string;
     user: {
-        name: string;
+        name: string | null;
         email: string;
-        image: string;
+        image: string | null;
     };
 }
 
@@ -161,16 +161,16 @@ export default function VerificationsPage() {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden relative">
-                                                    {req.user.image ? (
-                                                        <Image src={req.user.image} alt={req.user.name} fill className="object-cover" />
+                                                    {req.user?.image ? (
+                                                        <Image src={req.user.image} alt={req.user?.name || 'Usuario'} fill className="object-cover" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">
-                                                            {req.user.name.charAt(0)}
+                                                            {(req.user?.name || req.user?.email || 'U').charAt(0)}
                                                         </div>
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-medium text-gray-900">{req.user.name}</div>
+                                                    <div className="text-sm font-medium text-gray-900">{req.user?.name || 'Usuario'}</div>
                                                     <div className="text-xs text-gray-500">{req.user.email}</div>
                                                 </div>
                                             </div>

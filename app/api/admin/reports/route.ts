@@ -50,10 +50,6 @@ export async function GET(request: NextRequest) {
                 totalProducts,
                 totalProductRequests,
                 pendingProductRequests,
-                totalPageViews,
-                totalClicks,
-                securityAlerts,
-                criticalAlerts,
             ] = await Promise.all([
                 // Total users (excluding ADMIN and SUPER_ADMIN)
                 prisma.user.count({
@@ -82,32 +78,50 @@ export async function GET(request: NextRequest) {
                 prisma.productRequest.count({
                     where: { status: 'PENDING' },
                 }),
-                // Page views in period
-                prisma.analyticsEvent.count({
-                    where: {
-                        eventType: 'page_view',
-                        createdAt: { gte: startDate },
-                    },
-                }),
-                // Clicks in period
-                prisma.analyticsEvent.count({
-                    where: {
-                        eventType: 'click',
-                        createdAt: { gte: startDate },
-                    },
-                }),
-                // Security alerts in period (from AuditLog)
-                prisma.auditLog.count({
-                    where: { createdAt: { gte: startDate } },
-                }),
-                // Critical security alerts
-                prisma.auditLog.count({
-                    where: {
-                        severity: 'CRITICAL',
-                        createdAt: { gte: startDate },
-                    },
-                }),
             ]);
+
+            // Analytics and Audit data (these tables might not exist)
+            let totalPageViews = 0;
+            let totalClicks = 0;
+            let securityAlerts = 0;
+            let criticalAlerts = 0;
+
+            try {
+                // Try to fetch analytics data if the model exists
+                if ((prisma as any).analyticsEvent) {
+                    totalPageViews = await (prisma as any).analyticsEvent.count({
+                        where: {
+                            eventType: 'page_view',
+                            createdAt: { gte: startDate },
+                        },
+                    });
+                    totalClicks = await (prisma as any).analyticsEvent.count({
+                        where: {
+                            eventType: 'click',
+                            createdAt: { gte: startDate },
+                        },
+                    });
+                }
+            } catch (e) {
+                // AnalyticsEvent model doesn't exist, use defaults
+            }
+
+            try {
+                // Try to fetch audit data if the model exists
+                if ((prisma as any).auditLog) {
+                    securityAlerts = await (prisma as any).auditLog.count({
+                        where: { createdAt: { gte: startDate } },
+                    });
+                    criticalAlerts = await (prisma as any).auditLog.count({
+                        where: {
+                            severity: 'CRITICAL',
+                            createdAt: { gte: startDate },
+                        },
+                    });
+                }
+            } catch (e) {
+                // AuditLog model doesn't exist, use defaults
+            }
 
             // Get revenue data
             const orderRevenue = await prisma.order.aggregate({
@@ -163,106 +177,167 @@ export async function GET(request: NextRequest) {
         }
 
         if (type === 'interactions') {
-            // Event type breakdown
-            const eventsByType = await prisma.analyticsEvent.groupBy({
-                by: ['eventType'],
-                _count: true,
-                where: { createdAt: { gte: startDate } },
-                orderBy: { _count: { eventType: 'desc' } },
-            });
+            // Check if AnalyticsEvent model exists
+            if (!(prisma as any).analyticsEvent) {
+                return NextResponse.json({
+                    interactions: {
+                        byType: [],
+                        byDevice: [],
+                        byBrowser: [],
+                        topPages: [],
+                        daily: [],
+                    },
+                    period,
+                    message: 'Analytics tracking not configured',
+                });
+            }
 
-            // Device breakdown
-            const eventsByDevice = await prisma.analyticsEvent.groupBy({
-                by: ['deviceType'],
-                _count: true,
-                where: { createdAt: { gte: startDate } },
-            });
+            try {
+                // Event type breakdown
+                const eventsByType = await (prisma as any).analyticsEvent.groupBy({
+                    by: ['eventType'],
+                    _count: true,
+                    where: { createdAt: { gte: startDate } },
+                    orderBy: { _count: { eventType: 'desc' } },
+                });
 
-            // Browser breakdown
-            const eventsByBrowser = await prisma.analyticsEvent.groupBy({
-                by: ['browser'],
-                _count: true,
-                where: { createdAt: { gte: startDate } },
-            });
+                // Device breakdown
+                const eventsByDevice = await (prisma as any).analyticsEvent.groupBy({
+                    by: ['deviceType'],
+                    _count: true,
+                    where: { createdAt: { gte: startDate } },
+                });
 
-            // Top pages
-            const topPages = await prisma.analyticsEvent.groupBy({
-                by: ['page'],
-                _count: true,
-                where: {
-                    eventType: 'page_view',
-                    createdAt: { gte: startDate },
-                    page: { not: null },
-                },
-                orderBy: { _count: { page: 'desc' } },
-                take: 10,
-            });
+                // Browser breakdown
+                const eventsByBrowser = await (prisma as any).analyticsEvent.groupBy({
+                    by: ['browser'],
+                    _count: true,
+                    where: { createdAt: { gte: startDate } },
+                });
 
-            // Daily events for chart
-            const dailyEvents = await prisma.$queryRaw`
-                SELECT DATE("createdAt") as date, COUNT(*)::integer as count
-                FROM "analytics_events"
-                WHERE "createdAt" >= ${startDate}
-                GROUP BY DATE("createdAt")
-                ORDER BY date ASC
-            `;
+                // Top pages
+                const topPages = await (prisma as any).analyticsEvent.groupBy({
+                    by: ['page'],
+                    _count: true,
+                    where: {
+                        eventType: 'page_view',
+                        createdAt: { gte: startDate },
+                        page: { not: null },
+                    },
+                    orderBy: { _count: { page: 'desc' } },
+                    take: 10,
+                });
 
-            return NextResponse.json({
-                interactions: {
-                    byType: eventsByType,
-                    byDevice: eventsByDevice,
-                    byBrowser: eventsByBrowser,
-                    topPages,
-                    daily: dailyEvents,
-                },
-                period,
-            });
+                // Daily events for chart
+                let dailyEvents: any[] = [];
+                try {
+                    dailyEvents = await prisma.$queryRaw`
+                        SELECT DATE("createdAt") as date, COUNT(*)::integer as count
+                        FROM "analytics_events"
+                        WHERE "createdAt" >= ${startDate}
+                        GROUP BY DATE("createdAt")
+                        ORDER BY date ASC
+                    `;
+                } catch (e) {
+                    // Query failed, use empty array
+                }
+
+                return NextResponse.json({
+                    interactions: {
+                        byType: eventsByType,
+                        byDevice: eventsByDevice,
+                        byBrowser: eventsByBrowser,
+                        topPages,
+                        daily: dailyEvents,
+                    },
+                    period,
+                });
+            } catch (e) {
+                return NextResponse.json({
+                    interactions: {
+                        byType: [],
+                        byDevice: [],
+                        byBrowser: [],
+                        topPages: [],
+                        daily: [],
+                    },
+                    period,
+                    message: 'Analytics data unavailable',
+                });
+            }
         }
 
         if (type === 'security') {
-            // Security events from AuditLog (using action field)
-            const securityByType = await prisma.auditLog.groupBy({
-                by: ['action'],
-                _count: true,
-                where: { createdAt: { gte: startDate } },
-                orderBy: { _count: { action: 'desc' } },
-            });
+            // Check if AuditLog model exists
+            if (!(prisma as any).auditLog) {
+                return NextResponse.json({
+                    security: {
+                        byType: [],
+                        bySeverity: [],
+                        recentLogs: [],
+                        suspiciousIPs: [],
+                    },
+                    period,
+                    message: 'Security logging not configured',
+                });
+            }
 
-            const securityBySeverity = await prisma.auditLog.groupBy({
-                by: ['severity'],
-                _count: true,
-                where: { createdAt: { gte: startDate } },
-            });
+            try {
+                // Security events from AuditLog (using action field)
+                const securityByType = await (prisma as any).auditLog.groupBy({
+                    by: ['action'],
+                    _count: true,
+                    where: { createdAt: { gte: startDate } },
+                    orderBy: { _count: { action: 'desc' } },
+                });
 
-            // Recent audit logs
-            const recentSecurityLogs = await prisma.auditLog.findMany({
-                where: { createdAt: { gte: startDate } },
-                orderBy: { createdAt: 'desc' },
-                take: 50,
-            });
+                const securityBySeverity = await (prisma as any).auditLog.groupBy({
+                    by: ['severity'],
+                    _count: true,
+                    where: { createdAt: { gte: startDate } },
+                });
 
-            // Top IPs with warning/critical events
-            const suspiciousIPs = await prisma.auditLog.groupBy({
-                by: ['ipAddress'],
-                _count: true,
-                where: {
-                    createdAt: { gte: startDate },
-                    severity: { in: ['WARNING', 'CRITICAL'] },
-                    ipAddress: { not: null },
-                },
-                orderBy: { _count: { ipAddress: 'desc' } },
-                take: 10,
-            });
+                // Recent audit logs
+                const recentSecurityLogs = await (prisma as any).auditLog.findMany({
+                    where: { createdAt: { gte: startDate } },
+                    orderBy: { createdAt: 'desc' },
+                    take: 50,
+                });
 
-            return NextResponse.json({
-                security: {
-                    byType: securityByType,
-                    bySeverity: securityBySeverity,
-                    recentLogs: recentSecurityLogs,
-                    suspiciousIPs,
-                },
-                period,
-            });
+                // Top IPs with warning/critical events
+                const suspiciousIPs = await (prisma as any).auditLog.groupBy({
+                    by: ['ipAddress'],
+                    _count: true,
+                    where: {
+                        createdAt: { gte: startDate },
+                        severity: { in: ['WARNING', 'CRITICAL'] },
+                        ipAddress: { not: null },
+                    },
+                    orderBy: { _count: { ipAddress: 'desc' } },
+                    take: 10,
+                });
+
+                return NextResponse.json({
+                    security: {
+                        byType: securityByType,
+                        bySeverity: securityBySeverity,
+                        recentLogs: recentSecurityLogs,
+                        suspiciousIPs,
+                    },
+                    period,
+                });
+            } catch (e) {
+                return NextResponse.json({
+                    security: {
+                        byType: [],
+                        bySeverity: [],
+                        recentLogs: [],
+                        suspiciousIPs: [],
+                    },
+                    period,
+                    message: 'Security data unavailable',
+                });
+            }
         }
 
         return NextResponse.json({ error: 'Invalid report type' }, { status: 400 });

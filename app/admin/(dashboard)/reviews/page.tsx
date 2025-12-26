@@ -8,8 +8,16 @@ interface Review {
     id: string;
     productId: string;
     userId: string;
-    userName: string;
+    userName?: string;
     userImage?: string;
+    user?: {
+        name: string | null;
+        email: string;
+    };
+    product?: {
+        name: string;
+        slug: string;
+    };
     rating: number;
     title?: string;
     comment: string;
@@ -241,12 +249,12 @@ export default function AdminReviewsPage() {
                                                     <img className="h-10 w-10 rounded-full" src={review.userImage} alt="" />
                                                 ) : (
                                                     <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-                                                        {review.userName.charAt(0).toUpperCase()}
+                                                        {(review.user?.name || review.userName || 'U').charAt(0).toUpperCase()}
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-900">{review.userName}</div>
+                                                <div className="text-sm font-medium text-gray-900">{review.user?.name || review.userName || 'Usuario'}</div>
                                                 {review.isVerifiedPurchase && (
                                                     <div className="text-xs text-green-600">✓ Compra verificada</div>
                                                 )}

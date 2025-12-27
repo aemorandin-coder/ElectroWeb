@@ -89,6 +89,7 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState('description');
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
   // Digital Product State
   const [selectedDigitalAmount, setSelectedDigitalAmount] = useState<{
     amount: number;
@@ -428,11 +429,11 @@ export default function ProductDetailPage() {
   const currentImage = displayImages[selectedImageIndex] || product.mainImage || displayImages[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
+    <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa] pb-20 lg:pb-0">
       <PublicHeader />
 
-      {/* Compact Hero Breadcrumb */}
-      <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
+      {/* Compact Hero Breadcrumb - Hidden on mobile */}
+      <section className="hidden lg:block relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
         {/* Animated Background Orbs */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-5 left-5 w-32 h-32 bg-white rounded-full blur-3xl animate-pulse"></div>
@@ -498,9 +499,9 @@ export default function ProductDetailPage() {
         </div>
       </section>
 
-      {/* Main Content - 50% More Compact */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-3 lg:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
           {/* Left Column - Image with Thumbnails Inside */}
           <div
             className="relative" style={{ perspective: '1500px' }}>
@@ -547,17 +548,17 @@ export default function ProductDetailPage() {
                   </div>
                 )}
 
-                {/* Vertical Thumbnails - Inside Left */}
+                {/* Thumbnails - Horizontal bottom on mobile, Vertical left on desktop */}
                 {displayImages.length > 1 && (
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
-                    {displayImages.map((img, index) => (
+                  <div className="absolute left-1/2 bottom-2 -translate-x-1/2 lg:left-3 lg:top-1/2 lg:bottom-auto lg:-translate-y-1/2 lg:translate-x-0 z-20 flex flex-row lg:flex-col gap-1.5 lg:gap-2">
+                    {displayImages.slice(0, 5).map((img, index) => (
                       <button
                         key={index}
                         onClick={() => {
                           setSelectedImageIndex(index);
                           setImageLoading(true);
                         }}
-                        className={`relative w-12 h-12 bg-white/90 backdrop-blur-sm rounded-lg overflow-hidden border-2 transition-all duration-300 shadow-md hover:scale-110 ${selectedImageIndex === index
+                        className={`relative w-10 h-10 lg:w-12 lg:h-12 bg-white/90 backdrop-blur-sm rounded-lg overflow-hidden border-2 transition-all duration-300 shadow-md hover:scale-110 ${selectedImageIndex === index
                           ? 'border-[#2a63cd] ring-2 ring-[#2a63cd]/30'
                           : 'border-white/50 hover:border-gray-300'
                           }`}
@@ -586,8 +587,9 @@ export default function ProductDetailPage() {
 
                 {/* Floating Share Button */}
                 <div className="absolute top-16 right-4 z-20" style={{ right: product.hasDiscount ? '5rem' : '1rem' }}>
-                  <div className="relative group/share">
+                  <div className="relative">
                     <button
+                      onClick={() => setShowShareMenu(!showShareMenu)}
                       className="p-3 bg-white/90 backdrop-blur-md rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all flex items-center justify-center"
                       title="Compartir producto"
                     >
@@ -595,63 +597,72 @@ export default function ProductDetailPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                       </svg>
                     </button>
-                    {/* Share Dropdown */}
-                    <div className="absolute right-0 top-full mt-2 opacity-0 invisible group-hover/share:opacity-100 group-hover/share:visible transition-all duration-200 z-30">
-                      <div className="bg-white rounded-xl shadow-2xl border border-gray-100 py-2 min-w-[180px] animate-scaleIn">
-                        <p className="px-4 py-1.5 text-xs font-bold text-gray-400 uppercase tracking-wide">Compartir</p>
-                        {/* WhatsApp */}
-                        <button
-                          onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Mira este producto: ${product.name} - ${window.location.href}`)}`, '_blank')}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-green-50 transition-colors text-left"
-                        >
-                          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                            </svg>
+                    {/* Share Dropdown - Click to toggle */}
+                    {showShareMenu && (
+                      <>
+                        {/* Backdrop to close */}
+                        <div
+                          className="fixed inset-0 z-20"
+                          onClick={() => setShowShareMenu(false)}
+                        />
+                        <div className="absolute right-0 top-full mt-2 z-30">
+                          <div className="bg-white rounded-xl shadow-2xl border border-gray-100 py-2 min-w-[180px] animate-scaleIn">
+                            <p className="px-4 py-1.5 text-xs font-bold text-gray-400 uppercase tracking-wide">Compartir</p>
+                            {/* WhatsApp */}
+                            <button
+                              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Mira este producto: ${product.name} - ${window.location.href}`)}`, '_blank')}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-green-50 transition-colors text-left"
+                            >
+                              <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                </svg>
+                              </div>
+                              <span className="text-sm font-medium text-gray-700">WhatsApp</span>
+                            </button>
+                            {/* Facebook */}
+                            <button
+                              onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 transition-colors text-left"
+                            >
+                              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                </svg>
+                              </div>
+                              <span className="text-sm font-medium text-gray-700">Facebook</span>
+                            </button>
+                            {/* Twitter/X */}
+                            <button
+                              onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Mira este producto: ${product.name}`)}&url=${encodeURIComponent(window.location.href)}`, '_blank')}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 transition-colors text-left"
+                            >
+                              <div className="w-8 h-8 bg-gradient-to-br from-gray-800 to-black rounded-lg flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                </svg>
+                              </div>
+                              <span className="text-sm font-medium text-gray-700">X (Twitter)</span>
+                            </button>
+                            {/* Copy Link */}
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(window.location.href);
+                                toast.success('¡Enlace copiado!');
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-purple-50 transition-colors text-left"
+                            >
+                              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                              </div>
+                              <span className="text-sm font-medium text-gray-700">Copiar enlace</span>
+                            </button>
                           </div>
-                          <span className="text-sm font-medium text-gray-700">WhatsApp</span>
-                        </button>
-                        {/* Facebook */}
-                        <button
-                          onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 transition-colors text-left"
-                        >
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                            </svg>
-                          </div>
-                          <span className="text-sm font-medium text-gray-700">Facebook</span>
-                        </button>
-                        {/* Twitter/X */}
-                        <button
-                          onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Mira este producto: ${product.name}`)}&url=${encodeURIComponent(window.location.href)}`, '_blank')}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 transition-colors text-left"
-                        >
-                          <div className="w-8 h-8 bg-gradient-to-br from-gray-800 to-black rounded-lg flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                            </svg>
-                          </div>
-                          <span className="text-sm font-medium text-gray-700">X (Twitter)</span>
-                        </button>
-                        {/* Copy Link */}
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(window.location.href);
-                            toast.success('¡Enlace copiado!');
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-purple-50 transition-colors text-left"
-                        >
-                          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                            </svg>
-                          </div>
-                          <span className="text-sm font-medium text-gray-700">Copiar enlace</span>
-                        </button>
-                      </div>
-                    </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -678,13 +689,13 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Right Column - Product Details */}
-          <div className="space-y-6">
-            {/* Header Section - Name, Rating & Price in same row */}
-            <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-4">
-              {/* Left: Name & Rating */}
-              <div className="flex-1 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-xl border border-gray-100 px-6 py-3 shadow-lg flex flex-col justify-center">
+          <div className="space-y-3 lg:space-y-6">
+            {/* Header Section - Name, Rating & Price */}
+            <div className="flex flex-col gap-3 lg:gap-4">
+              {/* Name & Rating - Centered on mobile */}
+              <div className="bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-xl border border-gray-100 px-3 lg:px-6 py-2 lg:py-3 shadow-sm lg:shadow-lg text-center lg:text-left">
                 {product.brand && (
-                  <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-500">
+                  <div className="inline-flex items-center justify-center lg:justify-start gap-2 text-xs lg:text-sm font-medium text-gray-500">
                     <span className="uppercase tracking-wider">{product.brand}</span>
                     {product.category && (
                       <>
@@ -695,12 +706,12 @@ export default function ProductDetailPage() {
                   </div>
                 )}
 
-                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 leading-snug line-clamp-2">
+                <h1 className="text-base lg:text-2xl font-bold text-gray-900 leading-snug line-clamp-2">
                   {product.name}
                 </h1>
 
-                {/* Rating & Stock Status in same row */}
-                <div className="flex items-center gap-3 flex-wrap mt-1">
+                {/* Rating & Stock Status - Centered on mobile */}
+                <div className="flex items-center justify-center lg:justify-start gap-3 flex-wrap mt-1">
                   <div className="flex items-center gap-2">
                     <div className="flex text-yellow-400">
                       {[...Array(5)].map((_, i) => (
@@ -724,34 +735,34 @@ export default function ProductDetailPage() {
                 </div>
               </div>
 
-              {/* Right: Price - Protagonist */}
-              <div className="flex-shrink-0">
+              {/* Price - Compact on mobile */}
+              <div>
                 {product.productType === 'DIGITAL' && product.specs?.digitalPricing && selectedDigitalAmount ? (
-                  <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl border border-blue-100 px-6 py-3 text-center shadow-lg">
-                    <span className="block text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] tracking-tight leading-none">
+                  <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl border border-blue-100 px-3 lg:px-6 py-2 lg:py-3 text-center shadow-sm lg:shadow-lg">
+                    <span className="block text-2xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] tracking-tight leading-none">
                       ${selectedDigitalAmount.salePrice.toFixed(2)}
                     </span>
                     {settings?.exchangeRateVES && (
-                      <div className="flex items-center justify-center gap-1 mt-1">
-                        <span className="text-xs font-semibold text-gray-500">Bs.</span>
-                        <span className="text-sm font-bold text-gray-500">{formatVESPrice(selectedDigitalAmount.salePrice * settings.exchangeRateVES)}</span>
+                      <div className="flex items-center justify-center gap-1 mt-0.5">
+                        <span className="text-[10px] lg:text-xs font-semibold text-gray-500">Bs.</span>
+                        <span className="text-xs lg:text-sm font-bold text-gray-500">{formatVESPrice(selectedDigitalAmount.salePrice * settings.exchangeRateVES)}</span>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl border border-blue-100 px-6 py-3 text-center shadow-lg">
-                    <span className="block text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] tracking-tight leading-none">
+                  <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl border border-blue-100 px-3 lg:px-6 py-2 lg:py-3 text-center shadow-sm lg:shadow-lg">
+                    <span className="block text-2xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] tracking-tight leading-none">
                       ${Number(product.priceUSD).toFixed(2)}
                     </span>
                     {settings?.exchangeRateVES && (
-                      <div className="flex items-center justify-center gap-1 mt-1">
-                        <span className="text-xs font-semibold text-gray-500">Bs.</span>
-                        <span className="text-sm font-bold text-gray-500">{formatVESPrice(Number(product.priceUSD) * settings.exchangeRateVES)}</span>
+                      <div className="flex items-center justify-center gap-1 mt-0.5">
+                        <span className="text-[10px] lg:text-xs font-semibold text-gray-500">Bs.</span>
+                        <span className="text-xs lg:text-sm font-bold text-gray-500">{formatVESPrice(Number(product.priceUSD) * settings.exchangeRateVES)}</span>
                       </div>
                     )}
                     {product.hasDiscount && product.discountPercent && (
-                      <div className="flex items-center justify-center gap-2 mt-1">
-                        <span className="text-sm text-gray-400 line-through">
+                      <div className="flex items-center justify-center gap-2 mt-0.5">
+                        <span className="text-xs lg:text-sm text-gray-400 line-through">
                           ${formatPrice(product.priceUSD / (1 - product.discountPercent / 100))}
                         </span>
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-100">
@@ -986,15 +997,15 @@ export default function ProductDetailPage() {
 
 
         {/* Reviews Section */}
-        <div className="mt-8 mb-8">
-          <div className="flex items-center gap-4 mb-8">
-            <h2 className="text-3xl font-black text-[#212529]">
-              Reseñas y Calificaciones
+        <div className="mt-4 lg:mt-8 mb-4 lg:mb-8">
+          <div className="flex items-center gap-2 lg:gap-4 mb-4 lg:mb-8">
+            <h2 className="text-lg lg:text-3xl font-black text-[#212529]">
+              Reseñas
             </h2>
-            <div className="h-1 flex-1 bg-gradient-to-r from-[#2a63cd]/20 to-transparent rounded-full"></div>
+            <div className="h-0.5 lg:h-1 flex-1 bg-gradient-to-r from-[#2a63cd]/20 to-transparent rounded-full"></div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             {/* Left Column - Stats */}
             <div className="lg:col-span-1">
               <ReviewStats
@@ -1025,32 +1036,33 @@ export default function ProductDetailPage() {
 
         {
           relatedProducts.length > 0 && (
-            <section className="mt-10">
-              <div className="flex items-center gap-4 mb-8">
-                <h2 className="text-3xl font-black text-[#212529]">
-                  Productos Relacionados
+            <section className="mt-6 lg:mt-10">
+              <div className="flex items-center gap-2 lg:gap-4 mb-4 lg:mb-8">
+                <h2 className="text-lg lg:text-3xl font-black text-[#212529]">
+                  Relacionados
                 </h2>
-                <div className="h-1 flex-1 bg-gradient-to-r from-[#2a63cd]/20 to-transparent rounded-full"></div>
+                <div className="h-0.5 lg:h-1 flex-1 bg-gradient-to-r from-[#2a63cd]/20 to-transparent rounded-full"></div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Horizontal scroll on mobile, grid on desktop */}
+              <div className="flex lg:grid lg:grid-cols-4 gap-3 lg:gap-6 overflow-x-auto lg:overflow-x-visible pb-4 lg:pb-0 -mx-2 px-2 lg:mx-0 lg:px-0 snap-x snap-mandatory scrollbar-hide">
                 {relatedProducts.map((relatedProduct, index) => (
                   <Link
                     key={relatedProduct.id}
                     href={`/productos/${relatedProduct.slug}`}
-                    className="group relative"
+                    className="group relative flex-shrink-0 w-36 lg:w-auto snap-start"
                     style={{
                       animation: `fadeInUp 0.6s ease-out ${index * 0.15}s both`,
                     }}
                   >
-                    <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden transition-all duration-500 border border-gray-200/50 hover:border-[#2a63cd]/30 hover:shadow-2xl hover:shadow-[#2a63cd]/20 hover:-translate-y-2">
-                      {/* Magnetic Glow Effect */}
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-[#2a63cd] via-purple-500 to-pink-500 rounded-2xl opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500"></div>
+                    <div className="relative bg-white/80 backdrop-blur-xl rounded-xl lg:rounded-2xl overflow-hidden transition-all duration-500 border border-gray-200/50 hover:border-[#2a63cd]/30 hover:shadow-xl lg:hover:shadow-2xl hover:shadow-[#2a63cd]/20 hover:-translate-y-1 lg:hover:-translate-y-2">
+                      {/* Magnetic Glow Effect - Hidden on mobile */}
+                      <div className="hidden lg:block absolute -inset-0.5 bg-gradient-to-r from-[#2a63cd] via-purple-500 to-pink-500 rounded-2xl opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500"></div>
 
-                      {/* Shimmer Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-10"></div>
+                      {/* Shimmer Overlay - Hidden on mobile */}
+                      <div className="hidden lg:block absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-10"></div>
 
-                      {/* Image Container */}
-                      <div className="relative h-48 bg-gradient-to-br from-[#f8f9fa] to-gray-100 overflow-hidden">
+                      {/* Image Container - Shorter on mobile */}
+                      <div className="relative h-32 lg:h-48 bg-gradient-to-br from-[#f8f9fa] to-gray-100 overflow-hidden">
                         {/* Animated Background Pattern */}
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                           <div className="absolute inset-0 bg-gradient-to-br from-[#2a63cd]/5 via-purple-500/5 to-pink-500/5"></div>
@@ -1103,10 +1115,10 @@ export default function ProductDetailPage() {
                         )}
                       </div>
 
-                      {/* Content */}
-                      <div className="relative p-4 bg-white/90 backdrop-blur-sm">
-                        {/* Category Badge */}
-                        <div className="mb-2 flex items-center gap-2">
+                      {/* Content - Compact on mobile */}
+                      <div className="relative p-2 lg:p-4 bg-white/90 backdrop-blur-sm overflow-hidden">
+                        {/* Category Badge - Hidden on mobile */}
+                        <div className="hidden lg:flex mb-2 items-center gap-2">
                           <div className="flex-1">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-[#2a63cd]/10 to-[#1e4ba3]/10 rounded-full group-hover:from-[#2a63cd]/20 group-hover:to-[#1e4ba3]/20 transition-all">
                               <div className="w-1.5 h-1.5 rounded-full bg-[#2a63cd] animate-pulse"></div>
@@ -1124,16 +1136,16 @@ export default function ProductDetailPage() {
                           </div>
                         </div>
 
-                        {/* Product Name */}
-                        <h3 className="text-sm font-bold text-[#212529] mb-2 group-hover:text-[#2a63cd] transition-colors line-clamp-2 min-h-[40px]">
+                        {/* Product Name - Smaller on mobile */}
+                        <h3 className="text-xs lg:text-sm font-bold text-[#212529] lg:mb-2 group-hover:text-[#2a63cd] transition-colors line-clamp-2 min-h-[32px] lg:min-h-[40px]">
                           {relatedProduct.name}
                         </h3>
 
-                        {/* Price with Animation */}
+                        {/* Price */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-xs font-bold text-[#212529] opacity-60">USD</span>
-                            <span className="text-lg font-black text-[#212529]">
+                          <div className="flex items-baseline gap-0.5 lg:gap-1">
+                            <span className="text-[10px] lg:text-xs font-bold text-[#212529] opacity-60">USD</span>
+                            <span className="text-sm lg:text-lg font-black text-[#212529]">
                               {Number(relatedProduct.priceUSD).toFixed(2).replace('.', ',')}
                             </span>
                           </div>
@@ -1145,17 +1157,17 @@ export default function ProductDetailPage() {
                           </div>
                         </div>
 
-                        {/* Stock Indicator */}
+                        {/* Stock Indicator - Compact on mobile */}
                         {relatedProduct.stock <= 5 && relatedProduct.stock > 0 && (
-                          <div className="mt-2 flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></div>
-                            <span className="text-[10px] font-semibold text-orange-600">¡Últimas {relatedProduct.stock} unidades!</span>
+                          <div className="mt-1 lg:mt-2 flex items-center gap-1">
+                            <div className="w-1 h-1 lg:w-1.5 lg:h-1.5 rounded-full bg-orange-500 animate-pulse"></div>
+                            <span className="text-[8px] lg:text-[10px] font-semibold text-orange-600">¡Últimas {relatedProduct.stock}!</span>
                           </div>
                         )}
                         {relatedProduct.stock === 0 && (
-                          <div className="mt-2 flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                            <span className="text-[10px] font-semibold text-red-600">Agotado</span>
+                          <div className="mt-1 lg:mt-2 flex items-center gap-1">
+                            <div className="w-1 h-1 lg:w-1.5 lg:h-1.5 rounded-full bg-red-500"></div>
+                            <span className="text-[8px] lg:text-[10px] font-semibold text-red-600">Agotado</span>
                           </div>
                         )}
                       </div>

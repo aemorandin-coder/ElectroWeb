@@ -328,9 +328,12 @@ model GiftCardDesign {
 model GiftCard {
   id              String   @id @default(cuid())
   
-  // Card Details
-  code            String   @unique  // Format: ESMC-XXXX-XXXX-XXXX
-  pin             String?           // Optional PIN for extra security
+  // Card Details - Security Enhanced
+  // Note: 'code' is kept for backwards compatibility, new cards use codeHash
+  code            String   @unique  // Format: ESMC-XXXX-XXXX-XXXX (stored normalized without dashes)
+  codeHash        String?           // SHA-256 hash of the code for secure lookup
+  codeLast4       String?           // Last 4 characters for UI display
+  pin             String?           // Optional PIN (hashed for new cards)
   amountUSD       Decimal           // Original amount
   balanceUSD      Decimal           // Remaining balance
   
@@ -375,6 +378,7 @@ model GiftCard {
   transactions    GiftCardTransaction[]
 
   @@index([code])
+  @@index([codeHash])
   @@index([status])
   @@index([purchasedBy])
   @@map("gift_cards")

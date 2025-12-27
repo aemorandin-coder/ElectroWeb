@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useCart } from '@/contexts/CartContext';
+import { useCartSafe } from '@/contexts/CartContext';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 // Gift Card Designs for thumbnail display
@@ -31,7 +31,7 @@ const GIFT_CARD_DESIGNS: Record<string, { gradient: string; accent: string; name
 };
 
 export default function CartIcon() {
-  const { items, getTotalItems, getTotalPrice, removeItem, updateQuantity, clearCart } = useCart();
+  const { items, getTotalItems, getTotalPrice, removeItem, updateQuantity, clearCart } = useCartSafe();
   const { confirm } = useConfirm();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -119,7 +119,6 @@ export default function CartIcon() {
           style={{
             width: '20px',
             height: '20px',
-            color: 'rgba(255,255,255,0.9)',
             transition: 'transform 0.3s'
           }}
         >
@@ -139,11 +138,12 @@ export default function CartIcon() {
         <div
           className="cart-dropdown bg-white rounded-lg shadow-lg border border-[#e9ecef] z-50"
           style={{
-            position: 'fixed',
-            left: '12px',
-            right: '12px',
-            top: '54px',
-            width: 'auto',
+            position: 'absolute',
+            right: '0',
+            top: '100%',
+            marginTop: '8px',
+            width: '360px',
+            maxWidth: 'calc(100vw - 24px)',
             maxHeight: '80vh',
             overflowY: 'auto',
           }}

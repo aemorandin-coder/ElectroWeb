@@ -754,3 +754,107 @@ export const sendDigitalCodeEmail = async (
   });
 };
 
+// GIFT CARD EMAIL - Send gift card to recipient
+export const sendGiftCardEmail = async (
+  email: string,
+  giftCardData: {
+    code: string;
+    pin?: string;
+    amount: number;
+    senderName: string;
+    recipientName: string;
+    personalMessage?: string;
+    designName?: string;
+  }
+) => {
+  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const redeemUrl = `${appUrl}/canjear-gift-card`;
+
+  const content = `
+    <div style="text-align:center;margin-bottom:30px;">
+      <div style="width:90px;height:90px;background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 50%,#d97706 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 15px 35px rgba(251,191,36,0.4);">
+        <span style="color:white;font-size:40px;">🎁</span>
+      </div>
+      <h2 style="margin:0 0 10px;color:#212529;font-size:28px;font-weight:700;">¡Te Han Enviado una Gift Card!</h2>
+      <p style="color:#f59e0b;font-size:16px;font-weight:600;margin:0;">De parte de ${giftCardData.senderName}</p>
+    </div>
+    
+    <p style="color:#6a6c6b;font-size:16px;line-height:1.7;margin:0 0 25px;text-align:center;">
+      Hola <strong style="color:#212529;">${giftCardData.recipientName}</strong>,<br><br>
+      <strong>${giftCardData.senderName}</strong> te ha enviado una Gift Card de Electro Shop para que la uses en lo que más te guste.
+    </p>
+    
+    ${giftCardData.personalMessage ? `
+    <div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:16px;padding:25px;margin:25px 0;text-align:center;border:2px solid #f59e0b;position:relative;">
+      <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#f59e0b;color:white;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;">MENSAJE PERSONAL</div>
+      <p style="margin:10px 0 0;color:#92400e;font-size:15px;font-style:italic;line-height:1.6;">
+        "${giftCardData.personalMessage}"
+      </p>
+    </div>
+    ` : ''}
+    
+    <!-- Gift Card Visual -->
+    <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:20px;padding:30px;margin:30px 0;box-shadow:0 20px 40px rgba(0,0,0,0.3);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div>
+          <p style="margin:0;color:rgba(255,255,255,0.6);font-size:12px;letter-spacing:1px;">ELECTRO SHOP</p>
+          <p style="margin:4px 0 0;color:#38bdf8;font-size:11px;letter-spacing:2px;">GIFT CARD</p>
+        </div>
+        <div style="background:rgba(56,189,248,0.2);padding:6px 14px;border-radius:20px;border:1px solid rgba(56,189,248,0.4);">
+          <span style="color:#38bdf8;font-size:12px;font-weight:700;">✓ ACTIVA</span>
+        </div>
+      </div>
+      
+      <div style="text-align:center;padding:20px 0;">
+        <p style="margin:0;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:1px;">VALOR</p>
+        <p style="margin:8px 0 0;color:#38bdf8;font-size:48px;font-weight:900;text-shadow:0 0 30px rgba(56,189,248,0.5);">
+          $${giftCardData.amount.toFixed(0)}<span style="font-size:24px;opacity:0.8;">.00</span>
+        </p>
+        <p style="margin:8px 0 0;color:rgba(255,255,255,0.4);font-size:12px;">USD</p>
+      </div>
+      
+      <div style="background:rgba(255,255,255,0.1);border-radius:12px;padding:15px;margin-top:20px;">
+        <p style="margin:0 0 8px;color:rgba(255,255,255,0.5);font-size:10px;text-transform:uppercase;letter-spacing:1px;text-align:center;">Código de Canje</p>
+        <p style="margin:0;color:#ffffff;font-size:20px;font-weight:700;font-family:monospace;letter-spacing:3px;text-align:center;word-break:break-all;">
+          ${giftCardData.code}
+        </p>
+        ${giftCardData.pin ? `
+        <p style="margin:12px 0 0;color:rgba(255,255,255,0.5);font-size:10px;text-align:center;">
+          PIN: <span style="color:#fbbf24;font-weight:700;letter-spacing:2px;">${giftCardData.pin}</span>
+        </p>
+        ` : ''}
+      </div>
+    </div>
+    
+    <div style="background:#f0fdf4;border-radius:12px;padding:20px;margin:25px 0;border:1px solid #22c55e;">
+      <p style="margin:0 0 10px;color:#166534;font-size:14px;font-weight:600;">📝 ¿Cómo canjear tu Gift Card?</p>
+      <ol style="margin:0;padding:0 0 0 20px;color:#166534;font-size:13px;line-height:1.8;">
+        <li>Ingresa a Electro Shop y crea una cuenta o inicia sesión</li>
+        <li>Ve a la página de <strong>Canjear Gift Card</strong></li>
+        <li>Ingresa el código mostrado arriba${giftCardData.pin ? ' y el PIN' : ''}</li>
+        <li>¡El saldo se acreditará al instante en tu cuenta!</li>
+      </ol>
+    </div>
+    
+    <div style="text-align:center;margin:35px 0;">
+      <a href="${redeemUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 10px 25px rgba(34,197,94,0.3);">
+        🎉 Canjear Mi Gift Card
+      </a>
+    </div>
+    
+    <div style="background:#fef3c7;border-radius:12px;padding:15px;margin:25px 0;border:1px solid #fbbf24;">
+      <p style="margin:0;color:#92400e;font-size:12px;text-align:center;">
+        ⚠️ <strong>Importante:</strong> Guarda este correo. El código es único y no tiene fecha de vencimiento.
+      </p>
+    </div>
+    
+    <p style="color:#adb5bd;font-size:12px;margin:25px 0 0;text-align:center;">
+      ¿Tienes problemas? <a href="${appUrl}/contacto" style="color:#2a63cd;">Contáctanos</a>
+    </p>`;
+
+  return sendEmail({
+    to: email,
+    subject: `🎁 ¡${giftCardData.senderName} te ha enviado una Gift Card de $${giftCardData.amount}!`,
+    html: await getBaseTemplate(content, `${giftCardData.senderName} te regalo una Gift Card de $${giftCardData.amount}`),
+  });
+};

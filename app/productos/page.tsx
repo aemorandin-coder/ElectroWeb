@@ -23,18 +23,17 @@ export default async function ProductosPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
       <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
 
-      {/* Hero Section with Premium Effects */}
-      <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
-        {/* Animated Background Particles */}
-        <div className="absolute inset-0 opacity-10">
+      {/* Hero Section - Hidden on Mobile, visible from lg up */}
+      <section className="hidden lg:block relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-purple-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
-          {/* Premium Badge */}
-          <div className="inline-flex items-center gap-3 mb-4">
+        <div className="relative max-w-7xl mx-auto px-8 py-10 text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-3 mb-3">
             <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
             <div className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
               <span className="text-xs font-semibold text-white">Catálogo Premium</span>
@@ -42,15 +41,15 @@ export default async function ProductosPage() {
             <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight">
-            Nuestros <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Productos</span>
+          <h1 className="text-4xl font-bold text-white">
+            Nuestros <span className="text-cyan-200">Productos</span>
           </h1>
-          <p className="text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
-            Explora nuestra colección de tecnología de vanguardia con las mejores marcas y precios competitivos
+
+          <p className="text-sm text-white/80 max-w-2xl mx-auto mt-2">
+            Explora nuestra colección de tecnología de vanguardia
           </p>
         </div>
 
-        {/* Animated Wave Divider */}
         <AnimatedWave />
       </section>
 

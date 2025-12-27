@@ -9,6 +9,8 @@ import HotAdOverlay from '@/components/HotAdOverlay';
 import SubtleParticles from '@/components/SubtleParticles';
 import FloatingTechIcons from '@/components/FloatingTechIcons';
 import YouTubeEmbed from '@/components/YouTubeEmbed';
+import CategoryCarousel from '@/components/home/CategoryCarousel';
+import ProductCarousel from '@/components/home/ProductCarousel';
 import {
   FiBox, FiGrid, FiStar, FiHeadphones,
   FiShield, FiTool, FiBook,
@@ -154,7 +156,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Categories Section */}
+      {/* Categories Section with Carousel */}
       {companySettings?.showCategories !== false && (
         <section className="py-16 bg-white relative overflow-hidden" data-section="light">
           <SubtleParticles particleCount={15} />
@@ -166,91 +168,21 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {categories.slice(0, companySettings?.maxCategoriesDisplay || 12).map((category) => {
-                // Gradiente azul tenue y suave para todas las categorías
-                const gradient = 'from-[#6b9edd] via-[#5a8ad0] to-[#4a7dc4]';
-
-                return (
-                  <Link
-                    key={category.id}
-                    href={`/categorias/${category.slug}`}
-                    className="group relative bg-[#f8f9fa] hover:bg-white border border-[#e9ecef] rounded-2xl p-4 transition-all hover:shadow-xl hover:border-[#2a63cd]/40 hover:-translate-y-2"
-                  >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity`}></div>
-                    <div className="relative flex flex-col items-center gap-3">
-                      {/* 3D Glossy Icon with Shine Effect */}
-                      <div className="relative w-16 h-16">
-                        <div
-                          className={`
-                            relative w-full h-full rounded-2xl flex items-center justify-center
-                            bg-gradient-to-br ${gradient}
-                            shadow-xl
-                            group-hover:scale-110 transition-all duration-500
-                            overflow-hidden
-                          `}
-                          style={{
-                            boxShadow: `
-                              0 10px 40px -10px rgba(107, 158, 221, 0.5),
-                              0 6px 16px -6px rgba(74, 125, 196, 0.4),
-                              inset 0 2px 0 rgba(255, 255, 255, 0.6),
-                              inset 0 -2px 0 rgba(0, 0, 0, 0.15)
-                            `,
-                            border: '1px solid rgba(255, 255, 255, 0.3)'
-                          }}
-                        >
-                          {/* Glossy overlay */}
-                          <div
-                            className="absolute inset-0 rounded-2xl"
-                            style={{
-                              background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.1) 100%)',
-                              pointerEvents: 'none'
-                            }}
-                          />
-                          {/* Shine effect on hover */}
-                          <div
-                            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-                            style={{
-                              background: 'linear-gradient(45deg, transparent 20%, rgba(255,255,255,0.5) 50%, transparent 80%)',
-                              backgroundSize: '200% 200%',
-                              animation: 'shine 2s infinite'
-                            }}
-                          />
-                          {/* Icon/Image with rotation */}
-                          <div className="relative z-10 group-hover:rotate-12 transition-transform duration-500 drop-shadow-lg w-full h-full p-2 flex items-center justify-center">
-                            {category.image ? (
-                              <Image
-                                src={category.image}
-                                alt={category.name}
-                                width={56}
-                                height={56}
-                                className="w-full h-full object-cover drop-shadow-md"
-                              />
-                            ) : (
-                              <FiGrid className="w-7 h-7 text-white" />
-                            )}
-                          </div>
-                          {/* Bottom glow */}
-                          <div
-                            className="absolute inset-0 rounded-2xl opacity-40"
-                            style={{
-                              background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25) 0%, transparent 50%)',
-                              pointerEvents: 'none'
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <h3 className="text-sm font-bold text-[#212529] group-hover:text-[#2a63cd] transition-colors text-center line-clamp-2">{category.name}</h3>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+            {/* Category Carousel - Shows 6 at a time */}
+            <CategoryCarousel
+              categories={categories.map(c => ({
+                id: c.id,
+                name: c.name,
+                slug: c.slug,
+                image: c.image,
+              }))}
+              itemsPerPage={6}
+            />
           </div>
         </section>
       )}
 
-      {/* Featured Products Section */}
+      {/* Featured Products Section with Carousel */}
       <section className="py-12 bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] relative overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 opacity-10">
@@ -274,23 +206,8 @@ export default async function Home() {
             </Link>
           </div>
 
-          {formattedProducts.length === 0 ? (
-            <div className="text-center py-8 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-white/20 mb-3">
-                <FiClock className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-sm font-semibold text-white mb-1">Próximamente</h3>
-              <p className="text-xs text-white/70">Estamos preparando productos increíbles para ti</p>
-            </div>
-          ) : (
-            <div className="flex flex-wrap justify-center gap-4">
-              {formattedProducts.map((product) => (
-                <div key={product.id} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)] xl:w-[calc(25%-0.75rem)]">
-                  <ProductCard product={product as any} />
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Product Carousel - Shows 4 at a time */}
+          <ProductCarousel products={formattedProducts} itemsPerPage={4} />
         </div>
       </section>
 
@@ -388,7 +305,7 @@ export default async function Home() {
       )}
 
       {/* Footer */}
-      <footer className="bg-[#212529] text-white pt-12 pb-6 relative overflow-hidden" suppressHydrationWarning>
+      <footer className="bg-[#212529] text-white pt-12 pb-20 lg:pb-6 relative overflow-hidden" suppressHydrationWarning>
         {/* Metallic Grid Background Effect */}
         <div
           className="absolute inset-0 opacity-[0.03]"
@@ -407,7 +324,7 @@ export default async function Home() {
           }}
         />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" suppressHydrationWarning>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6 mb-8" suppressHydrationWarning>
             {/* Company Info */}
             <div suppressHydrationWarning>
               <div className="flex items-center gap-2 mb-2" suppressHydrationWarning>
@@ -481,19 +398,20 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-sm font-semibold text-white mb-3">Enlaces Rápidos</h4>
+            {/* Quick Links - Hidden on mobile */}
+            <div className="hidden lg:block desktop-only-section">
+              <h4 className="text-sm font-semibold text-white mb-3 uppercase tracking-wide">Enlaces Rápidos</h4>
               <ul className="space-y-1.5 text-xs text-gray-400">
                 <li><Link href="/productos" className="hover:text-[#2a63cd] transition-colors">Productos</Link></li>
                 <li><Link href="/categorias" className="hover:text-[#2a63cd] transition-colors">Categorías</Link></li>
+                <li><Link href="/gift-cards" className="hover:text-[#2a63cd] transition-colors">Gift Cards</Link></li>
                 <li><Link href="/contacto" className="hover:text-[#2a63cd] transition-colors">Contacto</Link></li>
               </ul>
             </div>
 
-            {/* Services - Hidden on mobile via CSS */}
-            <div className="footer-servicios">
-              <h4 className="text-sm font-semibold text-white mb-3">Servicios</h4>
+            {/* Services - Hidden on mobile */}
+            <div className="hidden lg:block desktop-only-section">
+              <h4 className="text-sm font-semibold text-white mb-3 uppercase tracking-wide">Servicios</h4>
               <ul className="space-y-1.5 text-xs text-gray-400">
                 <li><Link href="/servicios" className="hover:text-[#2a63cd] transition-colors">PC Gaming</Link></li>
                 <li><Link href="/servicios" className="hover:text-[#2a63cd] transition-colors">Sistemas CCTV</Link></li>
@@ -502,9 +420,9 @@ export default async function Home() {
               </ul>
             </div>
 
-            {/* Contact */}
-            <div className="footer-contacto">
-              <h4 className="text-sm font-semibold text-white mb-3">Contacto</h4>
+            {/* Contact - Visible on all devices */}
+            <div>
+              <h4 className="text-sm font-semibold text-white mb-3 uppercase tracking-wide">Contacto</h4>
               <ul className="space-y-2 text-xs text-gray-400">
                 {companySettings?.address && (
                   <li className="flex items-start gap-2">

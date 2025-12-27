@@ -3,95 +3,144 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { FiHome, FiBox, FiGrid, FiGift, FiUser, FiMenu, FiX } from 'react-icons/fi';
 
-const navLinks = [
-    { href: '/productos', label: 'Productos', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
-    { href: '/categorias', label: 'Categorías', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
-    { href: '/gift-cards', label: 'Gift Cards', icon: 'M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7' },
-    { href: '/servicios', label: 'Servicios', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
-    { href: '/cursos', label: 'Cursos', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
-    { href: '/contacto', label: 'Contacto', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+const mainNavItems = [
+    { href: '/', label: 'Inicio', icon: FiHome },
+    { href: '/productos', label: 'Productos', icon: FiBox },
+    { href: '/categorias', label: 'Categorías', icon: FiGrid },
+    { href: '/gift-cards', label: 'Gift Cards', icon: FiGift },
+];
+
+const moreNavItems = [
+    { href: '/servicios', label: 'Servicios' },
+    { href: '/cursos', label: 'Cursos' },
+    { href: '/contacto', label: 'Contacto' },
+    { href: '/solicitar-producto', label: 'Solicitar Producto' },
 ];
 
 export default function MobileNavBar() {
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
+    const [showMore, setShowMore] = useState(false);
     const pathname = usePathname();
 
+    // Close menu when navigating
     useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth <= 480);
-        };
-
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
-
-    // Close when navigating
-    useEffect(() => {
-        setIsExpanded(false);
+        setShowMore(false);
     }, [pathname]);
 
-    if (!isMobile) return null;
+    // Lock body scroll when menu is open
+    useEffect(() => {
+        if (showMore) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [showMore]);
+
+    const isActive = (href: string) => {
+        if (href === '/') return pathname === '/';
+        return pathname.startsWith(href);
+    };
 
     return (
         <>
-            {/* Toggle Button - Fixed below header */}
-            <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="mobile-nav-toggle"
-                aria-label="Menú de navegación"
-                aria-expanded={isExpanded}
-            >
-                <svg
-                    className={`mobile-nav-toggle-icon ${isExpanded ? 'rotated' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    {isExpanded ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    )}
-                </svg>
-                <span className="mobile-nav-toggle-text">
-                    {isExpanded ? 'Cerrar' : 'Menú'}
-                </span>
-            </button>
-
-            {/* Expandable Navigation Panel */}
-            <nav className={`mobile-nav-panel ${isExpanded ? 'expanded' : ''}`}>
-                <div className="mobile-nav-grid">
-                    {navLinks.map((link) => {
-                        const isActive = pathname.startsWith(link.href);
+            {/* Bottom Tab Bar - Dark Theme - CSS-based responsive (hidden on lg+) */}
+            <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[999] bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#1a1a2e] border-t border-white/10 safe-area-bottom">
+                <div className="flex items-center justify-around h-16 px-2">
+                    {mainNavItems.map((item) => {
+                        const Icon = item.icon;
+                        const active = isActive(item.href);
                         return (
                             <Link
-                                key={link.href}
-                                href={link.href}
-                                className={`mobile-nav-item ${isActive ? 'active' : ''}`}
-                                onClick={() => setIsExpanded(false)}
+                                key={item.href}
+                                href={item.href}
+                                className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${active
+                                    ? 'text-cyan-400'
+                                    : 'text-white/70 hover:text-white'
+                                    }`}
                             >
-                                <div className="mobile-nav-icon-wrapper">
-                                    <svg className="mobile-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={link.icon} />
-                                    </svg>
-                                </div>
-                                <span className="mobile-nav-label">{link.label}</span>
+                                <Icon className={`w-5 h-5 mb-0.5 ${active ? 'stroke-[2.5]' : ''}`} />
+                                <span className={`text-[10px] ${active ? 'font-bold' : 'font-medium'}`}>
+                                    {item.label}
+                                </span>
                             </Link>
                         );
                     })}
+
+                    {/* More Button */}
+                    <button
+                        onClick={() => setShowMore(true)}
+                        className="flex flex-col items-center justify-center flex-1 h-full text-white/70 hover:text-white transition-colors"
+                    >
+                        <FiMenu className="w-5 h-5 mb-0.5" />
+                        <span className="text-[10px] font-medium">Más</span>
+                    </button>
                 </div>
             </nav>
 
-            {/* Backdrop */}
-            {isExpanded && (
-                <div
-                    className="mobile-nav-backdrop"
-                    onClick={() => setIsExpanded(false)}
-                />
+            {/* More Menu Overlay */}
+            {showMore && (
+                <div className="lg:hidden fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm" onClick={() => setShowMore(false)}>
+                    <div
+                        className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Handle */}
+                        <div className="flex justify-center pt-3 pb-2">
+                            <div className="w-10 h-1 bg-gray-300 rounded-full"></div>
+                        </div>
+
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-5 pb-3 border-b border-gray-100">
+                            <h2 className="text-lg font-bold text-gray-900">Más opciones</h2>
+                            <button
+                                onClick={() => setShowMore(false)}
+                                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+                            >
+                                <FiX className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Menu Items */}
+                        <div className="p-4 space-y-1">
+                            {moreNavItems.map((item) => {
+                                const active = isActive(item.href);
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={`flex items-center px-4 py-3 rounded-xl transition-colors ${active
+                                            ? 'bg-[#2a63cd] text-white'
+                                            : 'text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                        onClick={() => setShowMore(false)}
+                                    >
+                                        <span className="font-medium">{item.label}</span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+
+                        {/* Safe area padding for bottom */}
+                        <div className="h-8"></div>
+                    </div>
+                </div>
             )}
+
+
+            <style jsx>{`
+                @keyframes slide-up {
+                    from { transform: translateY(100%); }
+                    to { transform: translateY(0); }
+                }
+                .animate-slide-up {
+                    animation: slide-up 0.3s ease-out;
+                }
+                .safe-area-bottom {
+                    padding-bottom: env(safe-area-inset-bottom, 0);
+                }
+            `}</style>
         </>
     );
 }

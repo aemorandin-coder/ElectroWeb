@@ -8,6 +8,7 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
+import ProcessingOverlay, { GIFT_CARD_STEPS } from '@/components/ProcessingOverlay';
 
 import { FiGift, FiCheck, FiAlertCircle, FiMail, FiArrowRight, FiClock, FiShoppingCart, FiCreditCard, FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi, FiLock, FiCalendar, FiEye, FiUser, FiStar } from 'react-icons/fi';
 import { AiOutlineDeliveredProcedure } from 'react-icons/ai';
@@ -290,6 +291,7 @@ export default function GiftCardsPage() {
 
     // NEW: Scheduled delivery date
     const [scheduledDate, setScheduledDate] = useState<string>('');
+    const [showScheduledSection, setShowScheduledSection] = useState(false);
 
     // NEW: Design category tabs
     const [designCategory, setDesignCategory] = useState<'all' | 'premium' | 'christmas' | 'brand'>('all');
@@ -299,6 +301,9 @@ export default function GiftCardsPage() {
 
     // NEW: Exchange rate for Bs display
     const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+
+    // Company logo for overlay
+    const [companyLogo, setCompanyLogo] = useState<string | null>(null);
 
     // Form refs for validation focus
     const recipientNameRef = useRef<HTMLInputElement>(null);
@@ -317,6 +322,11 @@ export default function GiftCardsPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [userBalance, setUserBalance] = useState(0);
 
+    // Processing overlay state
+    const [showProcessingOverlay, setShowProcessingOverlay] = useState(false);
+    const [processingStep, setProcessingStep] = useState(0);
+    const [processingError, setProcessingError] = useState<string | null>(null);
+
     // Calculate final amount
     const finalAmount = selectedAmount || (customAmount ? parseFloat(customAmount) : 0);
     const canPayWithBalance = userBalance >= finalAmount && finalAmount > 0;
@@ -332,12 +342,21 @@ export default function GiftCardsPage() {
             return true;
         });
 
-    // NEW: Fetch exchange rate
+    // Fetch exchange rate and company logo
     useEffect(() => {
+        // Fetch exchange rate
         fetch('/api/exchange-rates')
             .then(res => res.json())
             .then(data => {
                 if (data.rateVES) setExchangeRate(data.rateVES);
+            })
+            .catch(console.error);
+
+        // Fetch company settings for logo
+        fetch('/api/settings/public')
+            .then(res => res.json())
+            .then(data => {
+                if (data.logo) setCompanyLogo(data.logo);
             })
             .catch(console.error);
     }, []);
@@ -381,13 +400,13 @@ export default function GiftCardsPage() {
 
         setIsCheckingEmail(true);
         try {
-            const res = await fetch('/api/users/check', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-            });
+            const res = await fetch(`/api/users/check?email=${encodeURIComponent(email)}`);
             const data = await res.json();
-            setRecipientExists(data.exists);
+            if (res.ok) {
+                setRecipientExists(data.exists);
+            } else {
+                setRecipientExists(null);
+            }
         } catch (error) {
             console.error('Error checking email:', error);
             setRecipientExists(null);
@@ -444,9 +463,18 @@ export default function GiftCardsPage() {
             return;
         }
 
+        // Show processing overlay and scroll to view
+        setShowProcessingOverlay(true);
+        setProcessingStep(0);
+        setProcessingError(null);
         setIsLoading(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
         try {
+            // Step 1: Verificando pago (3 sec delay)
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            setProcessingStep(1);
+
             if (canPayWithBalance) {
                 // Pay with balance
                 const res = await fetch('/api/customer/balance/deduct', {
@@ -458,7 +486,14 @@ export default function GiftCardsPage() {
                     }),
                 });
 
-                if (!res.ok) throw new Error('Error al procesar el pago');
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Error al procesar el pago');
+                }
+
+                // Step 2: Creando Gift Card (3 sec delay)
+                setProcessingStep(2);
+                await new Promise(resolve => setTimeout(resolve, 3000));
 
                 // Create gift card
                 const giftRes = await fetch('/api/gift-cards', {
@@ -473,7 +508,18 @@ export default function GiftCardsPage() {
                     }),
                 });
 
-                if (!giftRes.ok) throw new Error('Error al crear la gift card');
+                if (!giftRes.ok) {
+                    const errorData = await giftRes.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Error al crear la gift card');
+                }
+
+                // Step 3: Enviando al correo (3 sec delay)
+                setProcessingStep(3);
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                // Step 4: Redirigiendo (3 sec delay)
+                setProcessingStep(4);
+                await new Promise(resolve => setTimeout(resolve, 3000));
 
                 toast.success('¡Gift Card enviada exitosamente!');
                 router.push('/customer/balance');
@@ -483,15 +529,23 @@ export default function GiftCardsPage() {
                     id: `gift-card-${selectedDesign.id}-${Date.now()}`,
                     name: `Gift Card $${finalAmount} para ${recipientName}`,
                     price: finalAmount,
-                    imageUrl: `gift-card-design:${selectedDesign.id}`, // Special marker for gift card design
-                    stock: 999, // Virtual product, unlimited stock
+                    imageUrl: `gift-card-design:${selectedDesign.id}`,
+                    stock: 999,
                 });
+
+                setProcessingStep(4);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                setShowProcessingOverlay(false);
                 toast.success('Gift Card agregada al carrito');
                 router.push('/carrito');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error:', error);
-            toast.error('Ocurrió un error. Intenta de nuevo.');
+            setProcessingError(error.message || 'Ocurrió un error. Intenta de nuevo.');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            setShowProcessingOverlay(false);
+            setProcessingError(null);
         } finally {
             setIsLoading(false);
         }
@@ -831,13 +885,14 @@ export default function GiftCardsPage() {
                                     </div>
                                 ))}
                                 {/* Custom Amount Input - in the same row */}
-                                <div className="relative">
+                                <div className="relative group">
                                     <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-xs">$</span>
                                     <input
                                         type="text"
                                         inputMode="numeric"
                                         pattern="[0-9]*"
                                         placeholder="Otro"
+                                        title="Ingresa un monto personalizado (múltiplos de $5)"
                                         value={customAmount}
                                         onChange={(e) => {
                                             const value = e.target.value;
@@ -852,20 +907,43 @@ export default function GiftCardsPage() {
                                         }}
                                         onBlur={(e) => {
                                             const value = parseInt(e.target.value, 10);
-                                            // If value is less than 5 and not empty, set to 5
-                                            if (e.target.value && value < 5) {
-                                                setCustomAmount('5');
-                                            }
+                                            if (!e.target.value || isNaN(value)) return;
+
+                                            // Round to nearest multiple of 5
+                                            let rounded = Math.round(value / 5) * 5;
+
+                                            // Ensure minimum of 5 and maximum of 1000
+                                            if (rounded < 5) rounded = 5;
+                                            if (rounded > 1000) rounded = 1000;
+
+                                            setCustomAmount(rounded.toString());
                                         }}
-                                        className={`w-full pl-5 pr-2 py-3 rounded-xl border text-center font-bold text-base transition-all duration-300 outline-none ${customAmount
+                                        className={`w-full pl-5 pr-8 py-3 rounded-xl border text-center font-bold text-base transition-all duration-300 outline-none ${customAmount
                                             ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                                             : 'border-gray-200 text-gray-700 hover:border-blue-300'
                                             }`}
                                     />
+                                    {/* Tooltip icon */}
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 cursor-help">
+                                        <svg className="w-4 h-4 text-gray-400 hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {/* Tooltip popup */}
+                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-lg">
+                                            <div className="font-semibold mb-1">Monto personalizado</div>
+                                            <ul className="space-y-0.5 text-gray-300">
+                                                <li>• Mínimo: $5</li>
+                                                <li>• Máximo: $1,000</li>
+                                                <li>• Solo múltiplos de $5</li>
+                                            </ul>
+                                            <div className="text-gray-400 mt-1 text-[10px]">Se redondea automáticamente</div>
+                                            <div className="absolute -bottom-1 right-3 w-2 h-2 bg-gray-900 rotate-45"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             {/* Min/Max indicator */}
-                            <p className="text-[10px] text-gray-400 text-center">Mínimo $5 — Máximo $1,000</p>
+                            <p className="text-[10px] text-gray-400 text-center">Mínimo $5 — Máximo $1,000 (múltiplos de $5)</p>
                         </div>
 
                         {/* Step 2: Recipient Info */}
@@ -978,23 +1056,42 @@ export default function GiftCardsPage() {
                             <p className="text-[10px] text-gray-400 text-right">{personalMessage.length}/200</p>
                         </div>
 
-                        {/* Step 4: Scheduled Delivery (optional) */}
+                        {/* Step 4: Scheduled Delivery (optional) - Collapsible */}
                         {!isForMyself && (
-                            <div className="mb-4">
-                                <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                    <FiCalendar className="w-4 h-4 text-blue-600" />
-                                    Programar envío (opcional)
-                                </h3>
-                                <input
-                                    type="date"
-                                    value={scheduledDate}
-                                    onChange={(e) => setScheduledDate(e.target.value)}
-                                    min={new Date().toISOString().split('T')[0]}
-                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-0 outline-none text-sm"
-                                />
-                                <p className="text-[10px] text-gray-400 mt-1">
-                                    {scheduledDate ? `Se enviará el ${new Date(scheduledDate + 'T12:00:00').toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' })}` : 'Dejar vacío para envío inmediato'}
-                                </p>
+                            <div className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowScheduledSection(!showScheduledSection)}
+                                    className="w-full px-3 py-2.5 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <FiCalendar className="w-4 h-4 text-blue-600" />
+                                        <span className="text-sm font-medium text-gray-700">Programar envío (opcional)</span>
+                                    </div>
+                                    <svg
+                                        className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${showScheduledSection ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showScheduledSection ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                    <div className="p-3 bg-white border-t border-gray-100">
+                                        <input
+                                            type="date"
+                                            value={scheduledDate}
+                                            onChange={(e) => setScheduledDate(e.target.value)}
+                                            min={new Date().toISOString().split('T')[0]}
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-0 outline-none text-sm"
+                                        />
+                                        <p className="text-[10px] text-gray-400 mt-1">
+                                            {scheduledDate ? `Se enviará el ${new Date(scheduledDate + 'T12:00:00').toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' })}` : 'Dejar vacío para envío inmediato'}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
@@ -1234,6 +1331,17 @@ export default function GiftCardsPage() {
                     </div>
                 </div>
             )}
+
+            {/* Processing Overlay - Using reusable component */}
+            <ProcessingOverlay
+                isVisible={showProcessingOverlay}
+                currentStep={processingStep}
+                steps={GIFT_CARD_STEPS}
+                error={processingError}
+                title="Procesando tu Gift Card"
+                subtitle="Por favor espera un momento..."
+                logoUrl={companyLogo}
+            />
         </div>
     );
 }

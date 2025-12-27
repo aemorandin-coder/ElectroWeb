@@ -60,7 +60,6 @@ export default function NotificationBell() {
           style={{
             width: '20px',
             height: '20px',
-            color: isOpen ? '#2a63cd' : 'rgba(255,255,255,0.9)',
             transform: isOpen ? 'rotate(12deg)' : 'none'
           }}
         />
@@ -86,10 +85,12 @@ export default function NotificationBell() {
           <div
             className="notification-dropdown z-50 animate-scaleIn"
             style={{
-              position: 'fixed',
-              left: '12px',
-              right: '12px',
-              top: '54px',
+              position: 'absolute',
+              right: '0',
+              top: '100%',
+              marginTop: '8px',
+              width: '360px',
+              maxWidth: 'calc(100vw - 24px)',
             }}
           >
             <NotificationCenter onClose={() => setIsOpen(false)} />

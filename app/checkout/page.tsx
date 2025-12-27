@@ -9,7 +9,8 @@ import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import RechargeModal from '@/components/modals/RechargeModal';
 import CheckoutPagoMovilForm from '@/components/checkout/CheckoutPagoMovilForm';
-import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle, FiZap } from 'react-icons/fi';
+import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverlay';
+import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle, FiZap, FiGift } from 'react-icons/fi';
 import { FaMobileScreen } from 'react-icons/fa6';
 import { FaCheck } from 'react-icons/fa';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -83,14 +84,13 @@ export default function CheckoutPage() {
   // Notes section collapsible
   const [showNotesSection, setShowNotesSection] = useState(false);
 
-  // Success modal state
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [orderCompleted, setOrderCompleted] = useState(false); // Track if order was just completed
-  const [successOrderData, setSuccessOrderData] = useState<{
-    orderNumber: string;
-    total: number;
-    items: Array<{ name: string; quantity: number }>;
-  } | null>(null);
+  // Order completion tracking
+  const [orderCompleted, setOrderCompleted] = useState(false);
+
+  // Processing overlay state
+  const [showProcessingOverlay, setShowProcessingOverlay] = useState(false);
+  const [processingStep, setProcessingStep] = useState(0);
+  const [processingError, setProcessingError] = useState<string | null>(null);
 
   // Active Discounts
   const [activeDiscounts, setActiveDiscounts] = useState<any[]>([]);
@@ -105,6 +105,17 @@ export default function CheckoutPage() {
     fechaPago: string;
     cedulaPagador: string; // Agregado para trazabilidad
     comprobante?: string;
+  } | null>(null);
+
+  // Gift Card Redemption State
+  const [giftCardCode, setGiftCardCode] = useState('');
+  const [giftCardPin, setGiftCardPin] = useState('');
+  const [giftCardRedeemed, setGiftCardRedeemed] = useState(false);
+  const [giftCardLoading, setGiftCardLoading] = useState(false);
+  const [giftCardError, setGiftCardError] = useState('');
+  const [giftCardInfo, setGiftCardInfo] = useState<{
+    balanceUSD: number;
+    status: string;
   } | null>(null);
 
   // Load company settings for exchange rates
@@ -429,23 +440,37 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (paymentMode === 'DIRECT' && !formData.paymentMethod) {
-      setError('Debes seleccionar un método de pago');
+    // If using Gift Card mode (DIRECT), user must have sufficient balance (from redeemed gift cards)
+    // The gift card mode now just adds to wallet, so we use WALLET for payment
+    if (paymentMode === 'DIRECT') {
+      if (userBalance < finalTotal) {
+        setError('Debes canjear una Gift Card para tener saldo suficiente, o usa "Usar Saldo / Recargar"');
+        setLoading(false);
+        return;
+      }
+    }
+
+    // If wallet mode, check balance
+    if (paymentMode === 'WALLET' && userBalance < finalTotal) {
+      setError('Saldo insuficiente. Recarga tu saldo o canjea una Gift Card.');
       setLoading(false);
       return;
     }
 
-    // Validate mobile payment verification
-    if (paymentMode === 'DIRECT' && formData.paymentMethod === 'MOBILE_PAYMENT' && !mobilePaymentVerified) {
-      setError('Debes verificar tu pago móvil antes de continuar');
-      setLoading(false);
-      return;
-    }
+    // Both modes now use WALLET payment method since gift cards add to wallet balance
+    const finalPaymentMethod = 'WALLET';
 
-    // If wallet mode, set payment method to WALLET
-    const finalPaymentMethod = paymentMode === 'WALLET' ? 'WALLET' : formData.paymentMethod;
+    // Show processing overlay
+    setShowProcessingOverlay(true);
+    setProcessingStep(0);
+    setProcessingError(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
+      // Step 1: Processing order
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setProcessingStep(1);
+
       // Get exchange rates
       const exchangeRateVES = companySettings?.exchangeRateVES || 1;
       const exchangeRateEUR = companySettings?.exchangeRateEUR || 1;
@@ -503,6 +528,10 @@ export default function CheckoutPage() {
           )),
           mobilePaymentData: mobilePaymentData || null,
         };
+
+        // Step 2: Confirming payment
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setProcessingStep(2);
 
         const physicalResponse = await fetch('/api/orders', {
           method: 'POST',
@@ -596,34 +625,40 @@ export default function CheckoutPage() {
         });
       }
 
+      // Step 3: Preparing order
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setProcessingStep(3);
+
       // Save address to profile if it's a new address (only if there were physical items)
       if (hasPhysical && isNewAddress && formData.shippingAddress && formData.shippingCity && formData.shippingState) {
         await saveAddressToProfile(formData);
       }
 
-      // Clear cart
-      clearCart();
+      // Step 4: Order created - show completion
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setProcessingStep(4);
 
-      // Mark order as completed to prevent showing empty cart message
+      // Mark order as completed BEFORE clearing cart
       setOrderCompleted(true);
 
-      // Set success data - handle multiple orders
-      const totalAmount = createdOrders.reduce((sum, o) => sum + o.total, 0);
-      const orderNumbers = createdOrders.map(o => o.orderNumber).join(', ');
+      // Wait for user to see the completed state
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      setSuccessOrderData({
-        orderNumber: orderNumbers,
-        total: totalAmount,
-        items: items.map(item => ({ name: item.name, quantity: item.quantity }))
-      });
-      setShowSuccessModal(true);
+      // Now clear cart and redirect
+      clearCart();
+      setShowProcessingOverlay(false);
+      router.push('/customer/orders');
 
-      // Redirect after 5 seconds (comfortable delay)
-      setTimeout(() => {
-        router.push('/customer/orders');
-      }, 5000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+      setProcessingError(errorMsg);
+      setError(errorMsg);
+
+      // Hide overlay after showing error
+      setTimeout(() => {
+        setShowProcessingOverlay(false);
+        setProcessingError(null);
+      }, 3000);
     } finally {
       setLoading(false);
     }
@@ -704,6 +739,100 @@ export default function CheckoutPage() {
     }
   };
 
+  // Handle Gift Card code input formatting
+  const handleGiftCardCodeChange = (value: string) => {
+    let cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    let formatted = '';
+    if (cleaned.length > 0) {
+      formatted += cleaned.substring(0, 4);
+      if (cleaned.length > 4) {
+        formatted += '-' + cleaned.substring(4, 8);
+        if (cleaned.length > 8) {
+          formatted += '-' + cleaned.substring(8, 12);
+          if (cleaned.length > 12) {
+            formatted += '-' + cleaned.substring(12, 16);
+          }
+        }
+      }
+    }
+    setGiftCardCode(formatted);
+    setGiftCardError('');
+    setGiftCardInfo(null);
+  };
+
+  // Check Gift Card Balance
+  const handleCheckGiftCard = async () => {
+    if (giftCardCode.length < 19) {
+      setGiftCardError('Ingresa un código completo');
+      return;
+    }
+    setGiftCardLoading(true);
+    setGiftCardError('');
+    setGiftCardInfo(null);
+
+    try {
+      // Add minimum 3 second delay for loading animation
+      const [response] = await Promise.all([
+        fetch(`/api/gift-cards/redeem?code=${giftCardCode}`),
+        new Promise(resolve => setTimeout(resolve, 3000))
+      ]);
+
+      const data = await response.json();
+      if (!response.ok) {
+        setGiftCardError(data.error || 'Gift Card no válida');
+        setGiftCardInfo(null);
+      } else if (!data.isValid) {
+        setGiftCardError(data.message || 'Esta Gift Card no está disponible');
+        setGiftCardInfo(null);
+      } else {
+        setGiftCardInfo({
+          balanceUSD: Number(data.balanceUSD) || 0,
+          status: data.status
+        });
+      }
+    } catch (err) {
+      setGiftCardError('Error al verificar la Gift Card');
+    } finally {
+      setGiftCardLoading(false);
+    }
+  };
+
+  // Redeem Gift Card
+  const handleRedeemGiftCard = async () => {
+    if (!giftCardInfo || Number(giftCardInfo.balanceUSD) <= 0) {
+      setGiftCardError('Esta Gift Card no tiene saldo disponible');
+      return;
+    }
+    setGiftCardLoading(true);
+    setGiftCardError('');
+    try {
+      const response = await fetch('/api/gift-cards/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: giftCardCode, pin: giftCardPin })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setGiftCardError(data.error || 'Error al canjear la Gift Card');
+      } else {
+        setGiftCardRedeemed(true);
+        // Update user balance
+        const newBalance = userBalance + (data.amountRedeemed || 0);
+        setUserBalance(newBalance);
+        // Auto switch to WALLET payment mode
+        setPaymentMode('WALLET');
+        // Clear gift card form for potential additional redemption
+        setGiftCardCode('');
+        setGiftCardPin('');
+        setGiftCardInfo(null);
+      }
+    } catch (err) {
+      setGiftCardError('Error al canjear la Gift Card');
+    } finally {
+      setGiftCardLoading(false);
+    }
+  };
+
   // Show loading while checking authentication to prevent flash
   if (status === 'loading') {
     return (
@@ -716,119 +845,11 @@ export default function CheckoutPage() {
     );
   }
 
-  // Show processing/success screen if order was just completed
-  if (orderCompleted && successOrderData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 relative overflow-hidden">
-        {/* Animated Background Orbs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-cyan-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-purple-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        </div>
 
-        {/* Success Card */}
-        <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6">
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 sm:p-12 shadow-2xl animate-slideInUp text-center">
-            {/* Success Icon with Animation */}
-            <div className="relative w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-8">
-              <div className="absolute inset-0 bg-green-500/30 rounded-full animate-ping"></div>
-              <div className="relative w-full h-full bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-2xl">
-                <svg className="w-14 h-14 sm:w-16 sm:h-16 text-white animate-scaleIn" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            </div>
+  // Show processing overlay when order is being processed (handled by component at bottom)
 
-            {/* Title */}
-            <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 font-[family-name:var(--font-tektur)]">
-              ¡Pedido Realizado!
-            </h2>
-
-            {/* Order Number */}
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/20 backdrop-blur-md rounded-full border border-white/30 mb-6">
-              <span className="text-base font-medium text-white/80">Orden:</span>
-              <span className="text-lg font-bold text-white">{successOrderData.orderNumber}</span>
-            </div>
-
-            {/* Order Summary */}
-            <div className="bg-white/10 rounded-2xl p-6 sm:p-8 mb-8 border border-white/20">
-              <p className="text-white/90 text-base sm:text-lg mb-3">
-                {successOrderData.items.length} producto{successOrderData.items.length > 1 ? 's' : ''}
-              </p>
-              <p className="text-3xl sm:text-4xl font-black text-white">
-                ${successOrderData.total.toFixed(2)} USD
-              </p>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mb-6">
-              <p className="text-base text-white/70 mb-3">Redirigiendo a tus pedidos...</p>
-              <div className="h-3 bg-white/20 rounded-full overflow-hidden max-w-md mx-auto">
-                <div className="h-full bg-gradient-to-r from-cyan-400 to-white rounded-full animate-progressBar"></div>
-              </div>
-            </div>
-
-            {/* Manual Link */}
-            <button
-              onClick={() => router.push('/customer/orders')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 text-white text-base font-semibold rounded-full transition-all border border-white/30"
-            >
-              <FiArrowRight className="w-5 h-5" />
-              Ir ahora a mis pedidos
-            </button>
-          </div>
-        </div>
-
-        <style jsx>{`
-          @keyframes slideInUp {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          @keyframes scaleIn {
-            from {
-              opacity: 0;
-              transform: scale(0.5);
-            }
-            to {
-              opacity: 1;
-              transform: scale(1);
-            }
-          }
-
-          @keyframes progressBar {
-            from {
-              width: 0%;
-            }
-            to {
-              width: 100%;
-            }
-          }
-
-          .animate-slideInUp {
-            animation: slideInUp 0.6s ease-out;
-          }
-
-          .animate-scaleIn {
-            animation: scaleIn 0.4s ease-out 0.3s both;
-          }
-
-          .animate-progressBar {
-            animation: progressBar 5s linear;
-          }
-        `}</style>
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
+  // Only show empty cart if not processing and not completed
+  if (items.length === 0 && !showProcessingOverlay && !orderCompleted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
         <PublicHeader />
@@ -854,6 +875,17 @@ export default function CheckoutPage() {
             </Link>
           </div>
         </main>
+
+        {/* Keep overlay available even in empty cart state during processing */}
+        <ProcessingOverlay
+          isVisible={showProcessingOverlay}
+          currentStep={processingStep}
+          steps={CHECKOUT_STEPS}
+          error={processingError}
+          title="Procesando tu pedido"
+          subtitle="Por favor espera un momento..."
+          logoUrl={companySettings?.logo}
+        />
       </div>
     );
   }
@@ -995,42 +1027,6 @@ export default function CheckoutPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span className="text-sm font-medium">{error}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Email Verification Warning Banner - Compact */}
-              {session?.user && !(session.user as any).emailVerified && (
-                <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <FiAlertCircle className="w-4 h-4 text-[#2a63cd]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-[#212529]">
-                        <strong className="font-bold text-[#1e4ba3]">Verifica tu email</strong> para realizar compras. Revisa tu bandeja de entrada.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          const res = await fetch('/api/auth/resend-verification', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email: (session.user as any).email }),
-                          });
-                          const data = await res.json();
-                          alert(data.message || 'Email de verificacion enviado');
-                        } catch (err) {
-                          alert('Error al reenviar email');
-                        }
-                      }}
-                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2a63cd] text-white text-xs font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors"
-                    >
-                      <FiAlertCircle className="w-3 h-3" />
-                      Reenviar
-                    </button>
                   </div>
                 </div>
               )}
@@ -1379,7 +1375,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Payment Method */}
-              <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] p-6">
+              <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] p-6 relative overflow-hidden">
                 <h2 className="text-lg font-bold text-[#212529] mb-4 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1389,28 +1385,62 @@ export default function CheckoutPage() {
                   Método de Pago
                 </h2>
 
+                {/* Email Verification Backdrop */}
+                {session?.user && !(session.user as any).emailVerified && (
+                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-md rounded-lg overflow-auto p-4">
+                    <div className="text-center w-full max-w-sm mx-auto">
+                      <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/30 animate-bounce" style={{ animationDuration: '2s' }}>
+                        <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-bold text-[#212529] mb-1">Verificación requerida</h3>
+                      <p className="text-sm text-[#6a6c6b] mb-3">
+                        Debes verificar tu correo electrónico antes de continuar.
+                      </p>
+                      <p className="text-xs text-amber-600 font-medium mb-4 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                        Revisa tu bandeja de entrada
+                      </p>
+                      <Link
+                        href="/customer/settings"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-bold rounded-xl hover:shadow-lg transition-all"
+                      >
+                        <FiUser className="w-4 h-4" />
+                        Ir a Mi Cuenta
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
                 {/* Payment Mode Selection */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <button
                     type="button"
-                    onClick={() => setPaymentMode('DIRECT')}
-                    className={`relative p-6 rounded-xl border-2 transition-all text-left group ${paymentMode === 'DIRECT'
-                      ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-lg'
-                      : 'border-[#e9ecef] hover:border-[#2a63cd]/50 hover:shadow-md'
+                    onClick={() => setPaymentMode(paymentMode === 'DIRECT' ? null : 'DIRECT')}
+                    className={`relative p-6 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'DIRECT'
+                      ? 'border-amber-500 bg-amber-50 shadow-lg'
+                      : 'border-amber-200 bg-gradient-to-br from-amber-50/50 to-yellow-50/50 hover:border-amber-400 hover:shadow-md'
                       }`}
                   >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${paymentMode === 'DIRECT' ? 'bg-[#2a63cd] text-white' : 'bg-[#f8f9fa] text-[#6a6c6b] group-hover:bg-[#2a63cd]/10 group-hover:text-[#2a63cd]'
+                    {/* Gift shimmer effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-200/30 to-transparent animate-shimmer"></div>
+
+                    <div className={`relative w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all ${paymentMode === 'DIRECT'
+                      ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
+                      : 'bg-gradient-to-br from-amber-100 to-yellow-100 text-amber-600 group-hover:from-amber-200 group-hover:to-yellow-200'
                       }`}>
-                      <FiCreditCard className="w-6 h-6" />
+                      {/* Sparkle effect */}
+                      <div className="absolute inset-[-2px] rounded-full border-2 border-dashed border-amber-400/50 animate-spin" style={{ animationDuration: '8s' }}></div>
+                      <FiGift className="w-6 h-6 relative z-10" />
                     </div>
-                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'DIRECT' ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
-                      Pagar Directamente
+                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'DIRECT' ? 'text-amber-700' : 'text-[#212529]'}`}>
+                      Canjear Gift Card
                     </h3>
                     <p className="text-sm text-[#6a6c6b]">
-                      Usa transferencia, pago móvil o criptomonedas
+                      Usa una Gift Card para agregar saldo a tu cuenta
                     </p>
                     {paymentMode === 'DIRECT' && (
-                      <div className="absolute top-4 right-4 w-6 h-6 bg-[#2a63cd] rounded-full flex items-center justify-center">
+                      <div className="absolute top-4 right-4 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
                         <FiCheck className="w-4 h-4 text-white" />
                       </div>
                     )}
@@ -1418,7 +1448,7 @@ export default function CheckoutPage() {
 
                   <button
                     type="button"
-                    onClick={() => setPaymentMode('WALLET')}
+                    onClick={() => setPaymentMode(paymentMode === 'WALLET' ? null : 'WALLET')}
                     className={`relative p-6 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'WALLET'
                       ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-lg'
                       : 'border-[#2a63cd]/30 bg-gradient-to-br from-white to-blue-50 hover:border-[#2a63cd]/50 hover:shadow-lg shadow-md'
@@ -1457,126 +1487,233 @@ export default function CheckoutPage() {
                   </button>
                 </div>
 
-                {/* Direct Payment Options */}
+                {/* Gift Card Redemption Section */}
                 {paymentMode === 'DIRECT' && (
-                  <div className="space-y-3 animate-fadeIn">
-                    {paymentMethods.length === 0 ? (
-                      <div className="p-6 text-center text-gray-500 border border-dashed border-gray-300 rounded-xl">
-                        <p>Cargando métodos de pago...</p>
-                      </div>
-                    ) : (
-                      paymentMethods.map((method) => (
-                        <label
-                          key={method.id}
-                          className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all hover:shadow-md ${formData.paymentMethod === method.type
-                            ? 'border-[#2a63cd] bg-blue-50/50 shadow-sm'
-                            : 'border-[#e9ecef] hover:border-[#2a63cd]/50 hover:bg-[#f8f9fa]'
-                            }`}
-                        >
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            value={method.type}
-                            checked={formData.paymentMethod === method.type}
-                            onChange={(e) => {
-                              setFormData(prev => ({ ...prev, paymentMethod: e.target.value }));
-                              // Reset mobile payment verification when changing method
-                              setMobilePaymentVerified(false);
-                              setMobilePaymentData(null);
-                            }}
-                            className="w-5 h-5 mt-0.5 text-[#2a63cd] focus:ring-[#2a63cd]"
-                          />
-                          <div className="ml-4 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {method.type === 'MOBILE_PAYMENT' && (
-                                <FaMobileScreen className="w-4 h-4 text-[#2a63cd]" />
-                              )}
-                              <span className="text-sm font-bold text-[#212529]">{method.name}</span>
-                              {method.bankName && (
-                                <span className="text-xs text-[#6a6c6b]">• {method.bankName}</span>
-                              )}
-                              {method.type === 'MERCANTIL_PANAMA' && (
-                                <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-100 text-[#2a63cd] rounded-full">
-                                  Internacional
-                                </span>
-                              )}
-                              {/* Show displayNote only for non-MOBILE_PAYMENT methods */}
-                              {method.displayNote && method.type !== 'MOBILE_PAYMENT' && (
-                                <span className="text-xs text-[#2a63cd] font-medium flex items-center gap-1">
-                                  <FiZap className="w-3 h-3" />
-                                  {method.displayNote}
-                                </span>
-                              )}
-                            </div>
-                            {/* Show details when selected - but NOT for MOBILE_PAYMENT (shown in verification form) */}
-                            {formData.paymentMethod === method.type && method.type !== 'MOBILE_PAYMENT' && (
-                              <div className="mt-3 pt-3 border-t border-gray-200 space-y-1 animate-fadeIn">
-                                {method.phone && (
-                                  <p className="text-xs text-gray-600">
-                                    <strong>Teléfono:</strong> {method.phone}
-                                  </p>
+                  <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-amber-200 animate-fadeIn shadow-sm overflow-hidden relative">
+                    {/* Decorative elements */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-300/20 to-transparent rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-300/20 to-transparent rounded-full blur-2xl"></div>
+
+                    <div className="relative">
+                      {/* Code Input */}
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-amber-800 mb-2">
+                            Código de Gift Card
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={giftCardCode}
+                              onChange={(e) => handleGiftCardCodeChange(e.target.value)}
+                              maxLength={19}
+                              className="w-full px-4 py-4 text-center text-xl font-mono font-bold tracking-widest border-2 border-amber-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all uppercase"
+                              placeholder="ESMC-XXXX-XXXX-XXXX"
+                            />
+                            {giftCardCode.length === 19 && !giftCardInfo && (
+                              <button
+                                type="button"
+                                onClick={handleCheckGiftCard}
+                                disabled={giftCardLoading}
+                                className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 p-2 md:px-4 md:py-2 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600 transition-all disabled:opacity-70 disabled:cursor-wait"
+                              >
+                                {giftCardLoading ? (
+                                  <span className="flex items-center gap-2">
+                                    <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span className="hidden md:inline">Verificando...</span>
+                                  </span>
+                                ) : (
+                                  <>
+                                    <svg className="w-5 h-5 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    <span className="hidden md:inline">Verificar</span>
+                                  </>
                                 )}
-                                {method.holderId && (
-                                  <p className="text-xs text-gray-600">
-                                    <strong>Cédula/RIF:</strong> {method.holderId}
-                                  </p>
-                                )}
-                                {method.email && (
-                                  <p className="text-xs text-gray-600">
-                                    <strong>Email:</strong> {method.email}
-                                  </p>
-                                )}
-                                {method.walletAddress && (
-                                  <p className="text-xs text-gray-600 font-mono break-all">
-                                    <strong>Wallet:</strong> {method.walletAddress}
-                                  </p>
-                                )}
-                                {method.network && (
-                                  <p className="text-xs text-gray-600">
-                                    <strong>Red:</strong> {method.network}
-                                  </p>
-                                )}
-                                {method.qrCodeImage && (
-                                  <div className="mt-2">
-                                    <Image
-                                      src={method.qrCodeImage}
-                                      alt="QR Code"
-                                      width={120}
-                                      height={120}
-                                      className="rounded-lg border border-gray-200"
-                                    />
-                                  </div>
-                                )}
-                              </div>
+                              </button>
                             )}
                           </div>
-                        </label>
-                      ))
-                    )}
+                        </div>
 
-                    {/* Mobile Payment Verification Form */}
-                    {formData.paymentMethod === 'MOBILE_PAYMENT' && (
-                      <div className="mt-4 animate-fadeIn">
-                        <CheckoutPagoMovilForm
-                          montoEsperado={finalTotal}
-                          montoEnBs={finalTotal * Number(companySettings?.exchangeRateVES || 0)}
-                          datosComercio={{
-                            telefono: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.phone,
-                            cedula: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderId,
-                            banco: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.bankName,
-                          }}
-                          onVerified={(data) => {
-                            setMobilePaymentVerified(true);
-                            setMobilePaymentData(data);
-                          }}
-                          onReset={() => {
-                            setMobilePaymentVerified(false);
-                            setMobilePaymentData(null);
-                          }}
-                          isVerified={mobilePaymentVerified}
-                        />
+                        {/* Error Message */}
+                        {giftCardError && (
+                          <div className="flex flex-col items-center justify-center gap-3 p-5 bg-gradient-to-br from-red-50 to-rose-100 border-2 border-red-300 rounded-2xl text-red-700 shadow-lg shadow-red-200/50 animate-fadeIn">
+                            <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                              <FiAlertCircle className="w-7 h-7 text-white" />
+                            </div>
+                            <span className="font-bold text-lg text-center">{giftCardError}</span>
+                            <p className="text-sm text-red-500 text-center">Verifica el código e intenta de nuevo</p>
+                          </div>
+                        )}
+
+                        {/* Gift Card Info */}
+                        {giftCardInfo && (
+                          <div className="animate-fadeIn space-y-4">
+                            {/* Balance Display */}
+                            <div className={`p-6 rounded-xl border-2 ${giftCardInfo.status === 'ACTIVE' && giftCardInfo.balanceUSD > 0
+                              ? 'bg-green-50 border-green-300'
+                              : 'bg-gray-50 border-gray-300'}`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm text-gray-600">Estado</span>
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${giftCardInfo.status === 'ACTIVE'
+                                  ? 'bg-green-500 text-white'
+                                  : 'bg-gray-400 text-white'}`}
+                                >
+                                  {giftCardInfo.status === 'ACTIVE' ? 'Activa' : giftCardInfo.status === 'DEPLETED' ? 'Sin saldo' : giftCardInfo.status}
+                                </span>
+                              </div>
+                              <div className="text-center py-4">
+                                <p className="text-sm text-gray-500 mb-1">Saldo disponible</p>
+                                <p className="text-4xl font-black text-green-600">
+                                  ${giftCardInfo.balanceUSD.toFixed(2)}
+                                </p>
+                                <p className="text-sm text-gray-500">USD</p>
+                              </div>
+                            </div>
+
+                            {/* PIN Input */}
+                            {giftCardInfo.status === 'ACTIVE' && giftCardInfo.balanceUSD > 0 && (
+                              <div>
+                                <label className="block text-sm font-semibold text-amber-800 mb-2">
+                                  <FiLock className="inline w-4 h-4 mr-1" />
+                                  PIN (opcional)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={giftCardPin}
+                                  onChange={(e) => setGiftCardPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                  maxLength={4}
+                                  className="w-full px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.5em] border-2 border-amber-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                                  placeholder="••••"
+                                />
+                              </div>
+                            )}
+
+                            {/* Redeem Button */}
+                            {giftCardInfo.status === 'ACTIVE' && giftCardInfo.balanceUSD > 0 && (
+                              <button
+                                type="button"
+                                onClick={handleRedeemGiftCard}
+                                disabled={giftCardLoading}
+                                className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-lg rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg shadow-green-500/30 disabled:opacity-50 flex items-center justify-center gap-2"
+                              >
+                                {giftCardLoading ? (
+                                  <>
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    Canjeando...
+                                  </>
+                                ) : (
+                                  <>
+                                    <FiGift className="w-5 h-5" />
+                                    Canjear ${giftCardInfo.balanceUSD.toFixed(2)} USD
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Success Message - shows after redemption with premium amber design */}
+                        {giftCardRedeemed && (
+                          <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-amber-300 animate-fadeIn shadow-lg overflow-hidden relative">
+                            {/* Subtle animated background */}
+                            <div className="absolute inset-0 opacity-30">
+                              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-amber-300/20 to-transparent rounded-full blur-3xl animate-pulse" />
+                              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-orange-300/20 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+                            </div>
+
+                            {/* Main Content - Circle + Info */}
+                            <div className="relative flex flex-col md:flex-row items-center gap-6">
+                              {/* Animated Circle - 100% */}
+                              <div className="relative flex-shrink-0">
+                                <div className="absolute inset-[-8px] rounded-full border-2 border-dashed border-amber-400/30 animate-spin" style={{ animationDuration: '20s' }} />
+                                <div className="absolute inset-[-4px] rounded-full animate-ping opacity-20 bg-amber-500" style={{ animationDuration: '2s' }} />
+                                <svg className="w-28 h-28 md:w-32 md:h-32 transform -rotate-90" viewBox="0 0 120 120">
+                                  <circle cx="60" cy="60" r="54" fill="none" stroke="#fde68a" strokeWidth="8" />
+                                  <circle cx="60" cy="60" r="54" fill="none" stroke="url(#amberGradientSuccess)" strokeWidth="8" strokeDasharray="339.29" strokeDashoffset="0" strokeLinecap="round" className="transition-all duration-1000" />
+                                  <defs>
+                                    <linearGradient id="amberGradientSuccess" x1="0%" y1="0%" x2="100%" y2="100%">
+                                      <stop offset="0%" stopColor="#f59e0b" />
+                                      <stop offset="100%" stopColor="#d97706" />
+                                    </linearGradient>
+                                  </defs>
+                                </svg>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                  <FiCheck className="w-8 h-8 text-amber-600 mb-1" />
+                                  <span className="text-lg font-black text-amber-700">100%</span>
+                                </div>
+                              </div>
+
+                              {/* Balance Info */}
+                              <div className="flex-1 text-center md:text-left">
+                                <p className="text-sm text-amber-600 mb-1">Tu saldo disponible</p>
+                                <p className="text-3xl md:text-4xl font-black text-amber-700 mb-3">
+                                  USD {userBalance.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$
+                                </p>
+
+                                {/* Saldo suficiente badge */}
+                                {userBalance >= finalTotal && (
+                                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold rounded-full shadow-md mb-3">
+                                    <FiCheck className="w-4 h-4" />
+                                    Saldo suficiente
+                                  </span>
+                                )}
+
+                                {/* Order details */}
+                                <div className="space-y-1.5 mt-3">
+                                  <div className="flex items-center justify-center md:justify-start gap-2 text-sm">
+                                    <FiPackage className="w-4 h-4 text-amber-500" />
+                                    <span className="text-gray-600">Total del pedido:</span>
+                                    <span className="font-bold text-amber-700">USD {finalTotal.toFixed(2)}$</span>
+                                  </div>
+                                  {userBalance >= finalTotal && (
+                                    <div className="flex items-center justify-center md:justify-start gap-2 text-sm">
+                                      <FiDollarSign className="w-4 h-4 text-amber-500" />
+                                      <span className="text-gray-600">Saldo restante después de la compra:</span>
+                                      <span className="font-bold text-green-600">USD {(userBalance - finalTotal).toFixed(2)}$</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Listo para pagar - centered */}
+                            <div className="mt-6 p-4 bg-white/80 rounded-xl border border-amber-200 text-center">
+                              <div className="flex flex-col items-center justify-center gap-2">
+                                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                                  <FiCheck className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-amber-800">¡Gift Card canjeada!</p>
+                                  <p className="text-sm text-amber-600">El saldo se ha agregado a tu cuenta</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Help text */}
+                        <p className="text-xs text-amber-600 text-center">
+                          El código está en el email de confirmación o en el reverso de la tarjeta
+                        </p>
+
+                        {/* Link to buy gift card */}
+                        <div className="pt-4 border-t border-amber-200 text-center">
+                          <p className="text-sm text-amber-700 mb-2">¿No tienes una Gift Card?</p>
+                          <Link
+                            href="/gift-cards"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 font-semibold rounded-lg hover:bg-amber-200 transition-all text-sm"
+                          >
+                            <FiGift className="w-4 h-4" />
+                            Comprar Gift Card
+                          </Link>
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 )}
 
@@ -2369,171 +2506,17 @@ export default function CheckoutPage() {
         )
       }
 
-      {/* Epic Success Modal */}
-      {
-        showSuccessModal && successOrderData && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 animate-fadeIn">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a]/95 via-[#2563eb]/95 to-[#2a63cd]/95 backdrop-blur-xl" />
+      {/* Processing Overlay - Reusable component */}
+      <ProcessingOverlay
+        isVisible={showProcessingOverlay}
+        currentStep={processingStep}
+        steps={CHECKOUT_STEPS}
+        error={processingError}
+        title="Procesando tu pedido"
+        subtitle="Por favor espera un momento..."
+        logoUrl={companySettings?.logo}
+      />
 
-            {/* Animated Background Particles */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-              <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-              <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-green-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-            </div>
-
-            <div className="relative z-10 bg-white/10 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl w-full max-w-lg p-8 animate-scaleInBounce">
-              {/* Animated Checkmark */}
-              <div className="w-28 h-28 mx-auto mb-6 relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full animate-pulse shadow-2xl shadow-emerald-500/30"></div>
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
-                  <circle
-                    cx="50" cy="50" r="40"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.3)"
-                    strokeWidth="4"
-                  />
-                  <circle
-                    cx="50" cy="50" r="40"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="4"
-                    strokeDasharray="251.2"
-                    strokeDashoffset="251.2"
-                    strokeLinecap="round"
-                    className="animate-drawCircle"
-                  />
-                  <path
-                    d="M30 52 L45 67 L70 35"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeDasharray="70"
-                    strokeDashoffset="70"
-                    className="animate-drawCheck"
-                  />
-                </svg>
-              </div>
-
-              {/* Title */}
-              <h2 className="text-3xl font-black text-white text-center mb-2 animate-slideUp flex items-center justify-center gap-3">
-                ¡Gracias por tu compra!
-                <FiCheck className="w-8 h-8 text-cyan-300 animate-bounce" />
-              </h2>
-
-              {/* Order Number */}
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-4 mb-6 animate-slideUp" style={{ animationDelay: '0.2s' }}>
-                <p className="text-center text-blue-100 text-sm mb-1">Número de Orden</p>
-                <p className="text-center text-2xl font-black text-white tracking-wider">
-                  {successOrderData.orderNumber}
-                </p>
-              </div>
-
-              {/* Products Summary */}
-              <div className="mb-6 animate-slideUp" style={{ animationDelay: '0.3s' }}>
-                <p className="text-white/80 text-sm mb-3 text-center">Productos en tu pedido:</p>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {successOrderData.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between px-4 py-2 bg-white/5 rounded-xl">
-                      <span className="text-white text-sm truncate flex-1">{item.name}</span>
-                      <span className="text-cyan-200 text-sm font-bold ml-2">x{item.quantity}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Total */}
-              <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 rounded-2xl border border-white/10 mb-6 animate-slideUp" style={{ animationDelay: '0.4s' }}>
-                <span className="text-white font-medium">Total pagado</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xs font-bold text-white/60">USD</span>
-                  <span className="text-2xl font-black text-white">{successOrderData.total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Info Banner */}
-              <div className="bg-blue-500/20 backdrop-blur-md rounded-xl border border-blue-400/30 p-4 mb-6 animate-slideUp" style={{ animationDelay: '0.5s' }}>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FiCheck className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-medium mb-1">
-                      Recibirás confirmación por correo y notificaciones en la plataforma
-                    </p>
-                    <p className="text-blue-200 text-xs">
-                      Ve a <strong className="text-white">Mi Perfil → Mis Pedidos</strong> para hacer seguimiento
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <p className="text-center text-white/60 text-xs mb-2">Redirigiendo a tus pedidos...</p>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-white rounded-full animate-progressBar"></div>
-                </div>
-              </div>
-
-              {/* Button */}
-              <button
-                onClick={() => router.push('/customer/orders')}
-                className="w-full py-4 bg-white text-[#2a63cd] font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Ver Mis Pedidos Ahora
-              </button>
-            </div>
-
-            <style jsx>{`
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @keyframes drawCircle {
-              to { stroke-dashoffset: 0; }
-            }
-            @keyframes drawCheck {
-              to { stroke-dashoffset: 0; }
-            }
-            @keyframes scaleInBounce {
-              0% { opacity: 0; transform: scale(0.8); }
-              50% { transform: scale(1.02); }
-              100% { opacity: 1; transform: scale(1); }
-            }
-            @keyframes slideUp {
-              from { opacity: 0; transform: translateY(20px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-            @keyframes progressBar {
-              from { width: 0%; }
-              to { width: 100%; }
-            }
-            .animate-fadeIn {
-              animation: fadeIn 0.3s ease-out;
-            }
-            .animate-drawCircle {
-              animation: drawCircle 0.8s ease-out 0.3s forwards;
-            }
-            .animate-drawCheck {
-              animation: drawCheck 0.5s ease-out 0.9s forwards;
-            }
-            .animate-scaleInBounce {
-              animation: scaleInBounce 0.5s ease-out;
-            }
-            .animate-slideUp {
-              animation: slideUp 0.6s ease-out both;
-            }
-            .animate-progressBar {
-              animation: progressBar 5s linear;
-            }
-          `}</style>
-          </div>
-        )
-      }
-
-    </div >
+    </div>
   );
 }

@@ -81,8 +81,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 const data = await response.json();
                 setNotifications(data.notifications || []);
             }
-        } catch (error) {
-            console.error('Error fetching notifications:', error);
+        } catch (error: any) {
+            // Silently ignore network errors (e.g., server restarting, offline)
+            // Only log if it's not a typical network failure
+            if (error?.name !== 'TypeError' || !error?.message?.includes('fetch')) {
+                console.error('Error fetching notifications:', error);
+            }
         } finally {
             setIsLoading(false);
         }

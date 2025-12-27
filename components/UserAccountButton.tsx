@@ -107,10 +107,6 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
             {userName.charAt(0).toUpperCase()}
           </div>
         )}
-        <div className="hidden md:flex flex-col items-start">
-          <span className="text-xs font-semibold text-[#212529]">{userName}</span>
-          <span className="text-xs text-[#6a6c6b]">{userEmail}</span>
-        </div>
         <svg
           className={`w-4 h-4 text-[#6a6c6b] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -125,9 +121,21 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
       {/* Epic Premium Dropdown Menu */}
       {isOpen && (
         <div className="profile-dropdown absolute right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fadeIn md:w-56 w-[200px]">
-          {/* Header with gradient */}
-          <div className="bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3d8f] p-3 md:p-4">
-            <div className="flex items-center gap-3">
+          {/* Header with gradient - Red when not verified */}
+          <div
+            className="p-3 md:p-4 relative overflow-hidden"
+            style={{
+              background: isVerified
+                ? 'linear-gradient(135deg, #2a63cd 0%, #1e4ba3 50%, #1a3d8f 100%)'
+                : 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)'
+            }}
+          >
+            {/* Shimmer effect for verified */}
+            {isVerified && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
+            )}
+
+            <div className="flex items-center gap-3 relative z-10">
               {userImage && !imageError ? (
                 <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-xl overflow-hidden border-2 border-white/30 shadow-lg flex-shrink-0">
                   <Image
@@ -147,18 +155,18 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-white font-semibold text-[13px] md:text-sm truncate">{userName}</span>
                 <span className="text-white/60 text-[10px] md:text-xs truncate">{userEmail}</span>
-                {/* Verification badge inline */}
-                <div className="flex items-center gap-1 mt-0.5">
+                {/* Verification badge - Enhanced */}
+                <div className="flex items-center gap-1.5 mt-1">
                   {isVerified ? (
-                    <>
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-400/20 rounded-full border border-emerald-300/30">
                       <FiCheckCircle className="w-3 h-3 text-emerald-300" />
-                      <span className="text-emerald-300 text-[9px] font-medium">Verificada</span>
-                    </>
+                      <span className="text-emerald-300 text-[9px] font-bold tracking-wide">VERIFICADA</span>
+                    </div>
                   ) : (
-                    <>
-                      <FiAlertCircle className="w-3 h-3 text-amber-300" />
-                      <span className="text-amber-300 text-[9px] font-medium">Verificar</span>
-                    </>
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-white/20 rounded-full border border-white/30 animate-pulse">
+                      <FiAlertCircle className="w-3 h-3 text-white" />
+                      <span className="text-white text-[9px] font-bold tracking-wide">¡SIN VERIFICAR!</span>
+                    </div>
                   )}
                 </div>
               </div>

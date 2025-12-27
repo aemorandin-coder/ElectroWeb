@@ -2,24 +2,15 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { sendGiftCardEmail } from '@/lib/email-service';
+import {
+    generateGiftCardCode,
+    hashGiftCardCode,
+    getCodeLastFour,
+    generateSecurePin,
+    hashPin
+} from '@/lib/gift-card-crypto';
 
-// Generate unique gift card code
-function generateGiftCardCode(): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed similar chars (0,O,1,I)
-    let code = 'ESMC'; // Electro Shop Money Card
-    for (let i = 0; i < 3; i++) {
-        code += '-';
-        for (let j = 0; j < 4; j++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-    }
-    return code;
-}
-
-// Generate PIN
-function generatePin(): string {
-    return Math.floor(1000 + Math.random() * 9000).toString();
-}
 
 // GET - Get gift cards (admin) or user's gift cards
 export async function GET(request: Request) {
@@ -74,33 +65,46 @@ export async function GET(request: Request) {
     }
 }
 
-// POST - Create a new gift card (purchase)
+// POST - Create a new gift card (purchase or admin generation)
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
         const body = await request.json();
 
+        // Support both field naming conventions for backwards compatibility
+        const amountUSD = body.amountUSD || body.amount;
+        const designId = body.designId || body.design;
+        const personalMessage = body.personalMessage || body.message;
         const {
-            amountUSD,
-            designId,
             isGift,
             recipientName,
             recipientEmail,
             senderName,
-            personalMessage,
-            orderId
+            orderId,
+            // Admin-specific fields
+            forPrint = false, // Flag for physical cards
+            quantity = 1      // Number of cards to generate
         } = body;
+
+        // Auto-detect if it's a gift when recipient email is provided
+        const isGiftCard = isGift ?? !!recipientEmail;
 
         // Validate amount
         if (!amountUSD || amountUSD < 5 || amountUSD > 500) {
             return NextResponse.json({ error: 'Monto inválido (min $5, max $500)' }, { status: 400 });
         }
 
-        // Generate unique code
+        // Generate unique code with high entropy
         let code = generateGiftCardCode();
+        let codeHash = hashGiftCardCode(code);
         let attempts = 0;
-        while (await prisma.giftCard.findUnique({ where: { code } }) && attempts < 10) {
+
+        // Check for uniqueness by hash
+        while (await prisma.giftCard.findFirst({
+            where: { OR: [{ code }, { codeHash }] }
+        }) && attempts < 10) {
             code = generateGiftCardCode();
+            codeHash = hashGiftCardCode(code);
             attempts++;
         }
 
@@ -108,22 +112,39 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Error generando código único' }, { status: 500 });
         }
 
-        // Create gift card
+        // Generate secure PIN and hash it
+        const plainPin = generateSecurePin();
+        const hashedPin = hashPin(plainPin);
+
+        // Validate designId if provided
+        let validDesignId = null;
+        if (designId) {
+            const designExists = await prisma.giftCardDesign.findUnique({
+                where: { id: designId }
+            });
+            if (designExists) {
+                validDesignId = designId;
+            }
+        }
+
+        // Create gift card with security enhancements
         const giftCard = await prisma.giftCard.create({
             data: {
                 code,
-                pin: generatePin(),
+                codeHash,
+                codeLast4: getCodeLastFour(code),
+                pin: hashedPin, // Store hashed PIN
                 amountUSD,
                 balanceUSD: amountUSD,
                 status: 'ACTIVE',
-                designId: designId || null,
+                designId: validDesignId,
                 purchasedBy: session?.user?.id || null,
                 purchasedAt: new Date(),
                 orderId,
-                recipientName: isGift ? recipientName : null,
-                recipientEmail: isGift ? recipientEmail : null,
-                senderName: isGift ? senderName : null,
-                personalMessage: isGift ? personalMessage : null,
+                recipientName: isGiftCard ? recipientName : null,
+                recipientEmail: isGiftCard ? recipientEmail : null,
+                senderName: isGiftCard ? senderName : null,
+                personalMessage: isGiftCard ? personalMessage : null,
                 activatedAt: new Date(),
                 // No expiration for Electro Shop gift cards
             },
@@ -146,7 +167,24 @@ export async function POST(request: Request) {
             }
         });
 
-        // TODO: Send email to recipient if isGift
+        // Send email to recipient if it's a gift
+        if (isGift && recipientEmail) {
+            try {
+                await sendGiftCardEmail(recipientEmail, {
+                    code: giftCard.code,
+                    pin: plainPin, // Send the plain PIN, not the hash
+                    amount: amountUSD,
+                    senderName: senderName || session?.user?.name || 'Un amigo',
+                    recipientName: recipientName || 'Amigo/a',
+                    personalMessage: personalMessage || undefined,
+                    designName: giftCard.design?.name || undefined,
+                });
+                console.log('[GIFT CARD] Email sent to recipient:', recipientEmail);
+            } catch (emailError) {
+                console.error('[GIFT CARD] Failed to send email to recipient:', emailError);
+                // Don't fail the request if email fails - gift card is still created
+            }
+        }
 
         return NextResponse.json({
             success: true,

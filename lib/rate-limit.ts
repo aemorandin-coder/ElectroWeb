@@ -128,3 +128,137 @@ export function getRateLimitHeaders(result: RateLimitResult, config: RateLimitCo
         'X-RateLimit-Reset': result.resetIn.toString(),
     };
 }
+
+// ============================================
+// PROGRESSIVE BLOCKING FOR FAILED ATTEMPTS
+// ============================================
+
+interface FailedAttemptEntry {
+    attempts: number;
+    lastAttempt: number;
+    blockedUntil: number | null;
+}
+
+// Store for tracking failed attempts
+const failedAttemptsStore = new Map<string, FailedAttemptEntry>();
+
+// Block durations in seconds (progressive)
+const BLOCK_DURATIONS = [
+    60,      // 1 minute after 5 attempts
+    300,     // 5 minutes after 10 attempts
+    900,     // 15 minutes after 15 attempts
+    3600,    // 1 hour after 20 attempts
+];
+
+/**
+ * Record a failed attempt and check if should be blocked
+ * @param identifier - Unique identifier (userId:IP or just IP)
+ * @param action - Action name for tracking
+ * @returns Object with blocked status and time remaining
+ */
+export function recordFailedAttempt(
+    identifier: string,
+    action: string
+): { blocked: boolean; blockedFor: number; attempts: number } {
+    const key = `failed:${action}:${identifier}`;
+    const now = Date.now();
+
+    let entry = failedAttemptsStore.get(key);
+
+    if (!entry) {
+        entry = {
+            attempts: 1,
+            lastAttempt: now,
+            blockedUntil: null,
+        };
+        failedAttemptsStore.set(key, entry);
+        return { blocked: false, blockedFor: 0, attempts: 1 };
+    }
+
+    // Check if currently blocked
+    if (entry.blockedUntil && now < entry.blockedUntil) {
+        const blockedFor = Math.ceil((entry.blockedUntil - now) / 1000);
+        return { blocked: true, blockedFor, attempts: entry.attempts };
+    }
+
+    // Reset if last attempt was more than 1 hour ago
+    if (now - entry.lastAttempt > 3600000) {
+        entry.attempts = 1;
+        entry.blockedUntil = null;
+    } else {
+        entry.attempts++;
+    }
+
+    entry.lastAttempt = now;
+
+    // Determine if should block and for how long
+    if (entry.attempts >= 5) {
+        const blockIndex = Math.min(
+            Math.floor((entry.attempts - 5) / 5),
+            BLOCK_DURATIONS.length - 1
+        );
+        const blockDuration = BLOCK_DURATIONS[blockIndex];
+        entry.blockedUntil = now + (blockDuration * 1000);
+
+        failedAttemptsStore.set(key, entry);
+        return {
+            blocked: true,
+            blockedFor: blockDuration,
+            attempts: entry.attempts
+        };
+    }
+
+    failedAttemptsStore.set(key, entry);
+    return { blocked: false, blockedFor: 0, attempts: entry.attempts };
+}
+
+/**
+ * Check if identifier is currently blocked
+ */
+export function isBlocked(identifier: string, action: string): {
+    blocked: boolean;
+    blockedFor: number;
+    attempts: number;
+} {
+    const key = `failed:${action}:${identifier}`;
+    const entry = failedAttemptsStore.get(key);
+
+    if (!entry) {
+        return { blocked: false, blockedFor: 0, attempts: 0 };
+    }
+
+    const now = Date.now();
+
+    if (entry.blockedUntil && now < entry.blockedUntil) {
+        const blockedFor = Math.ceil((entry.blockedUntil - now) / 1000);
+        return { blocked: true, blockedFor, attempts: entry.attempts };
+    }
+
+    return { blocked: false, blockedFor: 0, attempts: entry.attempts };
+}
+
+/**
+ * Reset failed attempts after successful action
+ */
+export function resetFailedAttempts(identifier: string, action: string): void {
+    const key = `failed:${action}:${identifier}`;
+    failedAttemptsStore.delete(key);
+}
+
+/**
+ * Clean up old failed attempt entries periodically
+ */
+setInterval(() => {
+    const now = Date.now();
+    const oneHourAgo = now - 3600000;
+
+    Array.from(failedAttemptsStore.entries()).forEach(([key, entry]) => {
+        // Remove entries that haven't had activity in over an hour
+        // and are no longer blocked
+        if (entry.lastAttempt < oneHourAgo &&
+            (!entry.blockedUntil || now > entry.blockedUntil)) {
+            failedAttemptsStore.delete(key);
+        }
+    });
+}, 300000); // Clean every 5 minutes
+

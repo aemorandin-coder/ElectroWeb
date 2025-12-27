@@ -127,9 +127,9 @@ export default function WhatsAppButton({
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-40 transition-all duration-500 ease-out ${isMinimized && !isHovered
-          ? 'scale-50 opacity-60'
-          : 'scale-100 opacity-100'
+      className={`fixed z-40 transition-all duration-500 ease-out bottom-20 right-4 lg:bottom-6 lg:right-6 ${isMinimized && !isHovered
+        ? 'scale-50 opacity-60'
+        : 'scale-100 opacity-100'
         }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

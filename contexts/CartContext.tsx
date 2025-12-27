@@ -121,3 +121,21 @@ export function useCart() {
   }
   return context;
 }
+
+// Safe version of useCart that doesn't throw - useful for components that may render before provider mounts
+export function useCartSafe(): CartContextType {
+  const context = useContext(CartContext);
+  if (context === undefined) {
+    // Return safe default values during initial render before provider mounts
+    return {
+      items: [],
+      addItem: () => { },
+      removeItem: () => { },
+      updateQuantity: () => { },
+      clearCart: () => { },
+      getTotalItems: () => 0,
+      getTotalPrice: () => 0,
+    };
+  }
+  return context;
+}

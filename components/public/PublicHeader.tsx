@@ -205,7 +205,10 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
 
             {/* Action Buttons */}
             <div className="flex items-center gap-4">
-              <div className={`flex items-center gap-4 ${isBlueHeader ? '[&>div>button>svg]:text-white [&>div>button]:hover:bg-white/20' : ''}`}>
+              <div
+                className="flex items-center gap-4"
+                style={{ color: isBlueHeader ? 'rgba(255,255,255,0.9)' : '#6a6c6b' }}
+              >
                 <NotificationBell />
                 <CartIcon />
               </div>

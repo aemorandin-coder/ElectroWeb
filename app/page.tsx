@@ -13,7 +13,7 @@ import CategoryCarousel from '@/components/home/CategoryCarousel';
 import ProductCarousel from '@/components/home/ProductCarousel';
 import {
   FiBox, FiGrid, FiStar, FiHeadphones,
-  FiShield, FiTool, FiBook,
+  FiShield, FiTool, FiBook, FiCode,
   FiSearch, FiArrowRight, FiClock,
   FiMail
 } from 'react-icons/fi';
@@ -222,50 +222,65 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-5">
             {[
               {
-                title: 'PC Gaming',
-                description: 'Equipos gaming personalizados de alta gama',
-                icon: <SiPcgamingwiki className="w-8 h-8" />,
-                color: 'from-blue-600 to-indigo-600',
+                title: 'Ingeniería de Computación',
+                description: 'Ensamblaje y configuración de equipos',
+                icon: <SiPcgamingwiki className="w-10 h-10" />,
               },
               {
-                title: 'Sistemas CCTV',
-                description: 'Seguridad y videovigilancia profesional',
-                icon: <PiSecurityCameraDuotone className="w-8 h-8" />,
-                color: 'from-cyan-600 to-blue-600',
+                title: 'Sistema CCTV y Seguridad',
+                description: 'Videovigilancia y seguridad profesional',
+                icon: <PiSecurityCameraDuotone className="w-10 h-10" />,
               },
               {
-                title: 'Servicio Técnico',
-                description: 'Reparación y mantenimiento especializado',
-                icon: <FaScrewdriverWrench className="w-8 h-8" />,
-                color: 'from-blue-500 to-cyan-500',
+                title: 'Servicio Técnico Especializado',
+                description: 'Reparación y mantenimiento de equipos',
+                icon: <FaScrewdriverWrench className="w-10 h-10" />,
               },
               {
-                title: 'Cursos Online',
+                title: 'Curso y Educación Online',
                 description: 'Formación en tecnología y programación',
-                icon: <PiStudentDuotone className="w-8 h-8" />,
-                color: 'from-indigo-500 to-purple-500',
+                icon: <PiStudentDuotone className="w-10 h-10" />,
+              },
+              {
+                title: 'Desarrollo de Software',
+                description: 'Aplicaciones web, móviles y sistemas',
+                icon: <FiCode className="w-10 h-10" />,
               },
             ].map((service, index) => (
               <div
                 key={index}
-                className="group relative bg-[#f8f9fa] hover:bg-white border border-[#e9ecef] rounded-lg p-4 hover:shadow-md transition-all"
+                className="group relative bg-gradient-to-br from-white via-[#f8f9fa] to-white border border-[#e9ecef] rounded-2xl p-6 hover:shadow-2xl hover:shadow-[#2a63cd]/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden text-center"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${service.color} opacity-0 group-hover:opacity-5 rounded-lg transition-opacity`}></div>
-                <div className="relative">
-                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg bg-gradient-to-br ${service.color} text-white mb-3 shadow-md`}>
-                    {service.icon}
+                {/* Premium gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#2a63cd]/5 via-transparent to-[#1e4ba3]/5 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-500"></div>
+
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+
+                <div className="relative flex flex-col items-center">
+                  {/* Premium Icon Container */}
+                  <div className="relative mb-4">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center text-white shadow-xl shadow-[#2a63cd]/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                      {/* Glossy overlay */}
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/30 via-white/10 to-transparent"></div>
+                      <div className="relative z-10">{service.icon}</div>
+                    </div>
+                    {/* Glow ring */}
+                    <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] opacity-0 group-hover:opacity-20 blur-lg transition-opacity duration-500"></div>
                   </div>
-                  <h3 className="text-sm font-bold text-[#212529] mb-1">{service.title}</h3>
-                  <p className="text-xs text-[#6a6c6b] mb-3">{service.description}</p>
+
+                  <h3 className="text-lg font-bold text-[#212529] mb-2 group-hover:text-[#2a63cd] transition-colors">{service.title}</h3>
+                  <p className="text-sm text-[#6a6c6b] mb-4 leading-relaxed">{service.description}</p>
+
                   <Link
                     href="/servicios"
-                    className="inline-flex items-center gap-1 text-xs font-medium text-[#2a63cd] group-hover:gap-2 transition-all"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-[#2a63cd] bg-[#2a63cd]/10 rounded-full group-hover:bg-[#2a63cd] group-hover:text-white transition-all duration-300"
                   >
                     Conocer más
-                    <FiArrowRight className="w-3 h-3" />
+                    <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </div>
               </div>

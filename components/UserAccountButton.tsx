@@ -88,10 +88,13 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
       {/* User Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex items-center gap-2 px-3 py-2 hover:bg-[#f8f9fa] rounded-lg transition-all duration-300 group hover:scale-105"
+        className="relative flex items-center gap-2 px-2 py-1.5 hover:bg-[#f8f9fa] rounded-lg transition-all duration-300 group hover:scale-105"
       >
         {userImage && !imageError ? (
-          <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-[#2a63cd]/30 group-hover:border-[#2a63cd] transition-colors select-none">
+          <div className={`relative w-10 h-10 rounded-full overflow-hidden border-[3px] shadow-md group-hover:shadow-lg transition-all ${isVerified
+              ? 'border-emerald-500 group-hover:border-emerald-400'
+              : 'border-amber-500 group-hover:border-amber-400 animate-pulse'
+            }`}>
             <Image
               src={userImage}
               alt={userName}
@@ -103,7 +106,10 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
             />
           </div>
         ) : (
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center text-white text-xs font-bold shadow-md group-hover:shadow-lg transition-shadow">
+          <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center text-white text-sm font-bold shadow-md group-hover:shadow-lg transition-all border-[3px] ${isVerified
+              ? 'border-emerald-500 group-hover:border-emerald-400'
+              : 'border-amber-500 group-hover:border-amber-400 animate-pulse'
+            }`}>
             {userName.charAt(0).toUpperCase()}
           </div>
         )}

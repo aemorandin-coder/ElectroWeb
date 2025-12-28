@@ -24,13 +24,49 @@ interface Product {
 interface ProductCarouselProps {
     products: Product[];
     itemsPerPage?: number;
+    autoShuffleInterval?: number; // in milliseconds
 }
 
-export default function ProductCarousel({ products, itemsPerPage = 4 }: ProductCarouselProps) {
+export default function ProductCarousel({
+    products,
+    itemsPerPage = 4,
+    autoShuffleInterval = 60000 // 1 minute default
+}: ProductCarouselProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
     const [isAnimating, setIsAnimating] = useState(false);
-    const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+    const [isMounted, setIsMounted] = useState(false);
+
+    // Fisher-Yates shuffle function
+    const shuffleArray = (arr: Product[]): Product[] => {
+        const shuffled = [...arr];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    };
+
+    // Shuffled products state - starts with original order for SSR
+    const [shuffledProducts, setShuffledProducts] = useState<Product[]>(products);
+
+    // Mark as mounted and do initial shuffle (client-side only)
+    useEffect(() => {
+        setIsMounted(true);
+        setShuffledProducts(shuffleArray(products));
+    }, [products]);
+
+    // Auto-shuffle every interval (client-side only)
+    useEffect(() => {
+        if (!isMounted || products.length <= 1) return;
+
+        const interval = setInterval(() => {
+            setShuffledProducts(shuffleArray(products));
+            setCurrentIndex(0); // Reset to first page on shuffle
+        }, autoShuffleInterval);
+
+        return () => clearInterval(interval);
+    }, [products, autoShuffleInterval, isMounted]);
 
     // Responsive items per page
     const [visibleItems, setVisibleItems] = useState(itemsPerPage);
@@ -53,11 +89,12 @@ export default function ProductCarousel({ products, itemsPerPage = 4 }: ProductC
         return () => window.removeEventListener('resize', handleResize);
     }, [itemsPerPage]);
 
-    // Update displayed products
-    useEffect(() => {
+    // Displayed products - use original products for SSR, shuffled for client
+    const displayedProducts = (() => {
+        const source = isMounted ? shuffledProducts : products;
         const startIndex = currentIndex * visibleItems;
-        setDisplayedProducts(products.slice(startIndex, startIndex + visibleItems));
-    }, [currentIndex, visibleItems, products]);
+        return source.slice(startIndex, startIndex + visibleItems);
+    })();
 
     const totalPages = Math.ceil(products.length / visibleItems);
     const canGoNext = currentIndex < totalPages - 1;

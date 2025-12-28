@@ -123,16 +123,16 @@ export default function CategoryCarousel({ categories, itemsPerPage = 6 }: Categ
                 </>
             )}
 
-            {/* Categories Grid with Slide Animation */}
+            {/* Categories Row with Slide Animation */}
             <div className="overflow-hidden">
                 <div
-                    className={`flex flex-wrap justify-center gap-3 sm:gap-4 transition-all duration-300 ease-out transform ${getAnimationClass()}`}
+                    className={`flex justify-center gap-2 sm:gap-4 transition-all duration-300 ease-out transform ${getAnimationClass()}`}
                 >
                     {displayedCategories.map((category, index) => (
                         <Link
                             key={`${category.id}-${currentIndex}`}
                             href={`/categorias/${category.slug}`}
-                            className="group relative bg-[#f8f9fa] hover:bg-white border border-[#e9ecef] rounded-2xl p-4 transition-all duration-300 hover:shadow-xl hover:border-[#2a63cd]/40 hover:-translate-y-2 w-[calc(50%-0.375rem)] sm:w-[calc(33.333%-0.5rem)] lg:w-[calc(16.666%-0.75rem)]"
+                            className="group relative flex-shrink-0 bg-[#f8f9fa] hover:bg-white border border-[#e9ecef] rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:shadow-xl hover:border-[#2a63cd]/40 hover:-translate-y-2 w-[15%] min-w-[100px] sm:min-w-[120px]"
                             style={{
                                 animationDelay: `${index * 50}ms`,
                             }}

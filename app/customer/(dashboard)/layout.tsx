@@ -34,11 +34,27 @@ export default function CustomerDashboardLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Closed by default on mobile
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
   const [userImage, setUserImage] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+      // Auto-open sidebar on desktop
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(true);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -87,6 +103,10 @@ export default function CustomerDashboardLayout({
   useEffect(() => {
     if (pathname !== prevPathname) {
       setIsTransitioning(true);
+      // Close sidebar on mobile when navigating
+      if (isMobile) {
+        setIsSidebarOpen(false);
+      }
 
       const timer = setTimeout(() => {
         setIsTransitioning(false);
@@ -95,7 +115,7 @@ export default function CustomerDashboardLayout({
 
       return () => clearTimeout(timer);
     }
-  }, [pathname, prevPathname]);
+  }, [pathname, prevPathname, isMobile]);
 
   if (status === 'loading') {
     return (
@@ -115,7 +135,7 @@ export default function CustomerDashboardLayout({
     { href: '/customer/orders', icon: FiShoppingBag, label: 'Mis Pedidos' },
     { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Lista de Deseos' },
     { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },
-    { href: '/customer/warranty', icon: FiShield, label: 'Garantía y Devoluciones' },
+    { href: '/customer/warranty', icon: FiShield, label: 'Garantía' },
     { href: '/customer/profile', icon: FiUser, label: 'Mi Perfil' },
     { href: '/customer/settings', icon: FiSettings, label: 'Configuración' },
   ];
@@ -134,6 +154,10 @@ export default function CustomerDashboardLayout({
     }
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#2a63cd] relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -147,36 +171,53 @@ export default function CustomerDashboardLayout({
       <div className="fixed inset-0 bg-grid-pattern opacity-5 pointer-events-none"></div>
 
       <div className="relative z-10">
+        {/* Mobile Overlay Backdrop */}
+        {isMobile && isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
         <aside
-          className={`fixed top-0 left-0 z-40 h-screen transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-            } bg-white/95 backdrop-blur-xl border-r border-white/30 w-64 shadow-2xl`}
+          className={`fixed top-0 left-0 z-50 h-screen transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            } bg-white/95 backdrop-blur-xl border-r border-white/30 w-64 shadow-2xl overflow-hidden`}
         >
           <div className="h-full flex flex-col">
-            {/* Logo */}
-            <div className="flex items-center gap-3 px-6 py-5 border-b border-[#e9ecef]">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2a63cd] shadow-md shadow-[#2a63cd]/20">
-                {companySettings?.logo ? (
-                  <div className="relative w-full h-full">
-                    <Image src={companySettings.logo} alt={companySettings.companyName} fill className="object-contain p-1" />
-                  </div>
-                ) : (
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                )}
+            {/* Logo & Close Button */}
+            <div className="flex items-center justify-between gap-3 px-4 lg:px-6 py-4 lg:py-5 border-b border-[#e9ecef]">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-[#2a63cd] shadow-md shadow-[#2a63cd]/20">
+                  {companySettings?.logo ? (
+                    <div className="relative w-full h-full">
+                      <Image src={companySettings.logo} alt={companySettings.companyName} fill className="object-contain p-1" />
+                    </div>
+                  ) : (
+                    <svg className="w-5 h-5 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-[#212529]">
+                    {companySettings?.companyName || 'Electro Shop'}
+                  </h2>
+                  <p className="text-xs text-[#6a6c6b]">Mi Panel</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-sm font-semibold text-[#212529]">
-                  {companySettings?.companyName || 'Electro Shop'}
-                </h2>
-                <p className="text-xs text-[#6a6c6b]">Mi Panel</p>
-              </div>
+              {/* Close button - Mobile only */}
+              <button
+                onClick={() => setIsSidebarOpen(false)}
+                className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <FiX className="w-5 h-5 text-gray-500" />
+              </button>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-3 py-4 overflow-y-auto">
-              <ul className="space-y-1">
+            <nav className="flex-1 px-2 lg:px-3 py-3 lg:py-4 overflow-y-auto">
+              <ul className="space-y-0.5 lg:space-y-1">
                 {menuItems.map((item, index) => {
                   const isActive = pathname === item.href ||
                     (item.href !== '/customer' && pathname.startsWith(item.href));
@@ -185,7 +226,8 @@ export default function CustomerDashboardLayout({
                     <li key={item.label} style={{ animationDelay: `${index * 50}ms` }} className="animate-fadeIn">
                       <Link
                         href={item.href}
-                        className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${isActive
+                        onClick={() => isMobile && setIsSidebarOpen(false)}
+                        className={`group relative flex items-center gap-3 px-3 py-2.5 lg:py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${isActive
                           ? 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white shadow-lg shadow-[#2a63cd]/30 scale-[1.02]'
                           : 'text-[#6a6c6b] hover:bg-[#f8f9fa] hover:text-[#212529] hover:scale-[1.01]'
                           }`}
@@ -208,9 +250,9 @@ export default function CustomerDashboardLayout({
             </nav>
 
             {/* User Info & Logout */}
-            <div className="border-t border-[#e9ecef] p-4">
+            <div className="border-t border-[#e9ecef] p-3 lg:p-4">
               <div className="flex items-center gap-3 mb-3 px-2">
-                <div className="relative w-9 h-9 rounded-full bg-[#f8f9fa] border border-[#dee2e6] overflow-hidden flex items-center justify-center">
+                <div className="relative w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-[#f8f9fa] border border-[#dee2e6] overflow-hidden flex items-center justify-center flex-shrink-0">
                   {userImage ? (
                     <Image
                       src={userImage}
@@ -219,7 +261,7 @@ export default function CustomerDashboardLayout({
                       className="object-cover"
                     />
                   ) : (
-                    <span className="text-sm font-semibold text-[#2a63cd]">
+                    <span className="text-xs lg:text-sm font-semibold text-[#2a63cd]">
                       {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   )}
@@ -238,9 +280,7 @@ export default function CustomerDashboardLayout({
                 className="group relative w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#f8f9fa] hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 text-[#6a6c6b] hover:text-red-600 text-sm font-medium rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] overflow-hidden"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-red-500/0 to-red-500/0 group-hover:from-red-500/10 group-hover:to-red-500/0 transition-all duration-300"></span>
-                <svg className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:translate-x-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+                <FiLogOut className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:translate-x-[-2px]" />
                 <span className="relative z-10">Cerrar Sesión</span>
               </button>
             </div>
@@ -248,67 +288,65 @@ export default function CustomerDashboardLayout({
         </aside>
 
         {/* Main Content */}
-        <div className={`transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-0'}`}>
-          {/* Top Bar - Same style as admin */}
-          <header className="bg-white border-b border-[#e9ecef] sticky top-0 z-30 shadow-sm backdrop-blur-sm bg-white/95">
-            <div className="px-6 py-4 flex items-center justify-between">
+        <div className={`transition-all duration-300 ${isSidebarOpen && !isMobile ? 'lg:ml-64' : 'ml-0'}`}>
+          {/* Top Bar - Responsive */}
+          <header className="bg-white border-b border-[#e9ecef] sticky top-0 z-30 shadow-sm">
+            <div className="px-3 lg:px-6 py-2 lg:py-4 flex items-center justify-between">
+              {/* Menu Toggle */}
               <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="relative p-2 hover:bg-[#f8f9fa] rounded-lg transition-all duration-300 group hover:scale-110"
+                onClick={toggleSidebar}
+                className="relative p-2 hover:bg-[#f8f9fa] rounded-lg transition-all duration-300 group"
               >
-                <svg className="w-6 h-6 text-[#6a6c6b] group-hover:text-[#2a63cd] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                <span className="absolute inset-0 rounded-lg bg-[#2a63cd]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></span>
+                {isSidebarOpen && isMobile ? (
+                  <FiX className="w-5 h-5 text-[#6a6c6b] group-hover:text-[#2a63cd] transition-colors" />
+                ) : (
+                  <FiMenu className="w-5 h-5 text-[#6a6c6b] group-hover:text-[#2a63cd] transition-colors" />
+                )}
               </button>
 
-              <div className="flex items-center gap-3">
-                {/* Email Verification Status */}
+              {/* Center - Email Verification Status */}
+              <div className="flex-1 flex justify-center">
                 {(session?.user as any)?.emailVerified ? (
-                  <div className="flex items-center gap-1.5 px-3 py-2 bg-green-50 border border-green-200 text-green-700 text-xs font-medium rounded-lg">
-                    <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <div
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+                    style={{ backgroundColor: '#dcfce7', border: '2px solid #22c55e' }}
+                  >
+                    <svg className="w-4 h-4" style={{ color: '#15803d' }} fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    <span className="hidden sm:inline">Verificado</span>
+                    <span style={{ color: '#14532d' }}>Verificado</span>
                   </div>
                 ) : (
                   <Link
                     href="/customer/settings"
-                    className="relative flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 animate-pulse-slow group overflow-hidden"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-md"
                   >
-                    <span className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                    <svg className="w-4 h-4 relative z-10 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                    <span className="relative z-10 hidden sm:inline">Verificar Email</span>
-                    <span className="relative z-10 sm:hidden">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </span>
+                    <span>Verificar</span>
                   </Link>
                 )}
-
-                {/* Home Button - Same style as admin */}
-                <Link
-                  href="/"
-                  className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-semibold rounded-lg hover:shadow-lg hover:shadow-[#2a63cd]/30 transition-all duration-300 hover:scale-105 group overflow-hidden"
-                >
-                  <span className="absolute inset-0 bg-gradient-to-r from-[#1e4ba3] to-[#2a63cd] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                  <svg className="w-4 h-4 relative z-10 group-hover:translate-x-[-2px] transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                  <span className="relative z-10">Ir a la Tienda</span>
-                </Link>
               </div>
+
+              {/* Home Button */}
+              <Link
+                href="/"
+                className="flex items-center justify-center w-9 h-9 lg:w-auto lg:h-auto lg:px-4 lg:py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white rounded-full lg:rounded-lg hover:shadow-lg transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span className="hidden lg:inline ml-2 text-sm font-semibold">Tienda</span>
+              </Link>
             </div>
           </header>
 
           {/* Page Content with Smooth Transition */}
-          <main className="p-6 overflow-hidden relative">
+          <main className="p-3 lg:p-6 overflow-hidden relative pb-20 lg:pb-6">
             {/* Shimmer Effect on Transition */}
             <div
-              className="absolute inset-6 rounded-xl pointer-events-none z-10 overflow-hidden"
+              className="absolute inset-3 lg:inset-6 rounded-xl pointer-events-none z-10 overflow-hidden"
               style={{
                 opacity: isTransitioning ? 1 : 0,
                 transition: 'opacity 0.3s ease-out'
@@ -325,7 +363,7 @@ export default function CustomerDashboardLayout({
 
             {/* Content Container with Smooth Transitions */}
             <div
-              className="bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/30 h-[calc(100vh-8rem)] overflow-y-auto p-6"
+              className="bg-white/95 backdrop-blur-xl rounded-xl lg:rounded-xl shadow-xl border border-white/30 min-h-[calc(100vh-10rem)] lg:h-[calc(100vh-8rem)] overflow-y-auto p-4 lg:p-6"
               style={{
                 opacity: isTransitioning ? 0 : 1,
                 transform: isTransitioning ? 'translateY(8px) scale(0.99)' : 'translateY(0) scale(1)',
@@ -340,3 +378,4 @@ export default function CustomerDashboardLayout({
     </div>
   );
 }
+

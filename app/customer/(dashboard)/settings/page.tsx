@@ -17,11 +17,11 @@ const ToggleSwitch = ({ checked, onChange, disabled = false }: { checked: boolea
   <button
     onClick={() => !disabled && onChange(!checked)}
     disabled={disabled}
-    className={`relative w-10 h-5 rounded-full transition-all duration-200 ${checked ? 'bg-[#2a63cd]' : 'bg-slate-200'
+    className={`relative w-9 h-5 lg:w-10 lg:h-5 rounded-full transition-all duration-200 ${checked ? 'bg-[#2a63cd]' : 'bg-slate-200'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
   >
     <div
-      className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${checked ? 'left-5' : 'left-0.5'
+      className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${checked ? 'left-4 lg:left-5' : 'left-0.5'
         }`}
     />
   </button>
@@ -311,35 +311,35 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#2a63cd] border-t-transparent" />
+        <div className="animate-spin rounded-full h-7 w-7 lg:h-8 lg:w-8 border-2 border-[#2a63cd] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 pb-6">
-      {/* Header - Compact */}
-      <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-xl p-4 text-white shadow-lg relative overflow-hidden">
+    <div className="space-y-3 lg:space-y-4 pb-6">
+      {/* Header - Responsive */}
+      <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-lg lg:rounded-xl p-3 lg:p-4 text-white shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl" />
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <FiSettings className="w-5 h-5" />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center gap-2 lg:gap-3">
+            <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-white/20 flex items-center justify-center">
+              <FiSettings className="w-4 h-4 lg:w-5 lg:h-5" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">Configuración</h1>
-              <p className="text-xs text-blue-100">Personaliza tu cuenta</p>
+              <h1 className="text-lg lg:text-xl font-bold">Configuración</h1>
+              <p className="text-[10px] lg:text-xs text-blue-100 hidden sm:block">Personaliza tu cuenta</p>
             </div>
           </div>
           <button
             onClick={handleSaveSettings}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 bg-white text-[#2a63cd] text-sm font-bold rounded-lg hover:bg-blue-50 transition-all disabled:opacity-70"
+            className="flex items-center justify-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 bg-white text-[#2a63cd] text-xs lg:text-sm font-bold rounded-lg hover:bg-blue-50 transition-all disabled:opacity-70 w-full sm:w-auto"
           >
             {saving ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#2a63cd] border-t-transparent" />
+              <div className="animate-spin rounded-full h-3.5 w-3.5 lg:h-4 lg:w-4 border-2 border-[#2a63cd] border-t-transparent" />
             ) : (
-              <FiSave className="w-4 h-4" />
+              <FiSave className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
             )}
             {saving ? 'Guardando...' : 'Guardar'}
           </button>
@@ -348,42 +348,42 @@ export default function SettingsPage() {
 
       {/* Pending Deletion Warning */}
       {accountStatus === 'PENDING_DELETION' && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <FiAlertTriangle className="w-5 h-5 text-red-500" />
+        <div className="bg-red-50 border border-red-200 rounded-lg lg:rounded-xl p-3 lg:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2 lg:gap-3">
+            <FiAlertTriangle className="w-4 h-4 lg:w-5 lg:h-5 text-red-500 flex-shrink-0" />
             <div>
-              <p className="text-sm font-bold text-red-700">Cuenta programada para eliminación</p>
-              <p className="text-xs text-red-600">Tu cuenta será eliminada permanentemente en 30 días.</p>
+              <p className="text-xs lg:text-sm font-bold text-red-700">Cuenta programada para eliminación</p>
+              <p className="text-[10px] lg:text-xs text-red-600">Tu cuenta será eliminada en 30 días.</p>
             </div>
           </div>
           <button
             onClick={handleCancelDeletion}
-            className="flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-700 text-xs font-bold rounded-lg hover:bg-red-200 transition-all"
+            className="flex items-center justify-center gap-1 px-3 py-1.5 bg-red-100 text-red-700 text-[10px] lg:text-xs font-bold rounded-lg hover:bg-red-200 transition-all w-full sm:w-auto"
           >
             <FiX className="w-3 h-3" />
-            Cancelar solicitud
+            Cancelar
           </button>
         </div>
       )}
 
       {/* Email Verification Status */}
       {!emailVerified && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between animate-fadeIn">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-              <FiMail className="w-5 h-5 text-amber-600" />
+        <div className="bg-amber-50 border border-amber-200 rounded-lg lg:rounded-xl p-3 lg:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-fadeIn">
+          <div className="flex items-center gap-2 lg:gap-3">
+            <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <FiMail className="w-4 h-4 lg:w-5 lg:h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm font-bold text-amber-800">Verificación de correo pendiente</p>
-              <p className="text-xs text-amber-700">
-                Para poder realizar compras, debes verificar tu correo electrónico.
+              <p className="text-xs lg:text-sm font-bold text-amber-800">Verificación pendiente</p>
+              <p className="text-[10px] lg:text-xs text-amber-700">
+                Verifica tu correo para poder comprar.
               </p>
             </div>
           </div>
           <button
             onClick={handleResendVerification}
             disabled={resendingVerification}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 bg-amber-600 text-white text-[10px] lg:text-xs font-bold rounded-lg hover:bg-amber-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed w-full sm:w-auto"
           >
             {resendingVerification ? (
               <>
@@ -392,8 +392,8 @@ export default function SettingsPage() {
               </>
             ) : (
               <>
-                <FiSend className="w-3.5 h-3.5" />
-                Reenviar verificación
+                <FiSend className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
+                <span className="hidden sm:inline">Reenviar</span> verificación
               </>
             )}
           </button>
@@ -402,71 +402,71 @@ export default function SettingsPage() {
 
       {/* Email Verified Success Badge */}
       {emailVerified && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-            <FiCheck className="w-4 h-4 text-green-600" />
+        <div className="bg-green-50 border border-green-200 rounded-lg lg:rounded-xl p-2.5 lg:p-3 flex items-center gap-2 lg:gap-3">
+          <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+            <FiCheck className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-green-600" />
           </div>
           <div>
-            <p className="text-sm font-bold text-green-800">Correo verificado</p>
-            <p className="text-xs text-green-700">Tu cuenta está verificada y lista para comprar.</p>
+            <p className="text-xs lg:text-sm font-bold text-green-800">Correo verificado</p>
+            <p className="text-[10px] lg:text-xs text-green-700 hidden sm:block">Tu cuenta está lista para comprar.</p>
           </div>
         </div>
       )}
 
-      {/* Main Grid - Flexible like Marketing */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Main Grid - Responsive */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4">
 
         {/* Column 1: Account Type + Privacy */}
-        <div className="space-y-4">
+        <div className="space-y-3 lg:space-y-4">
           {/* Account Type - Compact */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-              <FiUser className="w-4 h-4 text-[#2a63cd]" />
-              <h2 className="text-sm font-bold text-slate-800">Tipo de Cuenta</h2>
+          <div className="bg-white rounded-lg lg:rounded-xl border border-slate-200 overflow-hidden">
+            <div className="px-3 lg:px-4 py-2 lg:py-3 border-b border-slate-100 flex items-center gap-2">
+              <FiUser className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-[#2a63cd]" />
+              <h2 className="text-xs lg:text-sm font-bold text-slate-800">Tipo de Cuenta</h2>
             </div>
-            <div className="p-3 space-y-2">
-              <label className={`flex items-center gap-2 p-2.5 border rounded-lg cursor-pointer transition-all text-sm ${!settings.purchaseAsBusinessDefault ? 'border-[#2a63cd] bg-[#2a63cd]/5' : 'border-slate-200'
+            <div className="p-2.5 lg:p-3 space-y-1.5 lg:space-y-2">
+              <label className={`flex items-center gap-2 p-2 lg:p-2.5 border rounded-lg cursor-pointer transition-all text-xs lg:text-sm ${!settings.purchaseAsBusinessDefault ? 'border-[#2a63cd] bg-[#2a63cd]/5' : 'border-slate-200'
                 }`}>
                 <input
                   type="radio"
                   checked={!settings.purchaseAsBusinessDefault}
                   onChange={() => setSettings({ ...settings, purchaseAsBusinessDefault: false })}
-                  className="w-3.5 h-3.5 text-[#2a63cd]"
+                  className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-[#2a63cd]"
                 />
-                <span className="font-medium text-slate-700 flex-1">Persona Natural</span>
-                {!settings.purchaseAsBusinessDefault && <FiCheck className="w-4 h-4 text-[#2a63cd]" />}
+                <span className="font-medium text-slate-700 flex-1">Personal</span>
+                {!settings.purchaseAsBusinessDefault && <FiCheck className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-[#2a63cd]" />}
               </label>
 
-              <label className={`flex items-center gap-2 p-2.5 border rounded-lg transition-all text-sm ${settings.purchaseAsBusinessDefault ? 'border-[#2a63cd] bg-[#2a63cd]/5' : 'border-slate-200'
+              <label className={`flex items-center gap-2 p-2 lg:p-2.5 border rounded-lg transition-all text-xs lg:text-sm ${settings.purchaseAsBusinessDefault ? 'border-[#2a63cd] bg-[#2a63cd]/5' : 'border-slate-200'
                 } ${!settings.businessVerified ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input
                   type="radio"
                   checked={settings.purchaseAsBusinessDefault}
                   onChange={() => setSettings({ ...settings, purchaseAsBusinessDefault: true })}
                   disabled={!settings.businessVerified}
-                  className="w-3.5 h-3.5 text-[#2a63cd]"
+                  className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-[#2a63cd]"
                 />
                 <span className="font-medium text-slate-700 flex-1">Empresa</span>
                 {settings.businessVerified ? (
-                  <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">OK</span>
+                  <span className="text-[8px] lg:text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">OK</span>
                 ) : (
-                  <FiAlertCircle className="w-4 h-4 text-amber-500" />
+                  <FiAlertCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-amber-500" />
                 )}
               </label>
             </div>
           </div>
 
           {/* Privacy - Compact */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-              <HiOutlineShieldCheck className="w-4 h-4 text-[#2a63cd]" />
-              <h2 className="text-sm font-bold text-slate-800">Privacidad</h2>
+          <div className="bg-white rounded-lg lg:rounded-xl border border-slate-200 overflow-hidden">
+            <div className="px-3 lg:px-4 py-2 lg:py-3 border-b border-slate-100 flex items-center gap-2">
+              <HiOutlineShieldCheck className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-[#2a63cd]" />
+              <h2 className="text-xs lg:text-sm font-bold text-slate-800">Privacidad</h2>
             </div>
-            <div className="p-3 space-y-2">
+            <div className="p-2.5 lg:p-3 space-y-1.5 lg:space-y-2">
               <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <FiMail className="w-3.5 h-3.5 text-[#2a63cd]" />
-                  <span className="text-xs font-medium text-slate-700">Encuestas</span>
+                <div className="flex items-center gap-1.5 lg:gap-2">
+                  <FiMail className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-[#2a63cd]" />
+                  <span className="text-[10px] lg:text-xs font-medium text-slate-700">Encuestas</span>
                 </div>
                 <ToggleSwitch
                   checked={privacy.allowSurveys}
@@ -474,9 +474,9 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <FiActivity className="w-3.5 h-3.5 text-[#2a63cd]" />
-                  <span className="text-xs font-medium text-slate-700">Datos anónimos</span>
+                <div className="flex items-center gap-1.5 lg:gap-2">
+                  <FiActivity className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-[#2a63cd]" />
+                  <span className="text-[10px] lg:text-xs font-medium text-slate-700">Datos anónimos</span>
                 </div>
                 <ToggleSwitch
                   checked={privacy.shareAnonymousData}
@@ -487,57 +487,57 @@ export default function SettingsPage() {
           </div>
 
           {/* Session Info */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-              <FiMonitor className="w-4 h-4 text-[#2a63cd]" />
-              <h2 className="text-sm font-bold text-slate-800">Sesión Actual</h2>
+          <div className="bg-white rounded-lg lg:rounded-xl border border-slate-200 overflow-hidden">
+            <div className="px-3 lg:px-4 py-2 lg:py-3 border-b border-slate-100 flex items-center gap-2">
+              <FiMonitor className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-[#2a63cd]" />
+              <h2 className="text-xs lg:text-sm font-bold text-slate-800">Sesión</h2>
             </div>
-            <div className="p-3 space-y-2">
-              <div className="flex items-center gap-2 text-xs">
-                <FiClock className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-slate-500">Último acceso:</span>
+            <div className="p-2.5 lg:p-3 space-y-1.5 lg:space-y-2">
+              <div className="flex items-center gap-2 text-[10px] lg:text-xs">
+                <FiClock className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-slate-400" />
+                <span className="text-slate-500">Acceso:</span>
                 <span className="font-medium text-slate-700">{formatLastLogin(sessionInfo.lastLoginAt)}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs">
-                <FiMonitor className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-slate-500">Dispositivo:</span>
-                <span className="font-medium text-slate-700">{sessionInfo.lastLoginDevice}</span>
+              <div className="flex items-center gap-2 text-[10px] lg:text-xs">
+                <FiMonitor className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-slate-400" />
+                <span className="text-slate-500">Disp.:</span>
+                <span className="font-medium text-slate-700 truncate">{sessionInfo.lastLoginDevice}</span>
               </div>
               <button
                 onClick={handleLogoutAllSessions}
-                className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 bg-slate-100 text-slate-600 text-xs font-medium rounded-lg hover:bg-slate-200 transition-all"
+                className="w-full mt-1.5 lg:mt-2 flex items-center justify-center gap-1.5 lg:gap-2 px-3 py-2 bg-slate-100 text-slate-600 text-[10px] lg:text-xs font-medium rounded-lg hover:bg-slate-200 transition-all"
               >
-                <FiLogOut className="w-3.5 h-3.5" />
-                Cerrar todas las sesiones
+                <FiLogOut className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
+                Cerrar sesiones
               </button>
             </div>
           </div>
         </div>
 
         {/* Column 2: Notifications */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden h-fit">
-          <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-            <FiBell className="w-4 h-4 text-[#2a63cd]" />
-            <h2 className="text-sm font-bold text-slate-800">Notificaciones</h2>
+        <div className="bg-white rounded-lg lg:rounded-xl border border-slate-200 overflow-hidden h-fit">
+          <div className="px-3 lg:px-4 py-2 lg:py-3 border-b border-slate-100 flex items-center gap-2">
+            <FiBell className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-[#2a63cd]" />
+            <h2 className="text-xs lg:text-sm font-bold text-slate-800">Notificaciones</h2>
           </div>
-          <div className="p-3 space-y-3">
+          <div className="p-2.5 lg:p-3 space-y-2.5 lg:space-y-3">
             {/* Email */}
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                <FiMail className="w-3 h-3" /> Correo
+              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 lg:mb-2 flex items-center gap-1">
+                <FiMail className="w-2.5 h-2.5 lg:w-3 lg:h-3" /> Correo
               </p>
-              <div className="space-y-1.5">
+              <div className="space-y-1 lg:space-y-1.5">
                 <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <FiPackage className="w-3.5 h-3.5 text-[#2a63cd]" />
-                    <span className="text-xs font-medium text-slate-700">Pedidos</span>
+                  <div className="flex items-center gap-1.5 lg:gap-2">
+                    <FiPackage className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-[#2a63cd]" />
+                    <span className="text-[10px] lg:text-xs font-medium text-slate-700">Pedidos</span>
                   </div>
                   <ToggleSwitch checked={notifications.emailOrders} onChange={(v) => setNotifications({ ...notifications, emailOrders: v })} />
                 </div>
                 <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <FiTag className="w-3.5 h-3.5 text-[#2a63cd]" />
-                    <span className="text-xs font-medium text-slate-700">Promociones</span>
+                  <div className="flex items-center gap-1.5 lg:gap-2">
+                    <FiTag className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-[#2a63cd]" />
+                    <span className="text-[10px] lg:text-xs font-medium text-slate-700">Promos</span>
                   </div>
                   <ToggleSwitch checked={notifications.emailPromotions} onChange={(v) => setNotifications({ ...notifications, emailPromotions: v })} />
                 </div>
@@ -546,28 +546,28 @@ export default function SettingsPage() {
 
             {/* In-App */}
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                <FiBell className="w-3 h-3" /> En la App
+              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 lg:mb-2 flex items-center gap-1">
+                <FiBell className="w-2.5 h-2.5 lg:w-3 lg:h-3" /> En App
               </p>
-              <div className="space-y-1.5">
+              <div className="space-y-1 lg:space-y-1.5">
                 <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <FiPackage className="w-3.5 h-3.5 text-[#2a63cd]" />
-                    <span className="text-xs font-medium text-slate-700">Pedidos</span>
+                  <div className="flex items-center gap-1.5 lg:gap-2">
+                    <FiPackage className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-[#2a63cd]" />
+                    <span className="text-[10px] lg:text-xs font-medium text-slate-700">Pedidos</span>
                   </div>
                   <ToggleSwitch checked={notifications.inAppOrders} onChange={(v) => setNotifications({ ...notifications, inAppOrders: v })} />
                 </div>
                 <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <FiTag className="w-3.5 h-3.5 text-[#2a63cd]" />
-                    <span className="text-xs font-medium text-slate-700">Ofertas</span>
+                  <div className="flex items-center gap-1.5 lg:gap-2">
+                    <FiTag className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-[#2a63cd]" />
+                    <span className="text-[10px] lg:text-xs font-medium text-slate-700">Ofertas</span>
                   </div>
                   <ToggleSwitch checked={notifications.inAppPromotions} onChange={(v) => setNotifications({ ...notifications, inAppPromotions: v })} />
                 </div>
                 <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <FiVolume2 className="w-3.5 h-3.5 text-[#2a63cd]" />
-                    <span className="text-xs font-medium text-slate-700">Sonidos</span>
+                  <div className="flex items-center gap-1.5 lg:gap-2">
+                    <FiVolume2 className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-[#2a63cd]" />
+                    <span className="text-[10px] lg:text-xs font-medium text-slate-700">Sonidos</span>
                   </div>
                   <ToggleSwitch checked={notifications.soundEnabled} onChange={(v) => setNotifications({ ...notifications, soundEnabled: v })} />
                 </div>
@@ -577,22 +577,22 @@ export default function SettingsPage() {
         </div>
 
         {/* Column 3: Security + Danger Zone */}
-        <div className="space-y-4">
+        <div className="space-y-3 lg:space-y-4">
           {/* Password Change - Compact */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-              <FiLock className="w-4 h-4 text-[#2a63cd]" />
-              <h2 className="text-sm font-bold text-slate-800">Cambiar Contraseña</h2>
+          <div className="bg-white rounded-lg lg:rounded-xl border border-slate-200 overflow-hidden">
+            <div className="px-3 lg:px-4 py-2 lg:py-3 border-b border-slate-100 flex items-center gap-2">
+              <FiLock className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-[#2a63cd]" />
+              <h2 className="text-xs lg:text-sm font-bold text-slate-800">Contraseña</h2>
             </div>
-            <div className="p-3 space-y-3">
+            <div className="p-2.5 lg:p-3 space-y-2 lg:space-y-3">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Actual</label>
+                <label className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Actual</label>
                 <div className="relative">
                   <input
                     type={showPasswords.current ? 'text' : 'password'}
                     value={passwordData.currentPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                    className="w-full pl-3 pr-8 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#2a63cd]"
+                    className="w-full pl-3 pr-8 py-1.5 lg:py-2 text-xs lg:text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#2a63cd]"
                     placeholder="••••••••"
                   />
                   <button
@@ -600,18 +600,18 @@ export default function SettingsPage() {
                     onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400"
                   >
-                    {showPasswords.current ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                    {showPasswords.current ? <FiEyeOff className="w-3.5 h-3.5 lg:w-4 lg:h-4" /> : <FiEye className="w-3.5 h-3.5 lg:w-4 lg:h-4" />}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Nueva</label>
+                <label className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Nueva</label>
                 <div className="relative">
                   <input
                     type={showPasswords.new ? 'text' : 'password'}
                     value={passwordData.newPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                    className="w-full pl-3 pr-8 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#2a63cd]"
+                    className="w-full pl-3 pr-8 py-1.5 lg:py-2 text-xs lg:text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#2a63cd]"
                     placeholder="Mín. 8 caracteres"
                   />
                   <button
@@ -619,18 +619,18 @@ export default function SettingsPage() {
                     onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400"
                   >
-                    {showPasswords.new ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                    {showPasswords.new ? <FiEyeOff className="w-3.5 h-3.5 lg:w-4 lg:h-4" /> : <FiEye className="w-3.5 h-3.5 lg:w-4 lg:h-4" />}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Confirmar</label>
+                <label className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Confirmar</label>
                 <div className="relative">
                   <input
                     type={showPasswords.confirm ? 'text' : 'password'}
                     value={passwordData.confirmPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                    className="w-full pl-3 pr-8 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#2a63cd]"
+                    className="w-full pl-3 pr-8 py-1.5 lg:py-2 text-xs lg:text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#2a63cd]"
                     placeholder="Repetir"
                   />
                   <button
@@ -638,17 +638,17 @@ export default function SettingsPage() {
                     onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400"
                   >
-                    {showPasswords.confirm ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                    {showPasswords.confirm ? <FiEyeOff className="w-3.5 h-3.5 lg:w-4 lg:h-4" /> : <FiEye className="w-3.5 h-3.5 lg:w-4 lg:h-4" />}
                   </button>
                 </div>
                 {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
-                  <p className="text-[10px] text-red-500 mt-1">No coinciden</p>
+                  <p className="text-[9px] lg:text-[10px] text-red-500 mt-1">No coinciden</p>
                 )}
               </div>
               <button
                 onClick={handleChangePassword}
                 disabled={changingPassword || !passwordData.currentPassword || !passwordData.newPassword || passwordData.newPassword !== passwordData.confirmPassword}
-                className="w-full py-2 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-900 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-1.5 lg:py-2 bg-slate-800 text-white text-[10px] lg:text-xs font-bold rounded-lg hover:bg-slate-900 disabled:opacity-50 flex items-center justify-center gap-1.5 lg:gap-2"
               >
                 {changingPassword ? (
                   <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
@@ -661,35 +661,35 @@ export default function SettingsPage() {
           </div>
 
           {/* Danger Zone */}
-          <div className="bg-white rounded-xl border border-red-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-red-100 bg-red-50 flex items-center gap-2">
-              <FiAlertTriangle className="w-4 h-4 text-red-500" />
-              <h2 className="text-sm font-bold text-red-700">Zona de Peligro</h2>
+          <div className="bg-white rounded-lg lg:rounded-xl border border-red-200 overflow-hidden">
+            <div className="px-3 lg:px-4 py-2 lg:py-3 border-b border-red-100 bg-red-50 flex items-center gap-2">
+              <FiAlertTriangle className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-red-500" />
+              <h2 className="text-xs lg:text-sm font-bold text-red-700">Zona de Peligro</h2>
             </div>
-            <div className="p-3 space-y-2">
+            <div className="p-2.5 lg:p-3 space-y-1.5 lg:space-y-2">
               <button
                 onClick={handleDeactivateAccount}
-                className="w-full flex items-center justify-between p-2.5 border border-slate-200 rounded-lg hover:border-amber-300 hover:bg-amber-50 transition-all"
+                className="w-full flex items-center justify-between p-2 lg:p-2.5 border border-slate-200 rounded-lg hover:border-amber-300 hover:bg-amber-50 transition-all"
               >
-                <div className="flex items-center gap-2">
-                  <FiEyeOff className="w-4 h-4 text-amber-500" />
-                  <span className="text-xs font-medium text-slate-700">Desactivar cuenta</span>
+                <div className="flex items-center gap-1.5 lg:gap-2">
+                  <FiEyeOff className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-amber-500" />
+                  <span className="text-[10px] lg:text-xs font-medium text-slate-700">Desactivar</span>
                 </div>
-                <span className="text-[10px] text-slate-400">Temporal</span>
+                <span className="text-[8px] lg:text-[10px] text-slate-400">Temporal</span>
               </button>
               <button
                 onClick={handleRequestDeletion}
                 disabled={accountStatus === 'PENDING_DELETION'}
-                className="w-full flex items-center justify-between p-2.5 border border-slate-200 rounded-lg hover:border-red-300 hover:bg-red-50 transition-all disabled:opacity-50"
+                className="w-full flex items-center justify-between p-2 lg:p-2.5 border border-slate-200 rounded-lg hover:border-red-300 hover:bg-red-50 transition-all disabled:opacity-50"
               >
-                <div className="flex items-center gap-2">
-                  <FiTrash2 className="w-4 h-4 text-red-500" />
-                  <span className="text-xs font-medium text-slate-700">Eliminar cuenta</span>
+                <div className="flex items-center gap-1.5 lg:gap-2">
+                  <FiTrash2 className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-red-500" />
+                  <span className="text-[10px] lg:text-xs font-medium text-slate-700">Eliminar</span>
                 </div>
-                <span className="text-[10px] text-slate-400">Permanente</span>
+                <span className="text-[8px] lg:text-[10px] text-slate-400">Permanente</span>
               </button>
-              <p className="text-[10px] text-slate-400 px-1">
-                Al eliminar tu cuenta, se borrarán todos tus datos de forma permanente.
+              <p className="text-[8px] lg:text-[10px] text-slate-400 px-1">
+                Al eliminar, se borran todos tus datos.
               </p>
             </div>
           </div>

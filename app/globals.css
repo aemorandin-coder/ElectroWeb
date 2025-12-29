@@ -19,6 +19,91 @@
   display: none;
 }
 
+/* Profile Dropdown - Force text visibility */
+.profile-dropdown {
+  background-color: #ffffff !important;
+}
+
+.profile-dropdown a,
+.profile-dropdown button {
+  color: #000000 !important;
+}
+
+.profile-dropdown a span,
+.profile-dropdown button span {
+  color: inherit !important;
+}
+
+.profile-dropdown .text-black {
+  color: #000000 !important;
+}
+
+.profile-dropdown .text-red-600 {
+  color: #dc2626 !important;
+}
+
+/* Icon colors */
+.profile-dropdown .text-blue-600 {
+  color: #2563eb !important;
+}
+
+.profile-dropdown svg {
+  color: inherit !important;
+}
+
+.profile-dropdown .bg-blue-100 svg {
+  color: #2563eb !important;
+}
+
+.profile-dropdown .bg-red-100 svg {
+  color: #dc2626 !important;
+}
+
+/* Mobile layout for dropdown */
+.profile-dropdown {
+  min-width: 200px !important;
+}
+
+.profile-dropdown a,
+.profile-dropdown button {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px 14px !important;
+}
+
+.profile-dropdown a>div,
+.profile-dropdown button>div {
+  flex-shrink: 0 !important;
+}
+
+.profile-dropdown span {
+  font-size: 13px !important;
+}
+
+/* Logout button - single row centered */
+.profile-dropdown button {
+  justify-content: center !important;
+}
+
+.profile-dropdown button span {
+  white-space: nowrap !important;
+}
+
+/* Ensure icon containers are visible */
+.profile-dropdown button>div {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+  background-color: #fee2e2 !important;
+}
+
+
 :root {
   /* Brand Colors */
   --primary-blue: #2a63cd;

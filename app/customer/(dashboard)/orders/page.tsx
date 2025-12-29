@@ -191,142 +191,142 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="space-y-5">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl p-4 text-white">
-          <div className="flex items-center justify-between mb-2">
-            <FiDollarSign className="w-5 h-5 opacity-80" />
-            <span className="text-xs opacity-70">Total</span>
+    <div className="space-y-3 lg:space-y-5">
+      {/* Stats Cards - Responsive */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4">
+        <div className="bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg lg:rounded-xl p-3 lg:p-4 text-white">
+          <div className="flex items-center justify-between mb-1 lg:mb-2">
+            <FiDollarSign className="w-4 h-4 lg:w-5 lg:h-5 opacity-80" />
+            <span className="text-[10px] lg:text-xs opacity-70">Total</span>
           </div>
-          <p className="text-2xl font-black">${stats.totalSpent.toFixed(2)}</p>
-          <p className="text-xs opacity-70">Gastado en compras</p>
+          <p className="text-lg lg:text-2xl font-black">${stats.totalSpent.toFixed(2)}</p>
+          <p className="text-[10px] lg:text-xs opacity-70 hidden sm:block">Gastado en compras</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
-          <div className="flex items-center justify-between mb-2">
-            <FiCheck className="w-5 h-5 text-emerald-500" />
-            <span className="text-xs text-[#6a6c6b]">Completados</span>
+        <div className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-[#e9ecef]">
+          <div className="flex items-center justify-between mb-1 lg:mb-2">
+            <FiCheck className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-500" />
+            <span className="text-[10px] lg:text-xs text-[#6a6c6b]">Completos</span>
           </div>
-          <p className="text-2xl font-black text-[#212529]">{stats.completedOrders}</p>
-          <p className="text-xs text-[#6a6c6b]">Pedidos entregados</p>
+          <p className="text-lg lg:text-2xl font-black text-[#212529]">{stats.completedOrders}</p>
+          <p className="text-[10px] lg:text-xs text-[#6a6c6b] hidden sm:block">Pedidos entregados</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
-          <div className="flex items-center justify-between mb-2">
-            <FiClock className="w-5 h-5 text-amber-500" />
-            <span className="text-xs text-[#6a6c6b]">En Proceso</span>
+        <div className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-[#e9ecef]">
+          <div className="flex items-center justify-between mb-1 lg:mb-2">
+            <FiClock className="w-4 h-4 lg:w-5 lg:h-5 text-amber-500" />
+            <span className="text-[10px] lg:text-xs text-[#6a6c6b]">Proceso</span>
           </div>
-          <p className="text-2xl font-black text-[#212529]">{stats.pendingOrders}</p>
-          <p className="text-xs text-[#6a6c6b]">Pedidos activos</p>
+          <p className="text-lg lg:text-2xl font-black text-[#212529]">{stats.pendingOrders}</p>
+          <p className="text-[10px] lg:text-xs text-[#6a6c6b] hidden sm:block">Pedidos activos</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
-          <div className="flex items-center justify-between mb-2">
-            <FiPackage className="w-5 h-5 text-[#2a63cd]" />
-            <span className="text-xs text-[#6a6c6b]">Productos</span>
+        <div className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-[#e9ecef]">
+          <div className="flex items-center justify-between mb-1 lg:mb-2">
+            <FiPackage className="w-4 h-4 lg:w-5 lg:h-5 text-[#2a63cd]" />
+            <span className="text-[10px] lg:text-xs text-[#6a6c6b]">Items</span>
           </div>
-          <p className="text-2xl font-black text-[#212529]">{stats.totalItems}</p>
-          <p className="text-xs text-[#6a6c6b]">Artículos comprados</p>
+          <p className="text-lg lg:text-2xl font-black text-[#212529]">{stats.totalItems}</p>
+          <p className="text-[10px] lg:text-xs text-[#6a6c6b] hidden sm:block">Artículos comprados</p>
         </div>
       </div>
 
-      {/* Header & Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 min-w-[250px]">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+      {/* Header & Filters - Responsive */}
+      <div className="flex flex-col gap-2 lg:gap-4">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <FiSearch className="absolute left-2.5 lg:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5 lg:w-4 lg:h-4" />
             <input
               type="text"
-              placeholder="Buscar pedido..."
+              placeholder="Buscar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] transition-all"
+              className="w-full pl-8 lg:pl-9 pr-3 lg:pr-4 py-2 lg:py-2.5 text-xs lg:text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] transition-all"
             />
           </div>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-3 py-2.5 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] bg-white"
+            className="px-2 lg:px-3 py-2 lg:py-2.5 text-xs lg:text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] bg-white min-w-[80px] lg:min-w-[100px]"
           >
             <option value="ALL">Todos</option>
-            <option value="PENDING">Pendiente</option>
-            <option value="PROCESSING">Procesando</option>
-            <option value="SHIPPED">En Camino</option>
-            <option value="DELIVERED">Entregado</option>
+            <option value="PENDING">Pend.</option>
+            <option value="PROCESSING">Proc.</option>
+            <option value="SHIPPED">Enviado</option>
+            <option value="DELIVERED">Entreg.</option>
           </select>
+          <button
+            onClick={fetchOrders}
+            disabled={loading}
+            className="flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-2.5 bg-[#2a63cd] text-white text-xs lg:text-sm font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors disabled:opacity-50"
+          >
+            <FiRefreshCw className={`w-3.5 h-3.5 lg:w-4 lg:h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Actualizar</span>
+          </button>
         </div>
-        <button
-          onClick={fetchOrders}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors disabled:opacity-50"
-        >
-          <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Actualizar
-        </button>
       </div>
 
-      {/* Orders List */}
+      {/* Orders List - Responsive */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-16">
-          <div className="relative w-12 h-12">
+        <div className="flex flex-col items-center justify-center py-12 lg:py-16">
+          <div className="relative w-10 h-10 lg:w-12 lg:h-12">
             <div className="absolute inset-0 rounded-full border-2 border-[#e9ecef]" />
             <div className="absolute inset-0 rounded-full border-2 border-[#2a63cd] border-t-transparent animate-spin" />
           </div>
-          <p className="mt-4 text-sm text-[#6a6c6b]">Cargando pedidos...</p>
+          <p className="mt-3 lg:mt-4 text-xs lg:text-sm text-[#6a6c6b]">Cargando pedidos...</p>
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="text-center py-16 bg-[#f8f9fa] rounded-xl border border-dashed border-[#dee2e6]">
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-            <FiPackage className="w-8 h-8 text-[#adb5bd]" />
+        <div className="text-center py-12 lg:py-16 bg-[#f8f9fa] rounded-xl border border-dashed border-[#dee2e6]">
+          <div className="w-12 h-12 lg:w-16 lg:h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 lg:mb-4 shadow-sm">
+            <FiPackage className="w-6 h-6 lg:w-8 lg:h-8 text-[#adb5bd]" />
           </div>
-          <h3 className="text-lg font-bold text-[#212529] mb-1">No hay pedidos</h3>
-          <p className="text-sm text-[#6a6c6b] mb-4">Aún no has realizado ningún pedido</p>
+          <h3 className="text-base lg:text-lg font-bold text-[#212529] mb-1">No hay pedidos</h3>
+          <p className="text-xs lg:text-sm text-[#6a6c6b] mb-3 lg:mb-4">Aún no has realizado ningún pedido</p>
           <Link
             href="/productos"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors"
+            className="inline-flex items-center gap-1.5 lg:gap-2 px-4 lg:px-5 py-2 lg:py-2.5 bg-[#2a63cd] text-white text-xs lg:text-sm font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors"
           >
-            <FiShoppingBag className="w-4 h-4" />
+            <FiShoppingBag className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
             Explorar Productos
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2 lg:space-y-3">
           {filteredOrders.map((order, index) => {
             const statusConfig = getStatusConfig(order.status);
             return (
               <div
                 key={order.id}
-                className="group bg-white rounded-xl border border-[#e9ecef] p-4 hover:shadow-md hover:border-[#2a63cd]/20 transition-all duration-300"
+                className="group bg-white rounded-lg lg:rounded-xl border border-[#e9ecef] p-3 lg:p-4 hover:shadow-md hover:border-[#2a63cd]/20 transition-all duration-300"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 lg:gap-4">
                   {/* Order Icon */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd]/10 to-[#2a63cd]/5 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
-                      <FiPackage className="w-5 h-5 text-[#2a63cd]" />
+                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-[#2a63cd]/10 to-[#2a63cd]/5 rounded-lg lg:rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <FiPackage className="w-4 h-4 lg:w-5 lg:h-5 text-[#2a63cd]" />
                     </div>
                     {/* Status Indicator Dot */}
-                    <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ${statusConfig.bg} ${statusConfig.border} border flex items-center justify-center`}>
-                      <span className={statusConfig.animation}>{statusConfig.icon}</span>
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 lg:w-4 lg:h-4 rounded-full ${statusConfig.bg} ${statusConfig.border} border flex items-center justify-center`}>
+                      <span className={`${statusConfig.animation} scale-75 lg:scale-100`}>{statusConfig.icon}</span>
                     </div>
                   </div>
 
                   {/* Order Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="font-bold text-[#212529] text-sm">#{order.orderNumber}</h3>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border flex items-center gap-1`}>
-                        <span className={statusConfig.animation}>{statusConfig.icon}</span>
-                        {getStatusText(order.status)}
+                    <div className="flex items-center gap-1.5 lg:gap-2 mb-0.5 flex-wrap">
+                      <h3 className="font-bold text-[#212529] text-xs lg:text-sm">#{order.orderNumber}</h3>
+                      <span className={`px-1.5 lg:px-2 py-0.5 rounded-full text-[8px] lg:text-[10px] font-semibold ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border flex items-center gap-0.5 lg:gap-1`}>
+                        <span className={`${statusConfig.animation} scale-75 lg:scale-100`}>{statusConfig.icon}</span>
+                        <span className="hidden sm:inline">{getStatusText(order.status)}</span>
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-[#6a6c6b]">
+                    <div className="flex items-center gap-2 lg:gap-3 text-[10px] lg:text-xs text-[#6a6c6b]">
                       <span>{getTimeSince(order.createdAt)}</span>
-                      <span>•</span>
-                      <span>{order.items.length} producto{order.items.length > 1 ? 's' : ''}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="hidden sm:inline">{order.items.length} producto{order.items.length > 1 ? 's' : ''}</span>
                     </div>
                   </div>
 
-                  {/* Products Preview */}
-                  <div className="hidden sm:flex -space-x-2">
+                  {/* Products Preview - Hidden on mobile */}
+                  <div className="hidden lg:flex -space-x-2">
                     {order.items.slice(0, 3).map((item, i) => (
                       <div
                         key={i}
@@ -348,40 +348,33 @@ export default function OrdersPage() {
                   </div>
 
                   {/* Price & Actions */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 lg:gap-3">
                     <div className="text-right">
-                      <p className="text-lg font-black text-[#212529]">${order.totalUSD.toFixed(2)}</p>
-                      <p className="text-[10px] text-[#6a6c6b] uppercase tracking-wide">USD</p>
+                      <p className="text-sm lg:text-lg font-black text-[#212529]">${order.totalUSD.toFixed(2)}</p>
+                      <p className="text-[8px] lg:text-[10px] text-[#6a6c6b] uppercase tracking-wide hidden sm:block">USD</p>
                     </div>
 
                     {/* Digital Codes Button */}
                     {order.hasDigital && order.paymentStatus === 'PAID' && (
                       <Link
                         href={`/customer/orders/${order.id}/digital`}
-                        className="p-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all shadow-lg shadow-purple-500/20"
+                        className="p-2 lg:p-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all shadow-lg shadow-purple-500/20"
                         title="Ver códigos digitales"
                       >
-                        <BsCardList className="w-4 h-4" />
+                        <BsCardList className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                       </Link>
                     )}
 
-                    <div className="relative group/tooltip">
-                      <button
-                        onClick={() => {
-                          setSelectedOrder(order);
-                          setShowOrderDetails(true);
-                        }}
-                        className="p-2.5 bg-[#f8f9fa] hover:bg-[#2a63cd] text-[#6a6c6b] hover:text-white rounded-lg transition-all duration-200"
-                        title="Ver detalles del pedido"
-                      >
-                        <FiEye className="w-4 h-4" />
-                      </button>
-                      {/* Tooltip */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#212529] text-white text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none">
-                        Ver detalles
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#212529]" />
-                      </div>
-                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setShowOrderDetails(true);
+                      }}
+                      className="p-2 lg:p-2.5 bg-[#f8f9fa] hover:bg-[#2a63cd] text-[#6a6c6b] hover:text-white rounded-lg transition-all duration-200"
+                      title="Ver detalles del pedido"
+                    >
+                      <FiEye className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+                    </button>
                   </div>
                 </div>
               </div>

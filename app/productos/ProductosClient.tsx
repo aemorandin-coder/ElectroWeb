@@ -44,19 +44,19 @@ export default function ProductosClient({ initialProducts, initialCategories }: 
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Responsive: 6 en mobile, 9 en tablet, 12 en desktop
-  const [productsPerPage, setProductsPerPage] = useState(12);
+  // Responsive: 4 en mobile, 6 en tablet, 8 en desktop (2 rows)
+  const [productsPerPage, setProductsPerPage] = useState(8);
 
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
       setIsMobile(width < 1024);
       if (width < 640) {
-        setProductsPerPage(6);
+        setProductsPerPage(4); // 2 columns x 2 rows
       } else if (width < 1024) {
-        setProductsPerPage(8);
+        setProductsPerPage(6); // 3 columns x 2 rows
       } else {
-        setProductsPerPage(12);
+        setProductsPerPage(8); // 4 columns x 2 rows
       }
     };
     handleResize();
@@ -80,13 +80,15 @@ export default function ProductosClient({ initialProducts, initialCategories }: 
         product.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = !selectedCategory || product.category.slug === selectedCategory;
       const matchesPrice = product.priceUSD >= priceRange[0] && product.priceUSD <= priceRange[1];
-      return matchesSearch && matchesCategory && matchesPrice;
+      const matchesFeatured = sortBy !== 'featured' || product.isFeatured;
+      return matchesSearch && matchesCategory && matchesPrice && matchesFeatured;
     })
     .sort((a, b) => {
       switch (sortBy) {
         case 'price-asc': return a.priceUSD - b.priceUSD;
         case 'price-desc': return b.priceUSD - a.priceUSD;
         case 'name': return a.name.localeCompare(b.name);
+        case 'featured': return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
         case 'newest':
         default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
@@ -214,8 +216,8 @@ export default function ProductosClient({ initialProducts, initialCategories }: 
                   <button
                     onClick={() => { setSelectedCategory(''); setCurrentPage(1); }}
                     className={`w-full text-left px-4 py-3 rounded-xl transition-all text-sm font-medium ${selectedCategory === ''
-                        ? 'bg-[#2a63cd] text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-[#2a63cd] text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                   >
                     Todas las categorías
@@ -225,8 +227,8 @@ export default function ProductosClient({ initialProducts, initialCategories }: 
                       key={cat.id}
                       onClick={() => { setSelectedCategory(cat.slug); setCurrentPage(1); }}
                       className={`w-full text-left px-4 py-3 rounded-xl transition-all text-sm font-medium ${selectedCategory === cat.slug
-                          ? 'bg-[#2a63cd] text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-[#2a63cd] text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
                       {cat.name}
@@ -262,6 +264,7 @@ export default function ProductosClient({ initialProducts, initialCategories }: 
                   className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-sm font-medium focus:ring-2 focus:ring-[#2a63cd]"
                 >
                   <option value="newest">Más recientes</option>
+                  <option value="featured">★ Destacados</option>
                   <option value="price-asc">Precio: Menor a Mayor</option>
                   <option value="price-desc">Precio: Mayor a Menor</option>
                   <option value="name">Nombre A-Z</option>
@@ -290,194 +293,191 @@ export default function ProductosClient({ initialProducts, initialCategories }: 
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
 
-          {/* Desktop Sidebar Filters */}
-          <aside className="hidden lg:block lg:w-72 xl:w-80 flex-shrink-0">
-            <div className="sticky top-24 space-y-4">
+        {/* Desktop Horizontal Filters Bar */}
+        <div className="hidden lg:block mb-6">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+            <div className="flex flex-wrap items-center justify-center gap-4">
+
               {/* Search */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-                <h2 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <FiSearch className="w-4 h-4 text-[#2a63cd]" />
-                  Buscar
-                </h2>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                    placeholder="Buscar productos..."
-                    className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent text-sm"
-                  />
-                  {searchTerm && (
-                    <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                      <FiX className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Categories */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-                <h2 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <FiFilter className="w-4 h-4 text-[#2a63cd]" />
-                  Categoría
-                </h2>
-                <div className="space-y-1.5 max-h-64 overflow-y-auto">
-                  <button
-                    onClick={() => { setSelectedCategory(''); setCurrentPage(1); }}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-all text-sm ${selectedCategory === ''
-                        ? 'bg-[#2a63cd] text-white font-medium'
-                        : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                  >
-                    Todas
-                  </button>
-                  {initialCategories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => { setSelectedCategory(cat.slug); setCurrentPage(1); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-all text-sm ${selectedCategory === cat.slug
-                          ? 'bg-[#2a63cd] text-white font-medium'
-                          : 'text-gray-700 hover:bg-gray-100'
-                        }`}
-                    >
-                      {cat.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Price */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-                <h2 className="text-sm font-bold text-gray-900 mb-3">Precio máximo</h2>
+              <div className="relative flex-shrink-0 w-64">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
-                  type="range"
-                  min="0"
-                  max="10000"
-                  step="100"
-                  value={priceRange[1]}
-                  onChange={(e) => { setPriceRange([0, parseInt(e.target.value)]); setCurrentPage(1); }}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#2a63cd]"
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                  placeholder="Buscar productos..."
+                  className="w-full pl-9 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent text-sm"
                 />
-                <div className="flex justify-between mt-2 text-sm font-bold text-[#2a63cd]">
-                  <span>$0</span>
-                  <span>${priceRange[1]}</span>
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <FiX className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div className="h-8 w-px bg-gray-200" />
+
+              {/* Categories Dropdown */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Categoría:</span>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
+                  className="px-4 py-2.5 bg-gray-100 border-0 rounded-xl text-sm font-medium focus:ring-2 focus:ring-[#2a63cd] cursor-pointer min-w-[180px]"
+                >
+                  <option value="">Todas las categorías</option>
+                  {initialCategories.map((cat) => (
+                    <option key={cat.id} value={cat.slug}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Divider */}
+              <div className="h-8 w-px bg-gray-200" />
+
+              {/* Price Range - Compact */}
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Precio:</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min="0"
+                    max="10000"
+                    step="100"
+                    value={priceRange[1]}
+                    onChange={(e) => { setPriceRange([0, parseInt(e.target.value)]); setCurrentPage(1); }}
+                    className="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#2a63cd]"
+                  />
+                  <span className="text-sm font-bold text-[#2a63cd] min-w-[60px]">
+                    ${priceRange[1] === 10000 ? '10k+' : priceRange[1]}
+                  </span>
                 </div>
               </div>
+
+              {/* Divider */}
+              <div className="h-8 w-px bg-gray-200" />
 
               {/* Sort */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-                <h2 className="text-sm font-bold text-gray-900 mb-3">Ordenar</h2>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ordenar:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2a63cd]"
+                  className="px-3 py-2 bg-gray-100 border-0 rounded-xl text-sm font-medium focus:ring-2 focus:ring-[#2a63cd] cursor-pointer"
                 >
                   <option value="newest">Más recientes</option>
+                  <option value="featured">★ Destacados</option>
                   <option value="price-asc">Precio: Menor a Mayor</option>
                   <option value="price-desc">Precio: Mayor a Menor</option>
                   <option value="name">Nombre A-Z</option>
                 </select>
               </div>
 
-              {/* Clear */}
+              {/* Clear Filters */}
               {hasActiveFilters && (
-                <button
-                  onClick={clearAllFilters}
-                  className="w-full py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
-                >
-                  Limpiar Filtros
-                </button>
+                <>
+                  <div className="h-8 w-px bg-gray-200" />
+                  <button
+                    onClick={clearAllFilters}
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                  >
+                    <FiX className="w-4 h-4" />
+                    Limpiar
+                  </button>
+                </>
               )}
             </div>
-          </aside>
-
-          {/* Products Grid */}
-          <div className="flex-1 min-w-0">
-            {currentProducts.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
-                <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                  <FiSearch className="w-10 h-10 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">No se encontraron productos</h3>
-                <p className="text-gray-500 mb-6 text-sm">Ajusta tus filtros o busca con otros términos.</p>
-                <Link
-                  href="/solicitar-producto"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#2a63cd] text-white font-bold rounded-xl hover:bg-[#1e4ba3] transition-colors"
-                >
-                  Solicitar Producto
-                </Link>
-              </div>
-            ) : (
-              <>
-                {/* Results Header */}
-                <div className="flex items-center justify-between mb-4 lg:mb-6">
-                  <div>
-                    <p className="text-sm text-gray-500">
-                      <span className="font-bold text-gray-900">{filteredProducts.length}</span> producto{filteredProducts.length !== 1 && 's'}
-                      {selectedCategory && ` en ${initialCategories.find(c => c.slug === selectedCategory)?.name}`}
-                    </p>
-                  </div>
-                  <div className="hidden sm:block text-sm text-gray-500">
-                    Página {currentPage} de {totalPages}
-                  </div>
-                </div>
-
-                {/* Products Grid - Responsive */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-8">
-                  {currentProducts.map((product, index) => (
-                    <FadeIn key={product.id} delay={index * 0.03} duration={0.4}>
-                      <ProductCard product={product} />
-                    </FadeIn>
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-1 sm:gap-2">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                      className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                    >
-                      <FiChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-
-                    <div className="flex gap-1">
-                      {getVisiblePages().map((page, idx) => (
-                        typeof page === 'number' ? (
-                          <button
-                            key={idx}
-                            onClick={() => setCurrentPage(page)}
-                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg font-bold text-sm transition-all ${currentPage === page
-                                ? 'bg-[#2a63cd] text-white'
-                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                              }`}
-                          >
-                            {page}
-                          </button>
-                        ) : (
-                          <span key={idx} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-gray-400">
-                            {page}
-                          </span>
-                        )
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                      disabled={currentPage === totalPages}
-                      className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                    >
-                      <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
           </div>
+        </div>
+
+        {/* Products Section */}
+        <div className="w-full">
+          {currentProducts.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <FiSearch className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No se encontraron productos</h3>
+              <p className="text-gray-500 mb-6 text-sm">Ajusta tus filtros o busca con otros términos.</p>
+              <Link
+                href="/solicitar-producto"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#2a63cd] text-white font-bold rounded-xl hover:bg-[#1e4ba3] transition-colors"
+              >
+                Solicitar Producto
+              </Link>
+            </div>
+          ) : (
+            <>
+              {/* Results Header */}
+              <div className="flex items-center justify-between mb-4 lg:mb-6">
+                <div>
+                  <p className="text-sm text-gray-500">
+                    <span className="font-bold text-gray-900">{filteredProducts.length}</span> producto{filteredProducts.length !== 1 && 's'}
+                    {selectedCategory && ` en ${initialCategories.find(c => c.slug === selectedCategory)?.name}`}
+                  </p>
+                </div>
+                <div className="hidden sm:block text-sm text-gray-500">
+                  Página {currentPage} de {totalPages}
+                </div>
+              </div>
+
+              {/* Products Grid - 4 columns max */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-8">
+                {currentProducts.map((product, index) => (
+                  <FadeIn key={product.id} delay={index * 0.03} duration={0.4}>
+                    <ProductCard product={product} />
+                  </FadeIn>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-1 sm:gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  >
+                    <FiChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+
+                  <div className="flex gap-1">
+                    {getVisiblePages().map((page, idx) => (
+                      typeof page === 'number' ? (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg font-bold text-sm transition-all ${currentPage === page
+                            ? 'bg-[#2a63cd] text-white'
+                            : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      ) : (
+                        <span key={idx} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-gray-400">
+                          {page}
+                        </span>
+                      )
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  >
+                    <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </main>
 

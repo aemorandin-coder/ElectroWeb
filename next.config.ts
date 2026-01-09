@@ -21,6 +21,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Rewrite /uploads/* to /api/uploads/* so uploaded files work in production
+  // This ensures existing URLs in the database continue to work
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: '/api/uploads/:path*',
+      },
+    ];
+  },
   // Security headers
   async headers() {
     return [

@@ -122,9 +122,14 @@ export async function POST(request: NextRequest) {
         const timestamp = Date.now();
         const filename = `${type}-${timestamp}.${extension}`;
 
-        // Ensure upload directory exists
+        // Ensure upload directory exists - use process.cwd() which should be the project root
         const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+
+        console.log(`[UPLOAD] process.cwd(): ${process.cwd()}`);
+        console.log(`[UPLOAD] Target upload directory: ${uploadDir}`);
+
         if (!existsSync(uploadDir)) {
+            console.log(`[UPLOAD] Creating directory: ${uploadDir}`);
             await mkdir(uploadDir, { recursive: true });
         }
 
@@ -132,8 +137,13 @@ export async function POST(request: NextRequest) {
         const filepath = path.join(uploadDir, filename);
         await writeFile(filepath, buffer);
 
-        // Return public URL
-        const publicUrl = `/uploads/${filename}`;
+        // Verify the file was written successfully
+        const fileExists = existsSync(filepath);
+        console.log(`[UPLOAD] File written to: ${filepath}`);
+        console.log(`[UPLOAD] File exists after write: ${fileExists}`);
+
+        // Return public URL - Use API route to serve files (bypasses Nginx static file issues)
+        const publicUrl = `/api/uploads/${filename}`;
 
         console.log(`[UPLOAD] Settings asset uploaded: ${publicUrl} (${file.size} bytes)`);
 

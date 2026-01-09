@@ -49,7 +49,8 @@ export async function POST(request: NextRequest) {
     // Generate unique filename
     const fileName = `${session.user.email.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.${ext}`;
     const filePath = path.join(uploadsDir, fileName);
-    const publicPath = `/uploads/avatars/${fileName}`;
+    // Use API route to serve files (bypasses Nginx static file issues)
+    const publicPath = `/api/uploads/avatars/${fileName}`;
 
     // Save file
     await writeFile(filePath, buffer);

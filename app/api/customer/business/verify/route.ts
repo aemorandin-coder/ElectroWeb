@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
             const filename = `${prefix}-${session.user.id}-${timestamp}-${randomString}.${extension}`;
             const filepath = path.join(uploadDir, filename);
             await writeFile(filepath, buffer);
-            return `/uploads/documents/${filename}`;
+            // Use API route to serve files (bypasses Nginx static file issues)
+            return `/api/uploads/documents/${filename}`;
         };
 
         // Save files

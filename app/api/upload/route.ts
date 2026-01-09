@@ -128,8 +128,8 @@ export async function POST(request: NextRequest) {
     const filepath = path.join(uploadDir, filename);
     await writeFile(filepath, buffer);
 
-    // Return public URL
-    const publicUrl = `/uploads/products/${filename}`;
+    // Return public URL - Use API route to serve files (bypasses Nginx static file issues)
+    const publicUrl = `/api/uploads/products/${filename}`;
 
     return NextResponse.json({
       success: true,

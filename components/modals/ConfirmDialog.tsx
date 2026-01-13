@@ -95,55 +95,56 @@ export default function ConfirmDialog({
     const colors = getColors();
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100001] flex items-center justify-center p-3 lg:p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fadeIn"
                 onClick={onCancel}
             />
 
+            {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL */}
+            <button
+                onClick={onCancel}
+                className="fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all z-10"
+                aria-label="Cerrar"
+            >
+                <FiX className="w-6 h-6 text-gray-700" />
+            </button>
+
             {/* Dialog Panel */}
             <div
-                className="relative w-full transform overflow-hidden rounded-2xl bg-white p-8 text-left shadow-2xl animate-scaleIn"
-                style={{ maxWidth: '42rem', width: '95%' }} // Forzando ancho a ~670px
+                className="relative w-full transform overflow-hidden rounded-2xl bg-white p-5 lg:p-8 text-left shadow-2xl animate-scaleIn"
+                style={{ maxWidth: '42rem', width: '95%' }}
             >
-                {/* Close Button */}
-                <button
-                    onClick={onCancel}
-                    className="absolute top-4 right-4 p-2 text-[#6a6c6b] hover:text-[#212529] hover:bg-[#f8f9fa] rounded-lg transition-colors"
-                >
-                    <FiX className="w-5 h-5" />
-                </button>
-
                 {/* Icon */}
-                <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${colors.iconBg} mb-4`}>
-                    <div className={colors.iconText}>{getIcon()}</div>
+                <div className={`mx-auto flex h-12 w-12 lg:h-16 lg:w-16 items-center justify-center rounded-full ${colors.iconBg} mb-3 lg:mb-4`}>
+                    <div className={`${colors.iconText} scale-75 lg:scale-100`}>{getIcon()}</div>
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xl font-bold text-[#212529] text-center mb-2">
+                <h3 className="text-base lg:text-xl font-bold text-[#212529] text-center mb-1.5 lg:mb-2">
                     {title}
                 </h3>
 
                 {/* Message */}
-                <div className="mt-2 mb-6">
-                    <p className="text-base text-[#6a6c6b] text-center whitespace-normal break-words leading-relaxed">
+                <div className="mt-1.5 lg:mt-2 mb-4 lg:mb-6">
+                    <p className="text-sm lg:text-base text-[#6a6c6b] text-center whitespace-normal break-words leading-relaxed">
                         {message}
                     </p>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
                     <button
                         type="button"
-                        className="flex-1 px-4 py-3 bg-white text-[#6a6c6b] font-semibold border-2 border-[#e9ecef] rounded-xl hover:bg-[#f8f9fa] hover:border-[#dee2e6] transition-all"
+                        className="flex-1 px-4 py-2.5 lg:py-3 bg-white text-[#6a6c6b] font-semibold border-2 border-[#e9ecef] rounded-xl hover:bg-[#f8f9fa] hover:border-[#dee2e6] transition-all text-sm lg:text-base order-2 sm:order-1"
                         onClick={onCancel}
                     >
                         {cancelText}
                     </button>
                     <button
                         type="button"
-                        className={`flex-1 px-4 py-3 bg-gradient-to-r ${colors.confirmBg} ${colors.confirmText} font-semibold rounded-xl transition-all shadow-md hover:shadow-lg`}
+                        className={`flex-1 px-4 py-2.5 lg:py-3 bg-gradient-to-r ${colors.confirmBg} ${colors.confirmText} font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm lg:text-base order-1 sm:order-2`}
                         onClick={() => {
                             onConfirm();
                             onCancel();

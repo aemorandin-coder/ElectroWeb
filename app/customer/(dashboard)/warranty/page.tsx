@@ -66,34 +66,34 @@ export default function WarrantyPage() {
     };
 
     return (
-        <div className="h-full overflow-y-auto pr-2 space-y-4">
+        <div className="h-full space-y-3 lg:space-y-4">
             {/* Header */}
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center shadow-lg shadow-[#2a63cd]/20">
                     <FiShield className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-lg font-bold text-[#212529]">Garantía y Devoluciones</h1>
-                    <p className="text-xs text-[#6a6c6b]">Gestiona tus reclamos y solicitudes de devolución</p>
+                    <h1 className="text-base lg:text-lg font-black text-[#212529]">Garantía</h1>
+                    <p className="text-[10px] lg:text-xs text-[#6a6c6b]">Gestiona tus solicitudes</p>
                 </div>
             </div>
 
             {/* Tabs */}
             <div className="flex gap-1 border-b border-[#e9ecef]">
                 {[
-                    { id: 'info', label: 'Información', icon: FiHelpCircle },
+                    { id: 'info', label: 'Info', icon: FiHelpCircle },
                     { id: 'requests', label: 'Mis Solicitudes', icon: FiFileText },
-                    { id: 'new', label: 'Nueva Solicitud', icon: FiRefreshCw },
+                    { id: 'new', label: 'Nueva', icon: FiRefreshCw },
                 ].map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setSelectedTab(tab.id as any)}
-                        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${selectedTab === tab.id
-                            ? 'border-[#2a63cd] text-[#2a63cd]'
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-[10px] lg:text-xs font-bold border-b-2 transition-all active:scale-95 ${selectedTab === tab.id
+                            ? 'border-[#2a63cd] text-[#2a63cd] bg-blue-50/50'
                             : 'border-transparent text-[#6a6c6b] hover:text-[#212529]'
                             }`}
                     >
-                        <tab.icon className="w-3.5 h-3.5" />
+                        <tab.icon className={`w-3.5 h-3.5 ${selectedTab === tab.id ? 'animate-bounce' : ''}`} />
                         {tab.label}
                     </button>
                 ))}

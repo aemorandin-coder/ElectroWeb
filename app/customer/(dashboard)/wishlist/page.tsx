@@ -262,50 +262,38 @@ export default function WishlistPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Premium Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] rounded-2xl p-6 text-white shadow-xl">
+    <div className="space-y-3 lg:space-y-6">
+      {/* Premium Header - Mobile Optimized */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] rounded-lg lg:rounded-2xl p-3 lg:p-6 text-white shadow-xl">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
           <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-white/5 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-lg">
-              <PiListHeartBold className="w-7 h-7" />
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 lg:gap-4">
+            <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-lg lg:rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-lg">
+              <PiListHeartBold className="w-5 h-5 lg:w-7 lg:h-7" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight">Lista de Deseos</h1>
-              <p className="text-blue-100 flex items-center gap-2 mt-1">
-                <PiSparkle className="w-4 h-4" />
-                {wishlist.length} {wishlist.length === 1 ? 'producto guardado' : 'productos guardados'}
+              <h1 className="text-base lg:text-3xl font-black tracking-tight">Favoritos</h1>
+              <p className="text-blue-100 text-[10px] lg:text-base flex items-center gap-1">
+                <PiSparkle className="w-3 h-3 lg:w-4 lg:h-4" />
+                {wishlist.length} producto{wishlist.length !== 1 ? 's' : ''}
               </p>
             </div>
           </div>
 
-          {/* Stats Pills */}
-          <div className="flex flex-wrap gap-2">
-            <div className="px-3 py-1.5 bg-white/15 backdrop-blur-md rounded-lg border border-white/20 flex items-center gap-2">
-              <FiDollarSign className="w-3.5 h-3.5 text-blue-200" />
-              <span className="text-xs font-semibold">${totalValue.toFixed(2)}</span>
+          {/* Stats Pills - Compact on mobile */}
+          <div className="flex flex-wrap gap-1.5 lg:gap-2">
+            <div className="px-2 lg:px-3 py-1 lg:py-1.5 bg-white/15 backdrop-blur-md rounded-lg border border-white/20 flex items-center gap-1 lg:gap-2">
+              <FiDollarSign className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-blue-200" />
+              <span className="text-[10px] lg:text-xs font-semibold">${totalValue.toFixed(0)}</span>
             </div>
-            <div className="px-3 py-1.5 bg-white/15 backdrop-blur-md rounded-lg border border-white/20 flex items-center gap-2">
-              <FiTrendingUp className="w-3.5 h-3.5 text-blue-200" />
-              <span className="text-xs font-semibold">{inStockCount} disponibles</span>
+            <div className="px-2 lg:px-3 py-1 lg:py-1.5 bg-white/15 backdrop-blur-md rounded-lg border border-white/20 flex items-center gap-1 lg:gap-2">
+              <FiTrendingUp className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-blue-200" />
+              <span className="text-[10px] lg:text-xs font-semibold">{inStockCount}</span>
             </div>
-            {approvedDiscounts > 0 && (
-              <div className="px-3 py-1.5 bg-green-500/30 backdrop-blur-md rounded-lg border border-green-400/30 flex items-center gap-2">
-                <FiGift className="w-3.5 h-3.5 text-green-200" />
-                <span className="text-xs font-semibold">{approvedDiscounts} descuento{approvedDiscounts > 1 ? 's' : ''} activo{approvedDiscounts > 1 ? 's' : ''}</span>
-              </div>
-            )}
-            {pendingDiscounts > 0 && (
-              <div className="px-3 py-1.5 bg-blue-500/30 backdrop-blur-md rounded-lg border border-blue-400/30 flex items-center gap-2">
-                <FiClock className="w-3.5 h-3.5 text-blue-200" />
-                <span className="text-xs font-semibold">{pendingDiscounts} pendiente{pendingDiscounts > 1 ? 's' : ''}</span>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -314,17 +302,17 @@ export default function WishlistPage() {
       {showInfoBanner && (
         <div className="relative bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 rounded-xl border border-blue-200/60 p-4 shadow-sm overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="relative flex items-start gap-3">
-            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <FiPercent className="w-5 h-5 text-white" />
+          <div className="relative flex items-center gap-2">
+            <div className="flex-shrink-0 w-8 lg:w-10 h-8 lg:h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg lg:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <FiPercent className="w-4 lg:w-5 h-4 lg:h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-gray-800 mb-1 flex items-center gap-2">
-                <span>¡Solicita descuentos exclusivos!</span>
-                <span className="px-2 py-0.5 bg-[#2a63cd] text-white text-[10px] font-bold rounded-full">NUEVO</span>
+              <h3 className="font-bold text-gray-800 text-[10px] lg:text-sm mb-0 flex items-center gap-1.5">
+                <span className="truncate">¡Solicita descuentos exclusivos!</span>
+                <span className="px-1.5 py-0.5 bg-[#2a63cd] text-white text-[8px] font-bold rounded-full">NUEVO</span>
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Guarda productos aquí y solicita un descuento especial. Nuestro equipo revisará tu solicitud.
+              <p className="text-[9px] lg:text-xs text-gray-500 truncate">
+                Guarda productos y pide precio especial.
               </p>
             </div>
             <button
@@ -332,7 +320,7 @@ export default function WishlistPage() {
               className="flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               title="Cerrar"
             >
-              <FiX className="w-4 h-4" />
+              <FiX className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
             </button>
           </div>
         </div>

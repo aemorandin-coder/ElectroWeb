@@ -9,9 +9,7 @@ import {
   FiHome,
   FiShoppingBag,
   FiMapPin,
-  FiCreditCard,
   FiUser,
-  FiHeart,
   FiSettings,
   FiLogOut,
   FiMenu,
@@ -20,6 +18,7 @@ import {
 } from 'react-icons/fi';
 import { FaMoneyCheckAlt } from 'react-icons/fa';
 import { PiListHeartBold } from 'react-icons/pi';
+import CustomerMobileNavBar from '@/components/customer/CustomerMobileNavBar';
 
 interface CompanySettings {
   companyName: string;
@@ -34,7 +33,7 @@ export default function CustomerDashboardLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Closed by default on mobile
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
@@ -45,7 +44,6 @@ export default function CustomerDashboardLayout({
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
-      // Auto-open sidebar on desktop
       if (window.innerWidth >= 1024) {
         setIsSidebarOpen(true);
       }
@@ -99,11 +97,10 @@ export default function CustomerDashboardLayout({
     }
   }, [session]);
 
-  // Handle page transitions with epic animations
+  // Handle page transitions
   useEffect(() => {
     if (pathname !== prevPathname) {
       setIsTransitioning(true);
-      // Close sidebar on mobile when navigating
       if (isMobile) {
         setIsSidebarOpen(false);
       }
@@ -120,7 +117,7 @@ export default function CustomerDashboardLayout({
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2a63cd]"></div>
+        <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-[#2a63cd]"></div>
       </div>
     );
   }
@@ -128,6 +125,9 @@ export default function CustomerDashboardLayout({
   if (!session) {
     return null;
   }
+
+  const userName = session.user?.name || 'Usuario';
+  const userInitials = userName.split(' ').map(n => n.charAt(0).toUpperCase()).slice(0, 2).join('');
 
   const menuItems = [
     { href: '/customer', icon: FiHome, label: 'Inicio' },
@@ -159,7 +159,7 @@ export default function CustomerDashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#2a63cd] relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#2a63cd] relative">
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
@@ -171,7 +171,7 @@ export default function CustomerDashboardLayout({
       <div className="fixed inset-0 bg-grid-pattern opacity-5 pointer-events-none"></div>
 
       <div className="relative z-10">
-        {/* Mobile Overlay Backdrop */}
+        {/* Mobile Overlay Backdrop - ONLY for sidebar */}
         {isMobile && isSidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -179,45 +179,36 @@ export default function CustomerDashboardLayout({
           />
         )}
 
-        {/* Sidebar */}
+        {/* Sidebar - DESKTOP ONLY */}
         <aside
-          className={`fixed top-0 left-0 z-50 h-screen transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          className={`hidden lg:block fixed top-0 left-0 z-50 h-screen transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
             } bg-white/95 backdrop-blur-xl border-r border-white/30 w-64 shadow-2xl overflow-hidden`}
         >
           <div className="h-full flex flex-col">
-            {/* Logo & Close Button */}
-            <div className="flex items-center justify-between gap-3 px-4 lg:px-6 py-4 lg:py-5 border-b border-[#e9ecef]">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-[#2a63cd] shadow-md shadow-[#2a63cd]/20">
-                  {companySettings?.logo ? (
-                    <div className="relative w-full h-full">
-                      <Image src={companySettings.logo} alt={companySettings.companyName} fill className="object-contain p-1" />
-                    </div>
-                  ) : (
-                    <svg className="w-5 h-5 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-[#212529]">
-                    {companySettings?.companyName || 'Electro Shop'}
-                  </h2>
-                  <p className="text-xs text-[#6a6c6b]">Mi Panel</p>
-                </div>
+            {/* Logo */}
+            <div className="flex items-center gap-3 px-6 py-5 border-b border-[#e9ecef]">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2a63cd] shadow-md shadow-[#2a63cd]/20">
+                {companySettings?.logo ? (
+                  <div className="relative w-full h-full">
+                    <Image src={companySettings.logo} alt={companySettings.companyName} fill className="object-contain p-1" />
+                  </div>
+                ) : (
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                )}
               </div>
-              {/* Close button - Mobile only */}
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <FiX className="w-5 h-5 text-gray-500" />
-              </button>
+              <div>
+                <h2 className="text-sm font-semibold text-[#212529]">
+                  {companySettings?.companyName || 'Electro Shop'}
+                </h2>
+                <p className="text-xs text-[#6a6c6b]">Mi Panel</p>
+              </div>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-2 lg:px-3 py-3 lg:py-4 overflow-y-auto">
-              <ul className="space-y-0.5 lg:space-y-1">
+            <nav className="flex-1 px-3 py-4 overflow-y-auto">
+              <ul className="space-y-1">
                 {menuItems.map((item, index) => {
                   const isActive = pathname === item.href ||
                     (item.href !== '/customer' && pathname.startsWith(item.href));
@@ -226,8 +217,7 @@ export default function CustomerDashboardLayout({
                     <li key={item.label} style={{ animationDelay: `${index * 50}ms` }} className="animate-fadeIn">
                       <Link
                         href={item.href}
-                        onClick={() => isMobile && setIsSidebarOpen(false)}
-                        className={`group relative flex items-center gap-3 px-3 py-2.5 lg:py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${isActive
+                        className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${isActive
                           ? 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white shadow-lg shadow-[#2a63cd]/30 scale-[1.02]'
                           : 'text-[#6a6c6b] hover:bg-[#f8f9fa] hover:text-[#212529] hover:scale-[1.01]'
                           }`}
@@ -239,9 +229,6 @@ export default function CustomerDashboardLayout({
                         {isActive && (
                           <span className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-lg shadow-lg"></span>
                         )}
-                        {!isActive && (
-                          <span className="absolute inset-0 bg-gradient-to-r from-[#2a63cd]/0 to-[#2a63cd]/0 group-hover:from-[#2a63cd]/5 group-hover:to-[#2a63cd]/0 rounded-lg transition-all duration-300"></span>
-                        )}
                       </Link>
                     </li>
                   );
@@ -249,10 +236,10 @@ export default function CustomerDashboardLayout({
               </ul>
             </nav>
 
-            {/* User Info & Logout */}
-            <div className="border-t border-[#e9ecef] p-3 lg:p-4">
+            {/* User Info & Logout - Desktop */}
+            <div className="border-t border-[#e9ecef] p-4">
               <div className="flex items-center gap-3 mb-3 px-2">
-                <div className="relative w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-[#f8f9fa] border border-[#dee2e6] overflow-hidden flex items-center justify-center flex-shrink-0">
+                <div className="relative w-9 h-9 rounded-full bg-[#f8f9fa] border border-[#dee2e6] overflow-hidden flex items-center justify-center flex-shrink-0">
                   {userImage ? (
                     <Image
                       src={userImage}
@@ -261,8 +248,8 @@ export default function CustomerDashboardLayout({
                       className="object-cover"
                     />
                   ) : (
-                    <span className="text-xs lg:text-sm font-semibold text-[#2a63cd]">
-                      {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    <span className="text-sm font-semibold text-[#2a63cd]">
+                      {userInitials}
                     </span>
                   )}
                 </div>
@@ -279,8 +266,7 @@ export default function CustomerDashboardLayout({
                 onClick={handleSignOut}
                 className="group relative w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#f8f9fa] hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 text-[#6a6c6b] hover:text-red-600 text-sm font-medium rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] overflow-hidden"
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-red-500/0 to-red-500/0 group-hover:from-red-500/10 group-hover:to-red-500/0 transition-all duration-300"></span>
-                <FiLogOut className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:translate-x-[-2px]" />
+                <FiLogOut className="w-4 h-4 relative z-10" />
                 <span className="relative z-10">Cerrar Sesión</span>
               </button>
             </div>
@@ -289,15 +275,121 @@ export default function CustomerDashboardLayout({
 
         {/* Main Content */}
         <div className={`transition-all duration-300 ${isSidebarOpen && !isMobile ? 'lg:ml-64' : 'ml-0'}`}>
-          {/* Top Bar - Responsive */}
-          <header className="bg-white border-b border-[#e9ecef] sticky top-0 z-30 shadow-sm">
-            <div className="px-3 lg:px-6 py-2 lg:py-4 flex items-center justify-between">
+          {/* ========================================
+              MOBILE HEADER - REORGANIZED
+              Avatar + Mi Panel | Verificado (animated) | Home
+              ======================================== */}
+          <header className="lg:hidden customer-panel-header sticky top-0 z-30"
+            style={{
+              background: 'linear-gradient(to right, #1a1a2e, #16213e, #1a1a2e)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
+              height: '48px',
+              minHeight: '48px',
+            }}
+          >
+            <div className="h-full px-3 flex items-center justify-between">
+              {/* LEFT: Avatar only */}
+              <Link
+                href="/customer/profile"
+                className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border-2 flex-shrink-0"
+                style={{
+                  background: userImage ? 'transparent' : 'linear-gradient(135deg, #2a63cd 0%, #1e4ba3 100%)',
+                  borderColor: 'rgba(42, 99, 205, 0.5)',
+                }}
+              >
+                {userImage ? (
+                  <Image
+                    src={userImage}
+                    alt={userName}
+                    width={36}
+                    height={36}
+                    className="object-cover w-full h-full"
+                  />
+                ) : (
+                  <span className="text-xs font-bold text-white">{userInitials}</span>
+                )}
+              </Link>
+
+              {/* CENTER: Verification Status with subtle animation */}
+              <div className="flex-1 flex justify-center px-2">
+                {(session?.user as any)?.emailVerified ? (
+                  <div
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold"
+                    style={{
+                      backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                      border: '1px solid rgba(34, 197, 94, 0.3)',
+                      animation: 'verifiedPulse 3s ease-in-out infinite',
+                    }}
+                  >
+                    <svg
+                      className="w-3 h-3 text-green-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      style={{ animation: 'verifiedCheck 2s ease-in-out infinite' }}
+                    >
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-green-400">Verificado</span>
+                  </div>
+                ) : (
+                  <Link
+                    href="/customer/settings"
+                    className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-bold rounded-full animate-pulse"
+                  >
+                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>Verificar</span>
+                  </Link>
+                )}
+              </div>
+
+              {/* RIGHT: Home Button */}
+              <Link
+                href="/"
+                className="flex items-center justify-center w-9 h-9 rounded-lg transition-all flex-shrink-0"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(42, 99, 205, 0.3) 0%, rgba(30, 75, 163, 0.3) 100%)',
+                  border: '1px solid rgba(42, 99, 205, 0.4)',
+                }}
+              >
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </Link>
+            </div>
+
+            {/* CSS Animations for Verified badge */}
+            <style jsx>{`
+              @keyframes verifiedPulse {
+                0%, 100% {
+                  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.2);
+                }
+                50% {
+                  box-shadow: 0 0 8px 2px rgba(34, 197, 94, 0.15);
+                }
+              }
+              @keyframes verifiedCheck {
+                0%, 100% {
+                  transform: scale(1);
+                }
+                50% {
+                  transform: scale(1.1);
+                }
+              }
+            `}</style>
+          </header>
+
+          {/* DESKTOP HEADER */}
+          <header className="hidden lg:block bg-white border-b border-[#e9ecef] sticky top-0 z-30 shadow-sm">
+            <div className="px-6 py-4 flex items-center justify-between">
               {/* Menu Toggle */}
               <button
                 onClick={toggleSidebar}
                 className="relative p-2 hover:bg-[#f8f9fa] rounded-lg transition-all duration-300 group"
               >
-                {isSidebarOpen && isMobile ? (
+                {isSidebarOpen ? (
                   <FiX className="w-5 h-5 text-[#6a6c6b] group-hover:text-[#2a63cd] transition-colors" />
                 ) : (
                   <FiMenu className="w-5 h-5 text-[#6a6c6b] group-hover:text-[#2a63cd] transition-colors" />
@@ -332,21 +424,21 @@ export default function CustomerDashboardLayout({
               {/* Home Button */}
               <Link
                 href="/"
-                className="flex items-center justify-center w-9 h-9 lg:w-auto lg:h-auto lg:px-4 lg:py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white rounded-full lg:rounded-lg hover:shadow-lg transition-all"
+                className="flex items-center px-4 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white rounded-lg hover:shadow-lg transition-all"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
-                <span className="hidden lg:inline ml-2 text-sm font-semibold">Tienda</span>
+                <span className="ml-2 text-sm font-semibold">Tienda</span>
               </Link>
             </div>
           </header>
 
-          {/* Page Content with Smooth Transition */}
-          <main className="p-3 lg:p-6 overflow-hidden relative pb-20 lg:pb-6">
+          {/* Page Content */}
+          <main className="p-2 lg:p-6 overflow-hidden relative pb-20 lg:pb-6">
             {/* Shimmer Effect on Transition */}
             <div
-              className="absolute inset-3 lg:inset-6 rounded-xl pointer-events-none z-10 overflow-hidden"
+              className="absolute inset-2 lg:inset-6 rounded-xl pointer-events-none z-10 overflow-hidden"
               style={{
                 opacity: isTransitioning ? 1 : 0,
                 transition: 'opacity 0.3s ease-out'
@@ -361,9 +453,9 @@ export default function CustomerDashboardLayout({
               />
             </div>
 
-            {/* Content Container with Smooth Transitions */}
+            {/* Content Container - OPTIMIZED FOR MOBILE */}
             <div
-              className="bg-white/95 backdrop-blur-xl rounded-xl lg:rounded-xl shadow-xl border border-white/30 min-h-[calc(100vh-10rem)] lg:h-[calc(100vh-8rem)] overflow-y-auto p-4 lg:p-6"
+              className="bg-white/95 backdrop-blur-xl rounded-lg lg:rounded-xl shadow-xl border border-white/30 min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-8rem)] overflow-y-auto p-3 lg:p-6"
               style={{
                 opacity: isTransitioning ? 0 : 1,
                 transform: isTransitioning ? 'translateY(8px) scale(0.99)' : 'translateY(0) scale(1)',
@@ -375,6 +467,9 @@ export default function CustomerDashboardLayout({
           </main>
         </div>
       </div>
+
+      {/* MOBILE ONLY: Customer Navigation Bar */}
+      {isMobile && <CustomerMobileNavBar />}
     </div>
   );
 }

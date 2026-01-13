@@ -146,17 +146,17 @@ export default function AddressesPage() {
   }
 
   return (
-    <div className="space-y-6 overflow-y-auto h-full">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-xl p-6 text-white shadow-lg">
+    <div className="space-y-3 lg:space-y-6 overflow-y-auto h-full">
+      {/* Header - Responsive */}
+      <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-lg lg:rounded-xl p-3 lg:p-6 text-white shadow-lg">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <FiMapPin className="w-5 h-5" />
+          <div className="flex items-center gap-2 lg:gap-3">
+            <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <FiMapPin className="w-4 h-4 lg:w-5 lg:h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Mis Direcciones</h1>
-              <p className="text-sm text-blue-100">{addresses.length} direcciones guardadas</p>
+              <h1 className="text-base lg:text-2xl font-bold">Direcciones</h1>
+              <p className="text-[10px] lg:text-sm text-blue-100">{addresses.length} guardadas</p>
             </div>
           </div>
           <button
@@ -165,26 +165,25 @@ export default function AddressesPage() {
               resetForm();
               setShowModal(true);
             }}
-            className="px-4 py-2 bg-white text-[#2a63cd] font-semibold rounded-lg hover:bg-gray-50 transition-all shadow-md flex items-center gap-2"
+            className="px-3 lg:px-4 py-2 bg-white text-[#2a63cd] font-semibold rounded-lg hover:bg-gray-50 transition-all shadow-md flex items-center gap-1.5 lg:gap-2 text-xs lg:text-base"
           >
             <FiPlus className="w-4 h-4" />
-            Agregar
+            <span className="hidden sm:inline">Agregar</span>
           </button>
         </div>
       </div>
 
-      {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <p className="text-sm text-blue-800 flex items-start gap-2">
-          <FiZap className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5 animate-pulse" />
-          <span><strong>Consejo:</strong> Puedes agregar direcciones físicas para entrega a domicilio o seleccionar una agencia de
-            <strong> Zoom Envíos</strong> o <strong>MRW</strong> como punto de retiro.</span>
+      {/* Info Box - Compact on mobile */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg lg:rounded-xl p-2.5 lg:p-4">
+        <p className="text-xs lg:text-sm text-blue-800 flex items-start gap-2">
+          <FiZap className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-blue-600 flex-shrink-0 mt-0.5 animate-pulse" />
+          <span><strong>Tip:</strong> Agrega direcciones físicas o agencias de <strong>Zoom</strong> / <strong>MRW</strong>.</span>
         </p>
       </div>
 
       {/* Addresses Grid */}
       {addresses.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
           {addresses.map((address) => {
             const typeInfo = getTypeInfo(address.type || 'HOME');
             const TypeIcon = typeInfo.icon;
@@ -271,35 +270,47 @@ export default function AddressesPage() {
 
       {/* Modal - Using Portal */}
       {showModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-[100001] flex items-center justify-center p-3 lg:p-4 bg-black/60 backdrop-blur-sm">
+          {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL */}
+          <button
+            onClick={() => setShowModal(false)}
+            className="fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all z-10"
+            aria-label="Cerrar"
+          >
+            <FiX className="w-6 h-6 text-gray-700" />
+          </button>
+
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white px-6 py-4 flex items-center justify-between flex-shrink-0">
-              <div className="flex items-center gap-3">
-                <FiMapPin className="w-6 h-6" />
-                <div>
-                  <h3 className="text-lg font-bold">
-                    {editingAddress ? 'Editar Dirección' : 'Nueva Dirección'}
-                  </h3>
-                  <p className="text-sm text-white/80">Completa los datos de envío</p>
+            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white px-4 lg:px-6 py-2.5 lg:py-4 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <FiMapPin className="w-5 h-5 lg:w-6 lg:h-6" />
+                  <div>
+                    <h3 className="text-sm lg:text-lg font-bold">
+                      {editingAddress ? 'Editar Dirección' : 'Nueva Dirección'}
+                    </h3>
+                    <p className="text-[9px] lg:text-sm text-white/80">Completa los datos</p>
+                  </div>
                 </div>
+                {/* Save Icon in Header - Mobile Only */}
+                <button
+                  onClick={handleSubmit}
+                  className="sm:hidden p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all active:scale-90"
+                >
+                  <FiCheck className="w-6 h-6 text-white" />
+                </button>
               </div>
-              <button
-                onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
             </div>
 
             {/* Modal Content - Scrollable */}
-            <div className="p-6 overflow-y-auto flex-1">
+            <div className="p-4 lg:p-6 overflow-y-auto flex-1">
               {/* Address Type Selection */}
               <div className="mb-6">
                 <label className="block text-xs font-bold text-[#212529] mb-3 uppercase tracking-wider">
                   Tipo de Dirección *
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {ADDRESS_TYPES.map((type) => {
                     const TypeIcon = type.icon;
                     return (
@@ -307,16 +318,16 @@ export default function AddressesPage() {
                         key={type.id}
                         type="button"
                         onClick={() => setFormData({ ...formData, type: type.id })}
-                        className={`p-3 rounded-xl border-2 transition-all text-left ${formData.type === type.id
-                          ? 'border-[#2a63cd] bg-blue-50'
-                          : 'border-[#e9ecef] hover:border-[#2a63cd]/50'
+                        className={`p-2 lg:p-3 rounded-xl border-2 transition-all text-left group ${formData.type === type.id
+                          ? 'border-[#2a63cd] bg-blue-50/50 shadow-sm'
+                          : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
                           }`}
                       >
-                        <TypeIcon className={`w-5 h-5 mb-1 ${formData.type === type.id ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'
+                        <TypeIcon className={`w-4 h-4 lg:w-5 lg:h-5 mb-1 ${formData.type === type.id ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'
                           }`} />
-                        <p className={`text-sm font-semibold ${formData.type === type.id ? 'text-[#2a63cd]' : 'text-[#212529]'
+                        <p className={`text-[11px] lg:text-sm font-bold leading-tight mb-0.5 ${formData.type === type.id ? 'text-[#2a63cd]' : 'text-[#212529]'
                           }`}>{type.label}</p>
-                        <p className="text-xs text-[#6a6c6b]">{type.description}</p>
+                        <p className={`text-[9px] ${formData.type === type.id ? 'text-[#2a63cd]/70' : 'text-[#6a6c6b]'}`}>{type.description}</p>
                       </button>
                     );
                   })}
@@ -438,8 +449,8 @@ export default function AddressesPage() {
               </div>
             </div>
 
-            {/* Modal Footer - Fixed */}
-            <div className="p-6 border-t border-[#e9ecef] bg-white flex gap-3 flex-shrink-0">
+            {/* Modal Footer - Desktop only */}
+            <div className="hidden sm:flex p-6 border-t border-[#e9ecef] bg-white gap-3 flex-shrink-0">
               <button
                 onClick={() => setShowModal(false)}
                 className="flex-1 px-6 py-3 bg-[#f8f9fa] text-[#212529] font-semibold rounded-xl hover:bg-[#e9ecef] transition-all"

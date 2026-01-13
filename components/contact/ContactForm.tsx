@@ -242,20 +242,20 @@ export default function ContactForm() {
     }
 
     return (
-        <div className="bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] rounded-2xl shadow-2xl p-8 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] rounded-2xl shadow-2xl p-4 md:p-8 relative overflow-hidden">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl"></div>
 
             <div className="relative">
-                <h2 className="text-3xl font-black text-white mb-2">
+                <h2 className="text-xl md:text-3xl font-black text-white mb-2">
                     Envíanos un Mensaje
                 </h2>
-                <p className="text-blue-200/70 mb-6">
+                <p className="text-blue-200/70 mb-4 md:mb-6 text-xs md:text-base">
                     Completa el formulario y nos pondremos en contacto contigo lo antes posible
                 </p>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-2 md:space-y-5">
                     {/* Banner para datos precargados (desde soporte de pago móvil) */}
                     {hasPrefilledData && (
                         <div className="p-4 bg-orange-500/20 border border-orange-400/50 rounded-xl animate-fadeIn">
@@ -286,16 +286,16 @@ export default function ContactForm() {
                     )}
 
                     {/* Name Field */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1 md:space-y-1.5">
                         <div className="flex items-center gap-2">
-                            <label htmlFor="name" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                            <label htmlFor="name" className="block text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-wider">
                                 Nombre Completo
                             </label>
-                            <span className="text-[10px] text-blue-200/60">(Solo letras y una coma)</span>
+                            <span className="text-[9px] md:text-[10px] text-blue-200/60 hidden md:inline">(Solo letras y una coma)</span>
                         </div>
                         <div className="relative group">
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                             </div>
@@ -307,28 +307,28 @@ export default function ContactForm() {
                                 value={formData.name}
                                 onChange={handleChange}
                                 onBlur={() => handleBlur('name', formData.name)}
-                                className={`w-full pl-11 pr-4 py-3 bg-white/10 border ${touchedFields.name && validationErrors.name
+                                className={`w-full pl-12 pr-12 md:pl-11 md:pr-11 py-2 md:py-3 bg-white/10 border ${touchedFields.name && validationErrors.name
                                     ? 'border-red-500/50 focus:border-red-500'
                                     : 'border-white/20 focus:border-white/40'
-                                    } rounded-xl text-white placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200`}
+                                    } rounded-xl text-white text-xs md:text-base placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200 text-center`}
                                 placeholder="Tu nombre completo"
                             />
                             {touchedFields.name && validationErrors.name && (
-                                <p className="absolute -bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.name}</p>
+                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-[10px] md:text-xs text-red-400 font-medium">{validationErrors.name}</p>
                             )}
                         </div>
                     </div>
 
                     {/* Email & Phone Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-5">
                         {/* Email Field */}
-                        <div className="space-y-1.5">
-                            <label htmlFor="email" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                        <div className="space-y-1 md:space-y-1.5">
+                            <label htmlFor="email" className="block text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-wider">
                                 Email
                             </label>
                             <div className="relative group">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                                     </svg>
                                 </div>
@@ -339,29 +339,28 @@ export default function ContactForm() {
                                     value={formData.email}
                                     onChange={handleChange}
                                     onBlur={() => handleBlur('email', formData.email)}
-                                    className={`w-full pl-11 pr-4 py-3 bg-white/10 border ${touchedFields.email && validationErrors.email
+                                    className={`w-full pl-12 pr-12 md:pl-11 md:pr-11 py-2 md:py-3 bg-white/10 border ${touchedFields.email && validationErrors.email
                                         ? 'border-red-500/50 focus:border-red-500'
                                         : 'border-white/20 focus:border-white/40'
-                                        } rounded-xl text-white placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200`}
+                                        } rounded-xl text-white text-xs md:text-base placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200 text-center`}
                                     placeholder="tu@email.com"
                                 />
                                 {touchedFields.email && validationErrors.email && (
-                                    <p className="absolute -bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.email}</p>
+                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-[10px] md:text-xs text-red-400 font-medium">{validationErrors.email}</p>
                                 )}
                             </div>
                         </div>
 
                         {/* Phone Field */}
-                        <div className="space-y-1.5">
+                        <div className="space-y-1 md:space-y-1.5">
                             <div className="flex items-center gap-1">
-                                <label htmlFor="phone" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                                <label htmlFor="phone" className="block text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-wider">
                                     Teléfono
                                 </label>
-                                <span className="text-[10px] text-blue-200/60">(Solo números)</span>
                             </div>
                             <div className="relative group">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                     </svg>
                                 </div>
@@ -375,27 +374,27 @@ export default function ContactForm() {
                                     value={formData.phone}
                                     onChange={handleChange}
                                     onBlur={() => handleBlur('phone', formData.phone)}
-                                    className={`w-full pl-11 pr-4 py-3 bg-white/10 border ${touchedFields.phone && validationErrors.phone
+                                    className={`w-full pl-12 pr-12 md:pl-11 md:pr-11 py-2 md:py-3 bg-white/10 border ${touchedFields.phone && validationErrors.phone
                                         ? 'border-red-500/50 focus:border-red-500'
                                         : 'border-white/20 focus:border-white/40'
-                                        } rounded-xl text-white placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200`}
-                                    placeholder="04121234567"
+                                        } rounded-xl text-white text-xs md:text-base placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200 text-center`}
+                                    placeholder="0412..."
                                 />
                                 {touchedFields.phone && validationErrors.phone && (
-                                    <p className="absolute -bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.phone}</p>
+                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-[10px] md:text-xs text-red-400 font-medium">{validationErrors.phone}</p>
                                 )}
                             </div>
                         </div>
                     </div>
 
                     {/* Subject Field */}
-                    <div className="space-y-1.5 pt-2">
-                        <label htmlFor="subject" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                    <div className="space-y-1 md:space-y-1.5 pt-1 md:pt-2">
+                        <label htmlFor="subject" className="block text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-wider">
                             Asunto
                         </label>
                         <div className="relative group">
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                 </svg>
                             </div>
@@ -405,13 +404,13 @@ export default function ContactForm() {
                                 value={formData.subject}
                                 onChange={handleChange}
                                 onBlur={() => handleBlur('subject', formData.subject)}
-                                className={`w-full pl-11 pr-4 py-3 bg-white/10 border ${touchedFields.subject && validationErrors.subject
+                                className={`w-full pl-12 pr-12 md:pl-11 md:pr-11 py-2 md:py-3 bg-white/10 border ${touchedFields.subject && validationErrors.subject
                                     ? 'border-red-500/50 focus:border-red-500'
                                     : 'border-white/20 focus:border-white/40'
-                                    } rounded-xl text-white focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200 appearance-none cursor-pointer`}
+                                    } rounded-xl text-white text-xs md:text-base focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200 appearance-none cursor-pointer text-center`}
                                 style={{ colorScheme: 'dark' }}
                             >
-                                <option value="" className="bg-slate-800 text-white">Selecciona un asunto</option>
+                                <option value="" className="bg-slate-800 text-white">Selecciona...</option>
                                 <option value="consulta" className="bg-slate-800 text-white">Consulta General</option>
                                 <option value="producto" className="bg-slate-800 text-white">Información de Producto</option>
                                 <option value="orden" className="bg-slate-800 text-white">Estado de Orden</option>
@@ -420,24 +419,24 @@ export default function ContactForm() {
                             </select>
                             {/* Dropdown arrow */}
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-200/50 pointer-events-none">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
                             </div>
                             {touchedFields.subject && validationErrors.subject && (
-                                <p className="absolute -bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.subject}</p>
+                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-[10px] md:text-xs text-red-400 font-medium">{validationErrors.subject}</p>
                             )}
                         </div>
                     </div>
 
                     {/* Message Field */}
-                    <div className="space-y-1.5 pt-2">
-                        <label htmlFor="message" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                    <div className="space-y-1 md:space-y-1.5 pt-1 md:pt-2">
+                        <label htmlFor="message" className="block text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-wider">
                             Mensaje
                         </label>
                         <div className="relative group">
                             <div className="absolute left-3 top-3 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                                 </svg>
                             </div>
@@ -447,22 +446,22 @@ export default function ContactForm() {
                                 value={formData.message}
                                 onChange={handleChange}
                                 onBlur={() => handleBlur('message', formData.message)}
-                                rows={5}
-                                className={`w-full pl-11 pr-4 py-3 bg-white/10 border ${touchedFields.message && validationErrors.message
+                                rows={3}
+                                className={`w-full pl-12 pr-12 md:pl-11 md:pr-11 py-2 md:py-3 bg-white/10 border ${touchedFields.message && validationErrors.message
                                     ? 'border-red-500/50 focus:border-red-500'
                                     : 'border-white/20 focus:border-white/40'
-                                    } rounded-xl text-white placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 resize-none transition-all duration-200`}
-                                placeholder="Escribe tu mensaje aquí..."
+                                    } rounded-xl text-white text-xs md:text-base placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 resize-none transition-all duration-200 md:h-auto text-center`}
+                                placeholder="Escribe tu mensaje..."
                             />
                             {touchedFields.message && validationErrors.message && (
-                                <p className="absolute -bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.message}</p>
+                                <p className="absolute -bottom-5 left-0 text-[10px] md:text-xs text-red-400 font-medium">{validationErrors.message}</p>
                             )}
                         </div>
                     </div>
 
                     {/* hCaptcha */}
-                    <div className="flex justify-center pt-2">
-                        <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                    <div className="flex justify-center pt-1 md:pt-2">
+                        <div className="bg-white/5 p-2 md:p-3 rounded-xl border border-white/10 transform scale-90 md:scale-100 origin-center">
                             <HCaptchaWrapper
                                 sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
                                 onVerify={handleCaptchaVerify}

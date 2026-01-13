@@ -7,6 +7,8 @@ import { NotificationProvider } from "@/components/notifications/NotificationPro
 import NotificationToast from "@/components/notifications/NotificationToast";
 import DynamicFavicon from "@/components/DynamicFavicon";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import MobileScrollProgress from "@/components/public/MobileScrollProgress";
+import MobileNavBar from "@/components/public/MobileNavBar";
 import { getSiteSettings } from "@/lib/site-settings";
 
 // Use local fonts to avoid Google Fonts dependency during build
@@ -109,9 +111,12 @@ export default function RootLayout({
       <body className={`${inter.variable} ${nakadai.variable} ${tektrron.variable} antialiased`} suppressHydrationWarning>
         <Providers>
           <NotificationProvider>
+            <MobileScrollProgress />
             <div className="page-transition-wrapper">
               {children}
             </div>
+            {/* [MOBILE ONLY] Global floating nav bar - OUTSIDE wrapper for fixed positioning */}
+            <MobileNavBar />
             <WhatsAppButton />
             <NotificationToast />
             <DynamicFavicon />

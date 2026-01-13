@@ -4,7 +4,32 @@ import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import PageAnimations from '@/components/public/PageAnimations';
-import { FiGrid } from 'react-icons/fi';
+import { FiGrid, FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi } from 'react-icons/fi';
+
+const FloatingTechIcons = () => {
+  const icons = [
+    { Icon: FiMonitor, delay: '0s', position: 'top-8 left-10' },
+    { Icon: FiCpu, delay: '0.5s', position: 'top-20 right-16' },
+    { Icon: FiHardDrive, delay: '1s', position: 'bottom-12 left-20' },
+    { Icon: FiSmartphone, delay: '1.5s', position: 'bottom-8 right-12' },
+    { Icon: FiHeadphones, delay: '2s', position: 'top-1/2 left-8' },
+    { Icon: FiWifi, delay: '2.5s', position: 'top-1/3 right-8' },
+  ];
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
+      {icons.map(({ Icon, delay, position }, i) => (
+        <div
+          key={i}
+          className={`absolute ${position} animate-bounce`}
+          style={{ animationDelay: delay, animationDuration: '3s' }}
+        >
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export const revalidate = 0;
 
@@ -22,6 +47,8 @@ export default async function CategoriasPage() {
 
       {/* Hero Section - Premium Design */}
       <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
+        {/* Floating Icons Effect */}
+        <FloatingTechIcons />
         {/* Animated Background Particles */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse"></div>
@@ -29,20 +56,20 @@ export default async function CategoriasPage() {
           <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-purple-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-0 lg:py-10 text-center">
           {/* Premium Badge */}
-          <div className="inline-flex items-center gap-3 mb-4">
-            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-            <div className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <span className="text-xs font-semibold text-white">Explora Nuestro Catálogo</span>
+          <div className="inline-flex items-center gap-2 mb-2 lg:mb-4">
+            <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
+            <div className="px-2 lg:px-3 py-0.5 lg:py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+              <span className="text-[10px] lg:text-xs font-semibold text-white">Explora Nuestro Catálogo</span>
             </div>
-            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
+            <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white mb-2 lg:mb-3 tracking-tight">
             Categorías de <span className="bg-gradient-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent">Productos</span>
           </h1>
-          <p className="text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xs lg:text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
             Explora nuestra amplia selección de productos tecnológicos organizados por categoría
           </p>
         </div>
@@ -52,18 +79,18 @@ export default async function CategoriasPage() {
       </section>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-12 relative z-10">
         {categories.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-              <FiGrid className="w-8 h-8 text-gray-400" />
+          <div className="text-center py-10 lg:py-20">
+            <div className="inline-flex items-center justify-center w-12 h-12 lg:w-16 lg:h-16 bg-gray-100 rounded-full mb-4">
+              <FiGrid className="w-6 h-6 lg:w-8 lg:h-8 text-gray-400" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No hay categorías disponibles</h3>
-            <p className="text-gray-500">Vuelve más tarde para ver nuestras nuevas categorías.</p>
+            <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-2">No hay categorías disponibles</h3>
+            <p className="text-sm text-gray-500">Vuelve más tarde para ver nuestras nuevas categorías.</p>
           </div>
         ) : (
           /* Categories Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-16">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-8 lg:mb-16">
             {categories.map((category) => {
               // Gradiente azul tenue uniforme para todas las categorías
               const gradient = 'from-[#6b9edd] via-[#5a8ad0] to-[#4a7dc4]';

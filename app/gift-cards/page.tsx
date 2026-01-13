@@ -603,8 +603,8 @@ export default function GiftCardsPage() {
                 </div>
                 <FloatingTechIcons />
 
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
-                    <div className="inline-flex items-center gap-3 mb-4">
+                <div className="relative max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-2 pb-0 lg:py-10 text-center">
+                    <div className="hidden lg:inline-flex items-center gap-2 mb-2 lg:mb-4">
                         <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full">
                             <FiGift className="w-4 h-4 text-white" />
@@ -612,26 +612,26 @@ export default function GiftCardsPage() {
                         </div>
                         <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight">
+                    <h1 className="text-lg md:text-3xl lg:text-4xl font-black text-white mb-0.5 lg:mb-3 tracking-tight">
                         Regala <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Tecnología</span>
                     </h1>
-                    <p className="text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
-                        Ellos eligen, tú regalas felicidad. Gift Cards instantáneas para cualquier ocasión.
+                    <p className="text-[11px] md:text-sm lg:text-base text-white/90 max-w-3xl mx-auto">
+                        Gift Cards instantáneas para cualquier ocasión
                     </p>
                 </div>
             </section>
 
             {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="grid lg:grid-cols-2 gap-8">
+            <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 lg:py-12 relative z-10">
+                <div className="grid lg:grid-cols-2 gap-4 lg:gap-8">
 
                     {/* Left: Gift Card Preview */}
                     <div className="flex flex-col items-center">
                         {/* Epic Card Preview */}
                         <div
                             onClick={() => setIsFlipped(!isFlipped)}
-                            className="cursor-pointer mb-6 group"
-                            style={{ perspective: '1200px', width: '400px', height: '250px' }}
+                            className="cursor-pointer mb-3 lg:mb-6 group w-full max-w-[320px] lg:max-w-[400px] mx-auto"
+                            style={{ perspective: '1200px', aspectRatio: '1.6/1' }}
                         >
                             <div
                                 className="w-full h-full transition-transform duration-700 group-hover:scale-105"
@@ -799,10 +799,10 @@ export default function GiftCardsPage() {
                             </div>
                         </div>
 
-                        <p className="text-gray-500 text-sm mb-6">Clic en la tarjeta para voltear</p>
+                        <p className="text-gray-500 text-xs lg:text-sm mb-2 lg:mb-6">Clic en la tarjeta para voltear</p>
 
                         {/* Design Category Tabs */}
-                        <div className="flex justify-center gap-2 mb-4">
+                        <div className="flex justify-center gap-1 lg:gap-2 mb-2 lg:mb-4">
                             {[
                                 { id: 'all', label: 'Todos', icon: null },
                                 { id: 'premium', label: 'Premium', icon: <FiStar className="w-3 h-3" /> },
@@ -812,7 +812,7 @@ export default function GiftCardsPage() {
                                 <button
                                     key={cat.id}
                                     onClick={() => setDesignCategory(cat.id as typeof designCategory)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${designCategory === cat.id
+                                    className={`px-2 lg:px-3 py-1 lg:py-1.5 rounded-full text-[10px] lg:text-xs font-semibold transition-all flex items-center gap-1 ${designCategory === cat.id
                                         ? 'bg-blue-600 text-white shadow-md'
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
@@ -824,7 +824,7 @@ export default function GiftCardsPage() {
                         </div>
 
                         {/* Design Selection */}
-                        <div className="flex flex-wrap justify-center gap-3">
+                        <div className="flex flex-wrap justify-center gap-2 lg:gap-3">
                             {filteredDesigns.map((design) => (
                                 <button
                                     key={design.id}
@@ -852,9 +852,9 @@ export default function GiftCardsPage() {
                     </div>
 
                     {/* Right: Configuration Form */}
-                    <div className="bg-white rounded-2xl p-5 shadow-xl border border-gray-100">
+                    <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-5 shadow-xl border border-gray-100">
                         {/* Step 1: Amount */}
-                        <div className="mb-5">
+                        <div className="mb-3 lg:mb-5">
                             <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                                 <span className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-bold shadow-lg">1</span>
                                 Selecciona el monto
@@ -947,24 +947,24 @@ export default function GiftCardsPage() {
                         </div>
 
                         {/* Step 2: Recipient Info */}
-                        <div className="mb-5">
-                            <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                <span className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-bold">2</span>
+                        <div className="mb-3">
+                            <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-[10px] font-bold">2</span>
                                 Destinatario
                             </h3>
 
                             {/* Gift Type Selection - Two buttons in a row */}
-                            <div className="grid grid-cols-2 gap-2 mb-3">
+                            <div className="grid grid-cols-2 gap-2 mb-2">
                                 {/* For Someone Else */}
                                 <button
                                     type="button"
                                     onClick={() => setIsForMyself(false)}
-                                    className={`flex items-center justify-center gap-2 p-2.5 rounded-lg font-semibold text-sm transition-all ${!isForMyself
+                                    className={`flex items-center justify-center gap-1.5 p-2 rounded-lg font-semibold text-xs transition-all ${!isForMyself
                                         ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md'
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                 >
-                                    <FiGift className="w-4 h-4" />
+                                    <FiGift className="w-3.5 h-3.5" />
                                     Es un regalo
                                 </button>
 
@@ -973,19 +973,19 @@ export default function GiftCardsPage() {
                                     <button
                                         type="button"
                                         onClick={() => setIsForMyself(true)}
-                                        className={`flex items-center justify-center gap-2 p-2.5 rounded-lg font-semibold text-sm transition-all ${isForMyself
+                                        className={`flex items-center justify-center gap-1.5 p-2 rounded-lg font-semibold text-xs transition-all ${isForMyself
                                             ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
                                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                             }`}
                                     >
-                                        <FiUser className="w-4 h-4" />
+                                        <FiUser className="w-3.5 h-3.5" />
                                         Para mí mismo
                                     </button>
                                 )}
                             </div>
 
                             {/* Recipient Name & Email Inputs - Same row */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-2">
                                 {/* Name */}
                                 <div className="relative">
                                     <input
@@ -994,7 +994,7 @@ export default function GiftCardsPage() {
                                         placeholder="Nombre"
                                         value={recipientName}
                                         onChange={(e) => { setRecipientName(e.target.value); setErrors(prev => ({ ...prev, name: undefined })); }}
-                                        className={`w-full px-3 py-2.5 rounded-lg border outline-none transition-colors text-sm ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-500'
+                                        className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors text-xs ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-500'
                                             }`}
                                     />
                                     {errors.name && (
@@ -1013,7 +1013,7 @@ export default function GiftCardsPage() {
                                         placeholder="Email"
                                         value={recipientEmail}
                                         onChange={(e) => { setRecipientEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); }}
-                                        className={`w-full px-3 py-2.5 pr-8 rounded-lg border outline-none transition-colors text-sm ${errors.email ? 'border-red-400 bg-red-50' :
+                                        className={`w-full px-3 py-2 pr-8 rounded-lg border outline-none transition-colors text-xs ${errors.email ? 'border-red-400 bg-red-50' :
                                             recipientExists === false ? 'border-amber-400' :
                                                 recipientExists === true ? 'border-green-500' :
                                                     'border-gray-200 focus:border-blue-500'
@@ -1040,16 +1040,16 @@ export default function GiftCardsPage() {
                         </div>
 
                         {/* Step 3: Personal Message */}
-                        <div className="mb-4">
-                            <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                <span className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-bold">3</span>
+                        <div className="mb-3">
+                            <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-[10px] font-bold">3</span>
                                 Mensaje personal (opcional)
                             </h3>
                             <textarea
                                 placeholder="Escribe un mensaje especial..."
                                 value={personalMessage}
                                 onChange={(e) => setPersonalMessage(e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-0 outline-none resize-none text-sm"
+                                className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-0 outline-none resize-none text-xs"
                                 rows={2}
                                 maxLength={200}
                             />
@@ -1058,18 +1058,18 @@ export default function GiftCardsPage() {
 
                         {/* Step 4: Scheduled Delivery (optional) - Collapsible */}
                         {!isForMyself && (
-                            <div className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
+                            <div className="mb-3 border border-gray-200 rounded-lg overflow-hidden">
                                 <button
                                     type="button"
                                     onClick={() => setShowScheduledSection(!showScheduledSection)}
-                                    className="w-full px-3 py-2.5 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                                    className="w-full px-3 py-2 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <FiCalendar className="w-4 h-4 text-blue-600" />
-                                        <span className="text-sm font-medium text-gray-700">Programar envío (opcional)</span>
+                                        <FiCalendar className="w-3.5 h-3.5 text-blue-600" />
+                                        <span className="text-xs font-medium text-gray-700">Programar envío (opcional)</span>
                                     </div>
                                     <svg
-                                        className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${showScheduledSection ? 'rotate-180' : ''}`}
+                                        className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-300 ${showScheduledSection ? 'rotate-180' : ''}`}
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -1079,13 +1079,13 @@ export default function GiftCardsPage() {
                                 </button>
 
                                 <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showScheduledSection ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-                                    <div className="p-3 bg-white border-t border-gray-100">
+                                    <div className="p-2 bg-white border-t border-gray-100">
                                         <input
                                             type="date"
                                             value={scheduledDate}
                                             onChange={(e) => setScheduledDate(e.target.value)}
                                             min={new Date().toISOString().split('T')[0]}
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-0 outline-none text-sm"
+                                            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-0 outline-none text-xs"
                                         />
                                         <p className="text-[10px] text-gray-400 mt-1">
                                             {scheduledDate ? `Se enviará el ${new Date(scheduledDate + 'T12:00:00').toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' })}` : 'Dejar vacío para envío inmediato'}

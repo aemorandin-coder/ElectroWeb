@@ -34,11 +34,16 @@ export default function WhatsAppButton({
   const [isHovered, setIsHovered] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [settings, setSettings] = useState<{ whatsapp: string | null; companyName: string | null } | null>(null);
+  const [mounted, setMounted] = useState(false); // Fix: Add mounted state
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
   const isAdminPanel = pathname?.startsWith('/admin');
   const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN';
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isAdminPanel) {
@@ -73,6 +78,18 @@ export default function WhatsAppButton({
     }
   }, [isHovered]);
 
+  /* 
+     OCULTAR EN CONTACTO: 
+     El usuario no quiere el botón flotante en la página de contacto porque ya existe una tarjeta específica.
+  */
+  /* 
+     OCULTAR EN CONTACTO (FORCE): 
+     Detectar cualquier variante de la URL de contacto.
+  */
+  if (!mounted || !pathname || pathname.toLowerCase().includes('contacto')) {
+    return null;
+  }
+
   // Don't render WhatsApp button in admin panel
   if (isAdminPanel) {
     return null;
@@ -85,6 +102,7 @@ export default function WhatsAppButton({
   }
 
   // Clean the number for comparison and URL
+  // Clean the number for comparison and URL
   const cleanedNumber = cleanPhoneNumber(whatsappNumber);
 
   // Check if the number is a seed/placeholder number
@@ -94,7 +112,7 @@ export default function WhatsAppButton({
 
   const defaultMessage = message || `Hola! Tengo una consulta sobre los productos de ${settings?.companyName || 'Electro Shop'}`;
 
-  const handleClick = () => {
+  const handleWhatsAppClick = () => {
     if (isSeedNumber) {
       if (isAdmin) {
         // Admin sees: redirect to settings page to change it
@@ -125,14 +143,24 @@ export default function WhatsAppButton({
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
+  /* 
+     OCULTAR EN CONTACTO: 
+     El usuario no quiere el botón flotante en la página de contacto porque ya existe una tarjeta específica.
+  */
+  if (pathname === '/contacto') {
+    return null;
+  }
+
   return (
     <div
+      id="global-whatsapp-button"
       className={`fixed z-40 transition-all duration-500 ease-out bottom-20 right-4 lg:bottom-6 lg:right-6 ${isMinimized && !isHovered
         ? 'scale-50 opacity-60'
         : 'scale-100 opacity-100'
-        }`}
+        } ${pathname?.toLowerCase().includes('contacto') ? 'hidden pointer-events-none' : 'block'}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      style={pathname?.toLowerCase().includes('contacto') ? { display: 'none' } : {}}
     >
       {/* Epic Tooltip - Only show when hovered and not minimized */}
       {isHovered && !isMinimized && (
@@ -164,7 +192,7 @@ export default function WhatsAppButton({
 
       {/* Button */}
       <button
-        onClick={handleClick}
+        onClick={handleWhatsAppClick}
         className={`group relative w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center ${isHovered ? 'hover:scale-110' : ''
           } active:scale-95`}
         aria-label="Contactar por WhatsApp"

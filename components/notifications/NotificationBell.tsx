@@ -81,9 +81,9 @@ export default function NotificationBell() {
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Dropdown */}
+          {/* Desktop Dropdown - unchanged */}
           <div
-            className="notification-dropdown z-50 animate-scaleIn"
+            className="hidden sm:block notification-dropdown z-50 animate-scaleIn"
             style={{
               position: 'absolute',
               right: '0',
@@ -93,7 +93,29 @@ export default function NotificationBell() {
               maxWidth: 'calc(100vw - 24px)',
             }}
           >
-            <NotificationCenter onClose={() => setIsOpen(false)} />
+            <NotificationCenter onClose={() => setIsOpen(false)} isMobile={false} />
+          </div>
+
+          {/* Mobile Dropdown - Glassmorphism Floating 2025 */}
+          <div
+            className="sm:hidden notification-dropdown-mobile z-50 animate-mobileDropdownIn"
+            style={{
+              position: 'fixed',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              top: '70px',
+              width: '85vw',
+              maxWidth: '290px',
+              background: 'rgba(255, 255, 255, 0.92)',
+              backdropFilter: 'blur(24px) saturate(200%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+              borderRadius: '20px',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
+              boxShadow: '0 20px 60px -15px rgba(42, 99, 205, 0.35), 0 8px 25px -8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+              overflow: 'hidden',
+            }}
+          >
+            <NotificationCenter onClose={() => setIsOpen(false)} isMobile={true} />
           </div>
         </>
       )}
@@ -119,6 +141,23 @@ export default function NotificationBell() {
         }
         .animate-scaleIn {
           animation: scaleIn 0.2s ease-out;
+        }
+        @keyframes mobileDropdownIn {
+          0% {
+            opacity: 0;
+            transform: translateX(-50%) scale(0.9) translateY(-20px);
+          }
+          60% {
+            opacity: 1;
+            transform: translateX(-50%) scale(1.02) translateY(2px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(-50%) scale(1) translateY(0);
+          }
+        }
+        .animate-mobileDropdownIn {
+          animation: mobileDropdownIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
       `}</style>
     </div>

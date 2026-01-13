@@ -3,8 +3,34 @@ import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import ContactForm from '@/components/contact/ContactForm';
 import BusinessHours from '@/components/contact/BusinessHours';
+import { FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi, FiGift } from 'react-icons/fi';
 
 export const revalidate = 0;
+
+const FloatingTechIcons = () => {
+  const icons = [
+    { Icon: FiMonitor, delay: '0s', position: 'top-8 left-10' },
+    { Icon: FiCpu, delay: '0.5s', position: 'top-20 right-16' },
+    { Icon: FiHardDrive, delay: '1s', position: 'bottom-12 left-20' },
+    { Icon: FiSmartphone, delay: '1.5s', position: 'bottom-8 right-12' },
+    { Icon: FiHeadphones, delay: '2s', position: 'top-1/2 left-8' },
+    { Icon: FiWifi, delay: '2.5s', position: 'top-1/3 right-8' },
+  ];
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
+      {icons.map(({ Icon, delay, position }, i) => (
+        <div
+          key={i}
+          className={`absolute ${position} animate-bounce`}
+          style={{ animationDelay: delay, animationDuration: '3s' }}
+        >
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default async function ContactoPage() {
   const settings = await prisma.companySettings.findFirst();
@@ -13,17 +39,17 @@ export default async function ContactoPage() {
     <div className="min-h-screen bg-white">
       <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
 
-      {/* Hero Section - Premium Design */}
+      {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
-        {/* Animated Background Particles */}
+        {/* Floating Icons Effect */}
+        <FloatingTechIcons />
+
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-purple-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
-          {/* Premium Badge */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 text-center">
           <div className="inline-flex items-center gap-3 mb-4">
             <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
             <div className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
@@ -31,25 +57,27 @@ export default async function ContactoPage() {
             </div>
             <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
           </div>
-
-          <h1 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight">
-            Contáctanos
-          </h1>
+          <h1 className="text-3xl md:text-5xl font-black text-white mb-3 tracking-tight">Contáctanos</h1>
           <p className="text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
             Comunícate con nosotros por cualquiera de nuestros canales
           </p>
         </div>
 
-        {/* Animated Wave Divider */}
         <AnimatedWave />
       </section>
 
       {/* Main Content */}
-      <main className="bg-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 -mt-10">
+      <main className="bg-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-16 md:-mt-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          {/* Contact Information - Premium Cards */}
-          <div className="space-y-4">
-            {/* WhatsApp */}
+
+          {/* 1. VISTA MÓVIL: Solo Formulario */}
+          <div className="md:hidden">
+            <ContactForm />
+          </div>
+
+          {/* 2. VISTA ESCRITORIO: Lista Vertical Premium Estilo Original */}
+          <div className="hidden md:block space-y-4">
+            {/* WhatsApp Desktop */}
             {settings?.whatsapp && (
               <a
                 href={`https://wa.me/${settings.whatsapp}`}
@@ -78,7 +106,7 @@ export default async function ContactoPage() {
               </a>
             )}
 
-            {/* Email */}
+            {/* Email Desktop */}
             {settings?.email && (
               <a
                 href={`mailto:${settings.email}`}
@@ -102,7 +130,7 @@ export default async function ContactoPage() {
               </a>
             )}
 
-            {/* Phone */}
+            {/* Phone Desktop */}
             {settings?.phone && (
               <a
                 href={`tel:${settings.phone}`}
@@ -126,7 +154,7 @@ export default async function ContactoPage() {
               </a>
             )}
 
-            {/* Location */}
+            {/* Location Desktop */}
             <div className="relative overflow-hidden">
               <div className="relative flex items-start gap-4 p-5 bg-white/80 backdrop-blur-xl rounded-2xl border border-[#e9ecef] shadow-xl">
                 <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center shadow-lg">
@@ -146,21 +174,19 @@ export default async function ContactoPage() {
               </div>
             </div>
 
-            {/* Business Hours - Compact Collapsible */}
             <BusinessHours businessHours={settings?.businessHours} />
           </div>
 
-          {/* Contact Form - Premium Design */}
-          <div>
+          {/* Form for Desktop only (Mobile already has form at top) */}
+          <div className="hidden md:block w-full">
             <ContactForm />
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#212529] mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-sm text-gray-400">
+      <footer className="bg-[#212529] mt-4 md:mt-16 py-8 text-center">
+        <div className="max-w-7xl mx-auto px-4">
+          <p className="text-sm text-gray-400">
             &copy; {new Date().getFullYear()} {settings?.companyName || 'Electro Shop Morandin C.A.'} - Todos los derechos reservados
           </p>
         </div>

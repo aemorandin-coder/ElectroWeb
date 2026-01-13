@@ -7,7 +7,6 @@ import { usePathname } from 'next/navigation';
 import CartIcon from '@/components/CartIcon';
 import UserAccountButton from '@/components/UserAccountButton';
 import NotificationBell from '@/components/notifications/NotificationBell';
-import MobileNavBar from '@/components/public/MobileNavBar';
 
 interface CompanySettings {
   companyName: string;
@@ -116,18 +115,23 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   // Base classes that don't change between SSR and client
   const baseClasses = 'sticky top-0 z-50 transition-all duration-300 backdrop-blur-md border-b';
 
+  // SSR-safe: Always render white header initially, then switch after mount
+  // This prevents hydration mismatch since server always renders 'white' style
+  const headerStyle = mounted ? (isBlueHeader ? 'blue' : 'white') : 'white';
+
+  // Calculate styles based on headerStyle to ensure SSR/Client match
+  const isBlueStyle = headerStyle === 'blue';
+
   return (
     <>
       <header
         className={baseClasses}
-        // Use data attribute for styling to avoid hydration mismatch
-        data-header-style={mounted ? (isBlueHeader ? 'blue' : 'white') : 'white'}
+        data-header-style={headerStyle}
         style={{
-          // Apply styles based on mounted state to match SSR
-          backgroundColor: isBlueHeader ? 'rgba(30, 75, 163, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          backgroundImage: isBlueHeader ? 'linear-gradient(to right, rgba(42, 99, 205, 0.95), rgba(30, 75, 163, 0.95))' : 'none',
-          borderColor: isBlueHeader ? 'rgba(255, 255, 255, 0.1)' : '#e9ecef',
-          boxShadow: isBlueHeader ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+          backgroundColor: isBlueStyle ? 'rgba(30, 75, 163, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          backgroundImage: isBlueStyle ? 'linear-gradient(to right, rgba(42, 99, 205, 0.95), rgba(30, 75, 163, 0.95))' : 'none',
+          borderColor: isBlueStyle ? 'rgba(255, 255, 255, 0.1)' : '#e9ecef',
+          boxShadow: isBlueStyle ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
         }}
         suppressHydrationWarning
       >
@@ -150,12 +154,12 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                 </div>
               )}
               <h1
-                className={`text-2xl font-bold tracking-wide transition-colors duration-300 ${isBlueHeader ? 'text-white' : 'text-transparent bg-clip-text'
+                className={`text-2xl font-bold tracking-wide transition-colors duration-300 ${isBlueStyle ? 'text-white' : 'text-transparent bg-clip-text'
                   }`}
                 style={{
-                  backgroundImage: isBlueHeader ? 'none' : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
+                  backgroundImage: isBlueStyle ? 'none' : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
                   fontFamily: 'var(--font-tektrron), sans-serif',
-                  WebkitBackgroundClip: isBlueHeader ? 'unset' : 'text',
+                  WebkitBackgroundClip: isBlueStyle ? 'unset' : 'text',
                 }}
               >
                 {companySettings?.companyName || 'Electro Shop'}
@@ -179,12 +183,12 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                     href={link.href}
                     className="relative text-sm font-normal transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 rounded-sm"
                     style={{
-                      color: isBlueHeader
+                      color: isBlueStyle
                         ? (isActive ? 'white' : 'rgba(255,255,255,0.8)')
                         : (isActive ? primaryColor : '#6a6c6b')
                     }}
                   >
-                    <span className={`relative z-10 ${isBlueHeader
+                    <span className={`relative z-10 ${isBlueStyle
                       ? 'group-hover:text-white'
                       : (!isActive ? 'group-hover:text-[#2a63cd]' : '')
                       }`}>
@@ -193,7 +197,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                     <span
                       className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}
                       style={{
-                        background: isBlueHeader
+                        background: isBlueStyle
                           ? 'white'
                           : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
                       }}
@@ -207,19 +211,18 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
             <div className="flex items-center gap-4">
               <div
                 className="flex items-center gap-4"
-                style={{ color: isBlueHeader ? 'rgba(255,255,255,0.9)' : '#6a6c6b' }}
+                style={{ color: isBlueStyle ? 'rgba(255,255,255,0.9)' : '#6a6c6b' }}
               >
                 <NotificationBell />
                 <CartIcon />
               </div>
-              <UserAccountButton useBlueHeader={isBlueHeader} />
+              <UserAccountButton useBlueHeader={isBlueStyle} />
             </div>
           </div>
         </div>
       </header>
 
-      {/* Mobile Navigation Bar - Only visible on mobile */}
-      <MobileNavBar />
+      {/* Mobile Navigation Bar - Now rendered globally in layout.tsx */}
     </>
   );
 }

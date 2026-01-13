@@ -19,6 +19,67 @@
   display: none;
 }
 
+@keyframes marquee-text {
+  0% {
+    transform: translateX(10%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee-text {
+  animation: marquee-text 12s linear infinite;
+}
+
+/* Premium Mobile Animations */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideInUp {
+  animation: slideInUp 0.4s ease-out forwards;
+}
+
 /* Profile Dropdown - Force text visibility */
 .profile-dropdown {
   background-color: #ffffff !important;
@@ -794,15 +855,28 @@ button,
   }
 
   /* Logo/Brand text - WHITE and compact */
-  header h1,
-  header span,
-  header .font-bold,
-  header [class*="font-bold"],
-  header a>div>h3,
-  header a>div>span {
+  /* IMPORTANT: Exclude dropdown content from these rules */
+  header h1:not(.profile-dropdown-mobile *):not(.profile-dropdown-mobile h1),
+  header span:not(.profile-dropdown-mobile *):not(.profile-dropdown-mobile span),
+  header .font-bold:not(.profile-dropdown-mobile *),
+  header [class*="font-bold"]:not(.profile-dropdown-mobile *),
+  header a>div>h3:not(.profile-dropdown-mobile *),
+  header a>div>span:not(.profile-dropdown-mobile *) {
     color: #ffffff !important;
     font-size: 0.95rem !important;
     font-weight: 700 !important;
+  }
+
+  /* Profile and Notification dropdowns - FORCE reset styles with !important to override header rules */
+  .profile-dropdown-mobile span,
+  .profile-dropdown-mobile h4,
+  .profile-dropdown-mobile p,
+  .notification-dropdown span,
+  .notification-dropdown h4,
+  .notification-dropdown p {
+    color: revert !important;
+    font-size: revert !important;
+    font-weight: revert !important;
   }
 
   /* Logo image container */
@@ -1000,11 +1074,8 @@ button,
      CART DROPDOWN - PREMIUM MOBILE STYLE
      Mantiene colores azul del proyecto
      ======================================== */
-
-  /* Cart header */
-  header .absolute h3[class*="text-sm"] {
-    color: #212529 !important;
-  }
+  /* Price */
+  /* <p className="text-xs font-black text-[#212529] mr-1">${order.totalUSD.toFixed(0)}</p> */
 
   /* Cart item name - dark text */
   header .absolute h4[class*="text-sm"] {
@@ -1993,5 +2064,797 @@ button,
   :focus-visible {
     outline: 2px solid var(--primary-blue) !important;
     outline-offset: 2px !important;
+  }
+
+  /* ========================================
+     [MOBILE ONLY] SCROLL PROGRESS BAR
+     Premium progress indicator at top of page
+     ======================================== */
+  .mobile-scroll-progress {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 0% !important;
+    height: 3px !important;
+    background: linear-gradient(90deg, #00FF88, #00FFC8, #00FF88) !important;
+    opacity: 0.7 !important;
+    z-index: 10000 !important;
+    transition: width 0.1s ease-out !important;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5) !important;
+  }
+
+  /* ========================================
+     [MOBILE ONLY] MICRO-INTERACTIONS
+     Premium button effects for mobile
+     ======================================== */
+
+  /* "Ver todo" button - bounce effect on touch */
+  section:nth-of-type(3)>div>div:first-child>a {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  section:nth-of-type(3)>div>div:first-child>a:active {
+    transform: scale(1.05) !important;
+    box-shadow: 0 6px 20px rgba(42, 99, 205, 0.4) !important;
+  }
+
+  /* "Solicitar Producto" button - pulse animation */
+  section:nth-of-type(5) a {
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  section:nth-of-type(5) a::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-radius: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.4s ease, height 0.4s ease !important;
+  }
+
+  section:nth-of-type(5) a:active::before {
+    width: 200px !important;
+    height: 200px !important;
+  }
+
+  section:nth-of-type(5) a:active {
+    transform: scale(1.02) !important;
+  }
+
+  /* ========================================
+     [MOBILE ONLY] WHATSAPP BUTTON POSITIONING
+     Adjusted for floating bottom nav - centered vertically on right side
+     ======================================== */
+
+  /* [MOBILE ONLY] WhatsApp button positioning - DO NOT OVERRIDE component styles */
+  /* The component now handles its own positioning with inline styles */
+  /* Only add touch feedback effects here */
+
+  /* WhatsApp pulse animation on touch */
+  .whatsapp-pulse-btn:active {
+    animation: whatsappTouchPulse 0.2s ease-in-out !important;
+  }
+
+  @keyframes whatsappTouchPulse {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+    }
+
+    50% {
+      transform: scale(1.08);
+      box-shadow: 0 8px 30px rgba(37, 211, 102, 0.7);
+    }
+
+    100% {
+      transform: scale(1);
+      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+    }
+  }
+
+  /* [MOBILE ONLY] WhatsApp ring pulse animation - expands and fades */
+  @keyframes whatsappRingPulse {
+
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    50% {
+      transform: scale(1.2);
+      opacity: 0;
+    }
+  }
+
+  /* ========================================
+     [MOBILE ONLY] FLOATING NAV ADJUSTMENTS
+     Override CSS for the new floating design
+     ======================================== */
+
+  /* [MOBILE ONLY] FORCE floating nav to be always visible and fixed */
+  .mobile-floating-nav {
+    position: fixed !important;
+    bottom: 12px !important;
+    left: 12px !important;
+    right: 12px !important;
+    z-index: 9999 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    /* DO NOT use display: flex here - let the component handle internal layout */
+    /* DO NOT use transform: none - allow touch feedback transforms */
+  }
+
+  /* [MOBILE ONLY] Blue neon glow animation for active nav item */
+  @keyframes navItemGlow {
+    0% {
+      box-shadow: 0 0 0 rgba(42, 99, 205, 0);
+    }
+
+    50% {
+      box-shadow: 0 0 20px rgba(42, 99, 205, 0.6), 0 0 40px rgba(42, 99, 205, 0.3);
+    }
+
+    100% {
+      box-shadow: 0 0 0 rgba(42, 99, 205, 0);
+    }
+  }
+
+  /* Apply glow animation on touch/click */
+  .mobile-floating-nav a:active,
+  .mobile-floating-nav button:active {
+    animation: navItemGlow 0.4s ease-out !important;
+  }
+
+  /* ========================================
+     [MOBILE ONLY] PREMIUM CARD EFFECTS
+     Enhanced product and category cards
+     ======================================== */
+
+  /* Product cards - enhanced shadows on touch */
+  .mobile-product-card>a>div,
+  .mobile-category-card {
+    transition: all 0.2s ease !important;
+  }
+
+  .mobile-product-card:active>a>div,
+  .mobile-category-card:active {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-2px) !important;
+  }
+
+  /* ========================================
+     [MOBILE ONLY] SECTION FADE-IN ANIMATIONS
+     Premium entrance effects
+     ======================================== */
+  @keyframes mobileFadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  section {
+    animation: mobileFadeInUp 0.6s ease-out both !important;
+  }
+
+  section:nth-of-type(1) {
+    animation-delay: 0s !important;
+  }
+
+  section:nth-of-type(2) {
+    animation-delay: 0.1s !important;
+  }
+
+  section:nth-of-type(3) {
+    animation-delay: 0.15s !important;
+  }
+
+  section:nth-of-type(4) {
+    animation-delay: 0.2s !important;
+  }
+
+  section:nth-of-type(5) {
+    animation-delay: 0.25s !important;
+  }
+
+  /* ========================================
+     [MOBILE ONLY] FOOTER ADJUSTMENTS
+     Account for floating nav bar
+     ======================================== */
+  footer {
+    padding-bottom: 100px !important;
+    /* Space for floating nav */
+  }
+
+  /* ========================================
+     [MOBILE ONLY] CONTENT OPTIMIZATION
+     ONLY affects content inside main - NOT nav, header, or heroes
+     ======================================== */
+
+  /* === TYPOGRAPHY FOR MAIN CONTENT ONLY === */
+  /* Exclude: nav, header, footer, section:first-of-type (hero) */
+
+  main section:not(:first-of-type) h1,
+  main div:not([class*="nav"]) h1:not(:first-child) {
+    font-size: 1.25rem !important;
+    /* 20px */
+    line-height: 1.2 !important;
+  }
+
+  main section:not(:first-of-type) h2 {
+    font-size: 1rem !important;
+    /* 16px */
+    line-height: 1.2 !important;
+  }
+
+  main section:not(:first-of-type) h3,
+  main div h3 {
+    font-size: 0.875rem !important;
+    /* 14px */
+    line-height: 1.25 !important;
+  }
+
+  main section:not(:first-of-type) p,
+  main div p {
+    font-size: 0.8125rem !important;
+    /* 13px */
+    line-height: 1.5 !important;
+  }
+
+  /* === CONTENT SECTIONS SPACING (NOT HEROES) === */
+
+  main section:not(:first-of-type) {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  main>div:not([class*="nav"]):not([class*="header"]) {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* === CARD CONTENT OPTIMIZATION === */
+
+  main [class*="rounded-2xl"]>div,
+  main [class*="rounded-xl"]>div {
+    padding: 0.75rem !important;
+  }
+
+  /* === GRID GAPS IN CONTENT === */
+
+  main .grid {
+    gap: 0.75rem !important;
+  }
+
+  /* === MARGINS IN CONTENT SECTIONS === */
+
+  main section:not(:first-of-type) .mb-16,
+  main section:not(:first-of-type) .mb-12,
+  main section:not(:first-of-type) .mb-10,
+  main section:not(:first-of-type) .mb-8 {
+    margin-bottom: 0.75rem !important;
+  }
+
+  main section:not(:first-of-type) .mb-6 {
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* === FIX TEXT OVERFLOW === */
+
+  main h1,
+  main h2 {
+    max-width: 100% !important;
+    word-break: break-word !important;
+  }
+
+
+  /* Card standardization */
+  main .rounded-xl,
+  main .rounded-2xl,
+  main .rounded-lg {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+  }
+
+  /* Remove extra shadow bloat */
+  main .shadow-xl,
+  main .shadow-2xl {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  /* === FORM INPUTS OPTIMIZATION === */
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+    /* Prevents iOS zoom */
+    padding: 0.875rem 1rem !important;
+    border-radius: 12px !important;
+    min-height: 48px !important;
+    /* Touch-friendly */
+  }
+
+  /* Focus states */
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(42, 99, 205, 0.2) !important;
+    border-color: #2a63cd !important;
+  }
+
+  /* === BUTTONS OPTIMIZATION === */
+
+  button,
+  a.btn,
+  [role="button"] {
+    min-height: 44px !important;
+    /* Apple's minimum touch target */
+    border-radius: 12px !important;
+    font-size: 0.9375rem !important;
+    font-weight: 600 !important;
+  }
+
+  /* Primary buttons */
+  button[class*="bg-blue"],
+  button[class*="bg-primary"],
+  a[class*="bg-blue"],
+  a[class*="bg-primary"] {
+    background: linear-gradient(135deg, #2a63cd 0%, #1e4ba3 100%) !important;
+    transition: all 0.2s ease !important;
+  }
+
+  button[class*="bg-blue"]:active,
+  button[class*="bg-primary"]:active,
+  a[class*="bg-blue"]:active,
+  a[class*="bg-primary"]:active {
+    transform: scale(0.98) !important;
+    box-shadow: 0 4px 20px rgba(42, 99, 205, 0.4) !important;
+  }
+
+  /* === CARDS & CONTAINERS === */
+
+  /* Product cards */
+  .mobile-product-card,
+  main [class*="product"]>a,
+  main [class*="card"] {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+  }
+
+  /* Category cards */
+  main [class*="category"],
+  main [class*="categoria"] {
+    border-radius: 16px !important;
+  }
+
+  /* === IMAGES OPTIMIZATION === */
+
+  /* Product images */
+  main img {
+    border-radius: 12px !important;
+  }
+
+  /* Prevent image overflow */
+  main img[class*="object-cover"] {
+    border-radius: 0 !important;
+  }
+
+  /* === SPACING CONSISTENCY === */
+
+  /* Section gaps */
+  main>section+section,
+  main>div+div {
+    margin-top: 1.5rem !important;
+  }
+
+  /* Grid gaps */
+  main .grid {
+    gap: 1rem !important;
+  }
+
+  /* === HERO SECTIONS === */
+
+  /* Hero text container */
+  section:first-of-type h1 {
+    font-size: 2rem !important;
+    /* 32px */
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  section:first-of-type p {
+    font-size: 1rem !important;
+    opacity: 0.9 !important;
+  }
+
+  /* Force Hero auto height to remove gaps */
+  section.relative,
+  section:first-of-type {
+    min-height: auto !important;
+    height: auto !important;
+    padding-bottom: 2rem !important;
+    /* Minimum padding to look good */
+  }
+
+  /* === ANIMATIONS === */
+
+  /* Smooth scroll behavior */
+  html {
+    scroll-behavior: smooth !important;
+  }
+
+  /* Stagger animations for lists */
+  main ul>li,
+  main .grid>* {
+    animation: mobileFadeInUp 0.4s ease-out both !important;
+  }
+
+  main ul>li:nth-child(1),
+  main .grid>*:nth-child(1) {
+    animation-delay: 0s !important;
+  }
+
+  main ul>li:nth-child(2),
+  main .grid>*:nth-child(2) {
+    animation-delay: 0.05s !important;
+  }
+
+  main ul>li:nth-child(3),
+  main .grid>*:nth-child(3) {
+    animation-delay: 0.1s !important;
+  }
+
+  main ul>li:nth-child(4),
+  main .grid>*:nth-child(4) {
+    animation-delay: 0.15s !important;
+  }
+
+  main ul>li:nth-child(5),
+  main .grid>*:nth-child(5) {
+    animation-delay: 0.2s !important;
+  }
+
+  main ul>li:nth-child(6),
+  main .grid>*:nth-child(6) {
+    animation-delay: 0.25s !important;
+  }
+
+  /* === SKELETON LOADERS === */
+
+  [class*="skeleton"],
+  [class*="loading"] {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%) !important;
+    /* <div className="relative flex items-center gap-2 lg:gap-3">
+            <div className="flex-shrink-0 w-8 lg:w-10 h-8 lg:h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/10">
+              <FiPercent className="w-4 lg:w-5 h-4 lg:h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-gray-800 text-[11px] lg:text-sm mb-0 flex items-center gap-1.5">
+                <span className="truncate">¡Solicita descuentos exclusivos!</span>
+                <span className="px-1.5 py-0.5 bg-[#2a63cd] text-white text-[8px] font-bold rounded-full">NUEVO</span>
+              </h3>
+              <p className="text-[10px] lg:text-sm text-gray-500 truncate">
+                Guarda productos y pide precio especial.
+              </p>
+            </div>
+            <button
+              onClick={dismissInfoBanner}
+              className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Cerrar"
+            >
+              <FiX className="w-3.5 h-3.5" />
+            </button>
+          </div> */
+    background-size: 200% 100% !important;
+    animation: shimmer 1.5s infinite !important;
+    border-radius: 8px !important;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* === ACCESSIBILITY === */
+
+  /* Better focus visibility */
+  :focus-visible {
+    outline: 2px solid #2a63cd !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Disabled states */
+  [disabled],
+  .disabled {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+  }
+
+  /* === SAFE AREAS === */
+
+  /* Account for notch/dynamic island */
+  main {
+    padding-bottom: 100px !important;
+    /* Space for floating nav */
+  }
+
+  /* Status bar safe area */
+  header {
+    padding-top: max(0.5rem, env(safe-area-inset-top)) !important;
+  }
+
+  /* ============================================
+     🎛️ CLIENTE PANEL - MOBILE OPTIMIZATION
+     ============================================
+     Compact fonts, reduced heights, clean design
+     ============================================ */
+
+  /* Customer Panel Header - 48px height to match homepage style */
+  .customer-panel-header {
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    padding-top: 0 !important;
+  }
+
+  /* Customer Panel - Text sizes in header */
+  .customer-panel-header h1,
+  .customer-panel-header span {
+    font-size: 0.875rem !important;
+  }
+
+  /* CRITICAL: Ensure the floating nav stays fixed */
+  .mobile-floating-nav {
+    position: fixed !important;
+    bottom: 12px !important;
+    left: 12px !important;
+    right: 12px !important;
+    z-index: 9999 !important;
+  }
+
+  /* ============================================
+     💰 BALANCE PAGE - MOBILE PREMIUM ANIMATIONS
+     ============================================ */
+
+  /* Hero balance entrance animation */
+  @keyframes balanceReveal {
+    0% {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Skeleton shimmer for loading states */
+  @keyframes mobileShimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Touch ripple effect */
+  @keyframes touchRipple {
+    0% {
+      transform: scale(0);
+      opacity: 0.5;
+    }
+
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+
+  /* Card press animation */
+  .balance-card-touch:active {
+    transform: scale(0.97) !important;
+    transition: transform 0.1s ease-out !important;
+  }
+
+  /* Stats card hover state */
+  .stats-card-mobile:active {
+    transform: scale(0.98) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  /* Transaction item touch feedback */
+  .transaction-item-mobile:active {
+    background: rgba(0, 0, 0, 0.02) !important;
+    transform: scale(0.995) !important;
+  }
+
+  /* Filter pill active state */
+  .filter-pill-mobile:active {
+    transform: scale(0.9) !important;
+  }
+
+  /* Floating CTA button glow */
+  .cta-button-glow {
+    box-shadow: 0 8px 32px rgba(42, 99, 205, 0.25),
+      0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+  }
+
+  .cta-button-glow:active {
+    box-shadow: 0 4px 16px rgba(42, 99, 205, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+    transform: scale(0.98) !important;
+  }
+
+  /* Subtle bounce for empty state icon */
+  @keyframes gentleBounce {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  .bounce-subtle {
+    animation: gentleBounce 2s ease-in-out infinite;
+  }
+}
+
+/* ============================================
+   📱 ANDROID HIGH-DENSITY DEVICES OPTIMIZATION
+   For Full HD+ (1080x2460) and QHD+ (3120x1440)
+   These devices have CSS viewports around 360-380px
+   ============================================ */
+@media (max-width: 380px) {
+  /* Customer Panel - Ultra compact mode */
+
+  /* Ensure all text stays on single line */
+  .lg\:hidden h3,
+  .lg\:hidden .font-bold {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Order numbers should never wrap */
+  .lg\:hidden h3[class*="text-xs"],
+  .lg\:hidden h3[class*="text-sm"] {
+    font-size: 11px !important;
+  }
+
+  /* Reduce hero section heights */
+  .lg\:hidden .rounded-2xl[class*="bg-gradient"],
+  .lg\:hidden .rounded-3xl[class*="relative"] {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+
+  /* Compact stats cards */
+  .lg\:hidden .bg-white\/15 {
+    padding: 6px 8px !important;
+  }
+
+  /* Smaller filter pills */
+  .lg\:hidden button[class*="rounded-full"] {
+    padding: 4px 8px !important;
+    font-size: 9px !important;
+  }
+
+  /* Center input placeholders */
+  .lg\:hidden input::placeholder {
+    text-align: center !important;
+  }
+
+  /* Compact order/transaction cards */
+  .lg\:hidden .space-y-1\.5>div,
+  .lg\:hidden .space-y-2>div {
+    padding: 8px !important;
+  }
+
+  /* Fix icon button alignment */
+  .lg\:hidden button[class*="flex"][class*="items-center"][class*="justify-center"],
+  .lg\:hidden a[class*="flex"][class*="items-center"][class*="justify-center"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Reduce main balance font */
+  .lg\:hidden .text-5xl,
+  .lg\:hidden .text-4xl {
+    font-size: 2rem !important;
+  }
+
+  .lg\:hidden .text-3xl {
+    font-size: 1.5rem !important;
+  }
+
+  /* Compact action buttons */
+  .lg\:hidden .w-10.h-10 {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .lg\:hidden .w-8.h-8 {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  /* Reduce gaps */
+  .lg\:hidden .gap-3 {
+    gap: 8px !important;
+  }
+
+  .lg\:hidden .gap-2 {
+    gap: 6px !important;
+  }
+
+  /* Reduce hero balance text shadow */
+  .lg\:hidden h1[style*="textShadow"] {
+    font-size: 1.75rem !important;
+  }
+
+  /* Status badges more compact */
+  .lg\:hidden span[class*="rounded-full"][class*="text-\[8px\]"],
+  .lg\:hidden span[class*="rounded-full"][class*="text-\[9px\]"] {
+    padding: 2px 6px !important;
+    font-size: 7px !important;
+  }
+
+  /* Transaction/order info text */
+  .lg\:hidden p[class*="text-\[10px\]"],
+  .lg\:hidden p[class*="text-\[11px\]"] {
+    font-size: 9px !important;
+  }
+
+  /* Price text */
+  .lg\:hidden .text-sm.font-black,
+  .lg\:hidden .text-base.font-black {
+    font-size: 13px !important;
+  }
+
+  /* Search bar more compact with better padding for placeholder visibility */
+  .lg\:hidden input[type="text"] {
+    padding: 8px 36px !important;
+    font-size: 12px !important;
+  }
+
+  .lg\:hidden input[type="text"]::placeholder {
+    color: #9ca3af !important;
+    opacity: 1 !important;
+  }
+
+  /* Search icons positioning - push left icon closer to edge */
+  .lg\:hidden .relative>svg:first-child {
+    left: 10px !important;
   }
 }

@@ -194,27 +194,30 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
 
     // Use portal to render outside of parent container constraints
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[700px] max-h-[90vh] overflow-hidden animate-scaleIn flex flex-col">
+        <div className="fixed inset-0 z-[100001] flex items-center justify-center p-3 lg:p-4 bg-black/70 backdrop-blur-sm">
+            {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL */}
+            <button
+                onClick={onClose}
+                className="fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all z-10"
+                aria-label="Cerrar"
+            >
+                <FiX className="w-6 h-6 text-gray-700" />
+            </button>
+
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[700px] max-h-[90vh] overflow-hidden animate-scaleIn flex flex-col">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                            <FiFileText className="w-5 h-5" />
+                <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white px-4 lg:px-6 py-3 lg:py-4">
+                    <div className="flex items-center gap-2 lg:gap-3">
+                        <div className="w-8 h-8 lg:w-10 lg:h-10 bg-white/20 rounded-lg lg:rounded-xl flex items-center justify-center">
+                            <FiFileText className="w-4 h-4 lg:w-5 lg:h-5" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold">Términos y Condiciones de Recarga</h2>
-                            <p className="text-sm text-white/70">
-                                {step === 'terms' ? 'Paso 1 de 2: Leer términos' : 'Paso 2 de 2: Firmar aceptación'}
+                            <h2 className="text-sm lg:text-lg font-bold">Términos de Recarga</h2>
+                            <p className="text-[10px] lg:text-sm text-white/70">
+                                {step === 'terms' ? 'Paso 1: Leer términos' : 'Paso 2: Firmar'}
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                    >
-                        <FiX className="w-5 h-5" />
-                    </button>
                 </div>
 
                 {step === 'terms' ? (

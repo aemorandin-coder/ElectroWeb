@@ -71,48 +71,58 @@ export default function CustomerDashboard() {
 
   return (
     <div className="h-full flex flex-col gap-2 lg:gap-3">
-      {/* Hero Welcome Section - Responsive */}
+      {/* Hero Welcome Section - Compact with icon stats */}
       <div className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#162d6b] rounded-lg lg:rounded-xl p-3 lg:p-4 text-white overflow-hidden flex-shrink-0">
         <div className="absolute top-0 right-0 w-48 lg:w-72 h-48 lg:h-72 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-36 lg:w-56 h-36 lg:h-56 bg-blue-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
 
-        <div className="relative z-10">
-          {/* Greeting - Always visible */}
-          <div className="mb-2 lg:mb-0 lg:flex lg:items-center lg:justify-between">
-            <div className="flex-shrink-0">
-              <h1 className="text-lg lg:text-xl font-black mb-0.5">
-                {greeting}, {session?.user?.name?.split(' ')[0] || 'Cliente'}
-              </h1>
-              <p className="text-blue-100 text-[10px] lg:text-xs">Gestiona tus pedidos, saldo y preferencias</p>
+        <div className="relative z-10 flex flex-col gap-3">
+          {/* Greeting - Title */}
+          <div className="flex-shrink-0">
+            <h1 className="text-lg lg:text-xl font-black mb-0.5 leading-tight">
+              {greeting},<br className="sm:hidden" /> {session?.user?.name?.split(' ')[0] || 'Cliente'}
+            </h1>
+            <p className="text-blue-100 text-[10px] lg:text-xs hidden sm:block">Gestiona tus pedidos y preferencias</p>
+          </div>
+
+          {/* Stats - Icons under text on mobile, responsive row */}
+          <div className="flex items-center justify-between gap-2 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center gap-2">
+              {/* Pedidos */}
+              <div className="relative flex-shrink-0">
+                <div className="w-10 h-10 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
+                  <FiShoppingBag className="w-5 h-5 text-white" />
+                </div>
+                <span className="absolute -top-1 -right-1 bg-white text-[#2a63cd] text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                  {stats?.orders || 0}
+                </span>
+              </div>
+
+              {/* En Proceso */}
+              <div className="relative flex-shrink-0">
+                <div className="w-10 h-10 bg-amber-500/30 backdrop-blur-sm rounded-xl flex items-center justify-center border border-amber-400/30">
+                  <FiClock className="w-5 h-5 text-amber-200 animate-pulse" />
+                </div>
+                <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                  {stats?.pending || 0}
+                </span>
+              </div>
+
+              {/* Favoritos */}
+              <div className="relative flex-shrink-0">
+                <div className="w-10 h-10 bg-pink-500/30 backdrop-blur-sm rounded-xl flex items-center justify-center border border-pink-400/30">
+                  <FiHeart className="w-5 h-5 text-pink-200" />
+                </div>
+                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                  {stats?.wishlist || 0}
+                </span>
+              </div>
             </div>
 
-            {/* Stats Row - Horizontal scroll on mobile, flex on desktop */}
-            <div className="flex items-center gap-2 mt-2 lg:mt-0 overflow-x-auto scrollbar-hide pb-1 lg:pb-0">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2 lg:px-3 py-1.5 lg:py-2 border border-white/10 text-center flex-shrink-0 min-w-[60px] lg:min-w-[70px]">
-                <div className="flex items-center gap-1 justify-center mb-0.5">
-                  <FiShoppingBag className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-blue-200" />
-                  <span className="text-[8px] lg:text-[10px] text-blue-200">Pedidos</span>
-                </div>
-                <p className="text-sm lg:text-lg font-bold">{stats?.orders || 0}</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2 lg:px-3 py-1.5 lg:py-2 border border-white/10 text-center flex-shrink-0 min-w-[60px] lg:min-w-[70px]">
-                <div className="flex items-center gap-1 justify-center mb-0.5">
-                  <FiClock className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-amber-300" />
-                  <span className="text-[8px] lg:text-[10px] text-blue-200">Proceso</span>
-                </div>
-                <p className="text-sm lg:text-lg font-bold">{stats?.pending || 0}</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2 lg:px-3 py-1.5 lg:py-2 border border-white/10 text-center flex-shrink-0 min-w-[60px] lg:min-w-[70px]">
-                <div className="flex items-center gap-1 justify-center mb-0.5">
-                  <FiHeart className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-pink-300" />
-                  <span className="text-[8px] lg:text-[10px] text-blue-200">Favoritos</span>
-                </div>
-                <p className="text-sm lg:text-lg font-bold">{stats?.wishlist || 0}</p>
-              </div>
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 lg:px-4 py-1.5 lg:py-2 border border-white/20 text-center flex-shrink-0">
-                <p className="text-blue-200 text-[8px] lg:text-[10px]">Saldo</p>
-                <p className="text-base lg:text-xl font-black">${stats?.balance?.toFixed(2) || '0.00'}</p>
-              </div>
+            {/* Saldo - Right aligned on mobile */}
+            <div className="bg-white/20 backdrop-blur-md rounded-xl px-3 py-1.5 border border-white/20 text-right min-w-[80px]">
+              <p className="text-blue-200 text-[9px] uppercase font-black tracking-tighter">Saldo</p>
+              <p className="text-base lg:text-xl font-black">${stats?.balance?.toFixed(2) || '0.00'}</p>
             </div>
           </div>
         </div>

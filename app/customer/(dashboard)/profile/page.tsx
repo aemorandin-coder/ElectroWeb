@@ -448,25 +448,25 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-3">
-      {/* Header with Save Button */}
-      <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-xl p-4 text-white shadow-lg relative overflow-hidden">
+    <div className="space-y-2 lg:space-y-3">
+      {/* Header with Save Button - Mobile Optimized */}
+      <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-lg lg:rounded-xl p-3 lg:p-4 text-white shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
         <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+          <div className="flex items-center gap-2 lg:gap-3">
+            <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <FiUser className="w-4 h-4" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">Mi Perfil</h1>
-              <p className="text-xs text-blue-100">Gestiona tu información personal</p>
+              <h1 className="text-base lg:text-xl font-bold">Perfil</h1>
+              <p className="text-[10px] lg:text-xs text-blue-100">Información personal</p>
             </div>
           </div>
           {activeTab === 'personal' && (
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2.5 bg-white text-[#2a63cd] font-bold rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+              className="px-3 lg:px-6 py-2 lg:py-2.5 bg-white text-[#2a63cd] font-bold rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 lg:gap-2 shadow-lg hover:shadow-xl active:scale-95 text-xs lg:text-base"
             >
               {saving ? (
                 <>
@@ -474,12 +474,12 @@ export default function ProfilePage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Guardando...
+                  <span className="hidden sm:inline">Guardando...</span>
                 </>
               ) : (
                 <>
                   <FiSave className="w-4 h-4" />
-                  Guardar Cambios
+                  <span className="hidden sm:inline">Guardar</span>
                 </>
               )}
             </button>
@@ -520,12 +520,12 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        <div className="p-3">
+        <div className="p-2 lg:p-3">
           {activeTab === 'personal' ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
               {/* Profile Picture */}
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-xl border border-[#e9ecef] shadow-sm p-3">
+                <div className="bg-white rounded-lg lg:rounded-xl border border-[#e9ecef] shadow-sm p-3">
                   <div className="flex flex-col items-center">
                     <div className="relative mb-3 group">
                       <input
@@ -604,7 +604,7 @@ export default function ProfilePage() {
                           value={profile.name}
                           onChange={(e) => !isNameLocked && setProfile({ ...profile, name: e.target.value })}
                           disabled={isNameLocked}
-                          className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          className="w-full px-2.5 py-1.5 text-xs lg:text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] disabled:bg-gray-100 disabled:cursor-not-allowed"
                           placeholder="Ej: Juan Pérez"
                         />
                         {isNameLocked && (
@@ -631,8 +631,8 @@ export default function ProfilePage() {
                           onChange={(e) => !profile.idNumber && setProfile({ ...profile, idNumber: e.target.value })}
                           disabled={!!profile.idNumber}
                           maxLength={12}
-                          className="w-full px-2 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] disabled:bg-gray-100 disabled:cursor-not-allowed uppercase"
-                          placeholder="V-12345678"
+                          className="w-full px-2 py-1.5 text-xs lg:text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] disabled:bg-gray-100 disabled:cursor-not-allowed uppercase"
+                          placeholder="V-1234..."
                         />
                         {profile.idNumber && (
                           <div className="absolute hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-xs rounded-lg px-3 py-2 z-20 shadow-xl">
@@ -658,7 +658,7 @@ export default function ProfilePage() {
                             <button
                               type="button"
                               onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                              className="h-full px-1.5 py-2 bg-white border border-[#e9ecef] rounded-lg flex items-center gap-0.5 hover:bg-gray-50 transition-all"
+                              className="h-full px-1.5 py-1.5 bg-white border border-[#e9ecef] rounded-lg flex items-center gap-0.5 hover:bg-gray-50 transition-all"
                             >
                               <div className="relative w-4 h-3 shadow-sm rounded-sm overflow-hidden flex-shrink-0">
                                 <Image
@@ -706,7 +706,7 @@ export default function ProfilePage() {
                             value={profile.phone}
                             onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                             maxLength={11}
-                            className="flex-1 min-w-0 px-2 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
+                            className="flex-1 min-w-0 px-2 py-1.5 text-xs lg:text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
                             placeholder="4121234567"
                           />
                         </div>
@@ -722,7 +722,7 @@ export default function ProfilePage() {
                           type="email"
                           value={profile.email}
                           disabled
-                          className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg bg-[#f8f9fa] text-[#6a6c6b] cursor-not-allowed"
+                          className="w-full px-2.5 py-1.5 text-xs lg:text-sm border border-[#e9ecef] rounded-lg bg-[#f8f9fa] text-[#6a6c6b] cursor-not-allowed"
                         />
                       </div>
 
@@ -736,7 +736,7 @@ export default function ProfilePage() {
                           type="date"
                           value={profile.birthdate}
                           onChange={(e) => setProfile({ ...profile, birthdate: e.target.value })}
-                          className="w-full px-2 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
+                          className="w-full px-2 py-1.5 text-xs lg:text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
                         />
                       </div>
 
@@ -748,13 +748,12 @@ export default function ProfilePage() {
                         <select
                           value={profile.gender}
                           onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
-                          className="w-full px-2 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
+                          className="w-full px-2 py-1.5 text-xs lg:text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
                         >
-                          <option value="">Seleccionar...</option>
+                          <option value="prefer_not_to_say">No decir</option>
                           <option value="male">Masculino</option>
                           <option value="female">Femenino</option>
                           <option value="other">Otro</option>
-                          <option value="prefer_not_to_say">Prefiero no decir</option>
                         </select>
                       </div>
                     </div>
@@ -764,7 +763,7 @@ export default function ProfilePage() {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <h2 className="text-base font-bold text-[#212529]">Dirección de Residencia</h2>
-                      <div className="group relative">
+                      <div className="group relative hidden sm:block">
                         <FiAlertCircle className="w-4 h-4 text-[#2a63cd] cursor-help" />
                         <div className="absolute hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-xs rounded-lg px-3 py-2 z-20 shadow-xl">
                           <div className="relative">
@@ -776,32 +775,30 @@ export default function ProfilePage() {
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                      <div className="md:col-span-1">
-                        <label className="block text-xs font-medium text-[#212529] mb-1.5">
-                          <FiMapPin className="inline w-3.5 h-3.5 mr-1" />
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+                      <div className="col-span-1">
+                        <label className="block text-xs font-medium text-[#212529] mb-1">
                           Ciudad
                         </label>
                         <input
                           type="text"
                           value={profile.city}
                           onChange={(e) => setProfile({ ...profile, city: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
+                          className="w-full px-2 py-1.5 text-xs lg:text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
                           placeholder="Guanare"
                         />
                       </div>
-                      <div className="md:col-span-1">
-                        <label className="block text-xs font-medium text-[#212529] mb-1.5">
-                          <FiMapPin className="inline w-3.5 h-3.5 mr-1" />
+                      <div className="col-span-1">
+                        <label className="block text-xs font-medium text-[#212529] mb-1">
                           Estado
                         </label>
                         <select
                           value={profile.state}
                           onChange={(e) => setProfile({ ...profile, state: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
+                          className="w-full px-2 py-1.5 text-xs lg:text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
                           disabled={profile.country !== 'Venezuela'}
                         >
-                          <option value="">Seleccionar...</option>
+                          <option value="">Sel...</option>
                           {profile.country === 'Venezuela' ? (
                             VENEZUELA_STATES.map(state => (
                               <option key={state} value={state}>{state}</option>
@@ -811,15 +808,14 @@ export default function ProfilePage() {
                           )}
                         </select>
                       </div>
-                      <div className="md:col-span-2">
-                        <label className="block text-xs font-medium text-[#212529] mb-1.5">
-                          <FiGlobe className="inline w-3.5 h-3.5 mr-1" />
+                      <div className="col-span-2">
+                        <label className="block text-xs font-medium text-[#212529] mb-1">
                           País
                         </label>
                         <select
                           value={profile.country}
                           onChange={(e) => setProfile({ ...profile, country: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
+                          className="w-full px-2 py-1.5 text-xs lg:text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd]"
                         >
                           <option value="Venezuela">Venezuela</option>
                         </select>
@@ -844,7 +840,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <label className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${profile.receiptType === 'PERSON'
+                      <label className={`flex items-center gap-2 lg:gap-3 p-2 lg:p-3 border-2 rounded-lg cursor-pointer transition-all ${profile.receiptType === 'PERSON'
                         ? 'border-[#2a63cd] bg-blue-50'
                         : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
                         }`}>
@@ -865,7 +861,7 @@ export default function ProfilePage() {
                         </div>
                       </label>
                       <div className="relative group">
-                        <label className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${profile.receiptType === 'BUSINESS'
+                        <label className={`flex items-center gap-2 lg:gap-3 p-2 lg:p-3 border-2 rounded-lg transition-all ${profile.receiptType === 'BUSINESS'
                           ? 'border-[#2a63cd] bg-blue-50'
                           : 'border-[#e9ecef]'
                           } ${profile.businessVerificationStatus !== 'APPROVED'
@@ -1034,46 +1030,46 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div
-                  className="bg-white rounded-xl p-4 border border-[#e9ecef] shadow-sm hover:shadow-lg transition-all"
+                  className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-[#e9ecef] shadow-sm hover:shadow-lg transition-all"
                   style={{ animation: 'fadeInUp 0.5s ease-out 0ms both' }}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
-                      <FiPackage className="w-5 h-5 text-white" />
+                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
+                      <FiPackage className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     </div>
-                    <p className="text-3xl font-black text-[#2a63cd]">{stats.totalOrders}</p>
+                    <p className="text-xl lg:text-3xl font-black text-[#2a63cd]">{stats.totalOrders}</p>
                   </div>
-                  <h3 className="font-semibold text-sm text-[#6a6c6b] mt-2">Total Pedidos</h3>
+                  <h3 className="font-bold text-[10px] lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Pedidos</h3>
                 </div>
 
                 <div
-                  className="bg-white rounded-xl p-4 border border-[#e9ecef] shadow-sm hover:shadow-lg transition-all"
+                  className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-[#e9ecef] shadow-sm hover:shadow-lg transition-all"
                   style={{ animation: 'fadeInUp 0.5s ease-out 100ms both' }}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
-                      <HiMiniBanknotes className="w-5 h-5 text-white" />
+                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
+                      <HiMiniBanknotes className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     </div>
                     <div className="text-right">
-                      <p className="text-3xl font-black text-[#2a63cd]">${stats.totalSpent.toFixed(2)}</p>
+                      <p className="text-xl lg:text-3xl font-black text-[#2a63cd]">${stats.totalSpent.toFixed(0)}</p>
                     </div>
                   </div>
-                  <h3 className="font-semibold text-sm text-[#6a6c6b] mt-2">Total Gastado</h3>
+                  <h3 className="font-bold text-[10px] lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Gastado</h3>
                 </div>
 
                 <div
-                  className="bg-white rounded-xl p-4 border border-[#e9ecef] shadow-sm hover:shadow-lg transition-all"
+                  className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-[#e9ecef] shadow-sm hover:shadow-lg transition-all"
                   style={{ animation: 'fadeInUp 0.5s ease-out 200ms both' }}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
-                      <FiAward className="w-5 h-5 text-white" />
+                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
+                      <FiAward className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     </div>
-                    <p className="text-lg font-bold text-[#2a63cd]">
+                    <p className="text-xs lg:text-lg font-bold text-[#2a63cd]">
                       {new Date(stats.memberSince).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
                     </p>
                   </div>
-                  <h3 className="font-semibold text-sm text-[#6a6c6b] mt-2">Miembro Desde</h3>
+                  <h3 className="font-bold text-[10px] lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Cliente</h3>
                 </div>
               </div>
 

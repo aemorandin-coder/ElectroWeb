@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
                 // No borramos físicamente, lo marcamos como inactivo/borrador o archivado
                 await prisma.product.update({
                     where: { sku: data.sku },
-                    data: { isActive: false, status: 'ARCHIVED' }
+                    data: { status: 'ARCHIVED' }
                 });
                 break;
 

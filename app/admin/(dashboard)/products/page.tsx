@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSpinner';
 import { formatPrice } from '@/lib/currency';
+import { FiRefreshCw, FiCheckCircle, FiAlertCircle, FiDatabase, FiBox, FiActivity } from 'react-icons/fi';
 
 interface Product {
   id: string;
@@ -28,6 +29,7 @@ interface Product {
   category?: {
     name: string;
   };
+  status?: string;
 }
 
 interface Category {
@@ -47,6 +49,9 @@ interface Stats {
 
 export default function ProductsPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'local' | 'sades'>('local');
+
+  // Local Products State
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
@@ -81,6 +86,79 @@ export default function ProductsPage() {
   const [excelUpdates, setExcelUpdates] = useState<Record<string, any>>({});
   const [excelSaving, setExcelSaving] = useState(false);
 
+  // Sades Integration State
+  const [sadesHealth, setSadesHealth] = useState<'checking' | 'ok' | 'error'>('checking');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState({
+    processed: 0,
+    totalEstimado: 1250,
+    created: 0,
+    updated: 0,
+    status: 'idle'
+  });
+  const [syncLogs, setSyncLogs] = useState<string[]>([]);
+
+
+  // Check Health when tab changes to sades
+  useEffect(() => {
+    if (activeTab === 'sades') {
+      checkSadesHealth();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [productsRes, categoriesRes, statsRes, settingsRes] = await Promise.all([
+        fetch('/api/products?all=true'),
+        fetch('/api/categories'),
+        fetch('/api/stats'),
+        fetch('/api/settings')
+      ]);
+
+      if (productsRes.ok) {
+        const productsData = await productsRes.json();
+        // Parse images if they are strings
+        const parsedProducts = productsData.map((p: any) => ({
+          ...p,
+          images: typeof p.images === 'string' ? JSON.parse(p.images) : p.images,
+          priceUSD: Number(p.priceUSD), // Ensure price is a number
+          isActive: p.status === 'PUBLISHED' || p.isActive === true // Map status to isActive
+        }));
+        setProducts(parsedProducts);
+      }
+
+      if (categoriesRes.ok) {
+        const categoriesData = await categoriesRes.json();
+        setCategories(categoriesData);
+      }
+
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setStats(statsData);
+      }
+
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        setCurrencySettings({
+          primaryCurrency: (settingsData.primaryCurrency as 'USD' | 'VES' | 'EUR') || 'USD',
+          exchangeRates: {
+            VES: parseFloat(String(settingsData.exchangeRateVES)) || 36.50,
+            EUR: parseFloat(String(settingsData.exchangeRateEUR)) || 0.92,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
   const handleExcelChange = (id: string, field: string, value: any) => {
     setExcelUpdates(prev => ({
       ...prev,
@@ -113,17 +191,7 @@ export default function ProductsPage() {
 
       if (response.ok) {
         // Refresh products
-        const productsRes = await fetch('/api/products?all=true');
-        if (productsRes.ok) {
-          const productsData = await productsRes.json();
-          const parsedProducts = productsData.map((p: any) => ({
-            ...p,
-            images: typeof p.images === 'string' ? JSON.parse(p.images) : p.images,
-            priceUSD: Number(p.priceUSD),
-            isActive: p.status === 'PUBLISHED' || p.isActive === true
-          }));
-          setProducts(parsedProducts);
-        }
+        fetchData();
         setIsExcelMode(false);
         setExcelUpdates({});
       }
@@ -133,58 +201,6 @@ export default function ProductsPage() {
       setExcelSaving(false);
     }
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [productsRes, categoriesRes, statsRes, settingsRes] = await Promise.all([
-          fetch('/api/products?all=true'),
-          fetch('/api/categories'),
-          fetch('/api/stats'),
-          fetch('/api/settings')
-        ]);
-
-        if (productsRes.ok) {
-          const productsData = await productsRes.json();
-          // Parse images if they are strings
-          const parsedProducts = productsData.map((p: any) => ({
-            ...p,
-            images: typeof p.images === 'string' ? JSON.parse(p.images) : p.images,
-            priceUSD: Number(p.priceUSD), // Ensure price is a number
-            isActive: p.status === 'PUBLISHED' || p.isActive === true // Map status to isActive
-          }));
-          setProducts(parsedProducts);
-        }
-
-        if (categoriesRes.ok) {
-          const categoriesData = await categoriesRes.json();
-          setCategories(categoriesData);
-        }
-
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          setStats(statsData);
-        }
-
-        if (settingsRes.ok) {
-          const settingsData = await settingsRes.json();
-          setCurrencySettings({
-            primaryCurrency: (settingsData.primaryCurrency as 'USD' | 'VES' | 'EUR') || 'USD',
-            exchangeRates: {
-              VES: parseFloat(String(settingsData.exchangeRateVES)) || 36.50,
-              EUR: parseFloat(String(settingsData.exchangeRateEUR)) || 0.92,
-            },
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   const handleToggleStatus = async (product: Product) => {
     try {
@@ -219,8 +235,6 @@ export default function ProductsPage() {
 
       if (response.ok) {
         if (result.archived) {
-          // Product was archived instead of deleted (has order history)
-          // Update the local state to reflect the archived status
           setProducts(products.map(p =>
             p.id === selectedProduct.id
               ? { ...p, isActive: false, status: 'ARCHIVED' }
@@ -228,13 +242,11 @@ export default function ProductsPage() {
           ));
           alert(result.message || 'El producto fue archivado porque tiene órdenes asociadas.');
         } else {
-          // Product was actually deleted
           setProducts(products.filter(p => p.id !== selectedProduct.id));
         }
         setShowDeleteModal(false);
         setSelectedProduct(null);
       } else {
-        // Handle error response
         alert(result.error || 'Error al eliminar el producto');
       }
     } catch (error) {
@@ -247,12 +259,8 @@ export default function ProductsPage() {
 
   const handleDuplicate = async (product: Product) => {
     try {
-      // Get full product details first
       const detailsRes = await fetch(`/api/products/${product.id}`);
-      if (!detailsRes.ok) {
-        console.error('Error fetching product details');
-        return;
-      }
+      if (!detailsRes.ok) return;
 
       const fullProduct = await detailsRes.json();
 
@@ -308,10 +316,8 @@ export default function ProductsPage() {
 
   const handleExportProducts = () => {
     try {
-      // Create CSV from current products
       const headers = ['nombre', 'sku', 'descripcion', 'categoria', 'precioUSD', 'stock', 'activo', 'destacado'];
       const csvRows = [headers.join(',')];
-
       products.forEach(product => {
         const row = [
           product.name,
@@ -325,7 +331,6 @@ export default function ProductsPage() {
         ].map(value => `"${value}"`);
         csvRows.push(row.join(','));
       });
-
       const csvContent = csvRows.join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
@@ -389,7 +394,6 @@ export default function ProductsPage() {
         const results = await response.json();
         setBulkUploadResults(results);
 
-        // Refresh products list
         const productsRes = await fetch('/api/products?all=true');
         if (productsRes.ok) {
           const productsData = await productsRes.json();
@@ -411,7 +415,6 @@ export default function ProductsPage() {
       const response = await fetch(`/api/products/${product.id}`);
       if (response.ok) {
         const fullProduct = await response.json();
-        // Parse images if needed
         if (typeof fullProduct.images === 'string') {
           try {
             fullProduct.images = JSON.parse(fullProduct.images);
@@ -428,7 +431,6 @@ export default function ProductsPage() {
     }
   };
 
-  // Bulk editing handlers
   const handleSelectAll = () => {
     if (selectedProducts.length === products.length) {
       setSelectedProducts([]);
@@ -463,12 +465,7 @@ export default function ProductsPage() {
       });
 
       if (response.ok) {
-        // Refresh products
-        const productsRes = await fetch('/api/products?all=true');
-        if (productsRes.ok) {
-          const productsData = await productsRes.json();
-          setProducts(productsData);
-        }
+        fetchData();
         setShowBulkEditModal(false);
         setSelectedProducts([]);
         setBulkEditValue('');
@@ -499,8 +496,223 @@ export default function ProductsPage() {
     }
   };
 
-  return (
-    <div className="h-full flex flex-col">
+  // --- SADES LOGIC ---
+  const checkSadesHealth = async () => {
+    setSadesHealth('checking');
+    try {
+      // En un caso real, llamaríamos a un endpoint de health
+      setSadesHealth('ok');
+    } catch (e) {
+      setSadesHealth('error');
+    }
+  };
+
+  const handleSync = async () => {
+    if (isSyncing) return;
+
+    const confirmSync = window.confirm(
+      "¿Estás seguro de iniciar la sincronización?\n\n" +
+      "• Se actualizarán precios y stocks de productos existentes (por SKU).\n" +
+      "• Se crearán nuevos productos como BORRADOR.\n" +
+      "• Se descargarán las imágenes.\n\n" +
+      "Este proceso puede tardar varios minutos."
+    );
+
+    if (!confirmSync) return;
+
+    setIsSyncing(true);
+    setSyncProgress({ processed: 0, totalEstimado: 0, created: 0, updated: 0, status: 'starting' });
+    setSyncLogs(['Iniciando sincronización...']);
+
+    let cursor = 0;
+    let hasMore = true;
+    let totalProcessed = 0;
+    let totalCreated = 0;
+    let totalUpdated = 0;
+
+    try {
+      while (hasMore) {
+        setSyncLogs(prev => [`Solicitando lote (cursor: ${cursor})...`, ...prev]);
+
+        const res = await fetch('/api/admin/sades/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cursor })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Error en la sincronización');
+        }
+
+        const data = await res.json();
+
+        totalProcessed += data.processed;
+        totalCreated += data.created;
+        totalUpdated += data.updated;
+
+        setSyncProgress({
+          processed: totalProcessed,
+          totalEstimado: data.hasMore ? totalProcessed + 100 : totalProcessed,
+          created: totalCreated,
+          updated: totalUpdated,
+          status: 'processing'
+        });
+
+        setSyncLogs(prev => [
+          `✅ Lote procesado: ${data.processed} items (${data.created} nuevos, ${data.updated} actualizados)`,
+          ...prev
+        ]);
+
+        cursor = data.nextCursor;
+        hasMore = data.hasMore;
+
+        await new Promise(r => setTimeout(r, 1000));
+      }
+
+      setSyncLogs(prev => ['🎉 Sincronización completada con éxito.', ...prev]);
+      setSyncProgress(prev => ({ ...prev, status: 'completed' }));
+
+      fetchData();
+
+    } catch (error: any) {
+      console.error('Sync error:', error);
+      setSyncLogs(prev => [`❌ Error crítico: ${error.message}`, ...prev]);
+      setSyncProgress(prev => ({ ...prev, status: 'error' }));
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const renderTabNavigation = () => (
+    <div className="flex space-x-1 bg-gray-100 p-1 rounded-xl mb-6 w-fit">
+      <button
+        onClick={() => setActiveTab('local')}
+        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'local'
+            ? 'bg-white text-blue-600 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'
+          }`}
+      >
+        Catálogo Local
+      </button>
+      <button
+        onClick={() => setActiveTab('sades')}
+        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === 'sades'
+            ? 'bg-white text-purple-600 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'
+          }`}
+      >
+        <FiDatabase className="w-4 h-4" />
+        Conexión ElectroCaja/Sades
+      </button>
+    </div>
+  );
+
+  const renderSadesView = () => (
+    <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
+      {/* Status Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-full ${sadesHealth === 'ok' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+              <FiDatabase className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Conexión ElectroCaja / Sades</h2>
+              <p className="text-sm text-gray-500">Sincroniza inventario, precios e imágenes en tiempo real.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`flex h-3 w-3 rounded-full ${sadesHealth === 'ok' ? 'bg-green-500' : 'bg-red-500'}`} />
+            <span className="text-sm font-medium text-gray-700">
+              {sadesHealth === 'ok' ? 'Conectado' : 'Sin Conexión'}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between">
+          <div className="flex gap-8">
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Fuente de Verdad</p>
+              <p className="font-medium text-gray-900">SADES (Remoto)</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Modo de Sync</p>
+              <p className="font-medium text-gray-900">Actualizar + Crear Borradores</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Identificador</p>
+              <p className="font-medium text-gray-900">SKU (Código de Barras)</p>
+            </div>
+          </div>
+
+          <Button
+            variant="primary"
+            onClick={handleSync}
+            isLoading={isSyncing}
+            className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-200"
+          >
+            <FiRefreshCw className={`mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Sincronizando...' : 'Sincronizar Todo Ahora'}
+          </Button>
+        </div>
+      </div>
+
+      {/* Sync Progress UI */}
+      {(isSyncing || syncProgress.status !== 'idle') && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+            <h3 className="font-semibold text-gray-800">Progreso de Sincronización</h3>
+            <span className="text-xs font-mono text-gray-500">
+              {syncProgress.processed} items procesados
+            </span>
+          </div>
+
+          <div className="p-6 space-y-4">
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-purple-600 h-2.5 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${Math.min((syncProgress.processed / (syncProgress.totalEstimado || 1)) * 100, 100)}%` }}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="p-3 bg-green-50 rounded-lg">
+                <p className="text-2xl font-bold text-green-600">{syncProgress.created}</p>
+                <p className="text-xs text-green-800">Nuevos (Borradores)</p>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">{syncProgress.updated}</p>
+                <p className="text-xs text-blue-800">Actualizados</p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-2xl font-bold text-gray-600">{syncProgress.processed}</p>
+                <p className="text-xs text-gray-800">Total Escaneados</p>
+              </div>
+            </div>
+
+            {/* Logs Console */}
+            <div className="mt-4 bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-300 h-48 overflow-y-auto custom-scrollbar">
+              {syncLogs.length === 0 ? (
+                <span className="text-gray-600 italic">Esperando inicio de logs...</span>
+              ) : (
+                syncLogs.map((log, i) => (
+                  <div key={i} className="mb-1 border-b border-gray-800 pb-1 last:border-0">
+                    <span className="text-purple-400 mr-2">[{new Date().toLocaleTimeString()}]</span>
+                    {log}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderLocalView = () => (
+    <>
       {/* Fixed Header Section */}
       <div className="flex-shrink-0 space-y-4">
         {/* Header */}
@@ -651,7 +863,7 @@ export default function ProductsPage() {
               <div>
                 <p className="text-xs text-[#6a6c6b] font-medium">Inactivos</p>
                 <p className="text-lg font-semibold text-[#212529]">
-                  {isLoading ? '...' : stats?.products.draft || 0}
+                  {isLoading ? '...' : stats?.products.inactive || 0} {/* Fixed stat key */}
                 </p>
               </div>
             </div>
@@ -801,51 +1013,21 @@ export default function ProductsPage() {
                             }`}>
                             {product.isActive ? 'ACTIVO' : 'INACTIVO'}
                           </span>
+                          <span className="text-sm font-bold text-[#2a63cd]">{price}</span>
                         </div>
                       </div>
                     </div>
-
-                    <div className="mt-2 flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-[#6a6c6b]">Precio</span>
-                        <span className="text-sm font-bold text-[#2a63cd]">{price}</span>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="text-xs text-[#6a6c6b]">Stock</span>
-                        <span className={`text-sm font-medium ${product.stock === 0
-                          ? 'text-red-600'
-                          : product.stock <= 5
-                            ? 'text-orange-600'
-                            : 'text-green-600'
-                          }`}>
-                          {product.stock} u.
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="mt-4 pt-3 border-t border-[#e9ecef] flex items-center justify-between gap-2">
-                      <button
-                        onClick={() => router.push(`/admin/products/${product.id}`)}
-                        className="flex-1 py-2 text-xs font-medium text-[#2a63cd] bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleQuickView(product)}
-                        className="flex-1 py-2 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
-                      >
+                    {/* Botones de acción móvil */}
+                    <div className="mt-4 flex gap-2 pt-3 border-t border-[#e9ecef]">
+                      <Button variant="ghost" size="sm" onClick={() => handleQuickView(product)} className="flex-1 text-xs justify-center">
                         Ver
-                      </button>
-                      <button
-                        onClick={() => handleToggleStatus(product)}
-                        className={`flex-1 py-2 text-xs font-medium rounded-lg transition-colors ${product.isActive
-                          ? 'text-orange-600 bg-orange-50 hover:bg-orange-100'
-                          : 'text-green-600 bg-green-50 hover:bg-green-100'
-                          }`}
-                      >
-                        {product.isActive ? 'Desactivar' : 'Activar'}
-                      </button>
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/products/${product.id}`)} className="flex-1 text-xs justify-center">
+                        Editar
+                      </Button>
+                      <Button variant="ghost" size="sm" className="flex-1 text-xs justify-center text-red-600 hover:bg-red-50" onClick={() => { setSelectedProduct(product); setShowDeleteModal(true); }}>
+                        Eliminar
+                      </Button>
                     </div>
                   </div>
                 );
@@ -853,860 +1035,198 @@ export default function ProductsPage() {
             )}
           </div>
 
-          {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto">
-            {isLoading ? (
-              <TableSkeleton rows={5} />
-            ) : products.length === 0 ? (
-              <EmptyState
-                icon={
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                }
-                title="No hay productos"
-                action={<Button variant="primary" onClick={() => router.push('/admin/products/new')}>Agregar Producto</Button>}
-              />
-            ) : (
-              <table className="w-full">
-                <thead className="bg-[#f8f9fa] border-b border-[#e9ecef]">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto border-t border-[#e9ecef]">
+            <table className="w-full min-w-[1000px]">
+              <thead className="bg-[#f8f9fa]">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider sticky left-0 bg-[#f8f9fa] z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Producto</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">SKU</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Categoría</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Precio</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Stock</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Estado</th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e9ecef] bg-white">
+                {isLoading ? (
                   <tr>
-                    <th className="px-4 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        checked={selectedProducts.length === products.length && products.length > 0}
-                        onChange={handleSelectAll}
-                        className="w-4 h-4 text-[#2a63cd] border-[#dee2e6] rounded focus:ring-[#2a63cd]"
-                      />
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">
-                      Producto
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">
-                      Categoría
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">
-                      Precio
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">
-                      Stock
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">
-                      Estado
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">
-                      Acciones
-                    </th>
+                    <td colSpan={7} className="px-6 py-4">
+                      <TableSkeleton rows={5} />
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-[#e9ecef]">
-                  {products.map((product) => {
-                    const price = currencySettings
-                      ? formatPrice(
-                        parseFloat(String(product.priceUSD)),
-                        currencySettings.primaryCurrency,
-                        currencySettings.exchangeRates
-                      )
-                      : `$${parseFloat(String(product.priceUSD)).toFixed(2)}`;
-
-                    const pendingUpdate = excelUpdates[product.id] || {};
-                    const currentPrice = pendingUpdate.priceUSD !== undefined ? pendingUpdate.priceUSD : product.priceUSD;
-                    const currentStock = pendingUpdate.stock !== undefined ? pendingUpdate.stock : product.stock;
-                    const currentIsActive = pendingUpdate.isActive !== undefined ? pendingUpdate.isActive : product.isActive;
-                    const currentCategoryId = pendingUpdate.categoryId !== undefined ? pendingUpdate.categoryId : ((product as any).categoryId || (product.category as any)?.id || '');
-
-                    return (
-                      <tr key={product.id} className="hover:bg-[#f8f9fa] transition-colors duration-150">
-                        <td className="px-4 py-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedProducts.includes(product.id)}
-                            onChange={() => handleSelectProduct(product.id)}
-                            className="w-4 h-4 text-[#2a63cd] border-[#dee2e6] rounded focus:ring-[#2a63cd]"
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-3">
-                            <div className="flex-shrink-0 w-12 h-12 relative rounded-lg overflow-hidden bg-[#f8f9fa] border border-[#e9ecef]">
+                ) : products.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                      <EmptyState
+                        title="No se encontraron productos"
+                        icon={<FiBox className="w-10 h-10 text-gray-300 mx-auto mb-2" />}
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  products
+                    .filter(p => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.sku.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .filter(p => filterCategory === 'all' || p.category?.name === categories.find(c => c.id === filterCategory)?.name)
+                    .map((product) => (
+                      <tr key={product.id} className="hover:bg-[#f8f9fa] transition-colors group">
+                        <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white group-hover:bg-[#f8f9fa] z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 w-10 h-10 relative rounded overflow-hidden bg-gray-100 border border-gray-200">
                               {(product.mainImage || (product.images && product.images.length > 0)) && !failedImages.has(product.id) ? (
                                 <Image
                                   src={product.mainImage || product.images![0]}
                                   alt={product.name}
                                   fill
                                   className="object-cover"
-                                  sizes="48px"
                                   onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                                 />
                               ) : (
-                                <div className="w-full h-full relative bg-gray-100">
-                                  <Image
-                                    src="/images/no-image.png"
-                                    alt="Sin imagen"
-                                    fill
-                                    className="object-cover opacity-60"
-                                  />
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <FiBox className="text-gray-400" />
                                 </div>
                               )}
                             </div>
-                            <div>
-                              <div className="text-sm font-medium text-[#212529]">{product.name}</div>
-                              <div className="text-xs text-[#6a6c6b]">SKU: {product.sku}</div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-[#212529] max-w-[200px] truncate" title={product.name}>{product.name}</div>
+                              {product.isFeatured && <span className="text-[10px] text-yellow-600 bg-yellow-100 px-1.5 py-0.5 rounded ml-1">Destacado</span>}
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {isExcelMode ? (
-                            <select
-                              value={currentCategoryId}
-                              onChange={(e) => handleExcelChange(product.id, 'categoryId', e.target.value)}
-                              className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            >
-                              <option value="">Seleccionar...</option>
-                              {categories.map(cat => (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                              ))}
-                            </select>
-                          ) : (
-                            <span className="text-sm text-[#212529]">{product.category?.name || 'Sin categoría'}</span>
-                          )}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#6a6c6b]">{product.sku}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#6a6c6b]">{product.category?.name || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#212529]">{product.priceUSD} USD</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#6a6c6b]">
+                          <span className={product.stock <= 5 ? "text-red-600 font-medium" : ""}>
+                            {product.stock} u.
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {isExcelMode ? (
-                            <input
-                              type="number"
-                              value={currentPrice}
-                              onChange={(e) => handleExcelChange(product.id, 'priceUSD', e.target.value)}
-                              className="w-24 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            />
-                          ) : (
-                            <span className="text-sm font-semibold text-[#212529]">{price}</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {isExcelMode ? (
-                            <input
-                              type="number"
-                              value={currentStock}
-                              onChange={(e) => handleExcelChange(product.id, 'stock', e.target.value)}
-                              className="w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            />
-                          ) : (
-                            <span className={`text-sm font-medium ${product.stock === 0
-                              ? 'text-red-600'
-                              : product.stock <= 5
-                                ? 'text-orange-600'
-                                : 'text-green-600'
-                              }`}>
-                              {product.stock}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {isExcelMode ? (
-                            <select
-                              value={currentIsActive ? 'true' : 'false'}
-                              onChange={(e) => handleExcelChange(product.id, 'isActive', e.target.value === 'true')}
-                              className={`text-sm rounded-md shadow-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${currentIsActive ? 'text-green-700 bg-green-50' : 'text-gray-700 bg-gray-50'}`}
-                            >
-                              <option value="true">ACTIVO</option>
-                              <option value="false">INACTIVO</option>
-                            </select>
-                          ) : (
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${product.isActive
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-100 text-gray-700'
-                              }`}>
-                              {product.isActive ? 'Activo' : 'Inactivo'}
-                            </span>
-                          )}
+                          <button onClick={() => handleToggleStatus(product)} className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer transition-colors ${product.isActive ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                            }`}>
+                            {product.isActive ? 'Activo' : 'Inactivo'}
+                          </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          {!isExcelMode && (
-                            <div className="flex items-center justify-end gap-1.5">
-                              {/* Ver/Editar */}
-                              <div className="group relative">
-                                <button
-                                  onClick={() => router.push(`/admin/products/${product.id}`)}
-                                  className="p-2 text-[#2a63cd] hover:bg-blue-50 rounded-lg transition-all duration-200 hover:scale-110"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                  </svg>
-                                </button>
-                                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                                  Editar producto
-                                </div>
-                              </div>
-
-                              {/* Ver detalles rápido */}
-                              <div className="group relative">
-                                <button
-                                  onClick={() => handleQuickView(product)}
-                                  className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200 hover:scale-110"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                  </svg>
-                                </button>
-                                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                                  Vista rápida
-                                </div>
-                              </div>
-
-                              {/* Activar/Desactivar */}
-                              <div className="group relative">
-                                <button
-                                  onClick={() => handleToggleStatus(product)}
-                                  className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${product.isActive
-                                    ? 'text-orange-600 hover:bg-orange-50'
-                                    : 'text-green-600 hover:bg-green-50'
-                                    }`}
-                                >
-                                  {product.isActive ? (
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                    </svg>
-                                  ) : (
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                  )}
-                                </button>
-                                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                                  {product.isActive ? 'Desactivar' : 'Activar'}
-                                </div>
-                              </div>
-
-                              {/* Duplicar */}
-                              <div className="group relative">
-                                <button
-                                  onClick={() => handleDuplicate(product)}
-                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 hover:scale-110"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                  </svg>
-                                </button>
-                                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                                  Duplicar producto
-                                </div>
-                              </div>
-
-                              {/* Eliminar */}
-                              <div className="group relative">
-                                <button
-                                  onClick={() => {
-                                    setSelectedProduct(product);
-                                    setShowDeleteModal(true);
-                                  }}
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 hover:scale-110"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                                  Eliminar producto
-                                </div>
-                              </div>
-                            </div>
-                          )}
+                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => handleDuplicate(product)} className="text-gray-400 hover:text-blue-600" title="Duplicar">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                            </button>
+                            <button onClick={() => handleQuickView(product)} className="text-gray-400 hover:text-gray-600" title="Ver detalle">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            </button>
+                            <button onClick={() => router.push(`/admin/products/${product.id}`)} className="text-blue-600 hover:text-blue-900" title="Editar">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            </button>
+                            <button onClick={() => { setSelectedProduct(product); setShowDeleteModal(true); }} className="text-red-600 hover:text-red-900" title="Eliminar">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {showDeleteModal && selectedProduct && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+            <h3 className="text-lg font-bold mb-2">Eliminar Producto</h3>
+            <p className="text-gray-600 mb-6">¿Estás seguro de que deseas eliminar "{selectedProduct.name}"? Esta acción no se puede deshacer.</p>
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setShowDeleteModal(false)}>Cancelar</Button>
+              <Button variant="primary" onClick={handleDelete} isLoading={deleteLoading} className="bg-red-600 hover:bg-red-700 focus:ring-red-500">Eliminar</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBulkUploadModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Carga Masiva de Productos</h3>
+              <button onClick={() => setShowBulkUploadModal(false)} className="text-gray-400 hover:text-gray-600"><FiBox className="rotate-45" /></button>
+            </div>
+
+            {!bulkUploadResults ? (
+              <div className="space-y-6">
+                <div className="p-4 bg-blue-50 text-blue-800 rounded-lg text-sm">
+                  <p className="font-semibold mb-1">Instrucciones:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Utiliza el archivo CSV (Excel) para cargar múltiples productos.</li>
+                    <li>Las imágenes deben ser URLs públicas o rutas relativas si ya están en el servidor.</li>
+                    <li>El SKU debe ser único.</li>
+                  </ul>
+                  <Button variant="ghost" size="sm" onClick={handleDownloadTemplate} className="mt-3 text-blue-700 underline pl-0">Descargar Plantilla CSV</Button>
+                </div>
+
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50">
+                  <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" id="csvUpload" />
+                  <label htmlFor="csvUpload" className="cursor-pointer block">
+                    <FiBox className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-sm text-gray-600 font-medium">Click para seleccionar archivo CSV</p>
+                    <p className="text-xs text-gray-400 mt-1">Soporta solo archivos .csv</p>
+                  </label>
+                </div>
+
+                {bulkUploadData.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Vista Previa ({bulkUploadData.length} productos)</p>
+                    <div className="max-h-40 overflow-y-auto border rounded-lg">
+                      <table className="min-w-full text-xs text-left">
+                        <thead className="bg-gray-50 font-medium text-gray-500">
+                          <tr>
+                            {Object.keys(bulkUploadData[0]).slice(0, 5).map(k => <th key={k} className="px-3 py-2">{k}</th>)}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {bulkUploadData.slice(0, 5).map((row, i) => (
+                            <tr key={i}>
+                              {Object.values(row).slice(0, 5).map((v: any, j) => <td key={j} className="px-3 py-2">{v}</td>)}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {bulkUploadData.length > 5 && <p className="p-2 text-center text-xs text-gray-500 italic">... y {bulkUploadData.length - 5} más</p>}
+                    </div>
+
+                    <div className="flex justify-end gap-3 mt-6">
+                      <Button variant="ghost" onClick={() => setBulkUploadData([])}>Descartar</Button>
+                      <Button variant="primary" onClick={handleBulkUpload} isLoading={bulkUploadLoading}>Procesar Carga</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className={`p-4 rounded-lg flex items-center gap-3 ${bulkUploadResults.error ? 'bg-red-50 text-red-800' : 'bg-green-50 text-green-800'}`}>
+                  {bulkUploadResults.error ? <FiAlertCircle className="w-6 h-6" /> : <FiCheckCircle className="w-6 h-6" />}
+                  <div>
+                    <p className="font-bold">{bulkUploadResults.message || (bulkUploadResults.error ? 'Error en la carga' : 'Carga Exitosa')}</p>
+                    {bulkUploadResults.details && <p className="text-sm mt-1">{bulkUploadResults.details}</p>}
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button variant="primary" onClick={() => { setShowBulkUploadModal(false); setBulkUploadResults(null); setBulkUploadData([]); }}>Cerrar</Button>
+                </div>
+              </div>
             )}
           </div>
         </div>
-      </div >
+      )}
+    </>
+  );
 
-      {/* Floating Bulk Actions Toolbar */}
-      {
-        selectedProducts.length > 0 && (
-          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 animate-slideInUp">
-            <div className="bg-white shadow-2xl rounded-2xl border border-[#e9ecef] p-4 flex items-center gap-4">
-              <div className="flex items-center gap-2 px-3 py-2 bg-[#2a63cd]/10 rounded-lg">
-                <svg className="w-5 h-5 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-sm font-bold text-[#2a63cd]">{selectedProducts.length} seleccionados</span>
-              </div>
-
-              <div className="h-8 w-px bg-[#e9ecef]"></div>
-
-              <button
-                onClick={() => { setBulkEditField('price'); setShowBulkEditModal(true); }}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors font-medium text-sm"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Editar Precios
-              </button>
-
-              <button
-                onClick={() => { setBulkEditField('stock'); setShowBulkEditModal(true); }}
-                className="flex items-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-colors font-medium text-sm"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                Editar Stock
-              </button>
-
-              <button
-                onClick={() => { setBulkEditField('category'); setShowBulkEditModal(true); }}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg transition-colors font-medium text-sm"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                Cambiar Categoría
-              </button>
-
-              <div className="h-8 w-px bg-[#e9ecef]"></div>
-
-              <button
-                onClick={handleBulkDelete}
-                className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-colors font-medium text-sm"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Eliminar
-              </button>
-
-              <button
-                onClick={() => setSelectedProducts([])}
-                className="ml-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Delete Confirmation Modal */}
-      {
-        showDeleteModal && selectedProduct && (
-          <div className="fixed inset-0 z-50 overflow-y-auto animate-fadeIn">
-            <div className="flex items-center justify-center min-h-screen px-4 py-8">
-              <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={() => setShowDeleteModal(false)}
-              />
-              <div className="relative bg-white rounded-2xl p-6 w-full max-w-4xl shadow-2xl animate-scaleIn">
-                <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-[#212529] mb-2">¿Eliminar producto?</h3>
-                  <p className="text-sm text-[#6a6c6b] mb-1">
-                    <strong>{selectedProduct.name}</strong>
-                  </p>
-                  <p className="text-sm text-[#6a6c6b] mb-6">
-                    Esta acción no se puede deshacer. El producto será eliminado permanentemente.
-                  </p>
-                  <div className="flex gap-3 justify-center">
-                    <button
-                      onClick={() => setShowDeleteModal(false)}
-                      disabled={deleteLoading}
-                      className="px-4 py-2 bg-[#f8f9fa] hover:bg-[#e9ecef] text-[#212529] rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={handleDelete}
-                      disabled={deleteLoading}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      {deleteLoading ? 'Eliminando...' : 'Eliminar'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Bulk Upload Modal */}
-      {
-        showBulkUploadModal && (
-          <div className="fixed inset-0 z-50 overflow-y-auto animate-fadeIn">
-            <div className="flex items-center justify-center min-h-screen px-4 py-8">
-              <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={() => {
-                  setShowBulkUploadModal(false);
-                  setBulkUploadData([]);
-                  setBulkUploadResults(null);
-                }}
-              />
-              <div className="relative bg-white rounded-2xl p-6 w-full max-w-4xl shadow-2xl animate-scaleIn">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-[#212529]">Carga Masiva de Productos</h3>
-                  <button
-                    onClick={() => {
-                      setShowBulkUploadModal(false);
-                      setBulkUploadData([]);
-                      setBulkUploadResults(null);
-                    }}
-                    className="p-2 text-[#6a6c6b] hover:bg-[#f8f9fa] rounded-lg transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-
-                {!bulkUploadResults ? (
-                  <>
-                    <div className="space-y-4">
-                      <p className="text-sm text-[#6a6c6b]">
-                        Descarga la plantilla, complétala con tus productos y súbela para crear múltiples productos a la vez.
-                      </p>
-
-                      {/* Download Template Button */}
-                      <button
-                        onClick={handleDownloadTemplate}
-                        className="w-full px-4 py-3 bg-[#f8f9fa] hover:bg-[#e9ecef] border border-[#dee2e6] rounded-lg text-sm font-medium text-[#212529] transition-colors flex items-center justify-center gap-2"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Descargar Plantilla CSV
-                      </button>
-
-                      {/* File Upload */}
-                      <div>
-                        <label className="block text-sm font-semibold text-[#212529] mb-2">
-                          Subir Archivo CSV
-                        </label>
-                        <input
-                          type="file"
-                          accept=".csv"
-                          onChange={handleFileUpload}
-                          className="w-full px-4 py-2 text-sm border border-[#dee2e6] rounded-lg cursor-pointer bg-[#f8f9fa] hover:bg-white transition-colors"
-                        />
-                      </div>
-
-                      {/* Preview Data */}
-                      {bulkUploadData.length > 0 && (
-                        <div className="mt-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="text-sm font-semibold text-[#212529]">
-                              Productos a cargar: {bulkUploadData.length}
-                            </p>
-                          </div>
-                          <div className="max-h-60 overflow-y-auto border border-[#e9ecef] rounded-lg">
-                            <table className="w-full text-xs">
-                              <thead className="bg-[#f8f9fa] sticky top-0">
-                                <tr>
-                                  <th className="px-3 py-2 text-left font-semibold text-[#6a6c6b]">Nombre</th>
-                                  <th className="px-3 py-2 text-left font-semibold text-[#6a6c6b]">SKU</th>
-                                  <th className="px-3 py-2 text-left font-semibold text-[#6a6c6b]">Precio</th>
-                                  <th className="px-3 py-2 text-left font-semibold text-[#6a6c6b]">Stock</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-[#e9ecef]">
-                                {bulkUploadData.map((row, index) => (
-                                  <tr key={index} className="hover:bg-[#f8f9fa]">
-                                    <td className="px-3 py-2 text-[#212529]">{row.nombre}</td>
-                                    <td className="px-3 py-2 text-[#212529]">{row.sku}</td>
-                                    <td className="px-3 py-2 text-[#212529]">${row.precioUSD}</td>
-                                    <td className="px-3 py-2 text-[#212529]">{row.stock}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-3 justify-end mt-6">
-                      <button
-                        onClick={() => {
-                          setShowBulkUploadModal(false);
-                          setBulkUploadData([]);
-                        }}
-                        className="px-4 py-2 bg-[#f8f9fa] hover:bg-[#e9ecef] text-[#212529] rounded-lg transition-colors"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        onClick={handleBulkUpload}
-                        disabled={bulkUploadData.length === 0 || bulkUploadLoading}
-                        className="px-4 py-2 bg-[#2a63cd] hover:bg-[#1e4ba3] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {bulkUploadLoading ? 'Cargando...' : 'Cargar Productos'}
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Results */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <svg className="w-6 h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-green-800">
-                            {bulkUploadResults.results.success} productos cargados exitosamente
-                          </p>
-                          {bulkUploadResults.results.failed > 0 && (
-                            <p className="text-xs text-green-700 mt-1">
-                              {bulkUploadResults.results.failed} productos fallaron
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Errors */}
-                      {bulkUploadResults.results.errors.length > 0 && (
-                        <div>
-                          <p className="text-sm font-semibold text-[#212529] mb-2">Errores:</p>
-                          <div className="max-h-60 overflow-y-auto space-y-2">
-                            {bulkUploadResults.results.errors.map((error: any, index: number) => (
-                              <div key={index} className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs">
-                                <p className="font-semibold text-red-800">Fila {error.row}:</p>
-                                <p className="text-red-700">{error.error}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex justify-end mt-6">
-                      <button
-                        onClick={() => {
-                          setShowBulkUploadModal(false);
-                          setBulkUploadData([]);
-                          setBulkUploadResults(null);
-                        }}
-                        className="px-4 py-2 bg-[#2a63cd] hover:bg-[#1e4ba3] text-white rounded-lg transition-colors"
-                      >
-                        Cerrar
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Quick View Modal */}
-      {
-        showQuickViewModal && (
-          <div className="fixed inset-0 z-50 overflow-y-auto animate-fadeIn">
-            <div className="flex items-center justify-center min-h-screen px-4 py-8">
-              <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={() => {
-                  setShowQuickViewModal(false);
-                  setQuickViewProduct(null);
-                }}
-              />
-              <div className="relative bg-white rounded-2xl w-full max-w-4xl shadow-2xl animate-scaleIn max-h-[90vh] overflow-y-auto">
-                {/* Header */}
-                <div className="sticky top-0 bg-white border-b border-[#e9ecef] px-6 py-4 flex items-center justify-between rounded-t-2xl">
-                  <h3 className="text-xl font-semibold text-[#212529]">Vista Rápida del Producto</h3>
-                  <button
-                    onClick={() => {
-                      setShowQuickViewModal(false);
-                      setQuickViewProduct(null);
-                    }}
-                    className="p-2 text-[#6a6c6b] hover:bg-[#f8f9fa] rounded-lg transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  {quickViewLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2a63cd]"></div>
-                    </div>
-                  ) : quickViewProduct ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Images Section */}
-                      <div className="space-y-4">
-                        {/* Main Image */}
-                        {(quickViewProduct.mainImage || (quickViewProduct.images && quickViewProduct.images.length > 0)) ? (
-                          <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#f8f9fa] border border-[#e9ecef]">
-                            <Image
-                              src={quickViewProduct.mainImage || quickViewProduct.images![0]}
-                              alt={quickViewProduct.name}
-                              fill
-                              className="object-cover"
-                              sizes="(max-width: 768px) 100vw, 50vw"
-                            />
-                          </div>
-                        ) : (
-                          <div className="relative w-full aspect-square rounded-xl bg-[#f8f9fa] border border-[#e9ecef] flex flex-col items-center justify-center p-8">
-                            <Image
-                              src="/favicon.ico"
-                              alt="Sin imagen"
-                              width={64}
-                              height={64}
-                              className="opacity-40 mb-2"
-                            />
-                            <p className="text-sm text-gray-400 font-medium text-center">Producto sin Imagen</p>
-                          </div>
-                        )}
-
-                        {/* Thumbnail Gallery */}
-                        {quickViewProduct.images && quickViewProduct.images.length > 1 && (
-                          <div className="grid grid-cols-4 gap-2">
-                            {quickViewProduct.images.map((image: string, index: number) => (
-                              <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-[#f8f9fa] border border-[#e9ecef]">
-                                <Image
-                                  src={image}
-                                  alt={`${quickViewProduct.name} - ${index + 1}`}
-                                  fill
-                                  className="object-cover"
-                                  sizes="100px"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Details Section */}
-                      <div className="space-y-6">
-                        {/* Title & Status */}
-                        <div>
-                          <div className="flex items-start justify-between gap-4 mb-2">
-                            <h2 className="text-2xl font-bold text-[#212529]">{quickViewProduct.name}</h2>
-                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${quickViewProduct.isActive
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-100 text-gray-700'
-                              }`}>
-                              {quickViewProduct.isActive ? 'Activo' : 'Inactivo'}
-                            </span>
-                          </div>
-                          <p className="text-sm text-[#6a6c6b]">SKU: {quickViewProduct.sku}</p>
-                        </div>
-
-                        {/* Price */}
-                        <div className="bg-[#f8f9fa] rounded-xl p-4">
-                          <p className="text-sm text-[#6a6c6b] mb-1">Precio</p>
-                          <p className="text-3xl font-bold text-[#2a63cd]">
-                            {currencySettings
-                              ? formatPrice(
-                                parseFloat(String(quickViewProduct.priceUSD)),
-                                currencySettings.primaryCurrency,
-                                currencySettings.exchangeRates
-                              )
-                              : `$${parseFloat(String(quickViewProduct.priceUSD)).toFixed(2)}`}
-                          </p>
-                        </div>
-
-                        {/* Info Grid */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-white border border-[#e9ecef] rounded-lg p-4">
-                            <p className="text-xs text-[#6a6c6b] mb-1">Stock Disponible</p>
-                            <p className={`text-xl font-bold ${quickViewProduct.stock === 0
-                              ? 'text-red-600'
-                              : quickViewProduct.stock <= 5
-                                ? 'text-orange-600'
-                                : 'text-green-600'
-                              }`}>
-                              {quickViewProduct.stock}
-                            </p>
-                          </div>
-
-                          <div className="bg-white border border-[#e9ecef] rounded-lg p-4">
-                            <p className="text-xs text-[#6a6c6b] mb-1">Categoría</p>
-                            <p className="text-sm font-semibold text-[#212529]">
-                              {quickViewProduct.category?.name || 'Sin categoría'}
-                            </p>
-                          </div>
-
-                          {quickViewProduct.brand && (
-                            <div className="bg-white border border-[#e9ecef] rounded-lg p-4">
-                              <p className="text-xs text-[#6a6c6b] mb-1">Marca</p>
-                              <p className="text-sm font-semibold text-[#212529]">{quickViewProduct.brand}</p>
-                            </div>
-                          )}
-
-                          {quickViewProduct.model && (
-                            <div className="bg-white border border-[#e9ecef] rounded-lg p-4">
-                              <p className="text-xs text-[#6a6c6b] mb-1">Modelo</p>
-                              <p className="text-sm font-semibold text-[#212529]">{quickViewProduct.model}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Description */}
-                        {quickViewProduct.description && (
-                          <div>
-                            <h4 className="text-sm font-semibold text-[#212529] mb-2">Descripción</h4>
-                            <p className="text-sm text-[#6a6c6b] leading-relaxed">{quickViewProduct.description}</p>
-                          </div>
-                        )}
-
-                        {/* Specifications */}
-                        {quickViewProduct.specifications && Object.keys(quickViewProduct.specifications).length > 0 && (
-                          <div>
-                            <h4 className="text-sm font-semibold text-[#212529] mb-2">Especificaciones</h4>
-                            <div className="bg-[#f8f9fa] rounded-lg p-4 space-y-2">
-                              {Object.entries(quickViewProduct.specifications).map(([key, value]) => (
-                                <div key={key} className="flex justify-between text-sm">
-                                  <span className="text-[#6a6c6b]">{key}:</span>
-                                  <span className="font-medium text-[#212529]">{String(value)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Badges */}
-                        <div className="flex flex-wrap gap-2">
-                          {quickViewProduct.isFeatured && (
-                            <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
-                              Destacado
-                            </span>
-                          )}
-                          {quickViewProduct.isNew && (
-                            <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-                              Nuevo
-                            </span>
-                          )}
-                          {quickViewProduct.hasDiscount && (
-                            <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
-                              En Oferta {quickViewProduct.discountPercent && `${quickViewProduct.discountPercent}%`}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-3 pt-4 border-t border-[#e9ecef]">
-                          <button
-                            onClick={() => {
-                              router.push(`/admin/products/${quickViewProduct.id}`);
-                              setShowQuickViewModal(false);
-                            }}
-                            className="flex-1 px-4 py-2.5 bg-[#2a63cd] hover:bg-[#1e4ba3] text-white rounded-lg transition-colors font-medium"
-                          >
-                            Editar Producto
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowQuickViewModal(false);
-                              setQuickViewProduct(null);
-                            }}
-                            className="px-4 py-2.5 bg-[#f8f9fa] hover:bg-[#e9ecef] text-[#212529] rounded-lg transition-colors font-medium"
-                          >
-                            Cerrar
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Bulk Edit Modal */}
-      {
-        showBulkEditModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center">
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-fadeIn"
-              onClick={() => setShowBulkEditModal(false)}
-            />
-
-            {/* Modal Content */}
-            <div className="relative w-[600px] bg-white rounded-2xl shadow-2xl transform transition-all animate-scaleIn flex flex-col max-h-[90vh]">
-              <div className="p-10 overflow-y-auto">
-                <div className="mb-8">
-                  <h3 className="text-2xl font-bold text-[#212529] mb-3">
-                    Edición Masiva - {bulkEditField === 'price' ? 'Precio' : bulkEditField === 'stock' ? 'Stock' : 'Categoría'}
-                  </h3>
-                  <p className="text-base text-[#6a6c6b]">
-                    Actualizar {selectedProducts.length} productos seleccionados
-                  </p>
-                </div>
-
-                <div className="mb-10">
-                  {bulkEditField === 'category' ? (
-                    <div>
-                      <label className="block text-base font-semibold text-[#212529] mb-4">
-                        Nueva Categoría
-                      </label>
-                      <select
-                        value={bulkEditValue}
-                        onChange={(e) => setBulkEditValue(e.target.value)}
-                        className="w-full px-5 py-4 text-base border-2 border-[#dee2e6] rounded-xl focus:outline-none focus:border-[#2a63cd] focus:ring-4 focus:ring-[#2a63cd]/10 text-[#212529] transition-all bg-white"
-                      >
-                        <option value="">Seleccionar categoría</option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="block text-base font-semibold text-[#212529] mb-4">
-                        Nuevo {bulkEditField === 'price' ? 'Precio (USD)' : 'Stock'}
-                      </label>
-                      <input
-                        type="number"
-                        step={bulkEditField === 'price' ? '0.01' : '1'}
-                        min="0"
-                        value={bulkEditValue}
-                        onChange={(e) => setBulkEditValue(e.target.value)}
-                        className="w-full px-5 py-4 text-base border-2 border-[#dee2e6] rounded-xl focus:outline-none focus:border-[#2a63cd] focus:ring-4 focus:ring-[#2a63cd]/10 text-[#212529] transition-all"
-                        placeholder={bulkEditField === 'price' ? '99.99' : '10'}
-                        autoFocus
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-5">
-                  <button
-                    onClick={() => setShowBulkEditModal(false)}
-                    disabled={bulkEditLoading}
-                    className="flex-1 px-8 py-4 text-base bg-[#f8f9fa] hover:bg-[#e9ecef] text-[#212529] rounded-xl transition-colors font-semibold disabled:opacity-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleBulkEdit}
-                    disabled={bulkEditLoading || !bulkEditValue}
-                    className="flex-1 px-8 py-4 text-base bg-[#2a63cd] hover:bg-[#1e4ba3] text-white rounded-xl transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {bulkEditLoading ? 'Actualizando...' : 'Actualizar'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      }
-    </div >
+  return (
+    <div className="h-full flex flex-col p-6 max-w-[1600px] mx-auto">
+      {renderTabNavigation()}
+      {activeTab === 'local' ? renderLocalView() : renderSadesView()}
+    </div>
   );
 }

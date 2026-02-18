@@ -52,3 +52,6 @@ prisma/dev.db-journal
 
 # Uploads
 public/uploads/
+# Agent folders
+.agents/
+.agent/

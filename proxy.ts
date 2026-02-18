@@ -102,7 +102,9 @@ export default withAuth(
           pathname.startsWith('/api/exchange-rates') ||
           pathname.startsWith('/api/contact') ||
           pathname.startsWith('/api/reviews') ||
-          pathname.startsWith('/api/analytics');
+          pathname.startsWith('/api/uploads') ||
+          pathname.startsWith('/api/analytics') ||
+          pathname.startsWith('/api/webhooks'); // Also adding webhooks for safety
 
         // Allow login pages
         if (isLoginPage) {

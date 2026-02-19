@@ -7,7 +7,7 @@ import { isAuthorized } from '@/lib/auth-helpers';
 // GET - Get customer details
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,9 +15,8 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
-    // Handle both Promise and direct params
-    const resolvedParams = params instanceof Promise ? await params : params;
-    const customerId = resolvedParams.id;
+    const { id } = await params;
+    const customerId = id;
 
     if (!customerId) {
       return NextResponse.json({ error: 'ID de cliente requerido' }, { status: 400 });
@@ -79,7 +78,7 @@ export async function GET(
 // PUT - Update customer
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -87,9 +86,8 @@ export async function PUT(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
-    // Handle both Promise and direct params
-    const resolvedParams = params instanceof Promise ? await params : params;
-    const customerId = resolvedParams.id;
+    const { id } = await params;
+    const customerId = id;
 
     if (!customerId) {
       return NextResponse.json({ error: 'ID de cliente requerido' }, { status: 400 });
@@ -167,7 +165,7 @@ export async function PUT(
 // DELETE - Delete customer
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -175,9 +173,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
-    // Handle both Promise and direct params
-    const resolvedParams = params instanceof Promise ? await params : params;
-    const customerId = resolvedParams.id;
+    const { id } = await params;
+    const customerId = id;
 
     if (!customerId) {
       return NextResponse.json({ error: 'ID de cliente requerido' }, { status: 400 });

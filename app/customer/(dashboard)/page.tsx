@@ -2,8 +2,9 @@
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FiShoppingBag, FiDollarSign, FiHeart, FiTrendingUp, FiPackage, FiClock, FiActivity, FiArrowUp, FiArrowDown, FiChevronRight, FiShield, FiZap, FiCheck, FiTruck, FiUser, FiLogIn } from 'react-icons/fi';
+import { FiShoppingBag, FiDollarSign, FiHeart, FiTrendingUp, FiPackage, FiClock, FiActivity, FiArrowUp, FiArrowDown, FiChevronRight, FiShield, FiTag, FiCheck, FiTruck, FiUser, FiLogIn } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
+import CustomerOnboarding from '@/components/customer/CustomerOnboarding';
 
 interface DashboardStats {
   balance: number;
@@ -79,10 +80,10 @@ export default function CustomerDashboard() {
         <div className="relative z-10 flex flex-col gap-3">
           {/* Greeting - Title */}
           <div className="flex-shrink-0">
-            <h1 className="text-lg lg:text-xl font-black mb-0.5 leading-tight">
+            <h1 className="text-xl lg:text-2xl font-black mb-0.5 leading-tight">
               {greeting},<br className="sm:hidden" /> {session?.user?.name?.split(' ')[0] || 'Cliente'}
             </h1>
-            <p className="text-blue-100 text-[10px] lg:text-xs hidden sm:block">Gestiona tus pedidos y preferencias</p>
+            <p className="text-blue-100 text-xs lg:text-sm hidden sm:block">Gestiona tus pedidos y preferencias</p>
           </div>
 
           {/* Stats - Icons under text on mobile, responsive row */}
@@ -128,61 +129,8 @@ export default function CustomerDashboard() {
         </div>
       </div>
 
-      {/* Quick Actions Grid - 2x2 on mobile, 4 cols on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 flex-shrink-0">
-        <Link href="/customer/orders" className="group flex-1">
-          <div className="bg-white rounded-lg p-2 lg:p-2.5 border border-[#e9ecef] hover:border-[#2a63cd]/30 hover:shadow-md transition-all h-full">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 lg:w-7 lg:h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                <FiPackage className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-[#212529] text-[10px] lg:text-[11px] truncate">Mis Pedidos</h3>
-                <p className="text-[8px] lg:text-[9px] text-[#6a6c6b]">Ver historial</p>
-              </div>
-            </div>
-          </div>
-        </Link>
-        <Link href="/customer/balance" className="group flex-1">
-          <div className="bg-white rounded-lg p-2 lg:p-2.5 border border-[#e9ecef] hover:border-green-200 hover:shadow-md transition-all h-full">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 lg:w-7 lg:h-7 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                <FiDollarSign className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-[#212529] text-[10px] lg:text-[11px] truncate">Mi Saldo</h3>
-                <p className="text-[8px] lg:text-[9px] text-[#6a6c6b]">Recargar</p>
-              </div>
-            </div>
-          </div>
-        </Link>
-        <Link href="/customer/wishlist" className="group flex-1">
-          <div className="bg-white rounded-lg p-2 lg:p-2.5 border border-[#e9ecef] hover:border-pink-200 hover:shadow-md transition-all h-full">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 lg:w-7 lg:h-7 bg-gradient-to-br from-pink-500 to-rose-600 rounded-md flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                <FiHeart className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-[#212529] text-[10px] lg:text-[11px] truncate">Favoritos</h3>
-                <p className="text-[8px] lg:text-[9px] text-[#6a6c6b]">Ver lista</p>
-              </div>
-            </div>
-          </div>
-        </Link>
-        <Link href="/customer/warranty" className="group flex-1">
-          <div className="bg-white rounded-lg p-2 lg:p-2.5 border border-[#e9ecef] hover:border-purple-200 hover:shadow-md transition-all h-full">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 lg:w-7 lg:h-7 bg-gradient-to-br from-purple-500 to-violet-600 rounded-md flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                <FiShield className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-[#212529] text-[10px] lg:text-[11px] truncate">Garantía</h3>
-                <p className="text-[8px] lg:text-[9px] text-[#6a6c6b]">Soporte</p>
-              </div>
-            </div>
-          </div>
-        </Link>
-      </div>
+      {/* Customer Onboarding Section */}
+      <CustomerOnboarding stats={stats} />
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-3 flex-1 min-h-0">
@@ -231,14 +179,15 @@ export default function CustomerDashboard() {
                 })}
               </div>
             ) : (
-              <div className="text-center py-4 lg:py-6">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-[#f8f9fa] rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <FiPackage className="w-5 h-5 lg:w-6 lg:h-6 text-[#adb5bd]" />
+              <div className="text-center py-6 lg:py-8">
+                <div className="w-12 h-12 lg:w-16 lg:h-16 bg-[#f8f9fa] rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                  <FiPackage className="w-6 h-6 lg:w-8 lg:h-8 text-[#adb5bd]" />
                 </div>
-                <p className="text-[#6a6c6b] text-[10px] lg:text-xs mb-2">No tienes pedidos recientes</p>
-                <Link href="/productos" className="inline-flex items-center gap-1 px-2.5 lg:px-3 py-1 lg:py-1.5 bg-[#2a63cd] text-white rounded-lg hover:bg-[#1e4ba3] transition-colors font-medium text-[10px] lg:text-xs">
-                  <FiZap className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
-                  Explorar Productos
+                <h3 className="text-sm lg:text-base font-bold text-[#212529] mb-1">Empieza tu aventura</h3>
+                <p className="text-[#6a6c6b] text-xs lg:text-sm mb-4">Aún no tienes pedidos. ¡Es hora de armar tu setup!</p>
+                <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all font-bold text-xs lg:text-sm">
+                  <FiTag className="w-4 h-4" />
+                  Ver Ofertas de Hoy
                 </Link>
               </div>
             )}

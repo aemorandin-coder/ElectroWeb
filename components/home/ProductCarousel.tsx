@@ -253,7 +253,7 @@ export default function ProductCarousel({
                         {displayedProducts.map((product, index) => (
                             <div
                                 key={`${product.id}-${currentIndex}`}
-                                className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)] xl:w-[calc(25%-0.75rem)]"
+                                className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)] xl:w-[calc(25%-0.75rem)] transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#2a63cd]/20 rounded-2xl"
                                 style={{
                                     animationDelay: `${index * 50}ms`,
                                 }}

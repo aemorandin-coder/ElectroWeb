@@ -308,17 +308,17 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-2 lg:p-4">
+        <div className="fixed inset-0 z-[100000] flex items-end sm:items-center justify-center p-0 sm:p-2 lg:p-4">
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn"
                 onClick={onClose}
             />
 
-            {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL */}
+            {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL (Desktop) */}
             <button
                 onClick={onClose}
-                className="fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
+                className="hidden sm:flex fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 hover:bg-white rounded-full items-center justify-center shadow-lg active:scale-95 transition-all"
                 style={{ zIndex: 100001 }}
                 aria-label="Cerrar"
             >
@@ -326,35 +326,40 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             </button>
 
             {/* Modal */}
-            <div className="relative bg-white rounded-xl lg:rounded-2xl w-full max-w-3xl shadow-2xl animate-scaleIn max-h-[95vh] lg:max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="relative bg-white rounded-t-[32px] sm:rounded-2xl w-full max-w-3xl shadow-2xl h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden animate-slideInUp sm:animate-scaleIn z-10">
                 {/* Header - Compact on mobile */}
-                <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-3 lg:p-6 rounded-t-xl lg:rounded-t-2xl flex-shrink-0">
-                    <div className="flex items-center gap-2 lg:gap-3">
-                        {step !== 'SELECT_METHOD' && (
-                            <button
-                                onClick={() => setStep('SELECT_METHOD')}
-                                className="p-1.5 lg:p-2 hover:bg-white/10 rounded-lg transition-colors"
-                            >
-                                <FiArrowLeft className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
-                            </button>
-                        )}
-                        <div className="w-9 h-9 lg:w-12 lg:h-12 bg-white/20 backdrop-blur-sm rounded-lg lg:rounded-xl flex items-center justify-center">
-                            {step === 'VERIFY_PAYMENT' ? (
-                                <FiShield className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
-                            ) : (
-                                <FiDollarSign className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-4 lg:p-6 rounded-t-[32px] sm:rounded-t-2xl flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 lg:gap-3">
+                            {step !== 'SELECT_METHOD' && (
+                                <button
+                                    onClick={() => setStep('SELECT_METHOD')}
+                                    className="p-1.5 lg:p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                >
+                                    <FiArrowLeft className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
+                                </button>
                             )}
+                            <div className="w-9 h-9 lg:w-12 lg:h-12 bg-white/20 backdrop-blur-sm rounded-lg lg:rounded-xl flex items-center justify-center">
+                                {step === 'VERIFY_PAYMENT' ? (
+                                    <FiShield className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                                ) : (
+                                    <FiDollarSign className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                                )}
+                            </div>
+                            <div>
+                                <h2 className="text-base lg:text-xl font-bold text-white">
+                                    {step === 'VERIFY_PAYMENT' ? 'Verificar Pago' : 'Recargar'}
+                                </h2>
+                                <p className="text-[10px] lg:text-sm text-blue-100 hidden sm:block">
+                                    {step === 'VERIFY_PAYMENT'
+                                        ? 'Verifica tu pago movil'
+                                        : 'Añade fondos a tu cuenta'}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-base lg:text-xl font-bold text-white">
-                                {step === 'VERIFY_PAYMENT' ? 'Verificar Pago' : 'Recargar'}
-                            </h2>
-                            <p className="text-[10px] lg:text-sm text-blue-100 hidden sm:block">
-                                {step === 'VERIFY_PAYMENT'
-                                    ? 'Verifica tu pago movil'
-                                    : 'Añade fondos a tu cuenta'}
-                            </p>
-                        </div>
+                        <button onClick={onClose} className="p-2 sm:hidden hover:bg-white/20 rounded-lg transition-all">
+                            <FiX className="w-6 h-6 text-white" />
+                        </button>
                     </div>
 
                     {/* Step indicator for mobile payment */}

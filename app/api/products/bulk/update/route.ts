@@ -57,58 +57,48 @@ export async function POST(request: NextRequest) {
         }
 
         // Validate field
-        const validFields = ['price', 'stock', 'category', 'status'];
+        const validFields = ['price', 'pricePercent', 'stock', 'category', 'status'];
         if (!validFields.includes(field)) {
-            return NextResponse.json(
-                { error: 'Campo inválido' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Campo inválido' }, { status: 400 });
         }
 
-        // Build update data based on field
+        // pricePercent requires per-row fetch+update (can't do updateMany with relative math)
+        if (field === 'pricePercent') {
+            const pct = parseFloat(value);
+            if (isNaN(pct)) return NextResponse.json({ error: 'Porcentaje inválido' }, { status: 400 });
+
+            const products = await prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, priceUSD: true } });
+            await prisma.$transaction(
+                products.map(p => prisma.product.update({
+                    where: { id: p.id },
+                    data: { priceUSD: Math.max(0, Number(p.priceUSD) * (1 + pct / 100)) }
+                }))
+            );
+            return NextResponse.json({ message: `${products.length} productos actualizados con ${pct > 0 ? '+' : ''}${pct}%`, count: products.length });
+        }
+
+        // Build update data for uniform field operations
         let updateData: any = {};
 
         if (field === 'price') {
             const priceValue = parseFloat(value);
-            if (isNaN(priceValue) || priceValue < 0) {
-                return NextResponse.json(
-                    { error: 'Precio inválido' },
-                    { status: 400 }
-                );
-            }
+            if (isNaN(priceValue) || priceValue < 0) return NextResponse.json({ error: 'Precio inválido' }, { status: 400 });
             updateData.priceUSD = priceValue;
         } else if (field === 'stock') {
             const stockValue = parseInt(value);
-            if (isNaN(stockValue) || stockValue < 0) {
-                return NextResponse.json(
-                    { error: 'Stock inválido' },
-                    { status: 400 }
-                );
-            }
+            if (isNaN(stockValue) || stockValue < 0) return NextResponse.json({ error: 'Stock inválido' }, { status: 400 });
             updateData.stock = stockValue;
         } else if (field === 'category') {
-            // Validate category exists
-            const category = await prisma.category.findUnique({
-                where: { id: value },
-            });
-            if (!category) {
-                return NextResponse.json(
-                    { error: 'Categoría no encontrada' },
-                    { status: 404 }
-                );
-            }
+            const category = await prisma.category.findUnique({ where: { id: value } });
+            if (!category) return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
             updateData.categoryId = value;
         } else if (field === 'status') {
-            updateData.status = value; // PUBLISHED or DRAFT
+            if (!['PUBLISHED', 'DRAFT', 'ARCHIVED'].includes(value)) return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
+            updateData.status = value;
         }
 
-        // Perform bulk update
         const result = await prisma.product.updateMany({
-            where: {
-                id: {
-                    in: productIds,
-                },
-            },
+            where: { id: { in: productIds } },
             data: updateData,
         });
 

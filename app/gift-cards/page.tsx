@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import ProcessingOverlay, { GIFT_CARD_STEPS } from '@/components/ProcessingOverlay';
+import Footer from '@/components/Footer';
 
 import { FiGift, FiCheck, FiAlertCircle, FiMail, FiArrowRight, FiClock, FiShoppingCart, FiCreditCard, FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi, FiLock, FiCalendar, FiEye, FiUser, FiStar } from 'react-icons/fi';
 import { AiOutlineDeliveredProcedure } from 'react-icons/ai';
@@ -83,7 +84,7 @@ const CARD_DESIGNS = [
     // Brand themes - Electro Shop blue
     {
         id: 'electro-premium',
-        name: 'Electro Premium',
+        name: 'Electro Elite',
         gradient: 'linear-gradient(135deg, #1a3b7e 0%, #1e4ba3 25%, #2a63cd 50%, #1e4ba3 75%, #1a3b7e 100%)',
         accent: '#ffffff',
         secondAccent: '#60a5fa',
@@ -805,7 +806,7 @@ export default function GiftCardsPage() {
                         <div className="flex justify-center gap-1 lg:gap-2 mb-2 lg:mb-4">
                             {[
                                 { id: 'all', label: 'Todos', icon: null },
-                                { id: 'premium', label: 'Premium', icon: <FiStar className="w-3 h-3" /> },
+                                { id: 'premium', label: 'Elite', icon: <FiStar className="w-3 h-3" /> },
                                 { id: 'christmas', label: 'Navidad', icon: <FiGift className="w-3 h-3" /> },
                                 { id: 'brand', label: 'Electro', icon: <FiMonitor className="w-3 h-3" /> },
                             ].map((cat) => (
@@ -985,7 +986,7 @@ export default function GiftCardsPage() {
                             </div>
 
                             {/* Recipient Name & Email Inputs - Same row */}
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className={`grid grid-cols-2 gap-2 transition-all duration-300 ${isForMyself ? 'opacity-60' : 'opacity-100'}`}>
                                 {/* Name */}
                                 <div className="relative">
                                     <input
@@ -993,10 +994,16 @@ export default function GiftCardsPage() {
                                         type="text"
                                         placeholder="Nombre"
                                         value={recipientName}
-                                        onChange={(e) => { setRecipientName(e.target.value); setErrors(prev => ({ ...prev, name: undefined })); }}
-                                        className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors text-xs ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-500'
+                                        readOnly={isForMyself}
+                                        onChange={(e) => { if (!isForMyself) { setRecipientName(e.target.value); setErrors(prev => ({ ...prev, name: undefined })); } }}
+                                        className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors text-xs ${isForMyself ? 'bg-blue-50 border-blue-200 text-blue-700 cursor-default' : errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-500'
                                             }`}
                                     />
+                                    {isForMyself && (
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                            <FiUser className="w-3 h-3 text-blue-500" />
+                                        </div>
+                                    )}
                                     {errors.name && (
                                         <div className="absolute -bottom-4 left-0 text-[10px] text-red-500 flex items-center gap-1">
                                             <FiAlertCircle className="w-2.5 h-2.5" />
@@ -1012,17 +1019,20 @@ export default function GiftCardsPage() {
                                         type="email"
                                         placeholder="Email"
                                         value={recipientEmail}
-                                        onChange={(e) => { setRecipientEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); }}
-                                        className={`w-full px-3 py-2 pr-8 rounded-lg border outline-none transition-colors text-xs ${errors.email ? 'border-red-400 bg-red-50' :
-                                            recipientExists === false ? 'border-amber-400' :
-                                                recipientExists === true ? 'border-green-500' :
-                                                    'border-gray-200 focus:border-blue-500'
+                                        readOnly={isForMyself}
+                                        onChange={(e) => { if (!isForMyself) { setRecipientEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); } }}
+                                        className={`w-full px-3 py-2 pr-8 rounded-lg border outline-none transition-colors text-xs ${isForMyself ? 'bg-blue-50 border-blue-200 text-blue-700 cursor-default' :
+                                            errors.email ? 'border-red-400 bg-red-50' :
+                                                recipientExists === false ? 'border-amber-400' :
+                                                    recipientExists === true ? 'border-green-500' :
+                                                        'border-gray-200 focus:border-blue-500'
                                             }`}
                                     />
                                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                        {isCheckingEmail && <span className="text-gray-400 text-xs">...</span>}
-                                        {!isCheckingEmail && recipientExists === true && <FiCheck className="w-3.5 h-3.5 text-green-500" />}
-                                        {!isCheckingEmail && recipientExists === false && <FiAlertCircle className="w-3.5 h-3.5 text-amber-500" />}
+                                        {isForMyself && <FiLock className="w-3 h-3 text-blue-500" />}
+                                        {!isForMyself && isCheckingEmail && <span className="text-gray-400 text-xs">...</span>}
+                                        {!isForMyself && !isCheckingEmail && recipientExists === true && <FiCheck className="w-3.5 h-3.5 text-green-500" />}
+                                        {!isForMyself && !isCheckingEmail && recipientExists === false && <FiAlertCircle className="w-3.5 h-3.5 text-amber-500" />}
                                     </div>
                                     {errors.email && (
                                         <div className="absolute -bottom-4 left-0 text-[10px] text-red-500 flex items-center gap-1">
@@ -1032,6 +1042,13 @@ export default function GiftCardsPage() {
                                     )}
                                 </div>
                             </div>
+                            {isForMyself && (
+                                <p className="text-[10px] text-blue-500 mt-1.5 flex items-center gap-1">
+                                    <FiLock className="w-2.5 h-2.5" />
+                                    Se usarán tus datos de cuenta automáticamente
+                                </p>
+                            )}
+
                             {recipientExists === false && !errors.email && (
                                 <p className="text-xs text-amber-600 mt-1">
                                     Usuario no registrado. Se enviará invitación.
@@ -1222,14 +1239,8 @@ export default function GiftCardsPage() {
                 </div>
             </section>
 
-            {/* Footer - Simple style like servicios page */}
-            <footer className="bg-[#212529]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <p className="text-center text-sm text-gray-400">
-                        &copy; {new Date().getFullYear()} Electro Shop Morandin C.A. - Todos los derechos reservados
-                    </p>
-                </div>
-            </footer>
+            {/* Footer */}
+            <Footer />
 
             {/* Invite Modal */}
             {showInviteModal && (

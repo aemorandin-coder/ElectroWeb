@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { FiMapPin, FiPlus, FiEdit, FiTrash2, FiCheck, FiHome, FiBriefcase, FiPackage, FiTruck, FiX, FiInfo, FiZap } from 'react-icons/fi';
+import { FiMapPin, FiPlus, FiEdit, FiTrash2, FiCheck, FiHome, FiBriefcase, FiPackage, FiTruck, FiX, FiInfo } from 'react-icons/fi';
 
 // Address types including shipping companies
 const ADDRESS_TYPES = [
@@ -176,7 +176,7 @@ export default function AddressesPage() {
       {/* Info Box - Compact on mobile */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg lg:rounded-xl p-2.5 lg:p-4">
         <p className="text-xs lg:text-sm text-blue-800 flex items-start gap-2">
-          <FiZap className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-blue-600 flex-shrink-0 mt-0.5 animate-pulse" />
+          <FiInfo className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-blue-600 flex-shrink-0 mt-0.5" />
           <span><strong>Tip:</strong> Agrega direcciones físicas o agencias de <strong>Zoom</strong> / <strong>MRW</strong>.</span>
         </p>
       </div>
@@ -270,36 +270,44 @@ export default function AddressesPage() {
 
       {/* Modal - Using Portal */}
       {showModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100001] flex items-center justify-center p-3 lg:p-4 bg-black/60 backdrop-blur-sm">
-          {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL */}
+        <div className="fixed inset-0 z-[100001] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+          {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL (Desktop Only) */}
           <button
             onClick={() => setShowModal(false)}
-            className="fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all z-10"
+            className="hidden sm:flex fixed top-4 right-4 w-12 h-12 bg-white/90 hover:bg-white rounded-full items-center justify-center shadow-lg active:scale-95 transition-all z-10"
             aria-label="Cerrar"
           >
             <FiX className="w-6 h-6 text-gray-700" />
           </button>
 
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-t-[32px] sm:rounded-2xl shadow-2xl w-full max-w-[700px] h-[92vh] sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col animate-slideInUp sm:animate-fadeIn">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white px-4 lg:px-6 py-2.5 lg:py-4 flex-shrink-0">
+            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white px-5 lg:px-6 py-4 flex-shrink-0 rounded-t-[32px] sm:rounded-none">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 lg:gap-3">
-                  <FiMapPin className="w-5 h-5 lg:w-6 lg:h-6" />
+                <div className="flex items-center gap-3">
+                  <FiMapPin className="w-6 h-6" />
                   <div>
-                    <h3 className="text-sm lg:text-lg font-bold">
+                    <h3 className="text-base lg:text-lg font-bold">
                       {editingAddress ? 'Editar Dirección' : 'Nueva Dirección'}
                     </h3>
-                    <p className="text-[9px] lg:text-sm text-white/80">Completa los datos</p>
+                    <p className="text-[10px] lg:text-sm text-white/80">Completa los datos de envío</p>
                   </div>
                 </div>
-                {/* Save Icon in Header - Mobile Only */}
-                <button
-                  onClick={handleSubmit}
-                  className="sm:hidden p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all active:scale-90"
-                >
-                  <FiCheck className="w-6 h-6 text-white" />
-                </button>
+                {/* Save & Close Icons in Header - Mobile Only */}
+                <div className="flex sm:hidden items-center gap-2">
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all active:scale-90"
+                  >
+                    <FiX className="w-5 h-5 text-white" />
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    className="p-2.5 bg-emerald-500/80 hover:bg-emerald-500 rounded-xl transition-all active:scale-90 shadow-sm"
+                  >
+                    <FiCheck className="w-5 h-5 text-white" />
+                  </button>
+                </div>
               </div>
             </div>
 

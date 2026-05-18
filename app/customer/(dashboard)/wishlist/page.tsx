@@ -567,11 +567,11 @@ export default function WishlistPage() {
               Guarda favoritos y pide descuentos exclusivos
             </p>
             <Link
-              href="/productos"
+              href="/"
               className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-xl transition-all"
             >
               <PiSparkle className="w-5 h-5" />
-              Explorar Productos
+              Ver Ofertas de Hoy
             </Link>
           </div>
         </div>
@@ -581,51 +581,32 @@ export default function WishlistPage() {
       {showDiscountModal && selectedItem && typeof document !== 'undefined' && createPortal(
         <div
           onClick={() => setShowDiscountModal(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            padding: '16px',
-            animation: 'fadeIn 0.2s ease-out'
-          }}
+          className="fixed inset-0 z-[100001] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              width: '100%',
-              maxWidth: '512px',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              overflow: 'hidden',
-              animation: 'slideUp 0.3s ease-out'
-            }}
+            className="bg-white rounded-t-[32px] sm:rounded-2xl shadow-2xl w-full max-w-[512px] max-h-[95vh] sm:max-h-[90vh] flex flex-col animate-slideInUp sm:animate-fadeIn"
           >
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-5 text-white">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-4 sm:p-5 text-white flex-shrink-0 rounded-t-[32px] sm:rounded-none">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <FiPercent className="w-6 h-6" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <FiPercent className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold">Solicitar Descuento</h2>
-                    <p className="text-sm text-amber-100">Producto de tu lista de deseos</p>
+                    <h2 className="text-base sm:text-lg font-bold">Solicitar Descuento</h2>
+                    <p className="text-xs sm:text-sm text-amber-100">Producto de tu lista de deseos</p>
                   </div>
                 </div>
-                <button onClick={() => setShowDiscountModal(false)} className="p-2 hover:bg-white/20 rounded-lg transition-all">
+                <button onClick={() => setShowDiscountModal(false)} className="p-2 sm:hidden hover:bg-white/20 rounded-lg transition-all">
                   <FiX className="w-5 h-5" />
                 </button>
               </div>
             </div>
+            
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto flex-1 pb-6 sm:pb-0">
 
             {/* Product Info */}
             <div className="p-5 border-b border-[#e9ecef]">
@@ -717,6 +698,7 @@ export default function WishlistPage() {
                 El administrador revisara tu solicitud y te notificara cuando sea aprobada.
                 Los descuentos aprobados tienen tiempo limitado.
               </p>
+            </div>
             </div>
           </div>
         </div>,

@@ -67,11 +67,8 @@ export default function ContactForm() {
             case 'name':
                 if (!value || value.trim() === '') return 'Por favor, ingresa tu nombre';
                 if (value.length < 2) return 'El nombre debe tener al menos 2 caracteres';
-                // Only allow letters, spaces, accents, and ONE comma
-                const commaCount = (value.match(/,/g) || []).length;
-                if (commaCount > 1) return 'Solo se permite una coma para separar apellidos';
-                const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s,]+$/;
-                if (!nameRegex.test(value)) return 'Solo se permiten letras, espacios y una coma';
+                const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'\-,.]+$/;
+                if (!nameRegex.test(value)) return 'Solo se permiten letras y caracteres válidos';
                 return '';
 
             case 'email':
@@ -113,10 +110,8 @@ export default function ContactForm() {
 
         // Validation rules for specific fields
         if (name === 'name') {
-            // Only allow letters, spaces, accents, and comma
-            const commaCount = (value.match(/,/g) || []).length;
-            if (commaCount > 1) return; // Block more than 1 comma
-            const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s,]*$/;
+            // Allow letters, spaces, accents, hyphens, apostrophes and commas
+            const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'\-,.]*$/;
             if (!nameRegex.test(value)) return;
         }
 
@@ -291,7 +286,6 @@ export default function ContactForm() {
                             <label htmlFor="name" className="block text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-wider">
                                 Nombre Completo
                             </label>
-                            <span className="text-[9px] md:text-[10px] text-blue-200/60 hidden md:inline">(Solo letras y una coma)</span>
                         </div>
                         <div className="relative group">
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">

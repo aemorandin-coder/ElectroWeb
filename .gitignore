@@ -23,6 +23,9 @@
 # misc
 .DS_Store
 *.pem
+*.backup
+*.disabled
+*.broken
 
 # debug
 npm-debug.log*
@@ -55,3 +58,4 @@ public/uploads/
 # Agent folders
 .agents/
 .agent/
+.claude/

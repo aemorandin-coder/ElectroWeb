@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
     FiArrowLeft, FiSend, FiCheck, FiPackage, FiClock,
-    FiAlertCircle, FiUser, FiMail, FiPhone, FiZap, FiCopy,
+    FiAlertCircle, FiUser, FiMail, FiPhone, FiMonitor, FiCopy,
     FiPlus, FiTrash2, FiEdit
 } from 'react-icons/fi';
 import { SiSteam, SiPlaystation, SiNintendoswitch, SiRoblox } from 'react-icons/si';
@@ -197,7 +197,7 @@ export default function AdminDigitalCodesPage() {
                     <div>
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl text-white">
-                                <FiZap className="w-6 h-6" />
+                                <FiMonitor className="w-6 h-6" />
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">

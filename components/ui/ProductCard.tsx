@@ -64,7 +64,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                             alt={product.name}
                             fill
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            className="object-cover group-hover:scale-110 transition-transform duration-700"
+                            className="object-contain p-3 group-hover:scale-105 transition-transform duration-700"
                             onError={() => setImageError(true)}
                         />
                     ) : (
@@ -72,22 +72,12 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                             src="/images/no-image.png"
                             alt="Imagen no disponible"
                             fill
-                            className="object-cover"
+                            className="object-contain p-3"
                             unoptimized
                         />
                     )}
 
-                    {/* Featured Badge - Hot Sale Style */}
-                    {product.isFeatured && (
-                        <div className="absolute top-0 left-0 z-20">
-                            <div className="bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 text-white pl-2 pr-3 py-1 rounded-br-lg shadow-lg flex items-center gap-1.5">
-                                <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-[11px] font-black tracking-wide uppercase">Destacado</span>
-                            </div>
-                        </div>
-                    )}
+
 
                     {product.stock === 0 && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
@@ -98,6 +88,18 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
                 {/* Contenido de la tarjeta */}
                 <div className="p-4 flex-1 flex flex-col">
+                    {/* Featured Badge en el contenido (Mobile and Desktop) */}
+                    {product.isFeatured && (
+                        <div className="flex justify-center mb-2">
+                            <div className="inline-flex items-center gap-1 bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 text-white px-2 py-0.5 rounded-full shadow-sm">
+                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
+                                </svg>
+                                <span className="text-[10px] font-black tracking-wide uppercase">Destacado</span>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Nombre del producto - más grande y centrado */}
                     <h3 className="text-base font-bold text-[#212529] text-center line-clamp-2 group-hover:text-[#2a63cd] transition-colors duration-300 min-h-[48px] flex items-center justify-center leading-tight">
                         {product.name}
@@ -112,10 +114,10 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
                     {/* Sección de precios - centrada y protagonista */}
                     <div className="mt-auto">
-                        <div className="flex flex-col items-center pt-3 border-t border-gray-100">
+                        <div className="flex flex-col items-center pt-2 sm:pt-3 border-t border-gray-100">
                             {/* Precio USD - protagonista */}
                             <div className="flex items-baseline gap-1.5 mb-1">
-                                <span className="text-2xl font-black text-[#2a63cd]">${priceUSD.toFixed(2)}</span>
+                                <span className="text-xl sm:text-2xl font-black text-[#2a63cd]">${priceUSD.toFixed(2)}</span>
                             </div>
 
                             {/* Precio Bs - formato venezolano */}
@@ -125,18 +127,10 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                                     <span className="text-sm font-bold text-gray-500">{formatVESPrice(priceVES)}</span>
                                 </div>
                             )}
-
-                            {/* Stock indicator */}
-                            {product.stock > 0 && (
-                                <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 rounded-full mt-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                                    <span className="text-[10px] text-green-700 font-bold">Disponible ({product.stock})</span>
-                                </div>
-                            )}
                         </div>
 
-                        {/* Botón Ver Detalles */}
-                        <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        {/* Botón Ver Detalles (Solo Desktop) */}
+                        <div className="mt-3 hidden sm:block opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <div className="w-full px-3 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-xs font-bold rounded-xl text-center shadow-lg flex items-center justify-center gap-1.5">
                                 Ver Detalles
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

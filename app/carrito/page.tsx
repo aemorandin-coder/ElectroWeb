@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import PublicHeader from '@/components/public/PublicHeader';
+import Footer from '@/components/Footer';
 import { toast } from 'react-hot-toast';
-import { HiShieldCheck, HiLightningBolt, HiBadgeCheck, HiTrash } from 'react-icons/hi';
-import { FiTruck, FiShield, FiZap } from 'react-icons/fi';
+import { HiShieldCheck, HiBadgeCheck, HiTrash } from 'react-icons/hi';
+import { FiTruck, FiShield } from 'react-icons/fi';
 
 // Gift Card Designs - Same as gift-cards page
 const GIFT_CARD_DESIGNS: Record<string, { gradient: string; accent: string; name: string }> = {
@@ -120,8 +121,8 @@ export default function CarritoPage() {
   };
 
   const total = getTotalPrice();
-  const subtotal = total / 1.16;
-  const tax = total - subtotal;
+  const subtotal = total;
+  const tax = 0; // Exento para saldos y códigos digitales
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -175,6 +176,48 @@ export default function CarritoPage() {
               {items.length === 0 ? 'Está vacío' : `${items.length} producto${items.length > 1 ? 's' : ''} listo${items.length > 1 ? 's' : ''} para checkout`}
             </p>
           </div>
+
+          {/* Visual Stepper - Premium Gaming Aesthetics */}
+          {items.length > 0 && (
+            <div className="mt-8 max-w-xl mx-auto bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-xl animate-fadeIn">
+              <div className="relative flex justify-between items-center">
+                {/* Stepper Progress Line */}
+                <div className="absolute left-6 right-6 top-1/2 h-0.5 bg-white/10 -translate-y-1/2 z-0">
+                  <div className="w-1/3 h-full bg-gradient-to-r from-cyan-400 to-[#2a63cd] rounded-full"></div>
+                </div>
+
+                {/* Step 1: Carrito (Active) */}
+                <div className="relative flex flex-col items-center gap-1.5 z-10">
+                  <div className="w-9 h-9 bg-gradient-to-br from-cyan-400 to-[#2a63cd] border-2 border-cyan-300 rounded-full flex items-center justify-center font-bold text-white text-xs shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-black text-cyan-200 uppercase tracking-wide">1. Carrito</span>
+                </div>
+
+                {/* Step 2: Checkout (Inactive) */}
+                <div className="relative flex flex-col items-center gap-1.5 z-10">
+                  <div className="w-9 h-9 bg-[#111a36] border-2 border-white/10 rounded-full flex items-center justify-center font-bold text-white/40 text-xs hover:border-[#2a63cd]/50 transition-all">
+                    <svg className="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-bold text-white/50 uppercase tracking-wide">2. Pago</span>
+                </div>
+
+                {/* Step 3: Confirmación (Inactive) */}
+                <div className="relative flex flex-col items-center gap-1.5 z-10">
+                  <div className="w-9 h-9 bg-[#111a36] border-2 border-white/10 rounded-full flex items-center justify-center font-bold text-white/40 text-xs">
+                    <svg className="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-bold text-white/50 uppercase tracking-wide">3. ¡Listo!</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -340,9 +383,17 @@ export default function CarritoPage() {
                       {/* Product Info */}
                       <div className="flex-1 flex flex-col min-w-0">
                         <div className="flex-1">
-                          <h3 className="text-base font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-[#2a63cd] transition-colors">
+                          <h3 className="text-base font-bold text-slate-800 mb-1.5 line-clamp-2 group-hover:text-[#2a63cd] transition-colors">
                             {item.name}
                           </h3>
+                          {item.digitalUsername && (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 border border-purple-200/50 rounded-lg text-purple-700 text-xs font-bold shadow-sm mb-2 animate-fadeIn">
+                              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                              <span>Recarga para: {item.digitalUsername}</span>
+                            </div>
+                          )}
                           {/* Price Display - USD + Bs. */}
                           <div className="space-y-1">
                             <div className="flex items-baseline gap-1.5">
@@ -486,7 +537,7 @@ export default function CarritoPage() {
 
                     {/* Tax */}
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 text-sm">IVA (16%):</span>
+                      <span className="text-slate-500 text-sm">Impuestos (Exento):</span>
                       <div className="text-right">
                         <div className="flex items-baseline gap-1 justify-end">
                           <span className="text-xs text-slate-400">USD</span>
@@ -519,13 +570,6 @@ export default function CarritoPage() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Exchange Rate Note */}
-                    {settings?.exchangeRateVES && (
-                      <div className="text-[10px] text-slate-400 text-center pt-2">
-                        Tasa de cambio: 1 USD = Bs. {settings.exchangeRateVES.toFixed(2)}
-                      </div>
-                    )}
                   </div>
 
                   {/* Checkout Button */}
@@ -598,79 +642,9 @@ export default function CarritoPage() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-slate-800 text-white py-6 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-sm text-slate-400">
-            &copy; {new Date().getFullYear()} {settings?.companyName || 'Electro Shop Morandin C.A.'} - Todos los derechos reservados
-          </p>
-        </div>
-      </footer>
+      <Footer />
 
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-30px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(5deg); }
-        }
-        @keyframes float-delayed {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(-5deg); }
-        }
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        @keyframes bounce-subtle {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-        }
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
-        }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0) rotate(0); }
-          10% { transform: translateX(-2px) rotate(-5deg); }
-          20% { transform: translateX(2px) rotate(5deg); }
-          30% { transform: translateX(-2px) rotate(-5deg); }
-          40% { transform: translateX(2px) rotate(5deg); }
-          50% { transform: translateX(-1px) rotate(-3deg); }
-          60% { transform: translateX(1px) rotate(3deg); }
-          70% { transform: translateX(-1px) rotate(-1deg); }
-          80% { transform: translateX(1px) rotate(1deg); }
-          90% { transform: translateX(0) rotate(0); }
-        }
-        @keyframes removeItem {
-          0% { opacity: 1; transform: translateX(0) scale(1); }
-          50% { opacity: 0.5; transform: translateX(-20px) scale(0.98); }
-          100% { opacity: 0; transform: translateX(-100px) scale(0.9); }
-        }
-        @keyframes clearItem {
-          0% { opacity: 1; transform: translateY(0) scale(1); }
-          100% { opacity: 0; transform: translateY(-30px) scale(0.8); }
-        }
-        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
-        .animate-slideUp { animation: slideUp 0.6s ease-out forwards; }
-        .animate-float { animation: float 6s ease-in-out infinite; }
-        .animate-float-delayed { animation: float-delayed 8s ease-in-out infinite; }
-        .animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
-        .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
-        .animate-shake { animation: shake 0.5s ease-in-out; }
-        .animate-removeItem { animation: removeItem 0.4s ease-out forwards; }
-        .animate-clearItem { animation: clearItem 0.4s ease-out forwards; }
-      `}</style>
+
     </div>
   );
 }

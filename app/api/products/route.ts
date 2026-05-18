@@ -53,13 +53,15 @@ export async function GET(request: NextRequest) {
       ...(all ? {} : { take: limit, skip }),
     });
 
-    // Convert Decimal fields to Number for proper JSON serialization
+    const safeNum = (v: any) => v != null ? Number(v) : null;
     const formattedProducts = products.map(p => ({
       ...p,
-      priceUSD: Number(p.priceUSD),
-      priceVES: p.priceVES ? Number(p.priceVES) : null,
-      weightKg: p.weightKg ? Number(p.weightKg) : null,
-      shippingCost: p.shippingCost ? Number(p.shippingCost) : null,
+      priceUSD: safeNum(p.priceUSD) ?? 0,
+      priceVES: safeNum(p.priceVES),
+      compareAtPriceUSD: safeNum(p.compareAtPriceUSD),
+      costPerItem: safeNum(p.costPerItem),
+      weightKg: safeNum(p.weightKg),
+      shippingCost: safeNum(p.shippingCost),
     }));
 
     // BACKWARD COMPATIBILITY: Return array directly when all=true (for admin panel)
@@ -119,13 +121,31 @@ export async function POST(request: NextRequest) {
 
     // Check if slug already exists and append random string if so
     let finalSlug = slug;
-    let existingSlug = await prisma.product.findUnique({
+    const existingSlug = await prisma.product.findUnique({
       where: { slug: finalSlug },
     });
 
     if (existingSlug) {
       finalSlug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
     }
+
+    // Generate unique short code (6 chars: 2 from name + 4 random)
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const namePrefix = body.name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]/g, '')
+      .substring(0, 2);
+    let shortCode: string;
+    let attempts = 0;
+    do {
+      const suffix = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      shortCode = namePrefix + suffix;
+      const existing = await prisma.product.findUnique({ where: { shortCode } });
+      if (!existing) break;
+      attempts++;
+    } while (attempts < 10);
 
     // Verify category exists
     const category = await prisma.category.findUnique({
@@ -158,10 +178,15 @@ export async function POST(request: NextRequest) {
         name: body.name,
         sku: body.sku,
         slug: finalSlug,
+        shortCode,
         description: body.description || '',
         priceUSD,
+        compareAtPriceUSD: body.compareAtPriceUSD ? parseFloat(body.compareAtPriceUSD) : null,
+        costPerItem: body.costPerItem ? parseFloat(body.costPerItem) : null,
         stock,
         minStock: parseInt(body.minStock) || 0,
+        barcode: body.barcode || null,
+        tags: body.tags && Array.isArray(body.tags) ? JSON.stringify(body.tags) : null,
         categoryId: body.categoryId,
         brandId: body.brandId || null,
         images: JSON.stringify(imageArray),
@@ -170,6 +195,10 @@ export async function POST(request: NextRequest) {
         features: body.features ? JSON.stringify(body.features) : null,
         status: body.status || (body.isActive ? 'PUBLISHED' : 'DRAFT'),
         isFeatured: body.isFeatured || false,
+        // SEO Fields
+        seoTitle: body.seoTitle || null,
+        seoDescription: body.seoDescription || null,
+        seoImage: body.seoImage || null,
         // Digital Product Fields
         productType: body.productType || 'PHYSICAL',
         digitalPlatform: body.productType === 'DIGITAL' ? body.digitalPlatform : null,

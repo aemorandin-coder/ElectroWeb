@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FiPackage, FiStar, FiInfo, FiGift, FiTrendingUp, FiTrash2, FiExternalLink, FiDollarSign, FiCreditCard, FiCheckCircle, FiTruck, FiBox, FiTag, FiAlertCircle, FiZap } from 'react-icons/fi';
+import { FiPackage, FiStar, FiInfo, FiGift, FiTrendingUp, FiTrash2, FiExternalLink, FiDollarSign, FiCreditCard, FiCheckCircle, FiTruck, FiBox, FiTag, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
 import { useNotifications, Notification } from './NotificationProvider';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -15,7 +15,7 @@ const iconMap: Record<string, any> = {
     ORDER_DELIVERED: FiBox,
     REVIEW_APPROVED: FiStar,
     REVIEW_REPLIED: FiStar,
-    SYSTEM_UPDATE: FiZap,
+    SYSTEM_UPDATE: FiRefreshCw,
     SYSTEM_MAINTENANCE: FiAlertCircle,
     PROMOTION: FiTag,
     STOCK_ALERT: FiTrendingUp,

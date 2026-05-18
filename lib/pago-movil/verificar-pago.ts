@@ -94,14 +94,24 @@ export async function verificarPagoMovil(
     });
 
     try {
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-API-KEY': apiKey,
-            },
-            body: JSON.stringify(requestBody),
-        });
+        // Issue #16 fix: AbortController con timeout de 15s para evitar peticiones zombi
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15_000);
+
+        let response: Response;
+        try {
+            response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-KEY': apiKey,
+                },
+                body: JSON.stringify(requestBody),
+                signal: controller.signal,
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
 
         const data = await response.json();
         console.log('[BDV API] Respuesta:', data);
@@ -125,7 +135,17 @@ export async function verificarPagoMovil(
                 rawResponse: data,
             };
         }
-    } catch (error) {
+    } catch (error: any) {
+        // Timeout del AbortController
+        if (error?.name === 'AbortError') {
+            console.error('[BDV API] Timeout: la petición tardó más de 15 segundos');
+            return {
+                success: false,
+                verified: false,
+                code: 408,
+                message: 'El Banco de Venezuela no respondió a tiempo. Por favor, intenta nuevamente en unos momentos.',
+            };
+        }
         console.error('[BDV API] Error al verificar pago:', error);
         return {
             success: false,

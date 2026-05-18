@@ -430,6 +430,17 @@ export async function POST(request: NextRequest) {
       return order;
     });
 
+    // Referral commission: record PURCHASE conversion (fire-and-forget)
+    if (result) {
+      const { recordConversion } = await import('@/lib/influencer-commission');
+      recordConversion({
+        referredUserId: userId,
+        type: 'PURCHASE',
+        grossAmount: Number(body.totalUSD || body.total || 0),
+        orderId: result.id,
+      }).catch(() => {});
+    }
+
     // Note: For DIRECT payment, reservations are NOT deleted here - they expire after 15 mins
     // or are deleted when admin confirms payment and stock is actually deducted
 

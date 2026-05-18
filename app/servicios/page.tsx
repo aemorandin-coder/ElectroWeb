@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
@@ -486,14 +487,7 @@ export default async function ServiciosPage() {
         </div>
       </div>
 
-      {/* Footer - Keep current */}
-      <footer className="bg-[#212529] mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} {settings?.companyName || 'Electro Shop Morandin C.A.'} - Todos los derechos reservados
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

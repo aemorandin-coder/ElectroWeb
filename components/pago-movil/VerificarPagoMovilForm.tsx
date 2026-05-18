@@ -75,6 +75,7 @@ export default function VerificarPagoMovilForm({
     const [showBankDropdown, setShowBankDropdown] = useState(false);
     const [filteredBancos, setFilteredBancos] = useState<BancoVenezuela[]>(BANCOS_VENEZUELA);
     const [bankSearchTerm, setBankSearchTerm] = useState('');
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
     // Filtrar bancos por término de búsqueda
     useEffect(() => {
@@ -120,9 +121,9 @@ export default function VerificarPagoMovilForm({
     const getContactUrl = (errorMessage: string) => {
         const banco = BANCOS_VENEZUELA.find(b => b.codigo === formData.bancoOrigen);
         const mensaje = `
-📩 Solicitud de Soporte - Verificación de Pago Móvil
+[ Solicitud de Soporte - Verificación de Pago Móvil ]
 
-📋 DATOS DEL PAGO:
+DATOS DEL PAGO:
 • Cédula: ${formData.cedulaPagador}
 • Teléfono: ${formData.telefonoPagador}
 • Banco: ${banco?.nombre || formData.bancoOrigen}
@@ -131,7 +132,7 @@ export default function VerificarPagoMovilForm({
 • Monto USD: $${montoEsperado.toFixed(2)}
 ${montoEnBs ? `• Monto Bs: ${montoEnBs.toFixed(2)}` : ''}
 
-⚠️ ERROR ENCONTRADO:
+ERROR ENCONTRADO:
 ${errorMessage}
 
 Por favor necesito ayuda para verificar mi pago.
@@ -153,26 +154,28 @@ Por favor necesito ayuda para verificar mi pago.
         router.push(url);
     };
 
+    const validateFields = (): boolean => {
+        const errors: Record<string, string> = {};
+        const cedulaRegex = /^[VvEe]?\d{6,9}$/;
+        const cedulaLimpia = formData.cedulaPagador.trim().replace(/[.-]/g, '');
+        if (!cedulaLimpia || !cedulaRegex.test(cedulaLimpia))
+            errors.cedulaPagador = 'Formato requerido: V12345678 o E12345678';
+        if (!formData.telefonoPagador.match(/^04[0-9]{9}$/))
+            errors.telefonoPagador = 'Formato: 04121234567 (11 dígitos)';
+        if (!formData.bancoOrigen)
+            errors.bancoOrigen = 'Debes seleccionar tu banco';
+        if (!formData.referencia.match(/^\d{4,8}$/))
+            errors.referencia = 'Entre 4 y 8 dígitos numéricos';
+        if (!formData.fechaPago)
+            errors.fechaPago = 'Selecciona la fecha del pago';
+        setFieldErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     const handleVerificar = async () => {
-        // Validaciones básicas
-        if (!formData.cedulaPagador) {
-            onError?.('Ingresa la cédula del titular de la cuenta');
-            return;
-        }
-        if (!formData.telefonoPagador) {
-            onError?.('Ingresa el teléfono desde donde realizaste el pago');
-            return;
-        }
-        if (!formData.bancoOrigen) {
-            onError?.('Selecciona el banco desde donde realizaste el pago');
-            return;
-        }
-        if (!formData.referencia) {
-            onError?.('Ingresa el número de referencia del pago');
-            return;
-        }
-        if (!formData.fechaPago) {
-            onError?.('Selecciona la fecha del pago');
+        // Validación visual inline antes de enviar
+        if (!validateFields()) {
+            onError?.('Por favor corrige los errores en el formulario.');
             return;
         }
 
@@ -208,7 +211,7 @@ Por favor necesito ayuda para verificar mi pago.
                         duplicateReference: true,
                         requiresContact: true,
                     });
-                    onError?.('⚠️ Esta referencia de pago ya fue utilizada anteriormente. Por seguridad, esta acción ha sido registrada.');
+                    onError?.('Esta referencia de pago ya fue utilizada anteriormente. Por seguridad, esta acción ha sido registrada.');
                 } else {
                     setVerificationState('error');
                     setResultado({
@@ -298,10 +301,8 @@ Por favor necesito ayuda para verificar mi pago.
                     <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
                         Fecha del Pago <span className="text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
-                            <FiCalendar className="w-4 h-4" />
-                        </div>
+                    <div className="form-field">
+                        <FiCalendar className="field-icon text-[#6a6c6b]" />
                         <input
                             type="date"
                             name="fechaPago"
@@ -309,9 +310,16 @@ Por favor necesito ayuda para verificar mi pago.
                             onChange={handleChange}
                             max={new Date().toISOString().split('T')[0]}
                             disabled={disabled || verificationState === 'verifying'}
-                            className="w-full pl-10 pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                                fieldErrors.fechaPago ? 'border-red-400 bg-red-50' : 'border-[#e9ecef]'
+                            }`}
                         />
                     </div>
+                    {fieldErrors.fechaPago && (
+                        <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.fechaPago}
+                        </p>
+                    )}
                 </div>
 
                 {/* Referencia */}
@@ -319,22 +327,29 @@ Por favor necesito ayuda para verificar mi pago.
                     <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
                         Nº de Referencia <span className="text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
-                            <FiHash className="w-4 h-4" />
-                        </div>
+                    <div className="form-field">
+                        <FiHash className="field-icon text-[#6a6c6b]" />
                         <input
                             type="text"
                             name="referencia"
                             value={formData.referencia}
                             onChange={handleChange}
-                            placeholder="12345678"
+                            placeholder="Ej: 12345678"
                             maxLength={8}
+                            inputMode="numeric"
                             disabled={disabled || verificationState === 'verifying'}
-                            className="w-full pl-10 pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                                fieldErrors.referencia ? 'border-red-400 bg-red-50' : 'border-[#e9ecef]'
+                            }`}
                         />
                     </div>
-                    <p className="text-[10px] text-[#6a6c6b] mt-1">Últimos 4-8 dígitos</p>
+                    {fieldErrors.referencia ? (
+                        <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.referencia}
+                        </p>
+                    ) : (
+                        <p className="text-[10px] text-[#6a6c6b] mt-1">4 a 8 dígitos numéricos</p>
+                    )}
                 </div>
             </div>
 
@@ -345,10 +360,8 @@ Por favor necesito ayuda para verificar mi pago.
                     <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
                         Cédula del Titular <span className="text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
-                            <FiUser className="w-4 h-4" />
-                        </div>
+                    <div className="form-field">
+                        <FiUser className="field-icon text-[#6a6c6b]" />
                         <input
                             type="text"
                             name="cedulaPagador"
@@ -356,11 +369,20 @@ Por favor necesito ayuda para verificar mi pago.
                             onChange={handleChange}
                             placeholder="V12345678"
                             maxLength={12}
+                            autoCapitalize="characters"
                             disabled={disabled || verificationState === 'verifying'}
-                            className="w-full pl-10 pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                                fieldErrors.cedulaPagador ? 'border-red-400 bg-red-50' : 'border-[#e9ecef]'
+                            }`}
                         />
                     </div>
-                    <p className="text-[10px] text-[#6a6c6b] mt-1">Ej: V12345678 o E12345678</p>
+                    {fieldErrors.cedulaPagador ? (
+                        <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.cedulaPagador}
+                        </p>
+                    ) : (
+                        <p className="text-[10px] text-[#6a6c6b] mt-1">Ej: V12345678 o E12345678</p>
+                    )}
                 </div>
 
                 {/* Teléfono del pagador */}
@@ -368,23 +390,29 @@ Por favor necesito ayuda para verificar mi pago.
                     <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
                         Teléfono del Pago <span className="text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
-                            <FiPhone className="w-4 h-4" />
-                        </div>
+                    <div className="form-field">
+                        <FiPhone className="field-icon text-[#6a6c6b]" />
                         <input
                             type="tel"
                             name="telefonoPagador"
                             value={formData.telefonoPagador}
                             onChange={handleChange}
                             placeholder="04121234567"
-                            pattern="04[0-9]{9}"
+                            inputMode="tel"
                             maxLength={11}
                             disabled={disabled || verificationState === 'verifying'}
-                            className="w-full pl-10 pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                                fieldErrors.telefonoPagador ? 'border-red-400 bg-red-50' : 'border-[#e9ecef]'
+                            }`}
                         />
                     </div>
-                    <p className="text-[10px] text-[#6a6c6b] mt-1">Teléfono desde donde pagaste</p>
+                    {fieldErrors.telefonoPagador ? (
+                        <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.telefonoPagador}
+                        </p>
+                    ) : (
+                        <p className="text-[10px] text-[#6a6c6b] mt-1">Teléfono desde donde pagaste</p>
+                    )}
                 </div>
 
                 {/* Banco origen - Dropdown mejorado */}
@@ -392,6 +420,11 @@ Por favor necesito ayuda para verificar mi pago.
                     <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
                         Banco de Origen <span className="text-red-500">*</span>
                     </label>
+                    {fieldErrors.bancoOrigen && (
+                        <p className="text-red-500 text-xs mb-1 flex items-center gap-1">
+                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.bancoOrigen}
+                        </p>
+                    )}
                     <button
                         type="button"
                         onClick={() => !disabled && verificationState !== 'verifying' && setShowBankDropdown(!showBankDropdown)}
@@ -499,10 +532,10 @@ Por favor necesito ayuda para verificar mi pago.
                         >
                             {verificationState === 'success'
                                 ? resultado.autoApproved
-                                    ? '🎉 Pago Verificado y Saldo Acreditado'
+                                    ? 'Pago Verificado y Saldo Acreditado'
                                     : 'Pago Verificado'
                                 : verificationState === 'duplicate'
-                                    ? '⚠️ Referencia Ya Utilizada'
+                                    ? 'Referencia Ya Utilizada'
                                     : 'Pago No Verificado'}
                         </span>
                     </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
+import Footer from '@/components/Footer';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -10,7 +11,7 @@ import PublicHeader from '@/components/public/PublicHeader';
 import RechargeModal from '@/components/modals/RechargeModal';
 import CheckoutPagoMovilForm from '@/components/checkout/CheckoutPagoMovilForm';
 import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverlay';
-import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle, FiZap, FiGift } from 'react-icons/fi';
+import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle, FiGift } from 'react-icons/fi';
 import { FaMobileScreen } from 'react-icons/fa6';
 import { FaCheck } from 'react-icons/fa';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -267,7 +268,7 @@ export default function CheckoutPage() {
       setShowRedirectMessage(true);
       // Redirect after showing the message
       const timer = setTimeout(() => {
-        router.push('/registro?redirect=checkout');
+        router.push('/registro?callbackUrl=%2Fcheckout');
       }, 3000);
       return () => clearTimeout(timer);
     }
@@ -556,15 +557,19 @@ export default function CheckoutPage() {
       // CREATE ORDER FOR DIGITAL PRODUCTS (if any)
       if (hasDigital) {
         const digitalOrderItems = digitalItems.map(item => {
-          // For digital products, the cart ID has format: "productId-amount" (e.g., "abc123-10")
-          // We need to extract the original product ID for the database
+          // For digital products, the cart ID has format: "productId-amount-username" or "productId-amount"
+          // We extract the original product ID robustly by splitting on '-'
           const originalProductId = item.productType === 'DIGITAL' && item.id.includes('-')
-            ? item.id.substring(0, item.id.lastIndexOf('-'))
+            ? item.id.split('-')[0]
             : item.id;
+
+          const finalItemName = item.digitalUsername
+            ? `${item.name} [Recarga para: ${item.digitalUsername}]`
+            : item.name;
 
           return {
             productId: originalProductId,
-            productName: item.name,
+            productName: finalItemName,
             productSku: originalProductId, // Use original ID as SKU too
             productImage: item.imageUrl || null,
             pricePerUnit: item.price,
@@ -644,10 +649,14 @@ export default function CheckoutPage() {
       // Wait for user to see the completed state
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Now clear cart and redirect
+      // Now clear cart and redirect to success page
       clearCart();
       setShowProcessingOverlay(false);
-      router.push('/customer/orders');
+
+      // Build success URL with order data as query params
+      const orderNumbers = createdOrders.map(o => o.orderNumber).join(',');
+      const total = createdOrders.reduce((sum, o) => sum + o.total, 0).toFixed(2);
+      router.push(`/checkout/success?orders=${encodeURIComponent(orderNumbers)}&total=${total}`);
 
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
@@ -944,35 +953,6 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <style jsx>{`
-          @keyframes slideInUp {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          @keyframes progress {
-            from {
-              width: 0%;
-            }
-            to {
-              width: 100%;
-            }
-          }
-
-          .animate-slideInUp {
-            animation: slideInUp 0.6s ease-out;
-          }
-
-          .animate-progress {
-            animation: progress 3s linear;
-          }
-        `}</style>
       </div>
     );
   }
@@ -995,22 +975,6 @@ export default function CheckoutPage() {
             Completa tus datos para procesar tu pedido
           </p>
         </div>
-        <style jsx>{`
-          @keyframes blob {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(20px, -50px) scale(1.1); }
-            50% { transform: translate(-20px, 20px) scale(0.9); }
-            75% { transform: translate(50px, 50px) scale(1.05); }
-          }
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-blob { animation: blob 7s infinite; }
-          .animation-delay-2000 { animation-delay: 2s; }
-          .animate-fadeInUp { animation: fadeInUp 0.8s ease-out; }
-          .animation-delay-200 { animation-delay: 0.2s; animation-fill-mode: both; }
-        `}</style>
       </section>
 
       {/* Main Content - Wider for Desktop */}
@@ -2367,13 +2331,7 @@ export default function CheckoutPage() {
         </div>
       </main>
 
-      <footer className="bg-white border-t border-[#e9ecef] mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-sm text-[#6a6c6b]">
-            &copy; {new Date().getFullYear()} Electro Shop Morandin C.A. - Todos los derechos reservados
-          </p>
-        </div>
-      </footer>
+      <Footer />
 
       <RechargeModal
         isOpen={showRechargeModal}

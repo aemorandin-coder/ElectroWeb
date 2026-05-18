@@ -291,8 +291,17 @@ export default function RegisterPage() {
       } else if (result?.ok) {
         // Wait a bit for session to be established
         await new Promise(resolve => setTimeout(resolve, 200));
-        // Redirect to home
-        window.location.href = '/';
+        
+        // Redirect based on callback URL or home (Paso 1.4)
+        let redirectUrl = '/';
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          const callbackUrl = params.get('callbackUrl');
+          if (callbackUrl && callbackUrl.startsWith('/') && !callbackUrl.includes('/admin')) {
+            redirectUrl = callbackUrl;
+          }
+        }
+        window.location.href = redirectUrl;
       }
     } catch (err) {
       console.error('Registration error:', err);
@@ -359,7 +368,7 @@ export default function RegisterPage() {
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-slideInUp">
           <div className="p-8">
             <div className="mb-6 text-center">
-              <h2 className="text-2xl font-bold text-white mb-1">Crear Cuenta</h2>
+              <h1 className="text-2xl font-bold text-white mb-1">Crear Cuenta</h1>
               <p className="text-blue-100 text-sm">Completa tus datos para comenzar</p>
             </div>
 

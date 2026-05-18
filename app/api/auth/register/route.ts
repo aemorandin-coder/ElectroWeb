@@ -65,6 +65,10 @@ export async function POST(request: NextRequest) {
 
     const { name, email, phone, password, idNumber } = validationResult.data;
 
+    // Read referral code from httpOnly cookie (set by middleware when ?ref= is present)
+    const rawRef = request.cookies.get('electroshop_ref')?.value ?? '';
+    const refCode = rawRef && /^[A-Z0-9_-]{3,20}$/.test(rawRef) ? rawRef : null;
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -80,6 +84,16 @@ export async function POST(request: NextRequest) {
     // Hash password with strong work factor
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Validate refCode against DB (must belong to an ACTIVE influencer and not self)
+    let validatedRefCode: string | null = null;
+    if (refCode) {
+      const inf = await prisma.influencer.findUnique({
+        where: { code: refCode, status: 'ACTIVE' },
+        select: { id: true },
+      });
+      if (inf) validatedRefCode = refCode;
+    }
+
     // Create user with profile (emailVerified = null means not verified)
     const user = await prisma.user.create({
       data: {
@@ -87,6 +101,7 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         emailVerified: null, // Not verified until email confirmation
+        referredByCode: validatedRefCode,
         profile: {
           create: {
             phone: phone,
@@ -106,6 +121,12 @@ export async function POST(request: NextRequest) {
         }
       },
     });
+
+    // Record referral conversion (fire-and-forget — registration itself must succeed)
+    if (validatedRefCode) {
+      const { recordConversion } = await import('@/lib/influencer-commission');
+      recordConversion({ referredUserId: user.id, type: 'REGISTRATION', grossAmount: 0 }).catch(() => {});
+    }
 
     // Create verification token (24 hours expiry)
     const verificationToken = crypto.randomBytes(32).toString('hex');

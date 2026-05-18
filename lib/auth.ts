@@ -115,5 +115,6 @@ export const authOptions: NextAuthOptions = {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
+  // debug solo en dev — evita logs de CLIENT_FETCH_ERROR en producción
+  debug: false,
 };

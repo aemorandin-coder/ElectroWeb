@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
+import Footer from '@/components/Footer';
 import { FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi } from 'react-icons/fi';
 
 const FloatingTechIcons = () => {
@@ -402,14 +403,7 @@ export default async function CursosPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-[#212529] mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} {settings?.companyName || 'Electro Shop Morandin C.A.'} - Todos los derechos reservados
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

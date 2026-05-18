@@ -152,7 +152,8 @@ export async function PUT(request: NextRequest) {
       'deliveryFeeUSD', 'freeDeliveryThresholdUSD', 'taxPercent',
       'minOrderAmountUSD', 'maxOrderAmountUSD', 'maxFeaturedProducts',
       'maxCategoriesDisplay', 'lowStockThreshold', 'criticalStockThreshold',
-      'hotAdShadowBlur', 'hotAdShadowOpacity', 'hotAdBackdropOpacity'
+      'hotAdShadowBlur', 'hotAdShadowOpacity', 'hotAdBackdropOpacity',
+      'shippingCostPerKg', 'minConsolidatedShipping', 'packagingFeeUSD',
     ];
 
     numberFields.forEach(field => {

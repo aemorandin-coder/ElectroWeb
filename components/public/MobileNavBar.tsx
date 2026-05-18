@@ -7,6 +7,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useCart } from '@/contexts/CartContext';
 
 // [MOBILE ONLY] Premium SVG Icons with refined design
 const PremiumHomeIcon = ({ active }: { active: boolean }) => (
@@ -235,11 +236,30 @@ const PremiumSolicitarIcon = ({ active }: { active: boolean }) => (
     </svg>
 );
 
+// [MOBILE ONLY] Premium icon for Cart (Shopping Cart)
+const PremiumCartIcon = ({ active }: { active: boolean }) => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
+    >
+        <path
+            d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.07 15.93 4.52 17 5.41 17H17M17 17A2 2 0 1017 21 2 2 0 0017 17ZM9 17A2 2 0 109 21 2 2 0 009 17Z"
+            stroke="currentColor"
+            strokeWidth={active ? 2.5 : 2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
+        />
+    </svg>
+);
+
 // [MOBILE ONLY] All navigation items in carousel order
 const allNavItems = [
     { href: '/', label: 'Inicio', Icon: PremiumHomeIcon },
     { href: '/productos', label: 'Productos', Icon: PremiumProductsIcon },
     { href: '/categorias', label: 'Categorias', Icon: PremiumCategoriesIcon },
+    { href: '/carrito', label: 'Carrito', Icon: PremiumCartIcon },
     { href: '/gift-cards', label: 'Gift Cards', Icon: PremiumGiftIcon },
     { href: '/servicios', label: 'Servicios', Icon: PremiumServiciosIcon },
     { href: '/cursos', label: 'Cursos', Icon: PremiumCursosIcon },
@@ -248,6 +268,8 @@ const allNavItems = [
 ];
 
 export default function MobileNavBar() {
+    const { items } = useCart();
+    const cartCount = items.length;
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeItem, setActiveItem] = useState<string | null>(null);
     const pathname = usePathname();
@@ -379,6 +401,11 @@ export default function MobileNavBar() {
                                     )}
                                     <div className="relative">
                                         <Icon active={active} />
+                                        {item.href === '/carrito' && cartCount > 0 && (
+                                            <span className="absolute -top-1.5 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[8px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-[#0D1B2A] shadow-md shadow-red-500/30 animate-pulse">
+                                                {cartCount}
+                                            </span>
+                                        )}
                                     </div>
                                     <span
                                         className="text-[9px] mt-0.5 relative z-10 text-center truncate"

@@ -48,9 +48,11 @@ export default function WhatsAppButton({
   useEffect(() => {
     if (!isAdminPanel) {
       fetch('/api/settings/public')
-        .then(res => res.json())
-        .then(data => {
-          setSettings(data);
+        .then(async res => {
+          if (!res.ok) return;
+          const text = await res.text();
+          if (!text || text.trim() === '') return;
+          try { setSettings(JSON.parse(text)); } catch { /* ignorar */ }
         })
         .catch(err => console.error('Error fetching WhatsApp settings:', err));
     }
@@ -117,7 +119,6 @@ export default function WhatsAppButton({
       if (isAdmin) {
         // Admin sees: redirect to settings page to change it
         toast.error('El número de WhatsApp es provisional. Redirigiendo a configuración...', {
-          icon: '⚠️',
           duration: 3000,
         });
         setTimeout(() => {
@@ -126,7 +127,6 @@ export default function WhatsAppButton({
       } else {
         // Customer/public sees: notification that it's provisional
         toast('El número de WhatsApp es provisional. Pronto estará disponible el número oficial.', {
-          icon: '📱',
           duration: 4000,
           style: {
             background: '#f97316',

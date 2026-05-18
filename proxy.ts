@@ -1,6 +1,8 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+
+const REF_COOKIE = 'electroshop_ref';
+const REF_TTL_DAYS = 30;
 
 export default withAuth(
   function proxy(req) {
@@ -9,38 +11,34 @@ export default withAuth(
     const isAdminRoute = pathname.startsWith('/admin');
     const isLoginPage = pathname === '/login' || pathname === '/admin/login';
 
-    // ═══════════════════════════════════════════════════════════════
-    // 1. SECURITY HEADERS - Apply to all responses
-    // ═══════════════════════════════════════════════════════════════
     const response = NextResponse.next();
 
-    // Prevent clickjacking
+    // ── REFERRAL COOKIE (first-touch attribution) ────────────────────
+    const refParam = req.nextUrl.searchParams.get('ref');
+    if (refParam && /^[A-Za-z0-9_-]{3,20}$/.test(refParam)) {
+      if (!req.cookies.get(REF_COOKIE)) {
+        response.cookies.set(REF_COOKIE, refParam.toUpperCase(), {
+          httpOnly: true,
+          sameSite: 'lax',
+          maxAge: REF_TTL_DAYS * 24 * 60 * 60,
+          path: '/',
+        });
+      }
+    }
+
+    // ── SECURITY HEADERS ─────────────────────────────────────────────
     response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-
-    // Prevent MIME type sniffing
     response.headers.set('X-Content-Type-Options', 'nosniff');
-
-    // Enable XSS filter
     response.headers.set('X-XSS-Protection', '1; mode=block');
-
-    // Referrer policy
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-
-    // Permissions policy
     response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
-    // ═══════════════════════════════════════════════════════════════
-    // 2. REDIRECTS
-    // ═══════════════════════════════════════════════════════════════
-
-    // Redirect old admin/login to new login
+    // ── REDIRECTS ────────────────────────────────────────────────────
     if (pathname === '/admin/login') {
       return NextResponse.redirect(new URL('/login?redirect=admin', req.url));
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // 3. ADMIN ROUTES PROTECTION
-    // ═══════════════════════════════════════════════════════════════
+    // ── ADMIN PROTECTION ─────────────────────────────────────────────
     if (isAdminRoute && !isLoginPage) {
       if (!token) {
         const loginUrl = new URL('/login', req.url);
@@ -48,7 +46,6 @@ export default withAuth(
         return NextResponse.redirect(loginUrl);
       }
 
-      // Check if user is admin
       const userType = (token as any)?.userType;
       const role = (token as any)?.role;
 
@@ -57,34 +54,47 @@ export default withAuth(
       }
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // 4. CUSTOMER ROUTES PROTECTION
-    // ═══════════════════════════════════════════════════════════════
-    if (pathname.startsWith('/customer')) {
-      if (!token) {
-        const loginUrl = new URL('/login', req.url);
-        loginUrl.searchParams.set('callbackUrl', pathname);
-        return NextResponse.redirect(loginUrl);
-      }
+    // ── CUSTOMER PROTECTION ──────────────────────────────────────────
+    const isCustomerRoute =
+      pathname.startsWith('/customer') ||
+      pathname.startsWith('/mis-pedidos');
+
+    if (isCustomerRoute && !token) {
+      const loginUrl = new URL('/login', req.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // 5. CHECKOUT PROTECTION
-    // ═══════════════════════════════════════════════════════════════
-    if (pathname.startsWith('/checkout')) {
-      if (!token) {
-        const loginUrl = new URL('/login', req.url);
-        loginUrl.searchParams.set('callbackUrl', '/checkout');
-        loginUrl.searchParams.set('message', 'login_required');
-        return NextResponse.redirect(loginUrl);
-      }
+    // ── CHECKOUT PROTECTION ──────────────────────────────────────────
+    if (pathname.startsWith('/checkout') && !token) {
+      const loginUrl = new URL('/login', req.url);
+      loginUrl.searchParams.set('callbackUrl', '/checkout');
+      loginUrl.searchParams.set('message', 'login_required');
+      return NextResponse.redirect(loginUrl);
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // 6. API RATE LIMITING HEADERS (for client awareness)
-    // ═══════════════════════════════════════════════════════════════
+    // ── API HEADERS ──────────────────────────────────────────────────
     if (pathname.startsWith('/api/')) {
       response.headers.set('X-RateLimit-Policy', 'sliding-window');
+    }
+
+    // ── ADMIN IDENTITY HEADER ─────────────────────────────────────────
+    // Lets the frontend bypass maintenance mode for logged-in admins
+    // without requiring a DB round-trip in each component.
+    const userRole = (token as any)?.role;
+    const userType = (token as any)?.userType;
+    const isAdminUser = userType === 'admin' || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+    if (isAdminUser) {
+      response.headers.set('X-Is-Admin', '1');
+      response.cookies.set('x-is-admin', '1', {
+        httpOnly: false, // readable by client JS for maintenance bypass
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 8, // 8 hours — matches typical session
+        path: '/',
+      });
+    } else {
+      // Clear the cookie if they're not an admin (logged out, role changed)
+      response.cookies.delete('x-is-admin');
     }
 
     return response;
@@ -94,7 +104,8 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
         const isLoginPage = pathname === '/login' || pathname === '/admin/login';
-        const isPublicApiRoute = pathname.startsWith('/api/public') ||
+        const isPublicApiRoute =
+          pathname.startsWith('/api/public') ||
           pathname.startsWith('/api/auth') ||
           pathname.startsWith('/api/products') ||
           pathname.startsWith('/api/categories') ||
@@ -104,19 +115,29 @@ export default withAuth(
           pathname.startsWith('/api/reviews') ||
           pathname.startsWith('/api/uploads') ||
           pathname.startsWith('/api/analytics') ||
-          pathname.startsWith('/api/webhooks'); // Also adding webhooks for safety
+          pathname.startsWith('/api/webhooks');
 
-        // Allow login pages
-        if (isLoginPage) {
-          return true;
-        }
+        // Public pages — always allow (protection handled in proxy function above)
+        const isPublicPage =
+          pathname === '/' ||
+          pathname.startsWith('/p/') ||
+          pathname.startsWith('/productos') ||
+          pathname.startsWith('/categorias') ||
+          pathname.startsWith('/servicios') ||
+          pathname.startsWith('/contacto') ||
+          pathname.startsWith('/cursos') ||
+          pathname.startsWith('/comparar') ||
+          pathname.startsWith('/gift-cards') ||
+          pathname.startsWith('/canjear-gift-card') ||
+          pathname.startsWith('/solicitar-producto') ||
+          pathname.startsWith('/registro') ||
+          pathname.startsWith('/privacidad') ||
+          pathname.startsWith('/terminos') ||
+          pathname.startsWith('/verificar-email') ||
+          pathname.startsWith('/recuperar-contrasena');
 
-        // Allow public API routes
-        if (isPublicApiRoute) {
-          return true;
-        }
+        if (isLoginPage || isPublicApiRoute || isPublicPage) return true;
 
-        // For protected routes, require token
         return !!token;
       },
     },
@@ -125,13 +146,28 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    // Admin routes
+    // Public pages — needed for referral cookie capture + security headers
+    '/',
+    '/p/:path*',
+    '/productos/:path*',
+    '/categorias/:path*',
+    '/servicios',
+    '/contacto',
+    '/cursos',
+    '/comparar',
+    '/gift-cards',
+    '/canjear-gift-card',
+    '/solicitar-producto',
+    '/registro',
+    '/privacidad',
+    '/terminos',
+    '/verificar-email/:path*',
+    '/recuperar-contrasena/:path*',
+    // Protected routes
     '/admin/:path*',
-    // Customer routes
     '/customer/:path*',
-    // Checkout
+    '/mis-pedidos/:path*',
     '/checkout/:path*',
-    // Login
     '/login',
     // API routes (for headers)
     '/api/:path*',

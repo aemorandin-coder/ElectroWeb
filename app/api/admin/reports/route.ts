@@ -340,6 +340,71 @@ export async function GET(request: NextRequest) {
             }
         }
 
+        if (type === 'referrals') {
+            const [
+                totalInfluencers,
+                activeInfluencers,
+                conversionsByStatus,
+                revenueStats,
+            ] = await Promise.all([
+                prisma.influencer.count(),
+                prisma.influencer.count({ where: { status: 'ACTIVE' } }),
+                prisma.referralConversion.groupBy({
+                    by: ['status'],
+                    _count: true,
+                    _sum: { commission: true, grossAmount: true },
+                    where: { createdAt: { gte: startDate } },
+                }),
+                prisma.referralConversion.aggregate({
+                    _sum: { grossAmount: true, commission: true },
+                    where: { status: 'APPROVED', createdAt: { gte: startDate } },
+                }),
+            ]);
+
+            const topInfluencersRaw = await prisma.referralConversion.groupBy({
+                by: ['influencerId'],
+                _sum: { commission: true, grossAmount: true },
+                _count: true,
+                where: { status: 'APPROVED' },
+                orderBy: { _sum: { commission: 'desc' } },
+                take: 10,
+            });
+
+            const influencerIds = topInfluencersRaw.map((t) => t.influencerId);
+            const influencerDetails = await prisma.influencer.findMany({
+                where: { id: { in: influencerIds } },
+                select: { id: true, name: true, code: true, status: true },
+            });
+
+            const topInfluencers = topInfluencersRaw.map((t) => {
+                const details = influencerDetails.find((i) => i.id === t.influencerId);
+                return {
+                    id: t.influencerId,
+                    name: details?.name || 'Desconocido',
+                    code: details?.code || '',
+                    status: details?.status || 'ACTIVE',
+                    totalCommission: Number(t._sum.commission || 0),
+                    totalGross: Number(t._sum.grossAmount || 0),
+                    conversionsCount: t._count,
+                };
+            });
+
+            return NextResponse.json({
+                referrals: {
+                    totalInfluencers,
+                    activeInfluencers,
+                    pausedInfluencers: totalInfluencers - activeInfluencers,
+                    conversionsByStatus,
+                    approvedRevenue: {
+                        gross: Number(revenueStats._sum.grossAmount || 0),
+                        commission: Number(revenueStats._sum.commission || 0),
+                    },
+                    topInfluencers,
+                },
+                period,
+            });
+        }
+
         return NextResponse.json({ error: 'Invalid report type' }, { status: 400 });
     } catch (error) {
         console.error('Error fetching reports:', error);

@@ -64,6 +64,21 @@ export default function ProductosClient({ initialProducts, initialCategories }: 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Leer parámetros de búsqueda y categoría desde la URL al montar
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const querySearch = params.get('search');
+      const queryCategory = params.get('category');
+      if (querySearch) {
+        setSearchTerm(querySearch);
+      }
+      if (queryCategory) {
+        setSelectedCategory(queryCategory);
+      }
+    }
+  }, []);
+
   // Lock body scroll when mobile filters are open
   useEffect(() => {
     if (showMobileFilters) {
@@ -481,15 +496,7 @@ export default function ProductosClient({ initialProducts, initialCategories }: 
         </div>
       </main>
 
-      <style jsx>{`
-        @keyframes slide-in-right {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-        .animate-slide-in-right {
-          animation: slide-in-right 0.3s ease-out;
-        }
-      `}</style>
+
     </>
   );
 }

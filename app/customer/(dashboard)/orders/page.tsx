@@ -282,9 +282,9 @@ export default function OrdersPage() {
         </div>
 
         {/* ========================================
-            SEARCH & FILTERS - Ultra Compact
+            SEARCH & FILTERS - Comfortable Spacing
             ======================================== */}
-        <div className="px-2 pt-2 pb-1 space-y-1.5">
+        <div className="px-3 pt-3 pb-2 space-y-3">
           {/* Search Bar - Centered placeholder */}
           <div className="relative">
             <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
@@ -293,13 +293,13 @@ export default function OrdersPage() {
               placeholder="Buscar pedido..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-8 py-2 text-[11px] text-center bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition-all placeholder:text-center"
+              className="w-full pl-8 pr-8 py-2.5 text-xs bg-white border border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
             />
             <button
               onClick={fetchOrders}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-blue-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-blue-600"
             >
-              <FiRefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+              <FiRefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div >
 
@@ -316,9 +316,9 @@ export default function OrdersPage() {
                 <button
                   key={filter.value}
                   onClick={() => setSelectedStatus(filter.value)}
-                  className={`px-2 py-1 text-[8px] font-bold rounded-md whitespace-nowrap transition-all flex-shrink-0 ${selectedStatus === filter.value
-                    ? 'bg-[#2a63cd] text-white'
-                    : 'bg-white text-gray-500 border border-gray-200'
+                  className={`px-3 py-1.5 text-[10px] font-bold rounded-lg whitespace-nowrap transition-all flex-shrink-0 ${selectedStatus === filter.value
+                    ? 'bg-[#2a63cd] text-white shadow-md shadow-[#2a63cd]/20'
+                    : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
                     }`}
                 >
                   {filter.label}
@@ -329,9 +329,9 @@ export default function OrdersPage() {
         </div >
 
         {/* ========================================
-            ORDERS LIST - Ultra Compact
+            ORDERS LIST - Comfortable Spacing
             ======================================== */}
-        < div className="px-2 pb-20 space-y-1" >
+        < div className="px-3 pb-24 space-y-3" >
           {
             filteredOrders.length === 0 ? (
               /* Empty State */
@@ -344,7 +344,7 @@ export default function OrdersPage() {
                   {selectedStatus === 'ALL' ? 'Aún no has realizado ningún pedido' : 'No hay pedidos con este estado'}
                 </p>
                 <Link
-                  href="/productos"
+                  href="/"
                   className="inline-flex items-center gap-1 px-3 py-2 bg-[#2a63cd] text-white text-[10px] font-bold rounded-lg"
                 >
                   <FiShoppingBag className="w-3 h-3" />
@@ -352,49 +352,49 @@ export default function OrdersPage() {
                 </Link>
               </div>
             ) : (
-              /* Orders List - Ultra Compact */
+              /* Orders List - Comfortable */
               filteredOrders.map((order) => {
                 const statusConfig = getStatusConfig(order.status);
                 return (
                   <div
                     key={order.id}
-                    className="bg-white rounded-lg p-2 border border-gray-100"
+                    className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
                   >
-                    <div className="flex items-center gap-2">
-                      {/* Status Icon - Very small */}
-                      <div className={`w-7 h-7 rounded-md bg-gradient-to-br ${statusConfig.gradient || 'from-blue-400 to-blue-500'} flex items-center justify-center flex-shrink-0`}>
-                        <FiPackage className="w-3.5 h-3.5 text-white" />
+                    <div className="flex items-center gap-3">
+                      {/* Status Icon - Normal size */}
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${statusConfig.gradient || 'from-blue-400 to-blue-500'} flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                        <FiPackage className="w-4 h-4 text-white" />
                       </div>
 
-                      {/* Order Info - Compact single line */}
+                      {/* Order Info - More breathing room */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1">
-                          <span className="font-bold text-gray-900 text-[10px] whitespace-nowrap">#{order.orderNumber}</span>
-                          <span className={`px-1 py-0.5 rounded text-[7px] font-bold ${statusConfig.bg} ${statusConfig.text}`}>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-bold text-gray-900 text-xs">#{order.orderNumber}</span>
+                          <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold ${statusConfig.bg} ${statusConfig.text}`}>
                             {getStatusText(order.status)}
                           </span>
                         </div>
-                        <p className="text-[9px] text-gray-400">
+                        <p className="text-[10px] text-gray-500">
                           {getTimeSince(order.createdAt)} • {order.items.length} item{order.items.length > 1 ? 's' : ''}
                         </p>
                       </div>
 
                       {/* Price */}
-                      <span className="text-[11px] font-black text-gray-900 flex-shrink-0">${order.totalUSD.toFixed(0)}</span>
+                      <span className="text-sm font-black text-gray-900 flex-shrink-0 mr-1">${order.totalUSD.toFixed(0)}</span>
 
-                      {/* Actions - Single row */}
-                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                      {/* Actions - Proper hit area */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
                         {order.hasDigital && order.paymentStatus === 'PAID' && (
                           <Link
                             href={`/customer/orders/${order.id}/digital`}
-                            className="w-6 h-6 bg-purple-500 text-white rounded flex items-center justify-center"
+                            className="w-8 h-8 bg-purple-500 text-white rounded-lg flex items-center justify-center hover:bg-purple-600 transition-colors shadow-sm shadow-purple-500/30"
                           >
-                            <BsCardList className="w-3 h-3" />
+                            <BsCardList className="w-4 h-4" />
                           </Link>
                         )}
                         <button
                           onClick={() => { setSelectedOrder(order); setShowOrderDetails(true); }}
-                          className="w-6 h-6 bg-gray-100 text-gray-500 rounded flex items-center justify-center"
+                          className="w-8 h-8 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors border border-gray-200"
                         >
                           <FiChevronRight className="w-4 h-4" />
                         </button>
@@ -501,7 +501,7 @@ export default function OrdersPage() {
                 <FiPackage className="w-5 h-5 text-[#adb5bd]" />
               </div>
               <h3 className="text-sm font-bold text-[#212529] mb-1">Sin pedidos</h3>
-              <Link href="/productos" className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#2a63cd] text-white text-xs font-medium rounded-lg">
+              <Link href="/" className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#2a63cd] text-white text-xs font-medium rounded-lg">
                 <FiShoppingBag className="w-3.5 h-3.5" /> Explorar
               </Link>
             </div>
@@ -571,19 +571,19 @@ export default function OrdersPage() {
       {
         mounted && showOrderDetails && selectedOrder && createPortal(
           <div
-            className="fixed inset-0 flex items-center justify-center p-3"
+            className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-3 animate-fadeIn"
             style={{ zIndex: 999999 }}
           >
             {/* Backdrop */}
             <div
               onClick={closeModal}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
 
-            {/* CLOSE BUTTON - POSITIONED OUTSIDE THE MODAL */}
+            {/* CLOSE BUTTON - POSITIONED OUTSIDE THE MODAL (Desktop) */}
             <button
               onClick={closeModal}
-              className="fixed top-4 right-4 w-12 h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
+              className="hidden sm:flex fixed top-4 right-4 w-12 h-12 bg-white/90 hover:bg-white rounded-full items-center justify-center shadow-lg active:scale-95 transition-all"
               style={{ zIndex: 1000000 }}
               aria-label="Cerrar"
             >
@@ -592,20 +592,23 @@ export default function OrdersPage() {
 
             {/* Modal Content */}
             <div
-              className="relative bg-white rounded-2xl w-full max-w-xl max-h-[85vh] shadow-2xl overflow-hidden flex flex-col"
+              className="relative bg-white rounded-t-[32px] sm:rounded-2xl w-full max-w-xl h-[92vh] sm:h-auto sm:max-h-[85vh] shadow-2xl overflow-hidden flex flex-col animate-slideInUp sm:animate-fadeIn"
               style={{ zIndex: 1 }}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-4 py-3 text-white flex-shrink-0">
+              <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-5 sm:px-4 py-4 sm:py-3 text-white flex-shrink-0 flex items-center justify-between rounded-t-[32px] sm:rounded-none">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                     <FiPackage className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-[10px] opacity-70">Pedido</p>
+                    <p className="text-[10px] sm:text-xs opacity-70">Pedido</p>
                     <h3 className="text-lg font-black">#{selectedOrder.orderNumber}</h3>
                   </div>
                 </div>
+                <button onClick={closeModal} className="p-2 sm:hidden hover:bg-white/20 rounded-lg transition-all">
+                  <FiX className="w-6 h-6" />
+                </button>
               </div>
 
               {/* Content */}

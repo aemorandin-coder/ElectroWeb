@@ -14,7 +14,8 @@ import {
   FiLogOut,
   FiMenu,
   FiX,
-  FiShield
+  FiShield,
+  FiGift,
 } from 'react-icons/fi';
 import { FaMoneyCheckAlt } from 'react-icons/fa';
 import { PiListHeartBold } from 'react-icons/pi';
@@ -136,6 +137,7 @@ export default function CustomerDashboardLayout({
     { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Lista de Deseos' },
     { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },
     { href: '/customer/warranty', icon: FiShield, label: 'Garantía' },
+    { href: '/customer/referrals', icon: FiGift, label: 'Programa de Referidos' },
     { href: '/customer/profile', icon: FiUser, label: 'Mi Perfil' },
     { href: '/customer/settings', icon: FiSettings, label: 'Configuración' },
   ];
@@ -311,38 +313,9 @@ export default function CustomerDashboardLayout({
                 )}
               </Link>
 
-              {/* CENTER: Verification Status with subtle animation */}
+              {/* CENTER: Title */}
               <div className="flex-1 flex justify-center px-2">
-                {(session?.user as any)?.emailVerified ? (
-                  <div
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold"
-                    style={{
-                      backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                      border: '1px solid rgba(34, 197, 94, 0.3)',
-                      animation: 'verifiedPulse 3s ease-in-out infinite',
-                    }}
-                  >
-                    <svg
-                      className="w-3 h-3 text-green-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      style={{ animation: 'verifiedCheck 2s ease-in-out infinite' }}
-                    >
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-green-400">Verificado</span>
-                  </div>
-                ) : (
-                  <Link
-                    href="/customer/settings"
-                    className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-bold rounded-full animate-pulse"
-                  >
-                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span>Verificar</span>
-                  </Link>
-                )}
+                <span className="text-white text-sm font-bold tracking-wide">Mi Panel</span>
               </div>
 
               {/* RIGHT: Home Button */}
@@ -396,30 +369,8 @@ export default function CustomerDashboardLayout({
                 )}
               </button>
 
-              {/* Center - Email Verification Status */}
-              <div className="flex-1 flex justify-center">
-                {(session?.user as any)?.emailVerified ? (
-                  <div
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
-                    style={{ backgroundColor: '#dcfce7', border: '2px solid #22c55e' }}
-                  >
-                    <svg className="w-4 h-4" style={{ color: '#15803d' }} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span style={{ color: '#14532d' }}>Verificado</span>
-                  </div>
-                ) : (
-                  <Link
-                    href="/customer/settings"
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-md"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span>Verificar</span>
-                  </Link>
-                )}
-              </div>
+              {/* Center Spacer */}
+              <div className="flex-1"></div>
 
               {/* Home Button */}
               <Link

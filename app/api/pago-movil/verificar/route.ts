@@ -318,7 +318,7 @@ export async function POST(req: NextRequest) {
                         }),
                     ]);
 
-                    // Notificar al usuario
+                    // Notificar al usuario (notificación interna)
                     await prisma.notification.create({
                         data: {
                             userId,
@@ -329,6 +329,41 @@ export async function POST(req: NextRequest) {
                             icon: 'check-circle',
                         },
                     });
+
+                    // Email de confirmación al usuario
+                    try {
+                        const { sendEmail, getBaseTemplate } = await import('@/lib/email-service');
+                        await sendEmail({
+                            to: session.user.email!,
+                            subject: `✅ Recarga de $${montoUsd.toFixed(2)} aprobada — Electro Shop`,
+                            html: await getBaseTemplate(
+                                `<div style="text-align:center;margin-bottom:20px;">
+                                    <div style="width:64px;height:64px;background:linear-gradient(135deg,#10b981,#059669);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+                                        <span style="color:white;font-size:28px;">&#10003;</span>
+                                    </div>
+                                    <h2 style="margin:0 0 8px;color:#212529;font-size:22px;font-weight:700;">¡Recarga Aprobada! 💰</h2>
+                                    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;">
+                                        Tu recarga de <strong style="color:#10b981;">$${montoUsd.toFixed(2)} USD</strong>
+                                        fue verificada automáticamente con el Banco de Venezuela y ya está disponible en tu saldo.
+                                    </p>
+                                </div>
+                                <div style="background:#ecfdf5;border-radius:12px;padding:20px;margin:20px 0;border:1px solid #10b981;">
+                                    <p style="margin:0 0 6px;color:#065f46;font-size:13px;">Referencia BDV: <strong>${referencia}</strong></p>
+                                    <p style="margin:0;color:#065f46;font-size:13px;">Banco: <strong>${bancoOrigen}</strong></p>
+                                </div>
+                                <div style="text-align:center;margin:24px 0;">
+                                    <a href="${process.env.NEXTAUTH_URL}/customer/balance"
+                                       style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">
+                                        Ver Mi Saldo
+                                    </a>
+                                </div>`,
+                                'Tu recarga fue procesada automáticamente'
+                            ),
+                        });
+                    } catch (emailErr) {
+                        console.error('[API] Error enviando email de confirmación de recarga:', emailErr);
+                        // No bloquear la respuesta si el email falla
+                    }
 
                     // AUDIT: Registrar auto-aprobación exitosa
                     const requestMetadata = getRequestMetadata(req);
@@ -381,11 +416,14 @@ export async function POST(req: NextRequest) {
                 amount: resultado.amount,
             });
         } else {
+            const mensajeError = interpretarErrorBDV(resultado.code, resultado.message);
             return NextResponse.json({
                 success: true,
                 verified: false,
                 code: resultado.code,
-                message: interpretarErrorBDV(resultado.code, resultado.message),
+                // Ambos campos para compatibilidad con frontend existente
+                message: mensajeError,
+                error: mensajeError,
             });
         }
     } catch (error) {

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import ProductosClient from './ProductosClient';
+import Footer from '@/components/Footer';
 
 export const revalidate = 0;
 
@@ -23,31 +24,64 @@ export default async function ProductosPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
       <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
 
-      {/* Hero Section - Hidden on Mobile, visible from lg up */}
-      <section className="hidden lg:block relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
+      {/* Hero Section - Responsive, visible on all screens */}
+      <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-10 left-10 w-48 h-48 bg-white rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-72 h-72 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-8 py-10 text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-3 mb-3">
-            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-            <div className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <span className="text-xs font-semibold text-white">Catálogo Premium</span>
-            </div>
-            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-          </div>
-
-          <h1 className="text-4xl font-bold text-white">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 text-center">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
             Nuestros <span className="text-cyan-200">Productos</span>
           </h1>
 
-          <p className="text-sm text-white/80 max-w-2xl mx-auto mt-2">
-            Explora nuestra colección de tecnología de vanguardia
+          <p className="text-xs sm:text-sm text-white/80 max-w-2xl mx-auto mt-2 leading-relaxed">
+            Explora la mejor selección de saldo digital, gift cards, licencias y hardware gaming de vanguardia.
           </p>
+
+          {/* How It Works - Premium Glassmorphic Step Indicator */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto text-left">
+            {/* Step 1 */}
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex gap-3 transition-all hover:bg-white/10 hover:scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+              <div className="w-10 h-10 bg-white text-[#2a63cd] rounded-xl flex items-center justify-center font-black text-base shadow-md flex-shrink-0">
+                1
+              </div>
+              <div className="space-y-0.5">
+                <h3 className="text-xs font-black text-white uppercase tracking-wide">1. Selecciona tu Producto</h3>
+                <p className="text-[10px] leading-relaxed text-cyan-100/80">
+                  Elige tu saldo digital, recargas directas o el hardware y periféricos gaming de tu preferencia.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex gap-3 transition-all hover:bg-white/10 hover:scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+              <div className="w-10 h-10 bg-white text-[#2a63cd] rounded-xl flex items-center justify-center font-black text-base shadow-md flex-shrink-0">
+                2
+              </div>
+              <div className="space-y-0.5">
+                <h3 className="text-xs font-black text-white uppercase tracking-wide">2. Paga de Forma Segura</h3>
+                <p className="text-[10px] leading-relaxed text-cyan-100/80">
+                  Realiza tu pago vía Pago Móvil, Binance, Transferencia o Divisas.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex gap-3 transition-all hover:bg-white/10 hover:scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+              <div className="w-10 h-10 bg-white text-[#2a63cd] rounded-xl flex items-center justify-center font-black text-base shadow-md flex-shrink-0">
+                3
+              </div>
+              <div className="space-y-0.5">
+                <h3 className="text-xs font-black text-white uppercase tracking-wide">3. ¡Recibe tu Compra!</h3>
+                <p className="text-[10px] leading-relaxed text-cyan-100/80">
+                  Tu recarga digital se procesa en minutos, o recibe tu hardware directamente en tu dirección.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <AnimatedWave />
@@ -59,7 +93,7 @@ export default async function ProductosPage() {
         initialCategories={JSON.parse(JSON.stringify(categories))}
       />
 
-      {/* Footer CTA - Premium Style matching Homepage */}
+      {/* Footer CTA - Solicitar Producto */}
       <section className="py-12 bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] relative overflow-hidden mt-20">
         {/* Background Effects */}
         <div className="absolute inset-0 opacity-10">
@@ -110,14 +144,7 @@ export default async function ProductosPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f1a] text-white py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} Electro Shop - Todos los derechos reservados
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

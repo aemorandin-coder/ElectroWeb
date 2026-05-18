@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSpinner';
 import { formatPrice } from '@/lib/currency';
-import { FiRefreshCw, FiCheckCircle, FiAlertCircle, FiDatabase, FiBox, FiActivity } from 'react-icons/fi';
+import { FiRefreshCw, FiCheckCircle, FiAlertCircle, FiDatabase, FiBox, FiX, FiExternalLink } from 'react-icons/fi';
+import { parseProductImages } from '@/lib/product-utils';
 
 interface Product {
   id: string;
@@ -26,6 +27,8 @@ interface Product {
   hasDiscount?: boolean;
   discountPercent?: number;
   specifications?: Record<string, any>;
+  shortCode?: string | null;
+  slug?: string;
   category?: {
     name: string;
   };
@@ -77,7 +80,7 @@ export default function ProductsPage() {
   // Bulk editing state
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
-  const [bulkEditField, setBulkEditField] = useState<'price' | 'stock' | 'category'>('price');
+  const [bulkEditField, setBulkEditField] = useState<'price' | 'stock' | 'category' | 'status' | 'pricePercent'>('status');
   const [bulkEditValue, setBulkEditValue] = useState('');
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
 
@@ -86,25 +89,32 @@ export default function ProductsPage() {
   const [excelUpdates, setExcelUpdates] = useState<Record<string, any>>({});
   const [excelSaving, setExcelSaving] = useState(false);
 
+  // Status filter state
+  const [filterStatus, setFilterStatus] = useState('all');
+
   // Sades Integration State
   const [sadesHealth, setSadesHealth] = useState<'checking' | 'ok' | 'error'>('checking');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState({
     processed: 0,
-    totalEstimado: 1250,
+    totalEstimado: 0,
     created: 0,
     updated: 0,
     status: 'idle'
   });
-  const [syncLogs, setSyncLogs] = useState<string[]>([]);
+  const [syncLogs, setSyncLogs] = useState<{ message: string; timestamp: string }[]>([]);
 
 
-  // Check Health when tab changes to sades
+  // Check health when tab changes to sades
   useEffect(() => {
     if (activeTab === 'sades') {
       checkSadesHealth();
     }
   }, [activeTab]);
+
+  const addSyncLog = (message: string) => {
+    setSyncLogs(prev => [{ message, timestamp: new Date().toLocaleTimeString() }, ...prev]);
+  };
 
   useEffect(() => {
     fetchData();
@@ -124,9 +134,9 @@ export default function ProductsPage() {
         // Parse images if they are strings
         const parsedProducts = productsData.map((p: any) => ({
           ...p,
-          images: typeof p.images === 'string' ? JSON.parse(p.images) : p.images,
-          priceUSD: Number(p.priceUSD), // Ensure price is a number
-          isActive: p.status === 'PUBLISHED' || p.isActive === true // Map status to isActive
+          images: parseProductImages(p.images),
+          priceUSD: Number(p.priceUSD),
+          isActive: p.status === 'PUBLISHED' || p.isActive === true,
         }));
         setProducts(parsedProducts);
       }
@@ -397,7 +407,12 @@ export default function ProductsPage() {
         const productsRes = await fetch('/api/products?all=true');
         if (productsRes.ok) {
           const productsData = await productsRes.json();
-          setProducts(productsData);
+          setProducts(productsData.map((p: any) => ({
+            ...p,
+            images: parseProductImages(p.images),
+            priceUSD: Number(p.priceUSD),
+            isActive: p.status === 'PUBLISHED' || p.isActive === true,
+          })));
         }
       }
     } catch (error) {
@@ -415,13 +430,7 @@ export default function ProductsPage() {
       const response = await fetch(`/api/products/${product.id}`);
       if (response.ok) {
         const fullProduct = await response.json();
-        if (typeof fullProduct.images === 'string') {
-          try {
-            fullProduct.images = JSON.parse(fullProduct.images);
-          } catch (e) {
-            fullProduct.images = [];
-          }
-        }
+        fullProduct.images = parseProductImages(fullProduct.images);
         setQuickViewProduct(fullProduct);
       }
     } catch (error) {
@@ -432,10 +441,12 @@ export default function ProductsPage() {
   };
 
   const handleSelectAll = () => {
-    if (selectedProducts.length === products.length) {
-      setSelectedProducts([]);
+    const filteredIds = filteredProducts.map(p => p.id);
+    const allFilteredSelected = filteredIds.every(id => selectedProducts.includes(id));
+    if (allFilteredSelected) {
+      setSelectedProducts(prev => prev.filter(id => !filteredIds.includes(id)));
     } else {
-      setSelectedProducts(products.map(p => p.id));
+      setSelectedProducts(prev => [...new Set([...prev, ...filteredIds])]);
     }
   };
 
@@ -448,20 +459,34 @@ export default function ProductsPage() {
   };
 
   const handleBulkEdit = async () => {
-    if (selectedProducts.length === 0 || !bulkEditValue) return;
+    if (selectedProducts.length === 0) return;
+    if (bulkEditField !== 'status' && !bulkEditValue) return;
 
     setBulkEditLoading(true);
     try {
+      let payload: any = { productIds: selectedProducts };
+
+      if (bulkEditField === 'status') {
+        payload.field = 'status';
+        payload.value = bulkEditValue || 'PUBLISHED';
+      } else if (bulkEditField === 'price') {
+        payload.field = 'price';
+        payload.value = parseFloat(bulkEditValue);
+      } else if (bulkEditField === 'pricePercent') {
+        payload.field = 'pricePercent';
+        payload.value = parseFloat(bulkEditValue);
+      } else if (bulkEditField === 'stock') {
+        payload.field = 'stock';
+        payload.value = parseInt(bulkEditValue);
+      } else if (bulkEditField === 'category') {
+        payload.field = 'category';
+        payload.value = bulkEditValue;
+      }
+
       const response = await fetch('/api/products/bulk/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productIds: selectedProducts,
-          field: bulkEditField,
-          value: bulkEditField === 'price' || bulkEditField === 'stock'
-            ? parseFloat(bulkEditValue)
-            : bulkEditValue,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -469,9 +494,13 @@ export default function ProductsPage() {
         setShowBulkEditModal(false);
         setSelectedProducts([]);
         setBulkEditValue('');
+      } else {
+        const err = await response.json();
+        alert(err.error || 'Error al aplicar cambios masivos');
       }
     } catch (error) {
       console.error('Error bulk editing:', error);
+      alert('Error de conexión');
     } finally {
       setBulkEditLoading(false);
     }
@@ -480,19 +509,38 @@ export default function ProductsPage() {
   const handleBulkDelete = async () => {
     if (selectedProducts.length === 0) return;
 
-    if (!confirm(`¿Eliminar ${selectedProducts.length} productos seleccionados?`)) return;
+    if (!confirm(`¿Eliminar ${selectedProducts.length} productos seleccionados? Los que tengan órdenes asociadas serán archivados.`)) return;
 
     try {
-      await Promise.all(
+      const results = await Promise.all(
         selectedProducts.map(id =>
-          fetch(`/api/products/${id}`, { method: 'DELETE' })
+          fetch(`/api/products/${id}`, { method: 'DELETE' }).then(r => r.json().then(data => ({ id, ...data, ok: r.ok })))
         )
       );
 
-      setProducts(products.filter(p => !selectedProducts.includes(p.id)));
+      const archived = results.filter(r => r.ok && r.archived).length;
+      const deleted = results.filter(r => r.ok && !r.archived).length;
+      const failed = results.filter(r => !r.ok).length;
+
+      setProducts(prev =>
+        prev
+          .filter(p => !selectedProducts.includes(p.id) || results.find(r => r.id === p.id)?.archived)
+          .map(p => {
+            const result = results.find(r => r.id === p.id);
+            if (result?.archived) return { ...p, isActive: false, status: 'ARCHIVED' };
+            return p;
+          })
+      );
       setSelectedProducts([]);
+
+      const parts = [];
+      if (deleted > 0) parts.push(`${deleted} eliminado${deleted > 1 ? 's' : ''}`);
+      if (archived > 0) parts.push(`${archived} archivado${archived > 1 ? 's' : ''} (tienen órdenes)`);
+      if (failed > 0) parts.push(`${failed} con error`);
+      if (parts.length > 0) alert(parts.join(', '));
     } catch (error) {
       console.error('Error bulk deleting:', error);
+      alert('Error de conexión al intentar eliminar los productos');
     }
   };
 
@@ -500,9 +548,9 @@ export default function ProductsPage() {
   const checkSadesHealth = async () => {
     setSadesHealth('checking');
     try {
-      // En un caso real, llamaríamos a un endpoint de health
-      setSadesHealth('ok');
-    } catch (e) {
+      const res = await fetch('/api/admin/sades/health');
+      setSadesHealth(res.ok ? 'ok' : 'error');
+    } catch {
       setSadesHealth('error');
     }
   };
@@ -522,7 +570,7 @@ export default function ProductsPage() {
 
     setIsSyncing(true);
     setSyncProgress({ processed: 0, totalEstimado: 0, created: 0, updated: 0, status: 'starting' });
-    setSyncLogs(['Iniciando sincronización...']);
+    setSyncLogs([{ message: 'Iniciando sincronización...', timestamp: new Date().toLocaleTimeString() }]);
 
     let cursor = 0;
     let hasMore = true;
@@ -532,7 +580,7 @@ export default function ProductsPage() {
 
     try {
       while (hasMore) {
-        setSyncLogs(prev => [`Solicitando lote (cursor: ${cursor})...`, ...prev]);
+        addSyncLog(`Solicitando lote (cursor: ${cursor})...`);
 
         const res = await fetch('/api/admin/sades/sync', {
           method: 'POST',
@@ -559,10 +607,7 @@ export default function ProductsPage() {
           status: 'processing'
         });
 
-        setSyncLogs(prev => [
-          `✅ Lote procesado: ${data.processed} items (${data.created} nuevos, ${data.updated} actualizados)`,
-          ...prev
-        ]);
+        addSyncLog(`✅ Lote procesado: ${data.processed} items (${data.created} nuevos, ${data.updated} actualizados)`);
 
         cursor = data.nextCursor;
         hasMore = data.hasMore;
@@ -570,14 +615,14 @@ export default function ProductsPage() {
         await new Promise(r => setTimeout(r, 1000));
       }
 
-      setSyncLogs(prev => ['🎉 Sincronización completada con éxito.', ...prev]);
+      addSyncLog('🎉 Sincronización completada con éxito.');
       setSyncProgress(prev => ({ ...prev, status: 'completed' }));
 
       fetchData();
 
     } catch (error: any) {
       console.error('Sync error:', error);
-      setSyncLogs(prev => [`❌ Error crítico: ${error.message}`, ...prev]);
+      addSyncLog(`❌ Error crítico: ${error.message}`);
       setSyncProgress(prev => ({ ...prev, status: 'error' }));
     } finally {
       setIsSyncing(false);
@@ -699,8 +744,8 @@ export default function ProductsPage() {
               ) : (
                 syncLogs.map((log, i) => (
                   <div key={i} className="mb-1 border-b border-gray-800 pb-1 last:border-0">
-                    <span className="text-purple-400 mr-2">[{new Date().toLocaleTimeString()}]</span>
-                    {log}
+                    <span className="text-purple-400 mr-2">[{log.timestamp}]</span>
+                    {log.message}
                   </div>
                 ))
               )}
@@ -710,6 +755,17 @@ export default function ProductsPage() {
       )}
     </div>
   );
+
+  const filteredProducts = products
+    .filter(p => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.sku.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter(p => filterCategory === 'all' || p.category?.name === categories.find(c => c.id === filterCategory)?.name)
+    .filter(p => {
+      if (filterStatus === 'all') return true;
+      if (filterStatus === 'published') return p.isActive;
+      if (filterStatus === 'draft') return !p.isActive && p.status !== 'ARCHIVED';
+      if (filterStatus === 'out-of-stock') return p.stock <= 0;
+      return true;
+    });
 
   const renderLocalView = () => (
     <>
@@ -926,6 +982,8 @@ export default function ProductsPage() {
 
             {/* Status Filter */}
             <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
               className="px-4 py-2.5 bg-[#f8f9fa] border border-[#dee2e6] rounded-lg text-[#212529] focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-4 focus:ring-[#2a63cd]/10 transition-all duration-200"
             >
               <option value="all">Todos los estados</option>
@@ -937,6 +995,31 @@ export default function ProductsPage() {
         </div>
       </div>
 
+      {/* Bulk Selection Bar */}
+      {selectedProducts.length > 0 && (
+        <div className="flex items-center gap-3 bg-[#2a63cd] text-white px-4 py-3 rounded-lg shadow-lg animate-fadeIn">
+          <span className="text-sm font-semibold">{selectedProducts.length} producto{selectedProducts.length > 1 ? 's' : ''} seleccionado{selectedProducts.length > 1 ? 's' : ''}</span>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button variant="ghost" size="sm" onClick={() => { setBulkEditField('status'); setBulkEditValue('PUBLISHED'); setShowBulkEditModal(true); }} className="text-white hover:bg-white/20 border border-white/30">
+              Activar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { setBulkEditField('status'); setBulkEditValue('DRAFT'); setShowBulkEditModal(true); }} className="text-white hover:bg-white/20 border border-white/30">
+              Desactivar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { setBulkEditField('pricePercent'); setBulkEditValue(''); setShowBulkEditModal(true); }} className="text-white hover:bg-white/20 border border-white/30">
+              Cambiar Precio
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { setBulkEditField('category'); setBulkEditValue(''); setShowBulkEditModal(true); }} className="text-white hover:bg-white/20 border border-white/30">
+              Mover Categoría
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleBulkDelete} className="text-red-200 hover:bg-red-500/30 border border-red-300/50">
+              Eliminar
+            </Button>
+            <button onClick={() => setSelectedProducts([])} className="ml-2 text-white/60 hover:text-white text-xs">✕ Limpiar</button>
+          </div>
+        </div>
+      )}
+
       {/* Scrollable Products Table */}
       <div className="flex-1 overflow-y-auto pr-2 mt-4">
         <div className="bg-white rounded-lg border border-[#e9ecef] shadow-sm overflow-hidden animate-scaleIn">
@@ -945,7 +1028,10 @@ export default function ProductsPage() {
               <h2 className="text-sm font-semibold text-[#212529]">Listado de Productos</h2>
               <div className="flex items-center gap-1.5 text-xs text-[#6a6c6b]">
                 <span>Mostrando</span>
-                <span className="font-semibold text-[#212529]">{products.length}</span>
+                <span className="font-semibold text-[#212529]">{filteredProducts.length}</span>
+                {filteredProducts.length !== products.length && (
+                  <span className="text-[#6a6c6b]">de {products.length}</span>
+                )}
               </div>
             </div>
           </div>
@@ -954,7 +1040,7 @@ export default function ProductsPage() {
           <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
             {isLoading ? (
               <TableSkeleton rows={3} />
-            ) : products.length === 0 ? (
+            ) : filteredProducts.length === 0 ? (
               <EmptyState
                 icon={
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -965,7 +1051,7 @@ export default function ProductsPage() {
                 action={<Button variant="primary" onClick={() => router.push('/admin/products/new')}>Agregar Producto</Button>}
               />
             ) : (
-              products.map((product) => {
+              filteredProducts.map((product) => {
                 const price = currencySettings
                   ? formatPrice(
                     parseFloat(String(product.priceUSD)),
@@ -1066,10 +1152,7 @@ export default function ProductsPage() {
                     </td>
                   </tr>
                 ) : (
-                  products
-                    .filter(p => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.sku.toLowerCase().includes(searchQuery.toLowerCase()))
-                    .filter(p => filterCategory === 'all' || p.category?.name === categories.find(c => c.id === filterCategory)?.name)
-                    .map((product) => (
+                  filteredProducts.map((product) => (
                       <tr key={product.id} className="hover:bg-[#f8f9fa] transition-colors group">
                         <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white group-hover:bg-[#f8f9fa] z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                           <div className="flex items-center">
@@ -1109,18 +1192,18 @@ export default function ProductsPage() {
                           </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => handleDuplicate(product)} className="text-gray-400 hover:text-blue-600" title="Duplicar">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                          <div className="flex justify-end items-center gap-1">
+                            <button onClick={() => handleDuplicate(product)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Duplicar">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
                             </button>
-                            <button onClick={() => handleQuickView(product)} className="text-gray-400 hover:text-gray-600" title="Ver detalle">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            <button onClick={() => handleQuickView(product)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" title="Vista rápida">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                             </button>
-                            <button onClick={() => router.push(`/admin/products/${product.id}`)} className="text-blue-600 hover:text-blue-900" title="Editar">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            <button onClick={() => router.push(`/admin/products/${product.id}`)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             </button>
-                            <button onClick={() => { setSelectedProduct(product); setShowDeleteModal(true); }} className="text-red-600 hover:text-red-900" title="Eliminar">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            <button onClick={() => { setSelectedProduct(product); setShowDeleteModal(true); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Eliminar">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
                           </div>
                         </td>
@@ -1146,12 +1229,241 @@ export default function ProductsPage() {
         </div>
       )}
 
+      {showBulkEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-xl max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-base font-bold text-gray-900">
+                Edición Masiva — {selectedProducts.length} producto{selectedProducts.length > 1 ? 's' : ''}
+              </h3>
+              <button onClick={() => setShowBulkEditModal(false)} className="text-gray-400 hover:text-gray-600">
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Operación</label>
+                <select
+                  value={bulkEditField}
+                  onChange={(e) => { setBulkEditField(e.target.value as any); setBulkEditValue(''); }}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                >
+                  <option value="status">Cambiar estado (activar/desactivar)</option>
+                  <option value="pricePercent">Cambiar precio por % (ej: +10% o -5%)</option>
+                  <option value="price">Establecer precio fijo (USD)</option>
+                  <option value="category">Mover a categoría</option>
+                </select>
+              </div>
+
+              {bulkEditField === 'status' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nuevo Estado</label>
+                  <select
+                    value={bulkEditValue}
+                    onChange={(e) => setBulkEditValue(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="PUBLISHED">Activo (Publicado)</option>
+                    <option value="DRAFT">Borrador (Inactivo)</option>
+                  </select>
+                </div>
+              )}
+
+              {bulkEditField === 'pricePercent' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Porcentaje de cambio</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={bulkEditValue}
+                      onChange={(e) => setBulkEditValue(e.target.value)}
+                      placeholder="Ej: 10 para +10%, -5 para -5%"
+                      className="w-full px-3 py-2.5 pr-8 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">%</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Positivo sube el precio, negativo lo baja.</p>
+                </div>
+              )}
+
+              {bulkEditField === 'price' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nuevo precio (USD)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={bulkEditValue}
+                      onChange={(e) => setBulkEditValue(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full pl-7 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {bulkEditField === 'category' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nueva categoría</label>
+                  <select
+                    value={bulkEditValue}
+                    onChange={(e) => setBulkEditValue(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="">Seleccionar categoría...</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+              <Button variant="ghost" onClick={() => setShowBulkEditModal(false)}>Cancelar</Button>
+              <Button
+                variant="primary"
+                onClick={handleBulkEdit}
+                isLoading={bulkEditLoading}
+                disabled={bulkEditField !== 'status' && !bulkEditValue}
+                className="bg-[#2a63cd] hover:bg-[#1e4ba3] text-white"
+              >
+                Aplicar a {selectedProducts.length} producto{selectedProducts.length > 1 ? 's' : ''}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Quick View Modal ──────────────────────────────────────────── */}
+      {showQuickViewModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-900">Vista Rápida</h3>
+              <button
+                onClick={() => { setShowQuickViewModal(false); setQuickViewProduct(null); }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            {quickViewLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : quickViewProduct ? (
+              <div className="flex flex-col sm:flex-row overflow-y-auto flex-1">
+                {/* Image */}
+                <div className="sm:w-56 flex-shrink-0 bg-gray-50 flex items-center justify-center p-6 border-b sm:border-b-0 sm:border-r border-gray-100">
+                  {(quickViewProduct.images && quickViewProduct.images.length > 0) ? (
+                    <div className="relative w-40 h-40">
+                      <Image
+                        src={quickViewProduct.images[0]}
+                        alt={quickViewProduct.name}
+                        fill
+                        className="object-contain rounded-xl"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-40 h-40 bg-white rounded-xl border border-gray-200 flex items-center justify-center">
+                      <FiBox className="w-12 h-12 text-gray-300" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 p-6 space-y-4">
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <h2 className="text-lg font-bold text-gray-900 leading-tight">{quickViewProduct.name}</h2>
+                      <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-bold ${quickViewProduct.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {quickViewProduct.isActive ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400 font-mono mt-1">SKU: {quickViewProduct.sku}</p>
+                    {quickViewProduct.isFeatured && (
+                      <span className="inline-block mt-1 text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">⭐ Destacado</span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-[#f8f9fa] rounded-xl p-3">
+                      <p className="text-[10px] text-gray-400 uppercase font-semibold mb-0.5">Precio</p>
+                      <p className="text-base font-bold text-gray-900">${Number(quickViewProduct.priceUSD).toFixed(2)} USD</p>
+                    </div>
+                    <div className="bg-[#f8f9fa] rounded-xl p-3">
+                      <p className="text-[10px] text-gray-400 uppercase font-semibold mb-0.5">Stock</p>
+                      <p className={`text-base font-bold ${(quickViewProduct.stock || 0) <= 5 ? 'text-red-600' : 'text-gray-900'}`}>
+                        {quickViewProduct.stock} u.
+                      </p>
+                    </div>
+                    <div className="bg-[#f8f9fa] rounded-xl p-3">
+                      <p className="text-[10px] text-gray-400 uppercase font-semibold mb-0.5">Categoría</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">{quickViewProduct.category?.name || '-'}</p>
+                    </div>
+                    <div className="bg-[#f8f9fa] rounded-xl p-3">
+                      <p className="text-[10px] text-gray-400 uppercase font-semibold mb-0.5">Tipo</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {(quickViewProduct as any).productType === 'DIGITAL' ? '⚡ Digital' : '📦 Físico'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {quickViewProduct.description && (
+                    <div>
+                      <p className="text-[10px] text-gray-400 uppercase font-semibold mb-1">Descripción</p>
+                      <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed">{quickViewProduct.description}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Footer */}
+            {quickViewProduct && !quickViewLoading && (
+              <div className="px-6 py-3 border-t border-gray-100 bg-[#f8f9fa] flex items-center justify-between gap-3">
+                <button
+                  onClick={() => { handleToggleStatus(quickViewProduct); setShowQuickViewModal(false); }}
+                  className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                    quickViewProduct.isActive
+                      ? 'border-gray-200 text-gray-600 hover:bg-gray-100'
+                      : 'border-green-200 text-green-700 hover:bg-green-50'
+                  }`}
+                >
+                  {quickViewProduct.isActive ? 'Desactivar' : 'Activar'}
+                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => window.open(`/productos/${(quickViewProduct as any).slug || quickViewProduct.id}`, '_blank')}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-gray-200 rounded-lg hover:bg-white transition-colors"
+                  >
+                    <FiExternalLink className="w-3.5 h-3.5" />
+                    Ver en tienda
+                  </button>
+                  <button
+                    onClick={() => { setShowQuickViewModal(false); router.push(`/admin/products/${quickViewProduct.id}`); }}
+                    className="flex items-center gap-2 px-5 py-2 bg-[#2a63cd] text-white text-xs font-semibold rounded-lg hover:bg-[#1e4ba3] transition-colors"
+                  >
+                    Editar producto
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {showBulkUploadModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold">Carga Masiva de Productos</h3>
-              <button onClick={() => setShowBulkUploadModal(false)} className="text-gray-400 hover:text-gray-600"><FiBox className="rotate-45" /></button>
+              <button onClick={() => setShowBulkUploadModal(false)} className="text-gray-400 hover:text-gray-600"><FiX className="w-5 h-5" /></button>
             </div>
 
             {!bulkUploadResults ? (

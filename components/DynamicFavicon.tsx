@@ -67,22 +67,30 @@ export default function DynamicFavicon() {
         const fetchSettings = async () => {
             try {
                 const response = await fetch('/api/settings/public', {
-                    cache: 'no-store' // Avoid HTTP cache to get fresh data
+                    cache: 'no-store'
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    const newSettings = {
-                        favicon: data.favicon || null,
-                        companyName: data.companyName || null
-                    };
+                if (!response.ok) return;
 
-                    // Save to cache for future page loads
-                    saveToCache(newSettings.favicon, newSettings.companyName);
+                // Leer como texto primero — previene crash si Turbopack interrumpe la respuesta
+                const text = await response.text();
+                if (!text || text.trim() === '') return;
 
-                    // Update state
-                    setSettings(newSettings);
+                let data: any;
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    // JSON malformado — ignorar silenciosamente
+                    return;
                 }
+
+                const newSettings = {
+                    favicon: data.favicon || null,
+                    companyName: data.companyName || null
+                };
+
+                saveToCache(newSettings.favicon, newSettings.companyName);
+                setSettings(newSettings);
             } catch (error) {
                 console.error('Error fetching settings:', error);
                 // Keep using cached data on error

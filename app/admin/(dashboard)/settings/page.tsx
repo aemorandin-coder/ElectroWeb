@@ -1,1671 +1,1294 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
-import { SettingsFormData, SocialMediaItem, CompanySettings, SettingsValidationErrors } from '@/types/settings';
-import { validateSettings } from '@/lib/validations/settings';
+import { SettingsFormData, SettingsValidationErrors } from '@/types/settings';
 import {
   FiSave, FiLayout, FiSmartphone, FiGlobe, FiDollarSign,
-  FiTruck, FiShield, FiVideo, FiHome, FiGrid, FiActivity,
-  FiSearch, FiAlertTriangle, FiCheck, FiX, FiUpload, FiTrash2,
+  FiTruck, FiShield, FiVideo, FiHome, FiActivity,
+  FiAlertTriangle, FiCheck, FiX, FiUpload, FiTrash2,
   FiClock, FiMapPin, FiMail, FiPhone, FiInstagram, FiFacebook, FiTwitter, FiYoutube,
-  FiSettings, FiImage, FiMonitor
+  FiSettings, FiImage, FiMonitor, FiRefreshCw, FiSearch, FiExternalLink,
+  FiPackage, FiTag, FiBarChart2, FiToggleLeft, FiUsers, FiLock,
+  FiCreditCard, FiLink, FiEye,
 } from 'react-icons/fi';
 
-const DEFAULT_SOCIAL_MEDIA: SocialMediaItem[] = [
-  { name: 'Instagram', url: '', enabled: true, icon: 'instagram' },
-  { name: 'Facebook', url: '', enabled: true, icon: 'facebook' },
-  { name: 'Twitter/X', url: '', enabled: true, icon: 'twitter' },
-  { name: 'YouTube', url: '', enabled: true, icon: 'youtube' },
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+type Tab = 'general' | 'tienda' | 'homepage' | 'inventario' | 'seo' | 'sistema';
+
+const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: 'general',    label: 'General',    icon: <FiSettings /> },
+  { id: 'tienda',     label: 'Tienda',     icon: <FiDollarSign /> },
+  { id: 'homepage',   label: 'Homepage',   icon: <FiHome /> },
+  { id: 'inventario', label: 'Inventario', icon: <FiPackage /> },
+  { id: 'seo',        label: 'SEO',        icon: <FiSearch /> },
+  { id: 'sistema',    label: 'Sistema',    icon: <FiShield /> },
 ];
+
+const SECTION_FIELDS: Record<Tab, (keyof SettingsFormData)[]> = {
+  general: [
+    'companyName', 'tagline', 'rif', 'legalName', 'foundedYear', 'description',
+    'logo', 'favicon', 'primaryColor', 'secondaryColor',
+    'phone', 'whatsapp', 'email', 'address',
+    'instagram', 'facebook', 'twitter', 'youtube', 'telegram', 'tiktok',
+    'businessHours',
+  ],
+  tienda: [
+    'primaryCurrency', 'autoExchangeRates', 'exchangeRateVES', 'exchangeRateEUR',
+    'deliveryEnabled', 'shippingCostPerKg', 'minConsolidatedShipping', 'packagingFeeUSD',
+    'freeDeliveryThresholdUSD', 'pickupEnabled', 'pickupAddress', 'pickupInstructions',
+    'taxEnabled', 'taxPercent', 'minOrderAmountUSD', 'maxOrderAmountUSD',
+  ],
+  homepage: [
+    'heroTitle', 'heroSubtitle', 'heroButtonText', 'heroButtonLink', 'heroBackgroundImage',
+    'heroVideoEnabled', 'heroVideoUrl',
+    'showStats',
+    'stat1Label', 'stat1Value', 'stat1Icon',
+    'stat2Label', 'stat2Value', 'stat2Icon',
+    'stat3Label', 'stat3Value', 'stat3Icon',
+    'stat4Label', 'stat4Value', 'stat4Icon',
+    'showCategories', 'maxCategoriesDisplay',
+    'ctaEnabled', 'ctaTitle', 'ctaDescription', 'ctaButtonText', 'ctaButtonLink',
+    'maxFeaturedProducts',
+  ],
+  inventario: [
+    'lowStockThreshold', 'criticalStockThreshold',
+    'autoHideOutOfStock', 'notifyLowStock', 'notifyOutOfStock',
+  ],
+  seo: ['metaTitle', 'metaDescription', 'metaKeywords'],
+  sistema: [
+    'maintenanceMode', 'maintenanceMessage',
+    'maintenanceStartTime', 'maintenanceEndTime', 'maintenanceAllowedIPs',
+  ],
+};
+
+const DEFAULT_FORM: SettingsFormData = {
+  companyName: '', tagline: '', rif: '', legalName: '', foundedYear: '', description: '',
+  phone: '', whatsapp: '', email: '', address: '',
+  logo: null, favicon: null,
+  primaryColor: '#2a63cd', secondaryColor: '#1e4ba3',
+  instagram: '', facebook: '', twitter: '', youtube: '', telegram: '', tiktok: '',
+  socialMedia: [],
+  businessHours: {
+    monday:    { open: '09:00', close: '18:00', enabled: true },
+    tuesday:   { open: '09:00', close: '18:00', enabled: true },
+    wednesday: { open: '09:00', close: '18:00', enabled: true },
+    thursday:  { open: '09:00', close: '18:00', enabled: true },
+    friday:    { open: '09:00', close: '18:00', enabled: true },
+    saturday:  { open: '10:00', close: '14:00', enabled: true },
+    sunday:    { open: '00:00', close: '00:00', enabled: false },
+  },
+  primaryCurrency: 'USD', autoExchangeRates: false,
+  exchangeRateVES: 36.50, exchangeRateEUR: 0.92,
+  deliveryEnabled: true, deliveryFeeUSD: 0, freeDeliveryThresholdUSD: null,
+  shippingCostPerKg: 2, minConsolidatedShipping: 3, packagingFeeUSD: 2.5,
+  pickupEnabled: true, pickupAddress: '', pickupInstructions: '',
+  taxEnabled: false, taxPercent: 0,
+  minOrderAmountUSD: null, maxOrderAmountUSD: null,
+  maintenanceMode: false, maintenanceMessage: '',
+  maintenanceStartTime: '', maintenanceEndTime: '', maintenanceAllowedIPs: '',
+  metaTitle: '', metaDescription: '', metaKeywords: '',
+  heroVideoEnabled: false, heroVideoUrl: '', heroVideoTitle: '', heroVideoDescription: '',
+  maxFeaturedProducts: 8,
+  heroTitle: '', heroSubtitle: '', heroButtonText: '', heroButtonLink: '',
+  heroBackgroundImage: null,
+  showStats: true,
+  stat1Label: '', stat1Value: '', stat1Icon: '',
+  stat2Label: '', stat2Value: '', stat2Icon: '',
+  stat3Label: '', stat3Value: '', stat3Icon: '',
+  stat4Label: '', stat4Value: '', stat4Icon: '',
+  showCategories: true, maxCategoriesDisplay: 6,
+  lowStockThreshold: 10, criticalStockThreshold: 5,
+  autoHideOutOfStock: false, notifyLowStock: true, notifyOutOfStock: true,
+  ctaEnabled: true, ctaTitle: '', ctaDescription: '', ctaButtonText: '', ctaButtonLink: '',
+  hotAdEnabled: false, hotAdImage: null, hotAdTransparentBg: false,
+  hotAdShadowEnabled: true, hotAdShadowBlur: 20, hotAdShadowOpacity: 50,
+  hotAdBackdropOpacity: 70, hotAdBackdropColor: '#000000', hotAdLink: '',
+};
+
+// ─── Shared primitives ───────────────────────────────────────────────────────
+
+function Toggle({
+  id, name, checked, onChange, color = 'blue',
+}: {
+  id: string; name: string; checked: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  color?: 'blue' | 'green' | 'amber' | 'red' | 'cyan';
+}) {
+  const colors: Record<string, string> = {
+    blue:  'peer-checked:bg-blue-600',
+    green: 'peer-checked:bg-green-500',
+    amber: 'peer-checked:bg-amber-500',
+    red:   'peer-checked:bg-red-500',
+    cyan:  'peer-checked:bg-cyan-600',
+  };
+  return (
+    <label className="relative inline-flex items-center cursor-pointer">
+      <input
+        type="checkbox"
+        id={id}
+        name={name}
+        checked={checked}
+        onChange={onChange}
+        className="sr-only peer"
+      />
+      <div className={`w-10 h-5 bg-gray-300 rounded-full peer transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5 ${colors[color]}`} />
+    </label>
+  );
+}
+
+function Card({ title, icon, children, accent }: {
+  title: string; icon: React.ReactNode; children: React.ReactNode;
+  accent?: string;
+}) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className={`flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-gray-50/60 ${accent || ''}`}>
+        <span className="text-gray-500">{icon}</span>
+        <h3 className="font-semibold text-sm text-gray-800">{title}</h3>
+      </div>
+      <div className="p-5">{children}</div>
+    </div>
+  );
+}
+
+function Field({ label, hint, error, children }: {
+  label: string; hint?: string; error?: string; children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-gray-700 mb-1">{label}</label>
+      {children}
+      {hint && !error && <p className="text-[10px] text-gray-400 mt-1">{hint}</p>}
+      {error && <p className="text-[10px] text-red-500 mt-1">{error}</p>}
+    </div>
+  );
+}
+
+const inputCls = 'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-white';
+const inputWithIconCls = `${inputCls} pl-9`;
+
+// ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
   const { data: session } = useSession();
-  const [isLoading, setIsLoading] = useState(false);
-  const [settings, setSettings] = useState<CompanySettings | null>(null);
-  const [formData, setFormData] = useState<SettingsFormData>({
-    companyName: '',
-    tagline: '',
-    rif: '',
-    legalName: '',
-    foundedYear: '',
-    description: '',
-    phone: '',
-    whatsapp: '+582572511282',
-    email: 'electroshopgre@gmail.com',
-    address: '',
-    logo: null,
-    favicon: null,
-    primaryColor: '#2a63cd',
-    secondaryColor: '#1e4ba3',
-    instagram: '',
-    facebook: '',
-    twitter: '',
-    youtube: '',
-    telegram: '',
-    tiktok: '',
-    socialMedia: [...DEFAULT_SOCIAL_MEDIA],
-    businessHours: {
-      monday: { open: '09:00', close: '18:00', enabled: true },
-      tuesday: { open: '09:00', close: '18:00', enabled: true },
-      wednesday: { open: '09:00', close: '18:00', enabled: true },
-      thursday: { open: '09:00', close: '18:00', enabled: true },
-      friday: { open: '09:00', close: '18:00', enabled: true },
-      saturday: { open: '10:00', close: '14:00', enabled: true },
-      sunday: { open: '00:00', close: '00:00', enabled: false },
-    },
-    primaryCurrency: 'USD',
-    autoExchangeRates: false,
-    exchangeRateVES: 36.50,
-    exchangeRateEUR: 0.92,
-    deliveryEnabled: true,
-    deliveryFeeUSD: 0,
-    freeDeliveryThresholdUSD: null,
-    shippingCostPerKg: 2,
-    minConsolidatedShipping: 3,
-    packagingFeeUSD: 2.50,
-    pickupEnabled: true,
-    pickupAddress: '',
-    pickupInstructions: '',
-    taxEnabled: false,
-    taxPercent: 0,
-    minOrderAmountUSD: null,
-    maxOrderAmountUSD: null,
-    maintenanceMode: false,
-    maintenanceMessage: '',
-    maintenanceStartTime: '',
-    maintenanceEndTime: '',
-    maintenanceAllowedIPs: '',
-    metaTitle: '',
-    metaDescription: '',
-    metaKeywords: '',
-    heroVideoEnabled: false,
-    heroVideoUrl: '',
-    heroVideoTitle: '',
-    heroVideoDescription: '',
-    maxFeaturedProducts: 8,
-    // HomePage Hero Section
-    heroTitle: '',
-    heroSubtitle: '',
-    heroButtonText: '',
-    heroButtonLink: '',
-    heroBackgroundImage: null,
-    // HomePage Stats Section
-    showStats: true,
-    stat1Label: '',
-    stat1Value: '',
-    stat1Icon: '',
-    stat2Label: '',
-    stat2Value: '',
-    stat2Icon: '',
-    stat3Label: '',
-    stat3Value: '',
-    stat3Icon: '',
-    stat4Label: '',
-    stat4Value: '',
-    stat4Icon: '',
-    // HomePage Categories Display
-    showCategories: true,
-    maxCategoriesDisplay: 6,
-    // Inventory Configuration
-    lowStockThreshold: 10,
-    criticalStockThreshold: 5,
-    autoHideOutOfStock: false,
-    notifyLowStock: true,
-    notifyOutOfStock: true,
-    // HomePage CTA Section
-    ctaEnabled: true,
-    ctaTitle: '',
-    ctaDescription: '',
-    ctaButtonText: '',
-    ctaButtonLink: '',
-    // Hot Ad / Promotional Popup
-    hotAdEnabled: false,
-    hotAdImage: null,
-    hotAdTransparentBg: false,
-    hotAdShadowEnabled: true,
-    hotAdShadowBlur: 20,
-    hotAdShadowOpacity: 50,
-    hotAdBackdropOpacity: 70,
-    hotAdBackdropColor: '#000000',
-    hotAdLink: '',
-  });
-  const [exchangeRates, setExchangeRates] = useState({ VES: 36.50, EUR: 0.92 });
+  const [activeTab, setActiveTab] = useState<Tab>('general');
+  const [formData, setFormData] = useState<SettingsFormData>(DEFAULT_FORM);
+  const [initialFormData, setInitialFormData] = useState<SettingsFormData>(DEFAULT_FORM);
+  const [isFetching, setIsFetching] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [loadingRates, setLoadingRates] = useState(false);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<SettingsValidationErrors>({});
-  const [successMessage, setSuccessMessage] = useState('');
-  const [initialFormData, setInitialFormData] = useState<SettingsFormData | null>(null);
-  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [savedTab, setSavedTab] = useState<Tab | null>(null);
+  const [adminUsers, setAdminUsers] = useState<{ id: string; name: string; email: string; role: string }[]>([]);
+
+  const logoInputRef    = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
+  const heroBgInputRef  = useRef<HTMLInputElement>(null);
 
-  // Check if form has changes
+  // Per-tab dirty check
   const hasChanges = useMemo(() => {
-    if (!initialFormData) return false;
-    return JSON.stringify(formData) !== JSON.stringify(initialFormData);
-  }, [formData, initialFormData]);
+    const fields = SECTION_FIELDS[activeTab];
+    return fields.some(f => JSON.stringify(formData[f]) !== JSON.stringify(initialFormData[f]));
+  }, [formData, initialFormData, activeTab]);
+
+  // ── Fetch ──────────────────────────────────────────────────────────────────
+  useEffect(() => { fetchSettings(); }, []);
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  useEffect(() => {
-    if (formData.autoExchangeRates) {
-      fetchExchangeRates();
-    }
-  }, [formData.autoExchangeRates, formData.primaryCurrency]);
+    if (activeTab === 'sistema') fetchAdminUsers();
+  }, [activeTab]);
 
   const fetchSettings = async () => {
+    setIsFetching(true);
     try {
-      const response = await fetch('/api/settings');
-      if (response.ok) {
-        const data = await response.json();
-        setSettings(data);
-        const loadedData: SettingsFormData = {
-          companyName: data.companyName || '',
-          tagline: data.tagline || '',
-          rif: data.rif || '',
-          legalName: data.legalName || '',
-          foundedYear: data.foundedYear || '',
-          description: data.description || '',
-          phone: data.phone || '',
-          whatsapp: data.whatsapp || '',
-          email: data.email || '',
-          address: data.address || '',
-          logo: data.logo,
-          favicon: data.favicon,
-          primaryColor: data.primaryColor || '#2a63cd',
-          secondaryColor: data.secondaryColor || '#1e4ba3',
-          instagram: data.instagram || '',
-          facebook: data.facebook || '',
-          twitter: data.twitter || '',
-          youtube: data.youtube || '',
-          telegram: data.telegram || '',
-          tiktok: data.tiktok || '',
-          socialMedia: Array.isArray(data.socialMedia) ? data.socialMedia : [...DEFAULT_SOCIAL_MEDIA],
-          businessHours: data.businessHours || {
-            monday: { open: '09:00', close: '18:00', enabled: true },
-            tuesday: { open: '09:00', close: '18:00', enabled: true },
-            wednesday: { open: '09:00', close: '18:00', enabled: true },
-            thursday: { open: '09:00', close: '18:00', enabled: true },
-            friday: { open: '09:00', close: '18:00', enabled: true },
-            saturday: { open: '10:00', close: '14:00', enabled: true },
-            sunday: { open: '00:00', close: '00:00', enabled: false },
-          },
-          primaryCurrency: (data.primaryCurrency as 'USD' | 'VES' | 'EUR') || 'USD',
-          autoExchangeRates: data.autoExchangeRates || false,
-          exchangeRateVES: data.exchangeRateVES ? Number(data.exchangeRateVES) : 36.50,
-          exchangeRateEUR: data.exchangeRateEUR ? Number(data.exchangeRateEUR) : 0.92,
-          deliveryEnabled: data.deliveryEnabled ?? true,
-          deliveryFeeUSD: data.deliveryFeeUSD ? Number(data.deliveryFeeUSD) : 0,
-          freeDeliveryThresholdUSD: data.freeDeliveryThresholdUSD ? Number(data.freeDeliveryThresholdUSD) : null,
-          shippingCostPerKg: data.shippingCostPerKg ? Number(data.shippingCostPerKg) : 2,
-          minConsolidatedShipping: data.minConsolidatedShipping ? Number(data.minConsolidatedShipping) : 3,
-          packagingFeeUSD: data.packagingFeeUSD ? Number(data.packagingFeeUSD) : 2.50,
-          pickupEnabled: data.pickupEnabled ?? true,
-          pickupAddress: data.pickupAddress || '',
-          pickupInstructions: data.pickupInstructions || '',
-          taxEnabled: data.taxEnabled ?? false,
-          taxPercent: data.taxPercent ? Number(data.taxPercent) : 0,
-          minOrderAmountUSD: data.minOrderAmountUSD ? Number(data.minOrderAmountUSD) : null,
-          maxOrderAmountUSD: data.maxOrderAmountUSD ? Number(data.maxOrderAmountUSD) : null,
-          maintenanceMode: data.maintenanceMode ?? false,
-          maintenanceMessage: data.maintenanceMessage || '',
-          maintenanceStartTime: data.maintenanceStartTime ? new Date(data.maintenanceStartTime).toISOString().slice(0, 16) : '',
-          maintenanceEndTime: data.maintenanceEndTime ? new Date(data.maintenanceEndTime).toISOString().slice(0, 16) : '',
-          maintenanceAllowedIPs: data.maintenanceAllowedIPs || '',
-          metaTitle: data.metaTitle || '',
-          metaDescription: data.metaDescription || '',
-          metaKeywords: data.metaKeywords || '',
-          heroVideoEnabled: data.heroVideoEnabled ?? false,
-          heroVideoUrl: data.heroVideoUrl || '',
-          heroVideoTitle: data.heroVideoTitle || '',
-          heroVideoDescription: data.heroVideoDescription || '',
-          maxFeaturedProducts: data.maxFeaturedProducts || 8,
-          // HomePage Hero Section
-          heroTitle: data.heroTitle || '',
-          heroSubtitle: data.heroSubtitle || '',
-          heroButtonText: data.heroButtonText || '',
-          heroButtonLink: data.heroButtonLink || '',
-          heroBackgroundImage: data.heroBackgroundImage || null,
-          // HomePage Stats Section
-          showStats: data.showStats ?? true,
-          stat1Label: data.stat1Label || '',
-          stat1Value: data.stat1Value || '',
-          stat1Icon: data.stat1Icon || '',
-          stat2Label: data.stat2Label || '',
-          stat2Value: data.stat2Value || '',
-          stat2Icon: data.stat2Icon || '',
-          stat3Label: data.stat3Label || '',
-          stat3Value: data.stat3Value || '',
-          stat3Icon: data.stat3Icon || '',
-          stat4Label: data.stat4Label || '',
-          stat4Value: data.stat4Value || '',
-          stat4Icon: data.stat4Icon || '',
-          // HomePage Categories Display
-          showCategories: data.showCategories ?? true,
-          maxCategoriesDisplay: data.maxCategoriesDisplay || 6,
-          // Inventory Configuration
-          lowStockThreshold: data.lowStockThreshold || 10,
-          criticalStockThreshold: data.criticalStockThreshold || 5,
-          autoHideOutOfStock: data.autoHideOutOfStock ?? false,
-          notifyLowStock: data.notifyLowStock ?? true,
-          notifyOutOfStock: data.notifyOutOfStock ?? true,
-          // HomePage CTA Section
-          ctaEnabled: data.ctaEnabled ?? true,
-          ctaTitle: data.ctaTitle || '',
-          ctaDescription: data.ctaDescription || '',
-          ctaButtonText: data.ctaButtonText || '',
-          ctaButtonLink: data.ctaButtonLink || '',
-          // Hot Ad / Promotional Popup
-          hotAdEnabled: data.hotAdEnabled ?? false,
-          hotAdImage: data.hotAdImage || null,
-          hotAdTransparentBg: data.hotAdTransparentBg ?? false,
-          hotAdShadowEnabled: data.hotAdShadowEnabled ?? true,
-          hotAdShadowBlur: data.hotAdShadowBlur ?? 20,
-          hotAdShadowOpacity: data.hotAdShadowOpacity ?? 50,
-          hotAdBackdropOpacity: data.hotAdBackdropOpacity ?? 70,
-          hotAdBackdropColor: data.hotAdBackdropColor || '#000000',
-          hotAdLink: data.hotAdLink || '',
-        };
-        setFormData(loadedData);
-        setInitialFormData(loadedData);
-        if (data.logo) setLogoPreview(data.logo);
-        if (data.favicon) setFaviconPreview(data.favicon);
+      const res = await fetch('/api/settings');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      let businessHours = DEFAULT_FORM.businessHours;
+      if (data.businessHours) {
+        try { businessHours = typeof data.businessHours === 'string'
+          ? JSON.parse(data.businessHours) : data.businessHours; } catch {}
       }
-    } catch (error) {
-      console.error('Error fetching settings:', error);
+
+      const loaded: SettingsFormData = {
+        ...DEFAULT_FORM,
+        companyName:   data.companyName  || '',
+        tagline:       data.tagline      || '',
+        rif:           data.rif          || '',
+        legalName:     data.legalName    || '',
+        foundedYear:   data.foundedYear  || '',
+        description:   data.description  || '',
+        phone:         data.phone        || '',
+        whatsapp:      data.whatsapp     || '',
+        email:         data.email        || '',
+        address:       data.address      || '',
+        logo:          data.logo         || null,
+        favicon:       data.favicon      || null,
+        primaryColor:  data.primaryColor  || '#2a63cd',
+        secondaryColor:data.secondaryColor|| '#1e4ba3',
+        instagram:     data.instagram    || '',
+        facebook:      data.facebook     || '',
+        twitter:       data.twitter      || '',
+        youtube:       data.youtube      || '',
+        telegram:      data.telegram     || '',
+        tiktok:        data.tiktok       || '',
+        socialMedia:   [],
+        businessHours,
+        primaryCurrency:   (data.primaryCurrency  as 'USD'|'VES'|'EUR') || 'USD',
+        autoExchangeRates: data.autoExchangeRates ?? false,
+        exchangeRateVES:   data.exchangeRateVES   ? Number(data.exchangeRateVES)   : 36.50,
+        exchangeRateEUR:   data.exchangeRateEUR   ? Number(data.exchangeRateEUR)   : 0.92,
+        deliveryEnabled:   data.deliveryEnabled   ?? true,
+        deliveryFeeUSD:    data.deliveryFeeUSD    ? Number(data.deliveryFeeUSD)    : 0,
+        freeDeliveryThresholdUSD: data.freeDeliveryThresholdUSD ? Number(data.freeDeliveryThresholdUSD) : null,
+        shippingCostPerKg:     data.shippingCostPerKg     ? Number(data.shippingCostPerKg)     : 2,
+        minConsolidatedShipping: data.minConsolidatedShipping ? Number(data.minConsolidatedShipping) : 3,
+        packagingFeeUSD:       data.packagingFeeUSD       ? Number(data.packagingFeeUSD)       : 2.5,
+        pickupEnabled:         data.pickupEnabled         ?? true,
+        pickupAddress:         data.pickupAddress         || '',
+        pickupInstructions:    data.pickupInstructions    || '',
+        taxEnabled:            data.taxEnabled            ?? false,
+        taxPercent:            data.taxPercent            ? Number(data.taxPercent)   : 0,
+        minOrderAmountUSD:     data.minOrderAmountUSD     ? Number(data.minOrderAmountUSD) : null,
+        maxOrderAmountUSD:     data.maxOrderAmountUSD     ? Number(data.maxOrderAmountUSD) : null,
+        maintenanceMode:       data.maintenanceMode       ?? false,
+        maintenanceMessage:    data.maintenanceMessage    || '',
+        maintenanceStartTime:  data.maintenanceStartTime ? new Date(data.maintenanceStartTime).toISOString().slice(0,16) : '',
+        maintenanceEndTime:    data.maintenanceEndTime   ? new Date(data.maintenanceEndTime).toISOString().slice(0,16)   : '',
+        maintenanceAllowedIPs: data.maintenanceAllowedIPs || '',
+        metaTitle:       data.metaTitle       || '',
+        metaDescription: data.metaDescription || '',
+        metaKeywords:    data.metaKeywords    || '',
+        heroVideoEnabled:     data.heroVideoEnabled     ?? false,
+        heroVideoUrl:         data.heroVideoUrl         || '',
+        heroVideoTitle:       data.heroVideoTitle       || '',
+        heroVideoDescription: data.heroVideoDescription || '',
+        maxFeaturedProducts:  data.maxFeaturedProducts  ?? 8,
+        heroTitle:            data.heroTitle            || '',
+        heroSubtitle:         data.heroSubtitle         || '',
+        heroButtonText:       data.heroButtonText       || '',
+        heroButtonLink:       data.heroButtonLink       || '',
+        heroBackgroundImage:  data.heroBackgroundImage  || null,
+        showStats:     data.showStats     ?? true,
+        stat1Label:    data.stat1Label    || '', stat1Value: data.stat1Value || '', stat1Icon: data.stat1Icon || '',
+        stat2Label:    data.stat2Label    || '', stat2Value: data.stat2Value || '', stat2Icon: data.stat2Icon || '',
+        stat3Label:    data.stat3Label    || '', stat3Value: data.stat3Value || '', stat3Icon: data.stat3Icon || '',
+        stat4Label:    data.stat4Label    || '', stat4Value: data.stat4Value || '', stat4Icon: data.stat4Icon || '',
+        showCategories:       data.showCategories       ?? true,
+        maxCategoriesDisplay: data.maxCategoriesDisplay ?? 6,
+        lowStockThreshold:    data.lowStockThreshold    ?? 10,
+        criticalStockThreshold: data.criticalStockThreshold ?? 5,
+        autoHideOutOfStock:   data.autoHideOutOfStock   ?? false,
+        notifyLowStock:       data.notifyLowStock       ?? true,
+        notifyOutOfStock:     data.notifyOutOfStock     ?? true,
+        ctaEnabled:     data.ctaEnabled     ?? true,
+        ctaTitle:       data.ctaTitle       || '',
+        ctaDescription: data.ctaDescription || '',
+        ctaButtonText:  data.ctaButtonText  || '',
+        ctaButtonLink:  data.ctaButtonLink  || '',
+        hotAdEnabled:         data.hotAdEnabled         ?? false,
+        hotAdImage:           data.hotAdImage           || null,
+        hotAdTransparentBg:   data.hotAdTransparentBg   ?? false,
+        hotAdShadowEnabled:   data.hotAdShadowEnabled   ?? true,
+        hotAdShadowBlur:      data.hotAdShadowBlur      ?? 20,
+        hotAdShadowOpacity:   data.hotAdShadowOpacity   ?? 50,
+        hotAdBackdropOpacity: data.hotAdBackdropOpacity ?? 70,
+        hotAdBackdropColor:   data.hotAdBackdropColor   || '#000000',
+        hotAdLink:            data.hotAdLink            || '',
+      };
+
+      setFormData(loaded);
+      setInitialFormData(loaded);
+    } catch (e) {
+      console.error('Error fetching settings:', e);
+    } finally {
+      setIsFetching(false);
     }
+  };
+
+  const fetchAdminUsers = async () => {
+    try {
+      const res = await fetch('/api/admin/users?role=admin');
+      if (res.ok) {
+        const data = await res.json();
+        setAdminUsers(data.users || []);
+      }
+    } catch {}
   };
 
   const fetchExchangeRates = async () => {
     setLoadingRates(true);
     try {
-      // Use our internal API route to avoid CORS issues
-      const response = await fetch('/api/exchange-rates');
-      if (response.ok) {
-        const data = await response.json();
-        // Handle simplified response { VES: rate, lastUpdated: ... }
+      const res = await fetch('/api/exchange-rates');
+      if (res.ok) {
+        const data = await res.json();
         if (data.VES) {
-          const rate = data.VES;
-          setExchangeRates(prev => ({ ...prev, VES: rate }));
-          setFormData(prev => ({ ...prev, exchangeRateVES: rate }));
+          set('exchangeRateVES', data.VES);
         }
-      } else {
-        console.warn('Failed to fetch exchange rates: API response not ok');
       }
-    } catch (error) {
-      console.error('Error fetching rates:', error);
+    } catch (e) {
+      console.error('Error fetching rates:', e);
     } finally {
       setLoadingRates(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
+  const set = useCallback(<K extends keyof SettingsFormData>(key: K, value: SettingsFormData[K]) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  const handleInput = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-    }));
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
-    }
-  };
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    setFormData(prev => ({ ...prev, [name]: val }));
+    setErrors(prev => ({ ...prev, [name]: undefined }));
+  }, []);
 
-  const handleSocialMediaChange = (index: number, field: keyof SocialMediaItem, value: any) => {
-    const newSocialMedia = [...formData.socialMedia];
-    newSocialMedia[index] = { ...newSocialMedia[index], [field]: value };
-    setFormData(prev => ({ ...prev, socialMedia: newSocialMedia }));
-  };
-
-  const handleBusinessHoursChange = (day: keyof typeof formData.businessHours, field: string, value: any) => {
+  const handleHoursChange = useCallback((
+    day: keyof SettingsFormData['businessHours'],
+    field: 'open' | 'close' | 'enabled',
+    value: string | boolean,
+  ) => {
     setFormData(prev => ({
       ...prev,
       businessHours: {
         ...prev.businessHours,
-        [day]: { ...prev.businessHours[day], [field]: value }
-      }
+        [day]: { ...prev.businessHours[day], [field]: value },
+      },
     }));
-  };
+  }, []);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'favicon') => {
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: 'logo' | 'favicon' | 'heroBackgroundImage',
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('Máximo 5MB.'); return; }
 
-    // Validate file size
-    if (file.size > 2 * 1024 * 1024) {
-      alert('El archivo es demasiado grande. Máximo 2MB.');
-      return;
-    }
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/x-icon'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('Tipo de archivo no permitido. Solo se permiten imágenes JPG, PNG, WEBP, GIF e ICO.');
-      return;
-    }
-
-    // Show preview immediately using local URL
-    const localPreview = URL.createObjectURL(file);
-    if (field === 'logo') setLogoPreview(localPreview);
-    else setFaviconPreview(localPreview);
+    const preview = URL.createObjectURL(file);
+    set(field, preview as any);
 
     try {
-      // Upload file to server
-      const formDataUpload = new FormData();
-      formDataUpload.append('file', file);
-      formDataUpload.append('type', field);
-
-      const response = await fetch('/api/upload/settings', {
-        method: 'POST',
-        body: formDataUpload,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        alert(error.error || 'Error al subir el archivo');
-        // Revert preview
-        if (field === 'logo') setLogoPreview(formData.logo);
-        else setFaviconPreview(formData.favicon);
-        return;
-      }
-
-      const result = await response.json();
-
-      // Update form data with the server URL (not base64!)
-      setFormData(prev => ({ ...prev, [field]: result.url }));
-
-      // Update preview with server URL
-      if (field === 'logo') setLogoPreview(result.url);
-      else setFaviconPreview(result.url);
-
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      alert('Error de conexión al subir el archivo');
-      // Revert preview
-      if (field === 'logo') setLogoPreview(formData.logo);
-      else setFaviconPreview(formData.favicon);
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('type', field);
+      const res = await fetch('/api/upload/settings', { method: 'POST', body: fd });
+      if (!res.ok) { alert('Error al subir archivo'); set(field, null as any); return; }
+      const { url } = await res.json();
+      set(field, url);
+    } catch {
+      alert('Error de conexión');
+      set(field, null as any);
     } finally {
-      // Clean up the local preview URL
-      URL.revokeObjectURL(localPreview);
+      URL.revokeObjectURL(preview);
     }
   };
 
   const handleSave = async () => {
-    setIsLoading(true);
+    if (!hasChanges) return;
+    setIsSaving(true);
     setErrors({});
-    setSuccessMessage('');
+
+    const fields = SECTION_FIELDS[activeTab];
+    const payload: Partial<SettingsFormData> = {};
+    fields.forEach(f => { (payload as any)[f] = formData[f]; });
 
     try {
-      const validation = validateSettings(formData);
-      if (!validation.valid) {
-        setErrors(validation.errors);
-        setIsLoading(false);
-        // Scroll to top to see errors
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-
-      const response = await fetch('/api/settings', {
+      const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
-
-      if (response.ok) {
-        const updatedSettings = await response.json();
-        setSettings(updatedSettings);
-        setInitialFormData(formData); // Reset initial state to current state
-        setSuccessMessage('Configuración guardada exitosamente');
-        setTimeout(() => setSuccessMessage(''), 3000);
+      if (res.ok) {
+        const updated = await res.json();
+        setInitialFormData(prev => ({ ...prev, ...payload }));
+        setSavedTab(activeTab);
+        setTimeout(() => setSavedTab(null), 2500);
       } else {
-        const errorData = await response.json();
-        setErrors(errorData.errors || { form: errorData.error || 'Error al guardar' });
+        const err = await res.json();
+        setErrors(err.errors || { form: err.error || 'Error al guardar' });
       }
-    } catch (error) {
-      console.error('Error saving settings:', error);
+    } catch {
       setErrors({ form: 'Error de conexión' });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
+  // ── Skeleton ───────────────────────────────────────────────────────────────
+  if (isFetching) {
+    return (
+      <div className="p-6 max-w-5xl mx-auto animate-pulse space-y-6">
+        <div className="h-8 bg-gray-200 rounded w-64" />
+        <div className="flex gap-2">
+          {[1,2,3,4,5,6].map(i => <div key={i} className="h-9 bg-gray-200 rounded-lg w-24" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {[1,2,3].map(i => <div key={i} className="h-48 bg-gray-200 rounded-xl" />)}
+        </div>
+      </div>
+    );
+  }
+
   if (!session) return null;
 
-  return (
-    <div className="p-6 max-w-[1600px] mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Configuración del Sistema</h1>
-          <p className="text-gray-500 text-sm mt-1">Administra todos los aspectos de tu tienda desde un solo lugar</p>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={isLoading || !hasChanges}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg ${hasChanges ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'} disabled:opacity-50`}
-        >
-          {isLoading ? <FiLoader className="animate-spin" /> : <FiSave />}
-          {isLoading ? 'Guardando...' : hasChanges ? 'Guardar Cambios' : 'Sin Cambios'}
-        </button>
-      </div>
+  // ── Tab renders ────────────────────────────────────────────────────────────
 
-      {successMessage && (
-        <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200 flex items-center gap-2 animate-fadeIn">
-          <FiCheck className="w-5 h-5" />
-          {successMessage}
-        </div>
-      )}
+  const dayLabels: Record<string, string> = {
+    monday: 'Lunes', tuesday: 'Martes', wednesday: 'Miércoles',
+    thursday: 'Jueves', friday: 'Viernes', saturday: 'Sábado', sunday: 'Domingo',
+  };
+  const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'] as const;
 
-      {errors.form && (
-        <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 flex items-center gap-2 animate-fadeIn">
-          <FiAlertTriangle className="w-5 h-5" />
-          {errors.form}
-        </div>
-      )}
-
-      {/* Main Grid Layout - 2 Columns for better spacing */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* LEFT COLUMN: Identity & Branding */}
-        <div className="space-y-6">
-
-          {/* Section Header */}
-          <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
-            <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-              <FiSettings className="w-5 h-5" />
+  const renderGeneral = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {/* Left column */}
+      <div className="space-y-5">
+        <Card title="Información de la Empresa" icon={<FiLayout />}>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Nombre Empresa" error={errors.company}>
+                <input name="companyName" value={formData.companyName} onChange={handleInput} className={inputCls} />
+              </Field>
+              <Field label="RIF / ID Legal">
+                <input name="rif" value={formData.rif} onChange={handleInput} className={inputCls} />
+              </Field>
             </div>
-            <h2 className="text-lg font-bold text-gray-800">General e Identidad</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Razón Social">
+                <input name="legalName" value={formData.legalName} onChange={handleInput} className={inputCls} />
+              </Field>
+              <Field label="Año de Fundación">
+                <input name="foundedYear" value={formData.foundedYear} onChange={handleInput} placeholder="2015" className={inputCls} />
+              </Field>
+            </div>
+            <Field label="Slogan">
+              <input name="tagline" value={formData.tagline} onChange={handleInput} className={inputCls} />
+            </Field>
+            <Field label="Descripción Corta">
+              <textarea name="description" value={formData.description} onChange={handleInput} rows={2} className={`${inputCls} resize-none`} />
+            </Field>
           </div>
+        </Card>
 
-          {/* Company Info */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
-              <FiLayout className="text-blue-600" />
-              <h3 className="font-semibold text-gray-900">Información de la Empresa</h3>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Nombre Empresa</label>
-                  <input
-                    type="text"
-                    name="companyName"
-                    value={formData.companyName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">RIF / ID Legal</label>
-                  <input
-                    type="text"
-                    name="rif"
-                    value={formData.rif}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Slogan</label>
-                <input
-                  type="text"
-                  name="tagline"
-                  value={formData.tagline}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Descripción Corta</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={2}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none transition-colors"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Branding & Colors */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
-              <FiGrid className="text-purple-600" />
-              <h3 className="font-semibold text-gray-900">Branding y Colores</h3>
-            </div>
-            <div className="p-6 space-y-6">
-              <div className="flex gap-6">
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">Logo Principal</label>
-                  <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden relative group hover:border-blue-400 transition-colors">
-                      {logoPreview ? (
-                        <Image src={logoPreview} alt="Logo" fill className="object-contain p-1" />
-                      ) : (
-                        <FiImage className="text-gray-400 w-6 h-6" />
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="file"
-                        ref={logoInputRef}
-                        onChange={(e) => handleFileChange(e, 'logo')}
-                        accept="image/*"
-                        className="hidden"
-                      />
-                      <button
-                        onClick={() => logoInputRef.current?.click()}
-                        className="text-xs bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md transition-colors shadow-sm"
-                      >
-                        Subir Imagen
-                      </button>
-                      <span className="text-[10px] text-gray-400">Max 2MB (PNG, JPG)</span>
-                    </div>
+        <Card title="Branding y Colores" icon={<FiImage />}>
+          <div className="space-y-5">
+            <div className="flex gap-6">
+              {/* Logo */}
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-gray-700 mb-2">Logo Principal</p>
+                <div className="flex items-center gap-3">
+                  <div
+                    onClick={() => logoInputRef.current?.click()}
+                    className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden relative cursor-pointer hover:border-blue-400 transition-colors"
+                  >
+                    {formData.logo
+                      ? <Image src={formData.logo} alt="Logo" fill className="object-contain p-1" />
+                      : <FiImage className="text-gray-400 w-6 h-6" />}
                   </div>
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">Favicon</label>
-                  <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden relative group hover:border-blue-400 transition-colors">
-                      {faviconPreview ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={faviconPreview} alt="Favicon" className="w-full h-full object-contain p-2" />
-                      ) : (
-                        <FiGlobe className="text-gray-400 w-6 h-6" />
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="file"
-                        ref={faviconInputRef}
-                        onChange={(e) => handleFileChange(e, 'favicon')}
-                        accept="image/*"
-                        className="hidden"
-                      />
-                      <button
-                        onClick={() => faviconInputRef.current?.click()}
-                        className="text-xs bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md transition-colors shadow-sm"
-                      >
-                        Subir Icono
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6 pt-4 border-t border-gray-100">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">Color Primario</label>
-                  <div className="flex items-center gap-3 p-2 border border-gray-200 rounded-lg">
-                    <input
-                      type="color"
-                      name="primaryColor"
-                      value={formData.primaryColor}
-                      onChange={handleInputChange}
-                      className="h-8 w-12 rounded cursor-pointer border-0 p-0"
-                    />
-                    <span className="text-xs text-gray-600 font-mono font-medium">{formData.primaryColor}</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">Color Secundario</label>
-                  <div className="flex items-center gap-3 p-2 border border-gray-200 rounded-lg">
-                    <input
-                      type="color"
-                      name="secondaryColor"
-                      value={formData.secondaryColor}
-                      onChange={handleInputChange}
-                      className="h-8 w-12 rounded cursor-pointer border-0 p-0"
-                    />
-                    <span className="text-xs text-gray-600 font-mono font-medium">{formData.secondaryColor}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Info */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
-              <FiPhone className="text-green-600" />
-              <h3 className="font-semibold text-gray-900">Información de Contacto</h3>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Email Público</label>
-                  <div className="relative">
-                    <FiMail className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">WhatsApp</label>
-                  <div className="relative">
-                    <FiSmartphone className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-                    <input
-                      type="text"
-                      name="whatsapp"
-                      value={formData.whatsapp}
-                      onChange={handleInputChange}
-                      placeholder="+58 412-1234567"
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Teléfono de Contacto</label>
-                  <div className="relative">
-                    <FiPhone className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-                    <input
-                      type="text"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      placeholder="+58 257-2511282"
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-                    />
-                  </div>
-                  <p className="text-[10px] text-gray-500 mt-1">Número para llamadas (diferente a WhatsApp)</p>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Dirección Física</label>
-                  <div className="relative">
-                    <FiMapPin className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-                    <input
-                      type="text"
-                      name="address"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Social Media */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
-              <FiGlobe className="text-purple-600" />
-              <h3 className="font-semibold text-gray-900">Redes Sociales</h3>
-            </div>
-            <div className="p-6 space-y-4">
-              {/* Instagram */}
-              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-pink-300 transition-colors">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 text-white shadow-md">
-                  <FiInstagram className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Instagram</label>
-                  <input
-                    type="url"
-                    name="instagram"
-                    value={formData.instagram}
-                    onChange={handleInputChange}
-                    placeholder="https://instagram.com/tu_usuario"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Facebook */}
-              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-600 text-white shadow-md">
-                  <FiFacebook className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Facebook</label>
-                  <input
-                    type="url"
-                    name="facebook"
-                    value={formData.facebook}
-                    onChange={handleInputChange}
-                    placeholder="https://facebook.com/tu_pagina"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Twitter/X */}
-              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-sky-300 transition-colors">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-black text-white shadow-md">
-                  <FiTwitter className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Twitter / X</label>
-                  <input
-                    type="url"
-                    name="twitter"
-                    value={formData.twitter}
-                    onChange={handleInputChange}
-                    placeholder="https://twitter.com/tu_usuario"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* YouTube */}
-              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-red-300 transition-colors">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-600 text-white shadow-md">
-                  <FiYoutube className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">YouTube</label>
-                  <input
-                    type="url"
-                    name="youtube"
-                    value={formData.youtube}
-                    onChange={handleInputChange}
-                    placeholder="https://youtube.com/@tu_canal"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Telegram */}
-              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-cyan-300 transition-colors">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-md">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.96 6.504-1.357 8.63-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Telegram</label>
-                  <input
-                    type="url"
-                    name="telegram"
-                    value={formData.telegram || ''}
-                    onChange={handleInputChange}
-                    placeholder="https://t.me/tu_canal"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* TikTok */}
-              <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-400 transition-colors">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-black text-white shadow-md">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">TikTok</label>
-                  <input
-                    type="url"
-                    name="tiktok"
-                    value={formData.tiktok || ''}
-                    onChange={handleInputChange}
-                    placeholder="https://tiktok.com/@tu_usuario"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500/20 focus:border-gray-500 transition-colors"
-                  />
-                </div>
-              </div>
-
-              <p className="text-xs text-gray-500 italic mt-2 flex items-center gap-1">
-                <FiAlertTriangle className="w-3.5 h-3.5 text-yellow-500" />
-                Deja vacío los campos de las redes que no utilices. Solo se mostrarán las que tengan URL.
-              </p>
-            </div>
-          </div>
-
-
-          {/* Business Hours */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
-              <FiClock className="text-orange-600" />
-              <h3 className="font-semibold text-gray-900">Horario de Atención</h3>
-            </div>
-            <div className="p-6 space-y-3">
-              {(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const).map((day) => {
-                const dayNames: Record<string, string> = {
-                  monday: 'Lunes',
-                  tuesday: 'Martes',
-                  wednesday: 'Miércoles',
-                  thursday: 'Jueves',
-                  friday: 'Viernes',
-                  saturday: 'Sábado',
-                  sunday: 'Domingo',
-                };
-                return (
-                  <div key={day} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-                    <div className="w-24">
-                      <span className="text-sm font-medium text-gray-700">{dayNames[day]}</span>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.businessHours[day].enabled}
-                        onChange={(e) => handleBusinessHoursChange(day, 'enabled', e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-gray-300 rounded-full peer peer-checked:bg-green-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
-                    </label>
-                    {formData.businessHours[day].enabled ? (
-                      <div className="flex items-center gap-2 flex-1">
-                        <input
-                          type="time"
-                          value={formData.businessHours[day].open}
-                          onChange={(e) => handleBusinessHoursChange(day, 'open', e.target.value)}
-                          className="px-2 py-1 text-xs border border-gray-300 rounded-lg"
-                        />
-                        <span className="text-gray-400">a</span>
-                        <input
-                          type="time"
-                          value={formData.businessHours[day].close}
-                          onChange={(e) => handleBusinessHoursChange(day, 'close', e.target.value)}
-                          className="px-2 py-1 text-xs border border-gray-300 rounded-lg"
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-400 italic">Cerrado</span>
+                  <div className="space-y-1">
+                    <input ref={logoInputRef} type="file" accept="image/*" onChange={e => handleFileUpload(e, 'logo')} className="hidden" />
+                    <button onClick={() => logoInputRef.current?.click()} className="text-xs border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md transition-colors">Subir</button>
+                    {formData.logo && (
+                      <button onClick={() => set('logo', null)} className="text-xs text-red-500 hover:text-red-700 block">Quitar</button>
                     )}
                   </div>
-                );
-              })}
+                </div>
+              </div>
+              {/* Favicon */}
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-gray-700 mb-2">Favicon</p>
+                <div className="flex items-center gap-3">
+                  <div
+                    onClick={() => faviconInputRef.current?.click()}
+                    className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden cursor-pointer hover:border-blue-400 transition-colors"
+                  >
+                    {formData.favicon
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      ? <img src={formData.favicon} alt="Favicon" className="w-full h-full object-contain p-2" />
+                      : <FiGlobe className="text-gray-400 w-6 h-6" />}
+                  </div>
+                  <div className="space-y-1">
+                    <input ref={faviconInputRef} type="file" accept="image/*,.ico" onChange={e => handleFileUpload(e, 'favicon')} className="hidden" />
+                    <button onClick={() => faviconInputRef.current?.click()} className="text-xs border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md transition-colors">Subir</button>
+                    {formData.favicon && (
+                      <button onClick={() => set('favicon', null)} className="text-xs text-red-500 hover:text-red-700 block">Quitar</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100">
+              <div>
+                <p className="text-xs font-semibold text-gray-700 mb-2">Color Primario</p>
+                <div className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg">
+                  <input type="color" name="primaryColor" value={formData.primaryColor} onChange={handleInput} className="h-8 w-10 rounded cursor-pointer border-0 p-0" />
+                  <span className="text-xs text-gray-600 font-mono">{formData.primaryColor}</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-700 mb-2">Color Secundario</p>
+                <div className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg">
+                  <input type="color" name="secondaryColor" value={formData.secondaryColor} onChange={handleInput} className="h-8 w-10 rounded cursor-pointer border-0 p-0" />
+                  <span className="text-xs text-gray-600 font-mono">{formData.secondaryColor}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Color preview */}
+            <div className="rounded-lg overflow-hidden border border-gray-200">
+              <div className="px-4 py-2 text-white text-xs font-semibold flex items-center justify-between" style={{ backgroundColor: formData.primaryColor }}>
+                <span>ElectroShop</span>
+                <span className="opacity-80">Preview header</span>
+              </div>
+              <div className="p-3 bg-gray-50 flex items-center gap-2">
+                <button className="text-xs text-white px-3 py-1.5 rounded-lg font-semibold" style={{ backgroundColor: formData.primaryColor }}>
+                  Ver Productos
+                </button>
+                <button className="text-xs text-white px-3 py-1.5 rounded-lg font-semibold" style={{ backgroundColor: formData.secondaryColor }}>
+                  Comprar ahora
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        {/* RIGHT COLUMN */}
-        <div className="space-y-6">
-
-          {/* Section Header - Homepage */}
-          <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
-            <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
-              <FiMonitor className="w-5 h-5" />
-            </div>
-            <h2 className="text-lg font-bold text-gray-800">Homepage y Lógica</h2>
-          </div>
-
-          {/* Hero Section Configuration */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
-              <FiHome className="text-indigo-600" />
-              <h3 className="font-semibold text-gray-900">Sección Hero (Principal)</h3>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Título Principal</label>
-                <input
-                  type="text"
-                  name="heroTitle"
-                  value={formData.heroTitle}
-                  onChange={handleInputChange}
-                  placeholder="Ej: Bienvenido a Electro Shop"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Subtítulo</label>
-                <textarea
-                  name="heroSubtitle"
-                  value={formData.heroSubtitle}
-                  onChange={handleInputChange}
-                  rows={2}
-                  placeholder="Ej: La mejor tecnología al mejor precio"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none transition-colors"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Texto Botón</label>
+        <Card title="Redes Sociales" icon={<FiGlobe />}>
+          <div className="space-y-3">
+            {[
+              { name: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/usuario', color: 'from-pink-500 to-purple-600', icon: <FiInstagram /> },
+              { name: 'facebook',  label: 'Facebook',  placeholder: 'https://facebook.com/pagina',   color: 'bg-blue-600',                   icon: <FiFacebook /> },
+              { name: 'twitter',   label: 'Twitter/X', placeholder: 'https://x.com/usuario',          color: 'bg-black',                      icon: <FiTwitter /> },
+              { name: 'youtube',   label: 'YouTube',   placeholder: 'https://youtube.com/@canal',     color: 'bg-red-600',                    icon: <FiYoutube /> },
+              { name: 'telegram',  label: 'Telegram',  placeholder: 'https://t.me/canal',             color: 'from-cyan-400 to-blue-500',     icon: null },
+              { name: 'tiktok',    label: 'TikTok',    placeholder: 'https://tiktok.com/@usuario',    color: 'bg-black',                      icon: null },
+            ].map(({ name, label, placeholder, color, icon: SIcon }) => (
+              <div key={name} className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-200">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm flex-shrink-0 ${color.startsWith('from') ? `bg-gradient-to-br ${color}` : color}`}>
+                  {SIcon || <FiGlobe className="w-4 h-4" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-semibold text-gray-500 mb-0.5">{label}</p>
                   <input
-                    type="text"
-                    name="heroButtonText"
-                    value={formData.heroButtonText}
-                    onChange={handleInputChange}
-                    placeholder="Ver Productos"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                    type="url"
+                    name={name}
+                    value={(formData as any)[name]}
+                    onChange={handleInput}
+                    placeholder={placeholder}
+                    className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Link Botón</label>
-                  <input
-                    type="text"
-                    name="heroButtonLink"
-                    value={formData.heroButtonLink}
-                    onChange={handleInputChange}
-                    placeholder="/productos"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              {/* Video Toggle nested inside Hero */}
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <FiVideo className="text-red-500" />
-                    <span className="text-sm font-medium text-gray-700">Video de Fondo</span>
-                  </div>
-                  <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
-                    <input
-                      type="checkbox"
-                      name="heroVideoEnabled"
-                      id="heroVideoEnabled"
-                      checked={formData.heroVideoEnabled}
-                      onChange={handleInputChange}
-                      className="opacity-0 w-0 h-0 peer"
-                    />
-                    <label
-                      htmlFor="heroVideoEnabled"
-                      className="absolute top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full cursor-pointer peer-checked:bg-blue-600 transition-all duration-300 before:content-[''] before:absolute before:w-3 before:h-3 before:bg-white before:rounded-full before:left-1 before:bottom-1 peer-checked:before:translate-x-5 before:transition-transform"
-                    ></label>
-                  </div>
-                </div>
-
-                {formData.heroVideoEnabled && (
-                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 animate-fadeIn">
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">URL del Video (YouTube/MP4)</label>
-                    <input
-                      type="text"
-                      name="heroVideoUrl"
-                      value={formData.heroVideoUrl}
-                      onChange={handleInputChange}
-                      placeholder="https://youtube.com/..."
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
-                    />
-                    <p className="text-[10px] text-gray-500 mt-1 italic">
-                      * El video se reproducirá automáticamente en bucle y sin sonido.
-                    </p>
-                  </div>
+                {(formData as any)[name] && (
+                  <a href={(formData as any)[name]} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-500 flex-shrink-0">
+                    <FiExternalLink className="w-3.5 h-3.5" />
+                  </a>
                 )}
               </div>
-            </div>
+            ))}
+            <p className="text-[10px] text-gray-400 italic flex items-center gap-1 mt-1">
+              <FiAlertTriangle className="w-3 h-3 text-yellow-500" />
+              Deja vacío las redes que no uses — solo se muestran las que tengan URL.
+            </p>
           </div>
+        </Card>
+      </div>
 
-          {/* Stats & Categories */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
-              <FiActivity className="text-cyan-600" />
-              <h3 className="font-semibold text-gray-900">Estadísticas y Categorías</h3>
+      {/* Right column */}
+      <div className="space-y-5">
+        <Card title="Información de Contacto" icon={<FiPhone />}>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Email Público" error={errors.contact}>
+                <div className="relative">
+                  <FiMail className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                  <input type="email" name="email" value={formData.email} onChange={handleInput} className={inputWithIconCls} />
+                </div>
+              </Field>
+              <Field label="WhatsApp" hint="+58 412-1234567">
+                <div className="relative">
+                  <FiSmartphone className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                  <input type="text" name="whatsapp" value={formData.whatsapp} onChange={handleInput} placeholder="+58 412-1234567" className={inputWithIconCls} />
+                </div>
+              </Field>
             </div>
-            <div className="p-6 space-y-5">
-              {/* Stats Toggle */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Mostrar Sección de Estadísticas</span>
-                <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
-                  <input
-                    type="checkbox"
-                    name="showStats"
-                    id="showStats"
-                    checked={formData.showStats}
-                    onChange={handleInputChange}
-                    className="opacity-0 w-0 h-0 peer"
-                  />
-                  <label
-                    htmlFor="showStats"
-                    className="absolute top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full cursor-pointer peer-checked:bg-cyan-600 transition-all duration-300 before:content-[''] before:absolute before:w-3 before:h-3 before:bg-white before:rounded-full before:left-1 before:bottom-1 peer-checked:before:translate-x-5 before:transition-transform"
-                  ></label>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Teléfono">
+                <div className="relative">
+                  <FiPhone className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                  <input type="text" name="phone" value={formData.phone} onChange={handleInput} placeholder="+58 257-2511282" className={inputWithIconCls} />
                 </div>
-              </div>
-
-              {/* Categories Toggle */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Mostrar Carrusel de Categorías</span>
-                <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
-                  <input
-                    type="checkbox"
-                    name="showCategories"
-                    id="showCategories"
-                    checked={formData.showCategories}
-                    onChange={handleInputChange}
-                    className="opacity-0 w-0 h-0 peer"
-                  />
-                  <label
-                    htmlFor="showCategories"
-                    className="absolute top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full cursor-pointer peer-checked:bg-cyan-600 transition-all duration-300 before:content-[''] before:absolute before:w-3 before:h-3 before:bg-white before:rounded-full before:left-1 before:bottom-1 peer-checked:before:translate-x-5 before:transition-transform"
-                  ></label>
+              </Field>
+              <Field label="Dirección Física">
+                <div className="relative">
+                  <FiMapPin className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                  <input type="text" name="address" value={formData.address} onChange={handleInput} className={inputWithIconCls} />
                 </div>
-              </div>
-
-              {formData.showCategories && (
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Máximo de Categorías a Mostrar</label>
-                  <input
-                    type="number"
-                    name="maxCategoriesDisplay"
-                    value={formData.maxCategoriesDisplay}
-                    onChange={handleInputChange}
-                    min="1"
-                    max="12"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
-                  />
-                </div>
-              )}
+              </Field>
             </div>
+            {formData.whatsapp && (
+              <a
+                href={`https://wa.me/${formData.whatsapp.replace(/\D/g,'')}`}
+                target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-xs text-green-600 hover:text-green-800 font-medium"
+              >
+                <FiExternalLink className="w-3.5 h-3.5" />
+                Probar número de WhatsApp
+              </a>
+            )}
           </div>
+        </Card>
 
-          {/* Exchange Rates */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FiDollarSign className="text-green-600" />
-                <h3 className="font-semibold text-gray-900">Tasas de Cambio</h3>
-              </div>
-              <div className="flex items-center gap-2">
-                <label htmlFor="autoExchangeRates" className="text-xs text-gray-600 font-medium cursor-pointer">Auto-actualizar</label>
-                <input
-                  type="checkbox"
-                  name="autoExchangeRates"
-                  id="autoExchangeRates"
-                  checked={formData.autoExchangeRates}
-                  onChange={handleInputChange}
-                  className="rounded text-green-600 focus:ring-green-500 cursor-pointer"
+        <Card title="Horario de Atención" icon={<FiClock />}>
+          <div className="space-y-2">
+            {days.map(day => (
+              <div key={day} className="flex items-center gap-3 py-1.5 border-b border-gray-50 last:border-0">
+                <span className="text-xs font-medium text-gray-700 w-24">{dayLabels[day]}</span>
+                <Toggle
+                  id={`hours-${day}`}
+                  name={`hours-${day}`}
+                  checked={formData.businessHours[day].enabled}
+                  onChange={e => handleHoursChange(day, 'enabled', e.target.checked)}
+                  color="green"
                 />
+                {formData.businessHours[day].enabled ? (
+                  <div className="flex items-center gap-2 flex-1">
+                    <input
+                      type="time"
+                      value={formData.businessHours[day].open}
+                      onChange={e => handleHoursChange(day, 'open', e.target.value)}
+                      className="px-2 py-1 text-xs border border-gray-300 rounded-lg flex-1"
+                    />
+                    <span className="text-gray-400 text-xs">—</span>
+                    <input
+                      type="time"
+                      value={formData.businessHours[day].close}
+                      onChange={e => handleHoursChange(day, 'close', e.target.value)}
+                      className="px-2 py-1 text-xs border border-gray-300 rounded-lg flex-1"
+                    />
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-400 italic">Cerrado</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+
+  const renderTienda = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="space-y-5">
+        <Card title="Monedas y Tasas de Cambio" icon={<FiDollarSign />}>
+          <div className="space-y-4">
+            <Field label="Moneda Principal">
+              <select name="primaryCurrency" value={formData.primaryCurrency} onChange={handleInput} className={inputCls}>
+                <option value="USD">USD — Dólar americano</option>
+                <option value="VES">VES — Bolívar venezolano</option>
+                <option value="EUR">EUR — Euro</option>
+              </select>
+            </Field>
+
+            <div className="flex items-center justify-between py-2 border-t border-gray-100">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Auto-actualizar tasas</p>
+                <p className="text-xs text-gray-500">Usa la API del BCV para la tasa VES</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {formData.autoExchangeRates && (
+                  <button
+                    onClick={fetchExchangeRates}
+                    disabled={loadingRates}
+                    className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  >
+                    <FiRefreshCw className={`w-3 h-3 ${loadingRates ? 'animate-spin' : ''}`} />
+                    Actualizar
+                  </button>
+                )}
+                <Toggle id="autoExchangeRates" name="autoExchangeRates" checked={formData.autoExchangeRates} onChange={handleInput} color="green" />
               </div>
             </div>
-            <div className="p-6 grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Tasa VES (BCV)</label>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Tasa VES (Bs/USD)" error={errors.exchangeRates}>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">Bs</span>
                   <input
-                    type="number"
-                    name="exchangeRateVES"
-                    value={formData.exchangeRateVES}
-                    onChange={handleInputChange}
-                    step="0.01"
-                    disabled={formData.autoExchangeRates}
-                    className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg disabled:bg-gray-50 disabled:text-gray-500 transition-colors"
+                    type="number" name="exchangeRateVES"
+                    value={formData.exchangeRateVES} onChange={handleInput}
+                    step="0.01" disabled={formData.autoExchangeRates}
+                    className={`${inputCls} pl-8 disabled:bg-gray-50 disabled:text-gray-500`}
                   />
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Tasa EUR</label>
+              </Field>
+              <Field label="Tasa EUR">
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">€</span>
-                  <input
-                    type="number"
-                    name="exchangeRateEUR"
-                    value={formData.exchangeRateEUR}
-                    onChange={handleInputChange}
-                    step="0.01"
-                    className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg transition-colors"
-                  />
+                  <input type="number" name="exchangeRateEUR" value={formData.exchangeRateEUR} onChange={handleInput} step="0.01" className={`${inputCls} pl-8`} />
                 </div>
+              </Field>
+            </div>
+          </div>
+        </Card>
+
+        <Card title="Impuestos y Límites" icon={<FiTag />}>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Habilitar Impuestos (IVA)</p>
+                <p className="text-xs text-gray-500">Se aplica al total de la orden</p>
+              </div>
+              <Toggle id="taxEnabled" name="taxEnabled" checked={formData.taxEnabled} onChange={handleInput} color="blue" />
+            </div>
+
+            {formData.taxEnabled && (
+              <Field label="Porcentaje de impuesto (%)">
+                <input type="number" name="taxPercent" value={formData.taxPercent} onChange={handleInput} min="0" max="30" step="0.01" className={inputCls} />
+              </Field>
+            )}
+
+            <div className="pt-3 border-t border-gray-100 space-y-3">
+              <p className="text-xs font-semibold text-gray-700">Límites de Orden</p>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Monto mínimo (USD)" hint="Vacío = sin límite">
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
+                    <input type="number" name="minOrderAmountUSD" value={formData.minOrderAmountUSD ?? ''} onChange={handleInput} step="0.01" min="0" className={`${inputCls} pl-8`} />
+                  </div>
+                </Field>
+                <Field label="Monto máximo (USD)" hint="Vacío = sin límite">
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
+                    <input type="number" name="maxOrderAmountUSD" value={formData.maxOrderAmountUSD ?? ''} onChange={handleInput} step="0.01" min="0" className={`${inputCls} pl-8`} />
+                  </div>
+                </Field>
               </div>
             </div>
           </div>
+        </Card>
 
-          {/* Shipping & Delivery */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
-              <FiTruck className="text-blue-600" />
-              <h3 className="font-semibold text-gray-900">Envío y Entrega</h3>
-            </div>
-            <div className="p-6 space-y-5">
-              {/* Delivery Toggle */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Habilitar Envío a Domicilio</span>
-                  <p className="text-xs text-gray-500">Permite a los clientes recibir productos en su dirección</p>
-                </div>
-                <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
-                  <input
-                    type="checkbox"
-                    name="deliveryEnabled"
-                    id="deliveryEnabled"
-                    checked={formData.deliveryEnabled}
-                    onChange={handleInputChange}
-                    className="opacity-0 w-0 h-0 peer"
-                  />
-                  <label
-                    htmlFor="deliveryEnabled"
-                    className="absolute top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full cursor-pointer peer-checked:bg-blue-600 transition-all duration-300 before:content-[''] before:absolute before:w-3 before:h-3 before:bg-white before:rounded-full before:left-1 before:bottom-1 peer-checked:before:translate-x-5 before:transition-transform"
-                  ></label>
-                </div>
-              </div>
-
-
-              {formData.deliveryEnabled && (
-                <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 space-y-4 animate-fadeIn">
-                  {/* Info Banner */}
-                  <div className="flex items-start gap-2 p-3 bg-blue-100/50 rounded-lg">
-                    <FiTruck className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-blue-700">
-                      El envío se calcula por el peso de productos consolidables + tarifa de embalaje.
-                      Los productos grandes (no consolidables) tienen su costo fijo definido en cada producto.
-                    </p>
-                  </div>
-
-                  {/* Tarifas de Envío */}
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                      Tarifas por Peso (Productos Consolidables)
-                    </h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Costo por Kg (USD)</label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
-                          <input
-                            type="number"
-                            name="shippingCostPerKg"
-                            value={formData.shippingCostPerKg}
-                            onChange={handleInputChange}
-                            step="0.01"
-                            min="0"
-                            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                            placeholder="2.00"
-                          />
-                        </div>
-                        <p className="text-[10px] text-gray-500 mt-1">Por cada kg de peso</p>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Mínimo de Envío (USD)</label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
-                          <input
-                            type="number"
-                            name="minConsolidatedShipping"
-                            value={formData.minConsolidatedShipping}
-                            onChange={handleInputChange}
-                            step="0.01"
-                            min="0"
-                            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                            placeholder="3.00"
-                          />
-                        </div>
-                        <p className="text-[10px] text-gray-500 mt-1">Cargo mínimo de envío</p>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Embalaje (USD)</label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
-                          <input
-                            type="number"
-                            name="packagingFeeUSD"
-                            value={formData.packagingFeeUSD}
-                            onChange={handleInputChange}
-                            step="0.01"
-                            min="0"
-                            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                            placeholder="2.50"
-                          />
-                        </div>
-                        <p className="text-[10px] text-gray-500 mt-1">Tarifa fija de embalaje</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Envío Gratis */}
-                  <div className="pt-3 border-t border-blue-200 space-y-3">
-                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                      Promoción de Envío Gratis
-                    </h4>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Envío Gratis desde (USD)</label>
-                      <div className="relative max-w-[200px]">
-                        <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
-                        <input
-                          type="number"
-                          name="freeDeliveryThresholdUSD"
-                          value={formData.freeDeliveryThresholdUSD || ''}
-                          onChange={handleInputChange}
-                          step="0.01"
-                          min="0"
-                          className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-                          placeholder="100.00"
-                        />
-                      </div>
-                      <p className="text-[10px] text-gray-500 mt-1">
-                        Si el subtotal supera este monto, solo se cobra la tarifa de embalaje. Dejar vacío para no ofrecer envío gratis.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Mini Tutorial */}
-                  <div className="pt-3 border-t border-blue-200">
-                    <div className="bg-white p-4 rounded-lg border border-blue-200">
-                      <p className="text-xs font-bold text-gray-700 mb-3 flex items-center gap-2">
-                        <FiTruck className="w-4 h-4 text-blue-500" />
-                        ¿Cómo funciona el cálculo de envío?
-                      </p>
-
-                      <div className="space-y-3 text-xs text-gray-600">
-                        {/* Tipo 1: Consolidables */}
-                        <div className="flex gap-2">
-                          <span className="font-bold text-blue-600 w-4">1.</span>
-                          <div>
-                            <p className="font-semibold text-gray-700">Productos Consolidables (se envían juntos)</p>
-                            <p className="text-gray-500 mt-0.5">
-                              Se suman los pesos de todos los productos y se multiplica por el <strong>Costo por Kg</strong>.
-                              Si el resultado es menor al <strong>Mínimo de Envío</strong>, se cobra el mínimo.
-                            </p>
-                            <p className="text-blue-600 mt-1 font-medium">
-                              Ejemplo: 2kg × ${formData.shippingCostPerKg}/kg = ${(2 * formData.shippingCostPerKg).toFixed(2)} USD
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Tipo 2: Grandes */}
-                        <div className="flex gap-2">
-                          <span className="font-bold text-orange-600 w-4">2.</span>
-                          <div>
-                            <p className="font-semibold text-gray-700">Productos Grandes (no consolidables)</p>
-                            <p className="text-gray-500 mt-0.5">
-                              Cada producto tiene su propio costo de envío fijo definido al crearlo.
-                              Ideal para artículos voluminosos como monitores, refrigeradores, etc.
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Tipo 3: Embalaje */}
-                        <div className="flex gap-2">
-                          <span className="font-bold text-purple-600 w-4">3.</span>
-                          <div>
-                            <p className="font-semibold text-gray-700">Tarifa de Embalaje</p>
-                            <p className="text-gray-500 mt-0.5">
-                              Se cobra <strong>${formData.packagingFeeUSD} USD</strong> por la preparación y empaque del pedido.
-                              Se aplica siempre que haya productos físicos.
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Fórmula final */}
-                        <div className="mt-3 p-2 bg-slate-50 rounded-lg">
-                          <p className="font-semibold text-gray-700 mb-1">Fórmula Total:</p>
-                          <p className="text-gray-600 font-mono text-[11px]">
-                            (Peso × Costo/kg) + Envío productos grandes + ${formData.packagingFeeUSD} embalaje
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Pickup Toggle */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Habilitar Retiro en Tienda</span>
-                  <p className="text-xs text-gray-500">Permite a los clientes recoger sus pedidos</p>
-                </div>
-                <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
-                  <input
-                    type="checkbox"
-                    name="pickupEnabled"
-                    id="pickupEnabled"
-                    checked={formData.pickupEnabled}
-                    onChange={handleInputChange}
-                    className="opacity-0 w-0 h-0 peer"
-                  />
-                  <label
-                    htmlFor="pickupEnabled"
-                    className="absolute top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full cursor-pointer peer-checked:bg-blue-600 transition-all duration-300 before:content-[''] before:absolute before:w-3 before:h-3 before:bg-white before:rounded-full before:left-1 before:bottom-1 peer-checked:before:translate-x-5 before:transition-transform"
-                  ></label>
-                </div>
-              </div>
-
-              {formData.pickupEnabled && (
-                <div className="bg-green-50/50 p-4 rounded-lg border border-green-100 space-y-4 animate-fadeIn">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Dirección de Retiro</label>
-                    <input
-                      type="text"
-                      name="pickupAddress"
-                      value={formData.pickupAddress}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-                      placeholder="Av. Principal, Local #123, Ciudad"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Instrucciones de Retiro</label>
-                    <textarea
-                      name="pickupInstructions"
-                      value={formData.pickupInstructions}
-                      onChange={handleInputChange}
-                      rows={2}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-                      placeholder="Horario de atención, documentos requeridos, etc."
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+        {/* Link to payments page */}
+        <a href="/admin/payments" className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 hover:border-blue-400 transition-colors group">
+          <div className="p-3 bg-blue-100 rounded-lg text-blue-600 group-hover:bg-blue-200 transition-colors">
+            <FiCreditCard className="w-5 h-5" />
           </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-gray-800">Métodos de Pago</p>
+            <p className="text-xs text-gray-500">Configura Pago Móvil, Zelle, transferencias bancarias y más</p>
+          </div>
+          <FiExternalLink className="w-4 h-4 text-blue-400 group-hover:text-blue-600 transition-colors" />
+        </a>
+      </div>
 
-          {/* Maintenance Mode - High Visibility */}
-          <div className={`rounded-xl shadow-md border overflow-hidden transition-all duration-300 ${formData.maintenanceMode ? 'bg-amber-50 border-amber-300 shadow-amber-100' : 'bg-white border-gray-200'}`}>
-            <div className="p-4 border-b border-gray-100/50 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FiAlertTriangle className={formData.maintenanceMode ? 'text-amber-600' : 'text-gray-400'} />
-                <h3 className={`font-semibold ${formData.maintenanceMode ? 'text-amber-900' : 'text-gray-900'}`}>Modo Mantenimiento</h3>
+      <div className="space-y-5">
+        <Card title="Envío a Domicilio" icon={<FiTruck />}>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Habilitar envío</p>
+                <p className="text-xs text-gray-500">Permite entrega en la dirección del cliente</p>
               </div>
-              <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
-                <input
-                  type="checkbox"
-                  name="maintenanceMode"
-                  id="maintenanceMode"
-                  checked={formData.maintenanceMode}
-                  onChange={handleInputChange}
-                  className="opacity-0 w-0 h-0 peer"
-                />
-                <label
-                  htmlFor="maintenanceMode"
-                  className="absolute top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full cursor-pointer peer-checked:bg-amber-500 transition-all duration-300 before:content-[''] before:absolute before:w-3 before:h-3 before:bg-white before:rounded-full before:left-1 before:bottom-1 peer-checked:before:translate-x-5 before:transition-transform"
-                ></label>
-              </div>
+              <Toggle id="deliveryEnabled" name="deliveryEnabled" checked={formData.deliveryEnabled} onChange={handleInput} color="blue" />
             </div>
-            {formData.maintenanceMode && (
-              <div className="p-6 space-y-4 animate-fadeIn">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Mensaje para usuarios</label>
-                  <textarea
-                    name="maintenanceMessage"
-                    value={formData.maintenanceMessage}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="w-full px-3 py-2 text-sm border border-amber-200 bg-white rounded-lg resize-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
-                    placeholder="Estamos realizando mejoras..."
-                  />
+
+            {formData.deliveryEnabled && (
+              <div className="space-y-4 pt-3 border-t border-gray-100">
+                <div className="grid grid-cols-3 gap-3">
+                  <Field label="Costo/kg (USD)">
+                    <div className="relative">
+                      <span className="absolute left-2 top-2 text-gray-400 text-xs">$</span>
+                      <input type="number" name="shippingCostPerKg" value={formData.shippingCostPerKg} onChange={handleInput} step="0.01" min="0" className={`${inputCls} pl-6`} />
+                    </div>
+                  </Field>
+                  <Field label="Mínimo (USD)">
+                    <div className="relative">
+                      <span className="absolute left-2 top-2 text-gray-400 text-xs">$</span>
+                      <input type="number" name="minConsolidatedShipping" value={formData.minConsolidatedShipping} onChange={handleInput} step="0.01" min="0" className={`${inputCls} pl-6`} />
+                    </div>
+                  </Field>
+                  <Field label="Embalaje (USD)">
+                    <div className="relative">
+                      <span className="absolute left-2 top-2 text-gray-400 text-xs">$</span>
+                      <input type="number" name="packagingFeeUSD" value={formData.packagingFeeUSD} onChange={handleInput} step="0.01" min="0" className={`${inputCls} pl-6`} />
+                    </div>
+                  </Field>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Inicio Programado</label>
-                    <input
-                      type="datetime-local"
-                      name="maintenanceStartTime"
-                      value={formData.maintenanceStartTime}
-                      onChange={handleInputChange}
-                      className="w-full px-2 py-2 text-xs border border-amber-200 bg-white rounded-lg"
-                    />
+
+                <Field label="Envío gratis desde (USD)" hint="Vacío = no ofrecer envío gratis">
+                  <div className="relative max-w-[200px]">
+                    <span className="absolute left-3 top-2 text-gray-400 text-xs font-bold">$</span>
+                    <input type="number" name="freeDeliveryThresholdUSD" value={formData.freeDeliveryThresholdUSD ?? ''} onChange={handleInput} step="0.01" min="0" placeholder="100.00" className={`${inputCls} pl-8`} />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Fin Programado</label>
-                    <input
-                      type="datetime-local"
-                      name="maintenanceEndTime"
-                      value={formData.maintenanceEndTime}
-                      onChange={handleInputChange}
-                      className="w-full px-2 py-2 text-xs border border-amber-200 bg-white rounded-lg"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">IPs Permitidas (Separadas por coma)</label>
-                  <input
-                    type="text"
-                    name="maintenanceAllowedIPs"
-                    value={formData.maintenanceAllowedIPs}
-                    onChange={handleInputChange}
-                    placeholder="192.168.1.1, 10.0.0.1"
-                    className="w-full px-3 py-2 text-sm border border-amber-200 bg-white rounded-lg font-mono"
-                  />
+                </Field>
+
+                <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700 space-y-1">
+                  <p className="font-semibold">Fórmula de cálculo:</p>
+                  <p className="font-mono">(Peso total × ${formData.shippingCostPerKg}/kg) + Envío fijo productos grandes + ${formData.packagingFeeUSD} embalaje</p>
                 </div>
               </div>
             )}
           </div>
+        </Card>
 
-          {/* Hot Ad / Promotional Popup */}
-          <div className={`rounded-xl shadow-md border overflow-hidden hover:shadow-lg transition-shadow ${formData.hotAdEnabled ? 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200' : 'bg-white border-gray-200'}`}>
-            <div className={`p-4 border-b flex items-center justify-between ${formData.hotAdEnabled ? 'border-orange-200 bg-gradient-to-r from-orange-100 to-red-100' : 'border-gray-100 bg-gray-50/50'}`}>
-              <div className="flex items-center gap-2">
-                <FiActivity className="w-6 h-6 text-orange-500 animate-pulse" />
-                <h3 className="font-semibold text-gray-900">Publicidad Caliente</h3>
-                {formData.hotAdEnabled && (
-                  <span className="px-2 py-0.5 text-xs bg-red-500 text-white rounded-full font-bold animate-pulse">ACTIVO</span>
-                )}
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="hotAdEnabled"
-                  checked={formData.hotAdEnabled}
-                  onChange={handleInputChange}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-orange-500 peer-checked:to-red-500"></div>
-              </label>
-            </div>
-            <div className="p-6 space-y-5">
-              <p className="text-xs text-gray-600 bg-white/50 p-3 rounded-lg border border-gray-200 flex items-start gap-2">
-                <FiActivity className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                Muestra una imagen promocional que cubre toda la página principal cuando los visitantes llegan. Ideal para ofertas especiales, lanzamientos o eventos importantes.
-              </p>
-
-              {/* Image Upload */}
+        <Card title="Retiro en Tienda" icon={<FiMapPin />}>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-2">Imagen Promocional (PNG o JPG)</label>
-                <div className="flex items-start gap-4">
-                  <div className={`w-32 h-24 rounded-xl border-2 border-dashed flex items-center justify-center bg-gray-50 overflow-hidden relative group transition-colors ${formData.hotAdImage ? 'border-green-300' : 'border-gray-300 hover:border-orange-400'}`}>
-                    {formData.hotAdImage ? (
-                      <>
-                        <Image src={formData.hotAdImage} alt="Hot Ad Preview" fill className="object-contain p-1" />
-                        <button
-                          onClick={() => setFormData(prev => ({ ...prev, hotAdImage: null }))}
-                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <FiX className="w-3 h-3" />
-                        </button>
-                      </>
-                    ) : (
-                      <div className="text-center">
-                        <FiUpload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
-                        <span className="text-[10px] text-gray-400">Subir imagen</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <input
-                      type="file"
-                      id="hotAdImageInput"
-                      accept="image/png,image/jpeg,image/jpg"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
+                <p className="text-sm font-medium text-gray-700">Habilitar retiro</p>
+                <p className="text-xs text-gray-500">Clientes recogen en el local</p>
+              </div>
+              <Toggle id="pickupEnabled" name="pickupEnabled" checked={formData.pickupEnabled} onChange={handleInput} color="green" />
+            </div>
 
-                        if (file.size > 5 * 1024 * 1024) {
-                          alert('El archivo es demasiado grande. Máximo 5MB.');
-                          return;
-                        }
+            {formData.pickupEnabled && (
+              <div className="space-y-3 pt-3 border-t border-gray-100">
+                <Field label="Dirección de Retiro">
+                  <input type="text" name="pickupAddress" value={formData.pickupAddress} onChange={handleInput} placeholder="Av. Principal, Local #123" className={inputCls} />
+                </Field>
+                <Field label="Instrucciones de Retiro">
+                  <textarea name="pickupInstructions" value={formData.pickupInstructions} onChange={handleInput} rows={2} className={`${inputCls} resize-none`} placeholder="Horario, documentos necesarios, etc." />
+                </Field>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
 
-                        try {
-                          const formDataUpload = new FormData();
-                          formDataUpload.append('file', file);
-                          formDataUpload.append('type', 'hotAd');
-
-                          const response = await fetch('/api/upload/settings', {
-                            method: 'POST',
-                            body: formDataUpload,
-                          });
-
-                          if (!response.ok) {
-                            const error = await response.json();
-                            alert(error.error || 'Error al subir el archivo');
-                            return;
-                          }
-
-                          const result = await response.json();
-                          setFormData(prev => ({ ...prev, hotAdImage: result.url }));
-                        } catch (error) {
-                          console.error('Error uploading hot ad image:', error);
-                          alert('Error de conexión al subir el archivo');
-                        }
-                      }}
-                      className="hidden"
-                    />
-                    <button
-                      onClick={() => document.getElementById('hotAdImageInput')?.click()}
-                      className="text-xs bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md transition-colors shadow-sm"
-                    >
-                      {formData.hotAdImage ? 'Cambiar Imagen' : 'Seleccionar Imagen'}
+  const renderHomepage = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="space-y-5">
+        <Card title="Sección Hero (Portada)" icon={<FiHome />}>
+          <div className="space-y-3">
+            <Field label="Título Principal">
+              <input type="text" name="heroTitle" value={formData.heroTitle} onChange={handleInput} placeholder="Ej: Bienvenido a Electro Shop" className={inputCls} />
+            </Field>
+            <Field label="Subtítulo">
+              <textarea name="heroSubtitle" value={formData.heroSubtitle} onChange={handleInput} rows={2} placeholder="La mejor tecnología al mejor precio" className={`${inputCls} resize-none`} />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Texto del Botón">
+                <input type="text" name="heroButtonText" value={formData.heroButtonText} onChange={handleInput} placeholder="Ver Productos" className={inputCls} />
+              </Field>
+              <Field label="Link del Botón">
+                <input type="text" name="heroButtonLink" value={formData.heroButtonLink} onChange={handleInput} placeholder="/productos" className={inputCls} />
+              </Field>
+            </div>
+            <Field label="Imagen de Fondo" hint="PNG/JPG, máx 5MB">
+              <div className="flex items-center gap-3">
+                {formData.heroBackgroundImage ? (
+                  <div className="relative w-24 h-16 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                    <Image src={formData.heroBackgroundImage} alt="Hero BG" fill className="object-cover" />
+                    <button onClick={() => set('heroBackgroundImage', null)} className="absolute top-1 right-1 p-0.5 bg-red-500 text-white rounded-full">
+                      <FiX className="w-3 h-3" />
                     </button>
-                    <span className="text-[10px] text-gray-400">Max 5MB (PNG, JPG)</span>
                   </div>
-                </div>
+                ) : null}
+                <input ref={heroBgInputRef} type="file" accept="image/*" onChange={e => handleFileUpload(e, 'heroBackgroundImage')} className="hidden" />
+                <button onClick={() => heroBgInputRef.current?.click()} className="text-xs border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-md transition-colors">
+                  <FiUpload className="w-3.5 h-3.5 inline mr-1" />
+                  {formData.heroBackgroundImage ? 'Cambiar' : 'Subir imagen'}
+                </button>
               </div>
+            </Field>
+          </div>
+        </Card>
 
-              {/* Link */}
+        <Card title="Video de Fondo" icon={<FiVideo />}>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Link al hacer clic (Opcional)</label>
-                <input
-                  type="url"
-                  name="hotAdLink"
-                  value={formData.hotAdLink}
-                  onChange={handleInputChange}
-                  placeholder="https://tu-tienda.com/oferta-especial"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
-                />
-                <p className="text-[10px] text-gray-500 mt-1">Si se especifica, la imagen será clickeable y redirigirá a esta URL</p>
+                <p className="text-sm font-medium text-gray-700">Activar video</p>
+                <p className="text-xs text-gray-500">Se reproduce en bucle sin sonido en el hero</p>
               </div>
-
-              {/* Visual Options */}
-              <div className="space-y-4 pt-4 border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-800">Opciones Visuales</h4>
-
-                {/* Transparent Background */}
-                <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">Fondo Transparente</span>
-                    <p className="text-xs text-gray-500">Muestra la imagen sin borde redondeado</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hotAdTransparentBg"
-                      checked={formData.hotAdTransparentBg}
-                      onChange={handleInputChange}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
-                  </label>
-                </div>
-
-                {/* Shadow Enabled */}
-                <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">Sombra de Imagen</span>
-                    <p className="text-xs text-gray-500">Agrega profundidad a la imagen</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hotAdShadowEnabled"
-                      checked={formData.hotAdShadowEnabled}
-                      onChange={handleInputChange}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
-                  </label>
-                </div>
-
-                {/* Shadow Controls */}
-                {formData.hotAdShadowEnabled && (
-                  <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-2">
-                        Grosor de Sombra: {formData.hotAdShadowBlur}px
-                      </label>
-                      <input
-                        type="range"
-                        name="hotAdShadowBlur"
-                        value={formData.hotAdShadowBlur}
-                        onChange={handleInputChange}
-                        min="5"
-                        max="100"
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-2">
-                        Opacidad de Sombra: {formData.hotAdShadowOpacity}%
-                      </label>
-                      <input
-                        type="range"
-                        name="hotAdShadowOpacity"
-                        value={formData.hotAdShadowOpacity}
-                        onChange={handleInputChange}
-                        min="10"
-                        max="100"
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Backdrop Opacity */}
-                <div className="p-3 bg-white rounded-lg border border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">
-                    Opacidad del Fondo: {formData.hotAdBackdropOpacity}%
-                  </label>
-                  <input
-                    type="range"
-                    name="hotAdBackdropOpacity"
-                    value={formData.hotAdBackdropOpacity}
-                    onChange={handleInputChange}
-                    min="30"
-                    max="95"
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-700"
-                  />
-                </div>
-
-                {/* Backdrop Color */}
-                <div className="p-3 bg-white rounded-lg border border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">
-                    Color del Fondo
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      name="hotAdBackdropColor"
-                      value={formData.hotAdBackdropColor}
-                      onChange={handleInputChange}
-                      className="h-10 w-14 rounded-lg cursor-pointer border-2 border-gray-300 p-0"
-                    />
-                    <div className="flex-1">
-                      <span className="text-sm font-mono text-gray-600">{formData.hotAdBackdropColor}</span>
-                      <p className="text-[10px] text-gray-400 mt-0.5">Color del fondo detrás de la imagen</p>
-                    </div>
-                    {/* Preview */}
-                    <div
-                      className="w-16 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-[8px] text-white font-bold"
-                      style={{
-                        backgroundColor: formData.hotAdBackdropColor,
-                        opacity: formData.hotAdBackdropOpacity / 100
-                      }}
-                    >
-                      PREVIEW
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <Toggle id="heroVideoEnabled" name="heroVideoEnabled" checked={formData.heroVideoEnabled} onChange={handleInput} color="blue" />
             </div>
+            {formData.heroVideoEnabled && (
+              <Field label="URL del Video (YouTube o MP4)" hint="El video reemplaza la imagen de fondo">
+                <input type="url" name="heroVideoUrl" value={formData.heroVideoUrl} onChange={handleInput} placeholder="https://youtube.com/watch?v=..." className={inputCls} />
+              </Field>
+            )}
+          </div>
+        </Card>
+
+        <Card title="Sección CTA (Llamada a la acción)" icon={<FiLink />}>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-700">Mostrar sección CTA</p>
+              <Toggle id="ctaEnabled" name="ctaEnabled" checked={formData.ctaEnabled} onChange={handleInput} color="blue" />
+            </div>
+            {formData.ctaEnabled && (
+              <>
+                <Field label="Título CTA">
+                  <input type="text" name="ctaTitle" value={formData.ctaTitle} onChange={handleInput} className={inputCls} />
+                </Field>
+                <Field label="Descripción">
+                  <textarea name="ctaDescription" value={formData.ctaDescription} onChange={handleInput} rows={2} className={`${inputCls} resize-none`} />
+                </Field>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Texto Botón">
+                    <input type="text" name="ctaButtonText" value={formData.ctaButtonText} onChange={handleInput} className={inputCls} />
+                  </Field>
+                  <Field label="Link Botón">
+                    <input type="text" name="ctaButtonLink" value={formData.ctaButtonLink} onChange={handleInput} placeholder="/productos" className={inputCls} />
+                  </Field>
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      <div className="space-y-5">
+        <Card title="Estadísticas del Homepage" icon={<FiBarChart2 />}>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-700">Mostrar sección de estadísticas</p>
+              <Toggle id="showStats" name="showStats" checked={formData.showStats} onChange={handleInput} color="cyan" />
+            </div>
+            {formData.showStats && (
+              <div className="space-y-4 pt-2">
+                {([1,2,3,4] as const).map(n => (
+                  <div key={n} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs font-semibold text-gray-600 mb-2">Stat {n}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Field label="Valor">
+                        <input type="text" name={`stat${n}Value`} value={(formData as any)[`stat${n}Value`]} onChange={handleInput} placeholder="500+" className={inputCls} />
+                      </Field>
+                      <Field label="Etiqueta">
+                        <input type="text" name={`stat${n}Label`} value={(formData as any)[`stat${n}Label`]} onChange={handleInput} placeholder="Clientes" className={inputCls} />
+                      </Field>
+                      <Field label="Ícono" hint="Ej: FiUsers">
+                        <input type="text" name={`stat${n}Icon`} value={(formData as any)[`stat${n}Icon`]} onChange={handleInput} placeholder="FiUsers" className={inputCls} />
+                      </Field>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card title="Categorías y Productos" icon={<FiActivity />}>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-700">Mostrar carrusel de categorías</p>
+              <Toggle id="showCategories" name="showCategories" checked={formData.showCategories} onChange={handleInput} color="cyan" />
+            </div>
+            {formData.showCategories && (
+              <Field label="Máximo categorías a mostrar">
+                <input type="number" name="maxCategoriesDisplay" value={formData.maxCategoriesDisplay} onChange={handleInput} min="1" max="12" className={inputCls} />
+              </Field>
+            )}
+            <div className="pt-3 border-t border-gray-100">
+              <Field label="Máximo productos destacados en portada">
+                <input type="number" name="maxFeaturedProducts" value={formData.maxFeaturedProducts} onChange={handleInput} min="2" max="24" className={inputCls} />
+              </Field>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+
+  const renderInventario = () => (
+    <div className="max-w-xl space-y-5">
+      <Card title="Umbrales de Stock" icon={<FiPackage />}>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Stock bajo (alerta amarilla)" hint="Unidades mínimas para mostrar aviso">
+              <input type="number" name="lowStockThreshold" value={formData.lowStockThreshold} onChange={handleInput} min="1" className={inputCls} />
+            </Field>
+            <Field label="Stock crítico (alerta roja)" hint="Unidades para mostrar aviso crítico">
+              <input type="number" name="criticalStockThreshold" value={formData.criticalStockThreshold} onChange={handleInput} min="1" className={inputCls} />
+            </Field>
+          </div>
+
+          {formData.lowStockThreshold <= formData.criticalStockThreshold && (
+            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+              <FiAlertTriangle className="w-4 h-4 flex-shrink-0" />
+              El umbral crítico debe ser menor al de stock bajo.
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card title="Comportamiento de Productos" icon={<FiToggleLeft />}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Ocultar productos sin stock</p>
+              <p className="text-xs text-gray-500">Los productos agotados no aparecen en la tienda</p>
+            </div>
+            <Toggle id="autoHideOutOfStock" name="autoHideOutOfStock" checked={formData.autoHideOutOfStock} onChange={handleInput} color="amber" />
+          </div>
+        </div>
+      </Card>
+
+      <Card title="Notificaciones de Inventario" icon={<FiActivity />}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Notificar stock bajo</p>
+              <p className="text-xs text-gray-500">Alerta cuando un producto llega al umbral</p>
+            </div>
+            <Toggle id="notifyLowStock" name="notifyLowStock" checked={formData.notifyLowStock} onChange={handleInput} color="blue" />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Notificar producto agotado</p>
+              <p className="text-xs text-gray-500">Alerta cuando el stock llega a 0</p>
+            </div>
+            <Toggle id="notifyOutOfStock" name="notifyOutOfStock" checked={formData.notifyOutOfStock} onChange={handleInput} color="red" />
+          </div>
+
+          {(formData.notifyLowStock || formData.notifyOutOfStock) && (
+            <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700">
+              Las notificaciones aparecerán en el panel admin. Las alertas por email requieren configuración de SMTP en las variables de entorno.
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+
+  const renderSeo = () => {
+    const previewTitle = formData.metaTitle || formData.companyName || 'Electro Shop';
+    const previewDesc  = formData.metaDescription || 'Tu tienda de tecnología en Venezuela.';
+    return (
+      <div className="max-w-2xl space-y-5">
+        <Card title="Meta Etiquetas SEO" icon={<FiSearch />}>
+          <div className="space-y-4">
+            <Field label="Meta Título" hint={`${previewTitle.length}/60 caracteres`}>
+              <input type="text" name="metaTitle" value={formData.metaTitle} onChange={handleInput} maxLength={60} placeholder={`${formData.companyName} — Tu tienda de tecnología`} className={inputCls} />
+            </Field>
+            <Field label="Meta Descripción" hint={`${previewDesc.length}/160 caracteres`}>
+              <textarea name="metaDescription" value={formData.metaDescription} onChange={handleInput} rows={3} maxLength={160} className={`${inputCls} resize-none`} />
+            </Field>
+            <Field label="Keywords (separadas por coma)" hint="Poco usadas por Google, útiles para Bing">
+              <input type="text" name="metaKeywords" value={formData.metaKeywords} onChange={handleInput} placeholder="electrónica, tecnología, venezuela, laptops" className={inputCls} />
+            </Field>
+          </div>
+        </Card>
+
+        <Card title="Vista previa en Google" icon={<FiEye />}>
+          <div className="p-4 border border-gray-200 rounded-xl bg-white space-y-1 font-sans">
+            <p className="text-[13px] text-gray-500 truncate">electroshopve.com</p>
+            <p className="text-[18px] text-blue-700 font-medium leading-tight hover:underline cursor-pointer truncate">{previewTitle}</p>
+            <p className="text-[13px] text-gray-600 leading-snug line-clamp-2">{previewDesc}</p>
+          </div>
+          <p className="text-[10px] text-gray-400 mt-2 italic">Vista aproximada — Google puede reescribir el título y descripción.</p>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderSistema = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="space-y-5">
+        {/* Maintenance Mode — prominente y diferenciado */}
+        <div className={`rounded-xl border overflow-hidden transition-all duration-300 ${formData.maintenanceMode ? 'bg-amber-50 border-amber-300 shadow-amber-100 shadow-md' : 'bg-white border-gray-200 shadow-sm'}`}>
+          <div className={`flex items-center justify-between px-4 py-3 border-b ${formData.maintenanceMode ? 'border-amber-200 bg-amber-100/50' : 'border-gray-100 bg-gray-50/60'}`}>
+            <div className="flex items-center gap-2">
+              <FiAlertTriangle className={`w-5 h-5 ${formData.maintenanceMode ? 'text-amber-600 animate-pulse' : 'text-gray-400'}`} />
+              <h3 className={`font-semibold text-sm ${formData.maintenanceMode ? 'text-amber-900' : 'text-gray-800'}`}>
+                Modo Mantenimiento
+              </h3>
+              {formData.maintenanceMode && (
+                <span className="px-2 py-0.5 text-[10px] bg-amber-500 text-white rounded-full font-bold">ACTIVO</span>
+              )}
+            </div>
+            <Toggle
+              id="maintenanceMode" name="maintenanceMode"
+              checked={formData.maintenanceMode} onChange={handleInput}
+              color="amber"
+            />
+          </div>
+          <div className="p-5">
+            {!formData.maintenanceMode ? (
+              <p className="text-xs text-gray-500">Activa este modo para mostrar una página de mantenimiento a los visitantes. Los administradores siempre pueden acceder al panel.</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-start gap-2 p-3 bg-amber-100/60 rounded-lg text-xs text-amber-800">
+                  <FiAlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <p>La tienda está en mantenimiento. Los visitantes verán el mensaje configurado abajo. Los administradores pueden acceder normalmente.</p>
+                </div>
+                <Field label="Mensaje para visitantes">
+                  <textarea
+                    name="maintenanceMessage" value={formData.maintenanceMessage} onChange={handleInput}
+                    rows={3} className={`${inputCls} border-amber-200 resize-none`}
+                    placeholder="Estamos realizando mejoras. Volveremos pronto..."
+                  />
+                </Field>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Inicio programado">
+                    <input type="datetime-local" name="maintenanceStartTime" value={formData.maintenanceStartTime} onChange={handleInput} className={`${inputCls} border-amber-200`} />
+                  </Field>
+                  <Field label="Fin programado">
+                    <input type="datetime-local" name="maintenanceEndTime" value={formData.maintenanceEndTime} onChange={handleInput} className={`${inputCls} border-amber-200`} />
+                  </Field>
+                </div>
+                <Field label="IPs permitidas (separadas por coma)" hint="Además de los admins logueados">
+                  <input type="text" name="maintenanceAllowedIPs" value={formData.maintenanceAllowedIPs} onChange={handleInput} placeholder="192.168.1.1, 10.0.0.1" className={`${inputCls} border-amber-200 font-mono`} />
+                </Field>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Footer / Copyright */}
-      <div className="mt-12 pb-8 text-center text-xs text-gray-400 border-t border-gray-100 pt-8">
-        <p>Electro Shop Admin Panel v1.2.0 &bull; {new Date().getFullYear()}</p>
+      <div className="space-y-5">
+        <Card title="Administradores del Sistema" icon={<FiUsers />}>
+          <div className="space-y-3">
+            {adminUsers.length === 0 ? (
+              <div className="text-center py-6 text-gray-400">
+                <FiUsers className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                <p className="text-xs">No se encontraron administradores</p>
+                <a href="/admin/customers" className="text-xs text-blue-500 hover:underline mt-1 inline-block">Ver todos los usuarios →</a>
+              </div>
+            ) : (
+              <>
+                {adminUsers.map(u => (
+                  <div key={u.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold flex-shrink-0">
+                      {u.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">{u.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                    </div>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${u.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                      {u.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
+                    </span>
+                  </div>
+                ))}
+                <a href="/admin/customers?filter=admin" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
+                  <FiExternalLink className="w-3 h-3" />
+                  Gestionar permisos desde Clientes
+                </a>
+              </>
+            )}
+          </div>
+        </Card>
+
+        <Card title="Información del Sistema" icon={<FiSettings />}>
+          <div className="space-y-2 text-xs text-gray-600">
+            <div className="flex justify-between py-1.5 border-b border-gray-100">
+              <span className="text-gray-500">Versión del panel</span>
+              <span className="font-mono font-medium">v2.0.0</span>
+            </div>
+            <div className="flex justify-between py-1.5 border-b border-gray-100">
+              <span className="text-gray-500">Última actualización de settings</span>
+              <span className="font-mono">{new Date().toLocaleDateString('es-VE')}</span>
+            </div>
+            <div className="flex justify-between py-1.5">
+              <span className="text-gray-500">Usuario actual</span>
+              <span className="font-medium">{session?.user?.name || session?.user?.email}</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+
+  const tabContent: Record<Tab, React.ReactNode> = {
+    general:    renderGeneral(),
+    tienda:     renderTienda(),
+    homepage:   renderHomepage(),
+    inventario: renderInventario(),
+    seo:        renderSeo(),
+    sistema:    renderSistema(),
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  return (
+    <div className="p-5 max-w-[1400px] mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Configuración del Sistema</h1>
+          <p className="text-gray-500 text-sm mt-0.5">Controla todos los aspectos de tu tienda desde aquí</p>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={isSaving || !hasChanges}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm ${
+            hasChanges
+              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200 hover:shadow-md'
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+          } disabled:opacity-60`}
+        >
+          {isSaving
+            ? <><FiRefreshCw className="w-4 h-4 animate-spin" /> Guardando...</>
+            : savedTab === activeTab
+            ? <><FiCheck className="w-4 h-4" /> Guardado</>
+            : <><FiSave className="w-4 h-4" /> {hasChanges ? 'Guardar cambios' : 'Sin cambios'}</>
+          }
+        </button>
+      </div>
+
+      {/* Error banner */}
+      {errors.form && (
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg border border-red-200 flex items-center gap-2 text-sm">
+          <FiAlertTriangle className="w-4 h-4 flex-shrink-0" />
+          {errors.form}
+        </div>
+      )}
+
+      {/* Maintenance active banner */}
+      {formData.maintenanceMode && activeTab !== 'sistema' && (
+        <div
+          onClick={() => setActiveTab('sistema')}
+          className="mb-4 p-3 bg-amber-50 text-amber-700 rounded-lg border border-amber-300 flex items-center gap-2 text-sm cursor-pointer hover:bg-amber-100 transition-colors"
+        >
+          <FiAlertTriangle className="w-4 h-4 animate-pulse flex-shrink-0" />
+          <strong>La tienda está en modo mantenimiento.</strong>
+          <span className="text-amber-600 underline ml-auto text-xs">Ver configuración →</span>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-1 mb-6 bg-gray-100 rounded-xl p-1">
+        {TABS.map(tab => {
+          const tabFields = SECTION_FIELDS[tab.id];
+          const isDirty = initialFormData
+            ? tabFields.some(f => JSON.stringify(formData[f]) !== JSON.stringify(initialFormData[f]))
+            : false;
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id); setErrors({}); }}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all relative ${
+                activeTab === tab.id
+                  ? 'bg-white text-blue-700 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+              }`}
+            >
+              <span className="w-4 h-4">{tab.icon}</span>
+              {tab.label}
+              {isDirty && activeTab !== tab.id && (
+                <span className="w-1.5 h-1.5 bg-orange-400 rounded-full absolute top-1.5 right-1.5" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab content */}
+      <div>
+        {tabContent[activeTab]}
       </div>
     </div>
   );
 }
-
-function FiLoader({ className }: { className?: string }) {
-  return (
-    <svg className={`w-5 h-5 ${className}`} fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-  );
-}
-

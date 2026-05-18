@@ -5,7 +5,8 @@ import {
     FiBarChart2, FiShoppingCart, FiUsers, FiMousePointer,
     FiShield, FiTrendingUp, FiPackage, FiAlertTriangle,
     FiEye, FiMonitor, FiSmartphone, FiTablet,
-    FiGlobe, FiClock, FiRefreshCw, FiActivity, FiZap
+    FiGlobe, FiClock, FiRefreshCw, FiActivity, FiList,
+    FiGift, FiDollarSign, FiCheckCircle, FiAward
 } from 'react-icons/fi';
 
 interface OverviewData {
@@ -42,6 +43,14 @@ export default function ReportsPage() {
     const [products, setProducts] = useState<{ topSelling: Array<{ id: string; name: string; _count: { orderItems: number; reviews: number } }>; requests: Array<{ status: string; _count: number }> } | null>(null);
     const [interactions, setInteractions] = useState<{ byType: Array<{ eventType: string; _count: number }>; byDevice: Array<{ deviceType: string; _count: number }>; topPages: Array<{ page: string; _count: number }> } | null>(null);
     const [security, setSecurity] = useState<{ byType: Array<{ eventType: string; _count: number }>; bySeverity: Array<{ severity: string; _count: number }>; recentLogs: SecurityLog[]; suspiciousIPs: Array<{ ipAddress: string; _count: number }> } | null>(null);
+    const [referrals, setReferrals] = useState<{
+        totalInfluencers: number;
+        activeInfluencers: number;
+        pausedInfluencers: number;
+        conversionsByStatus: Array<{ status: string; _count: number; _sum: { commission: number; grossAmount: number } }>;
+        approvedRevenue: { gross: number; commission: number };
+        topInfluencers: Array<{ id: string; name: string; code: string; status: string; totalCommission: number; totalGross: number; conversionsCount: number }>;
+    } | null>(null);
     const [liveUsers, setLiveUsers] = useState<LiveUsersData | null>(null);
 
     useEffect(() => {
@@ -76,6 +85,7 @@ export default function ReportsPage() {
                 if (activeTab === 'products') setProducts(data.products);
                 if (activeTab === 'interactions') setInteractions(data.interactions);
                 if (activeTab === 'security') setSecurity(data.security);
+                if (activeTab === 'referrals') setReferrals(data.referrals);
             }
         } catch (error) {
             console.error('Error fetching reports:', error);
@@ -97,6 +107,7 @@ export default function ReportsPage() {
         { id: 'products', label: 'Productos', icon: FiPackage },
         { id: 'interactions', label: 'Interacciones', icon: FiMousePointer },
         { id: 'security', label: 'Seguridad', icon: FiShield },
+        { id: 'referrals', label: 'Referidos', icon: FiGift },
     ];
 
     return (
@@ -173,14 +184,14 @@ export default function ReportsPage() {
 
             {/* Controls - Compact */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
-                <div className="flex gap-0.5 bg-white rounded-lg p-1 shadow-sm border border-gray-200">
+                <div className="flex gap-0.5 bg-white rounded-lg p-1 shadow-sm border border-gray-200 overflow-x-auto max-w-full">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
                         return (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${activeTab === tab.id
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all flex-shrink-0 ${activeTab === tab.id
                                     ? 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white shadow-md'
                                     : 'text-gray-600 hover:bg-gray-100'
                                     }`}
@@ -423,7 +434,7 @@ export default function ReportsPage() {
                                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                                 <div className="w-6 h-6 bg-[#2a63cd]/10 rounded flex items-center justify-center">
-                                                    <FiZap className="w-3 h-3 text-[#2a63cd]" />
+                                                    <FiList className="w-3 h-3 text-[#2a63cd]" />
                                                 </div>
                                                 Eventos
                                             </h3>
@@ -461,6 +472,133 @@ export default function ReportsPage() {
                                             </div>
                                         ) : (
                                             <p className="text-xs text-gray-400 text-center py-4">Sin datos</p>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Referrals Tab */}
+                    {activeTab === 'referrals' && (
+                        <div className="space-y-4 animate-fadeIn">
+                            {!referrals ? (
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
+                                    <FiGift className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                                    <p className="text-xs text-gray-400">Sin datos de referidos</p>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Influencer counts */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {[
+                                            { label: 'Influencers Totales', value: referrals.totalInfluencers, Icon: FiUsers, color: 'text-[#2a63cd]', bg: 'bg-[#2a63cd]/10' },
+                                            { label: 'Activos', value: referrals.activeInfluencers, Icon: FiCheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                                            { label: 'Pausados', value: referrals.pausedInfluencers, Icon: FiActivity, color: 'text-amber-600', bg: 'bg-amber-50' },
+                                        ].map((card) => (
+                                            <div key={card.label} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <div className={`w-7 h-7 rounded-lg ${card.bg} flex items-center justify-center`}>
+                                                        <card.Icon className={`w-3.5 h-3.5 ${card.color}`} />
+                                                    </div>
+                                                    <span className="text-[10px] text-gray-400 uppercase font-medium">{card.label}</span>
+                                                </div>
+                                                <p className="text-2xl font-bold text-gray-800">{card.value}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Revenue cards */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-xl p-4">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <FiShoppingCart className="w-4 h-4 text-emerald-600" />
+                                                <span className="text-[10px] text-emerald-700 uppercase font-semibold">Ventas por referidos</span>
+                                            </div>
+                                            <p className="text-xl font-bold text-emerald-800">
+                                                ${referrals.approvedRevenue.gross.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+                                            </p>
+                                            <p className="text-[10px] text-emerald-600 mt-0.5">Monto bruto · período seleccionado</p>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-[#2a63cd]/5 to-[#2a63cd]/10 border border-[#2a63cd]/20 rounded-xl p-4">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <FiDollarSign className="w-4 h-4 text-[#2a63cd]" />
+                                                <span className="text-[10px] text-[#2a63cd] uppercase font-semibold">Comisiones pagadas</span>
+                                            </div>
+                                            <p className="text-xl font-bold text-[#1e4ba3]">
+                                                ${referrals.approvedRevenue.commission.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+                                            </p>
+                                            <p className="text-[10px] text-[#2a63cd]/70 mt-0.5">Comisiones aprobadas · período seleccionado</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Conversions by status */}
+                                    {referrals.conversionsByStatus.length > 0 && (
+                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                                            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                                <div className="w-6 h-6 bg-[#2a63cd]/10 rounded flex items-center justify-center">
+                                                    <FiList className="w-3 h-3 text-[#2a63cd]" />
+                                                </div>
+                                                Conversiones por Estado
+                                            </h3>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {['PENDING', 'APPROVED', 'REJECTED'].map((status) => {
+                                                    const entry = referrals.conversionsByStatus.find(c => c.status === status);
+                                                    const styles: Record<string, string> = {
+                                                        PENDING: 'bg-yellow-50 border-yellow-200 text-yellow-700',
+                                                        APPROVED: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+                                                        REJECTED: 'bg-red-50 border-red-200 text-red-700',
+                                                    };
+                                                    const labels: Record<string, string> = { PENDING: 'Pendientes', APPROVED: 'Aprobadas', REJECTED: 'Rechazadas' };
+                                                    return (
+                                                        <div key={status} className={`rounded-lg border p-3 text-center ${styles[status]}`}>
+                                                            <p className="text-xl font-bold">{entry?._count || 0}</p>
+                                                            <p className="text-[10px] font-medium mt-0.5">{labels[status]}</p>
+                                                            {entry && (
+                                                                <p className="text-[9px] opacity-70 mt-0.5">
+                                                                    ${Number(entry._sum.commission || 0).toFixed(2)} comisión
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Top influencers */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                                        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                            <div className="w-6 h-6 bg-yellow-100 rounded flex items-center justify-center">
+                                                <FiAward className="w-3 h-3 text-yellow-600" />
+                                            </div>
+                                            Top Influencers (comisión acumulada)
+                                        </h3>
+                                        {referrals.topInfluencers.length === 0 ? (
+                                            <p className="text-xs text-gray-400 text-center py-4">Sin conversiones aprobadas aún</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {referrals.topInfluencers.map((inf, idx) => (
+                                                    <div key={inf.id} className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg hover:bg-[#2a63cd]/5 transition-colors">
+                                                        <span className="w-6 h-6 bg-[#2a63cd] text-white rounded text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                                                            {idx + 1}
+                                                        </span>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="text-xs font-semibold text-gray-800 truncate">{inf.name}</span>
+                                                                <span className="text-[9px] font-mono text-gray-400 bg-gray-200 px-1 rounded">{inf.code}</span>
+                                                                {inf.status === 'PAUSED' && (
+                                                                    <span className="text-[9px] bg-yellow-100 text-yellow-700 px-1 rounded">Pausado</span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-[10px] text-gray-500">{inf.conversionsCount} conversiones · ${inf.totalGross.toFixed(2)} bruto</p>
+                                                        </div>
+                                                        <span className="text-sm font-bold text-[#2a63cd] flex-shrink-0">
+                                                            ${inf.totalCommission.toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         )}
                                     </div>
                                 </>

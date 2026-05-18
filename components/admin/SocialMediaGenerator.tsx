@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import {
     FiDownload, FiRefreshCw, FiImage, FiLayers,
     FiSearch, FiCheck, FiDollarSign, FiPercent,
-    FiZap, FiPackage, FiInstagram, FiType,
+    FiPackage, FiInstagram, FiType,
     FiStar, FiTrendingUp, FiClock, FiAward, FiTag,
     FiCpu, FiHash, FiMessageCircle, FiKey, FiEye, FiEyeOff,
     FiLayout, FiSave, FiBox
@@ -327,7 +327,7 @@ Responde SOLO con JSON (sin markdown):
                                 className="px-2 py-1 bg-[#2a63cd] text-white rounded text-[10px] hover:bg-[#1e4ba3] disabled:opacity-50"
                                 title="Generar con IA"
                             >
-                                {aiLoading ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FiZap className="w-3 h-3" />}
+                                {aiLoading ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FiCpu className="w-3 h-3" />}
                             </button>
                         </div>
                     </div>

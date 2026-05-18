@@ -3,7 +3,8 @@ import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import ContactForm from '@/components/contact/ContactForm';
 import BusinessHours from '@/components/contact/BusinessHours';
-import { FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi, FiGift } from 'react-icons/fi';
+import Footer from '@/components/Footer';
+import { FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi } from 'react-icons/fi';
 
 export const revalidate = 0;
 
@@ -75,7 +76,7 @@ export default async function ContactoPage() {
             <ContactForm />
           </div>
 
-          {/* 2. VISTA ESCRITORIO: Lista Vertical Premium Estilo Original */}
+          {/* 2. VISTA ESCRITORIO: Lista Vertical Estilo Original */}
           <div className="hidden md:block space-y-4">
             {/* WhatsApp Desktop */}
             {settings?.whatsapp && (
@@ -184,13 +185,7 @@ export default async function ContactoPage() {
         </div>
       </main>
 
-      <footer className="bg-[#212529] mt-4 md:mt-16 py-8 text-center">
-        <div className="max-w-7xl mx-auto px-4">
-          <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} {settings?.companyName || 'Electro Shop Morandin C.A.'} - Todos los derechos reservados
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

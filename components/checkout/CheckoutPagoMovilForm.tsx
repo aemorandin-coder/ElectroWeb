@@ -401,10 +401,8 @@ export default function CheckoutPagoMovilForm({
                     <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
                         Tu Cédula <span className="text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
-                            <FiCreditCard className="w-4 h-4" />
-                        </div>
+                    <div className="form-field">
+                        <FiCreditCard className="field-icon text-[#6a6c6b]" />
                         <input
                             type="text"
                             name="cedulaPagador"
@@ -412,8 +410,9 @@ export default function CheckoutPagoMovilForm({
                             onChange={handleChange}
                             placeholder="V12345678"
                             maxLength={10}
+                            autoCapitalize="characters"
                             disabled={verificando}
-                            className="w-full pl-10 pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
                     </div>
                     <p className="text-[10px] text-[#6a6c6b] mt-1">Cédula del titular de la cuenta</p>
@@ -424,20 +423,18 @@ export default function CheckoutPagoMovilForm({
                     <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
                         Tu Teléfono <span className="text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
-                            <FiPhone className="w-4 h-4" />
-                        </div>
+                    <div className="form-field">
+                        <FiPhone className="field-icon text-[#6a6c6b]" />
                         <input
                             type="tel"
                             name="telefonoPagador"
                             value={formData.telefonoPagador}
                             onChange={handleChange}
                             placeholder="04121234567"
-                            pattern="04[0-9]{9}"
+                            inputMode="tel"
                             maxLength={11}
                             disabled={verificando}
-                            className="w-full pl-10 pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
                     </div>
                 </div>
@@ -500,21 +497,21 @@ export default function CheckoutPagoMovilForm({
                     <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
                         Referencia
                     </label>
-                    <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
-                            <FiHash className="w-4 h-4" />
-                        </div>
+                    <div className="form-field">
+                        <FiHash className="field-icon text-[#6a6c6b]" />
                         <input
                             type="text"
                             name="referencia"
                             value={formData.referencia}
                             onChange={handleChange}
-                            placeholder="12345678"
+                            placeholder="Ej: 12345678"
                             maxLength={8}
+                            inputMode="numeric"
                             disabled={verificando}
-                            className="w-full pl-10 pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
                     </div>
+                    <p className="text-[10px] text-[#6a6c6b] mt-1">4 a 8 dígitos numéricos</p>
                 </div>
 
                 {/* Fecha del pago */}
@@ -522,10 +519,8 @@ export default function CheckoutPagoMovilForm({
                     <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
                         Fecha del Pago <span className="text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
-                            <FiCalendar className="w-4 h-4" />
-                        </div>
+                    <div className="form-field">
+                        <FiCalendar className="field-icon text-[#6a6c6b]" />
                         <input
                             type="date"
                             name="fechaPago"
@@ -533,7 +528,7 @@ export default function CheckoutPagoMovilForm({
                             onChange={handleChange}
                             max={new Date().toISOString().split('T')[0]}
                             disabled={verificando}
-                            className="w-full pl-10 pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
                     </div>
                 </div>

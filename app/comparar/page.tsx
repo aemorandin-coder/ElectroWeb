@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import PublicHeader from '@/components/public/PublicHeader';
+import Footer from '@/components/Footer';
 import { FiX, FiShoppingCart, FiStar, FiCheck, FiMinus, FiPlus } from 'react-icons/fi';
 
 interface Product {
@@ -69,23 +70,24 @@ function ComparePageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa]">
+      <div className="min-h-screen bg-[#f8f9fa] flex flex-col">
         <PublicHeader />
-        <div className="flex items-center justify-center h-96">
+        <div className="flex items-center justify-center h-96 flex-1">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2a63cd]"></div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   if (products.length === 0) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa]">
+      <div className="min-h-screen bg-[#f8f9fa] flex flex-col">
         <PublicHeader />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-[#212529] mb-4">Comparador de Productos</h1>
-            <p className="text-[#6a6c6b] mb-8">No hay productos para comparar</p>
+            <p className="text-[#6a6c6b] mb-8">No hay productos para comparar. Agrega productos desde el catálogo para compararlos.</p>
             <Link
               href="/productos"
               className="inline-block px-6 py-3 bg-[#2a63cd] text-white font-bold rounded-xl hover:bg-[#1e4ba3] transition-all shadow-lg hover:shadow-xl"
@@ -94,6 +96,7 @@ function ComparePageContent() {
             </Link>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -107,7 +110,7 @@ function ComparePageContent() {
   });
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col">
       <PublicHeader />
 
       {/* Header */}
@@ -283,6 +286,7 @@ function ComparePageContent() {
           </Link>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

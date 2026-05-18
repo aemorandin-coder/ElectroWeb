@@ -9,8 +9,9 @@ import { Toaster } from 'react-hot-toast';
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider
-      refetchInterval={5 * 60} // Refetch session every 5 minutes
-      refetchOnWindowFocus={true} // Refetch when window regains focus
+      // En dev Turbopack interrumpe HMR — valores conservadores evitan CLIENT_FETCH_ERROR
+      refetchInterval={30 * 60}        // 30 min (era 5 min — demasiado agresivo con Turbopack)
+      refetchOnWindowFocus={false}     // Desactivado: cada hot-reload dispara un refetch con body vacío
     >
       <CartProvider>
         <SettingsProvider>

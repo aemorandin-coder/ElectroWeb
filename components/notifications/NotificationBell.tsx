@@ -56,7 +56,7 @@ export default function NotificationBell() {
         style={{ overflow: 'visible' }}
       >
         <FiBell
-          className="transition-transform"
+          className={`transition-transform ${!shouldShake && !isOpen ? 'animate-periodic-ring' : ''}`}
           style={{
             width: '20px',
             height: '20px',

@@ -79,16 +79,23 @@ const PremiumLogoutIcon = () => (
     </svg>
 );
 
-// Navigation items
+const PremiumReferralIcon = ({ active }: { active: boolean }) => (
+    <svg viewBox="0 0 24 24" fill="none" className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}>
+        <polyline points="20 12 20 22 4 22 4 12" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.15)' : 'none'} />
+        <rect x="1" y="7" width="22" height="5" rx="1" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
+        <line x1="12" y1="22" x2="12" y2="7" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" />
+        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.1)' : 'none'} />
+        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.1)' : 'none'} />
+    </svg>
+);
+
+// Navigation items (Simplified for Mobile UX)
 const customerNavItems = [
-    { href: '/customer', label: 'Panel', Icon: PremiumDashboardIcon },
-    { href: '/customer/balance', label: 'Saldo', Icon: PremiumBalanceIcon },
+    { href: '/customer', label: 'Inicio', Icon: PremiumDashboardIcon },
     { href: '/customer/orders', label: 'Pedidos', Icon: PremiumOrdersIcon },
-    { href: '/customer/wishlist', label: 'Deseos', Icon: PremiumWishlistIcon },
-    { href: '/customer/addresses', label: 'Dirección', Icon: PremiumAddressIcon },
-    { href: '/customer/warranty', label: 'Garantía', Icon: PremiumWarrantyIcon },
+    { href: '/customer/wishlist', label: 'Favoritos', Icon: PremiumWishlistIcon },
+    { href: '/customer/referrals', label: 'Referidos', Icon: PremiumReferralIcon },
     { href: '/customer/profile', label: 'Perfil', Icon: PremiumProfileIcon },
-    { href: '/customer/settings', label: 'Ajustes', Icon: PremiumSettingsIcon },
 ];
 
 export default function CustomerMobileNavBar() {
@@ -160,101 +167,45 @@ export default function CustomerMobileNavBar() {
                 border: '1px solid rgba(255, 255, 255, 0.08)',
             }}
         >
-            <div
-                className="flex items-center h-16 overflow-x-auto"
-                style={{
-                    scrollSnapType: 'x mandatory',
-                    WebkitOverflowScrolling: 'touch',
-                    scrollBehavior: 'smooth',
-                    msOverflowStyle: 'none',
-                    scrollbarWidth: 'none',
-                }}
-            >
-                {/* Left fade */}
-                <div
-                    className="absolute left-0 top-0 bottom-0 w-6 pointer-events-none z-10"
-                    style={{
-                        background: 'linear-gradient(to right, rgba(13, 27, 42, 0.9), transparent)',
-                        borderRadius: '20px 0 0 20px',
-                    }}
-                />
-
-                {/* Nav items */}
-                <div className="flex items-center gap-0 px-2" style={{ minWidth: 'max-content' }}>
-                    {customerNavItems.map((item) => {
-                        const { Icon } = item;
-                        const active = isActive(item.href);
-                        const isTouched = activeItem === item.href;
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onTouchStart={() => handleTouchStart(item.href)}
-                                onTouchEnd={handleTouchEnd}
-                                className="flex flex-col items-center justify-center h-14 relative"
-                                style={{
-                                    width: '70px',
-                                    minWidth: '70px',
-                                    scrollSnapAlign: 'center',
-                                    color: active ? '#5a9cff' : 'rgba(255, 255, 255, 0.7)',
-                                    transform: isTouched ? 'scale(0.9)' : 'scale(1)',
-                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                }}
+            <div className="grid grid-cols-5 h-16 w-full items-center px-1">
+                {customerNavItems.map((item) => {
+                    const { Icon } = item;
+                    const active = isActive(item.href);
+                    const isTouched = activeItem === item.href;
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            onTouchStart={() => handleTouchStart(item.href)}
+                            onTouchEnd={handleTouchEnd}
+                            className="flex flex-col items-center justify-center h-14 relative"
+                            style={{
+                                color: active ? '#5a9cff' : 'rgba(255, 255, 255, 0.7)',
+                                transform: isTouched ? 'scale(0.9)' : 'scale(1)',
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                            }}
+                        >
+                            {active && (
+                                <div
+                                    className="absolute inset-0 rounded-xl"
+                                    style={{
+                                        background: 'radial-gradient(ellipse at center, rgba(42, 99, 205, 0.25) 0%, transparent 70%)',
+                                        pointerEvents: 'none',
+                                    }}
+                                />
+                            )}
+                            <div className="relative">
+                                <Icon active={active} />
+                            </div>
+                            <span
+                                className="text-[10px] mt-1 relative z-10 text-center truncate"
+                                style={{ fontWeight: active ? 700 : 500, letterSpacing: active ? '0.02em' : '0' }}
                             >
-                                {active && (
-                                    <div
-                                        className="absolute inset-0 rounded-xl"
-                                        style={{
-                                            background: 'radial-gradient(ellipse at center, rgba(42, 99, 205, 0.25) 0%, transparent 70%)',
-                                            pointerEvents: 'none',
-                                        }}
-                                    />
-                                )}
-                                <div className="relative">
-                                    <Icon active={active} />
-                                </div>
-                                <span
-                                    className="text-[9px] mt-0.5 relative z-10 text-center truncate"
-                                    style={{ fontWeight: active ? 700 : 500, letterSpacing: active ? '0.02em' : '0', maxWidth: '60px' }}
-                                >
-                                    {item.label}
-                                </span>
-                            </Link>
-                        );
-                    })}
-
-                    {/* Logout */}
-                    <button
-                        onClick={handleLogout}
-                        onTouchStart={() => handleTouchStart('logout')}
-                        onTouchEnd={handleTouchEnd}
-                        className="flex flex-col items-center justify-center h-14 relative"
-                        style={{
-                            width: '70px',
-                            minWidth: '70px',
-                            scrollSnapAlign: 'center',
-                            color: 'rgba(239, 68, 68, 0.9)',
-                            transform: activeItem === 'logout' ? 'scale(0.9)' : 'scale(1)',
-                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        }}
-                    >
-                        <div className="relative">
-                            <PremiumLogoutIcon />
-                        </div>
-                        <span className="text-[9px] mt-0.5 relative z-10 text-center" style={{ fontWeight: 600, color: 'rgba(239, 68, 68, 0.9)' }}>
-                            Salir
-                        </span>
-                    </button>
-                </div>
-
-                {/* Right fade */}
-                <div
-                    className="absolute right-0 top-0 bottom-0 w-6 pointer-events-none z-10"
-                    style={{
-                        background: 'linear-gradient(to left, rgba(13, 27, 42, 0.9), transparent)',
-                        borderRadius: '0 20px 20px 0',
-                    }}
-                />
+                                {item.label}
+                            </span>
+                        </Link>
+                    );
+                })}
             </div>
         </nav>
     );

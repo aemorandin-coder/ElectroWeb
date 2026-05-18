@@ -154,7 +154,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                 </div>
               )}
               <h1
-                className={`text-2xl font-bold tracking-wide transition-colors duration-300 ${isBlueStyle ? 'text-white' : 'text-transparent bg-clip-text'
+                className={`text-xl sm:text-2xl font-bold tracking-wide whitespace-nowrap transition-colors duration-300 ${isBlueStyle ? 'text-white' : 'text-transparent bg-clip-text'
                   }`}
                 style={{
                   backgroundImage: isBlueStyle ? 'none' : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
@@ -169,7 +169,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
             {/* Navigation Links */}
             <nav className="hidden md:flex items-center gap-6">
               {[
-                { href: '/productos', label: 'Productos' },
+                { href: '/productos', label: 'Productos', id: 'nav-productos' },
                 { href: '/categorias', label: 'Categorías' },
                 { href: '/gift-cards', label: 'Gift Cards' },
                 { href: '/servicios', label: 'Servicios' },
@@ -181,6 +181,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                   <Link
                     key={link.href}
                     href={link.href}
+                    id={link.id}
                     className="relative text-sm font-normal transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 rounded-sm"
                     style={{
                       color: isBlueStyle
@@ -214,9 +215,15 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                 style={{ color: isBlueStyle ? 'rgba(255,255,255,0.9)' : '#6a6c6b' }}
               >
                 <NotificationBell />
-                <CartIcon />
+                {/* id="cart-icon" — target del tour guiado */}
+                <span id="cart-icon">
+                  <CartIcon />
+                </span>
               </div>
-              <UserAccountButton useBlueHeader={isBlueStyle} />
+              {/* id="user-menu" — target del tour guiado */}
+              <span id="user-menu">
+                <UserAccountButton useBlueHeader={isBlueStyle} />
+              </span>
             </div>
           </div>
         </div>

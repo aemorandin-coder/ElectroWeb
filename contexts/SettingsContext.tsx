@@ -28,13 +28,17 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                 },
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                setSettings(data);
-                setError(null);
-            } else {
-                setError('Failed to fetch settings');
-            }
+            if (!response.ok) { setIsLoading(false); return; }
+
+            // Leer como texto primero — previene crash si Turbopack interrumpe la respuesta
+            const text = await response.text();
+            if (!text || text.trim() === '') { setIsLoading(false); return; }
+
+            let data: any;
+            try { data = JSON.parse(text); } catch { setIsLoading(false); return; }
+
+            setSettings(data);
+            setError(null);
         } catch (err) {
             console.error('Error fetching settings:', err);
             setError('Error fetching settings');

@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
                                 digitalRegion: true,
                                 mainImage: true,
                                 redemptionInstructions: true,
+                                deliveryMethod: true,
                             } as any
                         }
                     }
@@ -92,6 +93,7 @@ export async function GET(request: NextRequest) {
             region: item.product.digitalRegion,
             image: item.productImage || item.product.mainImage,
             quantity: item.quantity,
+            deliveryMethod: item.product.deliveryMethod || 'INSTANT',
             // Filter codes by orderItemId to ensure each order item has independent codes
             codes: filteredCodes.filter(dc => dc.orderItemId === item.id),
             redemptionInstructions: item.product.redemptionInstructions || null,

@@ -50,6 +50,8 @@ export async function GET(
       ...product,
       priceUSD: safeNumber(product.priceUSD) ?? 0,
       priceVES: safeNumber(product.priceVES),
+      compareAtPriceUSD: safeNumber(product.compareAtPriceUSD),
+      costPerItem: safeNumber(product.costPerItem),
       weightKg: safeNumber(product.weightKg),
       shippingCost: safeNumber(product.shippingCost),
     };
@@ -154,6 +156,33 @@ export async function PATCH(
 
     if (body.isFeatured !== undefined) updateData.isFeatured = body.isFeatured;
 
+    // Pricing extras
+    if (body.compareAtPriceUSD !== undefined) updateData.compareAtPriceUSD = body.compareAtPriceUSD ? parseFloat(body.compareAtPriceUSD) : null;
+    if (body.costPerItem !== undefined) updateData.costPerItem = body.costPerItem ? parseFloat(body.costPerItem) : null;
+
+    // Inventory extras
+    if (body.barcode !== undefined) updateData.barcode = body.barcode || null;
+    if (body.tags !== undefined) updateData.tags = Array.isArray(body.tags) ? JSON.stringify(body.tags) : null;
+
+    // SEO Fields
+    if (body.seoTitle !== undefined) updateData.seoTitle = body.seoTitle || null;
+    if (body.seoDescription !== undefined) updateData.seoDescription = body.seoDescription || null;
+    if (body.seoImage !== undefined) updateData.seoImage = body.seoImage || null;
+
+    // Slug update (generate from name if name changed, or use provided)
+    if (body.slug !== undefined) {
+      updateData.slug = body.slug;
+    } else if (body.name !== undefined && body.name !== oldProduct.name) {
+      const newSlug = body.name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      const existing = await prisma.product.findFirst({ where: { slug: newSlug, NOT: { id } } });
+      updateData.slug = existing ? `${newSlug}-${Math.random().toString(36).substring(2, 7)}` : newSlug;
+    }
+
     // Fields that might not exist in current schema or need specific handling
     if (body.brandId !== undefined) updateData.brandId = body.brandId;
 
@@ -178,13 +207,15 @@ export async function PATCH(
       },
     });
 
-    // Convert Decimal fields to Number for proper JSON serialization
+    const safeNum = (v: any) => v != null ? Number(v) : null;
     const formattedProduct = {
       ...product,
-      priceUSD: Number(product.priceUSD),
-      priceVES: product.priceVES ? Number(product.priceVES) : null,
-      weightKg: product.weightKg ? Number(product.weightKg) : null,
-      shippingCost: product.shippingCost ? Number(product.shippingCost) : null,
+      priceUSD: safeNum(product.priceUSD) ?? 0,
+      priceVES: safeNum(product.priceVES),
+      compareAtPriceUSD: safeNum(product.compareAtPriceUSD),
+      costPerItem: safeNum(product.costPerItem),
+      weightKg: safeNum(product.weightKg),
+      shippingCost: safeNum(product.shippingCost),
     };
 
     return NextResponse.json(formattedProduct);

@@ -15,6 +15,7 @@ interface CartItem {
   isConsolidable?: boolean;
   shippingCost?: number;
   dimensions?: string; // JSON string: {length, width, height} in cm
+  digitalUsername?: string;
 }
 
 interface CartContextType {

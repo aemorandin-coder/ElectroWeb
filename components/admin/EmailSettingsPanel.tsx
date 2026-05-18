@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import {
     FiMail, FiLock, FiServer, FiCheck, FiX, FiRefreshCw,
     FiSend, FiAlertCircle, FiCheckCircle, FiSettings,
-    FiEye, FiEyeOff, FiInfo, FiZap, FiShield, FiBell,
+    FiEye, FiEyeOff, FiInfo, FiShield, FiBell,
     FiGlobe, FiCloud, FiInbox, FiMessageSquare, FiTarget,
     FiAtSign, FiBox
 } from 'react-icons/fi';
@@ -414,7 +414,7 @@ export default function EmailSettingsPanel() {
             {/* Email Types Toggle - Compact Horizontal */}
             <div className="bg-white rounded-xl border border-[#e9ecef] overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-[#e9ecef] flex items-center gap-2">
-                    <FiZap className="w-4 h-4 text-[#2a63cd]" />
+                    <FiMail className="w-4 h-4 text-[#2a63cd]" />
                     <h3 className="font-bold text-sm text-[#212529]">Tipos de Email</h3>
                 </div>
                 <div className="p-3 grid grid-cols-3 gap-2">

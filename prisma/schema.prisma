@@ -64,6 +64,11 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   discountRequests    DiscountRequest[]
 
+  // Influencer system
+  referredByCode      String?    // Code of the influencer who referred this user
+  influencerProfile   Influencer? @relation("InfluencerUser")
+  referralConversions ReferralConversion[] @relation("ReferredUser")
+
   @@map("users")
 }
 
@@ -199,6 +204,7 @@ model Product {
   name        String
   sku         String   @unique
   slug        String   @unique
+  shortCode   String?  @unique
   description String
   priceUSD    Decimal
   priceVES    Decimal?
@@ -224,6 +230,19 @@ model Product {
   isConsolidable  Boolean   @default(true)  // Can be shipped with other products in same box
   shippingCost    Decimal?  @default(0)     // Fixed shipping cost (for non-consolidable items)
   
+  // Pricing extras
+  compareAtPriceUSD Decimal? // Strike-through price to show a discount
+  costPerItem       Decimal? // Internal cost (not shown to customers)
+
+  // Inventory extras
+  barcode  String?
+  tags     String?  // JSON array of tag strings
+
+  // SEO Fields
+  seoTitle       String?
+  seoDescription String?
+  seoImage       String?
+
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
 
@@ -428,11 +447,13 @@ model Category {
   slug        String    @unique
   description String?
   image       String?
+  icon        String?   // react-icons name e.g. "FiMonitor"
+  color       String?   // Tailwind color key e.g. "blue", "purple", "green"
   parentId    String?
   parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryHierarchy")
   products    Product[]
-  
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -1183,4 +1204,58 @@ model AuditLog {
   @@index([severity])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ============================================
+// INFLUENCER / REFERRAL SYSTEM
+// ============================================
+
+model Influencer {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation("InfluencerUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  code           String   @unique  // e.g. "GAMER2024" — used in ?ref=GAMER2024
+  name           String            // Display name (can differ from user.name)
+  commissionRate Decimal  @default(5) // Percentage: 5 = 5%
+  status         String   @default("ACTIVE") // ACTIVE | PAUSED
+
+  notes          String?           // Internal admin notes
+
+  conversions    ReferralConversion[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([code])
+  @@index([status])
+  @@map("influencers")
+}
+
+model ReferralConversion {
+  id             String   @id @default(cuid())
+  influencerId   String
+  influencer     Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
+  referredUserId String
+  referredUser   User     @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  type           String   // REGISTRATION | PURCHASE | RECHARGE
+  grossAmount    Decimal  @default(0) // Amount of the order/recharge
+  commission     Decimal  @default(0) // Calculated commission (grossAmount × rate / 100)
+
+  // Status flow: PENDING → APPROVED (balance credited) | REJECTED
+  status         String   @default("PENDING") // PENDING | APPROVED | REJECTED
+
+  orderId        String?  // Reference to order if type=PURCHASE
+  transactionId  String?  // Reference to transaction if type=RECHARGE
+
+  approvedAt     DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([influencerId])
+  @@index([referredUserId])
+  @@index([status])
+  @@index([type])
+  @@map("referral_conversions")
 }

@@ -81,6 +81,12 @@ export default function HotAdOverlay() {
         };
 
         fetchSettings();
+
+        // Limpieza para evitar que el scroll se quede bloqueado si el componente se desmonta
+        return () => {
+            document.body.style.overflow = '';
+            document.body.classList.remove('hot-ad-active');
+        };
     }, [mounted]);
 
     const handleClose = () => {

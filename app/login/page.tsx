@@ -38,6 +38,17 @@ function LoginPageContent() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [requiresCaptcha, setRequiresCaptcha] = useState(false);
+  const [forceShowForm, setForceShowForm] = useState(false);
+
+  // Timeout de seguridad: si la sesión tarda más de 800ms, mostrar el formulario igual
+  useEffect(() => {
+    const t = setTimeout(() => setForceShowForm(true), 800);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (status !== 'loading') setForceShowForm(true);
+  }, [status]);
 
   // Load failed attempts from localStorage
   useEffect(() => {
@@ -239,8 +250,8 @@ function LoginPageContent() {
     }
   };
 
-  // Show loading while checking session
-  if (status === 'loading') {
+  // Mostrar spinner solo si la sesión está cargando Y no ha pasado el timeout
+  if (status === 'loading' && !forceShowForm) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center">
         <div className="text-center">
@@ -331,12 +342,10 @@ function LoginPageContent() {
                 <label htmlFor="email" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
                   Correo Electrónico
                 </label>
-                <div className="relative group">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200 group-focus-within:text-white transition-colors duration-200">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                    </svg>
-                  </div>
+                <div className="form-field group">
+                  <svg className="field-icon text-blue-200 group-focus-within:text-white transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                  </svg>
                   <input
                     id="email"
                     type="email"
@@ -344,8 +353,8 @@ function LoginPageContent() {
                     onChange={(e) => handleEmailChange(e.target.value)}
                     onBlur={() => handleBlur('email', email)}
                     autoComplete="email"
-                    className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200"
-                    placeholder={userType === 'admin' ? 'admin@electroshop.com' : 'cliente@ejemplo.com'}
+                    className="w-full pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200"
+                    placeholder={userType === 'admin' ? 'admin@electroshop.com' : '@ente@ejemplo.com'}
                     disabled={isLoading}
                   />
                   <EpicTooltip
@@ -369,12 +378,10 @@ function LoginPageContent() {
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
-                <div className="relative group">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200 group-focus-within:text-white transition-colors duration-200">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </div>
+                <div className="form-field group">
+                  <svg className="field-icon text-blue-200 group-focus-within:text-white transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -382,14 +389,14 @@ function LoginPageContent() {
                     onChange={(e) => handlePasswordChange(e.target.value)}
                     onBlur={() => handleBlur('password', password)}
                     autoComplete={userType === 'admin' ? 'current-password' : 'password'}
-                    className="w-full pl-11 pr-10 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200"
+                    className="w-full has-right-icon pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200"
                     placeholder="••••••••"
                     disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-200 hover:text-white transition-colors duration-200"
+                    className="field-icon-right text-blue-200 hover:text-white transition-colors duration-200"
                   >
                     {showPassword ? (
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

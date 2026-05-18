@@ -116,7 +116,7 @@ Responde con un JSON array así (sin markdown, solo JSON puro):
             } catch (e) {
                 parsed = [
                     { text: 'SUPER OFERTA', style: 'urgente' },
-                    { text: 'Diseño Premium', style: 'elegante' },
+                    { text: 'Diseño Exclusivo', style: 'elegante' },
                     { text: 'Lo Quieres!', style: 'divertido' },
                     { text: 'Calidad Garantizada', style: 'profesional' },
                     { text: 'Edición Limitada', style: 'exclusivo' },

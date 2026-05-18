@@ -27,6 +27,46 @@ export async function GET(request: NextRequest) {
             where.type = type;
         }
 
+        // Stats-only mode — returns aggregate numbers, no list
+        if (searchParams.get('summary') === '1') {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+
+            const [pendingAgg, completedTodayAgg, cancelledTodayAgg, weekAgg] = await Promise.all([
+                prisma.transaction.aggregate({
+                    where: { status: 'PENDING', type: 'RECHARGE' },
+                    _count: true,
+                    _sum: { amount: true },
+                }),
+                prisma.transaction.aggregate({
+                    where: { status: 'COMPLETED', createdAt: { gte: today } },
+                    _count: true,
+                    _sum: { amount: true },
+                }),
+                prisma.transaction.aggregate({
+                    where: { status: 'CANCELLED', createdAt: { gte: today } },
+                    _count: true,
+                }),
+                prisma.transaction.aggregate({
+                    where: { status: 'COMPLETED', createdAt: { gte: weekAgo } },
+                    _sum: { amount: true },
+                    _count: true,
+                }),
+            ]);
+
+            return NextResponse.json({
+                pendingCount: pendingAgg._count,
+                pendingAmount: Number(pendingAgg._sum.amount || 0),
+                completedTodayCount: completedTodayAgg._count,
+                completedTodayAmount: Number(completedTodayAgg._sum.amount || 0),
+                cancelledTodayCount: cancelledTodayAgg._count,
+                weekCount: weekAgg._count,
+                weekAmount: Number(weekAgg._sum.amount || 0),
+            });
+        }
+
         const transactions = await prisma.transaction.findMany({
             where,
             include: {
@@ -34,6 +74,7 @@ export async function GET(request: NextRequest) {
                     include: {
                         user: {
                             select: {
+                                id: true,
                                 name: true,
                                 email: true,
                             },
@@ -42,6 +83,7 @@ export async function GET(request: NextRequest) {
                 },
             },
             orderBy: { createdAt: 'desc' },
+            take: 200,
         });
 
         return NextResponse.json(transactions);
@@ -118,6 +160,14 @@ export async function PATCH(request: NextRequest) {
             const customerId = transaction.balance.user.id;
             if (status === 'COMPLETED') {
                 await notifyRechargeApproved(customerId, Number(transaction.amount));
+                // Referral commission for recharge (fire-and-forget)
+                const { recordConversion } = await import('@/lib/influencer-commission');
+                recordConversion({
+                    referredUserId: customerId,
+                    type: 'RECHARGE',
+                    grossAmount: Number(transaction.amount),
+                    transactionId: transaction.id,
+                }).catch(() => {});
             } else if (status === 'CANCELLED') {
                 await notifyRechargeRejected(customerId, Number(transaction.amount), rejectionReason);
             }

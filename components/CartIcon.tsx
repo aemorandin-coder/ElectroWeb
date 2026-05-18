@@ -116,6 +116,7 @@ export default function CartIcon() {
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          className="animate-periodic-bounce"
           style={{
             width: '20px',
             height: '20px',
@@ -135,33 +136,45 @@ export default function CartIcon() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div
-          className="cart-dropdown bg-white rounded-lg shadow-lg border border-[#e9ecef] z-50"
-          style={{
-            position: 'absolute',
-            right: '0',
-            top: '100%',
-            marginTop: '8px',
-            width: '360px',
-            maxWidth: 'calc(100vw - 24px)',
-            maxHeight: '80vh',
-            overflowY: 'auto',
-          }}
-        >
-          {items.length === 0 ? (
-            <div className="p-6 text-center">
-              <svg className="w-16 h-16 text-[#e9ecef] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <p className="text-[#6a6c6b] text-sm mb-3">Tu carrito está vacío</p>
-              <Link
-                href="/productos"
-                onClick={() => setIsOpen(false)}
-                className="inline-block px-4 py-2 bg-[#2a63cd] text-white text-sm font-semibold rounded-lg hover:bg-[#1e4ba3] transition-all"
-              >
-                Ver Productos
-              </Link>
-            </div>
+        <>
+          {/* Mobile Backdrop Overlay */}
+          <div 
+            className="fixed left-0 right-0 bottom-0 top-20 bg-black/40 backdrop-blur-sm z-40 sm:hidden animate-fade-in" 
+            aria-hidden="true" 
+            onClick={() => setIsOpen(false)}
+          />
+
+          <div
+            className="cart-dropdown bg-white z-[60] sm:z-50
+              fixed sm:absolute
+              top-20 sm:top-full
+              left-4 right-4 sm:left-auto sm:right-0
+              sm:mt-2
+              w-auto sm:w-[360px]
+              rounded-2xl sm:rounded-xl
+              shadow-2xl sm:shadow-lg
+              border border-[#e9ecef]
+              overflow-hidden
+              flex flex-col
+              animate-mobileDropdownIn sm:animate-none"
+            style={{
+              maxHeight: 'calc(100vh - 120px)',
+            }}
+          >
+            {items.length === 0 ? (
+              <div className="p-8 text-center flex flex-col items-center justify-center">
+                <svg className="w-16 h-16 text-[#e9ecef] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <p className="text-[#6a6c6b] text-sm mb-4">Tu carrito está vacío</p>
+                <Link
+                  href="/productos"
+                  onClick={() => setIsOpen(false)}
+                  className="inline-block px-5 py-2.5 bg-[#2a63cd] text-white text-sm font-semibold rounded-xl hover:bg-[#1e4ba3] transition-all shadow-md"
+                >
+                  Explorar Productos
+                </Link>
+              </div>
           ) : (
             <>
               {/* Header with Clear Button */}
@@ -360,6 +373,7 @@ export default function CartIcon() {
             </>
           )}
         </div>
+        </>
       )}
     </div>
   );

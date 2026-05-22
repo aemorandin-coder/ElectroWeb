@@ -117,7 +117,7 @@ export default function WarrantyPage() {
                 </div>
                 <div>
                     <h1 className="text-base lg:text-lg font-black text-[#212529]">Garantía</h1>
-                    <p className="text-[10px] lg:text-xs text-[#6a6c6b]">Gestiona tus solicitudes</p>
+                    <p className="text-xs text-[#6a6c6b]">Gestiona tus solicitudes</p>
                 </div>
             </div>
 
@@ -131,7 +131,7 @@ export default function WarrantyPage() {
                     <button
                         key={tab.id}
                         onClick={() => setSelectedTab(tab.id as any)}
-                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-[10px] lg:text-xs font-bold border-b-2 transition-all active:scale-95 ${selectedTab === tab.id
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-bold border-b-2 transition-all active:scale-95 ${selectedTab === tab.id
                             ? 'border-[#2a63cd] text-[#2a63cd] bg-blue-50/50'
                             : 'border-transparent text-[#6a6c6b] hover:text-[#212529]'
                             }`}
@@ -244,12 +244,12 @@ export default function WarrantyPage() {
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
                                                 <h3 className="font-bold text-[#212529] text-sm">Pedido #{req.orderNumber}</h3>
-                                                <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full">En Revisión</span>
+                                                <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">En Revisión</span>
                                             </div>
                                             <p className="text-xs text-[#6a6c6b]">{new Date(req.createdAt).toLocaleDateString()}</p>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-[10px] font-bold text-[#6a6c6b] uppercase">{req.type}</span>
+                                            <span className="text-xs font-bold text-[#6a6c6b] uppercase">{req.type}</span>
                                             <p className="text-xs font-medium text-[#2a63cd] mt-0.5">{req.id}</p>
                                         </div>
                                     </div>
@@ -301,17 +301,17 @@ export default function WarrantyPage() {
                                                     <div className="flex items-center gap-1.5 mb-0.5">
                                                         <h4 className="font-bold text-[#212529] text-xs">#{order.orderNumber}</h4>
                                                         {withinWarranty ? (
-                                                            <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-semibold rounded-full flex items-center gap-0.5">
+                                                            <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full flex items-center gap-0.5">
                                                                 <FiCheck className="w-2.5 h-2.5" />
                                                                 Elegible
                                                             </span>
                                                         ) : (
-                                                            <span className="px-1.5 py-0.5 bg-red-100 text-red-600 text-[10px] font-semibold rounded-full">
+                                                            <span className="px-1.5 py-0.5 bg-red-100 text-red-600 text-xs font-semibold rounded-full">
                                                                 Expirado
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-[11px] text-[#6a6c6b]">
+                                                    <p className="text-xs text-[#6a6c6b]">
                                                         {order.items.length} producto{order.items.length > 1 ? 's' : ''} •
                                                         Entregado hace {daysSince} días
                                                         {!withinWarranty && ' (fuera de garantía)'}
@@ -365,7 +365,7 @@ export default function WarrantyPage() {
                                         value={warrantyReason}
                                         onChange={(e) => setWarrantyReason(e.target.value)}
                                         required
-                                        className="w-full px-3 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] text-sm"
+                                        className="w-full px-4 py-3 bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm text-sm"
                                     >
                                         <option value="">Selecciona un motivo...</option>
                                         <option value="DEFECT">Defecto de fábrica</option>
@@ -382,7 +382,7 @@ export default function WarrantyPage() {
                                         required
                                         rows={4}
                                         placeholder="Por favor describe detalladamente el problema que presenta tu producto..."
-                                        className="w-full px-3 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] text-sm resize-none"
+                                        className="w-full px-4 py-3 bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 resize-none text-[#212529] text-sm shadow-sm"
                                     ></textarea>
                                 </div>
                                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
@@ -394,7 +394,7 @@ export default function WarrantyPage() {
                                     <button
                                         type="submit"
                                         disabled={isSubmitting || !warrantyReason || !warrantyDescription}
-                                        className="w-full py-3 bg-[#2a63cd] text-white font-bold rounded-xl hover:bg-[#1e4ba3] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full py-3.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {isSubmitting ? (
                                             <>

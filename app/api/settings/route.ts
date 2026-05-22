@@ -125,7 +125,7 @@ export async function PUT(request: NextRequest) {
       'stat4Label', 'stat4Value', 'stat4Icon',
       'ctaTitle', 'ctaDescription', 'ctaButtonText', 'ctaButtonLink',
       'coursesDescription', 'servicesDescription',
-      'hotAdImage', 'hotAdLink', 'hotAdBackdropColor'
+      'hotAdImage', 'hotAdLink', 'hotAdBackdropColor', 'adminAlertEmails'
     ];
 
     stringFields.forEach(field => {

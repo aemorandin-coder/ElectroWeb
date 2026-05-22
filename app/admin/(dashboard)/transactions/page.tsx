@@ -8,9 +8,32 @@ import { toast } from 'react-hot-toast';
 import {
     FiDownload, FiCheck, FiX, FiFilter, FiRefreshCw,
     FiAlertCircle, FiSearch, FiDollarSign, FiClock,
-    FiCheckCircle, FiTrendingUp, FiUser,
+    FiCheckCircle, FiTrendingUp, FiUser, FiSmartphone,
+    FiCreditCard, FiGlobe, FiArrowUpCircle, FiArrowDownCircle,
+    FiRepeat, FiGift, FiPackage,
 } from 'react-icons/fi';
-import { formatPaymentMethod, getPaymentMethodIcon } from '@/lib/format-helpers';
+import { SiBinance } from 'react-icons/si';
+import { formatPaymentMethod } from '@/lib/format-helpers';
+
+// ─── Payment method icons (react-icons, no emojis) ──────────────────────────
+
+function PaymentIcon({ method, className = 'w-3.5 h-3.5' }: { method: string | null | undefined; className?: string }) {
+    switch (method) {
+        case 'MOBILE_PAYMENT':   return <FiSmartphone className={className} />;
+        case 'BANK_TRANSFER':    return <FiDollarSign className={className} />;
+        case 'ZELLE':            return <FiGlobe className={className} />;
+        case 'ZINLI':            return <FiGlobe className={className} />;
+        case 'PAYPAL':           return <FiGlobe className={className} />;
+        case 'CRYPTO':           return <SiBinance className={className} />;
+        case 'CASH':             return <FiDollarSign className={className} />;
+        case 'CREDIT_CARD':      return <FiCreditCard className={className} />;
+        case 'BALANCE':          return <FiArrowUpCircle className={className} />;
+        case 'MERCANTIL_PANAMA': return <FiGlobe className={className} />;
+        default:                 return <FiDollarSign className={className} />;
+    }
+}
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Transaction {
     id: string;
@@ -43,46 +66,57 @@ interface Stats {
 }
 
 const REJECTION_REASONS = [
-    { id: 'ref_invalid', label: 'Número de referencia inválido', description: 'El número de referencia proporcionado no coincide con ninguna transacción bancaria.' },
-    { id: 'amount_mismatch', label: 'Monto incorrecto', description: 'El monto transferido no coincide con el monto declarado en la solicitud.' },
-    { id: 'payment_not_found', label: 'Pago no encontrado', description: 'No se encontró el pago en nuestras cuentas bancarias.' },
-    { id: 'duplicate', label: 'Transacción duplicada', description: 'Esta referencia ya fue utilizada en otra solicitud de recarga.' },
-    { id: 'suspicious', label: 'Actividad sospechosa', description: 'La transacción ha sido marcada para revisión por actividad sospechosa.' },
-    { id: 'expired', label: 'Comprobante vencido', description: 'El comprobante de pago supera el tiempo máximo permitido.' },
-    { id: 'custom', label: 'Motivo personalizado', description: '' },
+    { id: 'ref_invalid',      label: 'Número de referencia inválido',   description: 'El número de referencia proporcionado no coincide con ninguna transacción bancaria.' },
+    { id: 'amount_mismatch',  label: 'Monto incorrecto',                description: 'El monto transferido no coincide con el monto declarado en la solicitud.' },
+    { id: 'payment_not_found',label: 'Pago no encontrado',              description: 'No se encontró el pago en nuestras cuentas bancarias.' },
+    { id: 'duplicate',        label: 'Transacción duplicada',           description: 'Esta referencia ya fue utilizada en otra solicitud de recarga.' },
+    { id: 'suspicious',       label: 'Actividad sospechosa',            description: 'La transacción ha sido marcada para revisión por actividad sospechosa.' },
+    { id: 'expired',          label: 'Comprobante vencido',             description: 'El comprobante de pago supera el tiempo máximo permitido.' },
+    { id: 'custom',           label: 'Motivo personalizado',            description: '' },
 ];
 
-const TYPE_STYLES: Record<string, string> = {
-    RECHARGE: 'bg-blue-50 text-blue-700',
-    PURCHASE: 'bg-purple-50 text-purple-700',
-    REFUND: 'bg-orange-50 text-orange-700',
-    BONUS: 'bg-pink-50 text-pink-700',
-    WITHDRAWAL: 'bg-gray-50 text-gray-700',
+// ─── Design tokens ───────────────────────────────────────────────────────────
+
+const TYPE_CONFIG: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
+    RECHARGE:   { label: 'Recarga',    cls: 'bg-blue-50 text-blue-700 border-blue-200',    icon: <FiArrowUpCircle   className="w-3 h-3" /> },
+    PURCHASE:   { label: 'Compra',     cls: 'bg-violet-50 text-violet-700 border-violet-200', icon: <FiPackage         className="w-3 h-3" /> },
+    REFUND:     { label: 'Reembolso',  cls: 'bg-orange-50 text-orange-700 border-orange-200', icon: <FiRepeat          className="w-3 h-3" /> },
+    BONUS:      { label: 'Bono',       cls: 'bg-pink-50 text-pink-700 border-pink-200',    icon: <FiGift            className="w-3 h-3" /> },
+    WITHDRAWAL: { label: 'Retiro',     cls: 'bg-slate-50 text-slate-600 border-slate-200', icon: <FiArrowDownCircle className="w-3 h-3" /> },
 };
 
-const TYPE_LABELS: Record<string, string> = {
-    RECHARGE: 'Recarga',
-    PURCHASE: 'Compra',
-    REFUND: 'Reembolso',
-    BONUS: 'Bono',
-    WITHDRAWAL: 'Retiro',
-};
-
-const STATUS_STYLES: Record<string, string> = {
-    PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    COMPLETED: 'bg-green-100 text-green-800 border-green-200',
-    FAILED: 'bg-red-100 text-red-800 border-red-200',
-    CANCELLED: 'bg-gray-100 text-gray-800 border-gray-200',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-    PENDING: 'Pendiente',
-    COMPLETED: 'Aprobada',
-    FAILED: 'Fallida',
-    CANCELLED: 'Rechazada',
+const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string }> = {
+    PENDING:   { label: 'Pendiente', dot: 'bg-amber-500',  cls: 'bg-amber-50  text-amber-700  border-amber-200'  },
+    COMPLETED: { label: 'Aprobada',  dot: 'bg-emerald-500',cls: 'bg-emerald-50 text-emerald-700 border-emerald-200'},
+    FAILED:    { label: 'Fallida',   dot: 'bg-rose-500',   cls: 'bg-rose-50   text-rose-700   border-rose-200'   },
+    CANCELLED: { label: 'Rechazada', dot: 'bg-slate-400',  cls: 'bg-slate-50  text-slate-600  border-slate-200'  },
 };
 
 const IS_CREDIT = (type: string) => ['RECHARGE', 'BONUS', 'REFUND'].includes(type);
+
+// ─── Stat Card ───────────────────────────────────────────────────────────────
+
+function StatCard({
+    icon, label, value, sub, accent = false
+}: {
+    icon: React.ReactNode; label: string; value: string | number;
+    sub: React.ReactNode; accent?: boolean;
+}) {
+    return (
+        <div className={`rounded-xl border p-4 flex items-start gap-3 ${accent ? 'bg-amber-50 border-amber-200' : 'bg-white border-[#e9ecef]'}`}>
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${accent ? 'bg-amber-100 text-amber-600' : 'bg-[#f8f9fa] text-[#6a6c6b]'}`}>
+                {icon}
+            </div>
+            <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-[#6a6c6b] uppercase tracking-widest mb-0.5">{label}</p>
+                <p className={`text-2xl font-black leading-none ${accent ? 'text-amber-700' : 'text-[#212529]'}`}>{value}</p>
+                <div className="text-xs mt-1">{sub}</div>
+            </div>
+        </div>
+    );
+}
+
+// ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function TransactionsPage() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -94,11 +128,8 @@ export default function TransactionsPage() {
     const [processingId, setProcessingId] = useState<string | null>(null);
     const [successAnimations, setSuccessAnimations] = useState<{ [key: string]: 'approve' | 'reject' | null }>({});
 
-    // Approval modal
     const [showApproveModal, setShowApproveModal] = useState(false);
     const [approvingTransaction, setApprovingTransaction] = useState<Transaction | null>(null);
-
-    // Rejection modal
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectingTransaction, setRejectingTransaction] = useState<Transaction | null>(null);
     const [selectedReason, setSelectedReason] = useState('');
@@ -128,18 +159,14 @@ export default function TransactionsPage() {
         fetchStats();
     }, [fetchTransactions, fetchStats]);
 
-    // Auto-refresh stats every 60s when there are pending transactions
     useEffect(() => {
         const interval = setInterval(() => {
             fetchStats();
-            if (filterStatus === 'PENDING' || filterStatus === 'all') {
-                fetchTransactions();
-            }
+            if (filterStatus === 'PENDING' || filterStatus === 'all') fetchTransactions();
         }, 60000);
         return () => clearInterval(interval);
     }, [fetchStats, fetchTransactions, filterStatus]);
 
-    // Client-side search filter
     const displayed = useMemo(() => {
         if (!searchQuery.trim()) return transactions;
         const q = searchQuery.toLowerCase();
@@ -151,10 +178,7 @@ export default function TransactionsPage() {
         );
     }, [transactions, searchQuery]);
 
-    const openApproveModal = (t: Transaction) => {
-        setApprovingTransaction(t);
-        setShowApproveModal(true);
-    };
+    const openApproveModal = (t: Transaction) => { setApprovingTransaction(t); setShowApproveModal(true); };
 
     const handleApprove = async () => {
         if (!approvingTransaction) return;
@@ -170,42 +194,29 @@ export default function TransactionsPage() {
             if (res.ok) {
                 setSuccessAnimations(prev => ({ ...prev, [id]: 'approve' }));
                 toast.success('Recarga aprobada exitosamente');
+                window.dispatchEvent(new Event('refresh-sidebar-counts'));
                 setTimeout(() => {
                     setSuccessAnimations(prev => ({ ...prev, [id]: null }));
-                    fetchTransactions();
-                    fetchStats();
+                    fetchTransactions(); fetchStats();
                 }, 1200);
             } else {
                 const err = await res.json();
                 toast.error(err.error || 'Error al aprobar');
             }
-        } catch {
-            toast.error('Error al aprobar transacción');
-        } finally {
-            setProcessingId(null);
-            setApprovingTransaction(null);
-        }
+        } catch { toast.error('Error al aprobar transacción'); }
+        finally { setProcessingId(null); setApprovingTransaction(null); }
     };
 
     const openRejectModal = (t: Transaction) => {
-        setRejectingTransaction(t);
-        setSelectedReason('');
-        setCustomReason('');
-        setShowRejectModal(true);
+        setRejectingTransaction(t); setSelectedReason(''); setCustomReason(''); setShowRejectModal(true);
     };
 
     const handleReject = async () => {
-        if (!rejectingTransaction || !selectedReason) {
-            toast.error('Por favor selecciona un motivo de rechazo');
-            return;
-        }
+        if (!rejectingTransaction || !selectedReason) { toast.error('Por favor selecciona un motivo de rechazo'); return; }
         const reason = selectedReason === 'custom'
             ? customReason
             : REJECTION_REASONS.find(r => r.id === selectedReason)?.label || selectedReason;
-        if (selectedReason === 'custom' && !customReason.trim()) {
-            toast.error('Por favor escribe el motivo personalizado');
-            return;
-        }
+        if (selectedReason === 'custom' && !customReason.trim()) { toast.error('Por favor escribe el motivo personalizado'); return; }
         const id = rejectingTransaction.id;
         try {
             setProcessingId(id);
@@ -217,62 +228,66 @@ export default function TransactionsPage() {
             if (res.ok) {
                 setSuccessAnimations(prev => ({ ...prev, [id]: 'reject' }));
                 toast.success('Transacción rechazada');
-                setShowRejectModal(false);
-                setRejectingTransaction(null);
+                setShowRejectModal(false); setRejectingTransaction(null);
+                window.dispatchEvent(new Event('refresh-sidebar-counts'));
                 setTimeout(() => {
                     setSuccessAnimations(prev => ({ ...prev, [id]: null }));
-                    fetchTransactions();
-                    fetchStats();
+                    fetchTransactions(); fetchStats();
                 }, 1200);
             } else {
                 const err = await res.json();
                 toast.error(err.error || 'Error al rechazar');
             }
-        } catch {
-            toast.error('Error al rechazar transacción');
-        } finally {
-            setProcessingId(null);
-        }
+        } catch { toast.error('Error al rechazar transacción'); }
+        finally { setProcessingId(null); }
     };
 
     const exportToCSV = () => {
         const headers = ['ID', 'Usuario', 'Email', 'Tipo', 'Estado', 'Monto USD', 'Descripción', 'Referencia', 'Método de Pago', 'Motivo Rechazo', 'Fecha'];
         const csvData = displayed.map(t => [
             t.id, t.balance.user.name || 'N/A', t.balance.user.email,
-            TYPE_LABELS[t.type] || t.type, STATUS_LABELS[t.status] || t.status,
+            TYPE_CONFIG[t.type]?.label || t.type, STATUS_CONFIG[t.status]?.label || t.status,
             Number(t.amount).toFixed(2), t.description,
             t.reference || '', formatPaymentMethod(t.paymentMethod),
             t.rejectionReason || '',
             format(new Date(t.createdAt), 'yyyy-MM-dd HH:mm:ss'),
         ]);
-        const BOM = '﻿';
+        const BOM = '\uFEFF';
         const content = [headers, ...csvData].map(row => row.map(c => `"${c}"`).join(',')).join('\n');
         const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `transacciones_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.csv`;
-        a.click();
+        a.href = url; a.download = `transacciones_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.csv`; a.click();
         URL.revokeObjectURL(url);
         toast.success('CSV descargado');
     };
 
     const pendingCount = transactions.filter(t => t.status === 'PENDING').length;
 
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    const fmtAmount = (n: number) => n.toLocaleString('es-VE', { minimumFractionDigits: 2 });
+
+    // ── Render ───────────────────────────────────────────────────────────────
+
     return (
-        <div className="h-full flex flex-col gap-4">
-            {/* Header */}
+        <div className="h-full flex flex-col gap-5">
+
+            {/* ── Header ── */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h1 className="text-xl font-bold text-[#212529] flex items-center gap-2">
+                    <h1 className="text-xl font-bold text-[#212529] flex items-center gap-2.5">
+                        <span className="w-8 h-8 rounded-lg bg-[#2a63cd] flex items-center justify-center shadow-sm flex-shrink-0">
+                            <FiDollarSign className="w-4 h-4 text-white" />
+                        </span>
                         Transacciones
                         {pendingCount > 0 && (
-                            <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 border border-yellow-200 rounded-full text-xs font-bold animate-pulse">
-                                {pendingCount} pendientes
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-200 rounded-full text-xs font-bold animate-pulse">
+                                {pendingCount} pendiente{pendingCount > 1 ? 's' : ''}
                             </span>
                         )}
                     </h1>
-                    <p className="text-[#6a6c6b] text-xs">Recargas y movimientos de saldo · máx. 200 registros</p>
+                    <p className="text-[#6a6c6b] text-xs mt-1 ml-10.5">Recargas y movimientos de saldo · máx. 200 registros</p>
                 </div>
                 <div className="flex gap-2">
                     <button
@@ -288,89 +303,70 @@ export default function TransactionsPage() {
                         className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#dee2e6] rounded-lg text-xs font-semibold text-[#212529] hover:bg-[#f8f9fa] transition-all disabled:opacity-40"
                     >
                         <FiDownload className="w-3.5 h-3.5" />
-                        CSV
+                        Exportar CSV
                     </button>
                 </div>
             </div>
 
-            {/* Stats bar */}
+            {/* ── Stats ── */}
             {stats && (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div className={`rounded-xl border p-3.5 ${stats.pendingCount > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-[#e9ecef]'}`}>
-                        <div className="flex items-center gap-2 mb-1">
-                            <FiClock className={`w-4 h-4 ${stats.pendingCount > 0 ? 'text-yellow-600' : 'text-[#6a6c6b]'}`} />
-                            <span className="text-[10px] font-semibold text-[#6a6c6b] uppercase tracking-wide">Pendientes</span>
-                        </div>
-                        <p className={`text-2xl font-black ${stats.pendingCount > 0 ? 'text-yellow-700' : 'text-[#212529]'}`}>
-                            {stats.pendingCount}
-                        </p>
-                        <p className={`text-xs font-semibold ${stats.pendingCount > 0 ? 'text-yellow-600' : 'text-[#6a6c6b]'}`}>
-                            ${stats.pendingAmount.toLocaleString('es-VE', { minimumFractionDigits: 2 })} por aprobar
-                        </p>
-                    </div>
-
-                    <div className="bg-white border border-[#e9ecef] rounded-xl p-3.5">
-                        <div className="flex items-center gap-2 mb-1">
-                            <FiCheckCircle className="w-4 h-4 text-green-600" />
-                            <span className="text-[10px] font-semibold text-[#6a6c6b] uppercase tracking-wide">Aprobadas hoy</span>
-                        </div>
-                        <p className="text-2xl font-black text-[#212529]">{stats.completedTodayCount}</p>
-                        <p className="text-xs text-green-600 font-semibold">
-                            +${stats.completedTodayAmount.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
-                        </p>
-                    </div>
-
-                    <div className="bg-white border border-[#e9ecef] rounded-xl p-3.5">
-                        <div className="flex items-center gap-2 mb-1">
-                            <FiTrendingUp className="w-4 h-4 text-[#2a63cd]" />
-                            <span className="text-[10px] font-semibold text-[#6a6c6b] uppercase tracking-wide">Esta semana</span>
-                        </div>
-                        <p className="text-2xl font-black text-[#212529]">{stats.weekCount}</p>
-                        <p className="text-xs text-[#2a63cd] font-semibold">
-                            ${stats.weekAmount.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
-                        </p>
-                    </div>
-
-                    <div className="bg-white border border-[#e9ecef] rounded-xl p-3.5">
-                        <div className="flex items-center gap-2 mb-1">
-                            <FiX className="w-4 h-4 text-red-500" />
-                            <span className="text-[10px] font-semibold text-[#6a6c6b] uppercase tracking-wide">Rechazadas hoy</span>
-                        </div>
-                        <p className="text-2xl font-black text-[#212529]">{stats.cancelledTodayCount}</p>
-                        <p className="text-xs text-[#6a6c6b]">transacciones canceladas</p>
-                    </div>
+                    <StatCard
+                        icon={<FiClock className="w-5 h-5" />}
+                        label="Pendientes"
+                        value={stats.pendingCount}
+                        sub={<span className={stats.pendingCount > 0 ? 'text-amber-600 font-semibold' : 'text-[#6a6c6b]'}>
+                            ${fmtAmount(stats.pendingAmount)} por aprobar
+                        </span>}
+                        accent={stats.pendingCount > 0}
+                    />
+                    <StatCard
+                        icon={<FiCheckCircle className="w-5 h-5 text-emerald-600" />}
+                        label="Aprobadas hoy"
+                        value={stats.completedTodayCount}
+                        sub={<span className="text-emerald-600 font-semibold">+${fmtAmount(stats.completedTodayAmount)}</span>}
+                    />
+                    <StatCard
+                        icon={<FiTrendingUp className="w-5 h-5 text-[#2a63cd]" />}
+                        label="Esta semana"
+                        value={stats.weekCount}
+                        sub={<span className="text-[#2a63cd] font-semibold">${fmtAmount(stats.weekAmount)}</span>}
+                    />
+                    <StatCard
+                        icon={<FiX className="w-5 h-5 text-rose-500" />}
+                        label="Rechazadas hoy"
+                        value={stats.cancelledTodayCount}
+                        sub={<span className="text-[#6a6c6b]">transacciones canceladas</span>}
+                    />
                 </div>
             )}
 
-            {/* Filters row */}
-            <div className="flex flex-wrap gap-2">
+            {/* ── Filters ── */}
+            <div className="flex flex-wrap gap-2 items-center">
                 {/* Search */}
-                <div className="relative flex-1 min-w-[180px]">
+                <div className="relative flex-1 min-w-[200px]">
                     <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#adb5bd]" />
                     <input
                         type="text"
                         placeholder="Buscar por nombre, email o referencia..."
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-white border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent"
+                        className="w-full pl-9 pr-4 py-2 bg-white border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] transition-colors"
                     />
                     {searchQuery && (
-                        <button
-                            onClick={() => setSearchQuery('')}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-[#adb5bd] hover:text-[#212529]"
-                        >
+                        <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#adb5bd] hover:text-[#212529]">
                             <FiX className="w-4 h-4" />
                         </button>
                     )}
                 </div>
 
-                {/* Type filter */}
+                {/* Type */}
                 <div className="relative">
-                    <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#adb5bd]" />
+                    <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#adb5bd] pointer-events-none" />
                     <select
                         value={filterType}
                         onChange={e => setFilterType(e.target.value)}
-                        className="pl-9 pr-8 py-2 bg-white border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a63cd] appearance-none cursor-pointer text-[#212529]"
+                        className="pl-9 pr-8 py-2 bg-white border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] appearance-none cursor-pointer text-[#212529]"
                     >
                         <option value="all">Todos los tipos</option>
                         <option value="RECHARGE">Recargas</option>
@@ -381,45 +377,44 @@ export default function TransactionsPage() {
                     </select>
                 </div>
 
-                {/* Status filter */}
-                <div className="relative">
-                    <select
-                        value={filterStatus}
-                        onChange={e => setFilterStatus(e.target.value)}
-                        className="px-3 py-2 bg-white border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a63cd] appearance-none cursor-pointer text-[#212529]"
-                    >
-                        <option value="all">Todos los estados</option>
-                        <option value="PENDING">Pendientes</option>
-                        <option value="COMPLETED">Aprobadas</option>
-                        <option value="CANCELLED">Rechazadas</option>
-                    </select>
-                </div>
+                {/* Status */}
+                <select
+                    value={filterStatus}
+                    onChange={e => setFilterStatus(e.target.value)}
+                    className="px-3 py-2 bg-white border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] appearance-none cursor-pointer text-[#212529]"
+                >
+                    <option value="all">Todos los estados</option>
+                    <option value="PENDING">Pendientes</option>
+                    <option value="COMPLETED">Aprobadas</option>
+                    <option value="CANCELLED">Rechazadas</option>
+                </select>
 
-                {/* Results count */}
                 {searchQuery && (
-                    <div className="flex items-center px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg text-xs text-[#6a6c6b]">
-                        {displayed.length} de {transactions.length}
+                    <div className="px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg text-xs text-[#6a6c6b] font-medium">
+                        {displayed.length} / {transactions.length}
                     </div>
                 )}
             </div>
 
-            {/* Content */}
+            {/* ── Content ── */}
             <div className="flex-1 overflow-hidden bg-white rounded-xl border border-[#e9ecef] shadow-sm flex flex-col min-h-0">
                 {loading ? (
                     <div className="flex-1 flex items-center justify-center">
                         <div className="flex flex-col items-center gap-3">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#2a63cd]" />
+                            <div className="animate-spin rounded-full h-9 w-9 border-2 border-[#e9ecef] border-t-[#2a63cd]" />
                             <span className="text-sm text-[#6a6c6b]">Cargando transacciones...</span>
                         </div>
                     </div>
                 ) : displayed.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-[#6a6c6b] gap-3">
-                        <FiDollarSign className="w-12 h-12 text-[#dee2e6]" />
-                        <p className="text-base font-medium">
+                    <div className="flex-1 flex flex-col items-center justify-center text-[#6a6c6b] gap-3 py-16">
+                        <div className="w-14 h-14 rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center">
+                            <FiDollarSign className="w-6 h-6 text-[#dee2e6]" />
+                        </div>
+                        <p className="text-sm font-medium">
                             {searchQuery ? 'Sin resultados para la búsqueda' : 'No hay transacciones'}
                         </p>
                         {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} className="text-sm text-[#2a63cd] underline">
+                            <button onClick={() => setSearchQuery('')} className="text-xs text-[#2a63cd] hover:underline font-medium">
                                 Limpiar búsqueda
                             </button>
                         )}
@@ -427,213 +422,235 @@ export default function TransactionsPage() {
                 ) : (
                     <>
                         {/* Mobile cards */}
-                        <div className="grid grid-cols-1 gap-3 p-4 md:hidden overflow-auto">
-                            {displayed.map(t => (
-                                <div
-                                    key={t.id}
-                                    className={`bg-white rounded-xl border p-4 shadow-sm transition-all duration-500 ${
-                                        successAnimations[t.id] === 'approve'
-                                            ? 'bg-green-50 border-green-300'
-                                            : successAnimations[t.id] === 'reject'
-                                              ? 'bg-red-50 border-red-300 opacity-50'
-                                              : 'border-[#e9ecef]'
-                                    }`}
-                                >
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${TYPE_STYLES[t.type] || TYPE_STYLES.RECHARGE}`}>
-                                                {TYPE_LABELS[t.type] || t.type}
-                                            </span>
-                                            <span className="text-xs text-[#6a6c6b]">
-                                                {format(new Date(t.createdAt), 'dd MMM yyyy HH:mm', { locale: es })}
-                                            </span>
-                                        </div>
-                                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[t.status] || STATUS_STYLES.PENDING}`}>
-                                            {STATUS_LABELS[t.status] || t.status}
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-2 mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <FiUser className="w-3.5 h-3.5 text-[#6a6c6b]" />
-                                            <div>
-                                                <p className="text-sm font-semibold text-[#212529]">{t.balance.user.name || 'Usuario'}</p>
-                                                <p className="text-xs text-[#6a6c6b]">{t.balance.user.email}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-[#f8f9fa] rounded-lg px-3 py-2 flex justify-between items-center">
-                                            <span className="text-xs text-[#6a6c6b]">Monto</span>
-                                            <span className={`text-sm font-bold ${IS_CREDIT(t.type) ? 'text-green-600' : 'text-red-600'}`}>
-                                                {IS_CREDIT(t.type) ? '+' : '-'}${Number(t.amount).toFixed(2)}
-                                            </span>
-                                        </div>
-
-                                        {t.reference && (
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs text-[#6a6c6b]">Ref.</span>
-                                                <span className="text-xs font-mono bg-[#f8f9fa] px-2 py-0.5 rounded text-[#212529]">{t.reference}</span>
-                                            </div>
-                                        )}
-
-                                        {t.paymentMethod && (
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs text-[#6a6c6b]">Método</span>
-                                                <span className="text-xs text-[#212529]">
-                                                    {getPaymentMethodIcon(t.paymentMethod)} {formatPaymentMethod(t.paymentMethod)}
+                        <div className="md:hidden divide-y divide-[#f1f3f5] overflow-auto">
+                            {displayed.map(t => {
+                                const typeConf = TYPE_CONFIG[t.type] || TYPE_CONFIG.RECHARGE;
+                                const statusConf = STATUS_CONFIG[t.status] || STATUS_CONFIG.PENDING;
+                                const isCredit = IS_CREDIT(t.type);
+                                const anim = successAnimations[t.id];
+                                return (
+                                    <div
+                                        key={t.id}
+                                        className={`p-4 transition-all duration-500 ${anim === 'approve' ? 'bg-emerald-50' : anim === 'reject' ? 'bg-rose-50 opacity-50' : ''}`}
+                                    >
+                                        {/* Top row */}
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold border ${typeConf.cls}`}>
+                                                    {typeConf.icon}{typeConf.label}
+                                                </span>
+                                                <span className="text-[10px] text-[#6a6c6b]">
+                                                    {format(new Date(t.createdAt), 'dd MMM · HH:mm', { locale: es })}
                                                 </span>
                                             </div>
-                                        )}
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusConf.cls}`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${statusConf.dot}`} />
+                                                {statusConf.label}
+                                            </span>
+                                        </div>
+
+                                        {/* User */}
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="w-7 h-7 rounded-full bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center flex-shrink-0">
+                                                <span className="text-xs font-bold text-[#2a63cd]">
+                                                    {(t.balance.user.name || t.balance.user.email)[0].toUpperCase()}
+                                                </span>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-[#212529] truncate">{t.balance.user.name || 'Usuario'}</p>
+                                                <p className="text-[10px] text-[#6a6c6b] truncate">{t.balance.user.email}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Amount + meta */}
+                                        <div className="bg-[#f8f9fa] rounded-lg px-3 py-2.5 flex justify-between items-center mb-3">
+                                            <div className="space-y-0.5">
+                                                {t.reference && (
+                                                    <p className="text-[10px] text-[#6a6c6b]">
+                                                        Ref: <span className="font-mono text-[#212529]">{t.reference}</span>
+                                                    </p>
+                                                )}
+                                                {t.paymentMethod && (
+                                                    <p className="text-[10px] text-[#6a6c6b] flex items-center gap-1">
+                                                        <PaymentIcon method={t.paymentMethod} className="w-3 h-3" />
+                                                        {formatPaymentMethod(t.paymentMethod)}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <span className={`text-lg font-black ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                                {isCredit ? '+' : '-'}${fmtAmount(Number(t.amount))}
+                                            </span>
+                                        </div>
 
                                         {t.status === 'CANCELLED' && t.rejectionReason && (
-                                            <div className="flex items-start gap-1.5 text-xs text-red-600">
+                                            <div className="flex items-start gap-1.5 text-xs text-rose-600 mb-3">
                                                 <FiAlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                                                 <span>{t.rejectionReason}</span>
                                             </div>
                                         )}
-                                    </div>
 
-                                    {t.status === 'PENDING' && t.type === 'RECHARGE' && (
-                                        <div className="flex gap-2 pt-3 border-t border-[#e9ecef]">
-                                            <button
-                                                onClick={() => openApproveModal(t)}
-                                                disabled={processingId === t.id}
-                                                className="flex-1 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50 hover:shadow-md transition-all"
-                                            >
-                                                {processingId === t.id ? (
-                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                ) : <FiCheck className="w-4 h-4" />}
-                                                Aprobar
-                                            </button>
-                                            <button
-                                                onClick={() => openRejectModal(t)}
-                                                disabled={processingId === t.id}
-                                                className="flex-1 py-2.5 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50 hover:shadow-md transition-all"
-                                            >
-                                                <FiX className="w-4 h-4" />
-                                                Rechazar
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                        {t.status === 'PENDING' && t.type === 'RECHARGE' && (
+                                            <div className="flex gap-2 pt-3 border-t border-[#f1f3f5]">
+                                                <button
+                                                    onClick={() => openApproveModal(t)}
+                                                    disabled={processingId === t.id}
+                                                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                                                >
+                                                    {processingId === t.id ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiCheck className="w-3.5 h-3.5" />}
+                                                    Aprobar
+                                                </button>
+                                                <button
+                                                    onClick={() => openRejectModal(t)}
+                                                    disabled={processingId === t.id}
+                                                    className="flex-1 py-2.5 bg-white border border-rose-300 text-rose-600 hover:bg-rose-50 rounded-lg text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                                                >
+                                                    <FiX className="w-3.5 h-3.5" />
+                                                    Rechazar
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
 
                         {/* Desktop table */}
                         <div className="hidden md:block overflow-auto flex-1">
-                            <table className="w-full">
-                                <thead className="bg-[#f8f9fa] border-b border-[#e9ecef] sticky top-0 z-10">
-                                    <tr>
-                                        <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Usuario</th>
-                                        <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Tipo / Método</th>
-                                        <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Monto</th>
-                                        <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Referencia</th>
-                                        <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Estado</th>
-                                        <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Fecha</th>
-                                        <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Acciones</th>
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-[#f1f3f5] bg-[#f8f9fa]">
+                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Usuario</th>
+                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Tipo</th>
+                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Monto</th>
+                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Referencia</th>
+                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Estado</th>
+                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Fecha</th>
+                                        <th className="px-5 py-3 text-right text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#f0f0f0]">
-                                    {displayed.map(t => (
-                                        <tr
-                                            key={t.id}
-                                            className={`transition-all duration-500 ${
-                                                successAnimations[t.id] === 'approve'
-                                                    ? 'bg-green-50'
-                                                    : successAnimations[t.id] === 'reject'
-                                                      ? 'bg-red-50 opacity-50'
-                                                      : 'hover:bg-[#f8f9fa]'
-                                            }`}
-                                        >
-                                            <td className="px-5 py-3.5">
-                                                <p className="text-sm font-semibold text-[#212529] truncate max-w-[160px]">
-                                                    {t.balance.user.name || 'Usuario'}
-                                                </p>
-                                                <p className="text-xs text-[#6a6c6b] truncate max-w-[160px]">{t.balance.user.email}</p>
-                                            </td>
-                                            <td className="px-5 py-3.5">
-                                                <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${TYPE_STYLES[t.type] || TYPE_STYLES.RECHARGE}`}>
-                                                    {TYPE_LABELS[t.type] || t.type}
-                                                </span>
-                                                {t.paymentMethod && (
-                                                    <p className="text-xs text-[#868e96] mt-1">
-                                                        {getPaymentMethodIcon(t.paymentMethod)} {formatPaymentMethod(t.paymentMethod)}
-                                                    </p>
-                                                )}
-                                                {t.description && (
-                                                    <p className="text-xs text-[#6a6c6b] mt-0.5 truncate max-w-[150px]">{t.description}</p>
-                                                )}
-                                            </td>
-                                            <td className="px-5 py-3.5">
-                                                <span className={`text-sm font-bold ${IS_CREDIT(t.type) ? 'text-green-600' : 'text-red-600'}`}>
-                                                    {IS_CREDIT(t.type) ? '+' : '-'}${Number(t.amount).toFixed(2)}
-                                                </span>
-                                                <p className="text-[10px] text-[#adb5bd]">USD</p>
-                                            </td>
-                                            <td className="px-5 py-3.5">
-                                                {t.reference ? (
-                                                    <span className="font-mono text-xs bg-[#f8f9fa] border border-[#e9ecef] px-2 py-1 rounded text-[#212529]">
-                                                        {t.reference}
+                                <tbody className="divide-y divide-[#f1f3f5]">
+                                    {displayed.map(t => {
+                                        const typeConf = TYPE_CONFIG[t.type] || TYPE_CONFIG.RECHARGE;
+                                        const statusConf = STATUS_CONFIG[t.status] || STATUS_CONFIG.PENDING;
+                                        const isCredit = IS_CREDIT(t.type);
+                                        const anim = successAnimations[t.id];
+                                        return (
+                                            <tr
+                                                key={t.id}
+                                                className={`transition-all duration-500 ${anim === 'approve' ? 'bg-emerald-50' : anim === 'reject' ? 'bg-rose-50 opacity-40' : 'hover:bg-[#fafafa]'}`}
+                                            >
+                                                {/* Usuario */}
+                                                <td className="px-5 py-3.5">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-8 h-8 rounded-full bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center flex-shrink-0">
+                                                            <span className="text-xs font-bold text-[#2a63cd]">
+                                                                {(t.balance.user.name || t.balance.user.email)[0].toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="font-semibold text-[#212529] truncate max-w-[140px] text-sm">
+                                                                {t.balance.user.name || 'Usuario'}
+                                                            </p>
+                                                            <p className="text-[11px] text-[#6a6c6b] truncate max-w-[140px]">{t.balance.user.email}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                {/* Tipo + método */}
+                                                <td className="px-5 py-3.5">
+                                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold border ${typeConf.cls}`}>
+                                                        {typeConf.icon}{typeConf.label}
                                                     </span>
-                                                ) : (
-                                                    <span className="text-xs text-[#adb5bd]">—</span>
-                                                )}
-                                            </td>
-                                            <td className="px-5 py-3.5">
-                                                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[t.status] || STATUS_STYLES.PENDING}`}>
-                                                    {STATUS_LABELS[t.status] || t.status}
-                                                </span>
-                                                {t.status === 'CANCELLED' && t.rejectionReason && (
-                                                    <p className="text-[10px] text-red-500 flex items-center gap-1 mt-1">
-                                                        <FiAlertCircle className="w-3 h-3" />
-                                                        {t.rejectionReason}
-                                                    </p>
-                                                )}
-                                            </td>
-                                            <td className="px-5 py-3.5 whitespace-nowrap">
-                                                <p className="text-xs text-[#212529]">
-                                                    {format(new Date(t.createdAt), 'dd MMM yyyy', { locale: es })}
-                                                </p>
-                                                <p className="text-[10px] text-[#6a6c6b]">
-                                                    {format(new Date(t.createdAt), 'HH:mm')}
-                                                </p>
-                                            </td>
-                                            <td className="px-5 py-3.5 text-right">
-                                                {t.status === 'PENDING' && t.type === 'RECHARGE' ? (
-                                                    successAnimations[t.id] ? (
-                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
-                                                            successAnimations[t.id] === 'approve' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                                        }`}>
-                                                            {successAnimations[t.id] === 'approve' ? <><FiCheck className="w-3.5 h-3.5" /> Aprobada</> : <><FiX className="w-3.5 h-3.5" /> Rechazada</>}
+                                                    {t.paymentMethod && (
+                                                        <p className="text-[11px] text-[#6a6c6b] mt-1 flex items-center gap-1">
+                                                            <PaymentIcon method={t.paymentMethod} className="w-3 h-3 flex-shrink-0" />
+                                                            {formatPaymentMethod(t.paymentMethod)}
+                                                        </p>
+                                                    )}
+                                                    {t.description && (
+                                                        <p className="text-[10px] text-[#adb5bd] mt-0.5 truncate max-w-[140px]">{t.description}</p>
+                                                    )}
+                                                </td>
+
+                                                {/* Monto */}
+                                                <td className="px-5 py-3.5 whitespace-nowrap">
+                                                    <span className={`text-sm font-black ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                                        {isCredit ? '+' : '-'}${fmtAmount(Number(t.amount))}
+                                                    </span>
+                                                    <p className="text-[10px] text-[#adb5bd] font-medium">USD</p>
+                                                </td>
+
+                                                {/* Referencia */}
+                                                <td className="px-5 py-3.5">
+                                                    {t.reference ? (
+                                                        <span className="font-mono text-xs bg-[#f8f9fa] border border-[#e9ecef] px-2 py-1 rounded-md text-[#212529] tracking-wide">
+                                                            {t.reference}
                                                         </span>
                                                     ) : (
-                                                        <div className="flex justify-end gap-1.5">
-                                                            <button
-                                                                onClick={() => openApproveModal(t)}
-                                                                disabled={processingId === t.id}
-                                                                className="group relative p-2 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-md hover:shadow-green-500/30 hover:scale-110 active:scale-95 transition-all disabled:opacity-50"
-                                                                title="Aprobar recarga"
-                                                            >
-                                                                {processingId === t.id ? (
-                                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                                ) : <FiCheck className="w-4 h-4" />}
-                                                            </button>
-                                                            <button
-                                                                onClick={() => openRejectModal(t)}
-                                                                disabled={processingId === t.id}
-                                                                className="group relative p-2 bg-gradient-to-br from-red-500 to-rose-600 text-white rounded-lg hover:shadow-md hover:shadow-red-500/30 hover:scale-110 active:scale-95 transition-all disabled:opacity-50"
-                                                                title="Rechazar recarga"
-                                                            >
-                                                                <FiX className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    )
-                                                ) : (
-                                                    <span className="text-xs text-[#adb5bd]">—</span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                        <span className="text-xs text-[#dee2e6]">—</span>
+                                                    )}
+                                                </td>
+
+                                                {/* Estado */}
+                                                <td className="px-5 py-3.5">
+                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${statusConf.cls}`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusConf.dot}`} />
+                                                        {statusConf.label}
+                                                    </span>
+                                                    {t.status === 'CANCELLED' && t.rejectionReason && (
+                                                        <p className="text-[10px] text-rose-500 flex items-center gap-1 mt-1">
+                                                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />
+                                                            <span className="truncate max-w-[120px]">{t.rejectionReason}</span>
+                                                        </p>
+                                                    )}
+                                                </td>
+
+                                                {/* Fecha */}
+                                                <td className="px-5 py-3.5 whitespace-nowrap">
+                                                    <p className="text-sm font-medium text-[#212529]">
+                                                        {format(new Date(t.createdAt), 'dd MMM yyyy', { locale: es })}
+                                                    </p>
+                                                    <p className="text-[11px] text-[#6a6c6b]">
+                                                        {format(new Date(t.createdAt), 'HH:mm')}
+                                                    </p>
+                                                </td>
+
+                                                {/* Acciones */}
+                                                <td className="px-5 py-3.5 text-right">
+                                                    {t.status === 'PENDING' && t.type === 'RECHARGE' ? (
+                                                        anim ? (
+                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${anim === 'approve' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                                                {anim === 'approve' ? <><FiCheck className="w-3.5 h-3.5" /> Aprobada</> : <><FiX className="w-3.5 h-3.5" /> Rechazada</>}
+                                                            </span>
+                                                        ) : (
+                                                            <div className="flex justify-end gap-1.5">
+                                                                <button
+                                                                    onClick={() => openApproveModal(t)}
+                                                                    disabled={processingId === t.id}
+                                                                    className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg hover:shadow-md transition-all disabled:opacity-50 active:scale-95"
+                                                                    title="Aprobar recarga"
+                                                                >
+                                                                    {processingId === t.id
+                                                                        ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                                        : <FiCheck className="w-4 h-4" />}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => openRejectModal(t)}
+                                                                    disabled={processingId === t.id}
+                                                                    className="p-2 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-400 rounded-lg transition-all disabled:opacity-50 active:scale-95"
+                                                                    title="Rechazar recarga"
+                                                                >
+                                                                    <FiX className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        )
+                                                    ) : (
+                                                        <span className="text-xs text-[#dee2e6]">—</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
@@ -641,33 +658,38 @@ export default function TransactionsPage() {
                 )}
             </div>
 
-            {/* Approval confirmation modal */}
+            {/* ── Approval Modal ── */}
             {showApproveModal && approvingTransaction && typeof document !== 'undefined' && createPortal(
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[460px] overflow-hidden">
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-4">
-                            <h2 className="text-lg font-bold flex items-center gap-2">
-                                <FiCheck className="w-5 h-5" />
-                                Confirmar Aprobación
-                            </h2>
-                            <p className="text-sm text-green-100">
-                                {approvingTransaction.balance.user.name || approvingTransaction.balance.user.email}
-                            </p>
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[440px] overflow-hidden border border-[#e9ecef]">
+                        {/* Header */}
+                        <div className="flex items-center gap-3 px-6 py-4 border-b border-[#f1f3f5]">
+                            <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
+                                <FiCheck className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <div>
+                                <h2 className="text-base font-bold text-[#212529]">Confirmar Aprobación</h2>
+                                <p className="text-xs text-[#6a6c6b]">
+                                    {approvingTransaction.balance.user.name || approvingTransaction.balance.user.email}
+                                </p>
+                            </div>
                         </div>
 
                         <div className="p-6 space-y-4">
-                            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-                                <p className="text-3xl font-black text-green-700">
-                                    +${Number(approvingTransaction.amount).toFixed(2)}
+                            {/* Amount highlight */}
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
+                                <p className="text-3xl font-black text-emerald-700">
+                                    +${fmtAmount(Number(approvingTransaction.amount))}
                                 </p>
-                                <p className="text-xs text-green-600 mt-0.5">USD · se acreditará al saldo del cliente</p>
+                                <p className="text-xs text-emerald-600 mt-1">USD · se acreditará al saldo del cliente</p>
                             </div>
 
-                            <div className="space-y-2 text-sm">
+                            {/* Details */}
+                            <div className="space-y-2.5 text-sm">
                                 {approvingTransaction.reference && (
                                     <div className="flex justify-between items-center">
                                         <span className="text-[#6a6c6b]">Referencia</span>
-                                        <span className="font-mono text-xs bg-[#f8f9fa] border border-[#e9ecef] px-2 py-1 rounded">
+                                        <span className="font-mono text-xs bg-[#f8f9fa] border border-[#e9ecef] px-2 py-1 rounded-md">
                                             {approvingTransaction.reference}
                                         </span>
                                     </div>
@@ -675,8 +697,9 @@ export default function TransactionsPage() {
                                 {approvingTransaction.paymentMethod && (
                                     <div className="flex justify-between items-center">
                                         <span className="text-[#6a6c6b]">Método de pago</span>
-                                        <span className="text-[#212529]">
-                                            {getPaymentMethodIcon(approvingTransaction.paymentMethod)} {formatPaymentMethod(approvingTransaction.paymentMethod)}
+                                        <span className="flex items-center gap-1.5 text-[#212529]">
+                                            <PaymentIcon method={approvingTransaction.paymentMethod} />
+                                            {formatPaymentMethod(approvingTransaction.paymentMethod)}
                                         </span>
                                     </div>
                                 )}
@@ -686,26 +709,26 @@ export default function TransactionsPage() {
                                 </div>
                             </div>
 
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+                            <div className="bg-[#f8f9fa] border border-[#e9ecef] rounded-lg px-4 py-3 text-xs text-[#6a6c6b]">
                                 El cliente recibirá una notificación de aprobación automáticamente.
                             </div>
                         </div>
 
-                        <div className="p-6 pt-0 flex gap-3">
+                        <div className="px-6 pb-6 flex gap-3">
                             <button
                                 onClick={() => { setShowApproveModal(false); setApprovingTransaction(null); }}
-                                className="flex-1 py-3 border-2 border-[#e9ecef] text-[#212529] font-bold rounded-xl hover:bg-[#f8f9fa] transition-all"
+                                className="flex-1 py-2.5 border border-[#dee2e6] text-[#212529] font-semibold rounded-xl hover:bg-[#f8f9fa] transition-all text-sm"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleApprove}
                                 disabled={processingId === approvingTransaction.id}
-                                className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                             >
-                                {processingId === approvingTransaction.id ? (
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                ) : <FiCheck className="w-5 h-5" />}
+                                {processingId === approvingTransaction.id
+                                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    : <FiCheck className="w-4 h-4" />}
                                 Aprobar Recarga
                             </button>
                         </div>
@@ -714,32 +737,33 @@ export default function TransactionsPage() {
                 document.body
             )}
 
-            {/* Rejection modal */}
+            {/* ── Rejection Modal ── */}
             {showRejectModal && rejectingTransaction && typeof document !== 'undefined' && createPortal(
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[550px] max-h-[90vh] overflow-hidden flex flex-col">
-                        <div className="bg-gradient-to-r from-red-500 to-rose-600 text-white px-6 py-4 flex-shrink-0">
-                            <h2 className="text-lg font-bold flex items-center gap-2">
-                                <FiX className="w-5 h-5" />
-                                Rechazar Transacción
-                            </h2>
-                            <p className="text-sm text-white/80">
-                                ${Number(rejectingTransaction.amount).toFixed(2)} · {rejectingTransaction.balance.user.name || rejectingTransaction.balance.user.email}
-                            </p>
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[520px] max-h-[90vh] overflow-hidden flex flex-col border border-[#e9ecef]">
+                        {/* Header */}
+                        <div className="flex items-center gap-3 px-6 py-4 border-b border-[#f1f3f5] flex-shrink-0">
+                            <div className="w-9 h-9 rounded-lg bg-rose-100 flex items-center justify-center">
+                                <FiX className="w-5 h-5 text-rose-600" />
+                            </div>
+                            <div>
+                                <h2 className="text-base font-bold text-[#212529]">Rechazar Transacción</h2>
+                                <p className="text-xs text-[#6a6c6b]">
+                                    ${fmtAmount(Number(rejectingTransaction.amount))} · {rejectingTransaction.balance.user.name || rejectingTransaction.balance.user.email}
+                                </p>
+                            </div>
                         </div>
 
                         <div className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div>
-                                <label className="block text-xs font-bold text-[#212529] mb-2 uppercase tracking-wider">
+                                <label className="block text-xs font-bold text-[#212529] mb-3 uppercase tracking-widest">
                                     Motivo del Rechazo *
                                 </label>
                                 <div className="space-y-2">
                                     {REJECTION_REASONS.map(reason => (
                                         <label
                                             key={reason.id}
-                                            className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer border-2 transition-all ${
-                                                selectedReason === reason.id ? 'border-red-500 bg-red-50' : 'border-[#e9ecef] hover:border-red-200'
-                                            }`}
+                                            className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer border-2 transition-all ${selectedReason === reason.id ? 'border-[#2a63cd] bg-blue-50' : 'border-[#e9ecef] hover:border-[#2a63cd]/30 hover:bg-[#f8f9fa]'}`}
                                         >
                                             <input
                                                 type="radio"
@@ -747,10 +771,10 @@ export default function TransactionsPage() {
                                                 value={reason.id}
                                                 checked={selectedReason === reason.id}
                                                 onChange={e => setSelectedReason(e.target.value)}
-                                                className="mt-0.5 w-4 h-4 text-red-600 focus:ring-red-500"
+                                                className="mt-0.5 w-4 h-4 text-[#2a63cd] focus:ring-[#2a63cd]/20 border-[#dee2e6]"
                                             />
                                             <div>
-                                                <span className="text-sm font-medium text-[#212529]">{reason.label}</span>
+                                                <span className="text-sm font-semibold text-[#212529]">{reason.label}</span>
                                                 {reason.description && (
                                                     <p className="text-xs text-[#6a6c6b] mt-0.5">{reason.description}</p>
                                                 )}
@@ -766,30 +790,30 @@ export default function TransactionsPage() {
                                     onChange={e => setCustomReason(e.target.value)}
                                     placeholder="Escribe el motivo del rechazo..."
                                     rows={3}
-                                    className="w-full px-4 py-3 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none text-sm"
+                                    className="w-full px-4 py-3 border border-[#dee2e6] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] resize-none text-sm transition-colors"
                                 />
                             )}
 
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800">
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-xs text-amber-800">
                                 <strong>Nota:</strong> El cliente recibirá una notificación con el motivo del rechazo.
                             </div>
                         </div>
 
-                        <div className="p-6 border-t border-[#e9ecef] bg-white flex gap-3 flex-shrink-0">
+                        <div className="px-6 pb-6 border-t border-[#f1f3f5] pt-4 flex gap-3 flex-shrink-0 bg-white">
                             <button
                                 onClick={() => setShowRejectModal(false)}
-                                className="flex-1 py-3 border-2 border-[#e9ecef] text-[#212529] font-bold rounded-xl hover:bg-[#f8f9fa] transition-all"
+                                className="flex-1 py-2.5 border border-[#dee2e6] text-[#212529] font-semibold rounded-xl hover:bg-[#f8f9fa] transition-all text-sm"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleReject}
                                 disabled={processingId === rejectingTransaction.id || !selectedReason}
-                                className="flex-1 py-3 bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition-all disabled:opacity-40 flex items-center justify-center gap-2 text-sm"
                             >
-                                {processingId === rejectingTransaction.id ? (
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                ) : <FiX className="w-5 h-5" />}
+                                {processingId === rejectingTransaction.id
+                                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    : <FiX className="w-4 h-4" />}
                                 Confirmar Rechazo
                             </button>
                         </div>

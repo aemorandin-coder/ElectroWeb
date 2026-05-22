@@ -12,6 +12,7 @@ import {
     FiTrendingUp, FiServer, FiCheckCircle, FiAlertCircle,
     FiLink, FiCopy, FiDollarSign, FiUserCheck, FiToggleRight,
     FiActivity, FiUpload, FiRadio, FiTv, FiSave,
+    FiChevronDown, FiChevronUp, FiBookOpen, FiInfo, FiClock,
 } from 'react-icons/fi';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -82,6 +83,7 @@ function InfluencersTab() {
     const [selectedConversions, setSelectedConversions] = useState<string[]>([]);
     const [approving, setApproving] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [showGuide, setShowGuide] = useState(false);
 
     // Create form
     const [createForm, setCreateForm] = useState({ userId: '', code: '', name: '', commissionRate: '5', notes: '' });
@@ -190,6 +192,83 @@ function InfluencersTab() {
 
     return (
         <div className="space-y-4">
+            {/* Guide Accordion */}
+            <div className="bg-white rounded-xl border border-[#e9ecef] overflow-hidden shadow-sm">
+                <button
+                    onClick={() => setShowGuide(!showGuide)}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50/70 hover:bg-gray-50 transition-colors text-left"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-[#2a63cd]/10 flex items-center justify-center text-[#2a63cd]">
+                            <FiInfo className="w-4.5 h-4.5" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-sm text-[#212529]">Guía de Funcionamiento: Ciclo de Referidos e Influencers</h3>
+                            <p className="text-[11px] text-[#6a6c6b]">Descubre cómo se generan, trackean y aprueban las comisiones paso a paso</p>
+                        </div>
+                    </div>
+                    {showGuide ? (
+                        <FiChevronUp className="w-5 h-5 text-[#6a6c6b]" />
+                    ) : (
+                        <FiChevronDown className="w-5 h-5 text-[#6a6c6b]" />
+                    )}
+                </button>
+
+                {showGuide && (
+                    <div className="p-5 border-t border-[#e9ecef] bg-white">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+                            {/* Connecting Line for desktop */}
+                            <div className="hidden md:block absolute top-[28px] left-[10%] right-[10%] h-[2px] border-t-2 border-dashed border-gray-200 z-0" />
+                            
+                            {[
+                                {
+                                    step: '1',
+                                    title: 'Crear Código',
+                                    desc: 'Registra al influencer con su email y código único (ej: DTO10). El sistema genera el enlace de referido.',
+                                    icon: FiPlus,
+                                    color: 'bg-blue-50 text-blue-600 border-blue-100',
+                                },
+                                {
+                                    step: '2',
+                                    title: 'Asociar Clientes',
+                                    desc: 'La cookie de referido dura 30 días en el navegador. Si el usuario se registra en ese lapso, queda asociado permanentemente.',
+                                    icon: FiLink,
+                                    color: 'bg-purple-50 text-purple-600 border-purple-100',
+                                },
+                                {
+                                    step: '3',
+                                    title: 'Comisión Pendiente',
+                                    desc: 'Al comprar o recargar saldo el cliente, se registra una comisión en estado "Pendiente" según el porcentaje configurado.',
+                                    icon: FiClock,
+                                    color: 'bg-amber-50 text-amber-600 border-amber-100',
+                                },
+                                {
+                                    step: '4',
+                                    title: 'Aprobar y Acreditar',
+                                    desc: 'Al hacer clic en "Aprobar", las comisiones se aprueban y se transfieren automáticamente como saldo a la billetera virtual del influencer.',
+                                    icon: FiCheckCircle,
+                                    color: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                                },
+                            ].map((item, idx) => {
+                                const Icon = item.icon;
+                                return (
+                                    <div key={idx} className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left space-y-2">
+                                        <div className={`w-12 h-12 rounded-xl ${item.color} border flex items-center justify-center shadow-sm relative`}>
+                                            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#212529] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                                {item.step}
+                                            </span>
+                                            <Icon className="w-5 h-5" />
+                                        </div>
+                                        <h4 className="font-bold text-xs text-[#212529]">{item.title}</h4>
+                                        <p className="text-[11px] text-[#6a6c6b] leading-relaxed">{item.desc}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </div>
+
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className="bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl p-4 text-white">

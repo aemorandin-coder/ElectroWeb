@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { FiBell } from 'react-icons/fi';
 import { useNotifications } from './NotificationProvider';
 import NotificationCenter from './NotificationCenter';
@@ -10,6 +11,12 @@ export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [shouldShake, setShouldShake] = useState(false);
   const [prevCount, setPrevCount] = useState(0);
+  const pathname = usePathname();
+
+  // Close dropdown on navigation
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
 
   // Shake animation when new notification arrives
   useEffect(() => {

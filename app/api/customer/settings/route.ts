@@ -168,6 +168,20 @@ export async function PATCH(request: NextRequest) {
         const profileData: any = {};
 
         if (body.purchaseAsBusinessDefault !== undefined) {
+            if (body.purchaseAsBusinessDefault === true) {
+                // Check if user is business verified in the DB
+                const currentProfile = await prisma.profile.findUnique({
+                    where: { userId },
+                    select: { businessVerified: true }
+                });
+
+                if (!currentProfile || !currentProfile.businessVerified) {
+                    return NextResponse.json(
+                        { error: 'No verificado: Solo las cuentas de empresa verificadas pueden activar esta opción.' },
+                        { status: 400 }
+                    );
+                }
+            }
             profileData.isBusinessAccount = body.purchaseAsBusinessDefault;
         }
 
@@ -289,6 +303,37 @@ export async function POST(request: NextRequest) {
         console.error('Error changing password:', error);
         return NextResponse.json(
             { error: 'Error al cambiar la contraseña' },
+            { status: 500 }
+        );
+    }
+}
+
+// DELETE for revoking all sessions
+export async function DELETE(request: NextRequest) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session || !session.user) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        }
+
+        const userId = session.user.id;
+
+        // Increment the user's sessionVersion to invalidate all other JWT tokens
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                sessionVersion: {
+                    increment: 1
+                }
+            }
+        });
+
+        return NextResponse.json({ message: 'Todas las sesiones cerradas exitosamente' });
+    } catch (error) {
+        console.error('Error invalidating sessions:', error);
+        return NextResponse.json(
+            { error: 'Error al cerrar las sesiones' },
             { status: 500 }
         );
     }

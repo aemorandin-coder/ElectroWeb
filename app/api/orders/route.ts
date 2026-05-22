@@ -7,8 +7,10 @@ import {
   createNotification,
   notifyOrderConfirmed,
   notifyOrderShipped,
-  notifyOrderDelivered
+  notifyOrderDelivered,
+  notifyAdminsNewOrder
 } from '@/lib/notifications';
+import { sendNewOrderAlert } from '@/lib/admin-alerts';
 import { OrderStatus, PaymentStatus } from '@prisma/client';
 import {
   sendEmail,
@@ -446,15 +448,30 @@ export async function POST(request: NextRequest) {
 
     // Send notifications (outside transaction to avoid failures)
     if (result) {
-      // Stock notifications would go here if we extracted them
-
-      // Create notification for new order
-      // Create notification for new order
+      // Notify customer order confirmed
       await notifyOrderConfirmed(
         body.userId || session.user.id,
         orderNumber,
         result.id
       );
+
+      // Notify all admins in-app about new order
+      notifyAdminsNewOrder(
+        result.user?.name || 'Cliente',
+        orderNumber,
+        Number(result.totalUSD)
+      ).catch(() => {});
+
+      // Send email alert to admin alert emails (fire-and-forget)
+      sendNewOrderAlert({
+        orderNumber,
+        customerName: result.user?.name || 'Cliente',
+        customerEmail: result.user?.email || '',
+        total: Number(result.totalUSD || body.totalUSD || body.total),
+        paymentMethod: body.paymentMethod || 'N/A',
+        itemCount: body.items?.length || 0,
+        baseUrl: process.env.NEXTAUTH_URL,
+      }).catch(() => {});
 
       if (body.paymentMethod === 'WALLET') {
         await createNotification({

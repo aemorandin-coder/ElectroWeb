@@ -19,6 +19,8 @@ interface SiteSettings {
   tiktok?: string;
   telegram?: string;
   youtube?: string;
+  rif?: string;
+  legalName?: string;
 }
 
 const SEED_PHONES = ['584241234567', '4241234567'];
@@ -37,6 +39,9 @@ export default function Footer() {
       .then(data => setSettings(data))
       .catch(() => {});
   }, []);
+
+  // Sanitizar el número de WhatsApp (eliminar +, espacios, guiones)
+  const waNumber = settings?.whatsapp?.replace(/\D/g, '') || '';
 
   return (
     <footer className="bg-[#212529] text-white pt-10 pb-20 lg:pb-8">
@@ -97,6 +102,7 @@ export default function Footer() {
                 ['Gift Cards', '/gift-cards'],
                 ['Categorías', '/categorias'],
                 ['Cursos', '/cursos'],
+                ['Enseña en ElectroShop', '/creator'],
               ].map(([l, h]) => (
                 <li key={h}>
                   <Link href={h} className="hover:text-[#2a63cd] transition-colors">{l}</Link>
@@ -139,9 +145,10 @@ export default function Footer() {
                   </a>
                 </li>
               )}
-              {settings?.whatsapp && !isSeedPhone(settings.whatsapp) && (
+              {waNumber && !isSeedPhone(waNumber) && (
                 <li>
-                  <a href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noopener noreferrer"
+                  {/* FIX #3: número sanitizado con .replace(/\D/g,'') */}
+                  <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
                     className="hover:text-[#2a63cd] flex justify-center md:justify-start items-center gap-2">
                     <FiMessageCircle className="w-4 h-4 flex-shrink-0" /> WhatsApp
                   </a>
@@ -159,9 +166,20 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
+        {/* Bottom Bar — ahora con RIF y Razón Social */}
         <div className="pt-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
-          <p>© {currentYear} {settings?.companyName || 'Electro Shop Morandin C.A.'} Todos los derechos reservados.</p>
+          <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3 text-center sm:text-left">
+            <p>© {currentYear} {settings?.companyName || 'Electro Shop Morandin C.A.'} Todos los derechos reservados.</p>
+            {(settings?.rif || settings?.legalName) && (
+              <span className="hidden sm:inline text-gray-600">·</span>
+            )}
+            {settings?.legalName && (
+              <p className="text-gray-500">{settings.legalName}</p>
+            )}
+            {settings?.rif && (
+              <p className="text-gray-500">RIF: {settings.rif}</p>
+            )}
+          </div>
           <div className="flex gap-4">
             <Link href="/terminos" className="hover:text-[#2a63cd] transition-colors">Términos</Link>
             <Link href="/privacidad" className="hover:text-[#2a63cd] transition-colors">Privacidad</Link>

@@ -223,13 +223,13 @@ export default function CustomersPage() {
   const getVerificationStatusBadge = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full flex items-center gap-1"><FiCheck className="w-3 h-3" /> Verificado</span>;
+        return <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-700 text-xs font-bold rounded-full border border-emerald-500/20 flex items-center gap-1"><FiCheck className="w-3 h-3" /> Verificado</span>;
       case 'PENDING':
-        return <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full flex items-center gap-1">Pendiente</span>;
+        return <span className="px-2.5 py-1 bg-amber-500/10 text-amber-700 text-xs font-bold rounded-full border border-amber-500/20 flex items-center gap-1">Pendiente</span>;
       case 'REJECTED':
-        return <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full flex items-center gap-1"><FiX className="w-3 h-3" /> Rechazado</span>;
+        return <span className="px-2.5 py-1 bg-rose-500/10 text-rose-700 text-xs font-bold rounded-full border border-rose-500/20 flex items-center gap-1"><FiX className="w-3 h-3" /> Rechazado</span>;
       default:
-        return <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full">No verificado</span>;
+        return <span className="px-2.5 py-1 bg-slate-500/10 text-slate-600 text-xs font-bold rounded-full border border-slate-500/20">No verificado</span>;
     }
   };
 
@@ -336,8 +336,8 @@ export default function CustomersPage() {
 
       {/* Scrollable Table Section */}
       <div className="flex-1 overflow-y-auto pr-2 mt-4">
-        <div className="bg-white rounded-xl border border-[#e9ecef] shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-[#e9ecef] bg-gradient-to-r from-[#f8f9fa] to-white">
+        <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/50 shadow-xl overflow-hidden">
+          <div className="p-4 border-b border-white/40 bg-gradient-to-r from-white/30 to-white/10">
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6a6c6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -348,7 +348,7 @@ export default function CustomersPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Buscar clientes por nombre, email..."
-                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-[#dee2e6] rounded-lg focus:outline-none focus:border-[#2a63cd] focus:ring-2 focus:ring-[#2a63cd]/10 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-white/70 backdrop-blur-sm border border-white/60 rounded-xl focus:outline-none focus:border-[#2a63cd] focus:ring-2 focus:ring-[#2a63cd]/10 shadow-sm transition-all"
                 />
               </div>
             </div>
@@ -441,20 +441,20 @@ export default function CustomersPage() {
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-[#f8f9fa]">
+                  <thead className="bg-white/40 backdrop-blur-sm border-b border-white/20">
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6a6c6b]">Cliente</th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6a6c6b]">Email</th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6a6c6b]">Tipo</th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6a6c6b]">Registro</th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6a6c6b]">Órdenes</th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6a6c6b]">Total</th>
-                      <th className="px-4 py-2 text-right text-xs font-semibold text-[#6a6c6b]">Acciones</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Cliente</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Email</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Tipo</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Registro</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Órdenes</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Total</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-[#6a6c6b]">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#e9ecef]">
+                  <tbody className="divide-y divide-white/20">
                     {customers.map((customer: any) => (
-                      <tr key={customer.id} className="hover:bg-[#f8f9fa] transition-colors">
+                      <tr key={customer.id} className="hover:bg-white/50 transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             {customer.image ? (
@@ -472,11 +472,11 @@ export default function CustomersPage() {
                         <td className="px-4 py-3 text-[#6a6c6b]">{customer.email}</td>
                         <td className="px-4 py-3">
                           {customer.profile?.customerType === 'COMPANY' ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-100">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500/10 text-blue-700 text-xs font-semibold rounded-full border border-blue-500/20">
                               <FiBriefcase className="w-3 h-3" /> Empresa
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-50 text-gray-600 text-xs rounded-full border border-gray-100">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-500/10 text-slate-600 text-xs font-semibold rounded-full border border-slate-500/20">
                               <FiUser className="w-3 h-3" /> Persona
                             </span>
                           )}

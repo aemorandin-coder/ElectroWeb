@@ -156,7 +156,7 @@ export default function AddressesPage() {
             </div>
             <div>
               <h1 className="text-base lg:text-2xl font-bold">Direcciones</h1>
-              <p className="text-[10px] lg:text-sm text-blue-100">{addresses.length} guardadas</p>
+              <p className="text-xs lg:text-sm text-blue-100">{addresses.length} guardadas</p>
             </div>
           </div>
           <button
@@ -290,7 +290,7 @@ export default function AddressesPage() {
                     <h3 className="text-base lg:text-lg font-bold">
                       {editingAddress ? 'Editar Dirección' : 'Nueva Dirección'}
                     </h3>
-                    <p className="text-[10px] lg:text-sm text-white/80">Completa los datos de envío</p>
+                    <p className="text-xs lg:text-sm text-white/80">Completa los datos de envío</p>
                   </div>
                 </div>
                 {/* Save & Close Icons in Header - Mobile Only */}
@@ -333,9 +333,9 @@ export default function AddressesPage() {
                       >
                         <TypeIcon className={`w-4 h-4 lg:w-5 lg:h-5 mb-1 ${formData.type === type.id ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'
                           }`} />
-                        <p className={`text-[11px] lg:text-sm font-bold leading-tight mb-0.5 ${formData.type === type.id ? 'text-[#2a63cd]' : 'text-[#212529]'
+                        <p className={`text-xs lg:text-sm font-bold leading-tight mb-0.5 ${formData.type === type.id ? 'text-[#2a63cd]' : 'text-[#212529]'
                           }`}>{type.label}</p>
-                        <p className={`text-[9px] ${formData.type === type.id ? 'text-[#2a63cd]/70' : 'text-[#6a6c6b]'}`}>{type.description}</p>
+                        <p className={`text-xs ${formData.type === type.id ? 'text-[#2a63cd]/70' : 'text-[#6a6c6b]'}`}>{type.description}</p>
                       </button>
                     );
                   })}
@@ -351,24 +351,30 @@ export default function AddressesPage() {
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-[#212529] mb-2">Nombre de Agencia *</label>
-                      <input
-                        type="text"
-                        value={formData.agencyName || ''}
-                        onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
-                        placeholder={formData.type === 'ZOOM' ? 'Zoom Centro Guanare' : 'MRW Guanare'}
-                        className="w-full px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd]"
-                      />
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Nombre de Agencia *</label>
+                      <div className="relative">
+                        <FiPackage className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={formData.agencyName || ''}
+                          onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
+                          placeholder={formData.type === 'ZOOM' ? 'Zoom Centro Guanare' : 'MRW Guanare'}
+                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#212529] mb-2">Código de Agencia</label>
-                      <input
-                        type="text"
-                        value={formData.agencyCode || ''}
-                        onChange={(e) => setFormData({ ...formData, agencyCode: e.target.value })}
-                        placeholder="Ej: GUA-001"
-                        className="w-full px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd]"
-                      />
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Código de Agencia</label>
+                      <div className="relative">
+                        <FiInfo className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={formData.agencyCode || ''}
+                          onChange={(e) => setFormData({ ...formData, agencyCode: e.target.value })}
+                          placeholder="Ej: GUA-001"
+                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -377,61 +383,76 @@ export default function AddressesPage() {
               <div className="space-y-4">
                 {/* Address */}
                 <div>
-                  <label className="block text-sm font-medium text-[#212529] mb-2">
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
                     {isShippingCompany ? 'Dirección de la Agencia *' : 'Dirección *'}
                   </label>
-                  <input
-                    type="text"
-                    value={formData.addressLine1}
-                    onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
-                    placeholder={isShippingCompany ? 'Av. Principal, Centro Comercial...' : 'Calle, Avenida, Casa/Apto...'}
-                    className="w-full px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd]"
-                  />
+                  <div className="relative">
+                    <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={formData.addressLine1}
+                      onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
+                      placeholder={isShippingCompany ? 'Av. Principal, Centro Comercial...' : 'Calle, Avenida, Casa/Apto...'}
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#212529] mb-2">Referencia (Opcional)</label>
-                  <input
-                    type="text"
-                    value={formData.addressLine2}
-                    onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
-                    placeholder="Punto de referencia, local, piso..."
-                    className="w-full px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd]"
-                  />
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Referencia (Opcional)</label>
+                  <div className="relative">
+                    <FiInfo className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={formData.addressLine2}
+                      onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
+                      placeholder="Punto de referencia, local, piso..."
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                    />
+                  </div>
                 </div>
 
                 {/* City & State */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#212529] mb-2">Ciudad *</label>
-                    <input
-                      type="text"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="w-full px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd]"
-                    />
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Ciudad *</label>
+                    <div className="relative">
+                      <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#212529] mb-2">Estado *</label>
-                    <input
-                      type="text"
-                      value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                      className="w-full px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd]"
-                    />
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Estado *</label>
+                    <div className="relative">
+                      <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={formData.state}
+                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                        className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 {/* Postal Code */}
                 <div>
-                  <label className="block text-sm font-medium text-[#212529] mb-2">Código Postal</label>
-                  <input
-                    type="text"
-                    value={formData.postalCode}
-                    onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                    placeholder="(Opcional)"
-                    className="w-full px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd]"
-                  />
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Código Postal</label>
+                  <div className="relative">
+                    <FiInfo className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={formData.postalCode}
+                      onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                      placeholder="(Opcional)"
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                    />
+                  </div>
                 </div>
 
                 {/* Default */}

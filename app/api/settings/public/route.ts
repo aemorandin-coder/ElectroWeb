@@ -154,6 +154,9 @@ export async function GET() {
       maintenanceMessage: settings.maintenanceMessage,
       maintenanceStartTime: settings.maintenanceStartTime,
       maintenanceEndTime: settings.maintenanceEndTime,
+      // Legal / Company Identity
+      rif: settings.rif,
+      legalName: settings.legalName,
       // Hot Ad / Promotional Popup
       hotAdEnabled: settings.hotAdEnabled,
       hotAdImage: settings.hotAdImage,

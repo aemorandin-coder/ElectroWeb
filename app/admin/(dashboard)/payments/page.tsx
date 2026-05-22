@@ -2,15 +2,61 @@
 
 import { useState, useEffect, useRef } from 'react';
 import {
-    FiPlus, FiEdit2, FiTrash2, FiCreditCard, FiSmartphone, FiDollarSign,
-    FiMoreHorizontal, FiToggleLeft, FiToggleRight, FiUpload, FiImage,
-    FiCheck, FiX, FiInfo, FiMove
+    FiPlus, FiEdit2, FiTrash2, FiCreditCard, FiToggleLeft, FiToggleRight,
+    FiCheck, FiX, FiInfo
 } from 'react-icons/fi';
-import { SiPaypal, SiBitcoin, SiEthereum } from 'react-icons/si';
-import { FaBuildingColumns, FaMobile, FaQrcode, FaMoneyBillWave } from 'react-icons/fa6';
+import { FaQrcode } from 'react-icons/fa6';
+import * as FiIcons from 'react-icons/fi';
+import * as FaIcons from 'react-icons/fa';
+import * as Fa6Icons from 'react-icons/fa6';
+import * as MdIcons from 'react-icons/md';
+import * as BsIcons from 'react-icons/bs';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
+
+const renderCustomIcon = (iconName: string, className = "w-7 h-7") => {
+    if (!iconName) return null;
+    
+    let name = iconName.trim();
+    if (name.includes('/') || name.includes('http')) {
+        const match = name.match(/q=([a-zA-Z0-9]+)/) || name.match(/\/([a-zA-Z0-9]+)$/);
+        if (match && match[1]) {
+            name = match[1];
+        }
+    }
+    
+    if (name.startsWith('Fi') && (FiIcons as any)[name]) {
+        const IconComponent = (FiIcons as any)[name];
+        return <IconComponent className={className} />;
+    }
+    if (name.startsWith('Fa') && (Fa6Icons as any)[name]) {
+        const IconComponent = (Fa6Icons as any)[name];
+        return <IconComponent className={className} />;
+    }
+    if (name.startsWith('Fa') && (FaIcons as any)[name]) {
+        const IconComponent = (FaIcons as any)[name];
+        return <IconComponent className={className} />;
+    }
+    if (name.startsWith('Md') && (MdIcons as any)[name]) {
+        const IconComponent = (MdIcons as any)[name];
+        return <IconComponent className={className} />;
+    }
+    if (name.startsWith('Bs') && (BsIcons as any)[name]) {
+        const IconComponent = (BsIcons as any)[name];
+        return <IconComponent className={className} />;
+    }
+
+    const allLibs = [FiIcons, Fa6Icons, FaIcons, MdIcons, BsIcons];
+    for (const lib of allLibs) {
+        if ((lib as any)[name]) {
+            const IconComponent = (lib as any)[name];
+            return <IconComponent className={className} />;
+        }
+    }
+
+    return null;
+};
 
 interface PaymentMethod {
     id: string;
@@ -37,77 +83,110 @@ interface PaymentMethod {
 
 const PAYMENT_TYPE_CONFIG: Record<string, { icon: React.ReactNode; label: string; color: string; bgColor: string }> = {
     BANK_TRANSFER: {
-        icon: <FaBuildingColumns className="w-5 h-5" />,
+        icon: (
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="10" width="18" height="11" rx="2" />
+                <path d="M3 6h18L12 2 3 6z" />
+                <line x1="8" y1="14" x2="8" y2="17" />
+                <line x1="12" y1="14" x2="12" y2="17" />
+                <line x1="16" y1="14" x2="16" y2="17" />
+            </svg>
+        ),
         label: 'Transferencia Bancaria',
-        color: 'text-[#2a63cd]',
-        bgColor: 'bg-blue-100'
+        color: 'text-[#2563EB]',
+        bgColor: 'bg-blue-50 border border-blue-100/50'
     },
     MOBILE_PAYMENT: {
-        icon: <FaMobile className="w-5 h-5" />,
+        icon: (
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="3" />
+                <path d="M12 18h.01" strokeWidth="3" />
+                <path d="M9 7h6" />
+                <path d="M9 11h6" />
+                <path d="M12 7v8" />
+                <circle cx="12" cy="11" r="2.5" fill="currentColor" fillOpacity="0.15" />
+            </svg>
+        ),
         label: 'Pago Móvil',
-        color: 'text-[#2a63cd]',
-        bgColor: 'bg-blue-100'
+        color: 'text-[#0EA5E9]',
+        bgColor: 'bg-sky-50 border border-sky-100/50'
     },
     ZELLE: {
-        // Zelle official logo - stylized Z with clean lines
         icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M13.559 24H6.108c-.911 0-1.396-1.053-.79-1.716l8.487-9.313H5.835a.835.835 0 01-.835-.835v-2.272c0-.461.374-.834.835-.834h7.401c.912 0 1.397 1.053.79 1.716L5.574 20.03h7.985c.461 0 .835.374.835.835v2.301a.835.835 0 01-.835.834z" />
-                <path d="M10.452 0h7.45c.912 0 1.397 1.053.79 1.716L10.23 11.033h7.949c.46 0 .834.373.834.834v2.272a.835.835 0 01-.834.835h-7.451c-.912 0-1.396-1.053-.79-1.716l8.417-9.284H10.452a.835.835 0 01-.835-.835V.835c0-.461.373-.835.835-.835z" />
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13.559 24h-2.841a.483.483 0 0 1-.483-.483v-2.765H5.638a.667.667 0 0 1-.666-.666v-2.234a.67.67 0 0 1 .142-.412l8.139-10.382h-7.25a.667.667 0 0 1-.667-.667V3.914c0-.367.299-.666.666-.666h4.23V.483c0-.266.217-.483.483-.483h2.841c.266 0 .483.217.483.483v2.765h4.323c.367 0 .666.299.666.666v2.137a.67.67 0 0 1-.141.41l-8.19 10.481h7.665c.367 0 .666.299.666.666v2.477a.667.667 0 0 1-.666.667h-4.32v2.765a.483.483 0 0 1-.483.483Z" />
             </svg>
         ),
         label: 'Zelle',
-        color: 'text-[#6D1ED4]',
-        bgColor: 'bg-purple-100'
+        color: 'text-[#7414CA]',
+        bgColor: 'bg-purple-50 border border-purple-100/50'
     },
     ZINLI: {
-        // Zinli official logo - stylized Z with dots
         icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M4 6h12l-8 12h12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                <circle cx="19" cy="6" r="2" fill="currentColor" />
-                <circle cx="5" cy="18" r="2" fill="currentColor" />
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
+                <rect width="24" height="24" rx="6" fill="#FF5E00" />
+                <path d="M7 8h10l-8 8h8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
         ),
         label: 'Zinli',
-        color: 'text-[#00D4AA]',
-        bgColor: 'bg-teal-100'
+        color: 'text-[#FF5E00]',
+        bgColor: 'bg-orange-50 border border-orange-100/50'
     },
     PAYPAL: {
-        icon: <SiPaypal className="w-5 h-5" />,
+        icon: (
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
+                <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.354C5.137 2.129 6.192 1.2 7.436 1.2h7.822c3.967 0 6.027 1.954 5.568 5.617-.468 3.738-2.825 5.922-6.529 5.922h-3.41l-.973 6.182a.64.64 0 0 1-.633.54H7.076z" fill="#003087" />
+                <path d="M12.276 14.863h-4.63a.64.64 0 0 1-.633-.54l-1.077 6.843a.64.64 0 0 0 .633.74h3.69c1.037 0 1.92-.777 2.08-1.802l1.01-6.425a.642.642 0 0 0-.633-.74c1.173.067 2.502.067 3.822 0 3.09 0 5.437-1.464 5.945-4.717.272-1.745-.04-3.155-.91-4.148-1.034 2.91-3.23 4.79-6.31 4.79z" fill="#0079C1" opacity="0.85" />
+            </svg>
+        ),
         label: 'PayPal',
-        color: 'text-[#2a63cd]',
-        bgColor: 'bg-blue-100'
+        color: 'text-[#003087]',
+        bgColor: 'bg-blue-50 border border-blue-100/50'
     },
     CRYPTO: {
-        icon: <SiBitcoin className="w-5 h-5" />,
+        icon: (
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.633 11.238c-1.393-4.777-6.24-7.51-11.026-6.12L11.238 0l-2.73.682.73 2.923c-.718.18-1.442.368-2.164.558L6.34 1.24l-2.73.682.723 2.89C2.793 5.25.753 6.136.753 6.136l-1.393 5.568s1.637-.753 1.602-.718c.895-.41 1.258.106 1.433.568l2.628 10.518c.106.39-.07.893-.768 1.155.034.034-1.602.733-1.602.733L1.08 22.86l4.085 1.023.73-2.923c.753-.18 1.488-.36 2.21-.543l.732 2.927 2.73-.683-.73-2.922c4.664-.882 7.747-2.67 6.822-7.525-.745-3.91-3.52-5.01-6.196-4.668.683-.875 1.205-1.92.934-3.784zm-3.69 7.03c-.848 3.413-5.26 1.572-6.745 1.2l1.373-5.508c1.484.37 6.275 1.102 5.372 4.308zm.934-6.425c-.777 3.12-4.462 1.536-5.7 1.228l1.248-5.006c1.238.307 5.275.877 4.452 3.778z"/>
+            </svg>
+        ),
         label: 'Criptomonedas',
-        color: 'text-[#2a63cd]',
-        bgColor: 'bg-blue-100'
+        color: 'text-[#F7931A]',
+        bgColor: 'bg-amber-50 border border-amber-100/50'
     },
     CASH: {
-        icon: <FaMoneyBillWave className="w-5 h-5" />,
+        icon: (
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 8h18M3 12h18" opacity="0.3" />
+                <rect x="2" y="6" width="20" height="12" rx="2" />
+                <circle cx="12" cy="12" r="3" />
+                <path d="M6 12h.01M18 12h.01" strokeWidth="3" />
+            </svg>
+        ),
         label: 'Efectivo',
-        color: 'text-[#2a63cd]',
-        bgColor: 'bg-blue-100'
+        color: 'text-[#10B981]',
+        bgColor: 'bg-emerald-50 border border-emerald-100/50'
     },
     MERCANTIL_PANAMA: {
-        // Mercantil Panamá logo real: Ala/media luna curva azul-naranja
         icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path d="M4 12c0-4.4 3.6-8 8-8 2.2 0 4.2.9 5.7 2.3L12 12l5.7 5.7c-1.5 1.4-3.5 2.3-5.7 2.3-4.4 0-8-3.6-8-8z" fill="currentColor" />
-                <path d="M12 12l5.7-5.7c1.4 1.5 2.3 3.5 2.3 5.7s-.9 4.2-2.3 5.7L12 12z" fill="currentColor" opacity="0.6" />
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
+                <path d="M4 12c0-4.4 3.6-8 8-8 2.2 0 4.2.9 5.7 2.3L12 12l5.7 5.7c-1.5 1.4-3.5 2.3-5.7 2.3-4.4 0-8-3.6-8-8z" fill="#002D62" />
+                <path d="M12 12l5.7-5.7c1.4 1.5 2.3 3.5 2.3 5.7s-.9 4.2-2.3 5.7L12 12z" fill="#FF6B00" />
             </svg>
         ),
         label: 'Mercantil Panamá',
-        color: 'text-[#2a63cd]',
-        bgColor: 'bg-blue-100'
+        color: 'text-[#002D62]',
+        bgColor: 'bg-blue-50 border border-blue-100/50'
     },
     OTHER: {
-        icon: <FiCreditCard className="w-5 h-5" />,
+        icon: (
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
+            </svg>
+        ),
         label: 'Otro',
-        color: 'text-[#2a63cd]',
-        bgColor: 'bg-blue-100'
+        color: 'text-[#64748B]',
+        bgColor: 'bg-slate-50 border border-slate-100/50'
     },
 };
 
@@ -121,6 +200,7 @@ export default function PaymentsPage() {
     const [uploadingLogo, setUploadingLogo] = useState(false);
     const qrInputRef = useRef<HTMLInputElement>(null);
     const logoInputRef = useRef<HTMLInputElement>(null);
+    const [logoMode, setLogoMode] = useState<'upload' | 'url' | 'icon'>('upload');
 
     const [formData, setFormData] = useState<Partial<PaymentMethod>>({
         type: 'BANK_TRANSFER',
@@ -258,6 +338,16 @@ export default function PaymentsPage() {
     const handleEdit = (method: PaymentMethod) => {
         setEditingMethod(method);
         setFormData(method);
+        const logoVal = method.logo || '';
+        if (logoVal.includes('react-icons.github.io') || (!logoVal.startsWith('/') && !logoVal.startsWith('http') && logoVal.length > 0)) {
+            setLogoMode('icon');
+        } else if (logoVal.includes('/uploads/') || logoVal.includes('/payment-methods/')) {
+            setLogoMode('upload');
+        } else if (logoVal.startsWith('/') || logoVal.startsWith('http')) {
+            setLogoMode('url');
+        } else {
+            setLogoMode('upload');
+        }
         setIsModalOpen(true);
     };
 
@@ -265,6 +355,7 @@ export default function PaymentsPage() {
         setIsModalOpen(false);
         setEditingMethod(null);
         setFormData({ type: 'BANK_TRANSFER', name: '', isActive: true, sortOrder: 0 });
+        setLogoMode('upload');
     };
 
     const toggleStatus = async (method: PaymentMethod) => {
@@ -407,9 +498,13 @@ export default function PaymentsPage() {
 
                                     {/* Header */}
                                     <div className="flex items-start gap-4 mb-4">
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${config.bgColor} ${config.color}`}>
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-sm ${config.bgColor} ${config.color}`}>
                                             {method.logo ? (
-                                                <Image src={method.logo} alt={method.name} width={32} height={32} className="rounded-lg object-cover" />
+                                                (method.logo.startsWith('/') || method.logo.startsWith('http')) && !method.logo.includes('react-icons.github.io') ? (
+                                                    <Image src={method.logo} alt={method.name} width={32} height={32} className="rounded-lg object-cover" />
+                                                ) : (
+                                                    renderCustomIcon(method.logo, "w-6 h-6") || config.icon
+                                                )
                                             ) : (
                                                 config.icon
                                             )}
@@ -562,7 +657,7 @@ export default function PaymentsPage() {
                                                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                                         }`}
                                                 >
-                                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-1.5 ${config.bgColor} ${config.color}`}>
+                                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-1.5 ${config.bgColor} ${config.color}`}>
                                                         {config.icon}
                                                     </div>
                                                     <span className={`text-[10px] font-medium leading-tight text-center line-clamp-2 ${formData.type === type ? 'text-[#2a63cd]' : 'text-gray-600'}`}>
@@ -584,6 +679,171 @@ export default function PaymentsPage() {
                                             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] text-base"
                                             required
                                         />
+                                    </div>
+
+                                    {/* Logo Selection / Icon */}
+                                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-900 mb-2">Logo o Icono del Método de Pago</label>
+                                            <p className="text-xs text-gray-500 mb-3">
+                                                Selecciona cómo deseas definir el logo/icono para este método de pago.
+                                            </p>
+                                        </div>
+
+                                        <div className="flex gap-4 border-b border-gray-200 pb-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setLogoMode('upload')}
+                                                className={`text-sm font-medium pb-2 border-b-2 px-1 transition-all ${
+                                                    logoMode === 'upload'
+                                                        ? 'border-[#2a63cd] text-[#2a63cd]'
+                                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                                }`}
+                                            >
+                                                Subir desde PC
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setLogoMode('url')}
+                                                className={`text-sm font-medium pb-2 border-b-2 px-1 transition-all ${
+                                                    logoMode === 'url'
+                                                        ? 'border-[#2a63cd] text-[#2a63cd]'
+                                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                                }`}
+                                            >
+                                                Imagen por URL
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setLogoMode('icon')}
+                                                className={`text-sm font-medium pb-2 border-b-2 px-1 transition-all ${
+                                                    logoMode === 'icon'
+                                                        ? 'border-[#2a63cd] text-[#2a63cd]'
+                                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                                }`}
+                                            >
+                                                Librería React Icons
+                                            </button>
+                                        </div>
+
+                                        {logoMode === 'upload' && (
+                                            <div className="flex items-start gap-4 pt-2">
+                                                {formData.logo && (formData.logo.startsWith('/') || formData.logo.startsWith('http')) && !formData.logo.includes('react-icons.github.io') ? (
+                                                    <div className="relative flex-shrink-0">
+                                                        <Image
+                                                            src={formData.logo}
+                                                            alt="Logo"
+                                                            width={80}
+                                                            height={80}
+                                                            className="rounded-lg border border-gray-200 object-cover w-20 h-20"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData(prev => ({ ...prev, logo: undefined }))}
+                                                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                                                        >
+                                                            <FiX className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div
+                                                        onClick={() => logoInputRef.current?.click()}
+                                                        className="w-20 h-20 flex-shrink-0 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#2a63cd] hover:bg-blue-50/50 transition-colors"
+                                                    >
+                                                        {uploadingLogo ? (
+                                                            <div className="w-6 h-6 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+                                                        ) : (
+                                                            <>
+                                                                <FiPlus className="w-6 h-6 text-gray-400 mb-1" />
+                                                                <span className="text-[10px] text-gray-500 text-center">Subir Imagen</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                <input
+                                                    ref={logoInputRef}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'logo')}
+                                                    className="hidden"
+                                                />
+                                                <div className="flex-1">
+                                                    <p className="text-xs text-gray-600 mb-1">
+                                                        Sube una imagen cuadrada de tu banco o pasarela de pago para mostrarla en el checkout.
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-400">Formatos recomendados: PNG, JPG. Máx. 1MB.</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {logoMode === 'url' && (
+                                            <div className="space-y-3 pt-2">
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Enlace directo a la imagen (URL)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.logo || ''}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, logo: e.target.value }))}
+                                                        placeholder="Ej: https://mi-sitio.com/imagenes/visa.png"
+                                                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                                    />
+                                                </div>
+                                                {formData.logo && (formData.logo.startsWith('/') || formData.logo.startsWith('http')) && !formData.logo.includes('react-icons.github.io') && (
+                                                    <div className="flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-200">
+                                                        <div className="relative w-12 h-12 flex-shrink-0 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+                                                            <img src={formData.logo} alt="Preview URL" className="w-full h-full object-cover" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-semibold text-gray-700">Vista previa de la imagen</p>
+                                                            <p className="text-[10px] text-gray-400">Cargada desde la URL ingresada.</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {logoMode === 'icon' && (
+                                            <div className="space-y-3 pt-2">
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <label className="block text-xs font-semibold text-gray-700">Nombre o Enlace de React Icon</label>
+                                                        <a
+                                                            href="https://react-icons.github.io/react-icons/"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-[10px] text-[#2a63cd] hover:underline font-semibold flex items-center gap-1"
+                                                        >
+                                                            <FiInfo className="w-3.5 h-3.5" />
+                                                            Ver catálogo React Icons ↗
+                                                        </a>
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.logo || ''}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, logo: e.target.value }))}
+                                                        placeholder="Ej: FaCcVisa, FiCreditCard, MdPayment o https://react-icons.github.io/react-icons/search/#q=FiCreditCard"
+                                                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-200">
+                                                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
+                                                        {formData.logo ? (
+                                                            renderCustomIcon(formData.logo, "w-6 h-6") || <FiCreditCard className="w-6 h-6" />
+                                                        ) : (
+                                                            <FiCreditCard className="w-6 h-6" />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-gray-700">Vista previa del icono</p>
+                                                        <p className="text-[10px] text-gray-400">
+                                                            {formData.logo && renderCustomIcon(formData.logo)
+                                                                ? `Icono "${formData.logo.includes('http') ? formData.logo.split('q=').pop() : formData.logo}" cargado con éxito.`
+                                                                : 'Introduce un nombre válido de la librería React Icons (sujeta a fa, fi, md, bs, fa6).'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Conditional Fields based on Type */}

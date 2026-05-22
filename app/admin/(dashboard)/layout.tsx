@@ -2,15 +2,25 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import { MdAdminPanelSettings } from 'react-icons/md';
 
 interface NavigationItem {
   name: string;
   href: string;
   icon: React.ReactNode;
   permission?: string;
+  countKey?: keyof SidebarCounts;
+}
+
+interface SidebarCounts {
+  pendingOrders: number;
+  pendingTransactions: number;
+  pendingInquiries: number;
+  pendingDiscounts: number;
+  pendingCreators: number;
 }
 
 export default function AdminLayout({
@@ -24,6 +34,13 @@ export default function AdminLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
+  const [sidebarCounts, setSidebarCounts] = useState<SidebarCounts>({
+    pendingOrders: 0,
+    pendingTransactions: 0,
+    pendingInquiries: 0,
+    pendingDiscounts: 0,
+    pendingCreators: 0,
+  });
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -50,6 +67,43 @@ export default function AdminLayout({
       return () => clearTimeout(timer);
     }
   }, [pathname, prevPathname]);
+
+  // Fetch sidebar badge counts — poll every 30 seconds
+  const fetchSidebarCounts = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/sidebar-counts?t=${Date.now()}`, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setSidebarCounts(data);
+      }
+    } catch {
+      // Silently fail — non-critical
+    }
+  }, []);
+
+  // Fetch sidebar counts when pathname changes (navigating refreshes counts immediately)
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchSidebarCounts();
+    }
+  }, [status, pathname, fetchSidebarCounts]);
+
+  // Listen to custom refresh events and run polling
+  useEffect(() => {
+    if (status === 'authenticated') {
+      const handleRefresh = () => {
+        fetchSidebarCounts();
+      };
+      
+      window.addEventListener('refresh-sidebar-counts', handleRefresh);
+      const interval = setInterval(fetchSidebarCounts, 30000);
+      
+      return () => {
+        window.removeEventListener('refresh-sidebar-counts', handleRefresh);
+        clearInterval(interval);
+      };
+    }
+  }, [status, fetchSidebarCounts]);
 
   if (status === 'loading') {
     return (
@@ -110,6 +164,7 @@ export default function AdminLayout({
         </svg>
       ),
       permission: 'MANAGE_ORDERS',
+      countKey: 'pendingOrders',
     },
     {
       name: 'Transacciones',
@@ -120,6 +175,7 @@ export default function AdminLayout({
         </svg>
       ),
       permission: 'MANAGE_ORDERS',
+      countKey: 'pendingTransactions',
     },
     {
       name: 'Gift Cards',
@@ -152,16 +208,7 @@ export default function AdminLayout({
       permission: 'MANAGE_SETTINGS',
     },
     {
-      name: 'Notificaciones',
-      href: '/admin/notifications',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Centro de Consultas',
+      name: 'Mensajes y Alertas',
       href: '/admin/inquiries',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,6 +216,7 @@ export default function AdminLayout({
         </svg>
       ),
       permission: 'MANAGE_CONTENT',
+      countKey: 'pendingInquiries',
     },
     {
       name: 'Marketing y Contenido',
@@ -176,6 +224,17 @@ export default function AdminLayout({
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+        </svg>
+      ),
+      permission: 'MANAGE_CONTENT',
+      countKey: 'pendingCreators',
+    },
+    {
+      name: 'Trabajos Realizados',
+      href: '/admin/servicios',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg>
       ),
       permission: 'MANAGE_CONTENT',
@@ -189,6 +248,7 @@ export default function AdminLayout({
         </svg>
       ),
       permission: 'MANAGE_CONTENT',
+      countKey: 'pendingDiscounts',
     },
     {
       name: 'Documentos Legales',
@@ -276,15 +336,13 @@ export default function AdminLayout({
             {/* Logo */}
             <div className="flex items-center gap-3 px-6 py-5 border-b border-[#e9ecef]">
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2a63cd] shadow-md shadow-[#2a63cd]/20">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                </svg>
+                <MdAdminPanelSettings className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-[#212529]">
+                <h2 className="text-base font-bold text-[#212529]">
                   Electro Shop
                 </h2>
-                <p className="text-xs text-[#6a6c6b]">Admin Panel</p>
+                <p className="text-sm text-[#6a6c6b]">Admin Panel</p>
               </div>
             </div>
 
@@ -294,12 +352,13 @@ export default function AdminLayout({
                 {filteredNavigation.map((item, index) => {
                   const isActive = pathname === item.href ||
                     (item.href !== '/admin' && pathname.startsWith(item.href));
+                  const badgeCount = item.countKey ? sidebarCounts[item.countKey] : 0;
 
                   return (
                     <li key={item.name} style={{ animationDelay: `${index * 50}ms` }} className="animate-fadeIn">
                       <Link
                         href={item.href}
-                        className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${isActive
+                        className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium transition-all duration-300 ${isActive
                           ? 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white shadow-lg shadow-[#2a63cd]/30 scale-[1.02]'
                           : 'text-[#6a6c6b] hover:bg-[#f8f9fa] hover:text-[#212529] hover:scale-[1.01]'
                           }`}
@@ -307,7 +366,19 @@ export default function AdminLayout({
                         <span className={`relative z-10 transition-transform duration-300 ${isActive ? 'text-white scale-110' : 'text-[#6a6c6b] group-hover:scale-110'}`}>
                           {item.icon}
                         </span>
-                        <span className="relative z-10">{item.name}</span>
+                        <span className="relative z-10 flex-1">{item.name}</span>
+                        {/* Blue notification badge */}
+                        {badgeCount > 0 && (
+                          <span
+                            className={`relative z-10 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full transition-all duration-300 ${
+                              isActive
+                                ? 'bg-white text-[#2a63cd]'
+                                : 'bg-[#2a63cd] text-white'
+                            }`}
+                          >
+                            {badgeCount > 99 ? '99+' : badgeCount}
+                          </span>
+                        )}
                         {isActive && (
                           <span className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-lg shadow-lg"></span>
                         )}
@@ -325,22 +396,22 @@ export default function AdminLayout({
             <div className="border-t border-[#e9ecef] p-4">
               <div className="flex items-center gap-3 mb-3 px-2">
                 <div className="flex items-center justify-center w-9 h-9 rounded-full bg-[#f8f9fa] border border-[#dee2e6]">
-                  <span className="text-sm font-semibold text-[#2a63cd]">
+                  <span className="text-base font-semibold text-[#2a63cd]">
                     {session.user.email?.[0].toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#212529] truncate">
+                  <p className="text-base font-bold text-[#212529] truncate">
                     {session.user.name}
                   </p>
-                  <p className="text-xs text-[#6a6c6b] truncate">
+                  <p className="text-sm text-[#6a6c6b] truncate">
                     {session.user.email}
                   </p>
                 </div>
               </div>
               <button
                 onClick={handleSignOut}
-                className="group relative w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#f8f9fa] hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 text-[#6a6c6b] hover:text-red-600 text-sm font-medium rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] overflow-hidden"
+                className="group relative w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#f8f9fa] hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 text-[#6a6c6b] hover:text-red-600 text-base font-medium rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] overflow-hidden"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-red-500/0 to-red-500/0 group-hover:from-red-500/10 group-hover:to-red-500/0 transition-all duration-300"></span>
                 <svg className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:translate-x-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -371,7 +442,7 @@ export default function AdminLayout({
                 {/* Home Button */}
                 <Link
                   href="/"
-                  className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-semibold rounded-lg hover:shadow-lg hover:shadow-[#2a63cd]/30 transition-all duration-300 hover:scale-105 group overflow-hidden"
+                  className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-base font-semibold rounded-lg hover:shadow-lg hover:shadow-[#2a63cd]/30 transition-all duration-300 hover:scale-105 group overflow-hidden"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-[#1e4ba3] to-[#2a63cd] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                   <svg className="w-4 h-4 relative z-10 group-hover:translate-x-[-2px] transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -387,7 +458,7 @@ export default function AdminLayout({
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-[#f8f9fa] to-white rounded-full border border-[#e9ecef] shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
                   <div className={`w-2 h-2 rounded-full animate-pulse ${session.user.role === 'SUPER_ADMIN' ? 'bg-purple-500 shadow-sm shadow-purple-500/50' : session.user.role === 'ADMIN' ? 'bg-[#2a63cd] shadow-sm shadow-[#2a63cd]/50' : 'bg-[#6a6c6b]'
                     }`} />
-                  <span className="text-xs font-semibold text-[#212529]">
+                  <span className="text-sm font-semibold text-[#212529]">
                     {session.user.role === 'SUPER_ADMIN' ? 'Super Admin' :
                       session.user.role === 'ADMIN' ? 'Administrador' :
                         session.user.role === 'SUPPORT' ? 'Soporte' : 'Usuario'}
@@ -398,10 +469,10 @@ export default function AdminLayout({
           </header>
 
           {/* Page Content with Smooth Transition */}
-          <main className="p-6 overflow-hidden relative">
+          <main className="p-4 md:p-5 overflow-hidden relative">
             {/* Shimmer Effect on Transition */}
             <div
-              className="absolute inset-6 rounded-xl pointer-events-none z-10 overflow-hidden"
+              className="absolute inset-4 md:inset-5 rounded-xl pointer-events-none z-10 overflow-hidden"
               style={{
                 opacity: isTransitioning ? 1 : 0,
                 transition: 'opacity 0.3s ease-out'
@@ -418,7 +489,7 @@ export default function AdminLayout({
 
             {/* Content Container with Smooth Transitions */}
             <div
-              className="bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/30 h-[calc(100vh-8rem)] overflow-y-auto p-6"
+              className="bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/30 h-[calc(100vh-7.5rem)] overflow-y-auto p-4 md:p-5"
               style={{
                 opacity: isTransitioning ? 0 : 1,
                 transform: isTransitioning ? 'translateY(8px) scale(0.99)' : 'translateY(0) scale(1)',

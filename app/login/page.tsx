@@ -354,7 +354,7 @@ function LoginPageContent() {
                     onBlur={() => handleBlur('email', email)}
                     autoComplete="email"
                     className="w-full pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200"
-                    placeholder={userType === 'admin' ? 'admin@electroshop.com' : '@ente@ejemplo.com'}
+                    placeholder={userType === 'admin' ? 'admin@electroshop.com' : 'cliente@ejemplo.com'}
                     disabled={isLoading}
                   />
                   <EpicTooltip

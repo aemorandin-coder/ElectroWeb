@@ -156,15 +156,15 @@ export default function CustomerMobileNavBar() {
                 zIndex: 99999,
                 borderRadius: '20px',
                 background: isScrolled
-                    ? 'linear-gradient(135deg, #0D1B2A 0%, #1B263B 50%, #0D1B2A 100%)'
-                    : 'linear-gradient(135deg, rgba(13, 27, 42, 0.95) 0%, rgba(27, 38, 59, 0.95) 50%, rgba(13, 27, 42, 0.95) 100%)',
+                    ? 'rgba(255, 255, 255, 0.92)'
+                    : 'rgba(255, 255, 255, 0.82)',
                 boxShadow: isScrolled
-                    ? '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                    : '0 8px 32px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                    ? '0 8px 32px rgba(42, 99, 205, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+                    : '0 8px 32px rgba(42, 99, 205, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
                 backdropFilter: 'blur(20px) saturate(180%)',
                 WebkitBackdropFilter: 'blur(20px) saturate(180%)',
                 transition: 'all 0.3s ease-in-out',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(42, 99, 205, 0.15)',
             }}
         >
             <div className="grid grid-cols-5 h-16 w-full items-center px-1">
@@ -180,8 +180,8 @@ export default function CustomerMobileNavBar() {
                             onTouchEnd={handleTouchEnd}
                             className="flex flex-col items-center justify-center h-14 relative"
                             style={{
-                                color: active ? '#5a9cff' : 'rgba(255, 255, 255, 0.7)',
-                                transform: isTouched ? 'scale(0.9)' : 'scale(1)',
+                                color: active ? '#2a63cd' : 'rgba(71, 85, 105, 0.85)',
+                                transform: isTouched ? 'scale(0.92)' : 'scale(1)',
                                 transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                             }}
                         >
@@ -189,7 +189,7 @@ export default function CustomerMobileNavBar() {
                                 <div
                                     className="absolute inset-0 rounded-xl"
                                     style={{
-                                        background: 'radial-gradient(ellipse at center, rgba(42, 99, 205, 0.25) 0%, transparent 70%)',
+                                        background: 'radial-gradient(ellipse at center, rgba(42, 99, 205, 0.15) 0%, transparent 70%)',
                                         pointerEvents: 'none',
                                     }}
                                 />
@@ -198,8 +198,8 @@ export default function CustomerMobileNavBar() {
                                 <Icon active={active} />
                             </div>
                             <span
-                                className="text-[10px] mt-1 relative z-10 text-center truncate"
-                                style={{ fontWeight: active ? 700 : 500, letterSpacing: active ? '0.02em' : '0' }}
+                                className="text-[10px] mt-1 relative z-10 text-center truncate font-bold"
+                                style={{ letterSpacing: active ? '0.01em' : '0' }}
                             >
                                 {item.label}
                             </span>

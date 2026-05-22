@@ -118,12 +118,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ read: true }),
+                keepalive: true,
             });
 
             if (response.ok) {
                 setNotifications(prev =>
                     prev.map(n => (n.id === id ? { ...n, read: true } : n))
                 );
+                window.dispatchEvent(new Event('refresh-sidebar-counts'));
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -134,10 +136,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         try {
             const response = await fetch('/api/notifications/mark-all-read', {
                 method: 'PATCH',
+                keepalive: true,
             });
 
             if (response.ok) {
                 setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                window.dispatchEvent(new Event('refresh-sidebar-counts'));
             }
         } catch (error) {
             console.error('Error marking all as read:', error);
@@ -148,24 +152,34 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         try {
             const response = await fetch(`/api/notifications/${id}`, {
                 method: 'DELETE',
+                keepalive: true,
             });
 
             if (response.ok) {
                 setNotifications(prev => prev.filter(n => n.id !== id));
+                window.dispatchEvent(new Event('refresh-sidebar-counts'));
             }
         } catch (error) {
             console.error('Error deleting notification:', error);
         }
     }, []);
 
-    // Fetch notifications on mount and when user changes
+    // Fetch notifications on mount, when user changes, and when sidebar counts refresh is requested
     useEffect(() => {
         if (session?.user) {
             fetchNotifications();
 
-            // Poll for new notifications every 30 seconds
+            const handleRefresh = () => {
+                fetchNotifications();
+            };
+
+            window.addEventListener('refresh-sidebar-counts', handleRefresh);
             const interval = setInterval(fetchNotifications, 30000);
-            return () => clearInterval(interval);
+            
+            return () => {
+                window.removeEventListener('refresh-sidebar-counts', handleRefresh);
+                clearInterval(interval);
+            };
         }
     }, [session, fetchNotifications]);
 

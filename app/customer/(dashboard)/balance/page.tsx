@@ -146,11 +146,11 @@ export default function BalancePage() {
           🚀 MOBILE VIEW - PREMIUM ANIMATED DESIGN
           Epic animations for Full HD+ / QHD+ devices
           ============================================ */}
-      <div className="lg:hidden overflow-y-auto h-full -m-3 bg-gradient-to-b from-slate-50 to-white">
+      <div className="lg:hidden overflow-y-auto h-full space-y-4">
         {/* ========================================
             ANIMATED HERO BALANCE - Premium Effects
             ======================================== */}
-        <div className="relative mx-2 mt-2 rounded-2xl overflow-hidden">
+        <div className="relative rounded-2xl overflow-hidden">
           {/* Animated Gradient Background */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#0ea5e9]">
             {/* Floating Orbs with Animation */}
@@ -168,7 +168,7 @@ export default function BalancePage() {
               <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center animate-pulse">
                 <FiDollarSign className="w-3.5 h-3.5 text-white" />
               </div>
-              <span className="text-white/80 text-[10px] font-medium tracking-wide uppercase">Saldo Disponible</span>
+              <span className="text-white/80 text-xs font-medium tracking-wide uppercase">Saldo Disponible</span>
             </div>
 
             {/* Main Balance - Animated Glow */}
@@ -189,7 +189,7 @@ export default function BalancePage() {
               <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/10 animate-slideInUp" style={{ animationDelay: '0.1s' }}>
                 <div className="flex items-center justify-center gap-1 mb-0.5">
                   <FiArrowDownLeft className="w-3 h-3 text-emerald-300" />
-                  <span className="text-white/70 text-[8px] uppercase font-bold">Recargado</span>
+                  <span className="text-white/70 text-xs uppercase font-bold">Recargado</span>
                 </div>
                 <p className="text-white font-black text-sm">${userBalance?.totalRecharges.toFixed(0) || '0'}</p>
               </div>
@@ -198,7 +198,7 @@ export default function BalancePage() {
               <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/10 animate-slideInUp" style={{ animationDelay: '0.2s' }}>
                 <div className="flex items-center justify-center gap-1 mb-0.5">
                   <FiArrowUpRight className="w-3 h-3 text-rose-300" />
-                  <span className="text-white/70 text-[8px] uppercase font-bold">Gastado</span>
+                  <span className="text-white/70 text-xs uppercase font-bold">Gastado</span>
                 </div>
                 <p className="text-white font-black text-sm">${userBalance?.totalSpent.toFixed(0) || '0'}</p>
               </div>
@@ -223,11 +223,11 @@ export default function BalancePage() {
         {/* ========================================
             TRANSACTIONS - With Full Labels
             ======================================== */}
-        <div className="px-2 pt-3 pb-20">
+        <div className="pt-3 pb-20">
           {/* Header with Full Filter Labels */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold text-gray-700">Movimientos</span>
-            <div className="flex gap-1">
+            <span className="text-xs font-bold text-gray-700">Movimientos</span>
+            <div className="flex gap-1.5">
               {[
                 { value: 'ALL', label: 'Todos' },
                 { value: 'RECHARGE', label: 'Recargas' },
@@ -236,9 +236,9 @@ export default function BalancePage() {
                 <button
                   key={filter.value}
                   onClick={() => setFilterType(filter.value)}
-                  className={`px-2 py-1 text-[8px] font-bold rounded-md transition-all ${filterType === filter.value
+                  className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all ${filterType === filter.value
                     ? 'bg-[#2a63cd] text-white shadow-md'
-                    : 'bg-gray-100 text-gray-500'
+                    : 'bg-gray-100/80 text-gray-500 hover:bg-gray-200/50'
                     }`}
                 >
                   {filter.label}
@@ -253,7 +253,7 @@ export default function BalancePage() {
               {filteredTransactions.slice(0, 10).map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="bg-white rounded-lg p-2 border border-gray-100"
+                  className="bg-white/80 backdrop-blur-sm rounded-lg p-2 border border-gray-150 shadow-sm"
                 >
                   <div className="flex items-center gap-2">
                     {/* Icon */}
@@ -269,10 +269,10 @@ export default function BalancePage() {
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-[10px] whitespace-nowrap overflow-hidden text-ellipsis">
+                      <p className="font-semibold text-gray-900 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
                         {transaction.description}
                       </p>
-                      <p className="text-[8px] text-gray-400">
+                      <p className="text-xs text-gray-400">
                         {new Date(transaction.createdAt).toLocaleDateString('es-ES', {
                           day: 'numeric',
                           month: 'short'
@@ -281,7 +281,7 @@ export default function BalancePage() {
                     </div>
 
                     {/* Amount */}
-                    <span className={`text-[11px] font-black flex-shrink-0 ${transaction.type === 'RECHARGE' ? 'text-emerald-600' : 'text-gray-900'
+                    <span className={`text-xs font-black flex-shrink-0 ${transaction.type === 'RECHARGE' ? 'text-emerald-600' : 'text-gray-900'
                       }`}>
                       {transaction.type === 'RECHARGE' ? '+' : '-'}${transaction.amount.toFixed(0)}
                     </span>
@@ -292,18 +292,18 @@ export default function BalancePage() {
           ) : (
             /* Empty State */
             <div className="text-center py-8">
-              <div className="w-12 h-12 mx-auto mb-2 bg-blue-50 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 mx-auto mb-2 bg-blue-50/50 rounded-full flex items-center justify-center">
                 <FiDollarSign className="w-6 h-6 text-blue-300" />
               </div>
-              <p className="text-[11px] font-bold text-gray-700 mb-1">Sin movimientos</p>
-              <p className="text-[9px] text-gray-400 mb-3">
+              <p className="text-xs font-bold text-gray-700 mb-1">Sin movimientos</p>
+              <p className="text-xs text-gray-400 mb-3">
                 {filterType === 'ALL' ? 'Aún no tienes transacciones' : 'Sin resultados'}
               </p>
               <button
                 onClick={() => setShowRechargeModal(true)}
-                className="inline-flex items-center gap-1 px-3 py-2 bg-[#2a63cd] text-white text-[10px] font-bold rounded-lg"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2a63cd] text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
               >
-                <FiPlus className="w-3 h-3" />
+                <FiPlus className="w-3.5 h-3.5" />
                 Recargar
               </button>
             </div>

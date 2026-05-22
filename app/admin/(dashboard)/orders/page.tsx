@@ -155,6 +155,7 @@ export default function OrdersPage() {
           setSelectedOrder({ ...selectedOrder, ...updatedOrder, status: newStatus });
         }
         setShowShippingModal(false);
+        window.dispatchEvent(new Event('refresh-sidebar-counts'));
       } else {
         toast.error('Error al actualizar el estado');
       }

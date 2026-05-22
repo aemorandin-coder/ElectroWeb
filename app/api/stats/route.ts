@@ -21,6 +21,13 @@ export async function GET() {
       totalCustomers,
       salesData,
       salesHistoryRaw,
+      pendingCreators,
+      pendingDiscounts,
+      pendingProductRequests,
+      pendingContactMessages,
+      pendingReferrals,
+      pendingReviews,
+      pendingBusinessVerifications,
     ] = await Promise.all([
       prisma.product.count(),
       prisma.product.count({ where: { status: 'PUBLISHED' } }),
@@ -50,7 +57,14 @@ export async function GET() {
           totalUSD: true
         },
         orderBy: { createdAt: 'asc' }
-      })
+      }),
+      prisma.courseCreator.count({ where: { status: 'PENDING' } }),
+      prisma.discountRequest.count({ where: { status: 'PENDING' } }),
+      prisma.productRequest.count({ where: { status: 'PENDING' } }),
+      prisma.contactMessage.count({ where: { status: 'PENDING' } }),
+      prisma.referralConversion.count({ where: { status: 'PENDING' } }),
+      prisma.review.count({ where: { isApproved: false } }),
+      prisma.profile.count({ where: { businessVerificationStatus: 'PENDING' } }),
     ]);
 
     // Process sales history
@@ -96,6 +110,15 @@ export async function GET() {
       sales: {
         total: Number(salesData._sum.totalUSD || 0),
         history: salesHistory
+      },
+      pendingActions: {
+        creators: pendingCreators,
+        discounts: pendingDiscounts,
+        productRequests: pendingProductRequests,
+        contactMessages: pendingContactMessages,
+        referrals: pendingReferrals,
+        reviews: pendingReviews,
+        businessVerifications: pendingBusinessVerifications,
       }
     });
   } catch (error: any) {

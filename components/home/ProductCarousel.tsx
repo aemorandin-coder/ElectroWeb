@@ -5,7 +5,6 @@
 // Mobile: Finger swipe, no arrows, scale on touch, fade-in slide-up animations
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { FaArrowAltCircleLeft, FaArrowAltCircleRight } from 'react-icons/fa';
 import { FiClock } from 'react-icons/fi';
 import ProductCard from '@/components/ui/ProductCard';
 
@@ -180,28 +179,6 @@ export default function ProductCarousel({
 
     return (
         <div className="relative">
-            {/* [DESKTOP ONLY] Navigation Arrows - Hidden on mobile */}
-            {!isMobile && products.length > visibleItems && (
-                <>
-                    <button
-                        onClick={handlePrev}
-                        disabled={!canGoPrev || isAnimating}
-                        className={`absolute -left-2 sm:-left-5 top-1/2 -translate-y-1/2 z-20 transition-all duration-300 hidden lg:block ${canGoPrev ? 'text-white hover:text-white/80 hover:scale-110' : 'opacity-30 cursor-not-allowed text-white/40'}`}
-                        aria-label="Anterior"
-                    >
-                        <FaArrowAltCircleLeft className="w-10 h-10 sm:w-12 sm:h-12 drop-shadow-lg" />
-                    </button>
-                    <button
-                        onClick={handleNext}
-                        disabled={!canGoNext || isAnimating}
-                        className={`absolute -right-2 sm:-right-5 top-1/2 -translate-y-1/2 z-20 transition-all duration-300 hidden lg:block ${canGoNext ? 'text-white hover:text-white/80 hover:scale-110' : 'opacity-30 cursor-not-allowed text-white/40'}`}
-                        aria-label="Siguiente"
-                    >
-                        <FaArrowAltCircleRight className="w-10 h-10 sm:w-12 sm:h-12 drop-shadow-lg" />
-                    </button>
-                </>
-            )}
-
             {/* [MOBILE ONLY] Touch Swipe Carousel */}
             {isMobile ? (
                 <div

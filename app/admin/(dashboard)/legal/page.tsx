@@ -88,6 +88,77 @@ export default function LegalDocumentsPage() {
         toast.success('Documento descargado');
     };
 
+    const exportLegalCSV = async () => {
+        try {
+            toast.loading('Generando CSV...', { id: 'csv-export' });
+            const response = await fetch(`/api/admin/legal/terms-acceptances?limit=10000&search=${encodeURIComponent(search)}`);
+            if (!response.ok) throw new Error('Error al descargar');
+            
+            const data = await response.json();
+            const acceptancesToExport = data.acceptances || [];
+            
+            if (acceptancesToExport.length === 0) {
+                toast.error('No hay datos para exportar', { id: 'csv-export' });
+                return;
+            }
+            
+            // Header columns
+            const headers = [
+                'ID Registro',
+                'ID Usuario',
+                'Nombre',
+                'Email',
+                'Cédula / ID',
+                'Teléfono',
+                'Dirección',
+                'IP',
+                'Navegador',
+                'Versión',
+                'Fecha Aceptación'
+            ];
+            
+            const csvRows = [
+                headers.join(','),
+                ...acceptancesToExport.map((row: TermsAcceptance) => {
+                    const escape = (val: string | null | undefined) => {
+                        if (val === null || val === undefined) return '""';
+                        return `"${val.toString().replace(/"/g, '""')}"`;
+                    };
+                    
+                    return [
+                        escape(row.id),
+                        escape(row.userId),
+                        escape(row.userName),
+                        escape(row.userEmail),
+                        escape(row.userIdNumber),
+                        escape(row.userPhone),
+                        escape(row.userAddress),
+                        escape(row.ipAddress),
+                        escape(row.userAgent),
+                        escape(row.termsVersion),
+                        escape(row.acceptedAt ? format(new Date(row.acceptedAt), 'yyyy-MM-dd HH:mm:ss') : '')
+                    ].join(',');
+                })
+            ];
+            
+            const csvContent = csvRows.join('\n');
+            // Add BOM (\uFEFF) for Excel compatibility with UTF-8
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `registro_legal_terminos_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            toast.success('CSV exportado correctamente', { id: 'csv-export' });
+        } catch (error) {
+            console.error('Error exporting legal CSV:', error);
+            toast.error('Error al exportar CSV', { id: 'csv-export' });
+        }
+    };
+
     const generateDocumentHtml = (doc: TermsAcceptance) => {
         return `
 <!DOCTYPE html>
@@ -232,6 +303,16 @@ export default function LegalDocumentsPage() {
                             className="pl-9 pr-4 py-2 bg-white border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent w-64"
                         />
                     </form>
+
+                    {/* Export CSV */}
+                    <button
+                        onClick={exportLegalCSV}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#dee2e6] rounded-lg hover:bg-[#f8f9fa] transition-all hover:scale-105 active:scale-95 text-sm text-[#6a6c6b] font-medium"
+                        title="Exportar a CSV"
+                    >
+                        <FiDownload className="w-4 h-4 text-[#2a63cd]" />
+                        <span className="hidden sm:inline">Exportar CSV</span>
+                    </button>
 
                     {/* Refresh */}
                     <button

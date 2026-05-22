@@ -34,6 +34,9 @@ export default function HotAdOverlay() {
     const [isVisible, setIsVisible] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
     const [dontShowAgain, setDontShowAgain] = useState(false);
+    // Countdown: 5 segundos obligatorios antes de poder cerrar
+    const [countdown, setCountdown] = useState(5);
+    const [canClose, setCanClose] = useState(false);
 
     // Mark as mounted on client
     useEffect(() => {
@@ -73,6 +76,9 @@ export default function HotAdOverlay() {
                         document.body.classList.add('hot-ad-active');
                         // Small delay for smooth animation
                         setTimeout(() => setIsVisible(true), 100);
+                        // Start 5-second countdown
+                        setCountdown(5);
+                        setCanClose(false);
                     }
                 }
             } catch (error) {
@@ -88,6 +94,19 @@ export default function HotAdOverlay() {
             document.body.classList.remove('hot-ad-active');
         };
     }, [mounted]);
+
+    // Countdown timer — decrements every second, enables close when 0
+    useEffect(() => {
+        if (!isVisible || canClose) return;
+        if (countdown <= 0) { setCanClose(true); return; }
+        const t = setInterval(() => {
+            setCountdown(prev => {
+                if (prev <= 1) { setCanClose(true); return 0; }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(t);
+    }, [isVisible, canClose, countdown]);
 
     const handleClose = () => {
         setIsClosing(true);
@@ -109,6 +128,8 @@ export default function HotAdOverlay() {
     };
 
     const handleBackdropClick = (e: React.MouseEvent) => {
+        // Only allow close via backdrop after countdown ends
+        if (!canClose) return;
         if (e.target === e.currentTarget) {
             handleClose();
         }
@@ -162,13 +183,40 @@ export default function HotAdOverlay() {
             onTouchMove={(e) => e.preventDefault()}
             onClick={(e) => e.stopPropagation()}
         >
-            {/* Close Button */}
+            {/* Close Button — disabled durante countdown */}
             <button
-                onClick={handleClose}
-                className="absolute top-4 right-4 z-10 p-3 bg-white/10 backdrop-blur-md hover:bg-white/20 rounded-full transition-all duration-200 group"
-                aria-label="Cerrar promoción"
+                onClick={canClose ? handleClose : undefined}
+                disabled={!canClose}
+                className={`absolute top-4 right-4 z-10 p-1 rounded-full transition-all duration-200 ${
+                    canClose
+                        ? 'bg-white/10 backdrop-blur-md hover:bg-white/20 cursor-pointer'
+                        : 'cursor-not-allowed'
+                }`}
+                aria-label={canClose ? 'Cerrar promoción' : `Espera ${countdown}s`}
             >
-                <FiX className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+                {canClose ? (
+                    <span className="w-10 h-10 flex items-center justify-center">
+                        <FiX className="w-6 h-6 text-white" />
+                    </span>
+                ) : (
+                    /* Circular countdown SVG */
+                    <span className="relative w-10 h-10 flex items-center justify-center">
+                        <svg className="absolute inset-0" width="40" height="40" viewBox="0 0 40 40">
+                            <circle cx="20" cy="20" r="17" fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+                            <circle
+                                cx="20" cy="20" r="17"
+                                fill="none"
+                                stroke="white"
+                                strokeWidth="2.5"
+                                strokeDasharray="106.8"
+                                strokeDashoffset={106.8 - (106.8 * (countdown / 5))}
+                                strokeLinecap="round"
+                                style={{ transform: 'rotate(-90deg)', transformOrigin: 'center', transition: 'stroke-dashoffset 1s linear' }}
+                            />
+                        </svg>
+                        <span className="relative text-white text-sm font-bold z-10">{countdown}</span>
+                    </span>
+                )}
             </button>
 
             {/* Image Container */}

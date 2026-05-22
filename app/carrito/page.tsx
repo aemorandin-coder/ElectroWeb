@@ -613,26 +613,33 @@ export default function CarritoPage() {
                 </div>
 
                 {/* Trust Badges */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-lg animate-slideUp" style={{ animationDelay: '0.1s' }}>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Compra Segura</h3>
+                <div className="bg-gradient-to-br from-[#2a63cd]/5 to-purple-500/5 rounded-2xl border border-slate-200 p-5 shadow-lg space-y-4 animate-slideUp" style={{ animationDelay: '0.1s' }}>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Envíos Asegurados</h3>
+                    <div className="flex gap-2">
+                      <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[9px] font-black">ZOOM</span>
+                      <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[9px] font-black">MRW</span>
+                    </div>
+                  </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-sm text-slate-600 group hover:text-[#2a63cd] transition-colors">
-                      <div className="w-8 h-8 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <FiShield className="w-4 h-4 text-[#2a63cd]" />
+                    <div className="flex items-start gap-3 text-xs text-slate-600">
+                      <div className="w-7 h-7 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <FiTruck className="w-3.5 h-3.5 text-[#2a63cd]" />
                       </div>
-                      <span className="font-medium">Pago Seguro SSL</span>
+                      <div>
+                        <p className="font-semibold text-slate-700">Despacho Nacional Garantizado</p>
+                        <p className="text-slate-500">Envíos Rápidos y Seguros a nivel nacional por ZOOM y MRW.</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-slate-600 group hover:text-[#2a63cd] transition-colors">
-                      <div className="w-8 h-8 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <HiBadgeCheck className="w-4 h-4 text-[#2a63cd]" />
+                    
+                    <div className="flex items-start gap-3 text-xs text-slate-600">
+                      <div className="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <FiShield className="w-3.5 h-3.5 text-emerald-600" />
                       </div>
-                      <span className="font-medium">Garantía Oficial</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-slate-600 group hover:text-[#2a63cd] transition-colors">
-                      <div className="w-8 h-8 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <FiTruck className="w-4 h-4 text-[#2a63cd]" />
+                      <div>
+                        <p className="font-semibold text-slate-700">Protección del Comprador</p>
+                        <p className="text-slate-500">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
                       </div>
-                      <span className="font-medium">Envío Rápido</span>
                     </div>
                   </div>
                 </div>

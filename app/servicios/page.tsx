@@ -3,6 +3,7 @@ import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
+import ServiciosPortfolio from '@/components/servicios/ServiciosPortfolio';
 import {
   FiMonitor, FiShield, FiCreditCard,
   FiAward, FiUsers, FiCheckCircle,
@@ -41,13 +42,27 @@ const FloatingTechIcons = () => {
 export const revalidate = 0;
 
 export default async function ServiciosPage() {
-  const [videos, settings] = await Promise.all([
+  const [rawVideos, settings] = await Promise.all([
     prisma.techServiceVideo.findMany({
       where: { isActive: true },
-      orderBy: { order: 'asc' }
+      orderBy: { order: 'asc' },
+      include: { reviews: { select: { rating: true } } },
     }),
-    prisma.companySettings.findFirst()
+    prisma.companySettings.findFirst(),
   ]);
+
+  const videos = rawVideos.map((v) => {
+    const avg =
+      v.reviews.length > 0
+        ? v.reviews.reduce((s, r) => s + r.rating, 0) / v.reviews.length
+        : null;
+    return {
+      ...v,
+      avgRating: avg,
+      reviewCount: v.reviews.length,
+      reviews: undefined,
+    };
+  });
 
   return (
     <div className="min-h-screen bg-white">
@@ -88,137 +103,131 @@ export default async function ServiciosPage() {
 
       {/* 1. MODO MOBILE (lg:hidden) - Current Optimized Layout */}
       <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 py-4 relative z-10">
-        {/* Servicios Destacados Mobile */}
+        {/* 1. Portfolio Mobile (Trabajos Realizados) */}
         <div className="mb-8">
-          <div className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] rounded-xl overflow-hidden">
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-2xl animate-pulse"></div>
-              <div className="absolute bottom-10 right-10 w-40 h-40 bg-cyan-300 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-            </div>
-
-            <div className="relative p-6 text-center text-white">
-              <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center mx-auto mb-3 border border-white/20">
-                <FaScrewdriverWrench className="w-6 h-6 text-white" />
+          <div className="text-center mb-4">
+            <h2 className="text-xl font-bold text-[#212529] mb-1">Trabajos Realizados</h2>
+            <p className="text-xs text-[#6a6c6b] max-w-md mx-auto leading-relaxed">
+              Explora demostraciones en video, compara imágenes de Antes/Después y lee testimonios de nuestros clientes satisfechos. Filtra por categoría para ver nuestra experiencia.
+            </p>
+          </div>
+          
+          {videos.length > 0 ? (
+            <ServiciosPortfolio videos={videos as any} />
+          ) : (
+            <div className="bg-[#f8f9fa] rounded-xl border border-dashed border-[#dee2e6] p-6 text-center shadow-sm">
+              <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-full flex items-center justify-center text-[#2a63cd] mx-auto mb-3">
+                <FiVideo className="w-5 h-5 opacity-80" />
               </div>
-
-              <h2 className="text-xl font-black mb-2">Servicios de Excelencia</h2>
-              <div className="max-w-3xl mx-auto space-y-4 text-white/90">
-                <p className="text-xs">Ofrecemos soluciones tecnológicas completas:</p>
-                <div className="grid grid-cols-2 gap-3 mt-4">
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 flex flex-col items-center text-center">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center mb-2 shadow-sm">
-                      <PiSecurityCameraDuotone className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="font-bold text-xs mb-1">CCTV</h3>
-                    <p className="text-[10px] text-white/80 leading-tight">Monitoreo 24/7 y seguridad.</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 flex flex-col items-center text-center">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center mb-2 shadow-sm">
-                      <FaEthernet className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="font-bold text-xs mb-1">Redes</h3>
-                    <p className="text-[10px] text-white/80 leading-tight">Conectividad estable.</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 flex flex-col items-center text-center">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center mb-2 shadow-sm">
-                      <FiCreditCard className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="font-bold text-xs mb-1">Puntos de Venta</h3>
-                    <p className="text-[10px] text-white/80 leading-tight">Control de negocio.</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 flex flex-col items-center text-center">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center mb-2 shadow-sm">
-                      <SiPcgamingwiki className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="font-bold text-xs mb-1">Gaming PC</h3>
-                    <p className="text-[10px] text-white/80 leading-tight">Potencia extrema.</p>
-                  </div>
-                </div>
-                <div className="mt-4 bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center flex-shrink-0">
-                      <FiShield className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="font-bold text-sm">Mantenimiento Consolas</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 justify-center">
-                    <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-semibold">Xbox S/X</span>
-                    <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-semibold">PS5</span>
-                    <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-semibold">Switch</span>
-                  </div>
-                </div>
+              <h3 className="text-sm font-bold text-[#212529] mb-1">Próximamente más proyectos</h3>
+              <p className="text-[11px] text-[#6a6c6b] leading-normal max-w-xs mx-auto">
+                Estamos preparando videos de CCTV, diseño de redes y mantenimiento técnico para compartirlos aquí muy pronto.
+              </p>
+            </div>
+          )}
+        </div>
+        {/* 2. Servicios Especializados Mobile (Compact) */}
+        <div className="bg-gradient-to-b from-white to-slate-50/50 rounded-2xl border border-slate-200/60 p-5 mb-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+          <div className="text-center mb-4">
+            <h2 className="text-lg font-bold text-[#212529]">Servicios Especializados</h2>
+            <p className="text-xs text-gray-500 mt-1">Soluciones tecnológicas completas y garantizadas:</p>
+          </div>
+          <div className="space-y-3">
+            {/* CCTV */}
+            <div className="flex items-center gap-3 p-3 bg-white rounded-xl hover:bg-slate-50/50 transition-all border border-slate-200/50 hover:border-[#2a63cd]/30 shadow-[0_2px_8px_rgba(0,0,0,0.015)] group">
+              <div className="w-9 h-9 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 text-[#2a63cd] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:from-[#2a63cd] group-hover:to-[#1e4ba3] group-hover:text-white group-hover:scale-105 transition-all duration-300">
+                <PiSecurityCameraDuotone className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-xs text-[#212529] group-hover:text-[#2a63cd] transition-colors">Sistemas CCTV</h3>
+                <p className="text-[10px] text-gray-500 truncate">Instalación y monitoreo de cámaras de videovigilancia 24/7.</p>
+              </div>
+            </div>
+            {/* Redes */}
+            <div className="flex items-center gap-3 p-3 bg-white rounded-xl hover:bg-slate-50/50 transition-all border border-slate-200/50 hover:border-[#2a63cd]/30 shadow-[0_2px_8px_rgba(0,0,0,0.015)] group">
+              <div className="w-9 h-9 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 text-[#2a63cd] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:from-[#2a63cd] group-hover:to-[#1e4ba3] group-hover:text-white group-hover:scale-105 transition-all duration-300">
+                <FaEthernet className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-xs text-[#212529] group-hover:text-[#2a63cd] transition-colors">Diseño de Redes</h3>
+                <p className="text-[10px] text-gray-500 truncate">Conectividad, cableado estructurado y redes estables.</p>
+              </div>
+            </div>
+            {/* POS */}
+            <div className="flex items-center gap-3 p-3 bg-white rounded-xl hover:bg-slate-50/50 transition-all border border-slate-200/50 hover:border-[#2a63cd]/30 shadow-[0_2px_8px_rgba(0,0,0,0.015)] group">
+              <div className="w-9 h-9 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 text-[#2a63cd] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:from-[#2a63cd] group-hover:to-[#1e4ba3] group-hover:text-white group-hover:scale-105 transition-all duration-300">
+                <FiCreditCard className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-xs text-[#212529] group-hover:text-[#2a63cd] transition-colors">Puntos de Venta POS</h3>
+                <p className="text-[10px] text-gray-500 truncate">Sistemas de facturación y control comercial para tu negocio.</p>
+              </div>
+            </div>
+            {/* Gaming PC */}
+            <div className="flex items-center gap-3 p-3 bg-white rounded-xl hover:bg-slate-50/50 transition-all border border-slate-200/50 hover:border-[#2a63cd]/30 shadow-[0_2px_8px_rgba(0,0,0,0.015)] group">
+              <div className="w-9 h-9 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 text-[#2a63cd] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:from-[#2a63cd] group-hover:to-[#1e4ba3] group-hover:text-white group-hover:scale-105 transition-all duration-300">
+                <SiPcgamingwiki className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-xs text-[#212529] group-hover:text-[#2a63cd] transition-colors">Gaming PC</h3>
+                <p className="text-[10px] text-gray-500 truncate">Ensamblaje y optimización de computadoras de alto rendimiento.</p>
+              </div>
+            </div>
+            {/* Consolas */}
+            <div className="flex items-center gap-3 p-3 bg-white rounded-xl hover:bg-slate-50/50 transition-all border border-slate-200/50 hover:border-[#2a63cd]/30 shadow-[0_2px_8px_rgba(0,0,0,0.015)] group">
+              <div className="w-9 h-9 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 text-[#2a63cd] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:from-[#2a63cd] group-hover:to-[#1e4ba3] group-hover:text-white group-hover:scale-105 transition-all duration-300">
+                <FiShield className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-xs text-[#212529] group-hover:text-[#2a63cd] transition-colors">Mantenimiento de Consolas</h3>
+                <p className="text-[10px] text-gray-500 truncate">Servicio técnico para Xbox, PlayStation, Steam Deck y Switch.</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Testimonios Mobile */}
-        {videos.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-center mb-4">Trabajos Realizados</h2>
-            <div className="grid grid-cols-1 gap-4">
-              {videos.map((video) => (
-                <div key={video.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                  <div className="relative aspect-video">
-                    {video.thumbnail ? (
-                      <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                        <FiVideo className="w-10 h-10 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-sm font-bold truncate">{video.title}</h3>
-                    <p className="text-xs text-gray-500 line-clamp-2 mt-1">{video.description}</p>
-                    <a href={video.videoUrl} target="_blank" rel="noopener noreferrer" className="mt-3 w-full flex items-center justify-center gap-2 py-2 bg-[#2a63cd] text-white text-xs font-bold rounded-lg ">
-                      Ver Video
-                    </a>
-                  </div>
-                </div>
-              ))}
+        {/* 3. Por qué confiar en nosotros Mobile (Compact) */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6 shadow-sm">
+          <h2 className="text-sm font-bold text-center text-[#212529] mb-4">¿Por qué confiar en nosotros?</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center p-3 bg-gray-50 rounded-xl border border-gray-100/50">
+              <FiAward className="w-6 h-6 text-[#2a63cd] mx-auto mb-1.5" />
+              <h3 className="font-bold text-xs text-[#212529] mb-0.5">Experiencia</h3>
+              <p className="text-[9px] text-gray-500">+10 años de trayectoria.</p>
             </div>
-          </div>
-        )}
-
-        {/* Por qué elegirnos Mobile */}
-        <div className="bg-white/80 rounded-xl border border-gray-100 p-4 mb-6 shadow-sm">
-          <h2 className="text-base font-bold text-center mb-3">¿Por qué confiar en nosotros?</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="text-center p-2 bg-gray-50 rounded-lg">
-              <FiAward className="w-5 h-5 text-[#2a63cd] mx-auto mb-1" />
-              <h3 className="font-bold text-[10px]">Experiencia</h3>
-              <p className="text-[9px] text-gray-500">+10 años trayectoria.</p>
-            </div>
-            <div className="text-center p-2 bg-gray-50 rounded-lg">
-              <FiUsers className="w-5 h-5 text-[#2a63cd] mx-auto mb-1" />
-              <h3 className="font-bold text-[10px]">Equipo Pro</h3>
+            <div className="text-center p-3 bg-gray-50 rounded-xl border border-gray-100/50">
+              <FiUsers className="w-6 h-6 text-[#2a63cd] mx-auto mb-1.5" />
+              <h3 className="font-bold text-xs text-[#212529] mb-0.5">Equipo Pro</h3>
               <p className="text-[9px] text-gray-500">Técnicos certificados.</p>
             </div>
-            <div className="text-center p-2 bg-gray-50 rounded-lg">
-              <FiCheckCircle className="w-5 h-5 text-[#2a63cd] mx-auto mb-1" />
-              <h3 className="font-bold text-[10px]">Garantía</h3>
-              <p className="text-[9px] text-gray-500">Soporte incluido.</p>
+            <div className="text-center p-3 bg-gray-50 rounded-xl border border-gray-100/50">
+              <FiCheckCircle className="w-6 h-6 text-[#2a63cd] mx-auto mb-1.5" />
+              <h3 className="font-bold text-xs text-[#212529] mb-0.5">Garantía</h3>
+              <p className="text-[9px] text-gray-500">Soporte post-servicio.</p>
             </div>
-            <div className="text-center p-2 bg-gray-50 rounded-lg">
-              <FiClock className="w-5 h-5 text-[#2a63cd] mx-auto mb-1" />
-              <h3 className="font-bold text-[10px]">Rapidez</h3>
-              <p className="text-[9px] text-gray-500">Atención ágil.</p>
+            <div className="text-center p-3 bg-gray-50 rounded-xl border border-gray-100/50">
+              <FiClock className="w-6 h-6 text-[#2a63cd] mx-auto mb-1.5" />
+              <h3 className="font-bold text-xs text-[#212529] mb-0.5">Atención Rápida</h3>
+              <p className="text-[9px] text-gray-500">Respuesta inmediata.</p>
             </div>
           </div>
         </div>
 
-        {/* Modalidades Mobile */}
+        {/* 4. Modalidades Mobile (Compact) */}
         <div className="grid grid-cols-2 gap-3 mb-8">
-          <div className="bg-blue-50 rounded-xl p-3 border border-blue-100 text-center">
-            <FiMonitor className="w-6 h-6 text-[#2a63cd] mx-auto mb-1" />
-            <h3 className="text-xs font-bold">On-Site</h3>
-            <p className="text-[9px] text-gray-500">Vamos a tu empresa.</p>
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-100/80 text-center shadow-sm">
+            <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-[#2a63cd] mx-auto mb-2 shadow-sm">
+              <FiMonitor className="w-5 h-5" />
+            </div>
+            <h3 className="text-xs font-bold text-[#212529] mb-1">Servicios On-Site</h3>
+            <p className="text-[9px] text-gray-500 leading-tight">Instalación y soporte directamente en tu negocio o empresa.</p>
           </div>
-          <div className="bg-blue-50 rounded-xl p-3 border border-blue-100 text-center">
-            <FiShield className="w-6 h-6 text-[#2a63cd] mx-auto mb-1" />
-            <h3 className="text-xs font-bold">Soporte</h3>
-            <p className="text-[9px] text-gray-500">Asistencia remota.</p>
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-100/80 text-center shadow-sm">
+            <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-[#2a63cd] mx-auto mb-2 shadow-sm">
+              <FiShield className="w-5 h-5" />
+            </div>
+            <h3 className="text-xs font-bold text-[#212529] mb-1">Soporte Técnico</h3>
+            <p className="text-[9px] text-gray-500 leading-tight">Asistencia remota e incidencias críticas 24/7.</p>
           </div>
         </div>
 
@@ -230,234 +239,197 @@ export default async function ServiciosPage() {
         </div>
       </div>
 
-      {/* 2. MODO ESCRITORIO (hidden lg:block) - GitHub Legacy Layout */}
+      {/* 2. MODO ESCRITORIO (hidden lg:block) - Reorganized & Compacted */}
       <div className="hidden lg:block max-w-7xl mx-auto px-8 py-12 relative z-10">
-        {/* Servicios Destacados Desktop (GitHub Version) */}
+        {/* 1. Portfolio Desktop (Trabajos Realizados) */}
         <div className="mb-16">
-          <div className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] rounded-2xl overflow-hidden">
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-2xl animate-pulse"></div>
-              <div className="absolute bottom-10 right-10 w-40 h-40 bg-cyan-300 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-[#212529] mb-3">Trabajos Realizados</h2>
+            <p className="text-base text-[#6a6c6b] max-w-2xl mx-auto leading-relaxed">
+              Descubre cómo trabajamos a través de demostraciones en video en tiempo real de nuestros proyectos de ingeniería, redes y CCTV. Compara el estado del equipamiento antes y después del servicio técnico, y lee las opiniones y calificaciones de nuestros clientes.
+            </p>
+          </div>
+          
+          {videos.length > 0 ? (
+            <ServiciosPortfolio videos={videos as any} />
+          ) : (
+            <div className="relative bg-gradient-to-r from-[#f8f9fa] to-white rounded-2xl border-2 border-dashed border-[#e9ecef] p-12 text-center overflow-hidden max-w-3xl mx-auto shadow-sm">
+              <div className="absolute -top-10 -left-10 w-24 h-24 bg-[#2a63cd]/5 rounded-full blur-xl pointer-events-none"></div>
+              <div className="w-16 h-16 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center text-[#2a63cd] mx-auto mb-4 shadow-sm">
+                <FiVideo className="w-8 h-8 opacity-80 animate-pulse" />
+              </div>
+              <h3 className="text-xl font-bold text-[#212529] mb-2">Construyendo nuestro portafolio digital</h3>
+              <p className="text-sm text-[#6a6c6b] max-w-md mx-auto leading-relaxed">
+                Próximamente verás aquí grabaciones de instalaciones de CCTV, configuraciones de racks de redes y diagnósticos de equipos gaming. ¡Vuelve pronto para ver nuestro portafolio de trabajos en acción!
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* 2. Servicios Especializados Desktop (Compact) */}
+        <div className="mb-16">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-[#212529] mb-2">Servicios Especializados</h2>
+            <p className="text-base text-[#6a6c6b] max-w-xl mx-auto">
+              Soluciones tecnológicas completas adaptadas a tus requerimientos:
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* CCTV Card */}
+            <div className="bg-gradient-to-b from-white to-slate-50/30 rounded-2xl border border-slate-200/60 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:border-[#2a63cd]/45 hover:shadow-[0_15px_35px_rgba(42,99,205,0.09)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center text-center group">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 text-[#2a63cd] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:from-[#2a63cd] group-hover:to-[#1e4ba3] group-hover:text-white group-hover:shadow-[0_8px_20px_rgba(42,99,205,0.2)] transition-all duration-300">
+                <PiSecurityCameraDuotone className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-[#212529] text-base mb-1.5 group-hover:text-[#2a63cd] transition-colors">Sistemas CCTV</h3>
+              <p className="text-xs text-gray-500 leading-normal">Instalación y monitoreo de cámaras de videovigilancia profesional.</p>
             </div>
 
-            <div className="relative p-12 text-center text-white">
-              <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/20">
-                <FaScrewdriverWrench className="w-10 h-10 text-white" />
+            {/* Redes Card */}
+            <div className="bg-gradient-to-b from-white to-slate-50/30 rounded-2xl border border-slate-200/60 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:border-[#2a63cd]/45 hover:shadow-[0_15px_35px_rgba(42,99,205,0.09)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center text-center group">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 text-[#2a63cd] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:from-[#2a63cd] group-hover:to-[#1e4ba3] group-hover:text-white group-hover:shadow-[0_8px_20px_rgba(42,99,205,0.2)] transition-all duration-300">
+                <FaEthernet className="w-5 h-5" />
               </div>
+              <h3 className="font-bold text-[#212529] text-base mb-1.5 group-hover:text-[#2a63cd] transition-colors">Diseño de Redes</h3>
+              <p className="text-xs text-gray-500 leading-normal">Despliegue de redes estructuradas e inalámbricas corporativas.</p>
+            </div>
 
-              <h2 className="text-4xl font-black mb-4">Servicios de Excelencia</h2>
-              <div className="max-w-3xl mx-auto space-y-4 text-lg text-white/90">
-                <p>Ofrecemos soluciones tecnológicas completas y personalizadas para llevar tu negocio o proyecto al siguiente nivel:</p>
-                <div className="grid md:grid-cols-2 gap-4 mt-6">
-                  {/* CCTV Desktop */}
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <PiSecurityCameraDuotone className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-xl mb-2">Sistemas CCTV</h3>
-                    <p className="text-sm text-white/80">Instalación y configuración de sistemas de videovigilancia profesional para empresas e industrias.</p>
-                  </div>
-
-                  {/* Redes Desktop */}
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <FaEthernet className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-xl mb-2">Diseño de Redes</h3>
-                    <p className="text-sm text-white/80">Arquitectura y despliegue de redes empresariales e industriales de alta disponibilidad.</p>
-                  </div>
-
-                  {/* POS Desktop */}
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <FiCreditCard className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-xl mb-2">Puntos de Venta POS</h3>
-                    <p className="text-sm text-white/80">Creación de sistemas POS completos para microempresas y emprendimientos, adaptados a tu negocio.</p>
-                  </div>
-
-                  {/* Gaming Desktop */}
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <SiPcgamingwiki className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-xl mb-2">PCs Gaming de Alto Rendimiento</h3>
-                    <p className="text-sm text-white/80">Ensamblaje personalizado de equipos gaming con componentes de última generación.</p>
-                  </div>
-                </div>
-
-                {/* Mantenimiento de Consolas Desktop */}
-                <div className="mt-6 bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <FiShield className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-bold text-xl mb-2">Mantenimiento de Consolas de Última Generación</h3>
-                  <p className="text-sm text-white/80 mb-3">Servicio técnico especializado para consolas modernas con técnicos certificados:</p>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold">Xbox Series S/X</span>
-                    <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold">PlayStation 5</span>
-                    <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold">Steam Deck</span>
-                    <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold">Nintendo Switch</span>
-                  </div>
-                </div>
+            {/* POS Card */}
+            <div className="bg-gradient-to-b from-white to-slate-50/30 rounded-2xl border border-slate-200/60 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:border-[#2a63cd]/45 hover:shadow-[0_15px_35px_rgba(42,99,205,0.09)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center text-center group">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 text-[#2a63cd] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:from-[#2a63cd] group-hover:to-[#1e4ba3] group-hover:text-white group-hover:shadow-[0_8px_20px_rgba(42,99,205,0.2)] transition-all duration-300">
+                <FiCreditCard className="w-6 h-6" />
               </div>
+              <h3 className="font-bold text-[#212529] text-base mb-1.5 group-hover:text-[#2a63cd] transition-colors">Puntos de Venta</h3>
+              <p className="text-xs text-gray-500 leading-normal">Instalación y soporte de sistemas comerciales de facturación.</p>
+            </div>
+
+            {/* Gaming PC Card */}
+            <div className="bg-gradient-to-b from-white to-slate-50/30 rounded-2xl border border-slate-200/60 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:border-[#2a63cd]/45 hover:shadow-[0_15px_35px_rgba(42,99,205,0.09)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center text-center group">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 text-[#2a63cd] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:from-[#2a63cd] group-hover:to-[#1e4ba3] group-hover:text-white group-hover:shadow-[0_8px_20px_rgba(42,99,205,0.2)] transition-all duration-300">
+                <SiPcgamingwiki className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-[#212529] text-base mb-1.5 group-hover:text-[#2a63cd] transition-colors">PC Gaming</h3>
+              <p className="text-xs text-gray-500 leading-normal">Ensamblaje y personalización de computadoras de alto rendimiento.</p>
+            </div>
+
+            {/* Consolas Card */}
+            <div className="bg-gradient-to-b from-white to-slate-50/30 rounded-2xl border border-slate-200/60 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:border-[#2a63cd]/45 hover:shadow-[0_15px_35px_rgba(42,99,205,0.09)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center text-center group">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 text-[#2a63cd] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:from-[#2a63cd] group-hover:to-[#1e4ba3] group-hover:text-white group-hover:shadow-[0_8px_20px_rgba(42,99,205,0.2)] transition-all duration-300">
+                <FiShield className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-[#212529] text-base mb-1.5 group-hover:text-[#2a63cd] transition-colors">Mantenimiento</h3>
+              <p className="text-xs text-gray-500 leading-normal">Servicio técnico de consolas (PS5, Xbox, Switch, Steam Deck).</p>
             </div>
           </div>
         </div>
 
-        {/* Testimonios y Videos Desktop (GitHub Version) */}
-        {videos.length > 0 && (
-          <div className="mb-16">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-[#212529] mb-3">Trabajos Realizados</h2>
-              <p className="text-base text-[#6a6c6b]">Conoce algunos de nuestros proyectos exitosos y testimonios de clientes satisfechos</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {videos.map((video) => (
-                <div key={video.id} className="group bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                  <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-                    {video.thumbnail ? (
-                      <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <FiVideo className="w-16 h-16 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center">
-                        <svg className="w-8 h-8 text-[#2a63cd] ml-1" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <h3 className="text-lg font-bold text-[#212529] mb-2 line-clamp-2 group-hover:text-[#2a63cd] transition-colors">{video.title}</h3>
-                    <p className="text-sm text-[#6a6c6b] mb-4 line-clamp-3">{video.description}</p>
-
-                    {video.customerName && video.testimonial && (
-                      <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
-                        <p className="text-xs text-[#212529] italic mb-2 line-clamp-2">"{video.testimonial}"</p>
-                        <p className="text-xs font-bold text-[#2a63cd]">- {video.customerName}</p>
-                      </div>
-                    )}
-
-                    <a href={video.videoUrl} target="_blank" rel="noopener noreferrer" className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-bold rounded-xl hover:shadow-lg transition-all hover:scale-105">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                      Ver Video
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Por qué elegirnos Desktop (GitHub Version) */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#e9ecef] shadow-xl p-8 mb-16">
-          <h2 className="text-3xl font-bold text-[#212529] mb-8 text-center">¿Por qué confiar en nosotros?</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto shadow-lg mb-3">
-                <FiAward className="w-7 h-7 text-white" />
+        {/* 3. Por qué confiar en nosotros Desktop (Compact) */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm mb-8">
+          <h2 className="text-2xl font-bold text-[#212529] mb-6 text-center">¿Por qué confiar en nosotros?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+              <div className="w-10 h-10 bg-[#2a63cd]/10 text-[#2a63cd] rounded-xl flex items-center justify-center mx-auto mb-3">
+                <FiAward className="w-5 h-5" />
               </div>
-              <h3 className="font-semibold text-lg mb-2 text-[#212529]">Experiencia Comprobada</h3>
-              <p className="text-[#6a6c6b] text-sm">Más de 10 años brindando soluciones tecnológicas exitosas.</p>
+              <h3 className="font-semibold text-sm mb-1 text-[#212529]">Experiencia Comprobada</h3>
+              <p className="text-gray-500 text-[11px] leading-relaxed">Más de 10 años brindando soluciones de tecnología.</p>
             </div>
-            <div className="text-center">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto shadow-lg mb-3">
-                <FiUsers className="w-7 h-7 text-white" />
+            <div className="text-center p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+              <div className="w-10 h-10 bg-[#2a63cd]/10 text-[#2a63cd] rounded-xl flex items-center justify-center mx-auto mb-3">
+                <FiUsers className="w-5 h-5" />
               </div>
-              <h3 className="font-semibold text-lg mb-2 text-[#212529]">Equipo Profesional</h3>
-              <p className="text-[#6a6c6b] text-sm">Técnicos certificados y especializados en cada área.</p>
+              <h3 className="font-semibold text-sm mb-1 text-[#212529]">Equipo Profesional</h3>
+              <p className="text-gray-500 text-[11px] leading-relaxed">Técnicos calificados y especializados.</p>
             </div>
-            <div className="text-center">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto shadow-lg mb-3">
-                <FiCheckCircle className="w-7 h-7 text-white" />
+            <div className="text-center p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+              <div className="w-10 h-10 bg-[#2a63cd]/10 text-[#2a63cd] rounded-xl flex items-center justify-center mx-auto mb-3">
+                <FiCheckCircle className="w-5 h-5" />
               </div>
-              <h3 className="font-semibold text-lg mb-2 text-[#212529]">Garantía de Calidad</h3>
-              <p className="text-[#6a6c6b] text-sm">Todos nuestros servicios incluyen garantía y soporte post-instalación.</p>
+              <h3 className="font-semibold text-sm mb-1 text-[#212529]">Garantía de Calidad</h3>
+              <p className="text-gray-500 text-[11px] leading-relaxed">Soporte post-instalación incluido.</p>
             </div>
-            <div className="text-center">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center mx-auto shadow-lg mb-3">
-                <FiClock className="w-7 h-7 text-white" />
+            <div className="text-center p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+              <div className="w-10 h-10 bg-[#2a63cd]/10 text-[#2a63cd] rounded-xl flex items-center justify-center mx-auto mb-3">
+                <FiClock className="w-5 h-5" />
               </div>
-              <h3 className="font-semibold text-lg mb-2 text-[#212529]">Atención Rápida</h3>
-              <p className="text-[#6a6c6b] text-sm">Respuesta y solución ágil a tus requerimientos técnicos.</p>
+              <h3 className="font-semibold text-sm mb-1 text-[#212529]">Atención Rápida</h3>
+              <p className="text-gray-500 text-[11px] leading-relaxed">Respuesta ágil a tus requerimientos.</p>
             </div>
           </div>
         </div>
 
-        {/* Modalidades de Servicio Desktop (GitHub Version) */}
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 border border-blue-200">
-            <div className="w-14 h-14 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center shadow-lg mb-4">
-              <FiMonitor className="w-7 h-7 text-white" />
+        {/* 4. Modalidades de Servicio Desktop (Compact) */}
+        <div className="grid md:grid-cols-2 gap-6 mb-16">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100/20 rounded-2xl p-6 border border-blue-200/60 shadow-sm flex gap-4">
+            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-[#2a63cd] shadow-sm flex-shrink-0 border border-blue-100">
+              <FiMonitor className="w-6 h-6" />
             </div>
-            <h3 className="text-2xl font-bold text-[#212529] mb-3">Servicios On-Site</h3>
-            <ul className="space-y-2 text-[#212529]">
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#2a63cd] mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Instalación directa en tu negocio o empresa</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#2a63cd] mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Evaluación personalizada del espacio</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#2a63cd] mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Capacitación del personal incluida</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#2a63cd] mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Documentación técnica completa</span>
-              </li>
-            </ul>
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-[#212529]">Servicios On-Site</h3>
+              <p className="text-xs text-gray-500 leading-relaxed mb-3">Instalación y evaluación directa en tu negocio o empresa con personal especializado:</p>
+              <ul className="grid grid-cols-2 gap-2 text-xs text-gray-600 font-medium">
+                <li className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-[#2a63cd] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Instalación directa</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-[#2a63cd] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Capacitación de uso</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-[#2a63cd] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Evaluación de espacio</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-[#2a63cd] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Documentación técnica</span>
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 border border-blue-200">
-            <div className="w-14 h-14 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center shadow-lg mb-4">
-              <FiShield className="w-7 h-7 text-white" />
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100/20 rounded-2xl p-6 border border-blue-200/60 shadow-sm flex gap-4">
+            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-[#2a63cd] shadow-sm flex-shrink-0 border border-blue-100">
+              <FiShield className="w-6 h-6" />
             </div>
-            <h3 className="text-2xl font-bold text-[#212529] mb-3">Soporte Técnico</h3>
-            <ul className="space-y-2 text-[#212529]">
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#2a63cd] mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Mantenimiento preventivo programado</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#2a63cd] mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Atención remota para incidencias</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#2a63cd] mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Garantía extendida disponible</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#2a63cd] mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Actualizaciones y mejoras incluidas</span>
-              </li>
-            </ul>
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-[#212529]">Soporte Técnico</h3>
+              <p className="text-xs text-gray-500 leading-relaxed mb-3">Asistencia técnica e incidencias para el mantenimiento de tus sistemas:</p>
+              <ul className="grid grid-cols-2 gap-2 text-xs text-gray-600 font-medium">
+                <li className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-[#2a63cd] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Mantenimiento preventivo</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-[#2a63cd] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Garantía extendida</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-[#2a63cd] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Atención remota 24/7</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-[#2a63cd] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Actualizaciones de software</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -479,15 +451,15 @@ export default async function ServiciosPage() {
               <a href={`https://wa.me/${settings?.whatsapp?.replace(/\D/g, '') || '582572511282'}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-all hover:scale-105 shadow-xl">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                </svg>
-                WhatsApp
-              </a>
-            </div>
-          </div>
+            </svg>
+            WhatsApp
+          </a>
         </div>
       </div>
-
-      <Footer />
     </div>
+  </div>
+
+  <Footer />
+</div>
   );
 }

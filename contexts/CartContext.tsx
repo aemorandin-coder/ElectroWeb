@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface CartItem {
   id: string;
@@ -33,6 +34,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [dbSynced, setDbSynced] = useState(false);
+  const { data: session, status } = useSession();
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -46,6 +49,70 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
     setIsLoaded(true);
   }, []);
+
+  // Merge database cart with localStorage cart when logging in
+  useEffect(() => {
+    if (status === 'authenticated' && isLoaded && !dbSynced) {
+      const fetchAndMergeCart = async () => {
+        try {
+          const res = await fetch('/api/cart');
+          if (res.ok) {
+            const data = await res.json();
+            const dbCart: CartItem[] = data.cartItems || [];
+
+            if (dbCart.length > 0) {
+              setItems((currentLocalItems) => {
+                const merged = [...currentLocalItems];
+
+                dbCart.forEach((dbItem) => {
+                  const existingIdx = merged.findIndex((i) => i.id === dbItem.id);
+                  if (existingIdx > -1) {
+                    // Combine quantities up to the database item's stock
+                    const newQty = Math.min(merged[existingIdx].quantity + dbItem.quantity, dbItem.stock);
+                    merged[existingIdx] = {
+                      ...merged[existingIdx],
+                      ...dbItem,
+                      quantity: newQty
+                    };
+                  } else {
+                    merged.push(dbItem);
+                  }
+                });
+
+                return merged;
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching database cart:', error);
+        } finally {
+          setDbSynced(true);
+        }
+      };
+
+      fetchAndMergeCart();
+    } else if (status === 'unauthenticated' && dbSynced) {
+      // Clear cart and reset sync when signing out
+      setItems([]);
+      localStorage.removeItem('cart');
+      setDbSynced(false);
+    }
+  }, [status, isLoaded, dbSynced]);
+
+  // Save cart to database with debounce
+  useEffect(() => {
+    if (status === 'authenticated' && dbSynced && isLoaded) {
+      const delayDebounceFn = setTimeout(() => {
+        fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cartItems: items })
+        }).catch(err => console.error('Error auto-saving cart to DB:', err));
+      }, 1000);
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [items, status, dbSynced, isLoaded]);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {

@@ -60,7 +60,7 @@ const SECTION_FIELDS: Record<Tab, (keyof SettingsFormData)[]> = {
   seo: ['metaTitle', 'metaDescription', 'metaKeywords'],
   sistema: [
     'maintenanceMode', 'maintenanceMessage',
-    'maintenanceStartTime', 'maintenanceEndTime', 'maintenanceAllowedIPs',
+    'maintenanceStartTime', 'maintenanceEndTime', 'maintenanceAllowedIPs', 'adminAlertEmails',
   ],
 };
 
@@ -106,6 +106,8 @@ const DEFAULT_FORM: SettingsFormData = {
   hotAdEnabled: false, hotAdImage: null, hotAdTransparentBg: false,
   hotAdShadowEnabled: true, hotAdShadowBlur: 20, hotAdShadowOpacity: 50,
   hotAdBackdropOpacity: 70, hotAdBackdropColor: '#000000', hotAdLink: '',
+  adminAlertEmails: '',
+  adminAlertEmailList: [],
 };
 
 // ─── Shared primitives ───────────────────────────────────────────────────────
@@ -299,6 +301,17 @@ export default function SettingsPage() {
         hotAdBackdropOpacity: data.hotAdBackdropOpacity ?? 70,
         hotAdBackdropColor:   data.hotAdBackdropColor   || '#000000',
         hotAdLink:            data.hotAdLink            || '',
+        adminAlertEmails:     data.adminAlertEmails     || '',
+        adminAlertEmailList:  (() => {
+          const raw = data.adminAlertEmails;
+          if (!raw) return [];
+          try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+          } catch {
+            return raw.split(',').map((e: string) => e.trim()).filter(Boolean);
+          }
+        })(),
       };
 
       setFormData(loaded);
@@ -1094,109 +1107,203 @@ export default function SettingsPage() {
   };
 
   const renderSistema = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <div className="space-y-5">
-        {/* Maintenance Mode — prominente y diferenciado */}
-        <div className={`rounded-xl border overflow-hidden transition-all duration-300 ${formData.maintenanceMode ? 'bg-amber-50 border-amber-300 shadow-amber-100 shadow-md' : 'bg-white border-gray-200 shadow-sm'}`}>
-          <div className={`flex items-center justify-between px-4 py-3 border-b ${formData.maintenanceMode ? 'border-amber-200 bg-amber-100/50' : 'border-gray-100 bg-gray-50/60'}`}>
-            <div className="flex items-center gap-2">
-              <FiAlertTriangle className={`w-5 h-5 ${formData.maintenanceMode ? 'text-amber-600 animate-pulse' : 'text-gray-400'}`} />
-              <h3 className={`font-semibold text-sm ${formData.maintenanceMode ? 'text-amber-900' : 'text-gray-800'}`}>
-                Modo Mantenimiento
-              </h3>
-              {formData.maintenanceMode && (
-                <span className="px-2 py-0.5 text-[10px] bg-amber-500 text-white rounded-full font-bold">ACTIVO</span>
-              )}
-            </div>
-            <Toggle
-              id="maintenanceMode" name="maintenanceMode"
-              checked={formData.maintenanceMode} onChange={handleInput}
-              color="amber"
-            />
-          </div>
-          <div className="p-5">
-            {!formData.maintenanceMode ? (
-              <p className="text-xs text-gray-500">Activa este modo para mostrar una página de mantenimiento a los visitantes. Los administradores siempre pueden acceder al panel.</p>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-start gap-2 p-3 bg-amber-100/60 rounded-lg text-xs text-amber-800">
-                  <FiAlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <p>La tienda está en mantenimiento. Los visitantes verán el mensaje configurado abajo. Los administradores pueden acceder normalmente.</p>
-                </div>
-                <Field label="Mensaje para visitantes">
-                  <textarea
-                    name="maintenanceMessage" value={formData.maintenanceMessage} onChange={handleInput}
-                    rows={3} className={`${inputCls} border-amber-200 resize-none`}
-                    placeholder="Estamos realizando mejoras. Volveremos pronto..."
-                  />
-                </Field>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Inicio programado">
-                    <input type="datetime-local" name="maintenanceStartTime" value={formData.maintenanceStartTime} onChange={handleInput} className={`${inputCls} border-amber-200`} />
-                  </Field>
-                  <Field label="Fin programado">
-                    <input type="datetime-local" name="maintenanceEndTime" value={formData.maintenanceEndTime} onChange={handleInput} className={`${inputCls} border-amber-200`} />
-                  </Field>
-                </div>
-                <Field label="IPs permitidas (separadas por coma)" hint="Además de los admins logueados">
-                  <input type="text" name="maintenanceAllowedIPs" value={formData.maintenanceAllowedIPs} onChange={handleInput} placeholder="192.168.1.1, 10.0.0.1" className={`${inputCls} border-amber-200 font-mono`} />
-                </Field>
-              </div>
+    <div className="space-y-5">
+      {/* Modo Mantenimiento - Ancho completo */}
+      <div className={`rounded-xl border overflow-hidden transition-all duration-300 ${formData.maintenanceMode ? 'bg-amber-50 border-amber-300 shadow-amber-100 shadow-md' : 'bg-white border-gray-200 shadow-sm'}`}>
+        <div className={`flex items-center justify-between px-4 py-3 border-b ${formData.maintenanceMode ? 'border-amber-200 bg-amber-100/50' : 'border-gray-100 bg-gray-50/60'}`}>
+          <div className="flex items-center gap-2">
+            <FiAlertTriangle className={`w-5 h-5 ${formData.maintenanceMode ? 'text-amber-600 animate-pulse' : 'text-gray-400'}`} />
+            <h3 className={`font-semibold text-sm ${formData.maintenanceMode ? 'text-amber-900' : 'text-gray-800'}`}>
+              Modo Mantenimiento
+            </h3>
+            {formData.maintenanceMode && (
+              <span className="px-2 py-0.5 text-[10px] bg-amber-500 text-white rounded-full font-bold">ACTIVO</span>
             )}
           </div>
+          <Toggle
+            id="maintenanceMode" name="maintenanceMode"
+            checked={formData.maintenanceMode} onChange={handleInput}
+            color="amber"
+          />
+        </div>
+        <div className="p-5">
+          {!formData.maintenanceMode ? (
+            <p className="text-xs text-gray-500">Activa este modo para mostrar una página de mantenimiento a los visitantes. Los administradores siempre pueden acceder al panel.</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-start gap-2 p-3 bg-amber-100/60 rounded-lg text-xs text-amber-800">
+                <FiAlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <p>La tienda está en mantenimiento. Los visitantes verán el mensaje configurado abajo. Los administradores pueden acceder normalmente.</p>
+              </div>
+              <Field label="Mensaje para visitantes">
+                <textarea
+                  name="maintenanceMessage" value={formData.maintenanceMessage} onChange={handleInput}
+                  rows={3} className={`${inputCls} border-amber-200 resize-none`}
+                  placeholder="Estamos realizando mejoras. Volveremos pronto..."
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Inicio programado">
+                  <input type="datetime-local" name="maintenanceStartTime" value={formData.maintenanceStartTime} onChange={handleInput} className={`${inputCls} border-amber-200`} />
+                </Field>
+                <Field label="Fin programado">
+                  <input type="datetime-local" name="maintenanceEndTime" value={formData.maintenanceEndTime} onChange={handleInput} className={`${inputCls} border-amber-200`} />
+                </Field>
+              </div>
+              <Field label="IPs permitidas (separadas por coma)" hint="Además de los admins logueados">
+                <input type="text" name="maintenanceAllowedIPs" value={formData.maintenanceAllowedIPs} onChange={handleInput} placeholder="192.168.1.1, 10.0.0.1" className={`${inputCls} border-amber-200 font-mono`} />
+              </Field>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="space-y-5">
-        <Card title="Administradores del Sistema" icon={<FiUsers />}>
-          <div className="space-y-3">
-            {adminUsers.length === 0 ? (
-              <div className="text-center py-6 text-gray-400">
-                <FiUsers className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                <p className="text-xs">No se encontraron administradores</p>
-                <a href="/admin/customers" className="text-xs text-blue-500 hover:underline mt-1 inline-block">Ver todos los usuarios →</a>
+      {/* Grid de 2 columnas para el resto de elementos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Columna Izquierda - Administradores del Sistema + Información del Sistema */}
+        <div className="space-y-5">
+          <Card title="Administradores del Sistema" icon={<FiUsers />}>
+            <div className="space-y-3">
+              {adminUsers.length === 0 ? (
+                <div className="text-center py-6 text-gray-400">
+                  <FiUsers className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                  <p className="text-xs">No se encontraron administradores</p>
+                  <a href="/admin/customers" className="text-xs text-blue-500 hover:underline mt-1 inline-block">Ver todos los usuarios →</a>
+                </div>
+              ) : (
+                <>
+                  {adminUsers.map(u => (
+                    <div key={u.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold flex-shrink-0">
+                        {u.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{u.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${u.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {u.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
+                      </span>
+                    </div>
+                  ))}
+                  <a href="/admin/customers?filter=admin" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
+                    <FiExternalLink className="w-3 h-3" />
+                    Gestionar permisos desde Clientes
+                  </a>
+                </>
+              )}
+            </div>
+          </Card>
+
+          <Card title="Información del Sistema" icon={<FiSettings />}>
+            <div className="space-y-2 text-xs text-gray-600">
+              <div className="flex justify-between py-1.5 border-b border-gray-100">
+                <span className="text-gray-500">Versión del panel</span>
+                <span className="font-mono font-medium">v2.0.0</span>
               </div>
-            ) : (
-              <>
-                {adminUsers.map(u => (
-                  <div key={u.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold flex-shrink-0">
-                      {u.name.charAt(0).toUpperCase()}
+              <div className="flex justify-between py-1.5 border-b border-gray-100">
+                <span className="text-gray-500">Última actualización de settings</span>
+                <span className="font-mono">{new Date().toLocaleDateString('es-VE')}</span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-gray-500">Usuario actual</span>
+                <span className="font-medium">{session?.user?.name || session?.user?.email}</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Columna Derecha - Alertas por Email */}
+        <div className="space-y-5">
+          <Card title="Alertas por Email al Administrador" icon={<FiMail />}>
+            <div className="space-y-4">
+              <p className="text-xs text-gray-500">
+                Agrega los correos que recibirán alertas en tiempo real cuando ocurran eventos importantes (nueva orden, recarga, solicitud de creador, etc.).
+                Todos los correos de esta lista reciben las mismas notificaciones.
+              </p>
+              <div className="space-y-2">
+                {((formData as any).adminAlertEmailList || []).map((email: string, index: number) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                      <FiMail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <span className="text-sm text-gray-700 truncate">{email}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{u.name}</p>
-                      <p className="text-xs text-gray-500 truncate">{u.email}</p>
-                    </div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${u.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {u.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const list = [...((formData as any).adminAlertEmailList || [])];
+                        list.splice(index, 1);
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          adminAlertEmailList: list,
+                          adminAlertEmails: JSON.stringify(list),
+                        }));
+                      }}
+                      className="p-2 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                      title="Eliminar"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 ))}
-                <a href="/admin/customers?filter=admin" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
-                  <FiExternalLink className="w-3 h-3" />
-                  Gestionar permisos desde Clientes
-                </a>
-              </>
-            )}
-          </div>
-        </Card>
-
-        <Card title="Información del Sistema" icon={<FiSettings />}>
-          <div className="space-y-2 text-xs text-gray-600">
-            <div className="flex justify-between py-1.5 border-b border-gray-100">
-              <span className="text-gray-500">Versión del panel</span>
-              <span className="font-mono font-medium">v2.0.0</span>
+                <div className="flex gap-2 mt-2">
+                  <input
+                    id="newAdminEmail"
+                    type="email"
+                    placeholder="nuevo@correo.com"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#2a63cd] bg-white"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const val = (e.target as HTMLInputElement).value.trim();
+                        if (val && val.includes('@')) {
+                          const list = [...((formData as any).adminAlertEmailList || [])];
+                          if (!list.includes(val)) {
+                            list.push(val);
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              adminAlertEmailList: list,
+                              adminAlertEmails: JSON.stringify(list),
+                            }));
+                          }
+                          (e.target as HTMLInputElement).value = '';
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const input = document.getElementById('newAdminEmail') as HTMLInputElement;
+                      const val = input?.value.trim();
+                      if (val && val.includes('@')) {
+                        const list = [...((formData as any).adminAlertEmailList || [])];
+                        if (!list.includes(val)) {
+                          list.push(val);
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            adminAlertEmailList: list,
+                            adminAlertEmails: JSON.stringify(list),
+                          }));
+                        }
+                        if (input) input.value = '';
+                      }
+                    }}
+                    className="px-4 py-2 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors"
+                  >
+                    Agregar
+                  </button>
+                </div>
+                {((formData as any).adminAlertEmailList || []).length === 0 && (
+                  <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
+                    <FiAlertTriangle className="w-3 h-3" />
+                    Sin correos configurados. No se enviarán alertas por email.
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-gray-100">
-              <span className="text-gray-500">Última actualización de settings</span>
-              <span className="font-mono">{new Date().toLocaleDateString('es-VE')}</span>
-            </div>
-            <div className="flex justify-between py-1.5">
-              <span className="text-gray-500">Usuario actual</span>
-              <span className="font-medium">{session?.user?.name || session?.user?.email}</span>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );

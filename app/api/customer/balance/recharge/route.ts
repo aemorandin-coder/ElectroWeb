@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { notifyRechargeRequested, notifyAdminsNewRecharge } from '@/lib/notifications';
+import { sendNewRechargeAlert } from '@/lib/admin-alerts';
 import { formatPaymentMethod } from '@/lib/format-helpers';
 
 // Crear solicitud de recarga de saldo (requiere aprobación del admin)
@@ -67,8 +68,17 @@ export async function POST(req: NextRequest) {
     try {
       // Notify customer
       await notifyRechargeRequested(userId, parseFloat(amount));
-      // Notify all admins
+      // Notify all admins in-app
       await notifyAdminsNewRecharge(userName, parseFloat(amount));
+      // Send email alert to configured admin emails (fire-and-forget)
+      sendNewRechargeAlert({
+        customerName: userName,
+        customerEmail: session.user.email || '',
+        amount: parseFloat(amount),
+        paymentMethod,
+        reference,
+        baseUrl: process.env.NEXTAUTH_URL,
+      }).catch(() => {});
     } catch (notifError) {
       console.error('Error sending notifications:', notifError);
       // Don't fail the request if notifications fail

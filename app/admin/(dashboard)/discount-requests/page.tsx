@@ -99,6 +99,7 @@ export default function DiscountRequestsPage() {
                 toast.success(actionType === 'approve' ? 'Descuento aprobado' : 'Solicitud rechazada');
                 setShowActionModal(false);
                 fetchRequests();
+                window.dispatchEvent(new Event('refresh-sidebar-counts'));
             } else {
                 const data = await response.json();
                 toast.error(data.error || 'Error al procesar');

@@ -193,11 +193,37 @@ html {
   cursor: default;
 }
 
-header nav a,
-header nav span,
-header nav button {
+/* ============================================
+   PREVENIR SELECCIÓN DE TEXTO EN ELEMENTOS UI
+   Aplica globalmente — evita la barra azul de
+   selección al hacer click en cualquier elemento
+   de interfaz: botones, cards, títulos, nav, etc.
+   ============================================ */
+* {
   user-select: none;
+  -webkit-user-select: none;
 }
+
+/* Re-habilitar SOLO donde tiene sentido seleccionar */
+p,
+pre,
+code,
+blockquote,
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+textarea,
+[contenteditable],
+.text-selectable {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+input[type="range"],
+input[type="checkbox"],
+input[type="radio"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 
 a, button, [role="button"], label[for], select,
 input[type="submit"], input[type="button"], input[type="reset"],
@@ -563,7 +589,7 @@ body.hot-ad-active [class*="z-40"] {
 
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: none;
   }
 }
 

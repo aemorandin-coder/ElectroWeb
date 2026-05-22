@@ -45,6 +45,7 @@ model User {
   password      String?
   image         String?
   role          Role      @default(USER)
+  sessionVersion Int      @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -63,6 +64,12 @@ model User {
   passwordResetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   discountRequests    DiscountRequest[]
+  serviceReviews      ServiceReview[]
+
+  // Courses
+  courseCreator       CourseCreator?
+  courseEnrollments   CourseEnrollment[]
+  courseReviews       CourseReview[]
 
   // Influencer system
   referredByCode      String?    // Code of the influencer who referred this user
@@ -99,6 +106,7 @@ model Profile {
   businessVerificationNotes   String?
   businessVerifiedAt          DateTime?
   savedAddresses              String?  // JSON array of saved addresses
+  savedCart                   String?  // JSON string with the cart items
   
   // Session Info
   lastLoginAt                 DateTime?
@@ -723,6 +731,9 @@ model CompanySettings {
   hotAdBackdropColor    String  @default("#000000")
   hotAdLink             String?
 
+  // Admin Alert Emails — comma-separated or JSON array of emails to notify on key events
+  adminAlertEmails      String?
+
   updatedAt DateTime @updatedAt
 
   @@map("company_settings")
@@ -851,12 +862,32 @@ model TechServiceVideo {
   thumbnail     String?
   customerName  String?
   testimonial   String?
+  platform      String?  // "YOUTUBE" | "TIKTOK" | "KICK"
+  category      String?  // "CCTV" | "REDES" | "POS" | "GAMING" | "CONSOLAS" | "ELECTRONICA"
+  beforeImage   String?
+  afterImage    String?
   isActive      Boolean  @default(true)
   order         Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  reviews       ServiceReview[]
+
   @@map("tech_service_videos")
+}
+
+model ServiceReview {
+  id             String           @id @default(cuid())
+  serviceVideoId String
+  serviceVideo   TechServiceVideo @relation(fields: [serviceVideoId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating         Int
+  comment        String?
+  createdAt      DateTime         @default(now())
+
+  @@unique([serviceVideoId, userId])
+  @@map("service_reviews")
 }
 
 model ChatConversation {
@@ -917,25 +948,135 @@ model Course {
   id              String   @id @default(cuid())
   title           String
   slug            String   @unique
+  shortDesc       String?
   description     String
-  duration        String?
-  level           String?
-  instructor      String?
+  trailerUrl      String?
+  category        String?  // DESARROLLO | REDES | ELECTRONICA | GAMING | SEGURIDAD | NEGOCIOS
+  tags            String?  // JSON array of strings
+  duration        String?  // legacy human-readable (e.g. "8 horas")
+  totalDuration   Int?     // total minutes (computed)
+  totalLessons    Int?     // cached count
+  enrollmentCount Int      @default(0)
+  rating          Decimal? // cached average
+  level           String?  // PRINCIPIANTE | INTERMEDIO | AVANZADO
+  instructor      String?  // legacy text; replaced by creatorId when creator platform is used
+  creatorId       String?
+  creator         CourseCreator? @relation(fields: [creatorId], references: [id])
   priceUSD        Decimal
   isOnline        Boolean  @default(true)
   isInPerson      Boolean  @default(false)
   maxStudents     Int?
-  syllabus        String?
+  syllabus        String?  // legacy JSON outline
   thumbnail       String?
   isFeatured      Boolean  @default(false)
   isActive        Boolean  @default(true)
   metaTitle       String?
   metaDescription String?
-  
+
+  modules         CourseModule[]
+  enrollments     CourseEnrollment[]
+  reviews         CourseReview[]
+
   updatedAt       DateTime @updatedAt
   createdAt       DateTime @default(now())
 
   @@map("courses")
+}
+
+// ============================================
+// CURSOS — MINI UDEMY PLATFORM
+// ============================================
+
+model CourseCreator {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName   String
+  bio           String?
+  avatar        String?
+  expertise     String?  // e.g. "Redes, CCTV, Electrónica"
+  status        String   @default("PENDING") // PENDING | APPROVED | REJECTED | SUSPENDED
+  commissionRate Decimal @default(90) // Creator keeps 90%, shop takes 10%
+  totalRevenue  Decimal  @default(0)
+  notes         String?  // Admin notes
+  courses       Course[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("course_creators")
+}
+
+model CourseModule {
+  id        String         @id @default(cuid())
+  courseId  String
+  course    Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  order     Int            @default(0)
+  lessons   CourseLesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId])
+  @@map("course_modules")
+}
+
+model CourseLesson {
+  id          String       @id @default(cuid())
+  moduleId    String
+  module      CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  videoUrl    String?      // YouTube/Vimeo UNLISTED
+  duration    Int?         // seconds
+  isFree      Boolean      @default(false)
+  order       Int          @default(0)
+  resources   String?      // JSON: [{label, url}]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([moduleId])
+  @@map("course_lessons")
+}
+
+model CourseEnrollment {
+  id               String   @id @default(cuid())
+  courseId         String
+  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId          String?
+  progress         Int      @default(0)  // 0-100 percent
+  completedLessons String?              // JSON array of lesson IDs
+  completedAt      DateTime?
+  certificateId    String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([courseId, userId])
+  @@index([userId])
+  @@map("course_enrollments")
+}
+
+model CourseReview {
+  id         String   @id @default(cuid())
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating     Int      // 1-5
+  comment    String?
+  isVerified Boolean  @default(false) // enrolled & completed at least 20%
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([courseId, userId])
+  @@index([courseId])
+  @@map("course_reviews")
 }
 
 model Wishlist {

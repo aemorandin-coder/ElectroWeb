@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { FiBell, FiCheck, FiCheckCircle, FiFilter } from 'react-icons/fi';
 import { useNotifications } from './NotificationProvider';
 import NotificationItem from './NotificationItem';
@@ -12,8 +13,13 @@ interface NotificationCenterProps {
 }
 
 export default function NotificationCenter({ onClose, isMobile = false }: NotificationCenterProps) {
+    const { data: session } = useSession();
     const { notifications, unreadCount, markAllAsRead, isLoading } = useNotifications();
     const [filter, setFilter] = useState<'all' | 'unread'>('all');
+
+    const role = session?.user && (session.user as any).role;
+    const isAdminOrSupport = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'SUPPORT';
+    const notificationsLink = isAdminOrSupport ? '/admin/inquiries?tab=alerts' : '/customer/notifications';
 
     const filteredNotifications = filter === 'unread'
         ? notifications.filter(n => !n.read)
@@ -121,7 +127,7 @@ export default function NotificationCenter({ onClose, isMobile = false }: Notifi
                 {filteredNotifications.length > 0 && (
                     <div className="px-3 py-2 border-t border-gray-100 bg-gray-50/80">
                         <Link
-                            href="/customer/notifications"
+                            href={notificationsLink}
                             onClick={onClose}
                             className="block w-full px-3 py-1.5 text-[11px] font-bold text-[#2a63cd] hover:bg-blue-50 rounded-lg transition-all text-center active:scale-[0.98]"
                         >
@@ -240,7 +246,7 @@ export default function NotificationCenter({ onClose, isMobile = false }: Notifi
             {filteredNotifications.length > 0 && (
                 <div className="p-3 border-t border-gray-200 bg-gray-50">
                     <Link
-                        href="/customer/notifications"
+                        href={notificationsLink}
                         onClick={onClose}
                         className="block w-full px-4 py-2 text-sm font-medium text-[#2a63cd] hover:bg-gray-100 rounded-lg transition-colors text-center"
                     >

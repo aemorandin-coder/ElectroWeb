@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSettings } from '@/contexts/SettingsContext';
+import ShareEarnButton from '@/components/social/ShareEarnButton';
 
 interface Product {
     id: string;
@@ -56,6 +57,16 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
                 {/* Imagen del producto */}
                 <div className="relative aspect-square bg-gradient-to-br from-[#f8f9fa] to-gray-100 overflow-hidden">
+                    {/* Botón Compartir y Ganar */}
+                    <ShareEarnButton
+                        url={`/productos/${product.slug}`}
+                        title={product.name}
+                        description={product.description || ''}
+                        image={mainImage || ''}
+                        price={priceUSD}
+                        type="product"
+                        className="absolute top-3 right-3 z-30 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 transition-opacity duration-300"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-10"></div>
 
                     {mainImage && !imageError ? (
@@ -78,6 +89,15 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                     )}
 
 
+
+                    {product.description && product.stock > 0 && (
+                        <div className="absolute inset-x-0 bottom-0 bg-black/75 backdrop-blur-md p-3.5 transform translate-y-full group-hover:translate-y-0 transition-transform duration-350 ease-out z-20 flex flex-col justify-end">
+                            <span className="text-[10px] uppercase tracking-wider text-blue-400 font-extrabold mb-1">Descripción</span>
+                            <p className="text-[11px] text-gray-200 line-clamp-3 leading-relaxed font-medium">
+                                {product.description}
+                            </p>
+                        </div>
+                    )}
 
                     {product.stock === 0 && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
@@ -105,12 +125,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                         {product.name}
                     </h3>
 
-                    {/* Descripción - sin espacio extra */}
-                    {product.description && (
-                        <p className="text-xs text-[#6a6c6b] text-center line-clamp-1 mb-3">
-                            {product.description}
-                        </p>
-                    )}
+
 
                     {/* Sección de precios - centrada y protagonista */}
                     <div className="mt-auto">

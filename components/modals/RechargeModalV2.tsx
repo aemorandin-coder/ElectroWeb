@@ -96,24 +96,67 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     // Helper function to get icon based on payment type
     const getMethodIcon = (type: string) => {
         switch (type) {
-            case 'MOBILE_PAYMENT': return <FiPhone className="w-6 h-6 text-white" />;
-            case 'CRYPTO': return <SiBinance className="w-6 h-6 text-white" />;
-            case 'BANK_TRANSFER': return <BsBank2 className="w-6 h-6 text-white" />;
-            case 'MERCANTIL_PANAMA': return (
-                <svg className="w-6 h-6" viewBox="0 0 24 24">
-                    <path d="M4 12c0-4.4 3.6-8 8-8 2.2 0 4.2.9 5.7 2.3L12 12l5.7 5.7c-1.5 1.4-3.5 2.3-5.7 2.3-4.4 0-8-3.6-8-8z" fill="white" />
-                    <path d="M12 12l5.7-5.7c1.4 1.5 2.3 3.5 2.3 5.7s-.9 4.2-2.3 5.7L12 12z" fill="white" opacity="0.6" />
+            case 'BANK_TRANSFER': return (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="10" width="18" height="11" rx="2" />
+                    <path d="M3 6h18L12 2 3 6z" />
+                    <line x1="8" y1="14" x2="8" y2="17" />
+                    <line x1="12" y1="14" x2="12" y2="17" />
+                    <line x1="16" y1="14" x2="16" y2="17" />
+                </svg>
+            );
+            case 'MOBILE_PAYMENT': return (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="5" y="2" width="14" height="20" rx="3" />
+                    <path d="M12 18h.01" strokeWidth="3" />
+                    <path d="M9 7h6" />
+                    <path d="M9 11h6" />
+                    <path d="M12 7v8" />
+                    <circle cx="12" cy="11" r="2.5" fill="white" fillOpacity="0.25" />
                 </svg>
             );
             case 'ZELLE': return (
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="white">
-                    <path d="M5 5h14v2h-9.5l9.5 10v2H5v-2h9.5L5 7V5z" />
-                    <rect x="10" y="2" width="4" height="2" rx="0.5" />
-                    <rect x="10" y="20" width="4" height="2" rx="0.5" />
+                    <path d="M13.559 24h-2.841a.483.483 0 0 1-.483-.483v-2.765H5.638a.667.667 0 0 1-.666-.666v-2.234a.67.67 0 0 1 .142-.412l8.139-10.382h-7.25a.667.667 0 0 1-.667-.667V3.914c0-.367.299-.666.666-.666h4.23V.483c0-.266.217-.483.483-.483h2.841c.266 0 .483.217.483.483v2.765h4.323c.367 0 .666.299.666.666v2.137a.67.67 0 0 1-.141.41l-8.19 10.481h7.665c.367 0 .666.299.666.666v2.477a.667.667 0 0 1-.666.667h-4.32v2.765a.483.483 0 0 1-.483.483Z" />
                 </svg>
             );
-            case 'PAYPAL': return <FiDollarSign className="w-6 h-6 text-white" />;
-            default: return <FiDollarSign className="w-6 h-6 text-white" />;
+            case 'ZINLI': return (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <rect width="22" height="22" x="1" y="1" rx="5" stroke="white" strokeWidth="2" />
+                    <path d="M7 8h10l-8 8h8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+            );
+            case 'PAYPAL': return (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.354C5.137 2.129 6.192 1.2 7.436 1.2h7.822c3.967 0 6.027 1.954 5.568 5.617-.468 3.738-2.825 5.922-6.529 5.922h-3.41l-.973 6.182a.64.64 0 0 1-.633.54H7.076z" fill="white" />
+                    <path d="M12.276 14.863h-4.63a.64.64 0 0 1-.633-.54l-1.077 6.843a.64.64 0 0 0 .633.74h3.69c1.037 0 1.92-.777 2.08-1.802l1.01-6.425a.642.642 0 0 0-.633-.74c1.173.067 2.502.067 3.822 0 3.09 0 5.437-1.464 5.945-4.717.272-1.745-.04-3.155-.91-4.148-1.034 2.91-3.23 4.79-6.31 4.79z" fill="white" opacity="0.75" />
+                </svg>
+            );
+            case 'CRYPTO': return (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="white">
+                    <path d="M23.633 11.238c-1.393-4.777-6.24-7.51-11.026-6.12L11.238 0l-2.73.682.73 2.923c-.718.18-1.442.368-2.164.558L6.34 1.24l-2.73.682.723 2.89C2.793 5.25.753 6.136.753 6.136l-1.393 5.568s1.637-.753 1.602-.718c.895-.41 1.258.106 1.433.568l2.628 10.518c.106.39-.07.893-.768 1.155.034.034-1.602.733-1.602.733L1.08 22.86l4.085 1.023.73-2.923c.753-.18 1.488-.36 2.21-.543l.732 2.927 2.73-.683-.73-2.922c4.664-.882 7.747-2.67 6.822-7.525-.745-3.91-3.52-5.01-6.196-4.668.683-.875 1.205-1.92.934-3.784zm-3.69 7.03c-.848 3.413-5.26 1.572-6.745 1.2l1.373-5.508c1.484.37 6.275 1.102 5.372 4.308zm.934-6.425c-.777 3.12-4.462 1.536-5.7 1.228l1.248-5.006c1.238.307 5.275.877 4.452 3.778z" />
+                </svg>
+            );
+            case 'CASH': return (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 8h18M3 12h18" opacity="0.35" />
+                    <rect x="2" y="6" width="20" height="12" rx="2" />
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M6 12h.01M18 12h.01" strokeWidth="3" />
+                </svg>
+            );
+            case 'MERCANTIL_PANAMA': return (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 12c0-4.4 3.6-8 8-8 2.2 0 4.2.9 5.7 2.3L12 12l5.7 5.7c-1.5 1.4-3.5 2.3-5.7 2.3-4.4 0-8-3.6-8-8z" fill="white" />
+                    <path d="M12 12l5.7-5.7c1.4 1.5 2.3 3.5 2.3 5.7s-.9 4.2-2.3 5.7L12 12z" fill="white" opacity="0.65" />
+                </svg>
+            );
+            default: return (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+            );
         }
     };
 

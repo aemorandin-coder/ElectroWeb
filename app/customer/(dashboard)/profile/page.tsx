@@ -521,12 +521,12 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        <div className="p-3 lg:p-5">
+        <div className="p-2 sm:p-4 lg:p-5">
           {activeTab === 'personal' ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
               {/* Profile Picture */}
-              <div className="lg:col-span-1">
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-md p-5 sticky top-24">
+              <div className="xl:col-span-1">
+                <div className="bg-transparent sm:bg-white rounded-2xl border-0 sm:border border-gray-100 shadow-none sm:shadow-md p-0 sm:p-5 sticky top-24">
                   <div className="flex flex-col items-center">
                     <div className="relative mb-4 group cursor-pointer" onClick={() => document.getElementById('avatar-upload')?.click()}>
                       <input
@@ -561,7 +561,7 @@ export default function ProfilePage() {
                           <FiCalendar className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Miembro desde</p>
+                          <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Miembro desde</p>
                           <p className="text-sm font-black text-gray-900">
                             {new Date(stats.memberSince).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
                           </p>
@@ -572,7 +572,7 @@ export default function ProfilePage() {
                           <FiPackage className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Pedidos</p>
+                          <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Pedidos</p>
                           <p className="text-sm font-black text-gray-900">{stats.totalOrders}</p>
                         </div>
                       </div>
@@ -582,8 +582,8 @@ export default function ProfilePage() {
               </div>
 
               {/* Profile Form */}
-              <div className="lg:col-span-2">
-                <div className="space-y-4">
+              <div className="xl:col-span-2">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Alert for sensitive info */}
                   <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 sm:p-4 flex items-start gap-3 shadow-sm">
                     <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
@@ -598,7 +598,7 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Basic Info */}
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-md p-4 sm:p-6">
+                  <div className="bg-transparent sm:bg-white rounded-2xl border-0 sm:border border-gray-100 shadow-none sm:shadow-md p-0 sm:p-6">
                     <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                       <FiUser className="w-5 h-5 text-blue-600" />
                       Información Personal
@@ -609,14 +609,17 @@ export default function ProfilePage() {
                         <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
                           Nombre Completo *
                         </label>
-                        <input
-                          type="text"
-                          value={profile.name}
-                          onChange={(e) => !isNameLocked && setProfile({ ...profile, name: e.target.value })}
-                          disabled={isNameLocked}
-                          className="w-full px-4 py-3 text-sm bg-gray-50 border-none ring-1 ring-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all disabled:bg-gray-100 disabled:text-gray-500 disabled:ring-gray-200 disabled:cursor-not-allowed font-medium shadow-inner"
-                          placeholder="Ej: Juan Pérez"
-                        />
+                        <div className="relative">
+                          <FiUser className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            value={profile.name}
+                            onChange={(e) => !isNameLocked && setProfile({ ...profile, name: e.target.value })}
+                            disabled={isNameLocked}
+                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed font-medium shadow-sm"
+                            placeholder="Ej: Juan Pérez"
+                          />
+                        </div>
                         {isNameLocked && (
                           <div className="absolute hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-gray-900 text-white text-xs rounded-lg px-3 py-2.5 z-20 shadow-xl text-center">
                             <div className="relative">
@@ -634,15 +637,18 @@ export default function ProfilePage() {
                         <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
                           Documento de Identidad *
                         </label>
-                        <input
-                          type="text"
-                          value={profile.idNumber}
-                          onChange={(e) => !profile.idNumber && setProfile({ ...profile, idNumber: e.target.value })}
-                          disabled={!!profile.idNumber}
-                          maxLength={12}
-                          className="w-full px-4 py-3 text-sm bg-gray-50 border-none ring-1 ring-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all disabled:bg-gray-100 disabled:text-gray-500 disabled:ring-gray-200 disabled:cursor-not-allowed uppercase font-medium shadow-inner"
-                          placeholder="V-1234..."
-                        />
+                        <div className="relative">
+                          <FiFileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            value={profile.idNumber}
+                            onChange={(e) => !profile.idNumber && setProfile({ ...profile, idNumber: e.target.value })}
+                            disabled={!!profile.idNumber}
+                            maxLength={12}
+                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed uppercase font-medium shadow-sm"
+                            placeholder="V-1234..."
+                          />
+                        </div>
                       </div>
 
                       {/* Teléfono */}
@@ -656,7 +662,7 @@ export default function ProfilePage() {
                             <button
                               type="button"
                               onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                              className="h-full px-4 py-3 bg-gray-50 ring-1 ring-gray-200 rounded-xl flex items-center gap-2 hover:bg-gray-100 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
+                              className="h-full px-4 py-3 bg-white/70 border border-gray-200 rounded-xl flex items-center gap-2 hover:border-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
                             >
                               <div className="relative w-5 h-3.5 shadow-sm rounded-sm overflow-hidden flex-shrink-0">
                                 <Image
@@ -697,14 +703,17 @@ export default function ProfilePage() {
                             )}
                           </div>
 
-                          <input
-                            type="tel"
-                            value={profile.phone}
-                            onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                            maxLength={11}
-                            className="flex-1 min-w-0 px-4 py-3 text-sm bg-gray-50 border-none ring-1 ring-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium shadow-inner"
-                            placeholder="4121234567"
-                          />
+                          <div className="relative flex-1">
+                            <FiPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                              type="tel"
+                              value={profile.phone}
+                              onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                              maxLength={11}
+                              className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                              placeholder="4121234567"
+                            />
+                          </div>
                         </div>
                       </div>
 
@@ -713,12 +722,15 @@ export default function ProfilePage() {
                         <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
                           Correo Electrónico
                         </label>
-                        <input
-                          type="email"
-                          value={profile.email}
-                          disabled
-                          className="w-full px-4 py-3 text-sm bg-gray-100 border-none ring-1 ring-gray-200 rounded-xl text-gray-500 cursor-not-allowed font-medium shadow-inner"
-                        />
+                        <div className="relative">
+                          <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type="email"
+                            value={profile.email}
+                            disabled
+                            className="w-full pl-10 pr-4 py-3 text-sm bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed font-medium shadow-sm"
+                          />
+                        </div>
                       </div>
 
                       {/* Fecha de Nacimiento */}
@@ -726,12 +738,15 @@ export default function ProfilePage() {
                         <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
                           Nacimiento
                         </label>
-                        <input
-                          type="date"
-                          value={profile.birthdate}
-                          onChange={(e) => setProfile({ ...profile, birthdate: e.target.value })}
-                          className="w-full px-4 py-3 text-sm bg-gray-50 border-none ring-1 ring-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-gray-700 shadow-inner"
-                        />
+                        <div className="relative">
+                          <FiCalendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+                          <input
+                            type="date"
+                            value={profile.birthdate}
+                            onChange={(e) => setProfile({ ...profile, birthdate: e.target.value })}
+                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm"
+                          />
+                        </div>
                       </div>
 
                       {/* Género */}
@@ -739,22 +754,25 @@ export default function ProfilePage() {
                         <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
                           Género
                         </label>
-                        <select
-                          value={profile.gender}
-                          onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
-                          className="w-full px-4 py-3 text-sm bg-gray-50 border-none ring-1 ring-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-gray-700 shadow-inner"
-                        >
-                          <option value="prefer_not_to_say">No especificar</option>
-                          <option value="male">Masculino</option>
-                          <option value="female">Femenino</option>
-                          <option value="other">Otro</option>
-                        </select>
+                        <div className="relative">
+                          <FiUser className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+                          <select
+                            value={profile.gender}
+                            onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
+                            className="w-full pl-10 pr-8 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm"
+                          >
+                            <option value="prefer_not_to_say">No especificar</option>
+                            <option value="male">Masculino</option>
+                            <option value="female">Femenino</option>
+                            <option value="other">Otro</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Location */}
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-md p-4 sm:p-6 mb-8">
+                  <div className="bg-transparent sm:bg-white rounded-2xl border-0 sm:border border-gray-100 shadow-none sm:shadow-md p-0 sm:p-6 mb-6 sm:mb-8">
                     <div className="flex items-center gap-2 mb-4">
                       <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <FiMapPin className="w-5 h-5 text-blue-600" />
@@ -778,34 +796,40 @@ export default function ProfilePage() {
                         <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
                           Ciudad
                         </label>
-                        <input
-                          type="text"
-                          value={profile.city}
-                          onChange={(e) => setProfile({ ...profile, city: e.target.value })}
-                          className="w-full px-4 py-3 text-sm bg-gray-50 border-none ring-1 ring-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium shadow-inner"
-                          placeholder="Ej: Caracas"
-                        />
+                        <div className="relative">
+                          <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            value={profile.city}
+                            onChange={(e) => setProfile({ ...profile, city: e.target.value })}
+                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                            placeholder="Ej: Caracas"
+                          />
+                        </div>
                       </div>
                       <div className="col-span-1">
                         <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
                           Estado
                         </label>
-                        <select
-                          value={profile.state}
-                          onChange={(e) => setProfile({ ...profile, state: e.target.value })}
-                          className="w-full px-4 py-3 text-sm bg-gray-50 border-none ring-1 ring-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-gray-700 shadow-inner"
-                        >
-                          <option value="">Sel...</option>
-                          {VENEZUELA_STATES.map(state => (
-                            <option key={state} value={state}>{state}</option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <FiGlobe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+                          <select
+                            value={profile.state}
+                            onChange={(e) => setProfile({ ...profile, state: e.target.value })}
+                            className="w-full pl-10 pr-8 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm"
+                          >
+                            <option value="">Sel...</option>
+                            {VENEZUELA_STATES.map(state => (
+                              <option key={state} value={state}>{state}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Receipt Type Selector */}
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-md p-4 sm:p-6 mb-8">
+                  <div className="bg-transparent sm:bg-white rounded-2xl border-0 sm:border border-gray-100 shadow-none sm:shadow-md p-0 sm:p-6 mb-6 sm:mb-8">
                     <div className="flex items-center gap-2 mb-4">
                       <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <FiFileText className="w-5 h-5 text-blue-600" />
@@ -891,7 +915,7 @@ export default function ProfilePage() {
                             toast.error('Requiere cuenta empresarial verificada. Ve a la pestaña de "Cuenta Empresarial".');
                             setTimeout(() => setActiveTab('business'), 1500);
                           }}>
-                            <div className="absolute top-2 right-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] font-bold rounded flex items-center gap-1 shadow-sm border border-yellow-200">
+                            <div className="absolute top-2 right-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-bold rounded flex items-center gap-1 shadow-sm border border-yellow-200">
                               <FiAlertCircle className="w-3 h-3" />
                               Verificación Requerida
                             </div>
@@ -934,7 +958,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Business Information Form - Compact */}
-              <div className="bg-white rounded-xl border border-[#e9ecef] shadow-sm p-3">
+              <div className="bg-transparent sm:bg-white rounded-xl border-0 sm:border border-[#e9ecef] shadow-none sm:shadow-sm p-0 sm:p-4">
                 <h3 className="text-base font-bold text-[#212529] mb-3 flex items-center gap-2">
                   <FiFileText className="w-4 h-4 text-[#2a63cd]" />
                   Información de la Empresa
@@ -944,30 +968,36 @@ export default function ProfilePage() {
                   {/* Company Name & RIF */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-[#212529] mb-1.5">
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
                         Nombre de la Empresa *
                       </label>
-                      <input
-                        type="text"
-                        value={profile.companyName}
-                        onChange={(e) => setProfile({ ...profile, companyName: e.target.value })}
-                        disabled={profile.businessVerificationStatus === 'PENDING' || profile.businessVerificationStatus === 'APPROVED'}
-                        placeholder="Ej: Tecnología Avanzada C.A."
-                        className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] disabled:bg-gray-50 disabled:text-gray-500"
-                      />
+                      <div className="relative">
+                        <FiBriefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={profile.companyName}
+                          onChange={(e) => setProfile({ ...profile, companyName: e.target.value })}
+                          disabled={profile.businessVerificationStatus === 'PENDING' || profile.businessVerificationStatus === 'APPROVED'}
+                          placeholder="Ej: Tecnología Avanzada C.A."
+                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed font-medium shadow-sm"
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-[#212529] mb-1.5">
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
                         RIF / NIT *
                       </label>
-                      <input
-                        type="text"
-                        value={profile.taxId}
-                        onChange={(e) => setProfile({ ...profile, taxId: e.target.value })}
-                        disabled={profile.businessVerificationStatus === 'PENDING' || profile.businessVerificationStatus === 'APPROVED'}
-                        placeholder="Ej: J-12345678-9"
-                        className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] disabled:bg-gray-50 disabled:text-gray-500"
-                      />
+                      <div className="relative">
+                        <FiFileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={profile.taxId}
+                          onChange={(e) => setProfile({ ...profile, taxId: e.target.value })}
+                          disabled={profile.businessVerificationStatus === 'PENDING' || profile.businessVerificationStatus === 'APPROVED'}
+                          placeholder="Ej: J-12345678-9"
+                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed font-medium shadow-sm"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -1038,7 +1068,7 @@ export default function ProfilePage() {
                     </div>
                     <p className="text-xl lg:text-3xl font-black text-[#2a63cd]">{stats.totalOrders}</p>
                   </div>
-                  <h3 className="font-bold text-[10px] lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Pedidos</h3>
+                  <h3 className="font-bold text-xs lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Pedidos</h3>
                 </div>
 
                 <div
@@ -1053,7 +1083,7 @@ export default function ProfilePage() {
                       <p className="text-xl lg:text-3xl font-black text-[#2a63cd]">${stats.totalSpent.toFixed(0)}</p>
                     </div>
                   </div>
-                  <h3 className="font-bold text-[10px] lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Gastado</h3>
+                  <h3 className="font-bold text-xs lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Gastado</h3>
                 </div>
 
                 <div
@@ -1068,7 +1098,7 @@ export default function ProfilePage() {
                       {new Date(stats.memberSince).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
                     </p>
                   </div>
-                  <h3 className="font-bold text-[10px] lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Cliente</h3>
+                  <h3 className="font-bold text-xs lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Cliente</h3>
                 </div>
               </div>
 

@@ -76,15 +76,16 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
   const { addItem, items } = useCart();
   const { settings } = useSettings();
   const [product, setProduct] = useState<Product>(initialProduct);
+  const filteredSpecs = product?.specs
+    ? Object.entries(product.specs).filter(([key, value]) => key !== 'digitalPricing' && typeof value !== 'object')
+    : [];
   const [loading, setLoading] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(true);
-  const [isSpecsExpanded, setIsSpecsExpanded] = useState(false);
-  const [isRedemptionExpanded, setIsRedemptionExpanded] = useState(false);
+  // Expanded states migrated to a clean tabbed layout
   const { data: session } = useSession();
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 });
@@ -837,145 +838,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
               </div>
             )}
 
-            {/* Description - Always Visible, Clean Design */}
-            <div className="mt-6">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center shadow-sm">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                  </svg>
-                </div>
-                <h3 className="font-bold text-[#212529]">Descripción del Producto</h3>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                {product.description ? (
-                  <p className="text-gray-600 leading-relaxed text-sm">{product.description}</p>
-                ) : (
-                  <p className="text-sm italic text-gray-400">Descripción por definir</p>
-                )}
-              </div>
-
-              {/* Trust Badges - Below Description (conditional for digital) */}
-              <div className="flex flex-wrap justify-center gap-2 mt-4">
-                {/* 100% Original - Always show */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold text-green-600 bg-green-50 border-green-100">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  <span>100% Original</span>
-                </div>
-
-                {/* Conditional: Physical = Envío Nacional, Digital = Envío Dinámico */}
-                {product.productType === 'DIGITAL' ? (
-                  product.deliveryMethod === 'MANUAL' ? (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold text-purple-700 bg-purple-50 border-purple-100 animate-pulse">
-                      <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Recarga Directa (5-15 min)</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold text-[#2a63cd] bg-blue-50 border-blue-100">
-                      <FiSend className="w-4 h-4" />
-                      <span>Envío Digital Instantáneo</span>
-                    </div>
-                  )
-                ) : (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold text-[#2a63cd] bg-blue-50 border-blue-100">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span>Envío Nacional</span>
-                  </div>
-                )}
-
-                {/* Pago Seguro - Always show */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold text-purple-600 bg-purple-50 border-purple-100">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                  <span>Pago Seguro</span>
-                </div>
-              </div>
-
-              {/* Redemption Instructions - Dynamic block for digital products */}
-              {product.productType === 'DIGITAL' && product.specs?.redemptionInstructions && (
-                <div className="mt-4">
-                  <button
-                    onClick={() => setIsRedemptionExpanded(!isRedemptionExpanded)}
-                    className="flex items-center gap-2 mb-2 w-full text-left"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="font-bold text-gray-900 flex-1">¿Cómo funciona esta recarga?</h3>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center transition-all duration-300 ${isRedemptionExpanded ? 'rotate-180' : ''}`}>
-                        <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </button>
-
-                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isRedemptionExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="bg-purple-50/50 rounded-xl p-4 border border-purple-100">
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{product.specs.redemptionInstructions}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Specifications - Same style as Description */}
-              {product.specs && (() => {
-                const filteredSpecs = Object.entries(product.specs).filter(([key, value]) =>
-                  key !== 'digitalPricing' && typeof value !== 'object'
-                );
-
-                return filteredSpecs.length > 0 && (
-                  <div className="mt-6">
-                    {/* Header - Same style as Description */}
-                    <button
-                      onClick={() => setIsSpecsExpanded(!isSpecsExpanded)}
-                      className="flex items-center gap-2 mb-3 w-full text-left"
-                    >
-                      <div className="w-8 h-8 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center shadow-sm">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                        </svg>
-                      </div>
-                      <h3 className="font-bold text-[#212529] flex-1">Especificaciones Técnicas</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-[#2a63cd]/10 rounded-full text-xs text-[#2a63cd] font-medium">
-                          {filteredSpecs.length}
-                        </span>
-                        <div className={`w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center transition-all duration-300 ${isSpecsExpanded ? 'rotate-180' : ''}`}>
-                          <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </div>
-                    </button>
-
-                    {/* Specs Grid - Dynamic columns based on count */}
-                    <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isSpecsExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                        <div className={`grid gap-3 ${filteredSpecs.length === 1 ? 'grid-cols-1' :
-                          filteredSpecs.length === 2 ? 'grid-cols-2' :
-                            filteredSpecs.length === 3 ? 'grid-cols-3' :
-                              filteredSpecs.length <= 4 ? 'grid-cols-2 md:grid-cols-4' :
-                                filteredSpecs.length <= 6 ? 'grid-cols-2 md:grid-cols-3' :
-                                  'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-                          }`}>
-                          {filteredSpecs.map(([key, value]) => (
-                            <div key={key} className="bg-white rounded-lg px-3 py-2.5 border border-gray-100 hover:border-[#2a63cd]/30 transition-colors">
-                              <span className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{key}</span>
-                              <span className="text-sm font-bold text-[#212529]">{String(value)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
+            {/* Expanded details moved below the fold into a tabbed full-width layout */}
 
             {/* Actions Section */}
             <div className="space-y-4 pt-6 border-t border-gray-100">
@@ -1051,6 +914,143 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
 
           </div>
         </div >
+
+        {/* Full-width Product Details Container (Description, Specs, Instructions) */}
+        <div className="mt-8 bg-white rounded-3xl border border-gray-100 p-6 lg:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.01)] space-y-8">
+          
+          {/* Trust Badges Banner */}
+          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pb-6 border-b border-gray-100">
+            {/* 100% Original - Always show */}
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold text-green-600 bg-green-50 border-green-100 shadow-sm">
+              <svg className="w-4.5 h-4.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>100% Original</span>
+            </div>
+
+            {/* Conditional: Physical = Envío Nacional, Digital = Envío Dinámico */}
+            {product.productType === 'DIGITAL' ? (
+              product.deliveryMethod === 'MANUAL' ? (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold text-purple-700 bg-purple-50 border-purple-100 shadow-sm">
+                  <svg className="w-4.5 h-4.5 text-purple-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
+                  </svg>
+                  <span>Recarga Directa (5-15 min)</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold text-[#2a63cd] bg-blue-50 border-blue-100 shadow-sm">
+                  <FiSend className="w-4 h-4 text-[#2a63cd]" />
+                  <span>Envío Digital Instantáneo</span>
+                </div>
+              )
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold text-[#2a63cd] bg-blue-50 border-blue-100 shadow-sm">
+                <svg className="w-4.5 h-4.5 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Envío Nacional</span>
+              </div>
+            )}
+
+            {/* Pago Seguro - Always show */}
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold text-purple-600 bg-purple-50 border-purple-100 shadow-sm">
+              <svg className="w-4.5 h-4.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span>Pago Seguro</span>
+            </div>
+          </div>
+
+          {/* Tabbed interface */}
+          <div>
+            {/* Tabs Navigation */}
+            <div className="flex border-b border-gray-100 mb-6 overflow-x-auto no-scrollbar gap-2">
+              <button
+                onClick={() => setActiveTab('description')}
+                className={`py-3 px-4 text-sm font-bold border-b-2 transition-all relative flex-shrink-0 ${
+                  activeTab === 'description'
+                    ? 'border-[#2a63cd] text-[#2a63cd]'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                Descripción
+              </button>
+
+              {filteredSpecs.length > 0 && (
+                <button
+                  onClick={() => setActiveTab('specs')}
+                  className={`py-3 px-4 text-sm font-bold border-b-2 transition-all relative flex-shrink-0 ${
+                    activeTab === 'specs'
+                      ? 'border-[#2a63cd] text-[#2a63cd]'
+                      : 'border-transparent text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  Especificaciones Técnicas
+                  <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
+                    activeTab === 'specs' ? 'bg-[#2a63cd]/15 text-[#2a63cd]' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {filteredSpecs.length}
+                  </span>
+                </button>
+              )}
+
+              {product.productType === 'DIGITAL' && product.specs?.redemptionInstructions && (
+                <button
+                  onClick={() => setActiveTab('instructions')}
+                  className={`py-3 px-4 text-sm font-bold border-b-2 transition-all relative flex-shrink-0 ${
+                    activeTab === 'instructions'
+                      ? 'border-[#2a63cd] text-[#2a63cd]'
+                      : 'border-transparent text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  ¿Cómo funciona?
+                </button>
+              )}
+            </div>
+
+            {/* Tabs Content with micro-animations */}
+            <div className="min-h-[120px]">
+              {activeTab === 'description' && (
+                <div className="animate-fadeIn animate-[fadeIn_0.3s_ease-out_both]">
+                  {product.description ? (
+                    <p className="text-gray-600 leading-relaxed text-sm whitespace-pre-line">{product.description}</p>
+                  ) : (
+                    <p className="text-sm italic text-gray-400">Descripción por definir</p>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'specs' && filteredSpecs.length > 0 && (
+                <div className="animate-fadeIn animate-[fadeIn_0.3s_ease-out_both]">
+                  <div className={`grid gap-3 ${
+                    filteredSpecs.length === 1 ? 'grid-cols-1' :
+                    filteredSpecs.length === 2 ? 'grid-cols-2' :
+                    filteredSpecs.length === 3 ? 'grid-cols-3' :
+                    filteredSpecs.length <= 4 ? 'grid-cols-2 md:grid-cols-4' :
+                    filteredSpecs.length <= 6 ? 'grid-cols-2 md:grid-cols-3' :
+                    'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+                  }`}>
+                    {filteredSpecs.map(([key, value]) => (
+                      <div key={key} className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:border-[#2a63cd]/30 transition-colors">
+                        <span className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{key}</span>
+                        <span className="text-sm font-bold text-[#212529]">{String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'instructions' && product.specs?.redemptionInstructions && (
+                <div className="animate-fadeIn animate-[fadeIn_0.3s_ease-out_both] bg-purple-50/30 rounded-2xl p-5 border border-purple-100/50">
+                  <p className="text-sm text-gray-755 whitespace-pre-wrap leading-relaxed">
+                    {product.specs.redemptionInstructions}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+        </div>
 
 
         {/* Reviews Section */}

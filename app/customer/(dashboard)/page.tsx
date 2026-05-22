@@ -133,35 +133,35 @@ export default function CustomerDashboard() {
       <CustomerOnboarding stats={stats} />
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-3 flex-1 min-h-0">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6 flex-1 min-h-0">
         {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-lg border border-[#e9ecef] overflow-hidden flex flex-col">
-          <div className="px-2 lg:px-3 py-1.5 lg:py-2 border-b border-[#e9ecef] flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-1.5 lg:gap-2">
-              <div className="w-5 h-5 lg:w-6 lg:h-6 bg-[#2a63cd]/10 rounded-md flex items-center justify-center">
-                <FiPackage className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-[#2a63cd]" />
+        <div className="xl:col-span-2 bg-white/90 backdrop-blur-md border border-white/60 shadow-md rounded-2xl overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300">
+          <div className="px-4 lg:px-5 py-3 lg:py-4 border-b border-white/40 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 lg:w-7 lg:h-7 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center">
+                <FiPackage className="w-3 h-3 lg:w-4 lg:h-4 text-[#2a63cd]" />
               </div>
               <h2 className="font-bold text-[#212529] text-sm lg:text-base">Pedidos Recientes</h2>
             </div>
-            <Link href="/customer/orders" className="text-[9px] lg:text-[10px] text-[#2a63cd] hover:underline font-semibold flex items-center gap-0.5">
-              Ver todos <FiChevronRight className="w-2 h-2 lg:w-2.5 lg:h-2.5" />
+            <Link href="/customer/orders" className="text-[10px] lg:text-[11px] text-[#2a63cd] hover:underline font-semibold flex items-center gap-0.5">
+              Ver todos <FiChevronRight className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
             </Link>
           </div>
-          <div className="p-1.5 lg:p-2 flex-1 overflow-y-auto">
+          <div className="p-3 lg:p-4 flex-1 overflow-y-auto">
             {stats?.recentOrders && stats.recentOrders.length > 0 ? (
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {stats.recentOrders.slice(0, 3).map((order) => {
                   const statusConfig = getStatusConfig(order.status);
                   const StatusIcon = statusConfig.icon;
                   return (
-                    <Link href="/customer/orders" key={order.id} className="flex items-center gap-2 lg:gap-3 p-2 lg:p-3 rounded-lg hover:bg-[#f8f9fa] transition-colors">
-                      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/5 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <FiPackage className="w-3.5 h-3.5 lg:w-5 lg:h-5 text-[#2a63cd]" />
+                    <Link href="/customer/orders" key={order.id} className="flex items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-xl hover:bg-blue-50/50 hover:shadow-sm border border-transparent hover:border-white/40 transition-all">
+                      <div className="w-9 h-9 lg:w-11 lg:h-11 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/5 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <FiPackage className="w-4 h-4 lg:w-5 lg:h-5 text-[#2a63cd]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 lg:gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-bold text-[#212529] text-xs lg:text-sm">#{order.orderNumber}</p>
-                          <span className={`px-1.5 lg:px-2 py-0.5 rounded-full text-[8px] lg:text-[10px] font-semibold ${statusConfig.bg} ${statusConfig.text} flex items-center gap-0.5 lg:gap-1`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] lg:text-[10px] font-semibold ${statusConfig.bg} ${statusConfig.text} flex items-center gap-0.5 lg:gap-1`}>
                             <StatusIcon className="w-2 h-2 lg:w-2.5 lg:h-2.5" />
                             {statusConfig.label}
                           </span>
@@ -170,7 +170,7 @@ export default function CustomerDashboard() {
                       </div>
                       <div className="text-right flex-shrink-0">
                         <p className="font-bold text-[#212529] text-sm lg:text-base">${order.total.toFixed(2)}</p>
-                        <p className="text-[8px] lg:text-[10px] text-[#6a6c6b]">
+                        <p className="text-[9px] lg:text-[10px] text-[#6a6c6b]">
                           {new Date(order.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                         </p>
                       </div>
@@ -179,13 +179,13 @@ export default function CustomerDashboard() {
                 })}
               </div>
             ) : (
-              <div className="text-center py-6 lg:py-8">
-                <div className="w-12 h-12 lg:w-16 lg:h-16 bg-[#f8f9fa] rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+              <div className="text-center py-8 lg:py-12">
+                <div className="w-14 h-14 lg:w-16 lg:h-16 bg-white/50 border border-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm">
                   <FiPackage className="w-6 h-6 lg:w-8 lg:h-8 text-[#adb5bd]" />
                 </div>
                 <h3 className="text-sm lg:text-base font-bold text-[#212529] mb-1">Empieza tu aventura</h3>
                 <p className="text-[#6a6c6b] text-xs lg:text-sm mb-4">Aún no tienes pedidos. ¡Es hora de armar tu setup!</p>
-                <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all font-bold text-xs lg:text-sm">
+                <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all font-bold text-xs lg:text-sm">
                   <FiTag className="w-4 h-4" />
                   Ver Ofertas de Hoy
                 </Link>
@@ -195,18 +195,18 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Activity & Stats */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
           {/* Activity Feed */}
-          <div className="bg-white rounded-lg border border-[#e9ecef] overflow-hidden flex flex-col flex-1">
-            <div className="px-2 lg:px-3 py-1.5 lg:py-2 border-b border-[#e9ecef] flex-shrink-0">
-              <div className="flex items-center gap-1.5 lg:gap-2">
-                <div className="w-5 h-5 lg:w-7 lg:h-7 bg-green-100 rounded-md flex items-center justify-center">
-                  <FiActivity className="w-2.5 h-2.5 lg:w-4 lg:h-4 text-green-600" />
+          <div className="bg-white/90 backdrop-blur-md border border-white/60 shadow-md rounded-2xl overflow-hidden flex flex-col flex-1 hover:shadow-lg transition-all duration-300">
+            <div className="px-4 lg:px-5 py-3 lg:py-4 border-b border-white/40 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 lg:w-7 lg:h-7 bg-green-100 rounded-lg flex items-center justify-center">
+                  <FiActivity className="w-3 h-3 lg:w-4 lg:h-4 text-green-600" />
                 </div>
                 <h2 className="font-bold text-[#212529] text-sm lg:text-base">Actividad</h2>
               </div>
             </div>
-            <div className="p-2 lg:p-3 flex-1 overflow-y-auto">
+            <div className="p-3 lg:p-4 flex-1 overflow-y-auto">
               {stats?.recentActivity && stats.recentActivity.length > 0 ? (
                 <div className="space-y-1.5 lg:space-y-2">
                   {stats.recentActivity.slice(0, 4).map((activity) => {

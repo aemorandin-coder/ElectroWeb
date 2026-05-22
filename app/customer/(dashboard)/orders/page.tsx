@@ -215,11 +215,11 @@ export default function OrdersPage() {
           🚀 MOBILE VIEW - PREMIUM ANIMATED DESIGN
           Epic animations for Android Full HD+ / QHD+
           ============================================ */}
-      <div className="lg:hidden overflow-y-auto h-full -m-2 bg-slate-50">
+      <div className="lg:hidden overflow-y-auto h-full space-y-4">
         {/* ========================================
             ANIMATED HERO - Premium Effects
             ======================================== */}
-        <div className="relative mx-2 mt-2 rounded-2xl overflow-hidden">
+        <div className="relative rounded-2xl overflow-hidden">
           {/* Animated Gradient Background */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#0ea5e9]">
             {/* Floating Orbs */}
@@ -238,7 +238,7 @@ export default function OrdersPage() {
                   <FiPackage className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-[9px] text-blue-200 uppercase font-bold tracking-wider">Mis Pedidos</p>
+                  <p className="text-xs text-blue-200 uppercase font-bold tracking-wider">Mis Pedidos</p>
                   <p className="text-xl font-black text-white" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
                     ${stats.totalSpent.toFixed(0)}
                   </p>
@@ -252,7 +252,7 @@ export default function OrdersPage() {
                   <div className="w-8 h-8 bg-emerald-500/30 rounded-lg flex items-center justify-center backdrop-blur-sm border border-emerald-300/20">
                     <FiCheck className="w-4 h-4 text-emerald-200" />
                   </div>
-                  <span className="absolute -top-1.5 -right-1.5 bg-white text-emerald-600 text-[9px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg animate-pulse">
+                  <span className="absolute -top-1.5 -right-1.5 bg-white text-emerald-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg animate-pulse">
                     {stats.completedOrders}
                   </span>
                 </div>
@@ -262,7 +262,7 @@ export default function OrdersPage() {
                   <div className="w-8 h-8 bg-amber-500/30 rounded-lg flex items-center justify-center backdrop-blur-sm border border-amber-300/20">
                     <FiClock className="w-4 h-4 text-amber-200" />
                   </div>
-                  <span className="absolute -top-1.5 -right-1.5 bg-white text-amber-600 text-[9px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg animate-pulse" style={{ animationDelay: '0.3s' }}>
+                  <span className="absolute -top-1.5 -right-1.5 bg-white text-amber-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg animate-pulse" style={{ animationDelay: '0.3s' }}>
                     {stats.pendingOrders}
                   </span>
                 </div>
@@ -272,7 +272,7 @@ export default function OrdersPage() {
                   <div className="w-8 h-8 bg-blue-500/30 rounded-lg flex items-center justify-center backdrop-blur-sm border border-blue-300/20">
                     <FiShoppingBag className="w-4 h-4 text-blue-200" />
                   </div>
-                  <span className="absolute -top-1.5 -right-1.5 bg-white text-blue-600 text-[9px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                  <span className="absolute -top-1.5 -right-1.5 bg-white text-blue-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
                     {stats.totalItems}
                   </span>
                 </div>
@@ -284,16 +284,16 @@ export default function OrdersPage() {
         {/* ========================================
             SEARCH & FILTERS - Comfortable Spacing
             ======================================== */}
-        <div className="px-3 pt-3 pb-2 space-y-3">
+        <div className="pt-3 pb-2 space-y-3">
           {/* Search Bar - Centered placeholder */}
           <div className="relative">
-            <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
+            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               placeholder="Buscar pedido..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-8 py-2.5 text-xs bg-white border border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+              className="w-full pl-10 pr-10 py-2.5 text-sm bg-white/70 border border-gray-200 rounded-xl focus:outline-none focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 hover:border-blue-400 transition-all duration-200 shadow-sm"
             />
             <button
               onClick={fetchOrders}
@@ -301,112 +301,108 @@ export default function OrdersPage() {
             >
               <FiRefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
-          </div >
+          </div>
 
           {/* Filter Pills - FULL TEXT (no abbreviations) */}
-          < div className="flex gap-1 overflow-x-auto scrollbar-hide" >
-            {
-              [
-                { value: 'ALL', label: 'Todos' },
-                { value: 'PENDING', label: 'Pendiente' },
-                { value: 'PROCESSING', label: 'Preparando' },
-                { value: 'SHIPPED', label: 'Enviado' },
-                { value: 'DELIVERED', label: 'Entregado' },
-              ].map((filter) => (
-                <button
-                  key={filter.value}
-                  onClick={() => setSelectedStatus(filter.value)}
-                  className={`px-3 py-1.5 text-[10px] font-bold rounded-lg whitespace-nowrap transition-all flex-shrink-0 ${selectedStatus === filter.value
-                    ? 'bg-[#2a63cd] text-white shadow-md shadow-[#2a63cd]/20'
-                    : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
-                    }`}
-                >
-                  {filter.label}
-                </button>
-              ))
-            }
-          </div >
-        </div >
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+            {[
+              { value: 'ALL', label: 'Todos' },
+              { value: 'PENDING', label: 'Pendiente' },
+              { value: 'PROCESSING', label: 'Preparando' },
+              { value: 'SHIPPED', label: 'Enviado' },
+              { value: 'DELIVERED', label: 'Entregado' },
+            ].map((filter) => (
+              <button
+                key={filter.value}
+                onClick={() => setSelectedStatus(filter.value)}
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all flex-shrink-0 ${selectedStatus === filter.value
+                  ? 'bg-[#2a63cd] text-white shadow-md shadow-[#2a63cd]/20'
+                  : 'bg-white/80 text-gray-500 border border-gray-200 hover:bg-gray-50'
+                  }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* ========================================
             ORDERS LIST - Comfortable Spacing
             ======================================== */}
-        < div className="px-3 pb-24 space-y-3" >
-          {
-            filteredOrders.length === 0 ? (
-              /* Empty State */
-              <div className="text-center py-8">
-                <div className="w-12 h-12 mx-auto mb-2 bg-blue-50 rounded-full flex items-center justify-center">
-                  <FiPackage className="w-6 h-6 text-blue-300" />
-                </div>
-                <p className="text-[11px] font-bold text-gray-700 mb-1">Sin pedidos</p>
-                <p className="text-[9px] text-gray-400 mb-3">
-                  {selectedStatus === 'ALL' ? 'Aún no has realizado ningún pedido' : 'No hay pedidos con este estado'}
-                </p>
-                <Link
-                  href="/"
-                  className="inline-flex items-center gap-1 px-3 py-2 bg-[#2a63cd] text-white text-[10px] font-bold rounded-lg"
-                >
-                  <FiShoppingBag className="w-3 h-3" />
-                  Explorar
-                </Link>
+        <div className="pb-24 space-y-3">
+          {filteredOrders.length === 0 ? (
+            /* Empty State */
+            <div className="text-center py-8">
+              <div className="w-12 h-12 mx-auto mb-2 bg-blue-50 rounded-full flex items-center justify-center">
+                <FiPackage className="w-6 h-6 text-blue-300" />
               </div>
-            ) : (
-              /* Orders List - Comfortable */
-              filteredOrders.map((order) => {
-                const statusConfig = getStatusConfig(order.status);
-                return (
-                  <div
-                    key={order.id}
-                    className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* Status Icon - Normal size */}
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${statusConfig.gradient || 'from-blue-400 to-blue-500'} flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                        <FiPackage className="w-4 h-4 text-white" />
+              <p className="text-xs font-bold text-gray-700 mb-1">Sin pedidos</p>
+              <p className="text-xs text-gray-400 mb-3">
+                {selectedStatus === 'ALL' ? 'Aún no has realizado ningún pedido' : 'No hay pedidos con este estado'}
+              </p>
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#2a63cd] text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                <FiShoppingBag className="w-3 h-3" />
+                Explorar
+              </Link>
+            </div>
+          ) : (
+            /* Orders List - Comfortable */
+            filteredOrders.map((order) => {
+              const statusConfig = getStatusConfig(order.status);
+              return (
+                <div
+                  key={order.id}
+                  className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-gray-150 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Status Icon - Normal size */}
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${statusConfig.gradient || 'from-blue-400 to-blue-500'} flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                      <FiPackage className="w-4 h-4 text-white" />
+                    </div>
+
+                    {/* Order Info - More breathing room */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-bold text-gray-900 text-xs">#{order.orderNumber}</span>
+                        <span className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${statusConfig.bg} ${statusConfig.text}`}>
+                          {getStatusText(order.status)}
+                        </span>
                       </div>
+                      <p className="text-xs text-gray-500">
+                        {getTimeSince(order.createdAt)} • {order.items.length} item{order.items.length > 1 ? 's' : ''}
+                      </p>
+                    </div>
 
-                      {/* Order Info - More breathing room */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-bold text-gray-900 text-xs">#{order.orderNumber}</span>
-                          <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold ${statusConfig.bg} ${statusConfig.text}`}>
-                            {getStatusText(order.status)}
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-gray-500">
-                          {getTimeSince(order.createdAt)} • {order.items.length} item{order.items.length > 1 ? 's' : ''}
-                        </p>
-                      </div>
+                    {/* Price */}
+                    <span className="text-sm font-black text-gray-900 flex-shrink-0 mr-1">${order.totalUSD.toFixed(0)}</span>
 
-                      {/* Price */}
-                      <span className="text-sm font-black text-gray-900 flex-shrink-0 mr-1">${order.totalUSD.toFixed(0)}</span>
-
-                      {/* Actions - Proper hit area */}
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        {order.hasDigital && order.paymentStatus === 'PAID' && (
-                          <Link
-                            href={`/customer/orders/${order.id}/digital`}
-                            className="w-8 h-8 bg-purple-500 text-white rounded-lg flex items-center justify-center hover:bg-purple-600 transition-colors shadow-sm shadow-purple-500/30"
-                          >
-                            <BsCardList className="w-4 h-4" />
-                          </Link>
-                        )}
-                        <button
-                          onClick={() => { setSelectedOrder(order); setShowOrderDetails(true); }}
-                          className="w-8 h-8 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors border border-gray-200"
+                    {/* Actions - Proper hit area */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {order.hasDigital && order.paymentStatus === 'PAID' && (
+                        <Link
+                          href={`/customer/orders/${order.id}/digital`}
+                          className="w-8 h-8 bg-purple-500 text-white rounded-lg flex items-center justify-center hover:bg-purple-600 transition-colors shadow-sm shadow-purple-500/30"
                         >
-                          <FiChevronRight className="w-4 h-4" />
-                        </button>
-                      </div>
+                          <BsCardList className="w-4 h-4" />
+                        </Link>
+                      )}
+                      <button
+                        onClick={() => { setSelectedOrder(order); setShowOrderDetails(true); }}
+                        className="w-8 h-8 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors border border-gray-200"
+                      >
+                        <FiChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                );
-              })
-            )
-          }
-        </div >
-      </div >
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
 
       {/* ============================================
           💻 DESKTOP VIEW - COMPLETELY UNCHANGED

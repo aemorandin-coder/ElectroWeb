@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { NotificationProvider } from "@/components/notifications/NotificationProvider";
+import ShareEarnModal from "@/components/social/ShareEarnModal";
 import NotificationToast from "@/components/notifications/NotificationToast";
 import DynamicFavicon from "@/components/DynamicFavicon";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
@@ -143,6 +144,7 @@ export default function RootLayout({
             <MobileNavBar />
             <WhatsAppButton />
             <NotificationToast />
+            <ShareEarnModal />
             <DynamicFavicon />
             <AnalyticsTracker />
             {/* Issue #26 — Tour guiado post-registro */}

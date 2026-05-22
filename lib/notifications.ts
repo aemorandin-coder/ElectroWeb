@@ -17,7 +17,10 @@ export type NotificationType =
   | 'RECHARGE_APPROVED'
   | 'RECHARGE_REJECTED'
   | 'NEW_CUSTOMER'
-  | 'NEW_RECHARGE_REQUEST';
+  | 'NEW_RECHARGE_REQUEST'
+  | 'NEW_ORDER'
+  | 'PRODUCT_REQUEST'
+  | 'NEW_CREATOR_REQUEST';
 
 interface CreateNotificationParams {
   userId: string;
@@ -233,6 +236,87 @@ export async function notifyAdminsNewCustomer(customerName: string, customerEmai
     return Promise.all(notifications);
   } catch (error) {
     console.error('Error notifying admins about new customer:', error);
+  }
+}
+
+/**
+ * Notify all admins about a new order
+ */
+export async function notifyAdminsNewOrder(customerName: string, orderNumber: string, total: number) {
+  try {
+    const admins = await prisma.user.findMany({
+      where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
+      select: { id: true }
+    });
+
+    const notifications = admins.map(admin =>
+      createNotification({
+        userId: admin.id,
+        type: 'NEW_ORDER',
+        title: 'Nueva Orden Recibida',
+        message: `${customerName} realizó una orden por $${total.toFixed(2)}. Número: ${orderNumber}`,
+        link: '/admin/orders',
+        icon: 'shopping-bag',
+      })
+    );
+
+    return Promise.all(notifications);
+  } catch (error) {
+    console.error('Error notifying admins about new order:', error);
+  }
+}
+
+/**
+ * Notify all admins about a new product request
+ */
+export async function notifyAdminsNewProductRequest(customerName: string, productName: string) {
+  try {
+    const admins = await prisma.user.findMany({
+      where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
+      select: { id: true }
+    });
+
+    const notifications = admins.map(admin =>
+      createNotification({
+        userId: admin.id,
+        type: 'PRODUCT_REQUEST',
+        title: 'Nueva Solicitud de Producto',
+        message: `${customerName} solicitó el producto: "${productName}".`,
+        link: '/admin/inquiries',
+        icon: 'package',
+      })
+    );
+
+    return Promise.all(notifications);
+  } catch (error) {
+    console.error('Error notifying admins about new product request:', error);
+  }
+}
+
+/**
+ * Notify all admins about a new creator application
+ */
+export async function notifyAdminsNewCreator(creatorName: string) {
+  try {
+    const admins = await prisma.user.findMany({
+      where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
+      select: { id: true }
+    });
+
+    const notifications = admins.map(admin =>
+      createNotification({
+        userId: admin.id,
+        type: 'NEW_CREATOR_REQUEST',
+        title: 'Nueva Solicitud de Creador',
+        message: `${creatorName} ha solicitado ser creador de cursos. Requiere revisión.`,
+        link: '/admin/creators',
+        icon: 'user-check',
+      })
+    );
+
+    return Promise.all(notifications);
+  } catch (error) {
+    console.error('Error notifying admins about new creator:', error);
   }
 }
 

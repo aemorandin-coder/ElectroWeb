@@ -9,7 +9,7 @@ import {
     FiPackage, FiInstagram, FiType,
     FiStar, FiTrendingUp, FiClock, FiAward, FiTag,
     FiCpu, FiHash, FiMessageCircle, FiKey, FiEye, FiEyeOff,
-    FiLayout, FiSave, FiBox
+    FiLayout, FiSave, FiBox, FiUsers
 } from 'react-icons/fi';
 
 interface Product {
@@ -100,6 +100,12 @@ export default function SocialMediaGenerator() {
     const [captionText, setCaptionText] = useState('');
     const [hashtagText, setHashtagText] = useState('');
 
+    // Recruitment state
+    const [campaignType, setCampaignType] = useState<'product' | 'recruitment'>('product');
+    const [recruitmentHeadline, setRecruitmentHeadline] = useState('¡ÚNETE COMO CREADOR!');
+    const [recruitmentCommission, setRecruitmentCommission] = useState<number>(10);
+    const [recruitmentBenefit, setRecruitmentBenefit] = useState('Gana recomendando productos');
+
     const canvasRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -183,7 +189,7 @@ export default function SocialMediaGenerator() {
     };
 
     const generateWithAI = async () => {
-        if (!selectedProduct) {
+        if (campaignType === 'product' && !selectedProduct) {
             toast.error('Selecciona un producto');
             return;
         }
@@ -194,21 +200,28 @@ export default function SocialMediaGenerator() {
 
         setAiLoading(true);
         try {
+            const prompt = campaignType === 'product'
+                ? `Genera contenido para Instagram Story de este producto:
+Producto: ${selectedProduct!.name}
+Precio: $${selectedProduct!.priceUSD} USD
+Categoria: ${selectedProduct!.category?.name || 'General'}
+
+Responde SOLO con JSON (sin markdown):
+{"headline":"TEXTO CORTO MAX 15 CHARS","caption":"Caption de max 100 chars con emojis","hashtags":["5 hashtags sin #"]}`
+                : `Genera contenido para una campaña de captación de influencers/creadores de contenido para nuestra tienda de tecnología y electrónica Electro Shop:
+Beneficio principal: ${recruitmentBenefit}
+Comisión ofrecida: ${recruitmentCommission}% por venta referida
+
+Responde SOLO con JSON (sin markdown):
+{"headline":"TITULO MAX 15 CHARS","caption":"Caption persuasivo de max 100 chars con emojis invitando a influencers a unirse al equipo","hashtags":["5 hashtags sin #"]}`;
+
             // Direct Gemini API call using the stored key
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiApiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{
-                        parts: [{
-                            text: `Genera contenido para Instagram Story de este producto:
-Producto: ${selectedProduct.name}
-Precio: $${selectedProduct.priceUSD} USD
-Categoria: ${selectedProduct.category?.name || 'General'}
-
-Responde SOLO con JSON (sin markdown):
-{"headline":"TEXTO CORTO MAX 15 CHARS","caption":"Caption de max 100 chars con emojis","hashtags":["5 hashtags sin #"]}`
-                        }]
+                        parts: [{ text: prompt }]
                     }]
                 })
             });
@@ -220,7 +233,12 @@ Responde SOLO con JSON (sin markdown):
                     const jsonMatch = text.match(/\{[\s\S]*\}/);
                     if (jsonMatch) {
                         const parsed = JSON.parse(jsonMatch[0]);
-                        setCustomText(parsed.headline || 'OFERTA');
+                        if (campaignType === 'product') {
+                            setCustomText(parsed.headline || 'OFERTA');
+                        } else {
+                            setRecruitmentHeadline(parsed.headline || 'ÚNETE AHORA');
+                            setCustomText(parsed.headline || 'ÚNETE AHORA');
+                        }
                         setCaptionText(parsed.caption || '');
                         setHashtagText(parsed.hashtags?.map((h: string) => `#${h}`).join(' ') || '');
                         toast.success('Contenido generado');
@@ -237,7 +255,8 @@ Responde SOLO con JSON (sin markdown):
     };
 
     const downloadImage = async () => {
-        if (!canvasRef.current || !selectedProduct) return;
+        if (!canvasRef.current) return;
+        if (campaignType === 'product' && !selectedProduct) return;
 
         setGenerating(true);
         try {
@@ -250,7 +269,10 @@ Responde SOLO con JSON (sin markdown):
             });
 
             const link = document.createElement('a');
-            link.download = `${selectedFormat.id}-${selectedProduct.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.png`;
+            const filename = campaignType === 'product'
+                ? `${selectedFormat.id}-${selectedProduct!.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.png`
+                : `${selectedFormat.id}-recruitment-${Date.now()}.png`;
+            link.download = filename;
             link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
 
@@ -323,7 +345,7 @@ Responde SOLO con JSON (sin markdown):
                             </button>
                             <button
                                 onClick={generateWithAI}
-                                disabled={!selectedProduct || aiLoading || !aiConfigured}
+                                disabled={(campaignType === 'product' && !selectedProduct) || aiLoading || !aiConfigured}
                                 className="px-2 py-1 bg-[#2a63cd] text-white rounded text-[10px] hover:bg-[#1e4ba3] disabled:opacity-50"
                                 title="Generar con IA"
                             >
@@ -332,40 +354,114 @@ Responde SOLO con JSON (sin markdown):
                         </div>
                     </div>
 
-                    {/* Product Selection */}
+                    {/* Campaign Type Toggle */}
                     <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                         <div className="flex items-center gap-1.5 mb-1.5">
-                            <FiPackage className="w-3.5 h-3.5 text-[#2a63cd]" />
-                            <span className="text-[10px] font-bold text-[#212529]">Producto</span>
+                            <FiLayers className="w-3.5 h-3.5 text-[#2a63cd]" />
+                            <span className="text-[10px] font-bold text-[#212529]">Tipo de Campaña</span>
                         </div>
-                        <div className="relative mb-1.5">
-                            <FiSearch className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#6a6c6b]" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Buscar..."
-                                className="w-full pl-7 pr-2 py-1 text-[10px] border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
-                            />
-                        </div>
-                        <div className="grid grid-cols-5 gap-1 max-h-20 overflow-y-auto">
-                            {filteredProducts.slice(0, 15).map((product) => (
-                                <button
-                                    key={product.id}
-                                    onClick={() => setSelectedProduct(product)}
-                                    className={`relative aspect-square rounded overflow-hidden border-2 transition-all hover:scale-105 ${selectedProduct?.id === product.id ? 'border-[#2a63cd]' : 'border-transparent'}`}
-                                    title={product.name}
-                                >
-                                    <Image src={getProductImage(product)} alt={product.name} fill className="object-cover" />
-                                    {selectedProduct?.id === product.id && (
-                                        <div className="absolute inset-0 bg-[#2a63cd]/30 flex items-center justify-center">
-                                            <FiCheck className="w-3 h-3 text-white" />
-                                        </div>
-                                    )}
-                                </button>
-                            ))}
+                        <div className="flex gap-1">
+                            <button
+                                onClick={() => setCampaignType('product')}
+                                className={`flex-1 py-1 px-2 text-[10px] font-bold rounded flex items-center justify-center gap-1.5 transition-all border ${campaignType === 'product' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'bg-transparent text-[#6a6c6b] border-[#e9ecef] hover:border-[#2a63cd]'}`}
+                            >
+                                <FiPackage className="w-3 h-3" />
+                                Producto
+                            </button>
+                            <button
+                                onClick={() => setCampaignType('recruitment')}
+                                className={`flex-1 py-1 px-2 text-[10px] font-bold rounded flex items-center justify-center gap-1.5 transition-all border ${campaignType === 'recruitment' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'bg-transparent text-[#6a6c6b] border-[#e9ecef] hover:border-[#2a63cd]'}`}
+                            >
+                                <FiUsers className="w-3 h-3" />
+                                Captar Influencer
+                            </button>
                         </div>
                     </div>
+
+                    {/* Product Selection */}
+                    {campaignType === 'product' && (
+                        <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                                <FiPackage className="w-3.5 h-3.5 text-[#2a63cd]" />
+                                <span className="text-[10px] font-bold text-[#212529]">Producto</span>
+                            </div>
+                            <div className="relative mb-1.5">
+                                <FiSearch className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#6a6c6b]" />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Buscar..."
+                                    className="w-full pl-7 pr-2 py-1 text-[10px] border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
+                                />
+                            </div>
+                            <div className="grid grid-cols-5 gap-1 max-h-20 overflow-y-auto">
+                                {filteredProducts.slice(0, 15).map((product) => (
+                                    <button
+                                        key={product.id}
+                                        onClick={() => setSelectedProduct(product)}
+                                        className={`relative aspect-square rounded overflow-hidden border-2 transition-all hover:scale-105 ${selectedProduct?.id === product.id ? 'border-[#2a63cd]' : 'border-transparent'}`}
+                                        title={product.name}
+                                    >
+                                        <Image src={getProductImage(product)} alt={product.name} fill className="object-cover" />
+                                        {selectedProduct?.id === product.id && (
+                                            <div className="absolute inset-0 bg-[#2a63cd]/30 flex items-center justify-center">
+                                                <FiCheck className="w-3 h-3 text-white" />
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Recruitment Configuration */}
+                    {campaignType === 'recruitment' && (
+                        <div className="bg-white rounded-lg border border-[#e9ecef] p-2 space-y-2">
+                            <div className="flex items-center gap-1.5">
+                                <FiUsers className="w-3.5 h-3.5 text-[#2a63cd]" />
+                                <span className="text-[10px] font-bold text-[#212529]">Detalles de Captación</span>
+                            </div>
+                            <div>
+                                <label className="text-[8px] font-bold text-[#6a6c6b] block mb-0.5">Título / Llamado</label>
+                                <input
+                                    type="text"
+                                    value={recruitmentHeadline}
+                                    onChange={(e) => {
+                                        const val = e.target.value.toUpperCase().slice(0, 20);
+                                        setRecruitmentHeadline(val);
+                                        setCustomText(val);
+                                    }}
+                                    placeholder="¡ÚNETE COMO CREADOR!"
+                                    maxLength={20}
+                                    className="w-full px-2 py-1 text-[10px] border border-[#e9ecef] rounded font-bold uppercase focus:ring-1 focus:ring-[#2a63cd]/20"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-1.5">
+                                <div>
+                                    <label className="text-[8px] font-bold text-[#6a6c6b] block mb-0.5">Comisión (%)</label>
+                                    <input
+                                        type="number"
+                                        value={recruitmentCommission}
+                                        onChange={(e) => setRecruitmentCommission(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                                        min={0} max={100}
+                                        className="w-full px-2 py-1 text-[10px] border border-[#e9ecef] rounded text-center focus:ring-1 focus:ring-[#2a63cd]/20"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[8px] font-bold text-[#6a6c6b] block mb-0.5">Beneficio Destacado</label>
+                                    <input
+                                        type="text"
+                                        value={recruitmentBenefit}
+                                        onChange={(e) => setRecruitmentBenefit(e.target.value.slice(0, 35))}
+                                        placeholder="Ej. Ganancias semanales"
+                                        maxLength={35}
+                                        className="w-full px-2 py-1 text-[10px] border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Format & Template in one row */}
                     <div className="grid grid-cols-2 gap-2">
@@ -458,28 +554,42 @@ Responde SOLO con JSON (sin markdown):
 
                     {/* Price & Options - Compact */}
                     <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
-                            <div className="flex items-center gap-1 mb-1">
-                                <FiPercent className="w-3 h-3 text-[#2a63cd]" />
-                                <span className="text-[9px] font-bold text-[#212529]">Descuento</span>
+                        {campaignType === 'product' ? (
+                            <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                                <div className="flex items-center gap-1 mb-1">
+                                    <FiPercent className="w-3 h-3 text-[#2a63cd]" />
+                                    <span className="text-[9px] font-bold text-[#212529]">Descuento</span>
+                                </div>
+                                <input
+                                    type="number"
+                                    value={discountPercent}
+                                    onChange={(e) => setDiscountPercent(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)))}
+                                    min={0} max={99}
+                                    className="w-full px-2 py-1 text-[10px] border border-[#e9ecef] rounded text-center"
+                                />
                             </div>
-                            <input
-                                type="number"
-                                value={discountPercent}
-                                onChange={(e) => setDiscountPercent(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)))}
-                                min={0} max={99}
-                                className="w-full px-2 py-1 text-[10px] border border-[#e9ecef] rounded text-center"
-                            />
-                        </div>
+                        ) : (
+                            <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                                <div className="flex items-center gap-1 mb-1">
+                                    <FiUsers className="w-3 h-3 text-[#2a63cd]" />
+                                    <span className="text-[9px] font-bold text-[#212529]">Comisión</span>
+                                </div>
+                                <div className="flex items-center justify-center h-5">
+                                    <span className="text-[10px] font-extrabold text-[#2a63cd]">{recruitmentCommission}% por venta</span>
+                                </div>
+                            </div>
+                        )}
                         <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                             <div className="flex items-center gap-1 mb-1">
                                 <FiBox className="w-3 h-3 text-[#2a63cd]" />
                                 <span className="text-[9px] font-bold text-[#212529]">Opciones</span>
                             </div>
                             <div className="flex gap-1">
-                                <button onClick={() => setShowPrice(!showPrice)} className={`flex-1 p-1 rounded border transition-all hover:border-[#2a63cd] ${showPrice ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`} title="Mostrar Precio">
-                                    <FiDollarSign className="w-3 h-3 mx-auto" />
-                                </button>
+                                {campaignType === 'product' && (
+                                    <button onClick={() => setShowPrice(!showPrice)} className={`flex-1 p-1 rounded border transition-all hover:border-[#2a63cd] ${showPrice ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`} title="Mostrar Precio">
+                                        <FiDollarSign className="w-3 h-3 mx-auto" />
+                                    </button>
+                                )}
                                 <button onClick={() => setShowLogo(!showLogo)} className={`flex-1 p-1 rounded border transition-all hover:border-[#2a63cd] ${showLogo ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`} title="Mostrar Logo">
                                     <FiImage className="w-3 h-3 mx-auto" />
                                 </button>
@@ -508,7 +618,7 @@ Responde SOLO con JSON (sin markdown):
                     {/* Download */}
                     <button
                         onClick={downloadImage}
-                        disabled={!selectedProduct || generating}
+                        disabled={(campaignType === 'product' && !selectedProduct) || generating}
                         className="w-full flex items-center justify-center gap-2 py-2 bg-[#2a63cd] text-white font-bold text-xs rounded-lg hover:bg-[#1e4ba3] transition-all disabled:opacity-50"
                     >
                         {generating ? <FiRefreshCw className="w-4 h-4 animate-spin" /> : <FiDownload className="w-4 h-4" />}
@@ -538,7 +648,10 @@ Responde SOLO con JSON (sin markdown):
                                     width: canvasSize.width,
                                     height: canvasSize.height,
                                     fontFamily: 'system-ui, -apple-system, sans-serif',
-                                    background: selectedTemplate.gradient
+                                    background: selectedTemplate.gradient,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between'
                                 }}
                             >
                                 {/* Background */}
@@ -562,9 +675,14 @@ Responde SOLO con JSON (sin markdown):
                                             )
                                         )}
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                                            {discountPercent > 0 && (
+                                            {campaignType === 'product' && discountPercent > 0 && (
                                                 <div style={{ padding: '4px 10px', background: '#ffffff', borderRadius: 9999 }}>
                                                     <span style={{ fontWeight: 900, fontSize: 14, color: selectedTemplate.accent }}>-{discountPercent}%</span>
+                                                </div>
+                                            )}
+                                            {campaignType === 'recruitment' && recruitmentCommission > 0 && (
+                                                <div style={{ padding: '4px 10px', background: '#ffffff', borderRadius: 9999 }}>
+                                                    <span style={{ fontWeight: 900, fontSize: 10, color: selectedTemplate.accent }}>{recruitmentCommission}% COMISIÓN</span>
                                                 </div>
                                             )}
                                             {selectedBadge.id !== 'none' && (
@@ -585,16 +703,117 @@ Responde SOLO con JSON (sin markdown):
 
                                 {/* Center */}
                                 <div style={{ position: 'relative', zIndex: 10, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
-                                    {selectedProduct ? (
-                                        <div style={{ position: 'relative', background: '#ffffff', borderRadius: 16, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden', width: selectedFormat.id === 'post' ? 160 : 170, height: selectedFormat.id === 'post' ? 160 : 170, padding: 8 }}>
-                                            <Image src={getProductImage(selectedProduct)} alt={selectedProduct.name} fill className="object-contain p-2" />
-                                        </div>
-                                    ) : (
-                                        <div style={{ width: 160, height: 160, background: 'rgba(255,255,255,0.1)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed rgba(255,255,255,0.3)' }}>
-                                            <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
-                                                <FiImage style={{ width: 32, height: 32, margin: '0 auto 8px' }} />
-                                                <p style={{ fontSize: 9 }}>Selecciona producto</p>
+                                    {campaignType === 'product' ? (
+                                        selectedProduct ? (
+                                            <div style={{ position: 'relative', background: '#ffffff', borderRadius: 16, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden', width: selectedFormat.id === 'post' ? 160 : 170, height: selectedFormat.id === 'post' ? 160 : 170, padding: 8 }}>
+                                                <Image src={getProductImage(selectedProduct)} alt={selectedProduct.name} fill className="object-contain p-2" />
                                             </div>
+                                        ) : (
+                                            <div style={{ width: 160, height: 160, background: 'rgba(255,255,255,0.1)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed rgba(255,255,255,0.3)' }}>
+                                                <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
+                                                    <FiImage style={{ width: 32, height: 32, margin: '0 auto 8px' }} />
+                                                    <p style={{ fontSize: 9 }}>Selecciona producto</p>
+                                                </div>
+                                            </div>
+                                        )
+                                    ) : (
+                                        /* Recruitment glassmorphic card */
+                                        <div style={{
+                                            width: selectedFormat.id === 'post' ? 220 : 230,
+                                            background: 'rgba(255, 255, 255, 0.15)',
+                                            backdropFilter: 'blur(10px)',
+                                            border: '1px solid rgba(255, 255, 255, 0.25)',
+                                            borderRadius: '16px',
+                                            padding: '12px 14px',
+                                            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.2)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            textAlign: 'center'
+                                        }}>
+                                            <div style={{
+                                                width: '40px',
+                                                height: '40px',
+                                                borderRadius: '50%',
+                                                background: 'rgba(255, 255, 255, 0.2)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)'
+                                            }}>
+                                                <FiAward style={{ width: '20px', height: '20px', color: selectedTemplate.accent || '#ffffff' }} />
+                                            </div>
+                                            <div>
+                                                <h4 style={{
+                                                    color: '#ffffff',
+                                                    fontWeight: 900,
+                                                    fontSize: '11px',
+                                                    letterSpacing: '0.05em',
+                                                    textTransform: 'uppercase',
+                                                    margin: '0 0 2px 0'
+                                                }}>
+                                                    {recruitmentHeadline || 'Programa de Creadores'}
+                                                </h4>
+                                                <div style={{
+                                                    height: '2px',
+                                                    width: '40px',
+                                                    background: selectedTemplate.accent || '#ffffff',
+                                                    margin: '0 auto 6px auto',
+                                                    borderRadius: '2px'
+                                                }} />
+                                            </div>
+                                            <ul style={{
+                                                listStyle: 'none',
+                                                padding: 0,
+                                                margin: 0,
+                                                width: '100%',
+                                                textAlign: 'left',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '5px'
+                                            }}>
+                                                <li style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    color: '#ffffff',
+                                                    fontSize: '9px',
+                                                    fontWeight: 600
+                                                }}>
+                                                    <span style={{ color: selectedTemplate.accent || '#ffffff' }}>✓</span>
+                                                    <span>Gana {recruitmentCommission}% por venta</span>
+                                                </li>
+                                                <li style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    color: '#ffffff',
+                                                    fontSize: '9px',
+                                                    fontWeight: 600
+                                                }}>
+                                                    <span style={{ color: selectedTemplate.accent || '#ffffff' }}>✓</span>
+                                                    <span style={{
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap',
+                                                        width: '100%'
+                                                    }} title={recruitmentBenefit}>
+                                                        {recruitmentBenefit || 'Ganancias sin límites'}
+                                                    </span>
+                                                </li>
+                                                <li style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    color: '#ffffff',
+                                                    fontSize: '9px',
+                                                    fontWeight: 600
+                                                }}>
+                                                    <span style={{ color: selectedTemplate.accent || '#ffffff' }}>✓</span>
+                                                    <span>Soporte VIP + Material</span>
+                                                </li>
+                                            </ul>
                                         </div>
                                     )}
                                 </div>
@@ -608,7 +827,7 @@ Responde SOLO con JSON (sin markdown):
                                             </span>
                                         </div>
                                     )}
-                                    {selectedProduct && (
+                                    {campaignType === 'product' && selectedProduct ? (
                                         <>
                                             <h3 style={{ color: '#ffffff', fontWeight: 700, fontSize: 14, lineHeight: 1.25, marginBottom: 4, textShadow: '0 2px 4px rgba(0,0,0,0.3)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                                                 {selectedProduct.name}
@@ -620,7 +839,16 @@ Responde SOLO con JSON (sin markdown):
                                                 </div>
                                             )}
                                         </>
-                                    )}
+                                    ) : campaignType === 'recruitment' ? (
+                                        <>
+                                            <h3 style={{ color: '#ffffff', fontWeight: 800, fontSize: '11px', lineHeight: 1.3, marginBottom: 4, textShadow: '0 2px 4px rgba(0,0,0,0.4)', textAlign: 'center' }}>
+                                                ¡Regístrate y empieza a ganar hoy mismo!
+                                            </h3>
+                                            <p style={{ color: selectedTemplate.accent || '#ffffff', fontWeight: 700, fontSize: '10px', textShadow: '0 2px 4px rgba(0,0,0,0.4)', textAlign: 'center', margin: 0 }}>
+                                                electroshop.com/creator
+                                            </p>
+                                        </>
+                                    ) : null}
                                     <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 8, fontWeight: 500 }}>{settings?.companyName || 'Electro Shop'}</span>
                                         {showInstagram && settings?.instagram && (

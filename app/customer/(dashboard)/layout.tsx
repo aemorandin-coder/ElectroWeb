@@ -16,6 +16,7 @@ import {
   FiX,
   FiShield,
   FiGift,
+  FiBook,
 } from 'react-icons/fi';
 import { FaMoneyCheckAlt } from 'react-icons/fa';
 import { PiListHeartBold } from 'react-icons/pi';
@@ -137,6 +138,7 @@ export default function CustomerDashboardLayout({
     { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Lista de Deseos' },
     { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },
     { href: '/customer/warranty', icon: FiShield, label: 'Garantía' },
+    { href: '/customer/mis-cursos', icon: FiBook, label: 'Mis Cursos' },
     { href: '/customer/referrals', icon: FiGift, label: 'Programa de Referidos' },
     { href: '/customer/profile', icon: FiUser, label: 'Mi Perfil' },
     { href: '/customer/settings', icon: FiSettings, label: 'Configuración' },
@@ -283,9 +285,11 @@ export default function CustomerDashboardLayout({
               ======================================== */}
           <header className="lg:hidden customer-panel-header sticky top-0 z-30"
             style={{
-              background: 'linear-gradient(to right, #1a1a2e, #16213e, #1a1a2e)',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
+              background: 'rgba(255, 255, 255, 0.85)',
+              borderBottom: '1px solid rgba(42, 99, 205, 0.15)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
               height: '48px',
               minHeight: '48px',
             }}
@@ -294,10 +298,10 @@ export default function CustomerDashboardLayout({
               {/* LEFT: Avatar only */}
               <Link
                 href="/customer/profile"
-                className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border-2 flex-shrink-0"
+                className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border-2 flex-shrink-0 transition-all active:scale-95"
                 style={{
                   background: userImage ? 'transparent' : 'linear-gradient(135deg, #2a63cd 0%, #1e4ba3 100%)',
-                  borderColor: 'rgba(42, 99, 205, 0.5)',
+                  borderColor: 'rgba(42, 99, 205, 0.6)',
                 }}
               >
                 {userImage ? (
@@ -315,20 +319,20 @@ export default function CustomerDashboardLayout({
 
               {/* CENTER: Title */}
               <div className="flex-1 flex justify-center px-2">
-                <span className="text-white text-sm font-bold tracking-wide">Mi Panel</span>
+                <span className="text-gray-900 text-sm font-black tracking-wide">Mi Panel</span>
               </div>
 
               {/* RIGHT: Home Button */}
               <Link
                 href="/"
-                className="flex items-center justify-center w-9 h-9 rounded-lg transition-all flex-shrink-0"
+                className="flex items-center justify-center w-9 h-9 rounded-lg transition-all flex-shrink-0 active:scale-95 shadow-sm"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(42, 99, 205, 0.3) 0%, rgba(30, 75, 163, 0.3) 100%)',
-                  border: '1px solid rgba(42, 99, 205, 0.4)',
+                  background: 'linear-gradient(135deg, #2a63cd 0%, #1e4ba3 100%)',
+                  border: '1px solid rgba(42, 99, 205, 0.2)',
                 }}
               >
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
               </Link>
             </div>
@@ -404,9 +408,9 @@ export default function CustomerDashboardLayout({
               />
             </div>
 
-            {/* Content Container - OPTIMIZED FOR MOBILE */}
+            {/* Content Container - OPTIMIZED FOR MOBILE & ELIMINATED DOUBLE SCROLLBAR */}
             <div
-              className="bg-white/95 backdrop-blur-xl rounded-lg lg:rounded-xl shadow-xl border border-white/30 min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-8rem)] overflow-y-auto p-3 lg:p-6"
+              className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/40 min-h-[calc(100vh-8rem)] p-3.5 lg:p-6"
               style={{
                 opacity: isTransitioning ? 0 : 1,
                 transform: isTransitioning ? 'translateY(8px) scale(0.99)' : 'translateY(0) scale(1)',

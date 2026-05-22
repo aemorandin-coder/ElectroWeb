@@ -129,6 +129,64 @@ export async function GET(request: NextRequest) {
                 where: { createdAt: { gte: startDate } },
             });
 
+            // Fetch all orders in the period for daily aggregation
+            const ordersInPeriod = await prisma.order.findMany({
+                where: { createdAt: { gte: startDate } },
+                select: { createdAt: true, totalUSD: true },
+                orderBy: { createdAt: 'asc' },
+            });
+
+            // Fetch new users in the period for daily aggregation
+            const usersInPeriod = await prisma.user.findMany({
+                where: {
+                    createdAt: { gte: startDate },
+                    role: { notIn: ['ADMIN', 'SUPER_ADMIN'] },
+                },
+                select: { createdAt: true },
+                orderBy: { createdAt: 'asc' },
+            });
+
+            const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+            // Group orders by day
+            const salesMap: Record<string, { sales: number; count: number }> = {};
+            ordersInPeriod.forEach(order => {
+                const day = formatDate(order.createdAt);
+                if (!salesMap[day]) {
+                    salesMap[day] = { sales: 0, count: 0 };
+                }
+                salesMap[day].sales += Number(order.totalUSD) || 0;
+                salesMap[day].count += 1;
+            });
+
+            // Group users by day
+            const usersMap: Record<string, number> = {};
+            usersInPeriod.forEach(user => {
+                const day = formatDate(user.createdAt);
+                usersMap[day] = (usersMap[day] || 0) + 1;
+            });
+
+            // Generate full date list for the period to avoid gaps
+            const dailyData: Array<{ date: string; sales: number; orders: number; users: number }> = [];
+            const tempDate = new Date(startDate);
+            const today = new Date();
+            let limit = 0;
+            while (tempDate <= today && limit < 366) {
+                const dayStr = formatDate(tempDate);
+                const salesInfo = salesMap[dayStr] || { sales: 0, count: 0 };
+                const usersCount = usersMap[dayStr] || 0;
+                
+                dailyData.push({
+                    date: dayStr,
+                    sales: Number(salesInfo.sales.toFixed(2)),
+                    orders: salesInfo.count,
+                    users: usersCount,
+                });
+                
+                tempDate.setDate(tempDate.getDate() + 1);
+                limit++;
+            }
+
             return NextResponse.json({
                 overview: {
                     users: { total: totalUsers, new: newUsers },
@@ -138,6 +196,7 @@ export async function GET(request: NextRequest) {
                     interactions: { pageViews: totalPageViews, clicks: totalClicks },
                     security: { total: securityAlerts, critical: criticalAlerts },
                     revenue: { total: orderRevenue._sum?.totalUSD || 0 },
+                    dailyData,
                 },
                 period,
             });

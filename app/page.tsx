@@ -5,7 +5,7 @@ import ProductCarousel from '@/components/home/ProductCarousel';
 import VideoPlayer from '@/components/home/VideoPlayer';
 import HomeSearchBar from '@/components/home/HomeSearchBar';
 import Footer from '@/components/Footer';
-import { FiArrowRight, FiShield, FiMessageCircle, FiCode, FiBox, FiSmartphone, FiSearch, FiCreditCard } from 'react-icons/fi';
+import { FiArrowRight, FiShield, FiMessageCircle, FiCode, FiBox, FiSmartphone, FiSearch, FiCreditCard, FiUsers } from 'react-icons/fi';
 import { SiPcgamingwiki, SiPlaystation, SiSteam, SiRoblox, SiGoogleplay, SiApple, SiBinance, SiZelle, SiPaypal } from 'react-icons/si';
 import { PiSecurityCameraDuotone, PiStudentDuotone } from 'react-icons/pi';
 import { FaScrewdriverWrench, FaXbox } from 'react-icons/fa6';
@@ -49,12 +49,7 @@ export default async function Home() {
     { name: 'Apple', color: '#555', icon: <SiApple />, href: '/productos?search=Apple' },
   ];
 
-  const PAYMENT_METHODS = [
-    { name: 'Binance', icon: <SiBinance />, color: '#F0B90B', bg: '#fff8e7' },
-    { name: 'Zelle', icon: <SiZelle />, color: '#6D1ED4', bg: '#f3eeff' },
-    { name: 'PayPal', icon: <SiPaypal />, color: '#003087', bg: '#e8f0ff' },
-    { name: 'Pago Móvil', icon: <FiSmartphone />, color: '#2a63cd', bg: '#e8f0ff' },
-  ];
+
 
   return (
     <div id="homepage-root" className="min-h-screen bg-white">
@@ -145,58 +140,130 @@ export default async function Home() {
             ))}
           </div>
 
-          {/* Trust Banner / Payment Methods - Subtle */}
-          <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
-            <div className="flex-1 text-center md:text-left">
-              <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-2 flex items-center justify-center md:justify-start gap-2">
-                <FiShield className="w-4 h-4 text-cyan-400" />
-                Pagos automáticos
-              </h3>
-              <p className="text-xs text-white/70 max-w-md mx-auto md:mx-0 leading-relaxed">
-                Usa nuestra herramienta de recarga en <b>Bolívares</b>. Paga con Pago Móvil de forma automática y tu saldo estará disponible al instante para comprar cualquier producto.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 sm:gap-4 flex-1">
-              {PAYMENT_METHODS.map(m => (
-                <div key={m.name} className="flex flex-col items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors group" title={m.name}>
-                  <span className="text-xl group-hover:scale-110 transition-transform" style={{ color: m.color }}>{m.icon}</span>
-                </div>
-              ))}
-            </div>
+          {/* Promo Ads Banner - Cursos & Creadores */}
+          <div className="mt-12 pt-8 border-t border-white/10 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Card 1: Academia / Cursos */}
+            <Link 
+              href="/cursos"
+              className="group relative flex flex-col sm:flex-row items-center sm:items-start gap-4 p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-md hover:bg-white/[0.08] transition-all duration-300 hover:-translate-y-1 overflow-hidden shadow-xl"
+            >
+              {/* Radial gradient hover glow */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500 pointer-events-none" />
+              
+              <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-blue-500/10 text-blue-400 text-3xl group-hover:scale-110 transition-transform duration-300 relative z-10">
+                <PiStudentDuotone />
+              </div>
+              
+              <div className="flex-1 text-center sm:text-left relative z-10">
+                <h3 className="text-base font-bold text-white mb-1.5 flex items-center justify-center sm:justify-start gap-2">
+                  Academia de Cursos
+                  <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">Nuevo</span>
+                </h3>
+                <p className="text-xs text-white/70 leading-relaxed mb-3">
+                  Aprende habilidades digitales premium con instructores expertos o publica tu propio curso y genera ingresos pasivos de manera sencilla.
+                </p>
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-400 group-hover:text-blue-300 transition-colors">
+                  Explorar Cursos <FiArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </div>
+            </Link>
+
+            {/* Card 2: Creadores & Influencers */}
+            <Link 
+              href="/creator"
+              className="group relative flex flex-col sm:flex-row items-center sm:items-start gap-4 p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-md hover:bg-white/[0.08] transition-all duration-300 hover:-translate-y-1 overflow-hidden shadow-xl"
+            >
+              {/* Radial gradient hover glow */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-500 pointer-events-none" />
+              
+              <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-cyan-500/10 text-cyan-400 text-3xl group-hover:scale-110 transition-transform duration-300 relative z-10">
+                <FiUsers />
+              </div>
+              
+              <div className="flex-1 text-center sm:text-left relative z-10">
+                <h3 className="text-base font-bold text-white mb-1.5 flex items-center justify-center sm:justify-start gap-2">
+                  Programa de Creadores
+                  <span className="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">Gana $$</span>
+                </h3>
+                <p className="text-xs text-white/70 leading-relaxed mb-3">
+                  Comparte enlaces de nuestros productos tecnológicos con tus redes sociales o seguidores, acumula comisiones en dólares y retíralas al instante.
+                </p>
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-cyan-400 group-hover:text-cyan-300 transition-colors">
+                  Unirse como Creador <FiArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </div>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* ═══ CÓMO COMPRAR ═══ */}
-      <section className="py-16 bg-[#f8f9fa] relative overflow-hidden">
+      <section className="py-20 bg-[#f8f9fa] relative overflow-hidden">
         {/* Decorative Background Elements */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-100/50 to-transparent rounded-full blur-3xl pointer-events-none transform translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-cyan-100/40 to-transparent rounded-full blur-3xl pointer-events-none transform -translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-100/50 to-transparent rounded-full blur-3xl pointer-events-none transform translate-x-1/2 -translate-y-1/2 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-cyan-100/40 to-transparent rounded-full blur-3xl pointer-events-none transform -translate-x-1/2 translate-y-1/2 animate-pulse" style={{ animationDelay: '2s' }} />
         
+        {/* Glowing Neon Blobs */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[250px] bg-gradient-to-r from-blue-400/5 to-cyan-400/5 rounded-full blur-[120px] pointer-events-none" />
+
         <div className="max-w-5xl mx-auto px-4 relative z-10">
-          <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1.5 bg-[#2a63cd]/10 text-[#2a63cd] text-xs font-bold tracking-widest uppercase rounded-full mb-4">
+          <div className="text-center mb-16">
+            <span className="inline-block px-3.5 py-1 bg-gradient-to-r from-[#2a63cd]/10 to-blue-500/5 text-[#2a63cd] text-[10px] sm:text-xs font-bold tracking-widest uppercase rounded-full mb-3 shadow-[0_2px_10px_rgba(42,99,205,0.04)]">
               Proceso Simple
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#1a1a1a] tracking-tight">¿Cómo funciona?</h2>
-            <p className="text-[#6a6c6b] mt-3 max-w-lg mx-auto text-sm sm:text-base font-medium">Diseñado para que tengas tus productos de la manera más rápida, segura y transparente.</p>
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-[#1a1a1a] tracking-tight bg-gradient-to-r from-[#1a1a1a] via-[#2a63cd] to-[#1a1a1a] bg-clip-text text-transparent px-4">
+              ¿Cómo funciona?
+            </h2>
+            <p className="text-gray-500 mt-2.5 max-w-lg mx-auto text-xs sm:text-sm md:text-base font-medium leading-relaxed px-6 sm:px-0">
+              Diseñado para que tengas tus productos de la manera más rápida, segura y transparente del mercado.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 relative">
-            {/* Connecting Line (Desktop Only) */}
-            <div className="hidden md:block absolute top-1/2 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-transparent via-[#2a63cd]/20 to-transparent -translate-y-[100px] z-0" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10 relative">
+            {/* Connecting Line with Flowing Dash Animation (Desktop Only) */}
+            <div className="hidden md:block absolute top-[115px] left-[15%] right-[15%] h-4 pointer-events-none z-0">
+              <svg className="w-full h-full overflow-visible" fill="none">
+                <path
+                  d="M 0 8 Q 50 15, 100 8"
+                  stroke="url(#flow-gradient)"
+                  strokeWidth="3.5"
+                  strokeDasharray="8 6"
+                  strokeLinecap="round"
+                  className="animate-[flow-dash_25s_linear_infinite]"
+                  id="connecting-path"
+                />
+                <defs>
+                  <linearGradient id="flow-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#2a63cd" stopOpacity="0.4" />
+                    <stop offset="50%" stopColor="#2a63cd" />
+                    <stop offset="100%" stopColor="#1e4ba3" stopOpacity="0.4" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+
+            <style>{`
+              @keyframes flow-dash {
+                to {
+                  stroke-dashoffset: -1000px;
+                }
+              }
+              #connecting-path {
+                animation: flow-dash 15s linear infinite;
+              }
+            `}</style>
 
             {[
               { 
                 step: '1', 
-                icon: <FiSearch className="w-7 h-7 text-[#2a63cd]" />, 
+                icon: <FiSearch className="w-7 h-7" />, 
                 title: 'Explora y Elige', 
                 desc: 'Navega por nuestro catálogo nacional. Selecciona tecnología, consolas o saldo digital de forma intuitiva.',
                 delay: '0ms'
               },
               { 
                 step: '2', 
-                icon: <FiCreditCard className="w-7 h-7 text-white" />, 
+                icon: <FiCreditCard className="w-7 h-7" />, 
                 title: 'Pago Flexible', 
                 desc: 'Múltiples opciones: Pago Móvil, Binance, Zelle, PayPal o efectivo. Tú decides cómo pagar.',
                 isPrimary: true,
@@ -204,7 +271,7 @@ export default async function Home() {
               },
               { 
                 step: '3', 
-                icon: <FiBox className="w-7 h-7 text-[#2a63cd]" />, 
+                icon: <FiBox className="w-7 h-7" />, 
                 title: 'Recepción Rápida', 
                 desc: 'Códigos digitales al instante o envíos seguros a nivel nacional con tu transportista de confianza.',
                 delay: '200ms'
@@ -212,37 +279,49 @@ export default async function Home() {
             ].map((s) => (
               <div 
                 key={s.step} 
-                className={`relative group bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 z-10 border border-gray-100 ${s.isPrimary ? 'ring-2 ring-[#2a63cd] ring-offset-2 ring-offset-[#f8f9fa]' : ''}`}
+                className={`relative group bg-white/75 backdrop-blur-md rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_50px_rgba(42,99,205,0.12)] transition-all duration-500 hover:-translate-y-2.5 z-10 border border-white/90 ${
+                  s.isPrimary 
+                    ? 'ring-2 ring-[#2a63cd] ring-offset-4 ring-offset-[#f8f9fa] bg-gradient-to-b from-white via-white to-blue-50/20' 
+                    : ''
+                }`}
                 style={{ animationDelay: s.delay }}
               >
-                {/* Step Number Badge */}
-                <div className={`absolute -top-3 -left-3 w-8 h-8 ${s.isPrimary ? 'bg-[#1e4ba3]' : 'bg-[#2a63cd]'} text-white text-sm font-black rounded-xl flex items-center justify-center shadow-md transform -rotate-6 group-hover:rotate-0 transition-transform`}>
+                {/* Step Number Badge with rotational 3D effect */}
+                <div className={`absolute -top-4 -left-4 w-10 h-10 ${
+                  s.isPrimary ? 'bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] shadow-[0_6px_15px_rgba(42,99,205,0.4)]' : 'bg-white border-2 border-gray-100 text-[#2a63cd]'
+                } ${
+                  s.isPrimary ? 'text-white' : 'text-[#2a63cd]'
+                } text-base font-black rounded-2xl flex items-center justify-center shadow-md transform -rotate-12 group-hover:rotate-3 group-hover:scale-110 transition-all duration-300`}>
                   {s.step}
                 </div>
 
-                {/* Icon Container */}
-                <div className="mb-4 relative inline-block">
-                  <div className={`absolute inset-0 bg-[#2a63cd] rounded-xl blur-md opacity-20 group-hover:opacity-40 transition-opacity`} />
-                  <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transform group-hover:scale-105 transition-transform ${s.isPrimary ? 'bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3]' : 'bg-blue-50 border border-blue-100'}`}>
+                {/* Icon Container with glowing pulse background */}
+                <div className="mb-6 relative inline-block">
+                  <div className={`absolute inset-0 bg-[#2a63cd] rounded-2xl blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300`} />
+                  <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 ${
+                    s.isPrimary 
+                      ? 'bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] text-white' 
+                      : 'bg-blue-50 text-[#2a63cd] group-hover:bg-[#2a63cd]/10'
+                  }`}>
                     {s.icon}
                   </div>
                 </div>
 
-                <h3 className="font-bold text-[#1a1a1a] text-base mb-2">{s.title}</h3>
+                <h3 className="font-bold text-[#1a1a1a] text-lg mb-3 group-hover:text-[#2a63cd] transition-colors duration-300">{s.title}</h3>
                 <p className="text-xs text-[#6a6c6b] leading-relaxed font-medium">{s.desc}</p>
               </div>
             ))}
           </div>
 
           {/* CTA Section */}
-          <div className="mt-16 text-center animate-fadeIn" style={{ animationDelay: '400ms' }}>
+          <div className="mt-20 text-center animate-fadeIn" style={{ animationDelay: '400ms' }}>
             <Link
               href="/registro"
-              className="group inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-2xl hover:shadow-[0_0_20px_rgba(42,99,205,0.4)] transition-all duration-300 active:scale-95 text-base overflow-hidden relative"
+              className="group inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-2xl hover:shadow-[0_0_25px_rgba(42,99,205,0.45)] transition-all duration-300 active:scale-95 text-base overflow-hidden relative"
             >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative z-10">Únete a Electro Shop Gratis</span>
-              <FiArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+              <FiArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1.5 transition-transform" />
             </Link>
             <p className="text-sm text-[#6a6c6b] mt-4 font-medium">
               ¿Ya eres cliente? <Link href="/login" className="text-[#2a63cd] font-bold hover:underline hover:text-[#1e4ba3] transition-colors">Inicia sesión aquí</Link>
@@ -250,6 +329,7 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
 
       {/* ═══ PRODUCTOS DESTACADOS ═══ */}
       {formattedProducts.length > 0 && (

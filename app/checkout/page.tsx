@@ -8,10 +8,10 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
-import RechargeModal from '@/components/modals/RechargeModal';
+import RechargeModal from '@/components/modals/RechargeModalV2';
 import CheckoutPagoMovilForm from '@/components/checkout/CheckoutPagoMovilForm';
 import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverlay';
-import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle, FiGift } from 'react-icons/fi';
+import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle, FiGift, FiShield } from 'react-icons/fi';
 import { FaMobileScreen } from 'react-icons/fa6';
 import { FaCheck } from 'react-icons/fa';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -1021,32 +1021,35 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Delivery Type Selection */}
+                {/* ── Selector de Tipo de Entrega ── */}
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-[#212529] mb-3">
                     Tipo de Entrega *
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className={`grid gap-3 ${companySettings?.pickupEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
+
+                    {/* Dirección personal */}
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, isOfficeDelivery: false, courierOfficeId: '' })}
-                      className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${!formData.isOfficeDelivery
+                      onClick={() => setFormData({ ...formData, deliveryMethod: 'HOME_DELIVERY', isOfficeDelivery: false, courierOfficeId: '' })}
+                      className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.deliveryMethod === 'HOME_DELIVERY' && !formData.isOfficeDelivery
                         ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
                         : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
                         }`}
                     >
-                      <FiMapPin className={`w-5 h-5 flex-shrink-0 ${!formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
+                      <FiMapPin className={`w-5 h-5 flex-shrink-0 ${formData.deliveryMethod === 'HOME_DELIVERY' && !formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
                       <div className="text-left">
-                        <p className={`text-sm font-bold ${!formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                        <p className={`text-sm font-bold ${formData.deliveryMethod === 'HOME_DELIVERY' && !formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
                           Dirección Personal
                         </p>
                         <p className="text-xs text-[#6a6c6b]">Envío a domicilio</p>
                       </div>
                     </button>
 
+                    {/* Oficina courier */}
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, isOfficeDelivery: true })}
+                      onClick={() => setFormData({ ...formData, deliveryMethod: 'SHIPPING', isOfficeDelivery: true })}
                       className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.isOfficeDelivery
                         ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
                         : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
@@ -1060,11 +1063,58 @@ export default function CheckoutPage() {
                         <p className="text-xs text-[#6a6c6b]">ZOOM o MRW</p>
                       </div>
                     </button>
+
+                    {/* Retiro en tienda — solo si pickupEnabled */}
+                    {companySettings?.pickupEnabled && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, deliveryMethod: 'PICKUP', isOfficeDelivery: false, courierOfficeId: '' })}
+                        className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.deliveryMethod === 'PICKUP'
+                          ? 'border-emerald-500 bg-emerald-50 shadow-md'
+                          : 'border-[#e9ecef] hover:border-emerald-300'
+                          }`}
+                      >
+                        <FiMapPin className={`w-5 h-5 flex-shrink-0 ${formData.deliveryMethod === 'PICKUP' ? 'text-emerald-600' : 'text-[#6a6c6b]'}`} />
+                        <div className="text-left">
+                          <p className={`text-sm font-bold ${formData.deliveryMethod === 'PICKUP' ? 'text-emerald-700' : 'text-[#212529]'}`}>
+                            Retiro en Tienda
+                          </p>
+                          <p className="text-xs text-[#6a6c6b]">Sin costo de envío</p>
+                        </div>
+                      </button>
+                    )}
                   </div>
+
+                  {/* Info card cuando selecciona PICKUP */}
+                  {formData.deliveryMethod === 'PICKUP' && (
+                    <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl animate-fadeIn">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FiMapPin className="w-5 h-5 text-emerald-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-emerald-800 mb-1">Retiro en nuestra tienda</p>
+                          {companySettings?.pickupAddress && (
+                            <p className="text-xs text-emerald-700 mb-1 flex items-center gap-1">
+                              <FiMapPin className="w-3 h-3 flex-shrink-0" />
+                              {companySettings.pickupAddress}
+                            </p>
+                          )}
+                          {companySettings?.pickupInstructions && (
+                            <p className="text-xs text-emerald-600">{companySettings.pickupInstructions}</p>
+                          )}
+                          <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 rounded-full">
+                            <FiCheck className="w-3 h-3 text-emerald-600" />
+                            <span className="text-[11px] font-bold text-emerald-700">Envío gratis · $0.00</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Personal Address Form */}
-                {!formData.isOfficeDelivery && (
+                {/* Personal Address Form — oculto si elige PICKUP */}
+                {formData.deliveryMethod !== 'PICKUP' && !formData.isOfficeDelivery && (
                   <div className="space-y-4 animate-fadeIn">
                     {/* Saved Addresses Selector */}
                     {savedAddresses.length > 0 && (
@@ -1259,8 +1309,8 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* Courier Office Selection */}
-                {formData.isOfficeDelivery && (
+                {/* Courier Office Selection — solo si NO es PICKUP */}
+                {formData.deliveryMethod !== 'PICKUP' && formData.isOfficeDelivery && (
                   <div className="space-y-4 animate-fadeIn">
                     <div>
                       <label className="block text-sm font-semibold text-[#212529] mb-3">
@@ -2303,26 +2353,33 @@ export default function CheckoutPage() {
               </div>
 
               {/* Trust Badges */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-lg animate-slideUp" style={{ animationDelay: '0.1s' }}>
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Compra Segura</h3>
+              <div className="bg-gradient-to-br from-[#2a63cd]/5 to-purple-500/5 rounded-2xl border border-slate-200 p-5 shadow-lg space-y-4 animate-slideUp" style={{ animationDelay: '0.1s' }}>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Envíos Asegurados</h3>
+                  <div className="flex gap-2">
+                    <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[9px] font-black">ZOOM</span>
+                    <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[9px] font-black">MRW</span>
+                  </div>
+                </div>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 text-sm text-slate-600 group hover:text-[#2a63cd] transition-colors">
-                    <div className="w-8 h-8 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <FiLock className="w-4 h-4 text-[#2a63cd]" />
+                  <div className="flex items-start gap-3 text-xs text-slate-600">
+                    <div className="w-7 h-7 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <FiTruck className="w-3.5 h-3.5 text-[#2a63cd]" />
                     </div>
-                    <span className="font-medium">Pago Seguro SSL</span>
+                    <div>
+                      <p className="font-semibold text-slate-700">Despacho Nacional Garantizado</p>
+                      <p className="text-slate-500">Envíos Rápidos y Seguros a nivel nacional por ZOOM y MRW.</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600 group hover:text-[#2a63cd] transition-colors">
-                    <div className="w-8 h-8 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <FiCheckCircle className="w-4 h-4 text-[#2a63cd]" />
+                  
+                  <div className="flex items-start gap-3 text-xs text-slate-600">
+                    <div className="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <FiShield className="w-3.5 h-3.5 text-emerald-600" />
                     </div>
-                    <span className="font-medium">Garantía Oficial</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600 group hover:text-[#2a63cd] transition-colors">
-                    <div className="w-8 h-8 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <FiTruck className="w-4 h-4 text-[#2a63cd]" />
+                    <div>
+                      <p className="font-semibold text-slate-700">Protección del Comprador</p>
+                      <p className="text-slate-500">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
                     </div>
-                    <span className="font-medium">Envío Rápido</span>
                   </div>
                 </div>
               </div>

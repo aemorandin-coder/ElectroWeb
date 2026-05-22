@@ -19,6 +19,7 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   const [mounted, setMounted] = useState(false);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(settings || null);
   const [isOnDarkSection, setIsOnDarkSection] = useState(true); // Start with dark (hero)
+  const [isCursosDropdownOpen, setIsCursosDropdownOpen] = useState(false);
   const pathname = usePathname();
 
   const isActiveLink = (href: string) => {
@@ -135,12 +136,12 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
         }}
         suppressHydrationWarning
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
+            <Link href="/" className="flex items-center gap-1.5 sm:gap-3 group flex-shrink-0">
               {companySettings?.logo && (
-                <div className="relative w-12 h-12 transition-transform duration-300 group-hover:scale-105">
+                <div className="relative w-9 h-9 sm:w-12 sm:h-12 transition-transform duration-300 group-hover:scale-105 flex-shrink-0">
                   <Image
                     src={companySettings.logo}
                     alt={companySettings.companyName}
@@ -148,13 +149,13 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                     className="object-contain drop-shadow-md"
                     priority
                     quality={100}
-                    sizes="48px"
+                    sizes="(max-width: 640px) 36px, 48px"
                     unoptimized
                   />
                 </div>
               )}
               <h1
-                className={`text-xl sm:text-2xl font-bold tracking-wide whitespace-nowrap transition-colors duration-300 ${isBlueStyle ? 'text-white' : 'text-transparent bg-clip-text'
+                className={`text-sm min-[380px]:text-base sm:text-2xl font-bold tracking-tight whitespace-nowrap transition-colors duration-300 ${isBlueStyle ? 'text-white' : 'text-transparent bg-clip-text'
                   }`}
                 style={{
                   backgroundImage: isBlueStyle ? 'none' : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
@@ -173,10 +174,87 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                 { href: '/categorias', label: 'Categorías' },
                 { href: '/gift-cards', label: 'Gift Cards' },
                 { href: '/servicios', label: 'Servicios' },
-                { href: '/cursos', label: 'Cursos Online' },
+                { href: '/cursos', label: 'Cursos Online', hasDropdown: true },
                 { href: '/contacto', label: 'Contáctanos' },
               ].map((link) => {
                 const isActive = isActiveLink(link.href);
+                if (link.hasDropdown) {
+                  return (
+                    <div
+                      key={link.href}
+                      className="relative"
+                      onMouseEnter={() => setIsCursosDropdownOpen(true)}
+                      onMouseLeave={() => setIsCursosDropdownOpen(false)}
+                    >
+                      <Link
+                        href={link.href}
+                        className="relative text-sm font-normal transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 rounded-sm flex items-center gap-1 py-2"
+                        style={{
+                          color: isBlueStyle
+                            ? (isActive ? 'white' : 'rgba(255,255,255,0.8)')
+                            : (isActive ? primaryColor : '#6a6c6b')
+                        }}
+                      >
+                        <span className={`relative z-10 ${isBlueStyle
+                          ? 'group-hover:text-white'
+                          : (!isActive ? 'group-hover:text-[#2a63cd]' : '')
+                          }`}>
+                          {link.label}
+                        </span>
+                        <svg className={`w-3.5 h-3.5 transition-transform duration-300 ${isCursosDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                        <span
+                          className={`absolute bottom-1 left-0 h-0.5 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}
+                          style={{
+                            background: isBlueStyle
+                              ? 'white'
+                              : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
+                          }}
+                        ></span>
+                      </Link>
+
+                      {/* Dropdown Menu */}
+                      {isCursosDropdownOpen && (
+                        <div
+                          className="absolute left-0 mt-0 w-64 rounded-xl shadow-xl border p-2 transition-all duration-200 z-50"
+                          style={{
+                            backgroundColor: isBlueStyle ? 'rgba(27, 38, 59, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+                            borderColor: isBlueStyle ? 'rgba(255, 255, 255, 0.1)' : '#e9ecef',
+                            backdropFilter: 'blur(10px)',
+                          }}
+                        >
+                          <Link
+                            href="/cursos"
+                            className={`flex flex-col gap-0.5 p-2.5 rounded-lg text-left transition-all ${
+                              isBlueStyle 
+                                ? 'hover:bg-white/10 text-white' 
+                                : 'hover:bg-[#f8f9fa] text-[#212529]'
+                            }`}
+                          >
+                            <span className="font-bold text-xs">Ver Cursos</span>
+                            <span className={`text-[10px] ${isBlueStyle ? 'text-white/60' : 'text-[#6a6c6b]'}`}>Explora nuestro catálogo de formación online</span>
+                          </Link>
+                          <Link
+                            href="/creator"
+                            className={`flex flex-col gap-0.5 p-2.5 rounded-lg text-left transition-all ${
+                              isBlueStyle 
+                                ? 'hover:bg-white/10 text-white' 
+                                : 'hover:bg-[#f8f9fa] text-[#212529]'
+                            }`}
+                          >
+                            <span className="font-bold text-xs flex items-center gap-1.5">
+                              Enseña aquí
+                              <span className="bg-[#2a63cd] text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold">¡Gana 90%!</span>
+                            </span>
+                            <span className={`text-[10px] ${isBlueStyle ? 'text-white/60' : 'text-[#6a6c6b]'}`}>Crea cursos y monetiza tu conocimiento</span>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
                 return (
                   <Link
                     key={link.href}
@@ -209,9 +287,9 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
             </nav>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               <div
-                className="flex items-center gap-4"
+                className="flex items-center gap-1.5 sm:gap-4"
                 style={{ color: isBlueStyle ? 'rgba(255,255,255,0.9)' : '#6a6c6b' }}
               >
                 <NotificationBell />

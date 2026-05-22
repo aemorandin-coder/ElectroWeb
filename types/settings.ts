@@ -145,6 +145,7 @@ export interface CompanySettings {
   hotAdBackdropOpacity?: number;
   hotAdBackdropColor?: string | null;
   hotAdLink?: string | null;
+  adminAlertEmails?: string | null;
 }
 
 export interface SettingsFormData {
@@ -251,6 +252,8 @@ export interface SettingsFormData {
   hotAdBackdropOpacity: number;
   hotAdBackdropColor: string;
   hotAdLink: string;
+  adminAlertEmails: string;
+  adminAlertEmailList?: string[];
 }
 
 export interface SettingsValidationErrors {

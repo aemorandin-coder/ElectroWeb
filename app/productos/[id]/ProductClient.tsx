@@ -11,7 +11,8 @@ import Footer from '@/components/Footer';
 import { FaShoppingBasket, FaGlobeAmericas, FaFlagUsa } from 'react-icons/fa';
 import { HiShoppingBag } from "react-icons/hi2";
 import { FiHeart, FiSend, FiTarget, FiPackage } from "react-icons/fi";
-import { SiRoblox, SiSteam, SiPlaystation, SiNintendoswitch, SiNetflix, SiSpotify, SiApple, SiGoogleplay } from 'react-icons/si';
+import { BsNintendoSwitch } from 'react-icons/bs';
+import { SiRoblox, SiSteam, SiPlaystation, SiNetflix, SiSpotify, SiApple, SiGoogleplay } from 'react-icons/si';
 import { FaXbox } from 'react-icons/fa6';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
@@ -340,7 +341,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
       'STEAM': { icon: <SiSteam className="w-4 h-4" />, name: 'Steam' },
       'PLAYSTATION': { icon: <SiPlaystation className="w-4 h-4" />, name: 'PlayStation' },
       'XBOX': { icon: <FaXbox className="w-4 h-4" />, name: 'Xbox' },
-      'NINTENDO': { icon: <SiNintendoswitch className="w-4 h-4" />, name: 'Nintendo' },
+      'NINTENDO': { icon: <BsNintendoSwitch className="w-4 h-4" />, name: 'Nintendo' },
       'NETFLIX': { icon: <SiNetflix className="w-4 h-4" />, name: 'Netflix' },
       'SPOTIFY': { icon: <SiSpotify className="w-4 h-4" />, name: 'Spotify' },
       'APPLE': { icon: <SiApple className="w-4 h-4" />, name: 'Apple' },

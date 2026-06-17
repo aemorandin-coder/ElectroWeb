@@ -11,7 +11,8 @@ import {
 } from 'react-icons/fi';
 import { MdOutlineLocalShipping } from 'react-icons/md';
 import { FaGlobeAmericas, FaFlagUsa } from 'react-icons/fa';
-import { SiRoblox, SiSteam, SiPlaystation, SiNintendoswitch, SiNetflix, SiSpotify, SiApple } from 'react-icons/si';
+import { BsNintendoSwitch } from 'react-icons/bs';
+import { SiRoblox, SiSteam, SiPlaystation, SiNetflix, SiSpotify, SiApple } from 'react-icons/si';
 import { parseProductImages, parseProductTags } from '@/lib/product-utils';
 
 const MAX_IMAGES = 8;
@@ -839,7 +840,7 @@ export default function ProductForm({ productId }: Props) {
                         {formData.digitalPlatform === 'ROBLOX' && <SiRoblox className="w-5 h-5" />}
                         {formData.digitalPlatform === 'STEAM' && <SiSteam className="w-5 h-5" />}
                         {formData.digitalPlatform === 'PLAYSTATION' && <SiPlaystation className="w-5 h-5" />}
-                        {formData.digitalPlatform === 'NINTENDO' && <SiNintendoswitch className="w-5 h-5" />}
+                        {formData.digitalPlatform === 'NINTENDO' && <BsNintendoSwitch className="w-5 h-5" />}
                         {formData.digitalPlatform === 'NETFLIX' && <SiNetflix className="w-5 h-5" />}
                         {formData.digitalPlatform === 'SPOTIFY' && <SiSpotify className="w-5 h-5" />}
                         {formData.digitalPlatform === 'APPLE' && <SiApple className="w-5 h-5" />}

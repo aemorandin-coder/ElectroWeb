@@ -10,7 +10,8 @@ import {
     FiAlertCircle, FiUser, FiMail, FiPhone, FiMonitor, FiCopy,
     FiPlus, FiTrash2, FiEdit
 } from 'react-icons/fi';
-import { SiSteam, SiPlaystation, SiNintendoswitch, SiRoblox } from 'react-icons/si';
+import { BsNintendoSwitch } from 'react-icons/bs';
+import { SiSteam, SiPlaystation, SiRoblox } from 'react-icons/si';
 import { FaGamepad } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
@@ -52,7 +53,7 @@ const platformIcons: Record<string, React.ReactNode> = {
     PLAYSTATION: <SiPlaystation className="w-5 h-5" />,
     PSN: <SiPlaystation className="w-5 h-5" />,
     XBOX: <FaGamepad className="w-5 h-5" />,
-    NINTENDO: <SiNintendoswitch className="w-5 h-5" />,
+    NINTENDO: <BsNintendoSwitch className="w-5 h-5" />,
     ROBLOX: <SiRoblox className="w-5 h-5" />,
 };
 

@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { FiGift, FiKey, FiPackage, FiStar } from 'react-icons/fi';
-import { FaGlobeAmericas, FaFlagUsa } from 'react-icons/fa';
+import { FaGlobeAmericas, FaFlagUsa, FaAmazon } from 'react-icons/fa';
+import { BsNintendoSwitch } from 'react-icons/bs';
 import {
-  SiRoblox, SiSteam, SiPlaystation, SiNintendoswitch,
-  SiNetflix, SiSpotify, SiApple, SiGooglepay, SiAmazon,
+  SiRoblox, SiSteam, SiPlaystation,
+  SiNetflix, SiSpotify, SiApple, SiGooglepay,
 } from 'react-icons/si';
 import { MdSportsEsports, MdGamepad } from 'react-icons/md';
 import EpicTooltip from '@/components/EpicTooltip';
@@ -23,7 +24,7 @@ const PLATFORMS: Platform[] = [
   { value: 'STEAM',       label: 'Steam',          icon: <SiSteam />,           color: 'text-gray-700' },
   { value: 'PLAYSTATION', label: 'PlayStation',    icon: <SiPlaystation />,     color: 'text-blue-600' },
   { value: 'XBOX',        label: 'Xbox',           icon: <MdGamepad />,         color: 'text-green-600' },
-  { value: 'NINTENDO',    label: 'Nintendo',       icon: <SiNintendoswitch />,  color: 'text-red-600' },
+  { value: 'NINTENDO',    label: 'Nintendo',       icon: <BsNintendoSwitch />,  color: 'text-red-600' },
   { value: 'FREEFIRE',    label: 'Free Fire',      icon: <MdSportsEsports />,   color: 'text-orange-500' },
   { value: 'VALORANT',    label: 'Valorant',       icon: <MdSportsEsports />,   color: 'text-rose-600' },
   { value: 'FORTNITE',    label: 'Fortnite',       icon: <MdSportsEsports />,   color: 'text-blue-500' },
@@ -32,7 +33,7 @@ const PLATFORMS: Platform[] = [
   { value: 'SPOTIFY',     label: 'Spotify',        icon: <SiSpotify />,         color: 'text-green-500' },
   { value: 'APPLE',       label: 'Apple / iTunes', icon: <SiApple />,           color: 'text-gray-800' },
   { value: 'GOOGLE_PLAY', label: 'Google Play',    icon: <SiGooglepay />,       color: 'text-blue-500' },
-  { value: 'AMAZON',      label: 'Amazon',         icon: <SiAmazon />,          color: 'text-orange-500' },
+  { value: 'AMAZON',      label: 'Amazon',         icon: <FaAmazon />,          color: 'text-orange-500' },
   { value: 'DISNEY',      label: 'Disney+',        icon: <MdSportsEsports />,   color: 'text-blue-700' },
   { value: 'GIFT_CARD',   label: 'Gift Card',      icon: <FiGift />,            color: 'text-purple-500' },
   { value: 'SOFTWARE',    label: 'Software/Licencia', icon: <FiKey />,          color: 'text-indigo-500' },

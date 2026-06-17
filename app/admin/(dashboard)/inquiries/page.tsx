@@ -405,7 +405,7 @@ export default function InquiriesPage() {
 
             {/* Content */}
             <div className="flex-1 overflow-hidden">
-                {activeTab === 'messages' ? (
+                {activeTab === 'messages' && (
                     // ============== MESSAGES TAB ==============
                     <div className="h-full flex flex-col">
                         {/* Filter */}
@@ -557,7 +557,8 @@ export default function InquiriesPage() {
                             </div>
                         </div>
                     </div>
-                ) : (
+                )}
+                {activeTab === 'requests' && (
                     // ============== REQUESTS TAB ==============
                     <div className="h-full flex flex-col">
                         {/* Stats and Filter */}

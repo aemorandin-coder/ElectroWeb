@@ -85,6 +85,22 @@ export interface CompanySettings {
   metaTitle?: string | null;
   metaDescription?: string | null;
   metaKeywords?: string | null;
+  homeMetaImage?: string | null;
+
+  productsMetaTitle?: string | null;
+  productsMetaDescription?: string | null;
+  productsMetaKeywords?: string | null;
+  productsMetaImage?: string | null;
+
+  servicesMetaTitle?: string | null;
+  servicesMetaDescription?: string | null;
+  servicesMetaKeywords?: string | null;
+  servicesMetaImage?: string | null;
+
+  coursesMetaTitle?: string | null;
+  coursesMetaDescription?: string | null;
+  coursesMetaKeywords?: string | null;
+  coursesMetaImage?: string | null;
 
   // Hero Video Settings
   heroVideoEnabled?: boolean;
@@ -196,6 +212,19 @@ export interface SettingsFormData {
   metaTitle: string;
   metaDescription: string;
   metaKeywords: string;
+  homeMetaImage: string | null;
+  productsMetaTitle: string;
+  productsMetaDescription: string;
+  productsMetaKeywords: string;
+  productsMetaImage: string | null;
+  servicesMetaTitle: string;
+  servicesMetaDescription: string;
+  servicesMetaKeywords: string;
+  servicesMetaImage: string | null;
+  coursesMetaTitle: string;
+  coursesMetaDescription: string;
+  coursesMetaKeywords: string;
+  coursesMetaImage: string | null;
   heroVideoEnabled: boolean;
   heroVideoUrl: string;
   heroVideoTitle: string;

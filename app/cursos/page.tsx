@@ -7,15 +7,45 @@ import Footer from '@/components/Footer';
 import { FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi } from 'react-icons/fi';
 import ShareEarnButton from '@/components/social/ShareEarnButton';
 
-export const metadata: Metadata = {
-  title: 'Cursos — ElectroShop',
-  description: 'Aprende redes, electrónica, CCTV, gaming y más con nuestros cursos online. Paga con tu saldo de ElectroShop.',
-  openGraph: {
-    title: 'Cursos Online — ElectroShop',
-    description: 'Aprende de los mejores expertos en tecnología. Más de 90% de comisión para los creadores.',
-    type: 'website',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await prisma.companySettings.findFirst({
+    select: {
+      coursesMetaTitle: true,
+      coursesMetaDescription: true,
+      coursesMetaKeywords: true,
+      coursesMetaImage: true,
+      logo: true,
+      companyName: true,
+    }
+  });
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
+
+  const title = settings?.coursesMetaTitle || `Cursos | ${settings?.companyName || 'Electro Shop'}`;
+  const description = settings?.coursesMetaDescription || 'Aprende redes, electrónica, CCTV, gaming y más con nuestros cursos online.';
+  const keywords = settings?.coursesMetaKeywords ? settings.coursesMetaKeywords.split(',').map(k => k.trim()) : undefined;
+
+  const shareImage = settings?.coursesMetaImage || settings?.logo || '/og-image.png';
+  const absoluteShareImage = shareImage.startsWith('http') ? shareImage : `${baseUrl}${shareImage.startsWith('/') ? '' : '/'}${shareImage}`;
+
+  return {
+    title,
+    description,
+    keywords,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: absoluteShareImage }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [{ url: absoluteShareImage }],
+    }
+  };
+}
 
 const CATEGORIES = [
   { value: 'DESARROLLO', label: 'Desarrollo' },

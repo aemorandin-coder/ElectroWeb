@@ -57,7 +57,12 @@ const SECTION_FIELDS: Record<Tab, (keyof SettingsFormData)[]> = {
     'lowStockThreshold', 'criticalStockThreshold',
     'autoHideOutOfStock', 'notifyLowStock', 'notifyOutOfStock',
   ],
-  seo: ['metaTitle', 'metaDescription', 'metaKeywords'],
+  seo: [
+    'metaTitle', 'metaDescription', 'metaKeywords', 'homeMetaImage',
+    'productsMetaTitle', 'productsMetaDescription', 'productsMetaKeywords', 'productsMetaImage',
+    'servicesMetaTitle', 'servicesMetaDescription', 'servicesMetaKeywords', 'servicesMetaImage',
+    'coursesMetaTitle', 'coursesMetaDescription', 'coursesMetaKeywords', 'coursesMetaImage',
+  ],
   sistema: [
     'maintenanceMode', 'maintenanceMessage',
     'maintenanceStartTime', 'maintenanceEndTime', 'maintenanceAllowedIPs', 'adminAlertEmails',
@@ -89,7 +94,10 @@ const DEFAULT_FORM: SettingsFormData = {
   minOrderAmountUSD: null, maxOrderAmountUSD: null,
   maintenanceMode: false, maintenanceMessage: '',
   maintenanceStartTime: '', maintenanceEndTime: '', maintenanceAllowedIPs: '',
-  metaTitle: '', metaDescription: '', metaKeywords: '',
+  metaTitle: '', metaDescription: '', metaKeywords: '', homeMetaImage: null,
+  productsMetaTitle: '', productsMetaDescription: '', productsMetaKeywords: '', productsMetaImage: null,
+  servicesMetaTitle: '', servicesMetaDescription: '', servicesMetaKeywords: '', servicesMetaImage: null,
+  coursesMetaTitle: '', coursesMetaDescription: '', coursesMetaKeywords: '', coursesMetaImage: null,
   heroVideoEnabled: false, heroVideoUrl: '', heroVideoTitle: '', heroVideoDescription: '',
   maxFeaturedProducts: 8,
   heroTitle: '', heroSubtitle: '', heroButtonText: '', heroButtonLink: '',
@@ -189,6 +197,12 @@ export default function SettingsPage() {
   const logoInputRef    = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
   const heroBgInputRef  = useRef<HTMLInputElement>(null);
+  
+  const [seoSubTab, setSeoSubTab] = useState<'home' | 'products' | 'services' | 'courses'>('home');
+  const homeMetaImageInputRef = useRef<HTMLInputElement>(null);
+  const productsMetaImageInputRef = useRef<HTMLInputElement>(null);
+  const servicesMetaImageInputRef = useRef<HTMLInputElement>(null);
+  const coursesMetaImageInputRef = useRef<HTMLInputElement>(null);
 
   // Per-tab dirty check
   const hasChanges = useMemo(() => {
@@ -265,6 +279,19 @@ export default function SettingsPage() {
         metaTitle:       data.metaTitle       || '',
         metaDescription: data.metaDescription || '',
         metaKeywords:    data.metaKeywords    || '',
+        homeMetaImage:   data.homeMetaImage   || null,
+        productsMetaTitle:       data.productsMetaTitle       || '',
+        productsMetaDescription: data.productsMetaDescription || '',
+        productsMetaKeywords:    data.productsMetaKeywords    || '',
+        productsMetaImage:       data.productsMetaImage       || null,
+        servicesMetaTitle:       data.servicesMetaTitle       || '',
+        servicesMetaDescription: data.servicesMetaDescription || '',
+        servicesMetaKeywords:    data.servicesMetaKeywords    || '',
+        servicesMetaImage:       data.servicesMetaImage       || null,
+        coursesMetaTitle:       data.coursesMetaTitle       || '',
+        coursesMetaDescription: data.coursesMetaDescription || '',
+        coursesMetaKeywords:    data.coursesMetaKeywords    || '',
+        coursesMetaImage:       data.coursesMetaImage       || null,
         heroVideoEnabled:     data.heroVideoEnabled     ?? false,
         heroVideoUrl:         data.heroVideoUrl         || '',
         heroVideoTitle:       data.heroVideoTitle       || '',
@@ -379,7 +406,7 @@ export default function SettingsPage() {
 
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    field: 'logo' | 'favicon' | 'heroBackgroundImage',
+    field: 'logo' | 'favicon' | 'heroBackgroundImage' | 'homeMetaImage' | 'productsMetaImage' | 'servicesMetaImage' | 'coursesMetaImage',
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1076,32 +1103,198 @@ export default function SettingsPage() {
   );
 
   const renderSeo = () => {
-    const previewTitle = formData.metaTitle || formData.companyName || 'Electro Shop';
-    const previewDesc  = formData.metaDescription || 'Tu tienda de tecnología en Venezuela.';
-    return (
-      <div className="max-w-2xl space-y-5">
-        <Card title="Meta Etiquetas SEO" icon={<FiSearch />}>
-          <div className="space-y-4">
-            <Field label="Meta Título" hint={`${previewTitle.length}/60 caracteres`}>
-              <input type="text" name="metaTitle" value={formData.metaTitle} onChange={handleInput} maxLength={60} placeholder={`${formData.companyName} — Tu tienda de tecnología`} className={inputCls} />
-            </Field>
-            <Field label="Meta Descripción" hint={`${previewDesc.length}/160 caracteres`}>
-              <textarea name="metaDescription" value={formData.metaDescription} onChange={handleInput} rows={3} maxLength={160} className={`${inputCls} resize-none`} />
-            </Field>
-            <Field label="Keywords (separadas por coma)" hint="Poco usadas por Google, útiles para Bing">
-              <input type="text" name="metaKeywords" value={formData.metaKeywords} onChange={handleInput} placeholder="electrónica, tecnología, venezuela, laptops" className={inputCls} />
-            </Field>
-          </div>
-        </Card>
+    // Determine preview values based on active subtab
+    let titleKey: 'metaTitle' | 'productsMetaTitle' | 'servicesMetaTitle' | 'coursesMetaTitle' = 'metaTitle';
+    let descKey: 'metaDescription' | 'productsMetaDescription' | 'servicesMetaDescription' | 'coursesMetaDescription' = 'metaDescription';
+    let keywordsKey: 'metaKeywords' | 'productsMetaKeywords' | 'servicesMetaKeywords' | 'coursesMetaKeywords' = 'metaKeywords';
+    let imageKey: 'homeMetaImage' | 'productsMetaImage' | 'servicesMetaImage' | 'coursesMetaImage' = 'homeMetaImage';
+    let pathLabel = '';
+    let fileInputRef: React.RefObject<HTMLInputElement | null>;
 
-        <Card title="Vista previa en Google" icon={<FiEye />}>
-          <div className="p-4 border border-gray-200 rounded-xl bg-white space-y-1 font-sans">
-            <p className="text-[13px] text-gray-500 truncate">electroshopve.com</p>
-            <p className="text-[18px] text-blue-700 font-medium leading-tight hover:underline cursor-pointer truncate">{previewTitle}</p>
-            <p className="text-[13px] text-gray-600 leading-snug line-clamp-2">{previewDesc}</p>
+    if (seoSubTab === 'home') {
+      titleKey = 'metaTitle';
+      descKey = 'metaDescription';
+      keywordsKey = 'metaKeywords';
+      imageKey = 'homeMetaImage';
+      pathLabel = '/';
+      fileInputRef = homeMetaImageInputRef;
+    } else if (seoSubTab === 'products') {
+      titleKey = 'productsMetaTitle';
+      descKey = 'productsMetaDescription';
+      keywordsKey = 'productsMetaKeywords';
+      imageKey = 'productsMetaImage';
+      pathLabel = '/productos';
+      fileInputRef = productsMetaImageInputRef;
+    } else if (seoSubTab === 'services') {
+      titleKey = 'servicesMetaTitle';
+      descKey = 'servicesMetaDescription';
+      keywordsKey = 'servicesMetaKeywords';
+      imageKey = 'servicesMetaImage';
+      pathLabel = '/servicios';
+      fileInputRef = servicesMetaImageInputRef;
+    } else {
+      titleKey = 'coursesMetaTitle';
+      descKey = 'coursesMetaDescription';
+      keywordsKey = 'coursesMetaKeywords';
+      imageKey = 'coursesMetaImage';
+      pathLabel = '/cursos';
+      fileInputRef = coursesMetaImageInputRef;
+    }
+
+    const previewTitle = formData[titleKey] || formData.companyName || 'Electro Shop';
+    const previewDesc  = formData[descKey] || `Explora nuestra sección de ${seoSubTab === 'home' ? 'tecnología' : seoSubTab === 'products' ? 'productos' : seoSubTab === 'services' ? 'servicios' : 'cursos'} en Venezuela.`;
+    const previewImage = formData[imageKey] || formData.logo || '/og-image.png';
+
+    const subtabs = [
+      { id: 'home', label: 'Inicio', path: '/' },
+      { id: 'products', label: 'Productos', path: '/productos' },
+      { id: 'services', label: 'Servicios', path: '/servicios' },
+      { id: 'courses', label: 'Cursos', path: '/cursos' },
+    ] as const;
+
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column - Forms (Col-span 7) */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Sub-tab selector */}
+          <div className="bg-gray-200/60 p-1 rounded-xl flex gap-1 w-full max-w-md">
+            {subtabs.map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSeoSubTab(tab.id)}
+                className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all text-center ${
+                  seoSubTab === tab.id
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {tab.label}
+                <span className="block text-[9px] opacity-65 font-normal">{tab.path}</span>
+              </button>
+            ))}
           </div>
-          <p className="text-[10px] text-gray-400 mt-2 italic">Vista aproximada — Google puede reescribir el título y descripción.</p>
-        </Card>
+
+          <Card title={`SEO — ${subtabs.find(t => t.id === seoSubTab)?.label}`} icon={<FiSearch />}>
+            <div className="space-y-4">
+              <Field label="Meta Título" hint={`${previewTitle.length}/60 caracteres`}>
+                <input
+                  type="text"
+                  name={titleKey}
+                  value={formData[titleKey] || ''}
+                  onChange={handleInput}
+                  maxLength={60}
+                  placeholder="Ej: Electro Shop — Tu tienda de tecnología"
+                  className={inputCls}
+                />
+              </Field>
+
+              <Field label="Meta Descripción" hint={`${previewDesc.length}/160 caracteres`}>
+                <textarea
+                  name={descKey}
+                  value={formData[descKey] || ''}
+                  onChange={handleInput}
+                  rows={3}
+                  maxLength={160}
+                  placeholder="Ej: Especialistas en ensamblado de computadoras gaming, venta de licencias de software y cursos técnicos."
+                  className={`${inputCls} resize-none`}
+                />
+              </Field>
+
+              <Field label="Keywords (separadas por coma)" hint="Palabras clave para motores de búsqueda">
+                <input
+                  type="text"
+                  name={keywordsKey}
+                  value={formData[keywordsKey] || ''}
+                  onChange={handleInput}
+                  placeholder="ej: computadoras, laptops, servicio tecnico, cursos"
+                  className={inputCls}
+                />
+              </Field>
+
+              <Field label="Imagen de Compartir (Open Graph Image)" hint="Tamaño recomendado: 1200x630px. PNG/JPG, máx 5MB">
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="relative w-36 h-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0 flex items-center justify-center">
+                    {formData[imageKey] ? (
+                      <Image src={formData[imageKey] as string} alt="SEO Preview" fill className="object-cover" />
+                    ) : (
+                      <FiImage className="w-8 h-8 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={e => handleFileUpload(e, imageKey)}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 text-xs border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg transition-colors font-semibold"
+                    >
+                      <FiUpload className="w-3.5 h-3.5" />
+                      {formData[imageKey] ? 'Cambiar Imagen' : 'Subir Imagen'}
+                    </button>
+                    {formData[imageKey] && (
+                      <button
+                        type="button"
+                        onClick={() => set(imageKey, null)}
+                        className="block text-xs text-red-500 hover:text-red-700 transition-colors font-semibold"
+                      >
+                        Quitar imagen
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </Field>
+            </div>
+          </Card>
+        </div>
+
+        {/* Right Column - Previews (Col-span 5) */}
+        <div className="lg:col-span-5 space-y-6">
+          {/* Google Search Preview */}
+          <Card title="Vista previa en Google" icon={<FiEye />}>
+            <div className="p-4 border border-gray-200 rounded-xl bg-white space-y-1 font-sans shadow-sm">
+              <p className="text-[12px] text-gray-500 truncate flex items-center gap-1">
+                <span>https://electroshopve.com</span>
+                {pathLabel !== '/' && <span className="text-gray-400">{pathLabel}</span>}
+              </p>
+              <p className="text-[18px] text-[#1a0dab] hover:underline cursor-pointer font-medium leading-tight truncate">
+                {previewTitle}
+              </p>
+              <p className="text-[13px] text-[#4d5156] leading-snug line-clamp-2">
+                {previewDesc}
+              </p>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-2 italic">Vista aproximada en motores de búsqueda.</p>
+          </Card>
+
+          {/* Social Media Preview */}
+          <Card title="Vista previa en Redes Sociales (WhatsApp / Facebook)" icon={<FiGlobe />}>
+            <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-md max-w-sm font-sans">
+              {/* Card Image */}
+              <div className="relative h-44 bg-gray-50 border-b border-gray-100 flex items-center justify-center">
+                {formData[imageKey] ? (
+                  <Image src={formData[imageKey] as string} alt="Social OG" fill className="object-cover" />
+                ) : formData.logo ? (
+                  <Image src={formData.logo} alt="Company Logo" fill className="object-contain p-4" />
+                ) : (
+                  <FiGlobe className="w-16 h-16 text-gray-300" />
+                )}
+              </div>
+              {/* Card Text Info */}
+              <div className="p-3 bg-[#f2f3f5] space-y-1">
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">ELECTROSHOPVE.COM</p>
+                <p className="text-sm font-bold text-gray-800 leading-snug line-clamp-1">{previewTitle}</p>
+                <p className="text-xs text-gray-600 leading-normal line-clamp-2">{previewDesc}</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-2 italic">Vista aproximada de enlace compartido.</p>
+          </Card>
+        </div>
       </div>
     );
   };

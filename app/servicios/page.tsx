@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
@@ -40,6 +41,46 @@ const FloatingTechIcons = () => {
 };
 
 export const revalidate = 0;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await prisma.companySettings.findFirst({
+    select: {
+      servicesMetaTitle: true,
+      servicesMetaDescription: true,
+      servicesMetaKeywords: true,
+      servicesMetaImage: true,
+      logo: true,
+      companyName: true,
+    }
+  });
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
+
+  const title = settings?.servicesMetaTitle || `Servicios | ${settings?.companyName || 'Electro Shop'}`;
+  const description = settings?.servicesMetaDescription || 'Servicios profesionales tecnológicos para tu negocio. Instalación de CCTV, redes, puntos de venta y mantenimiento técnico.';
+  const keywords = settings?.servicesMetaKeywords ? settings.servicesMetaKeywords.split(',').map(k => k.trim()) : undefined;
+
+  const shareImage = settings?.servicesMetaImage || settings?.logo || '/og-image.png';
+  const absoluteShareImage = shareImage.startsWith('http') ? shareImage : `${baseUrl}${shareImage.startsWith('/') ? '' : '/'}${shareImage}`;
+
+  return {
+    title,
+    description,
+    keywords,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: absoluteShareImage }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [{ url: absoluteShareImage }],
+    }
+  };
+}
 
 export default async function ServiciosPage() {
   const [rawVideos, settings] = await Promise.all([

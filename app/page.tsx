@@ -394,13 +394,17 @@ export default async function Home() {
       </section>
 
       {/* ═══ VIDEO REVIEWS ═══ */}
-      <section className="py-12 bg-gradient-to-br from-[#1a3b7e] to-[#2a63cd] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
-        <div className="max-w-4xl mx-auto px-4 relative z-10 text-center">
-          <h2 className="text-2xl sm:text-3xl font-black text-white mb-6">Reviews y Novedades</h2>
-          <VideoPlayer videoId="jfKfPfyJRdk" />
-        </div>
-      </section>
+      {settings?.heroVideoEnabled && settings?.heroVideoUrl && (
+        <section className="py-12 bg-gradient-to-br from-[#1a3b7e] to-[#2a63cd] relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
+          <div className="max-w-4xl mx-auto px-4 relative z-10 text-center">
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-6">
+              {settings?.heroVideoTitle || "Reviews y Novedades"}
+            </h2>
+            <VideoPlayer videoUrl={settings.heroVideoUrl} />
+          </div>
+        </section>
+      )}
 
       <Footer />
 

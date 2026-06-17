@@ -69,13 +69,16 @@ export async function POST(request: NextRequest) {
 
         const formData = await request.formData();
         const file = formData.get('file') as File;
-        const type = formData.get('type') as string; // 'logo' | 'favicon' | 'heroBackground' | 'hotAd'
+        const type = formData.get('type') as string; // 'logo' | 'favicon' | 'heroBackground' | 'hotAd' | SEO images
 
         if (!file) {
             return NextResponse.json({ error: 'No se proporcionó archivo' }, { status: 400 });
         }
 
-        if (!type || !['logo', 'favicon', 'heroBackground', 'hotAd'].includes(type)) {
+        const seoImageTypes = ['homeMetaImage', 'productsMetaImage', 'servicesMetaImage', 'coursesMetaImage'];
+        const allowedAssetTypes = ['logo', 'favicon', 'heroBackground', 'hotAd', ...seoImageTypes];
+
+        if (!type || !allowedAssetTypes.includes(type)) {
             return NextResponse.json({ error: 'Tipo de asset no válido' }, { status: 400 });
         }
 
@@ -90,8 +93,8 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        // Validate file size (max 2MB for logos/favicons, 5MB for backgrounds)
-        const maxSize = (type === 'heroBackground' || type === 'hotAd') ? 5 * 1024 * 1024 : 2 * 1024 * 1024;
+        // Validate file size (max 2MB for logos/favicons, 5MB for backgrounds/SEO)
+        const maxSize = (type === 'heroBackground' || type === 'hotAd' || seoImageTypes.includes(type)) ? 5 * 1024 * 1024 : 2 * 1024 * 1024;
         if (file.size > maxSize) {
             return NextResponse.json({
                 error: `El archivo es demasiado grande. Máximo ${maxSize / (1024 * 1024)}MB`

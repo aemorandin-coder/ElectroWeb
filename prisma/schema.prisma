@@ -666,6 +666,22 @@ model CompanySettings {
   metaTitle       String?
   metaDescription String?
   metaKeywords    String?
+  homeMetaImage   String?
+
+  productsMetaTitle       String?
+  productsMetaDescription String?
+  productsMetaKeywords    String?
+  productsMetaImage       String?
+
+  servicesMetaTitle       String?
+  servicesMetaDescription String?
+  servicesMetaKeywords    String?
+  servicesMetaImage       String?
+
+  coursesMetaTitle       String?
+  coursesMetaDescription String?
+  coursesMetaKeywords    String?
+  coursesMetaImage       String?
 
   // Hero Video Section
   heroVideoEnabled     Boolean @default(false)

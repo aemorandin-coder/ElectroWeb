@@ -53,6 +53,24 @@ type Video = {
   createdAt: string;
 };
 
+function getYoutubeVideoId(url: string): string | null {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/|live\/)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
+function getThumbnailUrl(videoUrl: string, thumbnail: string | null): string | null {
+  if (thumbnail && !getYoutubeVideoId(thumbnail)) {
+    return thumbnail;
+  }
+  const ytId = getYoutubeVideoId(videoUrl);
+  if (ytId) {
+    return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+  }
+  return thumbnail;
+}
+
 export default function AdminServiciosPage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
@@ -254,8 +272,8 @@ export default function AdminServiciosPage() {
             >
               {/* Thumbnail */}
               <div className="relative aspect-video bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef]">
-                {v.thumbnail ? (
-                  <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
+                {getThumbnailUrl(v.videoUrl, v.thumbnail) ? (
+                  <img src={getThumbnailUrl(v.videoUrl, v.thumbnail)!} alt={v.title} className="w-full h-full object-cover" />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <FiVideo className="w-10 h-10 text-[#dee2e6]" />

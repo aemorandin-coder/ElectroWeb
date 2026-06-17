@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
@@ -6,6 +7,46 @@ import ProductosClient from './ProductosClient';
 import Footer from '@/components/Footer';
 
 export const revalidate = 0;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await prisma.companySettings.findFirst({
+    select: {
+      productsMetaTitle: true,
+      productsMetaDescription: true,
+      productsMetaKeywords: true,
+      productsMetaImage: true,
+      logo: true,
+      companyName: true,
+    }
+  });
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
+
+  const title = settings?.productsMetaTitle || `Productos | ${settings?.companyName || 'Electro Shop'}`;
+  const description = settings?.productsMetaDescription || 'Explora la mejor selección de saldo digital, gift cards, licencias y hardware gaming de vanguardia.';
+  const keywords = settings?.productsMetaKeywords ? settings.productsMetaKeywords.split(',').map(k => k.trim()) : undefined;
+
+  const shareImage = settings?.productsMetaImage || settings?.logo || '/og-image.png';
+  const absoluteShareImage = shareImage.startsWith('http') ? shareImage : `${baseUrl}${shareImage.startsWith('/') ? '' : '/'}${shareImage}`;
+
+  return {
+    title,
+    description,
+    keywords,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: absoluteShareImage }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [{ url: absoluteShareImage }],
+    }
+  };
+}
 
 export default async function ProductosPage() {
   const [products, categories, settings] = await Promise.all([

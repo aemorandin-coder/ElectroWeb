@@ -64,22 +64,27 @@ export async function generateMetadata(): Promise<Metadata> {
     icons.icon = '/favicon.ico';
   }
 
-  // Open Graph image - use logo if available (ensure absolute URL)
-  const ogImage = ensureAbsoluteUrl(settings.logo) || ensureAbsoluteUrl(settings.favicon) || `${baseUrl}/og-image.png`;
+  // Open Graph image - use homeMetaImage if available, else logo, favicon, or default
+  const ogImage = ensureAbsoluteUrl(settings.homeMetaImage) || ensureAbsoluteUrl(settings.logo) || ensureAbsoluteUrl(settings.favicon) || `${baseUrl}/og-image.png`;
+
+  const titleText = settings.metaTitle || settings.companyName || "Electro Shop Morandin C.A. | Gaming, Laptops & Tecnología";
+  const descText = settings.metaDescription || settings.tagline || "Tienda de tecnología especializada en Guanare. Computadoras gaming, laptops, consolas, CCTV y más.";
+  const defaultKeywords = ["gaming", "laptops", "tecnología", "Guanare", "Venezuela", "servicio técnico", "cursos online", "electro shop", "electroshopve", "computadoras Venezuela", "pago móvil"];
+  const keywordsList = settings.metaKeywords ? settings.metaKeywords.split(',').map(k => k.trim()) : defaultKeywords;
 
   return {
     title: {
-      default: settings.companyName || "Electro Shop Morandin C.A. | Gaming, Laptops & Tecnología",
+      default: titleText,
       template: `%s | ${settings.companyName || 'Electro Shop'}`,
     },
-    description: settings.tagline || "Tienda de tecnología especializada en Guanare. Computadoras gaming, laptops, consolas, CCTV y más. Servicio técnico especializado y cursos online.",
-    keywords: ["gaming", "laptops", "tecnología", "Guanare", "Venezuela", "servicio técnico", "cursos online", "electro shop", "electroshopve", "computadoras Venezuela", "pago móvil"],
+    description: descText,
+    keywords: keywordsList,
     icons,
     metadataBase: new URL(baseUrl),
     // Open Graph — Optimizado para WhatsApp, Facebook, Telegram
     openGraph: {
-      title: settings.companyName || "Electro Shop Morandin C.A.",
-      description: settings.tagline || "Tienda de tecnología especializada en Guanare — Gaming, Laptops, Consolas, CCTV y más.",
+      title: titleText,
+      description: descText,
       url: baseUrl,
       siteName: settings.companyName || "Electro Shop",
       images: [
@@ -98,8 +103,8 @@ export async function generateMetadata(): Promise<Metadata> {
     // Twitter Card
     twitter: {
       card: 'summary_large_image',
-      title: settings.companyName || "Electro Shop Morandin C.A.",
-      description: settings.tagline || "Tienda de tecnología especializada en Guanare",
+      title: titleText,
+      description: descText,
       images: [{
         url: ogImage,
         width: 1200,

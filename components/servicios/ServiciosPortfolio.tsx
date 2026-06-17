@@ -36,12 +36,30 @@ type Video = {
   reviewCount: number;
 };
 
-function getEmbedUrl(url: string, platform: string | null): string | null {
-  if (platform === 'YOUTUBE') {
-    const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-    if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1&rel=0`;
+function getYoutubeVideoId(url: string): string | null {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/|live\/)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
+function getThumbnailUrl(videoUrl: string, thumbnail: string | null): string | null {
+  if (thumbnail && !getYoutubeVideoId(thumbnail)) {
+    return thumbnail;
   }
-  if (platform === 'TIKTOK') {
+  const ytId = getYoutubeVideoId(videoUrl);
+  if (ytId) {
+    return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+  }
+  return thumbnail;
+}
+
+function getEmbedUrl(url: string, platform: string | null): string | null {
+  const ytId = getYoutubeVideoId(url);
+  if (ytId) {
+    return `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
+  }
+  if (platform === 'TIKTOK' || url.includes('tiktok.com')) {
     const m = url.match(/tiktok\.com\/@[\w.]+\/video\/(\d+)/);
     if (m) return `https://www.tiktok.com/embed/v2/${m[1]}`;
   }
@@ -169,6 +187,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((v) => {
             const badge = v.platform ? PLATFORM_BADGES[v.platform] : null;
+            const computedThumbnail = getThumbnailUrl(v.videoUrl, v.thumbnail);
             return (
               <div
                 key={v.id}
@@ -177,9 +196,9 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
               >
                 {/* Thumbnail */}
                 <div className="relative aspect-video bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] overflow-hidden">
-                  {v.thumbnail ? (
+                  {computedThumbnail ? (
                     <img
-                      src={v.thumbnail}
+                      src={computedThumbnail}
                       alt={v.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />

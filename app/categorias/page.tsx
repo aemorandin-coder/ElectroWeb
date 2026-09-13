@@ -19,7 +19,7 @@ export default async function CategoriasPage() {
         description: true,
         icon: true,
         color: true,
-        _count: { select: { products: true } },
+        _count: { select: { products: { where: { status: 'PUBLISHED' } } } },
       },
     }),
     prisma.companySettings.findFirst(),

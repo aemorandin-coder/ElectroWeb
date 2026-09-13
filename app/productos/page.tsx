@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import ProductosClient from './ProductosClient';
@@ -52,7 +53,7 @@ export default async function ProductosPage() {
   const [products, categories, settings] = await Promise.all([
     prisma.product.findMany({
       where: { status: 'PUBLISHED' },
-      include: { category: true },
+      include: publicProductInclude,
       orderBy: { createdAt: 'desc' }
     }),
     prisma.category.findMany({
@@ -130,7 +131,7 @@ export default async function ProductosPage() {
 
       {/* Client Component with Products and Filters */}
       <ProductosClient
-        initialProducts={JSON.parse(JSON.stringify(products))}
+        initialProducts={products.map(toPublicProduct)}
         initialCategories={JSON.parse(JSON.stringify(categories))}
       />
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
 
 // GET /api/products/public - Get all active products (public endpoint)
 export async function GET(request: NextRequest) {
@@ -21,25 +22,17 @@ export async function GET(request: NextRequest) {
       where.isFeatured = true;
     }
 
+    const take = limit ? Math.min(100, Math.max(1, parseInt(limit) || 1)) : undefined;
+
     const products = await prisma.product.findMany({
       where,
-      include: {
-        category: true,
-      },
+      include: publicProductInclude,
       orderBy: { createdAt: 'desc' },
-      take: limit ? parseInt(limit) : undefined,
+      take,
     });
 
-    // Convert Decimal fields to Number for proper JSON serialization
-    const formattedProducts = products.map(p => ({
-      ...p,
-      priceUSD: Number(p.priceUSD),
-      priceVES: p.priceVES ? Number(p.priceVES) : null,
-      weightKg: p.weightKg ? Number(p.weightKg) : null,
-      shippingCost: p.shippingCost ? Number(p.shippingCost) : null,
-    }));
-
-    return NextResponse.json(formattedProducts);
+    // SEGURIDAD: solo campos públicos del DTO (sin costos internos)
+    return NextResponse.json(products.map(toPublicProduct));
   } catch (error) {
     console.error('Error fetching public products:', error);
     return NextResponse.json(

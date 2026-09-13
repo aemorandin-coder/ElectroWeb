@@ -15,11 +15,10 @@ interface Product {
     priceVES?: number | null;
     images: string[];
     slug: string;
-    status: string;
     description?: string | null;
     stock?: number;
     category?: { id: string; name: string; slug: string } | null;
-    brand?: { id: string; name: string } | null;
+    brand?: { name: string } | null;
     productType?: string;
     isFeatured?: boolean;
 }

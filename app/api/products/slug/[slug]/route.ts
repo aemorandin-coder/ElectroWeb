@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
 
 export async function GET(
   request: NextRequest,
@@ -13,9 +14,7 @@ export async function GET(
         slug,
         status: 'PUBLISHED'
       },
-      include: {
-        category: true,
-      },
+      include: publicProductInclude,
     });
 
     if (!product) {
@@ -25,16 +24,8 @@ export async function GET(
       );
     }
 
-    // Convert Decimal fields to Number for proper JSON serialization
-    const formattedProduct = {
-      ...product,
-      priceUSD: Number(product.priceUSD),
-      priceVES: product.priceVES ? Number(product.priceVES) : null,
-      weightKg: product.weightKg ? Number(product.weightKg) : null,
-      shippingCost: product.shippingCost ? Number(product.shippingCost) : null,
-    };
-
-    return NextResponse.json(formattedProduct);
+    // SEGURIDAD: solo campos públicos del DTO (sin costos internos)
+    return NextResponse.json(toPublicProduct(product));
   } catch (error) {
     console.error('Error fetching product:', error);
     return NextResponse.json(

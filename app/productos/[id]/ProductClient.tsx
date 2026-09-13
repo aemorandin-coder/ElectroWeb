@@ -40,7 +40,7 @@ interface Product {
   isNew: boolean;
   hasDiscount: boolean;
   discountPercent?: number;
-  brand?: string;
+  brand?: { name: string; slug: string } | null;
   specs?: Record<string, any>;
   features?: string[];
   createdAt: string;
@@ -676,7 +676,7 @@ export default function ProductClient({ initialProduct }: { initialProduct: Prod
               <div className="bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-xl border border-gray-100 px-3 lg:px-6 py-2 lg:py-3 shadow-sm lg:shadow-lg text-center lg:text-left">
                 {product.brand && (
                   <div className="inline-flex items-center justify-center lg:justify-start gap-2 text-xs lg:text-sm font-medium text-gray-500">
-                    <span className="uppercase tracking-wider">{product.brand}</span>
+                    <span className="uppercase tracking-wider">{product.brand.name}</span>
                     {product.category && (
                       <>
                         <span className="w-1 h-1 rounded-full bg-gray-300"></span>

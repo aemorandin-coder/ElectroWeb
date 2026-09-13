@@ -24,10 +24,10 @@ interface Product {
   images: string[];
   mainImage?: string | null;
   isFeatured: boolean;
-  isNew: boolean;
-  hasDiscount: boolean;
+  isNew?: boolean;
+  hasDiscount?: boolean;
   discountPercent?: number;
-  brand?: string;
+  brand?: { name: string } | null;
   createdAt: string;
 }
 

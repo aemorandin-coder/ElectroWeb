@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import CategoryClient from '@/components/public/CategoryClient';
@@ -22,18 +23,12 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
 
   const products = await prisma.product.findMany({
     where: { categoryId: category.id, status: 'PUBLISHED' },
-    include: { category: true, brand: true },
+    include: publicProductInclude,
     orderBy: { createdAt: 'desc' },
   });
 
-  const formattedProducts = products.map(p => ({
-    ...p,
-    priceUSD: Number(p.priceUSD),
-    priceVES: p.priceVES ? Number(p.priceVES) : null,
-    weightKg: p.weightKg ? Number(p.weightKg) : null,
-    shippingCost: p.shippingCost ? Number(p.shippingCost) : null,
-    images: typeof p.images === 'string' ? JSON.parse(p.images) : p.images,
-  }));
+  // SEGURIDAD: al componente cliente solo llegan campos públicos
+  const formattedProducts = products.map(toPublicProduct);
 
   const resolvedIconName = category.icon || getAutoIcon(category.name);
   const cv = getCategoryColor(category.color, category.name.length);
@@ -98,7 +93,7 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
       </section>
 
       {/* Products (Client Component) */}
-      <CategoryClient category={category} initialProducts={formattedProducts as any} />
+      <CategoryClient category={category} initialProducts={formattedProducts} />
 
       <PageAnimations />
     </div>

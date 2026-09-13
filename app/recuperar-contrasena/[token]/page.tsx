@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
     };
 
     return (
-        <div className="min-h-dvh bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 relative overflow-hidden">
+        <div className="min-h-dvh bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center px-4 relative overflow-hidden">
             {/* Animated Background */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
                         </p>
                         <Link
                             href="/login"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#2a63cd] font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand-500 font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg"
                         >
                             Ir al Login
                         </Link>
@@ -162,7 +162,7 @@ export default function ResetPasswordPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full px-6 py-4 bg-white text-[#2a63cd] font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-6 py-4 bg-white text-brand-500 font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Restableciendo...' : 'Restablecer Contraseña'}
                             </button>

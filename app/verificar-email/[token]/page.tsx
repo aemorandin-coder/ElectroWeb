@@ -41,12 +41,12 @@ export default function VerifyEmailPage() {
     }, [params.token, router]);
 
     return (
-        <div className="min-h-dvh bg-gradient-to-br from-[#f8f9fa] via-white to-[#e9ecef] flex items-center justify-center p-4">
+        <div className="min-h-dvh bg-gradient-to-br from-surface via-white to-line flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Card */}
-                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-[#e9ecef]">
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-line">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-8 py-6 text-center">
+                    <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-8 py-6 text-center">
                         <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
                             <FiMail className="w-8 h-8 text-white" />
                         </div>
@@ -58,11 +58,11 @@ export default function VerifyEmailPage() {
                     <div className="p-8 text-center">
                         {status === 'loading' && (
                             <div className="space-y-4">
-                                <div className="w-16 h-16 mx-auto bg-[#2a63cd]/10 rounded-full flex items-center justify-center">
-                                    <FiLoader className="w-8 h-8 text-[#2a63cd] animate-spin" />
+                                <div className="w-16 h-16 mx-auto bg-brand-500/10 rounded-full flex items-center justify-center">
+                                    <FiLoader className="w-8 h-8 text-brand-500 animate-spin" />
                                 </div>
-                                <h2 className="text-xl font-bold text-[#212529]">Verificando...</h2>
-                                <p className="text-[#6a6c6b]">Por favor espera mientras verificamos tu email</p>
+                                <h2 className="text-xl font-bold text-ink">Verificando...</h2>
+                                <p className="text-muted">Por favor espera mientras verificamos tu email</p>
                             </div>
                         )}
 
@@ -72,8 +72,8 @@ export default function VerifyEmailPage() {
                                     <FiCheckCircle className="w-8 h-8 text-emerald-600" />
                                 </div>
                                 <h2 className="text-xl font-bold text-emerald-600">Verificado Exitosamente</h2>
-                                <p className="text-[#6a6c6b]">{message}</p>
-                                <p className="text-sm text-[#adb5bd]">Redirigiendo al login...</p>
+                                <p className="text-muted">{message}</p>
+                                <p className="text-sm text-subtle">Redirigiendo al login...</p>
                             </div>
                         )}
 
@@ -83,11 +83,11 @@ export default function VerifyEmailPage() {
                                     <FiXCircle className="w-8 h-8 text-red-600" />
                                 </div>
                                 <h2 className="text-xl font-bold text-red-600">Error de Verificacion</h2>
-                                <p className="text-[#6a6c6b]">{message}</p>
+                                <p className="text-muted">{message}</p>
                                 <div className="pt-4 space-y-3">
                                     <Link
                                         href="/login"
-                                        className="block w-full py-3 bg-[#2a63cd] text-white font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors"
+                                        className="block w-full py-3 bg-brand-500 text-white font-medium rounded-lg hover:bg-brand-600 transition-colors"
                                     >
                                         Ir al Login
                                     </Link>
@@ -104,7 +104,7 @@ export default function VerifyEmailPage() {
                                                 if (res.ok) { toast.success(data.message || 'Email reenviado'); } else { toast.error(data.error || 'No se pudo reenviar el email'); }
                                             }
                                         }}
-                                        className="block w-full py-3 border border-[#2a63cd] text-[#2a63cd] font-medium rounded-lg hover:bg-[#2a63cd]/5 transition-colors"
+                                        className="block w-full py-3 border border-brand-500 text-brand-500 font-medium rounded-lg hover:bg-brand-500/5 transition-colors"
                                     >
                                         Reenviar Email
                                     </button>
@@ -115,8 +115,8 @@ export default function VerifyEmailPage() {
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-sm text-[#6a6c6b] mt-6">
-                    <Link href="/" className="text-[#2a63cd] hover:underline">
+                <p className="text-center text-sm text-muted mt-6">
+                    <Link href="/" className="text-brand-500 hover:underline">
                         Volver al inicio
                     </Link>
                 </p>

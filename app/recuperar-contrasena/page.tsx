@@ -66,7 +66,7 @@ export default function RecuperarContrasenaPage() {
     const companyName = companySettings?.companyName || 'Electro Shop Morandin';
 
     return (
-        <div className="min-h-dvh bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-8 relative overflow-hidden">
+        <div className="min-h-dvh bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center px-4 py-8 relative overflow-hidden">
             {/* Back to Home Button */}
             <Link
                 href="/"
@@ -106,7 +106,7 @@ export default function RecuperarContrasenaPage() {
                                 </p>
                                 <Link
                                     href="/login"
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#2a63cd] font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg"
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand-500 font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg"
                                 >
                                     <FiArrowLeft className="w-5 h-5" />
                                     Volver al Login
@@ -223,11 +223,11 @@ export default function RecuperarContrasenaPage() {
                                     <button
                                         type="submit"
                                         disabled={loading || !captchaToken}
-                                        className="w-full px-6 py-3.5 bg-white text-[#2a63cd] font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base flex items-center justify-center gap-2"
+                                        className="w-full px-6 py-3.5 bg-white text-brand-500 font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base flex items-center justify-center gap-2"
                                     >
                                         {loading ? (
                                             <>
-                                                <svg className="animate-spin h-5 w-5 text-[#2a63cd]" fill="none" viewBox="0 0 24 24">
+                                                <svg className="animate-spin h-5 w-5 text-brand-500" fill="none" viewBox="0 0 24 24">
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>

@@ -10,7 +10,7 @@ export default function TermsPage() {
   return (
     <>
       <PublicHeader />
-      <div className="min-h-dvh bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      <div className="min-h-dvh bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center px-4 py-12 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
@@ -273,7 +273,7 @@ export default function TermsPage() {
           <div className="p-6 border-t border-white/10 bg-white/5 flex justify-end">
             <button
               onClick={() => router.back()}
-              className="group flex items-center gap-2 px-6 py-3 bg-white text-[#2a63cd] font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+              className="group flex items-center gap-2 px-6 py-3 bg-white text-brand-500 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
             >
               <FiArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               Volver

@@ -76,7 +76,7 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
           {sidebarOpen && (
             <div>
               <p className="text-white text-sm font-bold leading-none">Creator Hub</p>
-              <p className="text-white/40 text-xs mt-0.5">ElectroShop</p>
+              <p className="text-white/80 text-xs mt-0.5">ElectroShop</p>
             </div>
           )}
         </div>
@@ -92,7 +92,7 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive
                     ? 'bg-[#2a63cd]/20 text-[#60a5fa] border border-[#2a63cd]/30'
-                    : 'text-white/50 hover:text-white hover:bg-white/5'
+                    : 'text-white/80 hover:text-white hover:bg-white/5'
                 }`}
                 title={!sidebarOpen ? item.label : undefined}
               >
@@ -107,7 +107,7 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
         <div className="border-t border-white/10 p-3 space-y-1 flex-shrink-0">
           <Link
             href="/creator"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-white/40 hover:text-white/70 hover:bg-white/5 transition-all"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-white/80 hover:text-white/70 hover:bg-white/5 transition-all"
             title={!sidebarOpen ? 'Página de Creadores' : undefined}
           >
             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,7 +117,7 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
           </Link>
           <Link
             href="/customer"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-white/40 hover:text-white/70 hover:bg-white/5 transition-all"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-white/80 hover:text-white/70 hover:bg-white/5 transition-all"
             title={!sidebarOpen ? 'Mi Panel Cliente' : undefined}
           >
             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +127,7 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
           </Link>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-white/40 hover:text-white/70 hover:bg-white/5 transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-white/80 hover:text-white/70 hover:bg-white/5 transition-all"
           >
             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarOpen ? 'M11 19l-7-7 7-7m8 14l-7-7 7-7' : 'M13 5l7 7-7 7M5 5l7 7-7 7'} />
@@ -150,14 +150,14 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <header className="bg-[#161b27]/80 backdrop-blur border-b border-white/10 px-6 py-3.5 flex items-center justify-between flex-shrink-0 sticky top-0 z-20">
-          <div className="text-white/40 text-sm">
+          <div className="text-white/80 text-sm">
             {NAV_ITEMS.find((n) => (n.exact ? pathname === n.href : pathname.startsWith(n.href)))?.label ?? 'Creator Hub'}
           </div>
           <div className="flex items-center gap-3">
             <Link
               href="/cursos"
               target="_blank"
-              className="text-xs text-white/40 hover:text-white/70 transition-colors"
+              className="text-xs text-white/80 hover:text-white/70 transition-colors"
             >
               Ver catálogo ↗
             </Link>

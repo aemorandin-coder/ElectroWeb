@@ -58,7 +58,7 @@ export default function CreatorProfilePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Mi Perfil de Creador</h1>
-          <p className="text-white/40 text-sm mt-1">Esta información es visible para tus estudiantes.</p>
+          <p className="text-white/80 text-sm mt-1">Esta información es visible para tus estudiantes.</p>
         </div>
         {msg && (
           <div className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 text-sm font-semibold">
@@ -91,7 +91,7 @@ export default function CreatorProfilePage() {
         </div>
 
         <div>
-          <label className="block text-white/60 text-xs font-semibold mb-1.5">Nombre de Creador *</label>
+          <label className="block text-white/80 text-xs font-semibold mb-1.5">Nombre de Creador *</label>
           <input
             value={form.displayName}
             onChange={(e) => setForm((p) => ({ ...p, displayName: e.target.value }))}
@@ -101,7 +101,7 @@ export default function CreatorProfilePage() {
         </div>
 
         <div>
-          <label className="block text-white/60 text-xs font-semibold mb-1.5">Área de Expertise</label>
+          <label className="block text-white/80 text-xs font-semibold mb-1.5">Área de Expertise</label>
           <input
             value={form.expertise}
             onChange={(e) => setForm((p) => ({ ...p, expertise: e.target.value }))}
@@ -111,7 +111,7 @@ export default function CreatorProfilePage() {
         </div>
 
         <div>
-          <label className="block text-white/60 text-xs font-semibold mb-1.5">Bio</label>
+          <label className="block text-white/80 text-xs font-semibold mb-1.5">Bio</label>
           <textarea
             value={form.bio}
             onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}

@@ -368,15 +368,15 @@ export default async function CursosPage({
               <div className="grid grid-cols-3 gap-4 pt-2 max-w-md">
                 <div>
                   <p className="text-xl md:text-2xl font-bold text-cyan-300">90%</p>
-                  <p className="text-xs text-white/60">Comisión para ti</p>
+                  <p className="text-xs text-white/80">Comisión para ti</p>
                 </div>
                 <div>
                   <p className="text-xl md:text-2xl font-bold text-cyan-300">Fácil</p>
-                  <p className="text-xs text-white/60">Sube tus videos</p>
+                  <p className="text-xs text-white/80">Sube tus videos</p>
                 </div>
                 <div>
                   <p className="text-xl md:text-2xl font-bold text-cyan-300">Soporte</p>
-                  <p className="text-xs text-white/60">De principio a fin</p>
+                  <p className="text-xs text-white/80">De principio a fin</p>
                 </div>
               </div>
             </div>

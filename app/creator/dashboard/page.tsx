@@ -61,7 +61,7 @@ export default function CreatorDashboardPage() {
         <h2 className="text-xl font-bold text-white mb-2">
           {creator?.status === 'PENDING' ? 'Solicitud en revisión' : 'Acceso no autorizado'}
         </h2>
-        <p className="text-white/50 mb-6 text-sm">
+        <p className="text-white/80 mb-6 text-sm">
           {creator?.status === 'PENDING'
             ? 'Tu solicitud está siendo revisada. Te avisaremos cuando sea aprobada.'
             : 'Necesitas ser un creador aprobado para acceder a este panel.'}
@@ -94,7 +94,7 @@ export default function CreatorDashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Hola, {creator.displayName}</h1>
-          <p className="text-white/40 text-sm mt-1">Aquí está el resumen de tu actividad como creador.</p>
+          <p className="text-white/80 text-sm mt-1">Aquí está el resumen de tu actividad como creador.</p>
         </div>
         <Link
           href="/creator/dashboard/cursos/nuevo"
@@ -113,7 +113,7 @@ export default function CreatorDashboardPage() {
           <div key={stat.label} className={`bg-gradient-to-br ${stat.color} border border-white/10 rounded-2xl p-5`}>
             <p className="text-2xl font-bold text-white">{stat.value}</p>
             <p className="text-white/70 text-xs font-semibold mt-0.5">{stat.label}</p>
-            <p className="text-white/30 text-xs">{stat.sub}</p>
+            <p className="text-white/80 text-xs">{stat.sub}</p>
           </div>
         ))}
       </div>
@@ -129,7 +129,7 @@ export default function CreatorDashboardPage() {
 
         {courses.length === 0 ? (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
-              <p className="text-white/60 mb-4 text-sm">Aún no has creado ningún curso.</p>
+              <p className="text-white/80 mb-4 text-sm">Aún no has creado ningún curso.</p>
             <Link
               href="/creator/dashboard/cursos/nuevo"
               className="inline-block px-6 py-2.5 bg-gradient-to-r from-[#2a63cd] to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
@@ -155,11 +155,11 @@ export default function CreatorDashboardPage() {
                       {course.isActive ? 'Activo' : 'En revisión'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-white/40 flex-wrap">
+                  <div className="flex items-center gap-4 text-xs text-white/80 flex-wrap">
                     <span>{course._count.enrollments} estudiantes</span>
                     <span>{course.rating?.toFixed(1) ?? '—'} rating</span>
                     <span>{course.totalLessons} lecciones</span>
-                    <span className="text-white/60 font-semibold">${course.priceUSD.toFixed(2)}</span>
+                    <span className="text-white/80 font-semibold">${course.priceUSD.toFixed(2)}</span>
                   </div>
                 </div>
                 <Link
@@ -177,7 +177,7 @@ export default function CreatorDashboardPage() {
       {/* Info card */}
       <div className="bg-gradient-to-r from-[#2a63cd]/20 to-cyan-500/20 border border-[#2a63cd]/30 rounded-2xl p-5">
         <h3 className="text-white font-bold mb-1.5 text-sm">¿Cómo funcionan tus ingresos?</h3>
-        <p className="text-white/60 text-xs leading-relaxed">
+        <p className="text-white/80 text-xs leading-relaxed">
           Por cada venta recibes el{' '}
           <strong className="text-white">{creator.commissionRate}%</strong> del precio del curso.
           El <strong className="text-white">{100 - creator.commissionRate}%</strong> restante es la comisión

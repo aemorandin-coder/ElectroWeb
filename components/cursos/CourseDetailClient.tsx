@@ -407,7 +407,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
               </div>
             ) : (
               <div className="aspect-video rounded-xl bg-black flex items-center justify-center">
-                <p className="text-white/50 text-sm">Video no disponible</p>
+                <p className="text-white/80 text-sm">Video no disponible</p>
               </div>
             )}
           </div>

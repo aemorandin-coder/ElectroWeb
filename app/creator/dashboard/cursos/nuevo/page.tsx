@@ -54,7 +54,7 @@ export default function NuevoCursoPage() {
       {/* Back */}
       <Link
         href="/creator/dashboard/cursos"
-        className="flex items-center gap-2 text-white/40 hover:text-white/70 text-sm transition-colors w-fit"
+        className="flex items-center gap-2 text-white/80 hover:text-white/70 text-sm transition-colors w-fit"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -64,7 +64,7 @@ export default function NuevoCursoPage() {
 
       <div>
         <h1 className="text-2xl font-bold text-white">Nuevo Curso</h1>
-        <p className="text-white/40 text-sm mt-1">
+        <p className="text-white/80 text-sm mt-1">
           Completa la información básica. Podrás agregar el currículum después de crearlo.
         </p>
       </div>
@@ -130,7 +130,7 @@ export default function NuevoCursoPage() {
             className={INPUT}
             placeholder="Ej: 19.99"
           />
-          <p className="text-white/30 text-xs mt-1">Recibirás el 90% de cada venta (${form.priceUSD ? (parseFloat(form.priceUSD) * 0.9).toFixed(2) : '0.00'} por venta)</p>
+          <p className="text-white/80 text-xs mt-1">Recibirás el 90% de cada venta (${form.priceUSD ? (parseFloat(form.priceUSD) * 0.9).toFixed(2) : '0.00'} por venta)</p>
         </Field>
 
         <Field label="URL de Trailer (YouTube/Vimeo)">
@@ -166,8 +166,8 @@ export default function NuevoCursoPage() {
         </div>
       </div>
 
-      <div className="p-4 bg-white/5 border border-white/10 rounded-xl text-xs text-white/40 leading-relaxed">
-        <strong className="text-white/60">Nota:</strong> Los nuevos cursos se crean en estado &quot;En revisión&quot; y necesitan aprobación del equipo de ElectroShop para ser visibles en el catálogo. Una vez aprobado podrás seguir editando el contenido.
+      <div className="p-4 bg-white/5 border border-white/10 rounded-xl text-xs text-white/80 leading-relaxed">
+        <strong className="text-white/80">Nota:</strong> Los nuevos cursos se crean en estado &quot;En revisión&quot; y necesitan aprobación del equipo de ElectroShop para ser visibles en el catálogo. Una vez aprobado podrás seguir editando el contenido.
       </div>
     </div>
   );
@@ -176,7 +176,7 @@ export default function NuevoCursoPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-white/60 text-xs font-semibold mb-1.5">{label}</label>
+      <label className="block text-white/80 text-xs font-semibold mb-1.5">{label}</label>
       {children}
     </div>
   );

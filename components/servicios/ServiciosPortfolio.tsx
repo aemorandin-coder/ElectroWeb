@@ -317,7 +317,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                  <FiVideo className="w-12 h-12 text-white/40" />
+                  <FiVideo className="w-12 h-12 text-white/80" />
                   <a
                     href={activeModal.videoUrl}
                     target="_blank"

@@ -150,7 +150,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
       <header className="shrink-0 flex items-center gap-4 px-4 py-2.5 bg-[#16213e] border-b border-white/10 z-20">
         <button
           onClick={() => setSidebarOpen((v) => !v)}
-          className="text-white/60 hover:text-white transition-colors"
+          className="text-white/80 hover:text-white transition-colors"
           title="Toggle sidebar"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,7 +158,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
           </svg>
         </button>
 
-        <Link href={`/cursos/${course.slug}`} className="text-white/60 hover:text-white transition-colors">
+        <Link href={`/cursos/${course.slug}`} className="text-white/80 hover:text-white transition-colors">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
@@ -166,7 +166,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
 
         <div className="flex-1 min-w-0">
           <p className="text-white font-semibold text-sm truncate">{course.title}</p>
-          <p className="text-white/50 text-xs">{instructorName}</p>
+          <p className="text-white/80 text-xs">{instructorName}</p>
         </div>
 
         {/* Progress bar */}
@@ -198,8 +198,8 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
           className={`shrink-0 flex flex-col bg-[#16213e] border-r border-white/10 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'w-72 lg:w-80' : 'w-0'} overflow-hidden`}
         >
           <div className="p-4 border-b border-white/10">
-            <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-1">Contenido del Curso</p>
-            <p className="text-white/40 text-xs">{completedLessons.size}/{totalLessons} lecciones completadas</p>
+            <p className="text-white/80 text-xs font-semibold uppercase tracking-wider mb-1">Contenido del Curso</p>
+            <p className="text-white/80 text-xs">{completedLessons.size}/{totalLessons} lecciones completadas</p>
           </div>
 
           {course.modules.map((mod) => (
@@ -210,14 +210,14 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <svg
-                    className={`w-3.5 h-3.5 text-white/40 shrink-0 transition-transform ${openModules.has(mod.id) ? 'rotate-90' : ''}`}
+                    className={`w-3.5 h-3.5 text-white/80 shrink-0 transition-transform ${openModules.has(mod.id) ? 'rotate-90' : ''}`}
                     fill="none" stroke="currentColor" viewBox="0 0 24 24"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                   <span className="text-white/80 text-xs font-semibold truncate">{mod.title}</span>
                 </div>
-                <span className="text-white/30 text-xs shrink-0 ml-2">
+                <span className="text-white/80 text-xs shrink-0 ml-2">
                   {mod.lessons.filter((l) => completedLessons.has(l.id)).length}/{mod.lessons.length}
                 </span>
               </button>
@@ -243,7 +243,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <p className={`text-xs leading-snug truncate ${active ? 'text-white font-semibold' : done ? 'text-white/50' : 'text-white/70'}`}>
+                          <p className={`text-xs leading-snug truncate ${active ? 'text-white font-semibold' : done ? 'text-white/80' : 'text-white/70'}`}>
                             {lesson.title}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
@@ -251,7 +251,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                               <span className="text-xs text-green-400">Preview</span>
                             )}
                             {lesson.duration && (
-                              <span className="text-xs text-white/30">{formatDuration(lesson.duration)}</span>
+                              <span className="text-xs text-white/80">{formatDuration(lesson.duration)}</span>
                             )}
                           </div>
                         </div>
@@ -279,7 +279,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                   allow="autoplay; encrypted-media; picture-in-picture"
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center text-white/30 gap-4 p-8 text-center">
+                <div className="flex flex-col items-center justify-center text-white/80 gap-4 p-8 text-center">
                   <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -305,7 +305,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                 <div className="min-w-0">
                   <p className="text-white font-semibold text-sm truncate">{activeLesson.title}</p>
                   {activeLesson.description && (
-                    <p className="text-white/40 text-xs truncate">{activeLesson.description}</p>
+                    <p className="text-white/80 text-xs truncate">{activeLesson.description}</p>
                   )}
                 </div>
 
@@ -314,7 +314,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                   <button
                     onClick={prevLesson}
                     disabled={isFirst}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -355,7 +355,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                       nextLesson();
                     }}
                     disabled={isLast}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     Siguiente
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -373,7 +373,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <span className="text-white/50 text-xs">{progress}%</span>
+                <span className="text-white/80 text-xs">{progress}%</span>
               </div>
             </div>
           )}

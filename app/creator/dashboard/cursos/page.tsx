@@ -47,7 +47,7 @@ export default function CreatorCoursesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Mis Cursos</h1>
-          <p className="text-white/40 text-sm mt-1">{courses.length} curso{courses.length !== 1 ? 's' : ''} en total</p>
+          <p className="text-white/80 text-sm mt-1">{courses.length} curso{courses.length !== 1 ? 's' : ''} en total</p>
         </div>
         <Link
           href="/creator/dashboard/cursos/nuevo"
@@ -67,7 +67,7 @@ export default function CreatorCoursesPage() {
       ) : courses.length === 0 ? (
         <div className="bg-white/5 border border-white/10 rounded-2xl p-16 text-center">
           <h2 className="text-white font-bold text-lg mb-2">Sin cursos aún</h2>
-          <p className="text-white/50 text-sm mb-6">Crea tu primer curso y comparte tu conocimiento.</p>
+          <p className="text-white/80 text-sm mb-6">Crea tu primer curso y comparte tu conocimiento.</p>
           <Link
             href="/creator/dashboard/cursos/nuevo"
             className="inline-block px-6 py-2.5 bg-gradient-to-r from-[#2a63cd] to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
@@ -94,18 +94,18 @@ export default function CreatorCoursesPage() {
                       {course.isActive ? 'Activo' : 'En revisión'}
                     </span>
                     {course.category && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/50">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/80">
                         {course.category}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-5 text-xs text-white/40 flex-wrap">
+                  <div className="flex items-center gap-5 text-xs text-white/80 flex-wrap">
                     <span>{course._count.enrollments} estudiantes</span>
                     <span>{course.rating?.toFixed(1) ?? '—'} ({course._count.reviews} reseñas)</span>
                     <span>{course.totalLessons} lecciones</span>
                     <span>{course._count.modules} módulos</span>
-                    <span className="text-white/60 font-bold">${course.priceUSD.toFixed(2)}</span>
+                    <span className="text-white/80 font-bold">${course.priceUSD.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -114,7 +114,7 @@ export default function CreatorCoursesPage() {
                     <Link
                       href={`/cursos/${course.slug}`}
                       target="_blank"
-                      className="px-3 py-1.5 bg-white/5 text-white/50 text-xs font-semibold rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+                      className="px-3 py-1.5 bg-white/5 text-white/80 text-xs font-semibold rounded-lg hover:bg-white/10 hover:text-white transition-colors"
                       title="Ver en catálogo"
                     >
                       Ver ↗

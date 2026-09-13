@@ -122,7 +122,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
   if (!course) {
     return (
       <div className="max-w-md mx-auto mt-16 text-center">
-        <p className="text-white/50">Curso no encontrado.</p>
+        <p className="text-white/80">Curso no encontrado.</p>
         <Link href="/creator/dashboard/cursos" className="text-[#60a5fa] text-sm hover:underline mt-3 block">
           ← Volver
         </Link>
@@ -135,7 +135,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Link href="/creator/dashboard/cursos" className="text-white/40 hover:text-white/70 text-sm transition-colors flex items-center gap-1 mb-2">
+          <Link href="/creator/dashboard/cursos" className="text-white/80 hover:text-white/70 text-sm transition-colors flex items-center gap-1 mb-2">
             ← Mis Cursos
           </Link>
           <h1 className="text-xl font-bold text-white line-clamp-1">{course.title}</h1>
@@ -161,7 +161,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
             key={t}
             onClick={() => setTab(t)}
             className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all ${
-              tab === t ? 'bg-[#2a63cd] text-white' : 'text-white/50 hover:text-white'
+              tab === t ? 'bg-[#2a63cd] text-white' : 'text-white/80 hover:text-white'
             }`}
           >
             {t === 'info' ? 'Información' : 'Currículum'}
@@ -221,7 +221,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
       {/* Curriculum Tab */}
       {tab === 'curriculum' && (
         <div className="space-y-4">
-          <p className="text-white/40 text-xs">
+          <p className="text-white/80 text-xs">
             Sube tus videos a YouTube (sin listar) o Vimeo, luego pega la URL de la lección aquí.
           </p>
 
@@ -229,7 +229,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
             <div key={mIdx} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
               {/* Module header */}
               <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-white/5">
-                <span className="text-white/30 text-xs font-bold w-6">{mIdx + 1}</span>
+                <span className="text-white/80 text-xs font-bold w-6">{mIdx + 1}</span>
                 <input
                   value={mod.title}
                   onChange={(e) => updModule(mIdx, e.target.value)}
@@ -290,7 +290,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                           onChange={(e) => updLesson(mIdx, lIdx, 'isFree', e.target.checked)}
                           className="w-4 h-4 accent-[#2a63cd]"
                         />
-                        <span className="text-white/50 text-xs group-hover:text-white/70 transition-colors">
+                        <span className="text-white/80 text-xs group-hover:text-white/70 transition-colors">
                           Lección gratuita (visible sin inscripción)
                         </span>
                       </label>
@@ -312,7 +312,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
 
           <button
             onClick={addModule}
-            className="w-full py-3 border-2 border-dashed border-white/20 text-white/40 rounded-2xl text-sm hover:border-white/40 hover:text-white/60 transition-all"
+            className="w-full py-3 border-2 border-dashed border-white/20 text-white/80 rounded-2xl text-sm hover:border-white/40 hover:text-white/80 transition-all"
           >
             + Agregar Módulo
           </button>
@@ -335,7 +335,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-white/60 text-xs font-semibold mb-1.5">{label}</label>
+      <label className="block text-white/80 text-xs font-semibold mb-1.5">{label}</label>
       {children}
     </div>
   );

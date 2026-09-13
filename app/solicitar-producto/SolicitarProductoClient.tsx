@@ -307,7 +307,7 @@ export default function SolicitarProductoClient() {
               <p className="text-blue-200/90 text-base mb-4 max-w-md mx-auto">
                 Hemos recibido tu solicitud y nuestro equipo ya está buscando las mejores opciones para ti.
               </p>
-              <p className="text-white/60 text-xs mb-8">
+              <p className="text-white/80 text-xs mb-8">
                 Te contactaremos en las próximas 24-48 horas • Serás redirigido al inicio...
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

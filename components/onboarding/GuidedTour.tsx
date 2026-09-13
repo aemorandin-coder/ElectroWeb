@@ -197,7 +197,7 @@ export function GuidedTour() {
             </span>
             <button
               onClick={finish}
-              className="text-white/60 hover:text-white text-xs transition-colors"
+              className="text-white/80 hover:text-white text-xs transition-colors"
             >
               Saltar tour
             </button>

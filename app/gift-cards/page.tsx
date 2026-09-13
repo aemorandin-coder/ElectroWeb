@@ -713,7 +713,7 @@ export default function GiftCardsPage() {
                                         {/* Amount */}
                                         <div className="flex items-end justify-between">
                                             <div>
-                                                <p className="text-white/50 text-xs font-medium tracking-wider mb-1">VALOR</p>
+                                                <p className="text-white/80 text-xs font-medium tracking-wider mb-1">VALOR</p>
                                                 <p
                                                     className="text-5xl font-bold tracking-tight"
                                                     style={{ color: selectedDesign.accent, textShadow: `0 0 30px ${selectedDesign.accent}60` }}
@@ -763,7 +763,7 @@ export default function GiftCardsPage() {
                                     <div className="relative z-10 p-6 h-full flex flex-col justify-between pt-24">
                                         {/* Recipient info */}
                                         <div className="text-center">
-                                            <p className="text-white/40 text-xs font-medium tracking-wider mb-1">PARA</p>
+                                            <p className="text-white/80 text-xs font-medium tracking-wider mb-1">PARA</p>
                                             <p className="text-xl font-bold text-white mb-2">
                                                 {recipientName || 'Destinatario'}
                                             </p>
@@ -781,7 +781,7 @@ export default function GiftCardsPage() {
 
                                         {/* Redemption Code */}
                                         <div className="text-center">
-                                            <p className="text-white/40 text-xs font-medium tracking-wider mb-2">CÓDIGO DE CANJE</p>
+                                            <p className="text-white/80 text-xs font-medium tracking-wider mb-2">CÓDIGO DE CANJE</p>
                                             <div
                                                 className="inline-block px-6 py-3 rounded-xl backdrop-blur-sm"
                                                 style={{ background: `${selectedDesign.accent}15`, border: `1px solid ${selectedDesign.accent}40` }}
@@ -793,7 +793,7 @@ export default function GiftCardsPage() {
                                                     {FAKE_CODE}
                                                 </p>
                                             </div>
-                                            <p className="text-white/30 text-[11px] mt-2 font-medium">Válido solo en electroshop.com</p>
+                                            <p className="text-white/80 text-[11px] mt-2 font-medium">Válido solo en electroshop.com</p>
                                         </div>
                                     </div>
                                 </div>

@@ -451,7 +451,7 @@ export default function ReferralsPage() {
 
                 {/* Code badge */}
                 <div className="flex items-center gap-2 mb-4">
-                    <span className="text-white/60 text-xs">Tu código:</span>
+                    <span className="text-white/80 text-xs">Tu código:</span>
                     <span className="bg-white/15 border border-white/25 rounded-lg px-3 py-1 text-sm font-bold tracking-widest">
                         {influencer.code}
                     </span>

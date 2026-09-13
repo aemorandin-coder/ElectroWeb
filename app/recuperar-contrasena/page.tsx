@@ -168,9 +168,9 @@ export default function RecuperarContrasenaPage() {
 
                                 {/* Footer Signature */}
                                 <div className="mt-4 pt-4 border-t border-white/10 w-full">
-                                    <p className="text-xs text-white/40 leading-tight">
+                                    <p className="text-xs text-white/80 leading-tight">
                                         Desarrollado por<br />
-                                        <span className="text-white/50 font-medium">Electro Shop - Estudio de desarrollo software y soluciones tecnológicas</span>
+                                        <span className="text-white/80 font-medium">Electro Shop - Estudio de desarrollo software y soluciones tecnológicas</span>
                                     </p>
                                 </div>
                             </div>

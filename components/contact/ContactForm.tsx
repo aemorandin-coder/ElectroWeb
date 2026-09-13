@@ -221,7 +221,7 @@ export default function ContactForm() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h3 className="text-3xl font-black text-white mb-3">¡Mensaje Enviado!</h3>
+                    <h3 className="text-3xl font-bold text-white mb-3">¡Mensaje Enviado!</h3>
                     <p className="text-blue-200/80 mb-8 text-lg">
                         Hemos recibido tu mensaje y te responderemos pronto.
                     </p>
@@ -243,7 +243,7 @@ export default function ContactForm() {
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl"></div>
 
             <div className="relative">
-                <h2 className="text-xl md:text-3xl font-black text-white mb-2">
+                <h2 className="text-xl md:text-3xl font-bold text-white mb-2">
                     Envíanos un Mensaje
                 </h2>
                 <p className="text-blue-200/70 mb-4 md:mb-6 text-xs md:text-base">
@@ -283,7 +283,7 @@ export default function ContactForm() {
                     {/* Name Field */}
                     <div className="space-y-1 md:space-y-1.5">
                         <div className="flex items-center gap-2">
-                            <label htmlFor="name" className="block text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-wider">
+                            <label htmlFor="name" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
                                 Nombre Completo
                             </label>
                         </div>
@@ -308,7 +308,7 @@ export default function ContactForm() {
                                 placeholder="Tu nombre completo"
                             />
                             {touchedFields.name && validationErrors.name && (
-                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-[10px] md:text-xs text-red-400 font-medium">{validationErrors.name}</p>
+                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.name}</p>
                             )}
                         </div>
                     </div>
@@ -317,7 +317,7 @@ export default function ContactForm() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-5">
                         {/* Email Field */}
                         <div className="space-y-1 md:space-y-1.5">
-                            <label htmlFor="email" className="block text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-wider">
+                            <label htmlFor="email" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
                                 Email
                             </label>
                             <div className="relative group">
@@ -340,7 +340,7 @@ export default function ContactForm() {
                                     placeholder="tu@email.com"
                                 />
                                 {touchedFields.email && validationErrors.email && (
-                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-[10px] md:text-xs text-red-400 font-medium">{validationErrors.email}</p>
+                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.email}</p>
                                 )}
                             </div>
                         </div>
@@ -348,7 +348,7 @@ export default function ContactForm() {
                         {/* Phone Field */}
                         <div className="space-y-1 md:space-y-1.5">
                             <div className="flex items-center gap-1">
-                                <label htmlFor="phone" className="block text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-wider">
+                                <label htmlFor="phone" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
                                     Teléfono
                                 </label>
                             </div>
@@ -375,7 +375,7 @@ export default function ContactForm() {
                                     placeholder="0412..."
                                 />
                                 {touchedFields.phone && validationErrors.phone && (
-                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-[10px] md:text-xs text-red-400 font-medium">{validationErrors.phone}</p>
+                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.phone}</p>
                                 )}
                             </div>
                         </div>
@@ -383,7 +383,7 @@ export default function ContactForm() {
 
                     {/* Subject Field */}
                     <div className="space-y-1 md:space-y-1.5 pt-1 md:pt-2">
-                        <label htmlFor="subject" className="block text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-wider">
+                        <label htmlFor="subject" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
                             Asunto
                         </label>
                         <div className="relative group">
@@ -418,14 +418,14 @@ export default function ContactForm() {
                                 </svg>
                             </div>
                             {touchedFields.subject && validationErrors.subject && (
-                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-[10px] md:text-xs text-red-400 font-medium">{validationErrors.subject}</p>
+                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.subject}</p>
                             )}
                         </div>
                     </div>
 
                     {/* Message Field */}
                     <div className="space-y-1 md:space-y-1.5 pt-1 md:pt-2">
-                        <label htmlFor="message" className="block text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-wider">
+                        <label htmlFor="message" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
                             Mensaje
                         </label>
                         <div className="relative group">
@@ -448,7 +448,7 @@ export default function ContactForm() {
                                 placeholder="Escribe tu mensaje..."
                             />
                             {touchedFields.message && validationErrors.message && (
-                                <p className="absolute -bottom-5 left-0 text-[10px] md:text-xs text-red-400 font-medium">{validationErrors.message}</p>
+                                <p className="absolute -bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.message}</p>
                             )}
                         </div>
                     </div>

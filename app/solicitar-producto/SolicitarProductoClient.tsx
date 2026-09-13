@@ -263,7 +263,7 @@ export default function SolicitarProductoClient() {
             <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
           </div>
 
-          <h1 className="text-3xl md:text-5xl font-black text-white mb-3 tracking-tight animate-slideInUp">
+          <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 tracking-tight animate-slideInUp">
             Solicitar <span className="text-cyan-200">Producto</span>
           </h1>
           <p className="text-sm md:text-lg text-white/90 max-w-4xl mx-auto mb-6 animate-slideInUp text-center" style={{ animationDelay: '0.1s' }}>
@@ -303,7 +303,7 @@ export default function SolicitarProductoClient() {
               <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/30 animate-bounce">
                 <FiCheck className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-black text-white mb-4">¡Solicitud Enviada!</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">¡Solicitud Enviada!</h2>
               <p className="text-blue-200/90 text-base mb-4 max-w-md mx-auto">
                 Hemos recibido tu solicitud y nuestro equipo ya está buscando las mejores opciones para ti.
               </p>
@@ -335,7 +335,7 @@ export default function SolicitarProductoClient() {
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl"></div>
 
               <div className="relative">
-                <h2 className="text-xl font-black text-white mb-1 text-center">
+                <h2 className="text-xl font-bold text-white mb-1 text-center">
                   Completa tu Solicitud
                 </h2>
                 <p className="text-blue-200/70 mb-6 text-[11px] text-center">
@@ -355,7 +355,7 @@ export default function SolicitarProductoClient() {
                   {/* Contact Info Header */}
                   <div className="flex items-center justify-center gap-2 mb-1">
                     <div className="h-px w-6 bg-white/10"></div>
-                    <span className="text-[9px] font-bold text-cyan-300 uppercase tracking-widest px-1">Contacto</span>
+                    <span className="text-[11px] font-bold text-cyan-300 uppercase tracking-widest px-1">Contacto</span>
                     <div className="h-px w-6 bg-white/10"></div>
                   </div>
 
@@ -379,7 +379,7 @@ export default function SolicitarProductoClient() {
                         />
                       </div>
                       {touchedFields.customerName && validationErrors.customerName && (
-                        <p className="text-[9px] text-red-400 text-center">{validationErrors.customerName}</p>
+                        <p className="text-[11px] text-red-400 text-center">{validationErrors.customerName}</p>
                       )}
                     </div>
 
@@ -400,7 +400,7 @@ export default function SolicitarProductoClient() {
                         />
                       </div>
                       {touchedFields.customerEmail && validationErrors.customerEmail && (
-                        <p className="text-[9px] text-red-400 text-center">{validationErrors.customerEmail}</p>
+                        <p className="text-[11px] text-red-400 text-center">{validationErrors.customerEmail}</p>
                       )}
                     </div>
                   </div>
@@ -426,14 +426,14 @@ export default function SolicitarProductoClient() {
                       />
                     </div>
                     {touchedFields.customerPhone && validationErrors.customerPhone && (
-                      <p className="text-[9px] text-red-400 text-center">{validationErrors.customerPhone}</p>
+                      <p className="text-[11px] text-red-400 text-center">{validationErrors.customerPhone}</p>
                     )}
                   </div>
 
                   {/* Product Info Header */}
                   <div className="flex items-center justify-center gap-2 mt-4">
                     <div className="h-px w-8 bg-white/10"></div>
-                    <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest px-2">Producto</span>
+                    <span className="text-xs font-bold text-cyan-300 uppercase tracking-widest px-2">Producto</span>
                     <div className="h-px w-8 bg-white/10"></div>
                   </div>
 
@@ -456,7 +456,7 @@ export default function SolicitarProductoClient() {
                         />
                       </div>
                       {touchedFields.productName && validationErrors.productName && (
-                        <p className="text-[10px] text-red-400 text-center">{validationErrors.productName}</p>
+                        <p className="text-xs text-red-400 text-center">{validationErrors.productName}</p>
                       )}
                     </div>
 
@@ -476,7 +476,7 @@ export default function SolicitarProductoClient() {
                         ))}
                       </select>
                       {touchedFields.category && validationErrors.category && (
-                        <p className="text-[10px] text-red-400 text-center">{validationErrors.category}</p>
+                        <p className="text-xs text-red-400 text-center">{validationErrors.category}</p>
                       )}
                     </div>
                   </div>
@@ -494,7 +494,7 @@ export default function SolicitarProductoClient() {
                       placeholder="Descripción Detallada (modelo, marca...)"
                     />
                     {touchedFields.productDescription && validationErrors.productDescription && (
-                      <p className="text-[10px] text-red-400 text-center">{validationErrors.productDescription}</p>
+                      <p className="text-xs text-red-400 text-center">{validationErrors.productDescription}</p>
                     )}
                   </div>
 
@@ -554,7 +554,7 @@ export default function SolicitarProductoClient() {
                   <button
                     type="submit"
                     disabled={loading || !captchaToken}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white text-[#2a63cd] text-sm font-black rounded-xl hover:bg-white/90 hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white text-[#2a63cd] text-sm font-bold rounded-xl hover:bg-white/90 hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
                   >
                     {loading ? (
                       <>

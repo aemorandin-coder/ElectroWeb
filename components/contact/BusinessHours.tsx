@@ -133,7 +133,7 @@ export default function BusinessHours({ businessHours }: BusinessHoursProps) {
                         className={`flex items-center justify-between p-2 rounded-lg ${day.isOpen ? 'bg-white/10' : 'bg-red-500/20'}`}
                     >
                         <div className="flex items-center gap-2">
-                            <span className={`px-2 py-0.5 rounded text-xs font-black ${day.isOpen ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${day.isOpen ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
                                 {day.abbr}
                             </span>
                             <span className="text-white text-sm font-medium">{day.name}</span>

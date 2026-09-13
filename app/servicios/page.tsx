@@ -125,12 +125,12 @@ export default async function ServiciosPage() {
           <div className="inline-flex items-center gap-2 mb-2 lg:mb-4">
             <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
             <div className="px-2 lg:px-3 py-0.5 lg:py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <span className="text-[10px] lg:text-xs font-semibold text-white">Servicios Profesionales</span>
+              <span className="text-xs font-semibold text-white">Servicios Profesionales</span>
             </div>
             <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
           </div>
 
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white mb-2 lg:mb-3 tracking-tight">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2 lg:mb-3 tracking-tight">
             Servicios <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Tecnológicos</span>
           </h1>
           <p className="text-xs lg:text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
@@ -181,7 +181,7 @@ export default async function ServiciosPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-xs text-[#212529] group-hover:text-[#2a63cd] transition-colors">Sistemas CCTV</h3>
-                <p className="text-[10px] text-gray-500 truncate">Instalación y monitoreo de cámaras de videovigilancia 24/7.</p>
+                <p className="text-xs text-gray-500 truncate">Instalación y monitoreo de cámaras de videovigilancia 24/7.</p>
               </div>
             </div>
             {/* Redes */}
@@ -191,7 +191,7 @@ export default async function ServiciosPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-xs text-[#212529] group-hover:text-[#2a63cd] transition-colors">Diseño de Redes</h3>
-                <p className="text-[10px] text-gray-500 truncate">Conectividad, cableado estructurado y redes estables.</p>
+                <p className="text-xs text-gray-500 truncate">Conectividad, cableado estructurado y redes estables.</p>
               </div>
             </div>
             {/* POS */}
@@ -201,7 +201,7 @@ export default async function ServiciosPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-xs text-[#212529] group-hover:text-[#2a63cd] transition-colors">Puntos de Venta POS</h3>
-                <p className="text-[10px] text-gray-500 truncate">Sistemas de facturación y control comercial para tu negocio.</p>
+                <p className="text-xs text-gray-500 truncate">Sistemas de facturación y control comercial para tu negocio.</p>
               </div>
             </div>
             {/* Gaming PC */}
@@ -211,7 +211,7 @@ export default async function ServiciosPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-xs text-[#212529] group-hover:text-[#2a63cd] transition-colors">Gaming PC</h3>
-                <p className="text-[10px] text-gray-500 truncate">Ensamblaje y optimización de computadoras de alto rendimiento.</p>
+                <p className="text-xs text-gray-500 truncate">Ensamblaje y optimización de computadoras de alto rendimiento.</p>
               </div>
             </div>
             {/* Consolas */}
@@ -221,7 +221,7 @@ export default async function ServiciosPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-xs text-[#212529] group-hover:text-[#2a63cd] transition-colors">Mantenimiento de Consolas</h3>
-                <p className="text-[10px] text-gray-500 truncate">Servicio técnico para Xbox, PlayStation, Steam Deck y Switch.</p>
+                <p className="text-xs text-gray-500 truncate">Servicio técnico para Xbox, PlayStation, Steam Deck y Switch.</p>
               </div>
             </div>
           </div>
@@ -234,22 +234,22 @@ export default async function ServiciosPage() {
             <div className="text-center p-3 bg-gray-50 rounded-xl border border-gray-100/50">
               <FiAward className="w-6 h-6 text-[#2a63cd] mx-auto mb-1.5" />
               <h3 className="font-bold text-xs text-[#212529] mb-0.5">Experiencia</h3>
-              <p className="text-[9px] text-gray-500">+10 años de trayectoria.</p>
+              <p className="text-[11px] text-gray-500">+10 años de trayectoria.</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-xl border border-gray-100/50">
               <FiUsers className="w-6 h-6 text-[#2a63cd] mx-auto mb-1.5" />
               <h3 className="font-bold text-xs text-[#212529] mb-0.5">Equipo Pro</h3>
-              <p className="text-[9px] text-gray-500">Técnicos certificados.</p>
+              <p className="text-[11px] text-gray-500">Técnicos certificados.</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-xl border border-gray-100/50">
               <FiCheckCircle className="w-6 h-6 text-[#2a63cd] mx-auto mb-1.5" />
               <h3 className="font-bold text-xs text-[#212529] mb-0.5">Garantía</h3>
-              <p className="text-[9px] text-gray-500">Soporte post-servicio.</p>
+              <p className="text-[11px] text-gray-500">Soporte post-servicio.</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-xl border border-gray-100/50">
               <FiClock className="w-6 h-6 text-[#2a63cd] mx-auto mb-1.5" />
               <h3 className="font-bold text-xs text-[#212529] mb-0.5">Atención Rápida</h3>
-              <p className="text-[9px] text-gray-500">Respuesta inmediata.</p>
+              <p className="text-[11px] text-gray-500">Respuesta inmediata.</p>
             </div>
           </div>
         </div>
@@ -261,14 +261,14 @@ export default async function ServiciosPage() {
               <FiMonitor className="w-5 h-5" />
             </div>
             <h3 className="text-xs font-bold text-[#212529] mb-1">Servicios On-Site</h3>
-            <p className="text-[9px] text-gray-500 leading-tight">Instalación y soporte directamente en tu negocio o empresa.</p>
+            <p className="text-[11px] text-gray-500 leading-tight">Instalación y soporte directamente en tu negocio o empresa.</p>
           </div>
           <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-100/80 text-center shadow-sm">
             <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-[#2a63cd] mx-auto mb-2 shadow-sm">
               <FiShield className="w-5 h-5" />
             </div>
             <h3 className="text-xs font-bold text-[#212529] mb-1">Soporte Técnico</h3>
-            <p className="text-[9px] text-gray-500 leading-tight">Asistencia remota e incidencias críticas 24/7.</p>
+            <p className="text-[11px] text-gray-500 leading-tight">Asistencia remota e incidencias críticas 24/7.</p>
           </div>
         </div>
 

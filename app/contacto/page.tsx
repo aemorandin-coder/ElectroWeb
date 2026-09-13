@@ -58,7 +58,7 @@ export default async function ContactoPage() {
             </div>
             <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
           </div>
-          <h1 className="text-3xl md:text-5xl font-black text-white mb-3 tracking-tight">Contáctanos</h1>
+          <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 tracking-tight">Contáctanos</h1>
           <p className="text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
             Comunícate con nosotros por cualquiera de nuestros canales
           </p>

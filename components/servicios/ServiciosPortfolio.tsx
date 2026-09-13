@@ -232,10 +232,10 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                   {(v.beforeImage || v.afterImage) && (
                     <div className="absolute bottom-3 right-3 flex gap-1">
                       {v.beforeImage && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white">ANTES</span>
+                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500 text-white">ANTES</span>
                       )}
                       {v.afterImage && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-white">DESPUÉS</span>
+                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500 text-white">DESPUÉS</span>
                       )}
                     </div>
                   )}
@@ -296,7 +296,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                     </span>
                   )}
                 </div>
-                <h2 className="text-lg font-black text-[#212529]">{activeModal.title}</h2>
+                <h2 className="text-lg font-bold text-[#212529]">{activeModal.title}</h2>
               </div>
               <button
                 onClick={closeModal}

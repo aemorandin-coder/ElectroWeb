@@ -536,7 +536,7 @@ export default function ProfilePage() {
                         onChange={handleAvatarChange}
                         className="hidden"
                       />
-                      <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center text-white text-4xl font-black shadow-xl overflow-hidden ring-4 ring-blue-50 group-hover:ring-blue-100 transition-all">
+                      <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center text-white text-4xl font-bold shadow-xl overflow-hidden ring-4 ring-blue-50 group-hover:ring-blue-100 transition-all">
                         {avatarPreview || profile.avatar || profile.image ? (
                           <img
                             src={avatarPreview || profile.avatar || profile.image}
@@ -551,7 +551,7 @@ export default function ProfilePage() {
                         <FiCamera className="w-4 h-4 text-white" />
                       </div>
                     </div>
-                    <h3 className="text-lg font-black text-[#212529] mb-1">{profile.name || 'Usuario'}</h3>
+                    <h3 className="text-lg font-bold text-[#212529] mb-1">{profile.name || 'Usuario'}</h3>
                     <p className="text-sm text-[#6a6c6b] font-medium mb-5">{profile.email}</p>
 
                     {/* Quick Stats */}
@@ -562,7 +562,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Miembro desde</p>
-                          <p className="text-sm font-black text-gray-900">
+                          <p className="text-sm font-bold text-gray-900">
                             {new Date(stats.memberSince).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
                           </p>
                         </div>
@@ -573,7 +573,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Pedidos</p>
-                          <p className="text-sm font-black text-gray-900">{stats.totalOrders}</p>
+                          <p className="text-sm font-bold text-gray-900">{stats.totalOrders}</p>
                         </div>
                       </div>
                     </div>
@@ -1066,7 +1066,7 @@ export default function ProfilePage() {
                     <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
                       <FiPackage className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     </div>
-                    <p className="text-xl lg:text-3xl font-black text-[#2a63cd]">{stats.totalOrders}</p>
+                    <p className="text-xl lg:text-3xl font-bold text-[#2a63cd]">{stats.totalOrders}</p>
                   </div>
                   <h3 className="font-bold text-xs lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Pedidos</h3>
                 </div>
@@ -1080,7 +1080,7 @@ export default function ProfilePage() {
                       <HiMiniBanknotes className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     </div>
                     <div className="text-right">
-                      <p className="text-xl lg:text-3xl font-black text-[#2a63cd]">${stats.totalSpent.toFixed(0)}</p>
+                      <p className="text-xl lg:text-3xl font-bold text-[#2a63cd]">${stats.totalSpent.toFixed(0)}</p>
                     </div>
                   </div>
                   <h3 className="font-bold text-xs lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Gastado</h3>

@@ -116,7 +116,7 @@ export default function WarrantyPage() {
                     <FiShield className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-base lg:text-lg font-black text-[#212529]">Garantía</h1>
+                    <h1 className="text-base lg:text-lg font-bold text-[#212529]">Garantía</h1>
                     <p className="text-xs text-[#6a6c6b]">Gestiona tus solicitudes</p>
                 </div>
             </div>

@@ -198,7 +198,7 @@ export default function CustomerMobileNavBar() {
                                 <Icon active={active} />
                             </div>
                             <span
-                                className="text-[10px] mt-1 relative z-10 text-center truncate font-bold"
+                                className="text-xs mt-1 relative z-10 text-center truncate font-bold"
                                 style={{ letterSpacing: active ? '0.01em' : '0' }}
                             >
                                 {item.label}

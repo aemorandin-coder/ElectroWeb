@@ -80,7 +80,7 @@ export default function CustomerDashboard() {
         <div className="relative z-10 flex flex-col gap-3">
           {/* Greeting - Title */}
           <div className="flex-shrink-0">
-            <h1 className="text-xl lg:text-2xl font-black mb-0.5 leading-tight">
+            <h1 className="text-xl lg:text-2xl font-bold mb-0.5 leading-tight">
               {greeting},<br className="sm:hidden" /> {session?.user?.name?.split(' ')[0] || 'Cliente'}
             </h1>
             <p className="text-blue-100 text-xs lg:text-sm hidden sm:block">Gestiona tus pedidos y preferencias</p>
@@ -94,7 +94,7 @@ export default function CustomerDashboard() {
                 <div className="w-10 h-10 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
                   <FiShoppingBag className="w-5 h-5 text-white" />
                 </div>
-                <span className="absolute -top-1 -right-1 bg-white text-[#2a63cd] text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                <span className="absolute -top-1 -right-1 bg-white text-[#2a63cd] text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
                   {stats?.orders || 0}
                 </span>
               </div>
@@ -104,7 +104,7 @@ export default function CustomerDashboard() {
                 <div className="w-10 h-10 bg-amber-500/30 backdrop-blur-sm rounded-xl flex items-center justify-center border border-amber-400/30">
                   <FiClock className="w-5 h-5 text-amber-200 animate-pulse" />
                 </div>
-                <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
                   {stats?.pending || 0}
                 </span>
               </div>
@@ -114,7 +114,7 @@ export default function CustomerDashboard() {
                 <div className="w-10 h-10 bg-pink-500/30 backdrop-blur-sm rounded-xl flex items-center justify-center border border-pink-400/30">
                   <FiHeart className="w-5 h-5 text-pink-200" />
                 </div>
-                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
                   {stats?.wishlist || 0}
                 </span>
               </div>
@@ -122,8 +122,8 @@ export default function CustomerDashboard() {
 
             {/* Saldo - Right aligned on mobile */}
             <div className="bg-white/20 backdrop-blur-md rounded-xl px-3 py-1.5 border border-white/20 text-right min-w-[80px]">
-              <p className="text-blue-200 text-[9px] uppercase font-black tracking-tighter">Saldo</p>
-              <p className="text-base lg:text-xl font-black">${stats?.balance?.toFixed(2) || '0.00'}</p>
+              <p className="text-blue-200 text-[11px] uppercase font-bold tracking-tighter">Saldo</p>
+              <p className="text-base lg:text-xl font-bold">${stats?.balance?.toFixed(2) || '0.00'}</p>
             </div>
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function CustomerDashboard() {
               </div>
               <h2 className="font-bold text-[#212529] text-sm lg:text-base">Pedidos Recientes</h2>
             </div>
-            <Link href="/customer/orders" className="text-[10px] lg:text-[11px] text-[#2a63cd] hover:underline font-semibold flex items-center gap-0.5">
+            <Link href="/customer/orders" className="text-xs lg:text-[11px] text-[#2a63cd] hover:underline font-semibold flex items-center gap-0.5">
               Ver todos <FiChevronRight className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
             </Link>
           </div>
@@ -161,16 +161,16 @@ export default function CustomerDashboard() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-bold text-[#212529] text-xs lg:text-sm">#{order.orderNumber}</p>
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] lg:text-[10px] font-semibold ${statusConfig.bg} ${statusConfig.text} flex items-center gap-0.5 lg:gap-1`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] lg:text-xs font-semibold ${statusConfig.bg} ${statusConfig.text} flex items-center gap-0.5 lg:gap-1`}>
                             <StatusIcon className="w-2 h-2 lg:w-2.5 lg:h-2.5" />
                             {statusConfig.label}
                           </span>
                         </div>
-                        <p className="text-[10px] lg:text-xs text-[#6a6c6b]">{order.itemCount} productos</p>
+                        <p className="text-xs text-[#6a6c6b]">{order.itemCount} productos</p>
                       </div>
                       <div className="text-right flex-shrink-0">
                         <p className="font-bold text-[#212529] text-sm lg:text-base">${order.total.toFixed(2)}</p>
-                        <p className="text-[9px] lg:text-[10px] text-[#6a6c6b]">
+                        <p className="text-[11px] lg:text-xs text-[#6a6c6b]">
                           {new Date(order.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                         </p>
                       </div>
@@ -236,13 +236,13 @@ export default function CustomerDashboard() {
                           {style.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[10px] lg:text-xs font-medium text-[#212529] truncate">{activity.description}</p>
-                          <p className="text-[8px] lg:text-[10px] text-[#6a6c6b]">
+                          <p className="text-xs font-medium text-[#212529] truncate">{activity.description}</p>
+                          <p className="text-[11px] lg:text-xs text-[#6a6c6b]">
                             {new Date(activity.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                           </p>
                         </div>
                         {activity.amount && (
-                          <span className={`text-[10px] lg:text-xs font-bold ${style.color} flex-shrink-0`}>
+                          <span className={`text-xs font-bold ${style.color} flex-shrink-0`}>
                             {activity.type === 'RECHARGE' || activity.type === 'DEPOSIT' ? '+' : activity.type === 'PURCHASE' ? '-' : ''}${activity.amount?.toFixed(2) || ''}
                           </span>
                         )}
@@ -253,7 +253,7 @@ export default function CustomerDashboard() {
               ) : (
                 <div className="text-center py-3 lg:py-4">
                   <FiActivity className="w-6 h-6 lg:w-8 lg:h-8 text-[#adb5bd] mx-auto mb-1.5 lg:mb-2" />
-                  <p className="text-[10px] lg:text-xs text-[#6a6c6b]">Sin actividad reciente</p>
+                  <p className="text-xs text-[#6a6c6b]">Sin actividad reciente</p>
                 </div>
               )}
             </div>
@@ -267,15 +267,15 @@ export default function CustomerDashboard() {
             </h3>
             <div className="space-y-1.5 lg:space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] lg:text-xs text-[#6a6c6b]">Total Recargado</span>
+                <span className="text-xs text-[#6a6c6b]">Total Recargado</span>
                 <span className="font-bold text-green-600 text-xs lg:text-sm">${stats?.totalRecharges?.toFixed(2) || '0.00'}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] lg:text-xs text-[#6a6c6b]">Total Gastado</span>
+                <span className="text-xs text-[#6a6c6b]">Total Gastado</span>
                 <span className="font-bold text-purple-600 text-xs lg:text-sm">${stats?.totalSpent?.toFixed(2) || '0.00'}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] lg:text-xs text-[#6a6c6b]">Este Mes</span>
+                <span className="text-xs text-[#6a6c6b]">Este Mes</span>
                 <span className="font-bold text-[#2a63cd] text-xs lg:text-sm">${stats?.totalSpentThisMonth?.toFixed(2) || '0.00'}</span>
               </div>
             </div>

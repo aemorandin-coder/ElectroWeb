@@ -69,15 +69,15 @@ export default function MisCursosPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="bg-[#f8f9fa] rounded-xl p-4 text-center">
-          <p className="text-2xl font-black text-[#2a63cd]">{enrollments.length}</p>
+          <p className="text-2xl font-bold text-[#2a63cd]">{enrollments.length}</p>
           <p className="text-xs text-[#6a6c6b] mt-0.5">Total</p>
         </div>
         <div className="bg-[#f8f9fa] rounded-xl p-4 text-center">
-          <p className="text-2xl font-black text-orange-500">{inProgressCount}</p>
+          <p className="text-2xl font-bold text-orange-500">{inProgressCount}</p>
           <p className="text-xs text-[#6a6c6b] mt-0.5">En progreso</p>
         </div>
         <div className="bg-[#f8f9fa] rounded-xl p-4 text-center">
-          <p className="text-2xl font-black text-green-600">{completedCount}</p>
+          <p className="text-2xl font-bold text-green-600">{completedCount}</p>
           <p className="text-xs text-[#6a6c6b] mt-0.5">Completados</p>
         </div>
       </div>

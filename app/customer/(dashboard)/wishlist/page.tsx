@@ -276,7 +276,7 @@ export default function WishlistPage() {
               <PiListHeartBold className="w-5 h-5 lg:w-7 lg:h-7" />
             </div>
             <div>
-              <h1 className="text-base lg:text-3xl font-black tracking-tight">Favoritos</h1>
+              <h1 className="text-base lg:text-3xl font-bold tracking-tight">Favoritos</h1>
               <p className="text-blue-100 text-xs lg:text-base flex items-center gap-1">
                 <PiSparkle className="w-3 h-3 lg:w-4 lg:h-4" />
                 {wishlist.length} producto{wishlist.length !== 1 ? 's' : ''}
@@ -443,12 +443,12 @@ export default function WishlistPage() {
                       {hasActiveDiscount ? (
                         <>
                           <span className="text-xs text-[#6a6c6b] line-through">${item.price.toFixed(2)}</span>
-                          <span className="text-base font-black text-green-600">
+                          <span className="text-base font-bold text-green-600">
                             ${(item.price * (1 - (discountStatus?.approvedDiscount || 0) / 100)).toFixed(2)}
                           </span>
                         </>
                       ) : (
-                        <span className="text-base font-black text-[#2a63cd]">${item.price.toFixed(2)}</span>
+                        <span className="text-base font-bold text-[#2a63cd]">${item.price.toFixed(2)}</span>
                       )}
                     </div>
 
@@ -511,7 +511,7 @@ export default function WishlistPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-[#212529] truncate">{item.productName}</h3>
-                    <p className="text-xl font-black text-[#2a63cd]">${item.price.toFixed(2)}</p>
+                    <p className="text-xl font-bold text-[#2a63cd]">${item.price.toFixed(2)}</p>
                     <div className="flex items-center gap-2 mt-1">
                       {discountStatus && getStatusBadge(discountStatus.status, discountStatus.expiresAt)}
                     </div>
@@ -562,7 +562,7 @@ export default function WishlistPage() {
             <div className="w-24 h-24 bg-gradient-to-br from-[#2a63cd]/20 to-[#2a63cd]/5 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <PiHeartBreakBold className="w-12 h-12 text-[#2a63cd]" />
             </div>
-            <h3 className="text-xl font-black text-[#212529] mb-3">Tu lista de deseos está vacía</h3>
+            <h3 className="text-xl font-bold text-[#212529] mb-3">Tu lista de deseos está vacía</h3>
             <p className="text-[#6a6c6b] mb-8 font-medium">
               Guarda favoritos y pide descuentos exclusivos
             </p>
@@ -622,7 +622,7 @@ export default function WishlistPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-[#212529] line-clamp-2">{selectedItem.productName}</h3>
-                  <p className="text-2xl font-black text-[#2a63cd] mt-1">${selectedItem.price.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-[#2a63cd] mt-1">${selectedItem.price.toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -659,7 +659,7 @@ export default function WishlistPage() {
                 </div>
                 <div className="border-t border-[#e9ecef] mt-3 pt-3 flex justify-between items-center">
                   <span className="font-bold text-[#212529]">Precio final:</span>
-                  <span className="text-2xl font-black text-emerald-600">${(selectedItem.price * (1 - discountPercent / 100)).toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-emerald-600">${(selectedItem.price * (1 - discountPercent / 100)).toFixed(2)}</span>
                 </div>
               </div>
 

@@ -174,7 +174,7 @@ export default function BalancePage() {
             {/* Main Balance - Animated Glow */}
             <div className="relative mb-3">
               <h1
-                className="text-4xl font-black text-white tracking-tight animate-fadeIn"
+                className="text-4xl font-bold text-white tracking-tight animate-fadeIn"
                 style={{ textShadow: '0 4px 24px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.2)' }}
               >
                 ${userBalance?.balance.toFixed(2) || '0.00'}
@@ -191,7 +191,7 @@ export default function BalancePage() {
                   <FiArrowDownLeft className="w-3 h-3 text-emerald-300" />
                   <span className="text-white/70 text-xs uppercase font-bold">Recargado</span>
                 </div>
-                <p className="text-white font-black text-sm">${userBalance?.totalRecharges.toFixed(0) || '0'}</p>
+                <p className="text-white font-bold text-sm">${userBalance?.totalRecharges.toFixed(0) || '0'}</p>
               </div>
 
               {/* Gastado */}
@@ -200,7 +200,7 @@ export default function BalancePage() {
                   <FiArrowUpRight className="w-3 h-3 text-rose-300" />
                   <span className="text-white/70 text-xs uppercase font-bold">Gastado</span>
                 </div>
-                <p className="text-white font-black text-sm">${userBalance?.totalSpent.toFixed(0) || '0'}</p>
+                <p className="text-white font-bold text-sm">${userBalance?.totalSpent.toFixed(0) || '0'}</p>
               </div>
             </div>
 
@@ -281,7 +281,7 @@ export default function BalancePage() {
                     </div>
 
                     {/* Amount */}
-                    <span className={`text-xs font-black flex-shrink-0 ${transaction.type === 'RECHARGE' ? 'text-emerald-600' : 'text-gray-900'
+                    <span className={`text-xs font-bold flex-shrink-0 ${transaction.type === 'RECHARGE' ? 'text-emerald-600' : 'text-gray-900'
                       }`}>
                       {transaction.type === 'RECHARGE' ? '+' : '-'}${transaction.amount.toFixed(0)}
                     </span>
@@ -342,9 +342,9 @@ export default function BalancePage() {
         {/* Balance Cards - Premium HUD Style */}
         <div className="grid grid-cols-3 gap-2 lg:gap-3 animate-slideInUp">
           <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-gray-100 shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
-            <p className="text-[7px] lg:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Saldo</p>
+            <p className="text-[11px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Saldo</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
-              <span className="text-xl lg:text-2xl font-black text-[#212529] whitespace-nowrap animate-marquee-text">
+              <span className="text-xl lg:text-2xl font-bold text-[#212529] whitespace-nowrap animate-marquee-text">
                 ${userBalance?.balance.toFixed(2) || '0.00'}
               </span>
             </div>
@@ -352,9 +352,9 @@ export default function BalancePage() {
           </div>
 
           <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-gray-100 shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
-            <p className="text-[7px] lg:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total</p>
+            <p className="text-[11px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
-              <span className="text-xl lg:text-2xl font-black text-[#212529] whitespace-nowrap">
+              <span className="text-xl lg:text-2xl font-bold text-[#212529] whitespace-nowrap">
                 ${userBalance?.totalRecharges.toFixed(0) || '0'}
               </span>
             </div>
@@ -362,9 +362,9 @@ export default function BalancePage() {
           </div>
 
           <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-gray-100 shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
-            <p className="text-[7px] lg:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Gastado</p>
+            <p className="text-[11px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Gastado</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
-              <span className="text-xl lg:text-2xl font-black text-[#212529] whitespace-nowrap">
+              <span className="text-xl lg:text-2xl font-bold text-[#212529] whitespace-nowrap">
                 ${userBalance?.totalSpent.toFixed(0) || '0'}
               </span>
             </div>
@@ -385,19 +385,19 @@ export default function BalancePage() {
                 <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-100">
                   <button
                     onClick={() => setFilterType('ALL')}
-                    className={`px-2 py-1 text-[10px] lg:text-xs font-bold rounded-md transition-all ${filterType === 'ALL' ? 'bg-[#2a63cd] text-white shadow-sm' : 'text-[#6a6c6b] hover:bg-gray-50'}`}
+                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'ALL' ? 'bg-[#2a63cd] text-white shadow-sm' : 'text-[#6a6c6b] hover:bg-gray-50'}`}
                   >
                     Todas
                   </button>
                   <button
                     onClick={() => setFilterType('RECHARGE')}
-                    className={`px-2 py-1 text-[10px] lg:text-xs font-bold rounded-md transition-all ${filterType === 'RECHARGE' ? 'bg-[#2a63cd] text-white shadow-sm' : 'text-[#6a6c6b] hover:bg-gray-50'}`}
+                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'RECHARGE' ? 'bg-[#2a63cd] text-white shadow-sm' : 'text-[#6a6c6b] hover:bg-gray-50'}`}
                   >
                     Recargas
                   </button>
                   <button
                     onClick={() => setFilterType('PURCHASE')}
-                    className={`px-2 py-1 text-[10px] lg:text-xs font-bold rounded-md transition-all ${filterType === 'PURCHASE' ? 'bg-[#2a63cd] text-white shadow-sm' : 'text-[#6a6c6b] hover:bg-gray-50'}`}
+                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'PURCHASE' ? 'bg-[#2a63cd] text-white shadow-sm' : 'text-[#6a6c6b] hover:bg-gray-50'}`}
                   >
                     Compras
                   </button>
@@ -423,7 +423,7 @@ export default function BalancePage() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-[#212529] text-xs lg:text-base truncate">{transaction.description}</p>
-                        <div className="flex items-center gap-1 lg:gap-2 text-[10px] lg:text-sm text-[#6a6c6b]">
+                        <div className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-[#6a6c6b]">
                           <span className="truncate">
                             {new Date(transaction.createdAt).toLocaleDateString('es-ES', {
                               day: 'numeric',
@@ -433,7 +433,7 @@ export default function BalancePage() {
                           {transaction.paymentMethod && (
                             <>
                               <span className="text-gray-300 hidden sm:inline">•</span>
-                              <span className="text-[8px] lg:text-xs bg-gray-100 px-1.5 lg:px-2 py-0.5 rounded-full hidden sm:inline">
+                              <span className="text-[11px] lg:text-xs bg-gray-100 px-1.5 lg:px-2 py-0.5 rounded-full hidden sm:inline">
                                 {formatPaymentMethod(transaction.paymentMethod)}
                               </span>
                             </>
@@ -445,7 +445,7 @@ export default function BalancePage() {
                       <p className={`text-sm lg:text-lg font-bold ${transaction.type === 'RECHARGE' ? 'text-green-600' : 'text-red-600'}`}>
                         {transaction.type === 'RECHARGE' ? '+' : '-'}${transaction.amount.toFixed(2)}
                       </p>
-                      <span className={`inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full text-[8px] lg:text-xs font-semibold ${transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                      <span className={`inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full text-[11px] lg:text-xs font-semibold ${transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
                         transaction.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
                           transaction.status === 'CANCELLED' ? 'bg-gray-100 text-gray-600' :
                             'bg-red-100 text-red-700'

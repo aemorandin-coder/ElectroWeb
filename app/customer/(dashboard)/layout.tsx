@@ -319,7 +319,7 @@ export default function CustomerDashboardLayout({
 
               {/* CENTER: Title */}
               <div className="flex-1 flex justify-center px-2">
-                <span className="text-gray-900 text-sm font-black tracking-wide">Mi Panel</span>
+                <span className="text-gray-900 text-sm font-bold tracking-wide">Mi Panel</span>
               </div>
 
               {/* RIGHT: Home Button */}

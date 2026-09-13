@@ -175,11 +175,11 @@ function ScratchCard({
             {/* The Code underneath */}
             <div
                 onClick={() => isInternalRevealed && onCopy()}
-                className={`relative z-10 h-full bg-[#0f172a] flex items-center justify-center font-mono text-[10px] font-black text-white tracking-widest ${isInternalRevealed ? 'cursor-pointer hover:bg-[#1e293b] active:bg-[#0f172a] transition-colors shadow-[inset_0_0_15px_rgba(6,182,212,0.3)]' : ''}`}
+                className={`relative z-10 h-full bg-[#0f172a] flex items-center justify-center font-mono text-xs font-bold text-white tracking-widest ${isInternalRevealed ? 'cursor-pointer hover:bg-[#1e293b] active:bg-[#0f172a] transition-colors shadow-[inset_0_0_15px_rgba(6,182,212,0.3)]' : ''}`}
             >
                 <span className="truncate px-2">{code}</span>
                 {isInternalRevealed && (
-                    <span className="absolute right-2 text-cyan-400 text-[8px] animate-pulse">TAP TO COPY</span>
+                    <span className="absolute right-2 text-cyan-400 text-[11px] animate-pulse">TAP TO COPY</span>
                 )}
             </div>
 
@@ -304,7 +304,7 @@ export default function DigitalCodesPage() {
                         <div className="w-12 h-12 border-4 border-white/20 rounded-full"></div>
                         <div className="absolute inset-0 w-12 h-12 border-4 border-t-white rounded-full animate-spin"></div>
                     </div>
-                    <p className="text-white/70 text-[10px] font-bold uppercase tracking-[0.2em]">Cargando códigos...</p>
+                    <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">Cargando códigos...</p>
                 </div>
             </div>
         );
@@ -356,13 +356,13 @@ export default function DigitalCodesPage() {
                                         style={{ width: `${progressPercent}%` }}
                                     />
                                 </div>
-                                <span className="text-[9px] text-gray-400 font-bold">{revealedCount}/{totalCodes}</span>
+                                <span className="text-[11px] text-gray-400 font-bold">{revealedCount}/{totalCodes}</span>
                             </div>
                         </div>
 
                         <div className="text-right">
-                            <p className="text-white text-[10px] font-black">#{data.orderNumber}</p>
-                            <p className="text-[7px] text-cyan-400 font-bold uppercase tracking-wider drop-shadow-[0_0_2px_rgba(34,211,238,0.8)]">Digital Delivery</p>
+                            <p className="text-white text-xs font-bold">#{data.orderNumber}</p>
+                            <p className="text-[11px] text-cyan-400 font-bold uppercase tracking-wider drop-shadow-[0_0_2px_rgba(34,211,238,0.8)]">Digital Delivery</p>
                         </div>
                     </div>
                 </div>
@@ -400,12 +400,12 @@ export default function DigitalCodesPage() {
                                     <div className="flex-1 min-w-0 text-left">
                                         <div className="flex items-center gap-1.5 mb-0.5">
                                             {/* Platform Badge - Animated */}
-                                            <span className="inline-flex items-center gap-1 text-[7px] font-black text-cyan-400 uppercase bg-cyan-950/50 border border-cyan-500/30 px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(34,211,238,0.2)]">
+                                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-cyan-400 uppercase bg-cyan-950/50 border border-cyan-500/30 px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(34,211,238,0.2)]">
                                                 {getPlatformIcon(item.platform)}
                                                 {item.platform || 'Digital'}
                                             </span>
                                             {item.region && (
-                                                <span className="text-[7px] font-black text-purple-400 uppercase bg-purple-950/50 border border-purple-500/30 px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(192,132,252,0.2)]">
+                                                <span className="text-[11px] font-bold text-purple-400 uppercase bg-purple-950/50 border border-purple-500/30 px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(192,132,252,0.2)]">
                                                     {item.region}
                                                 </span>
                                             )}
@@ -415,7 +415,7 @@ export default function DigitalCodesPage() {
 
                                     {/* Stats & Expand Icon */}
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[9px] font-bold text-gray-400">
+                                        <span className="text-[11px] font-bold text-gray-400">
                                             {itemRevealedCount}/{item.codes.length}
                                         </span>
                                         <div className={`w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-white/10' : ''}`}>
@@ -435,11 +435,11 @@ export default function DigitalCodesPage() {
                                                     style={{ animationDelay: `${index * 0.05}s` }}
                                                 >
                                                     <div className="flex items-center justify-between mb-1.5">
-                                                        <span className="text-[8px] font-bold text-gray-500 uppercase">
+                                                        <span className="text-[11px] font-bold text-gray-500 uppercase">
                                                             Confirmación de recarga {item.codes.length > 1 ? `#${index + 1}` : ''}
                                                         </span>
                                                         {revealedCodes[code.id] && (
-                                                            <span className="text-[7px] text-emerald-400 font-bold uppercase flex items-center gap-0.5 bg-emerald-950/50 border border-emerald-500/30 px-1.5 py-0.5 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.2)]">
+                                                            <span className="text-[11px] text-emerald-400 font-bold uppercase flex items-center gap-0.5 bg-emerald-950/50 border border-emerald-500/30 px-1.5 py-0.5 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.2)]">
                                                                 <FiCheck className="w-2 h-2" />
                                                                 Recibido
                                                             </span>
@@ -482,12 +482,12 @@ export default function DigitalCodesPage() {
                                                 </div>
                                                 <div className="space-y-1">
                                                     <h4 className="text-xs font-bold text-purple-300 uppercase tracking-wider">Recarga Directa en Proceso</h4>
-                                                    <p className="text-[10px] text-gray-300 max-w-xs mx-auto leading-relaxed">
+                                                    <p className="text-xs text-gray-300 max-w-xs mx-auto leading-relaxed">
                                                         Esta compra se procesa por recarga manual directa a la cuenta ingresada. Nuestro equipo administrativo está acreditando tu saldo en este momento.
                                                     </p>
                                                 </div>
                                                 <div className="py-1 px-3 bg-purple-950/60 border border-purple-500/20 rounded-lg inline-block">
-                                                    <span className="text-[9px] font-bold text-purple-300 flex items-center gap-1.5 justify-center">
+                                                    <span className="text-[11px] font-bold text-purple-300 flex items-center gap-1.5 justify-center">
                                                         <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping"></span>
                                                         Tiempo estimado: 5 - 15 minutos
                                                     </span>
@@ -496,7 +496,7 @@ export default function DigitalCodesPage() {
                                         ) : (
                                             <div className="text-center py-4 bg-[#0f172a] rounded-lg border border-dashed border-white/10">
                                                 <FiClock className="w-6 h-6 text-gray-600 mx-auto mb-1 animate-pulse" />
-                                                <p className="text-[9px] text-gray-500 font-bold uppercase">Preparando...</p>
+                                                <p className="text-[11px] text-gray-500 font-bold uppercase">Preparando...</p>
                                             </div>
                                         )}
                                     </div>
@@ -510,11 +510,11 @@ export default function DigitalCodesPage() {
                 <div className="mt-6 flex justify-center gap-2">
                     <div className="flex items-center gap-1 px-2.5 py-1.5 bg-[#0f172a] rounded-full border border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
                         <FiShield className="w-3 h-3 text-cyan-400" />
-                        <span className="text-[7px] text-cyan-100 font-bold uppercase tracking-wider">Encriptado</span>
+                        <span className="text-[11px] text-cyan-100 font-bold uppercase tracking-wider">Encriptado</span>
                     </div>
                     <div className="flex items-center gap-1 px-2.5 py-1.5 bg-[#0f172a] rounded-full border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]">
                         <FiCheck className="w-3 h-3 text-purple-400" />
-                        <span className="text-[7px] text-purple-100 font-bold uppercase tracking-wider">Garantizado</span>
+                        <span className="text-[11px] text-purple-100 font-bold uppercase tracking-wider">Garantizado</span>
                     </div>
                 </div>
 
@@ -522,7 +522,7 @@ export default function DigitalCodesPage() {
                 <div className="mt-8 text-center pb-20">
                     <Link href="/contacto" className="group inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-900/40 to-cyan-900/40 backdrop-blur-md rounded-full border border-cyan-500/30 hover:border-cyan-400/50 transition-all active:scale-95 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
                         <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-                        <span className="text-cyan-50 text-[10px] font-bold uppercase tracking-widest group-hover:text-cyan-200 transition-colors">¿Necesitas ayuda?</span>
+                        <span className="text-cyan-50 text-xs font-bold uppercase tracking-widest group-hover:text-cyan-200 transition-colors">¿Necesitas ayuda?</span>
                     </Link>
                 </div>
             </div>

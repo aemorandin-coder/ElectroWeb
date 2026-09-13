@@ -362,7 +362,7 @@ export default function ReferralsPage() {
                 >
                     <span className="text-2xl">{tierInfo.icon}</span>
                     <div>
-                        <p className={`text-[10px] font-semibold uppercase tracking-wide ${tierInfo.color}`}>
+                        <p className={`text-xs font-semibold uppercase tracking-wide ${tierInfo.color}`}>
                             Nivel Actual
                         </p>
                         <p className={`text-base font-bold ${tierInfo.color}`}>{tierInfo.label}</p>
@@ -372,7 +372,7 @@ export default function ReferralsPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                         <h1 className="text-xl font-bold text-[#212529]">Mi Programa de Referidos</h1>
                         {influencer.status === 'PAUSED' && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
                                 Pausado
                             </span>
                         )}
@@ -530,7 +530,7 @@ export default function ReferralsPage() {
                             </div>
                             <div>
                                 <div className="flex items-center gap-1.5 mb-0.5">
-                                    <span className="text-[10px] font-bold text-[#2a63cd]">
+                                    <span className="text-xs font-bold text-[#2a63cd]">
                                         Paso {item.step}
                                     </span>
                                 </div>
@@ -565,7 +565,7 @@ export default function ReferralsPage() {
                                     >
                                         {info.label}
                                     </span>
-                                    <span className="text-[10px] text-[#adb5bd]">
+                                    <span className="text-xs text-[#adb5bd]">
                                         {t === 'bronze' ? '0+' : t === 'silver' ? '10+' : '50+'}
                                     </span>
                                 </div>
@@ -660,7 +660,7 @@ export default function ReferralsPage() {
                                                 </td>
                                                 <td className="px-3 py-2.5 text-center">
                                                     <span
-                                                        className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${STATUS_STYLES[conv.status] || 'bg-gray-100 text-gray-700'}`}
+                                                        className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${STATUS_STYLES[conv.status] || 'bg-gray-100 text-gray-700'}`}
                                                     >
                                                         {STATUS_LABELS[conv.status] || conv.status}
                                                     </span>
@@ -721,7 +721,7 @@ export default function ReferralsPage() {
                                         <p className="text-sm font-semibold text-[#212529] truncate">
                                             {entry.name}
                                             {entry.isCurrentUser && (
-                                                <span className="ml-1.5 text-[10px] text-[#2a63cd] font-normal">
+                                                <span className="ml-1.5 text-xs text-[#2a63cd] font-normal">
                                                     (Tú)
                                                 </span>
                                             )}

@@ -239,7 +239,7 @@ export default function OrdersPage() {
                 </div>
                 <div>
                   <p className="text-xs text-blue-200 uppercase font-bold tracking-wider">Mis Pedidos</p>
-                  <p className="text-xl font-black text-white" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
+                  <p className="text-xl font-bold text-white" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
                     ${stats.totalSpent.toFixed(0)}
                   </p>
                 </div>
@@ -377,7 +377,7 @@ export default function OrdersPage() {
                     </div>
 
                     {/* Price */}
-                    <span className="text-sm font-black text-gray-900 flex-shrink-0 mr-1">${order.totalUSD.toFixed(0)}</span>
+                    <span className="text-sm font-bold text-gray-900 flex-shrink-0 mr-1">${order.totalUSD.toFixed(0)}</span>
 
                     {/* Actions - Proper hit area */}
                     <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -415,9 +415,9 @@ export default function OrdersPage() {
           < div className="bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl px-3 py-2 text-white flex-shrink-0 min-w-[90px]" >
             <div className="flex items-center gap-1.5 mb-0.5">
               <FiDollarSign className="w-4 h-4 opacity-80" />
-              <span className="text-[9px] opacity-70">Total</span>
+              <span className="text-[11px] opacity-70">Total</span>
             </div>
-            <p className="text-base lg:text-lg font-black">${stats.totalSpent.toFixed(0)}</p>
+            <p className="text-base lg:text-lg font-bold">${stats.totalSpent.toFixed(0)}</p>
           </div >
 
           {/* Completed - Icon with counter */}
@@ -426,7 +426,7 @@ export default function OrdersPage() {
               <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center">
                 <FiCheck className="w-5 h-5 text-emerald-600" />
               </div>
-              <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
+              <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
                 {stats.completedOrders}
               </span>
             </div>
@@ -438,7 +438,7 @@ export default function OrdersPage() {
               <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center animate-pulse">
                 <FiClock className="w-5 h-5 text-amber-600" />
               </div>
-              <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
+              <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
                 {stats.pendingOrders}
               </span>
             </div>
@@ -450,7 +450,7 @@ export default function OrdersPage() {
               <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
                 <FiPackage className="w-5 h-5 text-blue-600" />
               </div>
-              <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
+              <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
                 {stats.totalItems}
               </span>
             </div>
@@ -524,18 +524,18 @@ export default function OrdersPage() {
                       {/* Order Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 mb-0.5">
-                          <h3 className="font-bold text-[#212529] text-[9px] lg:text-xs">#{order.orderNumber}</h3>
-                          <span className={`px-1 py-0.5 rounded text-[7px] lg:text-[8px] font-bold ${statusConfig.bg} ${statusConfig.text}`}>
+                          <h3 className="font-bold text-[#212529] text-[11px] lg:text-xs">#{order.orderNumber}</h3>
+                          <span className={`px-1 py-0.5 rounded text-[11px] lg:text-[11px] font-bold ${statusConfig.bg} ${statusConfig.text}`}>
                             {getStatusTextShort(order.status)}
                           </span>
                         </div>
-                        <p className="text-[9px] lg:text-[10px] text-[#6a6c6b]">
+                        <p className="text-[11px] lg:text-xs text-[#6a6c6b]">
                           {getTimeSince(order.createdAt)} • {order.items.length} item{order.items.length > 1 ? 's' : ''}
                         </p>
                       </div>
 
                       {/* Price */}
-                      <p className="text-xs lg:text-sm font-black text-[#212529] mr-1">${order.totalUSD.toFixed(0)}</p>
+                      <p className="text-xs lg:text-sm font-bold text-[#212529] mr-1">${order.totalUSD.toFixed(0)}</p>
 
                       {/* Actions - Larger and centered */}
                       <div className="flex items-center gap-1">
@@ -598,8 +598,8 @@ export default function OrdersPage() {
                     <FiPackage className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-[10px] sm:text-xs opacity-70">Pedido</p>
-                    <h3 className="text-lg font-black">#{selectedOrder.orderNumber}</h3>
+                    <p className="text-xs opacity-70">Pedido</p>
+                    <h3 className="text-lg font-bold">#{selectedOrder.orderNumber}</h3>
                   </div>
                 </div>
                 <button onClick={closeModal} className="p-2 sm:hidden hover:bg-white/20 rounded-lg transition-all">
@@ -641,7 +641,7 @@ export default function OrdersPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-[#212529] truncate">{item.productName}</p>
-                        <p className="text-[10px] text-[#6a6c6b]">x{item.quantity}</p>
+                        <p className="text-xs text-[#6a6c6b]">x{item.quantity}</p>
                       </div>
                       <p className="text-xs font-bold text-[#2a63cd]">${item.totalUSD.toFixed(2)}</p>
                     </div>
@@ -652,12 +652,12 @@ export default function OrdersPage() {
               {/* Footer */}
               <div className="p-4 bg-[#f8f9fa] border-t border-[#e9ecef] flex-shrink-0">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] text-[#6a6c6b]">
+                  <span className="text-xs text-[#6a6c6b]">
                     {selectedOrder.paymentMethod && <>Pago: <strong className="text-[#212529]">{formatPaymentMethod(selectedOrder.paymentMethod)}</strong></>}
                   </span>
                   <div className="bg-[#2a63cd] text-white px-3 py-1.5 rounded-lg">
-                    <p className="text-[9px] opacity-70">Total</p>
-                    <p className="text-base font-black">USD {selectedOrder.totalUSD.toFixed(2)}</p>
+                    <p className="text-[11px] opacity-70">Total</p>
+                    <p className="text-base font-bold">USD {selectedOrder.totalUSD.toFixed(2)}</p>
                   </div>
                 </div>
                 <button

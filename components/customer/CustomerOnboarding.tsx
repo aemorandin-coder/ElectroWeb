@@ -35,10 +35,10 @@ export default function CustomerOnboarding({ stats }: OnboardingProps) {
                 <div className="flex-1 w-full">
                     <div className="flex justify-between items-start mb-2">
                         <div>
-                            <h2 className="text-base lg:text-lg font-black text-gray-900 mb-0.5">¡Bienvenido a tu Panel!</h2>
+                            <h2 className="text-base lg:text-lg font-bold text-gray-900 mb-0.5">¡Bienvenido a tu Panel!</h2>
                             <p className="text-[#6a6c6b] text-xs leading-tight">Completa estas misiones para disfrutar al máximo de la plataforma.</p>
                         </div>
-                        <span className="text-xl lg:text-2xl font-black text-[#2a63cd]">
+                        <span className="text-xl lg:text-2xl font-bold text-[#2a63cd]">
                             {percentage}%
                         </span>
                     </div>
@@ -64,7 +64,7 @@ export default function CustomerOnboarding({ stats }: OnboardingProps) {
                             <h3 className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
                                 <FiMail className="w-3.5 h-3.5 text-[#2a63cd]" /> Verificar Correo
                             </h3>
-                            <p className="text-[10px] text-[#6a6c6b]">Seguridad para tu cuenta</p>
+                            <p className="text-xs text-[#6a6c6b]">Seguridad para tu cuenta</p>
                         </div>
                         {!isEmailVerified && <FiChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5 transition-transform" />}
                     </Link>
@@ -76,7 +76,7 @@ export default function CustomerOnboarding({ stats }: OnboardingProps) {
                             <h3 className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
                                 <FiMapPin className="w-3.5 h-3.5 text-[#2a63cd]" /> Agregar Dirección
                             </h3>
-                            <p className="text-[10px] text-[#6a6c6b]">Para envíos físicos rápidos</p>
+                            <p className="text-xs text-[#6a6c6b]">Para envíos físicos rápidos</p>
                         </div>
                         <FiChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5 transition-transform" />
                     </Link>
@@ -92,7 +92,7 @@ export default function CustomerOnboarding({ stats }: OnboardingProps) {
                             <h3 className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
                                 <FiShoppingBag className="w-3.5 h-3.5 text-[#2a63cd]" /> Tu Primer Pedido
                             </h3>
-                            <p className="text-[10px] text-[#6a6c6b]">Explora nuestras ofertas</p>
+                            <p className="text-xs text-[#6a6c6b]">Explora nuestras ofertas</p>
                         </div>
                         {!hasOrders && <FiChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5 transition-transform" />}
                     </Link>

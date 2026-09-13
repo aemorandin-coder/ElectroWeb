@@ -206,7 +206,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
 
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[700px] max-h-[90vh] overflow-hidden animate-scaleIn flex flex-col">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white px-4 lg:px-6 py-3 lg:py-4">
+                <div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white px-4 lg:px-6 py-3 lg:py-4">
                     <div className="flex items-center gap-2 lg:gap-3">
                         <div className="w-8 h-8 lg:w-10 lg:h-10 bg-white/20 rounded-lg lg:rounded-xl flex items-center justify-center">
                             <FiFileText className="w-4 h-4 lg:w-5 lg:h-5" />
@@ -226,7 +226,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                         <div
                             ref={termsRef}
                             onScroll={handleScroll}
-                            className="p-6 overflow-y-auto max-h-[50vh] text-sm text-[#495057] space-y-4"
+                            className="p-6 overflow-y-auto max-h-[50vh] text-sm text-ink-soft space-y-4"
                         >
                             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
                                 <FiAlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
@@ -236,7 +236,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                 </p>
                             </div>
 
-                            <h3 className="font-bold text-[#212529] text-base">1. ORIGEN LÍCITO DE FONDOS</h3>
+                            <h3 className="font-bold text-ink text-base">1. ORIGEN LÍCITO DE FONDOS</h3>
                             <p>
                                 El usuario declara bajo juramento que todos los fondos utilizados para recargar saldo en esta plataforma
                                 provienen de actividades lícitas y legales. Queda estrictamente prohibido el uso de fondos provenientes de:
@@ -249,7 +249,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                 <li>Evasión fiscal o fondos no declarados</li>
                             </ul>
 
-                            <h3 className="font-bold text-[#212529] text-base">2. POLÍTICA DE NO REEMBOLSO</h3>
+                            <h3 className="font-bold text-ink text-base">2. POLÍTICA DE NO REEMBOLSO</h3>
                             <p>
                                 <strong className="text-red-600">EL SALDO RECARGADO NO ES REEMBOLSABLE BAJO NINGUNA CIRCUNSTANCIA.</strong>
                             </p>
@@ -259,7 +259,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                 ser utilizado para realizar compras de productos dentro de esta plataforma.
                             </p>
 
-                            <h3 className="font-bold text-[#212529] text-base">3. VERACIDAD DE LA INFORMACIÓN</h3>
+                            <h3 className="font-bold text-ink text-base">3. VERACIDAD DE LA INFORMACIÓN</h3>
                             <p>
                                 El usuario se compromete a proporcionar información veraz, exacta y actualizada en todas sus transacciones,
                                 incluyendo pero no limitado a:
@@ -275,7 +275,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                 suspensión de la cuenta sin derecho a reembolso.
                             </p>
 
-                            <h3 className="font-bold text-[#212529] text-base">4. TRANSACCIONES FALLIDAS O RECHAZADAS</h3>
+                            <h3 className="font-bold text-ink text-base">4. TRANSACCIONES FALLIDAS O RECHAZADAS</h3>
                             <p>
                                 El usuario acepta que las transacciones pueden ser rechazadas por los siguientes motivos:
                             </p>
@@ -291,7 +291,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                     de la capacidad de recarga del usuario.</strong>
                             </p>
 
-                            <h3 className="font-bold text-[#212529] text-base">5. VERIFICACIÓN Y AUDITORÍA</h3>
+                            <h3 className="font-bold text-ink text-base">5. VERIFICACIÓN Y AUDITORÍA</h3>
                             <p>
                                 La empresa se reserva el derecho de:
                             </p>
@@ -303,7 +303,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                 <li>Cancelar cuentas que violen estos términos</li>
                             </ul>
 
-                            <h3 className="font-bold text-[#212529] text-base">6. RESPONSABILIDAD LEGAL</h3>
+                            <h3 className="font-bold text-ink text-base">6. RESPONSABILIDAD LEGAL</h3>
                             <p>
                                 El usuario acepta total responsabilidad legal por cualquier violación de estos términos y exime a la
                                 empresa de cualquier responsabilidad derivada del uso indebido de la plataforma. En caso de disputas
@@ -311,7 +311,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                 Bolivariana de Venezuela.
                             </p>
 
-                            <h3 className="font-bold text-[#212529] text-base">7. MODIFICACIONES</h3>
+                            <h3 className="font-bold text-ink text-base">7. MODIFICACIONES</h3>
                             <p>
                                 La empresa se reserva el derecho de modificar estos términos en cualquier momento. Los usuarios serán
                                 notificados de cambios significativos y deberán aceptar los nuevos términos para continuar utilizando
@@ -326,9 +326,9 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                         </div>
 
                         {/* Footer */}
-                        <div className="p-6 border-t border-[#e9ecef] bg-[#f8f9fa]">
+                        <div className="p-6 border-t border-line bg-surface">
                             {!hasScrolledToBottom && (
-                                <p className="text-xs text-center text-[#6a6c6b] mb-4">
+                                <p className="text-xs text-center text-muted mb-4">
                                     Desplázate hasta el final para poder continuar
                                 </p>
                             )}
@@ -338,9 +338,9 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                     checked={agreedToTerms}
                                     onChange={(e) => setAgreedToTerms(e.target.checked)}
                                     disabled={!hasScrolledToBottom}
-                                    className="w-5 h-5 rounded border-2 border-[#2a63cd] text-[#2a63cd] focus:ring-[#2a63cd] mt-0.5"
+                                    className="w-5 h-5 rounded border-2 border-brand-500 text-brand-500 focus:ring-brand-500 mt-0.5"
                                 />
-                                <span className={`text-sm ${hasScrolledToBottom ? 'text-[#212529]' : 'text-[#adb5bd]'}`}>
+                                <span className={`text-sm ${hasScrolledToBottom ? 'text-ink' : 'text-subtle'}`}>
                                     He leído, entiendo y acepto todos los términos y condiciones descritos anteriormente.
                                     Declaro que los fondos que utilizaré son de origen lícito.
                                 </span>
@@ -348,7 +348,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                             <button
                                 onClick={() => setStep('signature')}
                                 disabled={!agreedToTerms || !hasScrolledToBottom}
-                                className="w-full py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Continuar a Firma Digital
                             </button>
@@ -360,7 +360,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                         <div className="p-6 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-[#212529] mb-1 uppercase tracking-wider">
+                                    <label className="block text-xs font-bold text-ink mb-1 uppercase tracking-wider">
                                         Cédula de Identidad *
                                     </label>
                                     <input
@@ -368,11 +368,11 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                         value={idNumber}
                                         onChange={(e) => setIdNumber(e.target.value)}
                                         placeholder="V-12345678"
-                                        className="w-full px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd]"
+                                        className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-[#212529] mb-1 uppercase tracking-wider">
+                                    <label className="block text-xs font-bold text-ink mb-1 uppercase tracking-wider">
                                         Teléfono
                                     </label>
                                     <input
@@ -380,12 +380,12 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="0414-1234567"
-                                        className="w-full px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd]"
+                                        className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-[#212529] mb-1 uppercase tracking-wider">
+                                <label className="block text-xs font-bold text-ink mb-1 uppercase tracking-wider">
                                     Dirección
                                 </label>
                                 <input
@@ -393,13 +393,13 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                     value={address}
                                     onChange={(e) => setAddress(e.target.value)}
                                     placeholder="Ciudad, Estado, País"
-                                    className="w-full px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd]"
+                                    className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                                 />
                             </div>
 
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <label className="text-xs font-bold text-[#212529] uppercase tracking-wider flex items-center gap-2">
+                                    <label className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-2">
                                         <FiEdit3 className="w-4 h-4" />
                                         Firma Digital *
                                     </label>
@@ -410,12 +410,12 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                         Limpiar Firma
                                     </button>
                                 </div>
-                                <div className="border-2 border-dashed border-[#2a63cd] rounded-xl p-1 bg-white">
+                                <div className="border-2 border-dashed border-brand-500 rounded-xl p-1 bg-white">
                                     <canvas
                                         ref={canvasRef}
                                         width={500}
                                         height={150}
-                                        className="w-full cursor-crosshair rounded-lg bg-[#f8f9fa]"
+                                        className="w-full cursor-crosshair rounded-lg bg-surface"
                                         onMouseDown={startDrawing}
                                         onMouseMove={draw}
                                         onMouseUp={stopDrawing}
@@ -425,7 +425,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                         onTouchEnd={stopDrawing}
                                     />
                                 </div>
-                                <p className="text-xs text-[#6a6c6b] mt-1">
+                                <p className="text-xs text-muted mt-1">
                                     Usa tu mouse o dedo para firmar en el recuadro
                                 </p>
                             </div>
@@ -438,10 +438,10 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                         </div>
 
                         {/* Footer */}
-                        <div className="p-6 border-t border-[#e9ecef] bg-[#f8f9fa] flex gap-3">
+                        <div className="p-6 border-t border-line bg-surface flex gap-3">
                             <button
                                 onClick={() => setStep('terms')}
-                                className="flex-1 py-3 border-2 border-[#e9ecef] text-[#212529] font-bold rounded-xl hover:bg-white transition-all"
+                                className="flex-1 py-3 border-2 border-line text-ink font-bold rounded-xl hover:bg-white transition-all"
                             >
                                 Volver
                             </button>

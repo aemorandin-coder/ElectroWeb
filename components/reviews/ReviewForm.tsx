@@ -106,7 +106,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
     if (checkingEligibility) {
         return (
             <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2a63cd] mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div>
                 <p className="text-gray-600 mt-4">Verificando elegibilidad...</p>
             </div>
         );
@@ -180,7 +180,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
                     placeholder="Resume tu experiencia"
                     maxLength={100}
                     disabled={isSubmitting}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 />
             </div>
 
@@ -197,7 +197,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
                     minLength={10}
                     maxLength={1000}
                     disabled={isSubmitting}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent resize-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                     {comment.length}/1000 caracteres

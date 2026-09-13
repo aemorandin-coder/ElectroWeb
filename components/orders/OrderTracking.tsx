@@ -117,7 +117,7 @@ export default function OrderTracking({
                                     ${isCompleted
                                         ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/40 scale-100'
                                         : isCurrent
-                                            ? `bg-gradient-to-br ${isDelivered ? 'from-emerald-400 to-emerald-600' : 'from-[#2a63cd] to-[#1e4ba3]'} shadow-lg ${isDelivered ? 'shadow-emerald-500/40' : 'shadow-blue-500/40'} scale-110 animate-epicPulse`
+                                            ? `bg-gradient-to-br ${isDelivered ? 'from-emerald-400 to-emerald-600' : 'from-brand-500 to-brand-600'} shadow-lg ${isDelivered ? 'shadow-emerald-500/40' : 'shadow-blue-500/40'} scale-110 animate-epicPulse`
                                             : 'bg-gray-200 scale-90'
                                     }
                                 `}
@@ -144,8 +144,8 @@ export default function OrderTracking({
                                 {/* Current Step Ping Animation */}
                                 {isCurrent && (
                                     <>
-                                        <span className={`absolute inset-0 rounded-full animate-ping opacity-30 ${isDelivered ? 'bg-emerald-400' : 'bg-[#2a63cd]'}`} />
-                                        <span className={`absolute inset-0 rounded-full animate-epicRing ${isDelivered ? 'border-emerald-400' : 'border-[#2a63cd]'}`} />
+                                        <span className={`absolute inset-0 rounded-full animate-ping opacity-30 ${isDelivered ? 'bg-emerald-400' : 'bg-brand-500'}`} />
+                                        <span className={`absolute inset-0 rounded-full animate-epicRing ${isDelivered ? 'border-emerald-400' : 'border-brand-500'}`} />
                                     </>
                                 )}
                             </div>

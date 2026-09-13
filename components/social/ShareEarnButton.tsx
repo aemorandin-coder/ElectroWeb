@@ -42,7 +42,7 @@ export default function ShareEarnButton({
   return (
     <button
       onClick={handleClick}
-      className={`w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200/60 shadow-md flex items-center justify-center text-[#212529] hover:bg-[#2a63cd] hover:text-white hover:border-[#2a63cd] hover:scale-105 active:scale-95 transition-all duration-300 ${className}`}
+      className={`w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200/60 shadow-md flex items-center justify-center text-ink hover:bg-brand-500 hover:text-white hover:border-brand-500 hover:scale-105 active:scale-95 transition-all duration-300 ${className}`}
       title="Compartir y Ganar"
       aria-label="Compartir y Ganar"
     >

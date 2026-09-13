@@ -33,9 +33,9 @@ export default function ReviewList({ reviews, showLoginPrompt = false }: ReviewL
                 {showLoginPrompt && (
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
                         {/* Arrow/Rombo - behind the badge */}
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-3 h-3 bg-[#1e4ba3] transform rotate-45 -mt-1.5 -z-10"></div>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-3 h-3 bg-brand-600 transform rotate-45 -mt-1.5 -z-10"></div>
                         {/* Badge - in front */}
-                        <div className="relative bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+                        <div className="relative bg-gradient-to-r from-brand-500 to-brand-600 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
@@ -66,7 +66,7 @@ export default function ReviewList({ reviews, showLoginPrompt = false }: ReviewL
                                     <Image src={review.userImage} alt={review.user?.name || review.userName || 'Usuario'} fill className="object-cover" />
                                 </div>
                             ) : (
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center">
                                     <span className="text-white font-bold text-lg">
                                         {(review.user?.name || review.userName || 'U').charAt(0).toUpperCase()}
                                     </span>

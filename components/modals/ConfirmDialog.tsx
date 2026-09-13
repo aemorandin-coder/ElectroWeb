@@ -79,7 +79,7 @@ export default function ConfirmDialog({
                 return {
                     iconBg: 'bg-blue-100',
                     iconText: 'text-blue-600',
-                    confirmBg: 'from-[#2a63cd] to-[#1e4ba3] hover:from-[#1e4ba3] hover:to-[#1a3b7e]',
+                    confirmBg: 'from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700',
                     confirmText: 'text-white',
                 };
             default:
@@ -122,13 +122,13 @@ export default function ConfirmDialog({
                 </div>
 
                 {/* Title */}
-                <h3 className="text-base lg:text-xl font-bold text-[#212529] text-center mb-1.5 lg:mb-2">
+                <h3 className="text-base lg:text-xl font-bold text-ink text-center mb-1.5 lg:mb-2">
                     {title}
                 </h3>
 
                 {/* Message */}
                 <div className="mt-1.5 lg:mt-2 mb-4 lg:mb-6">
-                    <p className="text-sm lg:text-base text-[#6a6c6b] text-center whitespace-normal break-words leading-relaxed">
+                    <p className="text-sm lg:text-base text-muted text-center whitespace-normal break-words leading-relaxed">
                         {message}
                     </p>
                 </div>
@@ -137,7 +137,7 @@ export default function ConfirmDialog({
                 <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
                     <button
                         type="button"
-                        className="flex-1 px-4 py-2.5 lg:py-3 bg-white text-[#6a6c6b] font-semibold border-2 border-[#e9ecef] rounded-xl hover:bg-[#f8f9fa] hover:border-[#dee2e6] transition-all text-sm lg:text-base order-2 sm:order-1"
+                        className="flex-1 px-4 py-2.5 lg:py-3 bg-white text-muted font-semibold border-2 border-line rounded-xl hover:bg-surface hover:border-line-strong transition-all text-sm lg:text-base order-2 sm:order-1"
                         onClick={onCancel}
                     >
                         {cancelText}

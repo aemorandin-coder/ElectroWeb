@@ -298,11 +298,11 @@ Por favor necesito ayuda para verificar mi pago.
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Fecha del pago */}
                 <div>
-                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
                         Fecha del Pago <span className="text-red-500">*</span>
                     </label>
                     <div className="form-field">
-                        <FiCalendar className="field-icon text-[#6a6c6b]" />
+                        <FiCalendar className="field-icon text-muted" />
                         <input
                             type="date"
                             name="fechaPago"
@@ -310,8 +310,8 @@ Por favor necesito ayuda para verificar mi pago.
                             onChange={handleChange}
                             max={new Date().toISOString().split('T')[0]}
                             disabled={disabled || verificationState === 'verifying'}
-                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                                fieldErrors.fechaPago ? 'border-red-400 bg-red-50' : 'border-[#e9ecef]'
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                                fieldErrors.fechaPago ? 'border-red-400 bg-red-50' : 'border-line'
                             }`}
                         />
                     </div>
@@ -324,11 +324,11 @@ Por favor necesito ayuda para verificar mi pago.
 
                 {/* Referencia */}
                 <div>
-                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
                         Nº de Referencia <span className="text-red-500">*</span>
                     </label>
                     <div className="form-field">
-                        <FiHash className="field-icon text-[#6a6c6b]" />
+                        <FiHash className="field-icon text-muted" />
                         <input
                             type="text"
                             name="referencia"
@@ -338,8 +338,8 @@ Por favor necesito ayuda para verificar mi pago.
                             maxLength={8}
                             inputMode="numeric"
                             disabled={disabled || verificationState === 'verifying'}
-                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                                fieldErrors.referencia ? 'border-red-400 bg-red-50' : 'border-[#e9ecef]'
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                                fieldErrors.referencia ? 'border-red-400 bg-red-50' : 'border-line'
                             }`}
                         />
                     </div>
@@ -348,7 +348,7 @@ Por favor necesito ayuda para verificar mi pago.
                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.referencia}
                         </p>
                     ) : (
-                        <p className="text-xs text-[#6a6c6b] mt-1">4 a 8 dígitos numéricos</p>
+                        <p className="text-xs text-muted mt-1">4 a 8 dígitos numéricos</p>
                     )}
                 </div>
             </div>
@@ -357,11 +357,11 @@ Por favor necesito ayuda para verificar mi pago.
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Cédula del pagador */}
                 <div>
-                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
                         Cédula del Titular <span className="text-red-500">*</span>
                     </label>
                     <div className="form-field">
-                        <FiUser className="field-icon text-[#6a6c6b]" />
+                        <FiUser className="field-icon text-muted" />
                         <input
                             type="text"
                             name="cedulaPagador"
@@ -371,8 +371,8 @@ Por favor necesito ayuda para verificar mi pago.
                             maxLength={12}
                             autoCapitalize="characters"
                             disabled={disabled || verificationState === 'verifying'}
-                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                                fieldErrors.cedulaPagador ? 'border-red-400 bg-red-50' : 'border-[#e9ecef]'
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                                fieldErrors.cedulaPagador ? 'border-red-400 bg-red-50' : 'border-line'
                             }`}
                         />
                     </div>
@@ -381,17 +381,17 @@ Por favor necesito ayuda para verificar mi pago.
                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.cedulaPagador}
                         </p>
                     ) : (
-                        <p className="text-xs text-[#6a6c6b] mt-1">Ej: V12345678 o E12345678</p>
+                        <p className="text-xs text-muted mt-1">Ej: V12345678 o E12345678</p>
                     )}
                 </div>
 
                 {/* Teléfono del pagador */}
                 <div>
-                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
                         Teléfono del Pago <span className="text-red-500">*</span>
                     </label>
                     <div className="form-field">
-                        <FiPhone className="field-icon text-[#6a6c6b]" />
+                        <FiPhone className="field-icon text-muted" />
                         <input
                             type="tel"
                             name="telefonoPagador"
@@ -401,8 +401,8 @@ Por favor necesito ayuda para verificar mi pago.
                             inputMode="tel"
                             maxLength={11}
                             disabled={disabled || verificationState === 'verifying'}
-                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                                fieldErrors.telefonoPagador ? 'border-red-400 bg-red-50' : 'border-[#e9ecef]'
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                                fieldErrors.telefonoPagador ? 'border-red-400 bg-red-50' : 'border-line'
                             }`}
                         />
                     </div>
@@ -411,13 +411,13 @@ Por favor necesito ayuda para verificar mi pago.
                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.telefonoPagador}
                         </p>
                     ) : (
-                        <p className="text-xs text-[#6a6c6b] mt-1">Teléfono desde donde pagaste</p>
+                        <p className="text-xs text-muted mt-1">Teléfono desde donde pagaste</p>
                     )}
                 </div>
 
                 {/* Banco origen - Dropdown mejorado */}
                 <div className="relative">
-                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
                         Banco de Origen <span className="text-red-500">*</span>
                     </label>
                     {fieldErrors.bancoOrigen && (
@@ -429,25 +429,25 @@ Por favor necesito ayuda para verificar mi pago.
                         type="button"
                         onClick={() => !disabled && verificationState !== 'verifying' && setShowBankDropdown(!showBankDropdown)}
                         disabled={disabled || verificationState === 'verifying'}
-                        className="w-full flex items-center justify-between px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-between px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
-                        <span className={bancoSeleccionado ? 'text-[#212529]' : 'text-[#6a6c6b]'}>
+                        <span className={bancoSeleccionado ? 'text-ink' : 'text-muted'}>
                             {bancoSeleccionado ? bancoSeleccionado.nombreCorto : 'Seleccionar banco...'}
                         </span>
-                        <FiChevronDown className={`w-4 h-4 text-[#6a6c6b] transition-transform ${showBankDropdown ? 'rotate-180' : ''}`} />
+                        <FiChevronDown className={`w-4 h-4 text-muted transition-transform ${showBankDropdown ? 'rotate-180' : ''}`} />
                     </button>
 
                     {/* Dropdown de bancos */}
                     {showBankDropdown && (
-                        <div className="absolute z-20 mt-1 w-full bg-white border border-[#e9ecef] rounded-xl shadow-xl max-h-64 overflow-hidden animate-fadeIn">
+                        <div className="absolute z-20 mt-1 w-full bg-white border border-line rounded-xl shadow-xl max-h-64 overflow-hidden animate-fadeIn">
                             {/* Buscador */}
-                            <div className="p-2 border-b border-[#e9ecef]">
+                            <div className="p-2 border-b border-line">
                                 <input
                                     type="text"
                                     value={bankSearchTerm}
                                     onChange={(e) => setBankSearchTerm(e.target.value)}
                                     placeholder="Buscar banco..."
-                                    className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2a63cd]"
+                                    className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500"
                                     autoFocus
                                 />
                             </div>
@@ -459,15 +459,15 @@ Por favor necesito ayuda para verificar mi pago.
                                             key={banco.codigo}
                                             type="button"
                                             onClick={() => handleSelectBanco(banco)}
-                                            className={`w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 transition-colors flex items-center justify-between ${formData.bancoOrigen === banco.codigo ? 'bg-blue-50 text-[#2a63cd]' : 'text-[#212529]'
+                                            className={`w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 transition-colors flex items-center justify-between ${formData.bancoOrigen === banco.codigo ? 'bg-blue-50 text-brand-500' : 'text-ink'
                                                 }`}
                                         >
                                             <span>{banco.nombre}</span>
-                                            <span className="text-xs text-[#6a6c6b]">{banco.codigo}</span>
+                                            <span className="text-xs text-muted">{banco.codigo}</span>
                                         </button>
                                     ))
                                 ) : (
-                                    <div className="px-4 py-3 text-sm text-[#6a6c6b] text-center">
+                                    <div className="px-4 py-3 text-sm text-muted text-center">
                                         No se encontraron bancos
                                     </div>
                                 )}
@@ -480,17 +480,17 @@ Por favor necesito ayuda para verificar mi pago.
                 <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-200">
                     <div className="flex items-center justify-between">
                         <div>
-                            <span className="text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Monto a pagar:</span>
+                            <span className="text-xs font-semibold text-muted uppercase tracking-wider">Monto a pagar:</span>
                             <p className="text-xs text-orange-600 mt-0.5">Tasa BCV oficial</p>
                         </div>
                         <div className="text-right">
                             {montoEnBs ? (
                                 <>
                                     <span className="text-2xl font-bold text-orange-600">Bs. {montoEnBs.toFixed(2)}</span>
-                                    <p className="text-xs text-[#6a6c6b]">(${montoEsperado.toFixed(2)} USD)</p>
+                                    <p className="text-xs text-muted">(${montoEsperado.toFixed(2)} USD)</p>
                                 </>
                             ) : (
-                                <span className="text-xl font-bold text-[#2a63cd]">${montoEsperado.toFixed(2)}</span>
+                                <span className="text-xl font-bold text-brand-500">${montoEsperado.toFixed(2)}</span>
                             )}
                         </div>
                     </div>
@@ -573,7 +573,7 @@ Por favor necesito ayuda para verificar mi pago.
                     ? 'bg-green-500 text-white cursor-default'
                     : verificationState === 'verifying'
                         ? 'bg-gradient-to-r from-blue-400 to-blue-500 text-white cursor-wait'
-                        : 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
+                        : 'bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
                     }`}
             >
                 {getButtonContent()}

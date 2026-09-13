@@ -162,7 +162,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
     // Helper function to get gradient color - all blue for brand consistency
     const getMethodColor = () => {
-        return 'from-[#2a63cd] to-[#1e4ba3]';
+        return 'from-brand-500 to-brand-600';
     };
 
     // Build details object for display
@@ -371,7 +371,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             {/* Modal */}
             <div className="relative bg-white rounded-t-[32px] sm:rounded-2xl w-full max-w-3xl shadow-2xl h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden animate-slideInUp sm:animate-scaleIn z-10">
                 {/* Header - Compact on mobile */}
-                <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-4 lg:p-6 rounded-t-[32px] sm:rounded-t-2xl flex-shrink-0">
+                <div className="bg-gradient-to-r from-brand-500 to-brand-600 p-4 lg:p-6 rounded-t-[32px] sm:rounded-t-2xl flex-shrink-0">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 lg:gap-3">
                             {step !== 'SELECT_METHOD' && (
@@ -422,7 +422,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                             <div className="space-y-4 lg:space-y-6">
                                 {/* Amount Selection */}
                                 <div>
-                                    <label className="block text-xs lg:text-sm font-bold text-[#212529] mb-2 lg:mb-3 uppercase tracking-wider">
+                                    <label className="block text-xs lg:text-sm font-bold text-ink mb-2 lg:mb-3 uppercase tracking-wider">
                                         Monto a Recargar (USD)
                                     </label>
 
@@ -433,8 +433,8 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                 key={quickAmount}
                                                 onClick={() => setAmount(quickAmount.toString())}
                                                 className={`group relative overflow-hidden rounded-lg lg:rounded-xl font-bold text-xs lg:text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 ${amount === quickAmount.toString()
-                                                    ? 'bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] text-white shadow-lg shadow-[#2a63cd]/40 ring-1 lg:ring-2 ring-[#2a63cd] ring-offset-1 lg:ring-offset-2'
-                                                    : 'bg-gradient-to-br from-slate-100 to-slate-200 text-[#212529] hover:from-[#2a63cd]/10 hover:to-[#1e4ba3]/10 hover:shadow-md'
+                                                    ? 'bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-lg shadow-brand-500/40 ring-1 lg:ring-2 ring-brand-500 ring-offset-1 lg:ring-offset-2'
+                                                    : 'bg-gradient-to-br from-gray-100 to-gray-200 text-ink hover:from-brand-500/10 hover:to-brand-600/10 hover:shadow-md'
                                                     }`}
                                                 style={{ animationDelay: `${index * 50}ms` }}
                                             >
@@ -442,7 +442,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                 <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ${amount === quickAmount.toString() ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}></div>
 
                                                 <div className="relative py-2 lg:py-3 px-1 lg:px-2 flex flex-col items-center">
-                                                    <span className={`text-[11px] lg:text-xs font-bold tracking-wider mb-0.5 ${amount === quickAmount.toString() ? 'text-blue-200' : 'text-[#6a6c6b]'
+                                                    <span className={`text-[11px] lg:text-xs font-bold tracking-wider mb-0.5 ${amount === quickAmount.toString() ? 'text-blue-200' : 'text-muted'
                                                         }`}>USD</span>
                                                     <span className="text-sm lg:text-lg font-bold">{quickAmount}</span>
                                                 </div>
@@ -450,7 +450,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                 {/* Selection indicator */}
                                                 {amount === quickAmount.toString() && (
                                                     <div className="absolute top-0.5 right-0.5 lg:top-1 lg:right-1 w-3 h-3 lg:w-4 lg:h-4 bg-white rounded-full flex items-center justify-center shadow-md">
-                                                        <FiCheck className="w-2 h-2 lg:w-3 lg:h-3 text-[#2a63cd]" />
+                                                        <FiCheck className="w-2 h-2 lg:w-3 lg:h-3 text-brand-500" />
                                                     </div>
                                                 )}
                                             </button>
@@ -459,7 +459,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
                                     {/* Custom Amount Input */}
                                     <div className="relative">
-                                        <div className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 text-[#6a6c6b]">
+                                        <div className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 text-muted">
                                             <FiDollarSign className="w-4 h-4 lg:w-5 lg:h-5" />
                                         </div>
                                         <input
@@ -467,19 +467,19 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                             value={amount}
                                             onChange={(e) => setAmount(e.target.value)}
                                             placeholder="Otro monto..."
-                                            className="w-full pl-10 lg:pl-12 pr-3 lg:pr-4 py-2.5 lg:py-3 border-2 border-[#e9ecef] rounded-lg lg:rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] text-base lg:text-lg font-semibold transition-all"
+                                            className="w-full pl-10 lg:pl-12 pr-3 lg:pr-4 py-2.5 lg:py-3 border-2 border-line rounded-lg lg:rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-base lg:text-lg font-semibold transition-all"
                                         />
                                     </div>
                                 </div>
 
                                 {/* Payment Method Selection */}
                                 <div>
-                                    <label className="block text-xs lg:text-sm font-bold text-[#212529] mb-2 lg:mb-3 uppercase tracking-wider">
+                                    <label className="block text-xs lg:text-sm font-bold text-ink mb-2 lg:mb-3 uppercase tracking-wider">
                                         Metodo de Pago
                                     </label>
                                     {loadingMethods ? (
                                         <div className="flex items-center justify-center py-6 lg:py-8">
-                                            <div className="w-5 h-5 lg:w-6 lg:h-6 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+                                            <div className="w-5 h-5 lg:w-6 lg:h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                                         </div>
                                     ) : companyPaymentMethods.length === 0 ? (
                                         <div className="text-center py-4 lg:py-6 text-gray-500">
@@ -492,8 +492,8 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                     key={method.id}
                                                     onClick={() => setSelectedMethod(method.type)}
                                                     className={`w-full p-3 lg:p-4 rounded-lg lg:rounded-xl border-2 transition-all duration-300 text-left transform hover:scale-[1.01] lg:hover:scale-[1.02] active:scale-[0.98] ${selectedMethod === method.type
-                                                        ? 'border-[#2a63cd] bg-gradient-to-r from-[#2a63cd]/10 to-[#1e4ba3]/5 shadow-lg'
-                                                        : 'border-[#e9ecef] hover:border-[#2a63cd]/50 hover:bg-[#f8f9fa]'
+                                                        ? 'border-brand-500 bg-gradient-to-r from-brand-500/10 to-brand-600/5 shadow-lg'
+                                                        : 'border-line hover:border-brand-500/50 hover:bg-surface'
                                                         }`}
                                                 >
                                                     <div className="flex items-center gap-2 lg:gap-3">
@@ -502,7 +502,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center gap-1.5 lg:gap-2 mb-0.5 flex-wrap">
-                                                                <h3 className="font-bold text-[#212529] text-sm lg:text-base">{method.name}</h3>
+                                                                <h3 className="font-bold text-ink text-sm lg:text-base">{method.name}</h3>
                                                                 {method.type === 'MOBILE_PAYMENT' && (
                                                                     <span className="px-1.5 lg:px-2 py-0.5 text-[11px] lg:text-xs font-bold bg-green-100 text-green-700 rounded-full flex items-center gap-0.5">
                                                                         <FiShield className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
@@ -510,21 +510,21 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                                     </span>
                                                                 )}
                                                                 {method.type === 'MERCANTIL_PANAMA' && (
-                                                                    <span className="px-1.5 lg:px-2 py-0.5 text-[11px] lg:text-xs font-bold bg-blue-100 text-[#2a63cd] rounded-full">
+                                                                    <span className="px-1.5 lg:px-2 py-0.5 text-[11px] lg:text-xs font-bold bg-blue-100 text-brand-500 rounded-full">
                                                                         Intl
                                                                     </span>
                                                                 )}
                                                                 {selectedMethod === method.type && (
-                                                                    <div className="w-4 h-4 lg:w-5 lg:h-5 bg-[#2a63cd] rounded-full flex items-center justify-center">
+                                                                    <div className="w-4 h-4 lg:w-5 lg:h-5 bg-brand-500 rounded-full flex items-center justify-center">
                                                                         <FiCheck className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-white" />
                                                                     </div>
                                                                 )}
                                                             </div>
                                                             {method.bankName && (
-                                                                <p className="text-xs text-[#6a6c6b]">{method.bankName}</p>
+                                                                <p className="text-xs text-muted">{method.bankName}</p>
                                                             )}
                                                             {method.displayNote && selectedMethod === method.type && (
-                                                                <p className="text-xs text-[#2a63cd] mt-1 font-medium truncate">
+                                                                <p className="text-xs text-brand-500 mt-1 font-medium truncate">
                                                                     {method.displayNote}
                                                                 </p>
                                                             )}
@@ -540,9 +540,9 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                             {/* Right Column: Details & Reference */}
                             <div className="space-y-3 lg:space-y-4">
                                 {/* Selected Method Details */}
-                                <div className="bg-gradient-to-br from-[#f8f9fa] to-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-[#e9ecef] shadow-sm">
-                                    <h3 className="font-bold text-xs lg:text-sm text-[#212529] mb-2 lg:mb-3 flex items-center gap-2">
-                                        <div className="w-1 h-3 lg:h-4 bg-[#2a63cd] rounded-full"></div>
+                                <div className="bg-gradient-to-br from-surface to-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-line shadow-sm">
+                                    <h3 className="font-bold text-xs lg:text-sm text-ink mb-2 lg:mb-3 flex items-center gap-2">
+                                        <div className="w-1 h-3 lg:h-4 bg-brand-500 rounded-full"></div>
                                         Datos para el pago
                                     </h3>
 
@@ -553,14 +553,14 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                 if (!method) return null;
                                                 const details = getMethodDetails(method);
                                                 return Object.entries(details).map(([key, value]) => (
-                                                    <div key={key} className="flex items-center justify-between py-1 border-b border-[#e9ecef] last:border-0">
+                                                    <div key={key} className="flex items-center justify-between py-1 border-b border-line last:border-0">
                                                         <div className="flex flex-col">
-                                                            <span className="text-[11px] lg:text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">{key}</span>
-                                                            <span className="text-xs lg:text-sm font-medium text-[#212529]">{value}</span>
+                                                            <span className="text-[11px] lg:text-xs text-muted uppercase font-bold tracking-wider">{key}</span>
+                                                            <span className="text-xs lg:text-sm font-medium text-ink">{value}</span>
                                                         </div>
                                                         <button
                                                             onClick={() => { navigator.clipboard.writeText(value); toast.success('Copiado!'); }}
-                                                            className="text-[#2a63cd] hover:bg-blue-50 px-1.5 lg:px-2 py-0.5 lg:py-1 rounded transition-colors text-[11px] lg:text-xs font-bold"
+                                                            className="text-brand-500 hover:bg-blue-50 px-1.5 lg:px-2 py-0.5 lg:py-1 rounded transition-colors text-[11px] lg:text-xs font-bold"
                                                         >
                                                             COPIAR
                                                         </button>
@@ -588,9 +588,9 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                             })()}
                                         </div>
                                     ) : (
-                                        <div className="text-center py-3 lg:py-4 text-[#6a6c6b]">
-                                            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-[#e9ecef] rounded-full flex items-center justify-center mx-auto mb-2">
-                                                <FiDollarSign className="w-4 h-4 lg:w-5 lg:h-5 text-[#6a6c6b]" />
+                                        <div className="text-center py-3 lg:py-4 text-muted">
+                                            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-line rounded-full flex items-center justify-center mx-auto mb-2">
+                                                <FiDollarSign className="w-4 h-4 lg:w-5 lg:h-5 text-muted" />
                                             </div>
                                             <p className="text-xs">Selecciona un metodo de pago</p>
                                         </div>
@@ -604,15 +604,15 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                             <div className="w-5 h-5 lg:w-6 lg:h-6 bg-gradient-to-br from-yellow-500 to-orange-500 rounded flex items-center justify-center">
                                                 <span className="text-white font-bold text-[11px] lg:text-xs">Bs</span>
                                             </div>
-                                            <span className="font-bold text-xs lg:text-sm text-[#212529]">Monto en Bolivares</span>
+                                            <span className="font-bold text-xs lg:text-sm text-ink">Monto en Bolivares</span>
                                         </div>
                                         <div className="bg-white rounded-lg p-2 lg:p-3 border border-yellow-200">
                                             <div className="flex items-center justify-between text-xs mb-1">
-                                                <span className="text-[#6a6c6b]">USD ${amount ? parseFloat(amount).toFixed(2) : '0.00'}</span>
-                                                <span className="text-[#6a6c6b]">x {exchangeRate > 0 ? exchangeRate.toFixed(2) : '...'}</span>
+                                                <span className="text-muted">USD ${amount ? parseFloat(amount).toFixed(2) : '0.00'}</span>
+                                                <span className="text-muted">x {exchangeRate > 0 ? exchangeRate.toFixed(2) : '...'}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs font-semibold text-[#212529]">Total:</span>
+                                                <span className="text-xs font-semibold text-ink">Total:</span>
                                                 <span className="text-base lg:text-xl font-bold text-orange-600">
                                                     Bs. {amountInBs ? amountInBs.toFixed(2) : '0.00'}
                                                 </span>
@@ -630,7 +630,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                 {/* Reference Number - Only for non-mobile payment */}
                                 {selectedMethod && selectedMethod !== 'MOBILE_PAYMENT' && (
                                     <div>
-                                        <label className="block text-xs font-bold text-[#212529] mb-1 lg:mb-1.5 uppercase tracking-wider">
+                                        <label className="block text-xs font-bold text-ink mb-1 lg:mb-1.5 uppercase tracking-wider">
                                             Numero de Referencia
                                         </label>
                                         <input
@@ -638,10 +638,10 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                             value={reference}
                                             onChange={(e) => setReference(e.target.value)}
                                             placeholder="Ej: 123456789"
-                                            className="w-full px-3 py-2 lg:py-2.5 border-2 border-[#e9ecef] rounded-lg lg:rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-xs lg:text-sm"
+                                            className="w-full px-3 py-2 lg:py-2.5 border-2 border-line rounded-lg lg:rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-xs lg:text-sm"
                                         />
-                                        <p className="text-[11px] lg:text-xs text-[#6a6c6b] mt-1 flex items-center gap-1">
-                                            <span className="min-w-5 h-5 px-1 rounded-full bg-blue-100 text-[#2a63cd] flex items-center justify-center text-[11px] font-bold">i</span>
+                                        <p className="text-[11px] lg:text-xs text-muted mt-1 flex items-center gap-1">
+                                            <span className="min-w-5 h-5 px-1 rounded-full bg-blue-100 text-brand-500 flex items-center justify-center text-[11px] font-bold">i</span>
                                             ID de transaccion
                                         </p>
                                     </div>
@@ -681,11 +681,11 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                 </div>
 
                 {/* Actions - Fixed at bottom */}
-                <div className="p-3 lg:p-6 border-t border-[#e9ecef] bg-white flex-shrink-0">
+                <div className="p-3 lg:p-6 border-t border-line bg-white flex-shrink-0">
                     <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
                         <button
                             onClick={onClose}
-                            className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-[#f8f9fa] text-[#212529] font-semibold rounded-lg lg:rounded-xl hover:bg-[#e9ecef] transition-all text-sm lg:text-base order-2 sm:order-1"
+                            className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-surface text-ink font-semibold rounded-lg lg:rounded-xl hover:bg-line transition-all text-sm lg:text-base order-2 sm:order-1"
                         >
                             Cancelar
                         </button>
@@ -719,7 +719,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     <button
                                         onClick={handleTraditionalSubmit}
                                         disabled={processing || !amount || !selectedMethod || !reference || !hasAcceptedTerms}
-                                        className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-semibold rounded-lg lg:rounded-xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base order-1 sm:order-2"
+                                        className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold rounded-lg lg:rounded-xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base order-1 sm:order-2"
                                     >
                                         {processing ? (
                                             <>

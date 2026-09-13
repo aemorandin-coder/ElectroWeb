@@ -189,9 +189,9 @@ export function GuidedTour() {
         className="pointer-events-auto"
         style={{ ...tooltipStyle, zIndex: 10000, width: 320 }}
       >
-        <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
           {/* Header con gradiente */}
-          <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-5 py-3 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-5 py-3 flex items-center justify-between">
             <span className="text-xs font-bold text-white/70 uppercase tracking-widest">
               Paso {step + 1} de {TOUR_STEPS.length}
             </span>
@@ -204,10 +204,10 @@ export function GuidedTour() {
           </div>
 
           <div className="px-5 py-4">
-            <h3 className="text-base font-bold text-slate-900 mb-1.5">
+            <h3 className="text-base font-bold text-gray-900 mb-1.5">
               {current.title}
             </h3>
-            <p className="text-sm text-slate-500 leading-relaxed mb-5">
+            <p className="text-sm text-gray-500 leading-relaxed mb-5">
               {current.desc}
             </p>
 
@@ -220,8 +220,8 @@ export function GuidedTour() {
                     onClick={() => setStep(i)}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
                       i === step
-                        ? 'bg-[#2a63cd] w-5'
-                        : 'bg-slate-200 hover:bg-slate-300 w-1.5'
+                        ? 'bg-brand-500 w-5'
+                        : 'bg-gray-200 hover:bg-gray-300 w-1.5'
                     }`}
                     aria-label={`Ir al paso ${i + 1}`}
                   />
@@ -233,7 +233,7 @@ export function GuidedTour() {
                 {step > 0 && (
                   <button
                     onClick={() => setStep((s) => s - 1)}
-                    className="px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-all"
+                    className="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
                   >
                     ← Atrás
                   </button>
@@ -242,7 +242,7 @@ export function GuidedTour() {
                   onClick={() =>
                     step < TOUR_STEPS.length - 1 ? setStep((s) => s + 1) : finish()
                   }
-                  className="px-4 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-bold rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  className="px-4 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-200"
                 >
                   {step < TOUR_STEPS.length - 1 ? 'Siguiente →' : '¡Listo!'}
                 </button>

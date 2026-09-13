@@ -99,7 +99,7 @@ export default function CreatorLandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-[#212529] flex flex-col justify-between overflow-x-hidden">
+    <div className="min-h-dvh bg-white text-[#212529] flex flex-col justify-between overflow-x-hidden">
       <PublicHeader />
       
       {/* Hero Section */}

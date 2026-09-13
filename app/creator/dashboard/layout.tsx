@@ -52,7 +52,7 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
+      <div className="min-h-dvh bg-[#0f1117] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -61,10 +61,10 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
   if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-[#0f1117] flex">
+    <div className="min-h-dvh bg-[#0f1117] flex">
       {/* Sidebar */}
       <aside
-        className={`${sidebarOpen ? 'w-60' : 'w-16'} transition-all duration-300 flex-shrink-0 bg-[#161b27] border-r border-white/10 flex flex-col sticky top-0 h-screen`}
+        className={`${sidebarOpen ? 'w-60' : 'w-16'} transition-all duration-300 flex-shrink-0 bg-[#161b27] border-r border-white/10 flex flex-col sticky top-0 h-dvh`}
       >
         {/* Logo */}
         <div className="px-4 py-5 border-b border-white/10 flex items-center gap-3 flex-shrink-0">

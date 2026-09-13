@@ -319,7 +319,7 @@ export default function RegisterPage() {
   const selectedCountry = COUNTRY_CODES.find(c => c.code === countryCode) || COUNTRY_CODES[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-6 relative overflow-hidden">
+    <div className="min-h-dvh bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-6 relative overflow-hidden">
       {/* Back to Login Button */}
       <Link
         href="/login"

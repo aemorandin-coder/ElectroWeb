@@ -235,7 +235,7 @@ export default async function CursosPage({
   const hasCourses = courses.length > 0;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-dvh bg-white">
       <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
 
       {/* Hero Section */}

@@ -103,7 +103,7 @@ export default function RedeemGiftCardPage() {
 
     if (redeemSuccess) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+            <div className="min-h-dvh bg-gradient-to-b from-gray-50 to-white">
                 <PublicHeader />
                 <div style={{ maxWidth: '600px', margin: '0 auto', padding: '80px 24px' }}>
                     <div style={{ background: 'white', borderRadius: '24px', padding: '48px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', textAlign: 'center' }}>
@@ -135,7 +135,7 @@ export default function RedeemGiftCardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <div className="min-h-dvh bg-gradient-to-b from-gray-50 to-white">
             <PublicHeader />
 
             {/* Hero */}

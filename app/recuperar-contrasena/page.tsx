@@ -77,7 +77,7 @@ export default function RecuperarContrasenaPage() {
     const companyName = companySettings?.companyName || 'Electro Shop Morandin';
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-8 relative overflow-hidden">
+        <div className="min-h-dvh bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-8 relative overflow-hidden">
             {/* Back to Home Button */}
             <Link
                 href="/"

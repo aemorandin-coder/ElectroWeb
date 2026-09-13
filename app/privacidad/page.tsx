@@ -12,7 +12,7 @@ export default function PrivacyPage() {
   return (
     <>
       <PublicHeader />
-      <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      <div className="min-h-dvh bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-12 relative overflow-hidden">
       {/* Back Button */}
       <button
         onClick={() => router.back()}

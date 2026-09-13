@@ -118,7 +118,7 @@ export default function CustomerDashboardLayout({
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa]">
+      <div className="min-h-dvh flex items-center justify-center bg-[#f8f9fa]">
         <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-[#2a63cd]"></div>
       </div>
     );
@@ -163,7 +163,7 @@ export default function CustomerDashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#2a63cd] relative">
+    <div className="min-h-dvh bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#2a63cd] relative">
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
@@ -185,7 +185,7 @@ export default function CustomerDashboardLayout({
 
         {/* Sidebar - DESKTOP ONLY */}
         <aside
-          className={`hidden lg:block fixed top-0 left-0 z-50 h-screen transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          className={`hidden lg:block fixed top-0 left-0 z-50 h-dvh transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
             } bg-white/95 backdrop-blur-xl border-r border-white/30 w-64 shadow-2xl overflow-hidden`}
         >
           <div className="h-full flex flex-col">

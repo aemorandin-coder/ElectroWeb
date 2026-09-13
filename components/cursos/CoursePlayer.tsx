@@ -137,7 +137,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
   const embedUrl = activeLesson?.videoUrl ? getEmbedUrl(activeLesson.videoUrl) : null;
 
   return (
-    <div className="flex flex-col h-screen bg-[#1a1a2e] overflow-hidden">
+    <div className="flex flex-col h-dvh bg-[#1a1a2e] overflow-hidden">
 
       {/* Creator preview banner */}
       {isCreatorPreview && (

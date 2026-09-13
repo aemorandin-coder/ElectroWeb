@@ -1,6 +1,6 @@
 export default function ContactoLoading() {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
+        <div className="min-h-dvh bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
             {/* Header Skeleton */}
             <header className="sticky top-0 z-50 bg-white border-b border-[#e9ecef] shadow-sm h-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">

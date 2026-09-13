@@ -40,7 +40,7 @@ export default function VerifyEmailPage() {
     }, [params.token, router]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#e9ecef] flex items-center justify-center p-4">
+        <div className="min-h-dvh bg-gradient-to-br from-[#f8f9fa] via-white to-[#e9ecef] flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Card */}
                 <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-[#e9ecef]">

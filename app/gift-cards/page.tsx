@@ -581,7 +581,7 @@ export default function GiftCardsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
+        <div className="min-h-dvh bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
             {/* CSS for animations */}
             <style jsx global>{`
                 @keyframes shimmer {

@@ -253,7 +253,7 @@ function LoginPageContent() {
   // Mostrar spinner solo si la sesión está cargando Y no ha pasado el timeout
   if (status === 'loading' && !forceShowForm) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center">
+      <div className="min-h-dvh bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 mb-4 shadow-2xl animate-pulse">
             <svg className="animate-spin h-8 w-8 text-white" fill="none" viewBox="0 0 24 24">
@@ -278,7 +278,7 @@ function LoginPageContent() {
   const restName = companyNameParts.slice(1).join(' ') || 'Morandin';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-4 relative overflow-hidden">
+    <div className="min-h-dvh bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-4 relative overflow-hidden">
       {/* Back to Home Button */}
       <Link
         href="/"
@@ -507,7 +507,7 @@ function LoginPageContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center">
+      <div className="min-h-dvh bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 mb-4 shadow-2xl animate-pulse">
             <svg className="animate-spin h-8 w-8 text-white" fill="none" viewBox="0 0 24 24">

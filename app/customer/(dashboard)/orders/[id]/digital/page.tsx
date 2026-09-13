@@ -298,7 +298,7 @@ export default function DigitalCodesPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#0ea5e9] flex items-center justify-center">
+            <div className="min-h-dvh bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#0ea5e9] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <div className="relative">
                         <div className="w-12 h-12 border-4 border-white/20 rounded-full"></div>
@@ -312,7 +312,7 @@ export default function DigitalCodesPage() {
 
     if (!data) {
         return (
-            <div className="min-h-screen bg-[#0a0f1d] flex items-center justify-center p-4">
+            <div className="min-h-dvh bg-[#0a0f1d] flex items-center justify-center p-4">
                 <div className="text-center">
                     <FiAlertTriangle className="w-10 h-10 text-rose-500 mx-auto mb-3 animate-bounce shadow-[0_0_15px_rgba(244,63,94,0.5)] rounded-full" />
                     <h1 className="text-lg font-bold text-white mb-2">Orden no encontrada</h1>
@@ -329,7 +329,7 @@ export default function DigitalCodesPage() {
     const progressPercent = totalCodes > 0 ? (revealedCount / totalCodes) * 100 : 0;
 
     return (
-        <div className="min-h-screen bg-[#0a0f1d] relative overflow-hidden">
+        <div className="min-h-dvh bg-[#0a0f1d] relative overflow-hidden">
             {/* Epic Floating Orbs Background - Gaming Neon */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-10 right-10 w-40 h-40 bg-cyan-500/20 rounded-full blur-[80px] animate-pulse" />

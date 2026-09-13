@@ -525,7 +525,7 @@ export default function OrdersPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 mb-0.5">
                           <h3 className="font-bold text-ink text-[11px] lg:text-xs">#{order.orderNumber}</h3>
-                          <span className={`px-1 py-0.5 rounded text-[11px] lg:text-[11px] font-bold ${statusConfig.bg} ${statusConfig.text}`}>
+                          <span className={`px-1 py-0.5 rounded text-[11px] font-bold ${statusConfig.bg} ${statusConfig.text}`}>
                             {getStatusTextShort(order.status)}
                           </span>
                         </div>

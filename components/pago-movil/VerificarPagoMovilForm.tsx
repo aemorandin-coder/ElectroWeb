@@ -348,7 +348,7 @@ Por favor necesito ayuda para verificar mi pago.
                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.referencia}
                         </p>
                     ) : (
-                        <p className="text-[10px] text-[#6a6c6b] mt-1">4 a 8 dígitos numéricos</p>
+                        <p className="text-xs text-[#6a6c6b] mt-1">4 a 8 dígitos numéricos</p>
                     )}
                 </div>
             </div>
@@ -381,7 +381,7 @@ Por favor necesito ayuda para verificar mi pago.
                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.cedulaPagador}
                         </p>
                     ) : (
-                        <p className="text-[10px] text-[#6a6c6b] mt-1">Ej: V12345678 o E12345678</p>
+                        <p className="text-xs text-[#6a6c6b] mt-1">Ej: V12345678 o E12345678</p>
                     )}
                 </div>
 
@@ -411,7 +411,7 @@ Por favor necesito ayuda para verificar mi pago.
                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.telefonoPagador}
                         </p>
                     ) : (
-                        <p className="text-[10px] text-[#6a6c6b] mt-1">Teléfono desde donde pagaste</p>
+                        <p className="text-xs text-[#6a6c6b] mt-1">Teléfono desde donde pagaste</p>
                     )}
                 </div>
 
@@ -481,16 +481,16 @@ Por favor necesito ayuda para verificar mi pago.
                     <div className="flex items-center justify-between">
                         <div>
                             <span className="text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Monto a pagar:</span>
-                            <p className="text-[10px] text-orange-600 mt-0.5">Tasa BCV oficial</p>
+                            <p className="text-xs text-orange-600 mt-0.5">Tasa BCV oficial</p>
                         </div>
                         <div className="text-right">
                             {montoEnBs ? (
                                 <>
-                                    <span className="text-2xl font-black text-orange-600">Bs. {montoEnBs.toFixed(2)}</span>
+                                    <span className="text-2xl font-bold text-orange-600">Bs. {montoEnBs.toFixed(2)}</span>
                                     <p className="text-xs text-[#6a6c6b]">(${montoEsperado.toFixed(2)} USD)</p>
                                 </>
                             ) : (
-                                <span className="text-xl font-black text-[#2a63cd]">${montoEsperado.toFixed(2)}</span>
+                                <span className="text-xl font-bold text-[#2a63cd]">${montoEsperado.toFixed(2)}</span>
                             )}
                         </div>
                     </div>

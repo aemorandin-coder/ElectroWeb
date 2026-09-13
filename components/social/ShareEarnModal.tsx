@@ -153,8 +153,8 @@ export default function ShareEarnModal() {
               <FiGift className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-black text-[#212529]">Compartir y Ganar</h2>
-              <p className="text-[10px] font-bold text-[#6a6c6b] uppercase tracking-wide">
+              <h2 className="text-base font-bold text-[#212529]">Compartir y Ganar</h2>
+              <p className="text-xs font-bold text-[#6a6c6b] uppercase tracking-wide">
                 {item.type === 'product' ? 'Producto Recomentado' : 'Curso de Tecnología'}
               </p>
             </div>
@@ -219,7 +219,7 @@ export default function ShareEarnModal() {
 
                   {/* Info Metadatos */}
                   <div className="p-3 space-y-1">
-                    <p className="text-[10px] font-semibold text-gray-400 tracking-wider uppercase">
+                    <p className="text-xs font-semibold text-gray-400 tracking-wider uppercase">
                       electroshopve.com
                     </p>
                     <h4 className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white line-clamp-1 leading-snug">
@@ -237,7 +237,7 @@ export default function ShareEarnModal() {
                 </div>
                 
                 {/* Hora del mensaje */}
-                <span className="text-[9px] text-gray-400 self-end mt-0.5">
+                <span className="text-[11px] text-gray-400 self-end mt-0.5">
                   12:00 PM
                 </span>
               </div>
@@ -327,7 +327,7 @@ export default function ShareEarnModal() {
               </div>
 
               <div className="pt-1 flex items-center justify-between border-t border-gray-150/40">
-                <span className="text-[10px] font-semibold text-gray-500">
+                <span className="text-xs font-semibold text-gray-500">
                   ¡Es 100% gratis y rápido!
                 </span>
                 

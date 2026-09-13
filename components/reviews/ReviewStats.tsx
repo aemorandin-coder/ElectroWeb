@@ -33,7 +33,7 @@ export default function ReviewStats({
             <div className="flex items-center gap-8 mb-6">
                 {/* Average Rating */}
                 <div className="text-center">
-                    <div className="text-5xl font-black text-gray-900 mb-2">
+                    <div className="text-5xl font-bold text-gray-900 mb-2">
                         {averageRating.toFixed(1)}
                     </div>
                     <StarRating rating={averageRating} readonly size="md" />

@@ -153,7 +153,7 @@ export default function OrderTracking({
                             {/* Label */}
                             <p
                                 className={`
-                                    mt-1.5 text-[10px] font-semibold text-center leading-tight max-w-[50px]
+                                    mt-1.5 text-xs font-semibold text-center leading-tight max-w-[50px]
                                     transition-all duration-300
                                     ${isCompleted || isCurrent ? 'text-gray-800' : 'text-gray-400'}
                                 `}
@@ -208,7 +208,7 @@ export default function OrderTracking({
                                 <p className="text-xs font-bold text-indigo-900">
                                     {shippingCarrier || 'Envío'}
                                 </p>
-                                <p className="text-[10px] text-indigo-600">
+                                <p className="text-xs text-indigo-600">
                                     Guía: <span className="font-mono font-bold">{trackingNumber}</span>
                                 </p>
                             </div>
@@ -218,7 +218,7 @@ export default function OrderTracking({
                                 href={trackingUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 px-2 py-1 bg-indigo-600 text-white text-[10px] font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+                                className="flex items-center gap-1 px-2 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
                             >
                                 <FiExternalLink className="w-3 h-3" />
                                 Rastrear
@@ -226,12 +226,12 @@ export default function OrderTracking({
                         )}
                     </div>
                     {shippingNotes && (
-                        <p className="mt-2 text-[10px] text-indigo-700 bg-indigo-100/50 px-2 py-1 rounded">
+                        <p className="mt-2 text-xs text-indigo-700 bg-indigo-100/50 px-2 py-1 rounded">
                             📍 {shippingNotes}
                         </p>
                     )}
                     {estimatedDelivery && status === 'SHIPPED' && (
-                        <p className="mt-1.5 text-[10px] text-indigo-600">
+                        <p className="mt-1.5 text-xs text-indigo-600">
                             📅 Entrega estimada: <span className="font-semibold">{new Date(estimatedDelivery).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                         </p>
                     )}

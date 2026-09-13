@@ -213,7 +213,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                         </div>
                         <div>
                             <h2 className="text-sm lg:text-lg font-bold">Términos de Recarga</h2>
-                            <p className="text-[10px] lg:text-sm text-white/70">
+                            <p className="text-xs lg:text-sm text-white/70">
                                 {step === 'terms' ? 'Paso 1: Leer términos' : 'Paso 2: Firmar'}
                             </p>
                         </div>

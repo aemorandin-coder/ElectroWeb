@@ -11,7 +11,7 @@ import {
   notifyAdminsNewOrder
 } from '@/lib/notifications';
 import { sendNewOrderAlert } from '@/lib/admin-alerts';
-import { OrderStatus, PaymentStatus } from '@prisma/client';
+import { OrderStatus, PaymentStatus, PaymentMethodType, Prisma } from '@prisma/client';
 import {
   sendEmail,
   sendOrderShippedEmail,
@@ -23,6 +23,8 @@ import { generateReviewReminderEmail } from '@/lib/email-templates/ReviewReminde
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { parseDeliveryMethod, parseOrderItems, quoteOrder, OrderInputError, type QuotedLine } from '@/lib/order-quote';
+import { roundMoney, type OrderGroupTotals } from '@/lib/pricing';
 
 
 // GET - Get all orders
@@ -113,7 +115,125 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Margen para diferencias de redondeo o de tasa entre el pago móvil y la orden
+const MOBILE_PAYMENT_TOLERANCE = 0.01;
+const ORDER_NUMBER_RETRIES = 5;
+const ACCEPTED_PAYMENT_METHODS: string[] = ['WALLET', ...Object.values(PaymentMethodType)];
+
+type CreatedOrder = Prisma.OrderGetPayload<{
+  include: { items: true; user: { select: { name: true; email: true } } };
+}>;
+
+interface OrderGroup {
+  totals: OrderGroupTotals;
+  lines: QuotedLine[];
+  deliveryMethod: string;
+  shippingAddress: string;
+  tag: string;
+}
+
+// ORD-{año}-{secuencia}. Se llama dentro de la transacción. El advisory lock serializa la creación
+// de órdenes hasta el commit, así dos compras simultáneas no leen la misma secuencia; si aun así
+// chocan (p. ej. una orden creada por otra vía), el @unique falla y el POST reintenta.
+async function getNextOrderSequence(tx: Prisma.TransactionClient, year: number): Promise<number> {
+  await tx.$queryRaw`SELECT pg_advisory_xact_lock(7426001)::text AS locked`;
+  const rows = await tx.$queryRaw<Array<{ max: number | null }>>`
+    SELECT MAX(CAST(split_part("orderNumber", '-', 3) AS INTEGER)) AS max
+    FROM "orders"
+    WHERE "orderNumber" LIKE ${`ORD-${year}-%`}
+      AND split_part("orderNumber", '-', 3) ~ '^[0-9]{1,9}$'
+  `;
+  return Number(rows[0]?.max ?? 0) + 1;
+}
+
+function isOrderNumberConflict(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError
+    && error.code === 'P2002'
+    && String(error.meta?.target ?? '').includes('orderNumber');
+}
+
+async function sendNewOrderNotifications(order: CreatedOrder, userId: string, paymentMethod: string) {
+  await notifyOrderConfirmed(userId, order.orderNumber, order.id);
+
+  notifyAdminsNewOrder(
+    order.user?.name || 'Cliente',
+    order.orderNumber,
+    Number(order.totalUSD)
+  ).catch(() => {});
+
+  sendNewOrderAlert({
+    orderNumber: order.orderNumber,
+    customerName: order.user?.name || 'Cliente',
+    customerEmail: order.user?.email || '',
+    total: Number(order.totalUSD),
+    paymentMethod,
+    itemCount: order.items.length,
+    baseUrl: process.env.NEXTAUTH_URL,
+  }).catch(() => {});
+
+  if (paymentMethod === 'WALLET') {
+    await createNotification({
+      userId,
+      type: 'ORDER_PAID',
+      title: 'Pago Confirmado',
+      message: `El pago de tu orden #${order.orderNumber} ha sido confirmado con Billetera Digital.`,
+      link: `/customer/orders`,
+      icon: 'payment'
+    });
+  }
+
+  try {
+    const companySettings = await prisma.companySettings.findFirst();
+
+    const emailHtml = generateOrderConfirmationEmail({
+      companyName: companySettings?.companyName || 'Electro Shop',
+      companyLogo: companySettings?.logo || undefined,
+      orderNumber: order.orderNumber,
+      customerName: order.user?.name || 'Cliente',
+      orderDate: format(new Date(order.createdAt), "d 'de' MMMM, yyyy", { locale: es }),
+      items: order.items.map(item => ({
+        name: item.productName || 'Producto',
+        quantity: item.quantity,
+        price: item.priceUSD.toString(),
+      })),
+      subtotal: order.subtotalUSD.toString(),
+      shipping: order.shippingUSD.toString(),
+      tax: order.taxUSD.toString(),
+      total: order.totalUSD.toString(),
+      currency: 'USD',
+      paymentMethod: order.paymentMethod || 'N/A',
+      deliveryMethod: 'Delivery',
+      deliveryAddress: order.shippingAddress || undefined,
+    });
+
+    await sendEmail({
+      to: order.user?.email || '',
+      subject: `Confirmación de Pedido - ${order.orderNumber}`,
+      html: emailHtml,
+    });
+
+    // Si el pago no es con billetera, también se envía el correo de pago pendiente
+    if (paymentMethod !== 'WALLET' && order.user?.email) {
+      try {
+        await sendOrderPendingPaymentEmail(order.user.email, {
+          orderNumber: order.orderNumber,
+          total: Number(order.totalUSD),
+          customerName: order.user.name || 'Cliente',
+        });
+      } catch (pendingEmailError) {
+        console.error('Error sending pending payment email:', pendingEmailError);
+      }
+    }
+  } catch (emailError) {
+    console.error('Error sending order confirmation email:', emailError);
+    // No se falla la creación de la orden si el correo falla
+  }
+}
+
 // POST - Create new order
+// Contrato: { items: [{ productId, quantity, digitalAmount?, digitalUsername? }], deliveryMethod,
+//   shippingAddress, paymentMethod, mobilePaymentData?, notes?, expectedTotalUSD? }
+// Precios, envío, descuentos, total y dueño de la orden se calculan aquí; el resto del body se ignora.
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -121,7 +241,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    // SEGURIDAD: el dueño de la orden y el saldo que se descuenta salen siempre de la sesión
+    const userId = session.user.id;
 
     // Rate limiting - sensitive for order creation
     const rateLimit = checkRateLimit(userId, 'orders:create', RATE_LIMITS.SENSITIVE);
@@ -136,19 +257,82 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+    if (!body) {
+      return NextResponse.json({ error: 'Solicitud inválida' }, { status: 400 });
+    }
+
+    const items = parseOrderItems(body.items);
+    const deliveryMethod = parseDeliveryMethod(body.deliveryMethod);
+
+    const paymentMethod = typeof body.paymentMethod === 'string' ? body.paymentMethod : '';
+    if (!ACCEPTED_PAYMENT_METHODS.includes(paymentMethod)) {
+      return NextResponse.json({ error: 'Método de pago inválido' }, { status: 400 });
+    }
+
+    const shippingAddress = typeof body.shippingAddress === 'string' ? body.shippingAddress.trim().slice(0, 500) : '';
+    const notes = typeof body.notes === 'string' ? body.notes.trim().slice(0, 1000) : '';
+
+    const quote = await quoteOrder(userId, items, deliveryMethod);
+    const { calculation, settings } = quote;
+
+    if (quote.errors.length > 0) {
+      return NextResponse.json(
+        { error: 'Hay problemas con los productos de tu carrito', details: quote.errors },
+        { status: 400 }
+      );
+    }
+
+    if (deliveryMethod === 'PICKUP' && calculation.physical && !settings?.pickupEnabled) {
+      return NextResponse.json({ error: 'El retiro en tienda no está disponible' }, { status: 400 });
+    }
+
+    // Min/max de compra con el total calculado en el servidor
+    if (settings?.minOrderAmountUSD && calculation.totalUSD < Number(settings.minOrderAmountUSD)) {
+      return NextResponse.json(
+        { error: `El monto mínimo de compra es $${settings.minOrderAmountUSD}` },
+        { status: 400 }
+      );
+    }
+
+    if (settings?.maxOrderAmountUSD && calculation.totalUSD > Number(settings.maxOrderAmountUSD)) {
+      return NextResponse.json(
+        { error: `El monto máximo de compra es $${settings.maxOrderAmountUSD}` },
+        { status: 400 }
+      );
+    }
+
+    // Si el total que vio el cliente no coincide (precio o envío cambiaron), no se cobra nada:
+    // se devuelve el cálculo actualizado para que lo revise y confirme de nuevo.
+    if (typeof body.expectedTotalUSD === 'number' && Math.abs(body.expectedTotalUSD - calculation.totalUSD) > 0.01) {
+      return NextResponse.json(
+        {
+          error: 'El total de tu compra cambió. Revisa el resumen actualizado y confirma de nuevo.',
+          calculation,
+        },
+        { status: 409 }
+      );
+    }
 
     // =============================================
     // SEGURIDAD: Verificar pago móvil en servidor
     // =============================================
-    // NUNCA confiar en body.mobilePaymentData.verified del cliente
-    // Debemos verificar en la base de datos que el pago realmente fue verificado
-    let serverVerifiedMobilePayment = false;
-    if (body.paymentMethod === 'MOBILE_PAYMENT' && body.mobilePaymentData?.referencia) {
+    // NUNCA confiar en body.mobilePaymentData.verified del cliente: la verificación debe existir
+    // en la base de datos, no estar usada y cubrir el total calculado aquí.
+    const exchangeRateVES = settings?.exchangeRateVES ? Number(settings.exchangeRateVES) : 0;
+    const mobilePaymentData = (body.mobilePaymentData && typeof body.mobilePaymentData === 'object'
+      ? body.mobilePaymentData
+      : {}) as Record<string, unknown>;
+    const referencia = typeof mobilePaymentData.referencia === 'string' ? mobilePaymentData.referencia.trim() : '';
+
+    let mobilePaymentVerificationId: string | null = null;
+    let isPaymentConfirmed = paymentMethod === 'WALLET';
+
+    if (paymentMethod === 'MOBILE_PAYMENT' && referencia) {
       const verificacion = await prisma.pagoMovilVerificacion.findFirst({
         where: {
           userId,
-          referencia: body.mobilePaymentData.referencia,
+          referencia,
           verificado: true,
           contexto: 'ORDER',
           orderId: null,  // Solo verificaciones no usadas
@@ -157,253 +341,180 @@ export async function POST(request: NextRequest) {
       });
 
       if (verificacion) {
-        serverVerifiedMobilePayment = true;
-        console.log(`[ORDERS] Pago móvil verificado en servidor: ${verificacion.referencia}`);
+        mobilePaymentVerificationId = verificacion.id;
+        const paidVES = Number(verificacion.importeVerificado ?? 0);
+        const requiredVES = calculation.totalUSD * exchangeRateVES;
+
+        if (exchangeRateVES > 0 && paidVES >= requiredVES * (1 - MOBILE_PAYMENT_TOLERANCE)) {
+          isPaymentConfirmed = true;
+        } else {
+          console.warn(`[SECURITY] Pago móvil ${referencia} no cubre el total de la orden (Bs. ${paidVES} de Bs. ${requiredVES}) - usuario ${userId}`);
+        }
       } else {
-        console.warn(`[SECURITY] Intento de orden con pago móvil no verificado: ${body.mobilePaymentData.referencia} por usuario ${userId}`);
+        console.warn(`[SECURITY] Intento de orden con pago móvil no verificado: ${referencia} por usuario ${userId}`);
       }
     }
 
-    // Validate required fields
-    if (!body.items || body.items.length === 0) {
-      return NextResponse.json(
-        { error: 'La orden debe contener al menos un producto' },
-        { status: 400 }
-      );
-    }
-
-    if (!body.currency || !body.total || !body.deliveryMethod) {
-      return NextResponse.json(
-        { error: 'Faltan campos requeridos: currency, total, deliveryMethod' },
-        { status: 400 }
-      );
-    }
-
-    // Get company settings for validation
-    const settings = await prisma.companySettings.findUnique({
-      where: { id: 'default' },
-    });
-
-    // Validate min/max order amounts
-    if (settings) {
-      const orderTotal = parseFloat(body.total);
-
-      if (settings.minOrderAmountUSD && orderTotal < parseFloat(settings.minOrderAmountUSD.toString())) {
-        return NextResponse.json(
-          { error: `El monto mínimo de compra es $${settings.minOrderAmountUSD}` },
-          { status: 400 }
-        );
-      }
-
-      if (settings.maxOrderAmountUSD && orderTotal > parseFloat(settings.maxOrderAmountUSD.toString())) {
-        return NextResponse.json(
-          { error: `El monto máximo de compra es $${settings.maxOrderAmountUSD}` },
-          { status: 400 }
-        );
+    // Unidades físicas por producto (para descontar stock o reservarlo)
+    const physicalQuantities = new Map<string, number>();
+    for (const line of quote.lines) {
+      if (line.productType !== 'DIGITAL') {
+        physicalQuantities.set(line.productId, (physicalQuantities.get(line.productId) ?? 0) + line.quantity);
       }
     }
 
-    // Validate stock availability for all items BEFORE creating order
-    // PERFORMANCE: Batch query instead of N+1 queries
-    const productIds = body.items.map((item: any) => item.productId);
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: { id: true, stock: true, name: true, status: true, productType: true },
-    });
+    const discountRequestIds = [...new Set(
+      quote.lines.map(line => line.discountRequestId).filter((id): id is string => id !== null)
+    )];
 
-    // Create a map for O(1) lookup
-    const productMap = new Map(products.map(p => [p.id, p]));
-
-    const stockErrors: string[] = [];
-    for (const item of body.items) {
-      const product = productMap.get(item.productId);
-
-      if (!product) {
-        stockErrors.push(`Producto no encontrado: ${item.productName}`);
-        continue;
-      }
-
-      if (product.status !== 'PUBLISHED') {
-        stockErrors.push(`El producto "${product.name}" no está disponible`);
-        continue;
-      }
-
-      // Skip stock validation for digital products - they don't have physical inventory limits
-      if (product.productType === 'DIGITAL') {
-        continue;
-      }
-
-      if (product.stock < item.quantity) {
-        stockErrors.push(
-          `Stock insuficiente para "${product.name}". Disponible: ${product.stock}, Solicitado: ${item.quantity}`
-        );
-      }
+    // La compra se divide en una orden física (con envío) y una digital, como hasta ahora
+    const groups: OrderGroup[] = [];
+    if (calculation.physical) {
+      groups.push({
+        totals: calculation.physical,
+        lines: quote.lines.filter(line => line.productType !== 'DIGITAL'),
+        deliveryMethod,
+        shippingAddress,
+        tag: '[Productos Físicos]',
+      });
+    }
+    if (calculation.digital) {
+      groups.push({
+        totals: calculation.digital,
+        lines: quote.lines.filter(line => line.productType === 'DIGITAL'),
+        deliveryMethod: 'DIGITAL',
+        shippingAddress: '',
+        tag: '[Productos Digitales]',
+      });
     }
 
-    if (stockErrors.length > 0) {
-      return NextResponse.json(
-        { error: 'Problemas con el stock', details: stockErrors },
-        { status: 400 }
-      );
-    }
+    const createOrders = () => prisma.$transaction(async (tx) => {
+      const year = new Date().getFullYear();
+      let sequence = await getNextOrderSequence(tx, year);
+      const orderNumbers = groups.map(() => `ORD-${year}-${String(sequence++).padStart(4, '0')}`);
 
-    // Generate order number
-    const lastOrder = await prisma.order.findFirst({
-      orderBy: { createdAt: 'desc' },
-      select: { orderNumber: true },
-    });
-
-    let orderNumber = 'ORD-2025-0001';
-    if (lastOrder) {
-      const lastNumber = parseInt(lastOrder.orderNumber.split('-')[2]);
-      orderNumber = `ORD-2025-${String(lastNumber + 1).padStart(4, '0')}`;
-    }
-
-    // Start transaction for order creation and balance deduction
-    const result = await prisma.$transaction(async (tx) => {
-      // Handle Wallet Payment
-      if (body.paymentMethod === 'WALLET') {
+      // Pago con billetera: se descuenta el total del servidor solo si el saldo alcanza (atómico)
+      let balanceId: string | null = null;
+      if (paymentMethod === 'WALLET') {
         const userBalance = await tx.userBalance.findUnique({
-          where: { userId: body.userId || session.user.id },
+          where: { userId },
+          select: { id: true },
         });
 
-        if (!userBalance || userBalance.balance.toNumber() < body.total) {
-          throw new Error('Saldo insuficiente en billetera');
+        const debited = userBalance
+          ? await tx.userBalance.updateMany({
+            where: { id: userBalance.id, balance: { gte: calculation.totalUSD } },
+            data: {
+              balance: { decrement: calculation.totalUSD },
+              totalSpent: { increment: calculation.totalUSD },
+            },
+          })
+          : { count: 0 };
+
+        if (!userBalance || debited.count === 0) {
+          throw new OrderInputError('Saldo insuficiente en billetera');
+        }
+        balanceId = userBalance.id;
+      }
+
+      const orders: CreatedOrder[] = [];
+
+      for (const [index, group] of groups.entries()) {
+        const orderNumber = orderNumbers[index];
+        const { totals } = group;
+
+        if (balanceId) {
+          await tx.transaction.create({
+            data: {
+              balanceId,
+              type: 'PURCHASE',
+              status: 'COMPLETED',
+              amount: totals.totalUSD,
+              currency: 'USD',
+              description: `Compra Orden #${orderNumber}`,
+              reference: orderNumber,
+              paymentMethod: 'WALLET',
+            },
+          });
         }
 
-        // Deduct balance
-        await tx.userBalance.update({
-          where: { id: userBalance.id },
+        const order = await tx.order.create({
           data: {
-            balance: { decrement: body.total },
-            totalSpent: { increment: body.total },
-          },
-        });
-
-        // Create transaction record
-        await tx.transaction.create({
-          data: {
-            balanceId: userBalance.id,
-            type: 'PURCHASE',
-            status: 'COMPLETED',
-            amount: body.total,
-            currency: body.currency,
-            description: `Compra Orden #${orderNumber}`,
-            reference: orderNumber,
-            paymentMethod: 'WALLET',
-          },
-        });
-      }
-
-      // Create order with items
-      const order = await tx.order.create({
-        data: {
-          orderNumber,
-          userId: body.userId || session.user.id,
-          shippingAddress: body.shippingAddress || '',
-          subtotalUSD: body.subtotalUSD || body.subtotal || 0,
-          taxUSD: body.taxUSD || body.tax || 0,
-          shippingUSD: body.shippingUSD || body.shipping || 0,
-          discountUSD: body.discountUSD || body.discount || 0,
-          totalUSD: body.totalUSD || body.total,
-          exchangeRate: body.exchangeRate || 1,
-          totalVES: body.totalVES || 0,
-          exchangeRateVES: body.exchangeRateVES,
-          exchangeRateEUR: body.exchangeRateEUR,
-          paymentMethod: body.paymentMethod,
-          // MOBILE_PAYMENT verificado se trata como pagado (verificado con BDV)
-          // SEGURIDAD: Usamos serverVerifiedMobilePayment que se verificó en la BD, no el valor del cliente
-          status: (body.paymentMethod === 'WALLET' || (body.paymentMethod === 'MOBILE_PAYMENT' && serverVerifiedMobilePayment))
-            ? OrderStatus.PROCESSING
-            : OrderStatus.PENDING,
-          paymentStatus: (body.paymentMethod === 'WALLET' || (body.paymentMethod === 'MOBILE_PAYMENT' && serverVerifiedMobilePayment))
-            ? 'PAID'
-            : 'PENDING',
-          paidAt: (body.paymentMethod === 'WALLET' || (body.paymentMethod === 'MOBILE_PAYMENT' && serverVerifiedMobilePayment))
-            ? new Date()
-            : null,
-          trackingNumber: body.trackingNumber,
-          notes: body.notes,
-          items: {
-            create: body.items.map((item: any) => ({
-              productId: item.productId,
-              productName: item.productName,
-              productSku: item.productSku || item.sku,
-              productImage: item.productImage || item.image,
-              priceUSD: item.priceUSD || item.pricePerUnit || item.price,
-              quantity: item.quantity,
-              totalUSD: item.totalUSD || item.subtotal || (item.quantity * (item.priceUSD || item.pricePerUnit || item.price)),
-            })),
-          },
-        },
-        include: {
-          items: true,
-          user: {
-            select: {
-              name: true,
-              email: true,
+            orderNumber,
+            userId,
+            shippingAddress: group.shippingAddress,
+            deliveryMethod: group.deliveryMethod,
+            subtotalUSD: totals.subtotalUSD,
+            taxUSD: totals.taxUSD,
+            shippingUSD: totals.shippingUSD,
+            discountUSD: totals.discountUSD,
+            totalUSD: totals.totalUSD,
+            exchangeRate: 1,
+            totalVES: exchangeRateVES > 0 ? roundMoney(totals.totalUSD * exchangeRateVES) : 0,
+            exchangeRateVES: settings?.exchangeRateVES ?? null,
+            exchangeRateEUR: settings?.exchangeRateEUR ?? null,
+            paymentMethod,
+            // WALLET y MOBILE_PAYMENT verificado (en BD y por monto) se tratan como pagados
+            status: isPaymentConfirmed ? OrderStatus.PROCESSING : OrderStatus.PENDING,
+            paymentStatus: isPaymentConfirmed ? PaymentStatus.PAID : PaymentStatus.PENDING,
+            paidAt: isPaymentConfirmed ? new Date() : null,
+            notes: notes ? `${notes} ${group.tag}` : group.tag,
+            items: {
+              create: group.lines.map(line => ({
+                productId: line.productId,
+                productName: line.name,
+                productSku: line.productSku,
+                productImage: line.productImage,
+                priceUSD: line.unitPriceUSD,
+                quantity: line.quantity,
+                totalUSD: roundMoney(line.unitPriceUSD * line.quantity),
+              })),
             },
           },
-        },
-      });
+          include: {
+            items: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        });
 
-      // STOCK LOGIC BASED ON PAYMENT METHOD:
-      // - WALLET: Deduct stock immediately (payment is confirmed)
-      // - MOBILE_PAYMENT (verified): Deduct stock immediately (payment verified with BDV)
-      // - DIRECT (not verified): Create reservation (payment pending verification, stock not deducted yet)
+        orders.push(order);
+      }
 
-      // SEGURIDAD: Usar serverVerifiedMobilePayment que se verificó en BD, no el valor del cliente
-      const isPaymentConfirmed = body.paymentMethod === 'WALLET' ||
-        (body.paymentMethod === 'MOBILE_PAYMENT' && serverVerifiedMobilePayment);
-
+      // STOCK SEGÚN EL PAGO:
+      // - Confirmado (WALLET o pago móvil verificado): se descuenta ya, solo si alcanza
+      // - Sin confirmar: reserva de 5 minutos mientras el admin verifica el pago
       if (isPaymentConfirmed) {
-        // CONFIRMED PAYMENT: Deduct stock immediately since payment is confirmed
-        for (const item of body.items) {
-          const product = await tx.product.findUnique({
-            where: { id: item.productId },
-            select: { stock: true, productType: true }
+        for (const [productId, quantity] of physicalQuantities) {
+          const updated = await tx.product.updateMany({
+            where: { id: productId, stock: { gte: quantity } },
+            data: { stock: { decrement: quantity } },
           });
-
-          if (product && product.productType !== 'DIGITAL') {
-            const newStock = product.stock - item.quantity;
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { stock: Math.max(0, newStock) },
-            });
+          if (updated.count === 0) {
+            throw new OrderInputError('Uno de los productos se agotó mientras procesábamos tu compra. Revisa tu carrito.');
           }
         }
       } else {
-        // UNCONFIRMED PAYMENT: Create stock reservation (5 minutes while admin verifies payment)
-        // Stock is NOT deducted - it will be deducted when admin confirms payment
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 minutos de reservación
 
-        for (const item of body.items) {
-          const product = await tx.product.findUnique({
-            where: { id: item.productId },
-            select: { productType: true }
+        for (const [productId, quantity] of physicalQuantities) {
+          await tx.stockReservation.create({
+            data: { userId, productId, quantity, expiresAt },
           });
-
-          // Only reserve physical products
-          if (product && product.productType !== 'DIGITAL') {
-            await tx.stockReservation.create({
-              data: {
-                userId: body.userId || session.user.id,
-                productId: item.productId,
-                quantity: item.quantity,
-                expiresAt,
-              },
-            });
-          }
         }
       }
 
-      // Mark discounts as used
-      if (body.appliedDiscountIds && body.appliedDiscountIds.length > 0) {
-        await tx.discountRequest.updateMany({
+      // Descuentos aprobados que el servidor aplicó
+      if (discountRequestIds.length > 0) {
+        const used = await tx.discountRequest.updateMany({
           where: {
-            id: { in: body.appliedDiscountIds },
-            userId: body.userId || session.user.id,
+            id: { in: discountRequestIds },
+            userId,
             status: 'APPROVED',
           },
           data: {
@@ -411,132 +522,61 @@ export async function POST(request: NextRequest) {
             usedAt: new Date(),
           },
         });
+        if (used.count !== discountRequestIds.length) {
+          throw new OrderInputError('Uno de tus descuentos ya fue usado. Revisa el resumen y confirma de nuevo.');
+        }
       }
 
       // SEGURIDAD: Vincular la verificación de pago móvil con la orden para prevenir reutilización
-      if (serverVerifiedMobilePayment && body.mobilePaymentData?.referencia) {
-        await tx.pagoMovilVerificacion.updateMany({
-          where: {
-            userId,
-            referencia: body.mobilePaymentData.referencia,
-            verificado: true,
-            contexto: 'ORDER',
-            orderId: null,
-          },
-          data: {
-            orderId: order.id,
-          },
+      if (mobilePaymentVerificationId) {
+        const linked = await tx.pagoMovilVerificacion.updateMany({
+          where: { id: mobilePaymentVerificationId, orderId: null },
+          data: { orderId: orders[0].id },
         });
+        if (linked.count === 0) {
+          throw new OrderInputError('Este pago móvil ya fue usado en otra orden');
+        }
       }
 
-      return order;
-    });
+      return orders;
+    }, { maxWait: 10000, timeout: 15000 });
 
-    // Referral commission: record PURCHASE conversion (fire-and-forget)
-    if (result) {
-      const { recordConversion } = await import('@/lib/influencer-commission');
+    let orders: CreatedOrder[] = [];
+    for (let attempt = 1; ; attempt++) {
+      try {
+        orders = await createOrders();
+        break;
+      } catch (error) {
+        if (!isOrderNumberConflict(error) || attempt >= ORDER_NUMBER_RETRIES) throw error;
+      }
+    }
+
+    // Comisión de referidos con el total del servidor (fire-and-forget)
+    const { recordConversion } = await import('@/lib/influencer-commission');
+    for (const order of orders) {
       recordConversion({
         referredUserId: userId,
         type: 'PURCHASE',
-        grossAmount: Number(body.totalUSD || body.total || 0),
-        orderId: result.id,
+        grossAmount: Number(order.totalUSD),
+        orderId: order.id,
       }).catch(() => {});
     }
 
-    // Note: For DIRECT payment, reservations are NOT deleted here - they expire after 15 mins
-    // or are deleted when admin confirms payment and stock is actually deducted
+    // Nota: las reservas de pagos sin confirmar no se borran aquí; expiran solas
+    // o se eliminan cuando el admin confirma el pago y se descuenta el stock.
 
-    // Send notifications (outside transaction to avoid failures)
-    if (result) {
-      // Notify customer order confirmed
-      await notifyOrderConfirmed(
-        body.userId || session.user.id,
-        orderNumber,
-        result.id
-      );
-
-      // Notify all admins in-app about new order
-      notifyAdminsNewOrder(
-        result.user?.name || 'Cliente',
-        orderNumber,
-        Number(result.totalUSD)
-      ).catch(() => {});
-
-      // Send email alert to admin alert emails (fire-and-forget)
-      sendNewOrderAlert({
-        orderNumber,
-        customerName: result.user?.name || 'Cliente',
-        customerEmail: result.user?.email || '',
-        total: Number(result.totalUSD || body.totalUSD || body.total),
-        paymentMethod: body.paymentMethod || 'N/A',
-        itemCount: body.items?.length || 0,
-        baseUrl: process.env.NEXTAUTH_URL,
-      }).catch(() => {});
-
-      if (body.paymentMethod === 'WALLET') {
-        await createNotification({
-          userId: body.userId || session.user.id,
-          type: 'ORDER_PAID',
-          title: 'Pago Confirmado',
-          message: `El pago de tu orden #${orderNumber} ha sido confirmado con Billetera Digital.`,
-          link: `/customer/orders`,
-          icon: 'payment'
-        });
-      }
-
-      // Send order confirmation email
-      try {
-        const companySettings = await prisma.companySettings.findFirst();
-
-        const emailHtml = generateOrderConfirmationEmail({
-          companyName: companySettings?.companyName || 'Electro Shop',
-          companyLogo: companySettings?.logo || undefined,
-          orderNumber: result.orderNumber,
-          customerName: result.user?.name || 'Cliente',
-          orderDate: format(new Date(result.createdAt), "d 'de' MMMM, yyyy", { locale: es }),
-          items: result.items.map(item => ({
-            name: item.productName || 'Producto',
-            quantity: item.quantity,
-            price: item.priceUSD.toString(),
-          })),
-          subtotal: result.subtotalUSD.toString(),
-          shipping: result.shippingUSD.toString(),
-          tax: result.taxUSD.toString(),
-          total: result.totalUSD.toString(),
-          currency: 'USD',
-          paymentMethod: result.paymentMethod || 'N/A',
-          deliveryMethod: 'Delivery',
-          deliveryAddress: result.shippingAddress || undefined,
-        });
-
-        await sendEmail({
-          to: result.user?.email || '',
-          subject: `Confirmación de Pedido - ${result.orderNumber}`,
-          html: emailHtml,
-        });
-
-        // If payment method is DIRECT (not WALLET), also send pending payment email
-        if (body.paymentMethod !== 'WALLET' && result.user?.email) {
-          try {
-            await sendOrderPendingPaymentEmail(result.user.email, {
-              orderNumber: result.orderNumber,
-              total: Number(result.totalUSD),
-              customerName: result.user.name || 'Cliente',
-            });
-          } catch (pendingEmailError) {
-            console.error('Error sending pending payment email:', pendingEmailError);
-          }
-        }
-      } catch (emailError) {
-        console.error('Error sending order confirmation email:', emailError);
-        // Don't fail the order creation if email fails
-      }
+    // Notificaciones fuera de la transacción para que un fallo no afecte la compra
+    for (const order of orders) {
+      await sendNewOrderNotifications(order, userId, paymentMethod);
     }
 
-    return NextResponse.json(result, { status: 201 });
-  } catch (error: any) {
+    return NextResponse.json({ orders, totalUSD: calculation.totalUSD }, { status: 201 });
+  } catch (error) {
+    if (error instanceof OrderInputError) {
+      return NextResponse.json({ error: error.message, details: error.details }, { status: error.status });
+    }
     console.error('Error creating order:', error);
-    return NextResponse.json({ error: error.message || 'Error al crear orden' }, { status: 500 });
+    return NextResponse.json({ error: 'Error al crear la orden. Intenta de nuevo.' }, { status: 500 });
   }
 }
 

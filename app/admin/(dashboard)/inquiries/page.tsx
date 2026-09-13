@@ -462,7 +462,7 @@ export default function InquiriesPage() {
                                                 <p className="text-sm text-gray-900 font-medium truncate mb-1">{msg.subject}</p>
                                                 <p className="text-xs text-gray-500 truncate">{msg.message}</p>
                                                 <div className="mt-2">
-                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getMessageStatusColor(msg.status)}`}>
+                                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getMessageStatusColor(msg.status)}`}>
                                                         {getMessageStatusLabel(msg.status)}
                                                     </span>
                                                 </div>

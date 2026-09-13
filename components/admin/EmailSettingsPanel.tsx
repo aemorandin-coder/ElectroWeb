@@ -217,7 +217,7 @@ export default function EmailSettingsPanel() {
                         </p>
                     </div>
                     {settings?.isConfigured && settings.lastTestAt && (
-                        <div className="text-right text-white/70 text-[10px]">
+                        <div className="text-right text-white/70 text-xs">
                             <p className="font-medium text-white">
                                 {new Date(settings.lastTestAt).toLocaleDateString('es-ES', {
                                     day: '2-digit',
@@ -258,7 +258,7 @@ export default function EmailSettingsPanel() {
                                     {info.icon}
                                 </div>
                                 <h4 className="font-semibold text-xs text-[#212529]">{info.name}</h4>
-                                <p className="text-[10px] text-[#6a6c6b] mt-0.5">{info.description}</p>
+                                <p className="text-xs text-[#6a6c6b] mt-0.5">{info.description}</p>
                             </button>
                         ))}
                     </div>
@@ -285,7 +285,7 @@ export default function EmailSettingsPanel() {
                     {/* Host, Port, SSL in one row */}
                     <div className="grid grid-cols-12 gap-3">
                         <div className="col-span-6">
-                            <label className="block text-[10px] font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                            <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
                                 Servidor SMTP
                             </label>
                             <input
@@ -297,7 +297,7 @@ export default function EmailSettingsPanel() {
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-[10px] font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                            <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
                                 Puerto
                             </label>
                             <input
@@ -325,7 +325,7 @@ export default function EmailSettingsPanel() {
                     {/* Credentials */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-[10px] font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                            <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
                                 Usuario / Email
                             </label>
                             <div className="relative">
@@ -340,7 +340,7 @@ export default function EmailSettingsPanel() {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-[10px] font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                            <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
                                 Contraseña
                             </label>
                             <div className="relative">
@@ -373,7 +373,7 @@ export default function EmailSettingsPanel() {
                 </div>
                 <div className="p-3 grid grid-cols-3 gap-3">
                     <div>
-                        <label className="block text-[10px] font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                        <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
                             Nombre
                         </label>
                         <input
@@ -385,7 +385,7 @@ export default function EmailSettingsPanel() {
                         />
                     </div>
                     <div>
-                        <label className="block text-[10px] font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                        <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
                             Email
                         </label>
                         <input
@@ -397,7 +397,7 @@ export default function EmailSettingsPanel() {
                         />
                     </div>
                     <div>
-                        <label className="block text-[10px] font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                        <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
                             Responder A
                         </label>
                         <input
@@ -446,7 +446,7 @@ export default function EmailSettingsPanel() {
                                     </div>
                                     <div>
                                         <h4 className="font-semibold text-xs text-[#212529]">{item.title}</h4>
-                                        <p className="text-[10px] text-[#6a6c6b]">{item.desc}</p>
+                                        <p className="text-xs text-[#6a6c6b]">{item.desc}</p>
                                     </div>
                                 </div>
                             </button>

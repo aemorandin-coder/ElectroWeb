@@ -556,23 +556,23 @@ export default function LegalDocumentsPage() {
                                 </h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-[10px] text-[#6a6c6b] uppercase font-bold tracking-wider">Nombre</span>
+                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Nombre</span>
                                         <p className="text-sm font-medium text-[#212529]">{viewingDocument.userName}</p>
                                     </div>
                                     <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-[10px] text-[#6a6c6b] uppercase font-bold tracking-wider">Email</span>
+                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Email</span>
                                         <p className="text-sm font-medium text-[#212529]">{viewingDocument.userEmail}</p>
                                     </div>
                                     <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-[10px] text-[#6a6c6b] uppercase font-bold tracking-wider">Cédula</span>
+                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Cédula</span>
                                         <p className="text-sm font-medium text-[#212529]">{viewingDocument.userIdNumber || 'No proporcionada'}</p>
                                     </div>
                                     <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-[10px] text-[#6a6c6b] uppercase font-bold tracking-wider">Teléfono</span>
+                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Teléfono</span>
                                         <p className="text-sm font-medium text-[#212529]">{viewingDocument.userPhone || 'No proporcionado'}</p>
                                     </div>
                                     <div className="bg-[#f8f9fa] rounded-lg p-3 col-span-2">
-                                        <span className="text-[10px] text-[#6a6c6b] uppercase font-bold tracking-wider">Dirección</span>
+                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Dirección</span>
                                         <p className="text-sm font-medium text-[#212529]">{viewingDocument.userAddress || 'No proporcionada'}</p>
                                     </div>
                                 </div>
@@ -586,21 +586,21 @@ export default function LegalDocumentsPage() {
                                 </h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-[10px] text-[#6a6c6b] uppercase font-bold tracking-wider">Fecha y Hora</span>
+                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Fecha y Hora</span>
                                         <p className="text-sm font-medium text-[#212529]">
                                             {format(new Date(viewingDocument.acceptedAt), "dd 'de' MMMM 'de' yyyy, HH:mm:ss", { locale: es })}
                                         </p>
                                     </div>
                                     <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-[10px] text-[#6a6c6b] uppercase font-bold tracking-wider">Versión</span>
+                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Versión</span>
                                         <p className="text-sm font-medium text-[#212529]">v{viewingDocument.termsVersion}</p>
                                     </div>
                                     <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-[10px] text-[#6a6c6b] uppercase font-bold tracking-wider">Dirección IP</span>
+                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Dirección IP</span>
                                         <p className="text-sm font-medium text-[#212529] font-mono">{viewingDocument.ipAddress || 'No registrada'}</p>
                                     </div>
                                     <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-[10px] text-[#6a6c6b] uppercase font-bold tracking-wider">ID Documento</span>
+                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">ID Documento</span>
                                         <p className="text-xs font-medium text-[#212529] font-mono">{viewingDocument.id}</p>
                                     </div>
                                 </div>

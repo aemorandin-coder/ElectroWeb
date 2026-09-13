@@ -180,9 +180,9 @@ export default function ReportsPage() {
                                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full" />
                             </div>
                             <div>
-                                <p className="text-blue-100 text-[10px] font-medium uppercase tracking-wide">En vivo ahora</p>
+                                <p className="text-blue-100 text-xs font-medium uppercase tracking-wide">En vivo ahora</p>
                                 <div className="flex items-baseline gap-1.5">
-                                    <span className="text-2xl font-black text-white">
+                                    <span className="text-2xl font-bold text-white">
                                         {liveUsers?.liveCount ?? '...'}
                                     </span>
                                     <span className="text-emerald-200 text-xs">activos</span>
@@ -192,7 +192,7 @@ export default function ReportsPage() {
                         <div className="hidden md:flex items-center gap-4">
                             <div className="text-center px-3 border-l border-white/20">
                                 <p className="text-lg font-bold text-white">{liveUsers?.authenticatedCount ?? 0}</p>
-                                <p className="text-[10px] text-blue-200">Logueados</p>
+                                <p className="text-xs text-blue-200">Logueados</p>
                             </div>
                             <div className="flex items-center gap-2 px-3 border-l border-white/20">
                                 <div className="text-center">
@@ -214,7 +214,7 @@ export default function ReportsPage() {
                         <div className="mt-2 pt-2 border-t border-white/20">
                             <div className="flex flex-wrap gap-1.5">
                                 {liveUsers.topPages.slice(0, 4).map((page, i) => (
-                                    <span key={i} className="px-2 py-0.5 bg-white/15 rounded text-[10px] text-white font-mono">
+                                    <span key={i} className="px-2 py-0.5 bg-white/15 rounded text-xs text-white font-mono">
                                         {page.page} <span className="text-emerald-300">({page.count})</span>
                                     </span>
                                 ))}
@@ -291,9 +291,9 @@ export default function ReportsPage() {
                                 <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-[#2a63cd]/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-[10px] text-gray-400 font-medium uppercase">Clientes</p>
+                                            <p className="text-xs text-gray-400 font-medium uppercase">Clientes</p>
                                             <p className="text-2xl font-bold text-gray-800">{overview.users.total}</p>
-                                            <p className="text-[10px] text-emerald-600 flex items-center gap-0.5">
+                                            <p className="text-xs text-emerald-600 flex items-center gap-0.5">
                                                 <FiTrendingUp className="w-3 h-3" />+{overview.users.new} nuevos
                                             </p>
                                         </div>
@@ -307,9 +307,9 @@ export default function ReportsPage() {
                                 <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-[#2a63cd]/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-[10px] text-gray-400 font-medium uppercase">Pedidos</p>
+                                            <p className="text-xs text-gray-400 font-medium uppercase">Pedidos</p>
                                             <p className="text-2xl font-bold text-gray-800">{overview.orders.total}</p>
-                                            <p className="text-[10px] text-emerald-600 flex items-center gap-0.5">
+                                            <p className="text-xs text-emerald-600 flex items-center gap-0.5">
                                                 <FiTrendingUp className="w-3 h-3" />+{overview.orders.recent} recientes
                                             </p>
                                         </div>
@@ -323,11 +323,11 @@ export default function ReportsPage() {
                                 <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-[#2a63cd]/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-[10px] text-gray-400 font-medium uppercase">Ingresos</p>
+                                            <p className="text-xs text-gray-400 font-medium uppercase">Ingresos</p>
                                             <p className="text-xl font-bold text-gray-800">
                                                 ${Number(overview.revenue.total).toLocaleString('es-VE', { minimumFractionDigits: 2 })}
                                             </p>
-                                            <p className="text-[10px] text-gray-400">En el período</p>
+                                            <p className="text-xs text-gray-400">En el período</p>
                                         </div>
                                         <div className="w-10 h-10 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                                             <FiTrendingUp className="w-5 h-5 text-[#2a63cd]" />
@@ -339,9 +339,9 @@ export default function ReportsPage() {
                                 <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-[#2a63cd]/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-[10px] text-gray-400 font-medium uppercase">Productos</p>
+                                            <p className="text-xs text-gray-400 font-medium uppercase">Productos</p>
                                             <p className="text-2xl font-bold text-gray-800">{overview.products.total}</p>
-                                            <p className="text-[10px] text-amber-600">{overview.productRequests.pending} solicitudes</p>
+                                            <p className="text-xs text-amber-600">{overview.productRequests.pending} solicitudes</p>
                                         </div>
                                         <div className="w-10 h-10 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                                             <FiPackage className="w-5 h-5 text-[#2a63cd]" />
@@ -423,12 +423,12 @@ export default function ReportsPage() {
                                         <div className="bg-gray-50 rounded-lg p-3 text-center group hover:bg-[#2a63cd]/5 transition-colors">
                                             <FiEye className="w-5 h-5 text-[#2a63cd] mx-auto mb-1" />
                                             <p className="text-xl font-bold text-gray-800">{overview.interactions.pageViews}</p>
-                                            <p className="text-[10px] text-gray-500">Vistas</p>
+                                            <p className="text-xs text-gray-500">Vistas</p>
                                         </div>
                                         <div className="bg-gray-50 rounded-lg p-3 text-center group hover:bg-[#2a63cd]/5 transition-colors">
                                             <FiMousePointer className="w-5 h-5 text-[#2a63cd] mx-auto mb-1" />
                                             <p className="text-xl font-bold text-gray-800">{overview.interactions.clicks}</p>
-                                            <p className="text-[10px] text-gray-500">Clics</p>
+                                            <p className="text-xs text-gray-500">Clics</p>
                                         </div>
                                     </div>
                                 </div>
@@ -445,12 +445,12 @@ export default function ReportsPage() {
                                         <div className="bg-gray-50 rounded-lg p-3 text-center">
                                             <FiAlertTriangle className="w-5 h-5 text-amber-500 mx-auto mb-1" />
                                             <p className="text-xl font-bold text-gray-800">{overview.security.total}</p>
-                                            <p className="text-[10px] text-gray-500">Alertas</p>
+                                            <p className="text-xs text-gray-500">Alertas</p>
                                         </div>
                                         <div className={`rounded-lg p-3 text-center ${overview.security.critical > 0 ? 'bg-red-50' : 'bg-emerald-50'}`}>
                                             <FiShield className={`w-5 h-5 mx-auto mb-1 ${overview.security.critical > 0 ? 'text-red-500' : 'text-emerald-500'}`} />
                                             <p className="text-xl font-bold text-gray-800">{overview.security.critical}</p>
-                                            <p className="text-[10px] text-gray-500">Críticas</p>
+                                            <p className="text-xs text-gray-500">Críticas</p>
                                         </div>
                                     </div>
                                 </div>
@@ -573,12 +573,12 @@ export default function ReportsPage() {
                                             {products.topSelling.slice(0, 5).map((product, index) => (
                                                 <div key={product.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-[#2a63cd]/5 transition-colors">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="w-5 h-5 bg-[#2a63cd] text-white rounded text-[10px] font-bold flex items-center justify-center">
+                                                        <span className="w-5 h-5 bg-[#2a63cd] text-white rounded text-xs font-bold flex items-center justify-center">
                                                             {index + 1}
                                                         </span>
                                                         <span className="text-xs font-medium text-gray-700 truncate max-w-[180px]">{product.name}</span>
                                                     </div>
-                                                    <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-semibold">
+                                                    <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-semibold">
                                                         {product._count.orderItems} vendidos
                                                     </span>
                                                 </div>
@@ -596,7 +596,7 @@ export default function ReportsPage() {
                                             {products.requests.map((req) => (
                                                 <div key={req.status} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-[#2a63cd]/5 transition-colors">
                                                     <p className="text-lg font-bold text-gray-800">{req._count}</p>
-                                                    <p className="text-[10px] text-gray-500 capitalize">{req.status.toLowerCase()}</p>
+                                                    <p className="text-xs text-gray-500 capitalize">{req.status.toLowerCase()}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -724,7 +724,7 @@ export default function ReportsPage() {
                                                         <div key={device.deviceType} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-[#2a63cd]/5 transition-colors">
                                                             <Icon className="w-5 h-5 text-[#2a63cd] mx-auto mb-1" />
                                                             <p className="text-lg font-bold text-gray-800">{device._count}</p>
-                                                            <p className="text-[10px] text-gray-500 capitalize">{device.deviceType || 'Otro'}</p>
+                                                            <p className="text-xs text-gray-500 capitalize">{device.deviceType || 'Otro'}</p>
                                                         </div>
                                                     );
                                                 }) : <p className="text-xs text-gray-400 text-center col-span-3">Sin datos</p>}
@@ -740,7 +740,7 @@ export default function ReportsPage() {
                                                 {interactions.byType.length > 0 ? interactions.byType.slice(0, 6).map((event) => (
                                                     <div key={event.eventType} className="bg-gray-50 rounded-lg p-2 text-center hover:bg-[#2a63cd]/5 transition-colors">
                                                         <p className="text-lg font-bold text-gray-800">{event._count}</p>
-                                                        <p className="text-[10px] text-gray-500 capitalize truncate">{event.eventType.replace(/_/g, ' ')}</p>
+                                                        <p className="text-xs text-gray-500 capitalize truncate">{event.eventType.replace(/_/g, ' ')}</p>
                                                     </div>
                                                 )) : <p className="text-xs text-gray-400 text-center col-span-3">Sin datos</p>}
                                             </div>
@@ -759,10 +759,10 @@ export default function ReportsPage() {
                                                 {interactions.topPages.map((page, index) => (
                                                     <div key={page.page} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-[#2a63cd]/5 transition-colors">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="w-5 h-5 bg-[#2a63cd] text-white rounded text-[10px] font-bold flex items-center justify-center">
+                                                            <span className="w-5 h-5 bg-[#2a63cd] text-white rounded text-xs font-bold flex items-center justify-center">
                                                                 {index + 1}
                                                             </span>
-                                                            <span className="font-mono text-[10px] text-gray-600 truncate max-w-[120px]">{page.page}</span>
+                                                            <span className="font-mono text-xs text-gray-600 truncate max-w-[120px]">{page.page}</span>
                                                         </div>
                                                         <span className="text-xs font-bold text-[#2a63cd]">{page._count}</span>
                                                     </div>
@@ -792,7 +792,7 @@ export default function ReportsPage() {
                                             <div className={`w-7 h-7 rounded-lg ${card.bg} flex items-center justify-center`}>
                                                 <card.Icon className={`w-3.5 h-3.5 ${card.color}`} />
                                             </div>
-                                            <span className="text-[10px] text-gray-400 uppercase font-medium">{card.label}</span>
+                                            <span className="text-xs text-gray-400 uppercase font-medium">{card.label}</span>
                                         </div>
                                         <p className="text-2xl font-bold text-gray-800">{card.value}</p>
                                     </div>
@@ -804,22 +804,22 @@ export default function ReportsPage() {
                                 <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-xl p-4">
                                     <div className="flex items-center gap-2 mb-1">
                                         <FiShoppingCart className="w-4 h-4 text-emerald-600" />
-                                        <span className="text-[10px] text-emerald-700 uppercase font-semibold">Ventas por referidos</span>
+                                        <span className="text-xs text-emerald-700 uppercase font-semibold">Ventas por referidos</span>
                                     </div>
                                     <p className="text-xl font-bold text-emerald-800">
                                         ${referrals.approvedRevenue.gross.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
                                     </p>
-                                    <p className="text-[10px] text-emerald-600 mt-0.5">Monto bruto · período seleccionado</p>
+                                    <p className="text-xs text-emerald-600 mt-0.5">Monto bruto · período seleccionado</p>
                                 </div>
                                 <div className="bg-gradient-to-br from-[#2a63cd]/5 to-[#2a63cd]/10 border border-[#2a63cd]/20 rounded-xl p-4">
                                     <div className="flex items-center gap-2 mb-1">
                                         <FiDollarSign className="w-4 h-4 text-[#2a63cd]" />
-                                        <span className="text-[10px] text-[#2a63cd] uppercase font-semibold">Comisiones pagadas</span>
+                                        <span className="text-xs text-[#2a63cd] uppercase font-semibold">Comisiones pagadas</span>
                                     </div>
                                     <p className="text-xl font-bold text-[#1e4ba3]">
                                         ${referrals.approvedRevenue.commission.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
                                     </p>
-                                    <p className="text-[10px] text-[#2a63cd]/70 mt-0.5">Comisiones aprobadas · período seleccionado</p>
+                                    <p className="text-xs text-[#2a63cd]/70 mt-0.5">Comisiones aprobadas · período seleccionado</p>
                                 </div>
                             </div>
 
@@ -941,9 +941,9 @@ export default function ReportsPage() {
                                             return (
                                                 <div key={status} className={`rounded-lg border p-3 text-center ${styles[status]}`}>
                                                     <p className="text-xl font-bold">{entry?._count || 0}</p>
-                                                    <p className="text-[10px] font-medium mt-0.5">{labels[status]}</p>
+                                                    <p className="text-xs font-medium mt-0.5">{labels[status]}</p>
                                                     {entry && (
-                                                        <p className="text-[9px] opacity-70 mt-0.5">
+                                                        <p className="text-[11px] opacity-70 mt-0.5">
                                                             ${Number(entry._sum.commission || 0).toFixed(2)} comisión
                                                         </p>
                                                     )}
@@ -968,18 +968,18 @@ export default function ReportsPage() {
                                     <div className="space-y-2">
                                         {referrals.topInfluencers.map((inf, idx) => (
                                             <div key={inf.id} className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg hover:bg-[#2a63cd]/5 transition-colors">
-                                                <span className="w-6 h-6 bg-[#2a63cd] text-white rounded text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                                                <span className="w-6 h-6 bg-[#2a63cd] text-white rounded text-xs font-bold flex items-center justify-center flex-shrink-0">
                                                     {idx + 1}
                                                 </span>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-1.5">
                                                         <span className="text-xs font-semibold text-gray-800 truncate">{inf.name}</span>
-                                                        <span className="text-[9px] font-mono text-gray-400 bg-gray-200 px-1 rounded">{inf.code}</span>
+                                                        <span className="text-[11px] font-mono text-gray-400 bg-gray-200 px-1 rounded">{inf.code}</span>
                                                         {inf.status === 'PAUSED' && (
-                                                            <span className="text-[9px] bg-yellow-100 text-yellow-700 px-1 rounded">Pausado</span>
+                                                            <span className="text-[11px] bg-yellow-100 text-yellow-700 px-1 rounded">Pausado</span>
                                                         )}
                                                     </div>
-                                                    <p className="text-[10px] text-gray-500">{inf.conversionsCount} conversiones · ${inf.totalGross.toFixed(2)} bruto</p>
+                                                    <p className="text-xs text-gray-500">{inf.conversionsCount} conversiones · ${inf.totalGross.toFixed(2)} bruto</p>
                                                 </div>
                                                 <span className="text-sm font-bold text-[#2a63cd] flex-shrink-0">
                                                     ${inf.totalCommission.toFixed(2)}
@@ -1013,17 +1013,17 @@ export default function ReportsPage() {
                                     {/* Eventos críticos recientes */}
                                     {security.recentLogs.filter(log => log.severity === 'critical').length > 0 && (
                                         <div className="mt-3 pt-3 border-t border-white/20">
-                                            <p className="text-red-100 text-[10px] uppercase tracking-wider mb-2">Últimos eventos críticos:</p>
+                                            <p className="text-red-100 text-xs uppercase tracking-wider mb-2">Últimos eventos críticos:</p>
                                             <div className="space-y-1">
                                                 {security.recentLogs
                                                     .filter(log => log.severity === 'critical')
                                                     .slice(0, 3)
                                                     .map((log) => (
                                                         <div key={log.id} className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-1.5">
-                                                            <span className="text-white text-[10px] font-mono truncate max-w-[200px]">
+                                                            <span className="text-white text-xs font-mono truncate max-w-[200px]">
                                                                 {log.eventType.replace(/_/g, ' ')}
                                                             </span>
-                                                            <span className="text-red-100 text-[10px]">
+                                                            <span className="text-red-100 text-xs">
                                                                 {new Date(log.createdAt).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' })}
                                                             </span>
                                                         </div>
@@ -1046,7 +1046,7 @@ export default function ReportsPage() {
                                     return (
                                         <div key={sev} className={`${c.bg} rounded-xl p-4 border ${c.border} hover:scale-105 transition-transform`}>
                                             <p className={`text-2xl font-bold ${c.text}`}>{count}</p>
-                                            <p className="text-[10px] text-gray-600">{c.label}</p>
+                                            <p className="text-xs text-gray-600">{c.label}</p>
                                         </div>
                                     );
                                 })}
@@ -1064,7 +1064,7 @@ export default function ReportsPage() {
                                         {security.byType.map((type) => (
                                             <div key={type.eventType} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-[#2a63cd]/5 transition-colors">
                                                 <p className="text-lg font-bold text-gray-800">{type._count}</p>
-                                                <p className="text-[10px] text-gray-500 capitalize truncate">{type.eventType.replace(/_/g, ' ')}</p>
+                                                <p className="text-xs text-gray-500 capitalize truncate">{type.eventType.replace(/_/g, ' ')}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -1084,8 +1084,8 @@ export default function ReportsPage() {
                                     <div className="space-y-1.5">
                                         {security.suspiciousIPs.slice(0, 5).map((ip) => (
                                             <div key={ip.ipAddress} className="flex items-center justify-between p-2 bg-red-50 rounded-lg">
-                                                <span className="font-mono text-[10px] text-gray-700">{ip.ipAddress || 'Desconocida'}</span>
-                                                <span className="text-[10px] font-bold text-red-600">{ip._count} intentos</span>
+                                                <span className="font-mono text-xs text-gray-700">{ip.ipAddress || 'Desconocida'}</span>
+                                                <span className="text-xs font-bold text-red-600">{ip._count} intentos</span>
                                             </div>
                                         ))}
                                     </div>
@@ -1101,7 +1101,7 @@ export default function ReportsPage() {
                                 </h3>
                                 {security.recentLogs.length > 0 ? (
                                     <div className="overflow-x-auto max-h-64">
-                                        <table className="w-full text-[10px]">
+                                        <table className="w-full text-xs">
                                             <thead>
                                                 <tr className="text-left text-gray-500 border-b border-gray-200">
                                                     <th className="pb-2 font-medium">Fecha</th>
@@ -1118,7 +1118,7 @@ export default function ReportsPage() {
                                                         </td>
                                                         <td className="py-2 font-mono">{log.eventType.replace(/_/g, ' ')}</td>
                                                         <td className="py-2">
-                                                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${log.severity === 'critical' ? 'bg-red-100 text-red-700' :
+                                                            <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium ${log.severity === 'critical' ? 'bg-red-100 text-red-700' :
                                                                 log.severity === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-[#2a63cd]'
                                                                 }`}>{log.severity}</span>
                                                         </td>

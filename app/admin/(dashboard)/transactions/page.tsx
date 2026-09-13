@@ -108,8 +108,8 @@ function StatCard({
                 {icon}
             </div>
             <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-[#6a6c6b] uppercase tracking-widest mb-0.5">{label}</p>
-                <p className={`text-2xl font-black leading-none ${accent ? 'text-amber-700' : 'text-[#212529]'}`}>{value}</p>
+                <p className="text-xs font-semibold text-[#6a6c6b] uppercase tracking-widest mb-0.5">{label}</p>
+                <p className={`text-2xl font-bold leading-none ${accent ? 'text-amber-700' : 'text-[#212529]'}`}>{value}</p>
                 <div className="text-xs mt-1">{sub}</div>
             </div>
         </div>
@@ -439,11 +439,11 @@ export default function TransactionsPage() {
                                                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold border ${typeConf.cls}`}>
                                                     {typeConf.icon}{typeConf.label}
                                                 </span>
-                                                <span className="text-[10px] text-[#6a6c6b]">
+                                                <span className="text-xs text-[#6a6c6b]">
                                                     {format(new Date(t.createdAt), 'dd MMM · HH:mm', { locale: es })}
                                                 </span>
                                             </div>
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusConf.cls}`}>
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusConf.cls}`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${statusConf.dot}`} />
                                                 {statusConf.label}
                                             </span>
@@ -458,7 +458,7 @@ export default function TransactionsPage() {
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-sm font-semibold text-[#212529] truncate">{t.balance.user.name || 'Usuario'}</p>
-                                                <p className="text-[10px] text-[#6a6c6b] truncate">{t.balance.user.email}</p>
+                                                <p className="text-xs text-[#6a6c6b] truncate">{t.balance.user.email}</p>
                                             </div>
                                         </div>
 
@@ -466,18 +466,18 @@ export default function TransactionsPage() {
                                         <div className="bg-[#f8f9fa] rounded-lg px-3 py-2.5 flex justify-between items-center mb-3">
                                             <div className="space-y-0.5">
                                                 {t.reference && (
-                                                    <p className="text-[10px] text-[#6a6c6b]">
+                                                    <p className="text-xs text-[#6a6c6b]">
                                                         Ref: <span className="font-mono text-[#212529]">{t.reference}</span>
                                                     </p>
                                                 )}
                                                 {t.paymentMethod && (
-                                                    <p className="text-[10px] text-[#6a6c6b] flex items-center gap-1">
+                                                    <p className="text-xs text-[#6a6c6b] flex items-center gap-1">
                                                         <PaymentIcon method={t.paymentMethod} className="w-3 h-3" />
                                                         {formatPaymentMethod(t.paymentMethod)}
                                                     </p>
                                                 )}
                                             </div>
-                                            <span className={`text-lg font-black ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                            <span className={`text-lg font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                 {isCredit ? '+' : '-'}${fmtAmount(Number(t.amount))}
                                             </span>
                                         </div>
@@ -519,13 +519,13 @@ export default function TransactionsPage() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-[#f1f3f5] bg-[#f8f9fa]">
-                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Usuario</th>
-                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Tipo</th>
-                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Monto</th>
-                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Referencia</th>
-                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Estado</th>
-                                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Fecha</th>
-                                        <th className="px-5 py-3 text-right text-[10px] font-bold text-[#6a6c6b] uppercase tracking-widest">Acciones</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Usuario</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Tipo</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Monto</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Referencia</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Estado</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Fecha</th>
+                                        <th className="px-5 py-3 text-right text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#f1f3f5]">
@@ -568,16 +568,16 @@ export default function TransactionsPage() {
                                                         </p>
                                                     )}
                                                     {t.description && (
-                                                        <p className="text-[10px] text-[#adb5bd] mt-0.5 truncate max-w-[140px]">{t.description}</p>
+                                                        <p className="text-xs text-[#adb5bd] mt-0.5 truncate max-w-[140px]">{t.description}</p>
                                                     )}
                                                 </td>
 
                                                 {/* Monto */}
                                                 <td className="px-5 py-3.5 whitespace-nowrap">
-                                                    <span className={`text-sm font-black ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                                    <span className={`text-sm font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                         {isCredit ? '+' : '-'}${fmtAmount(Number(t.amount))}
                                                     </span>
-                                                    <p className="text-[10px] text-[#adb5bd] font-medium">USD</p>
+                                                    <p className="text-xs text-[#adb5bd] font-medium">USD</p>
                                                 </td>
 
                                                 {/* Referencia */}
@@ -598,7 +598,7 @@ export default function TransactionsPage() {
                                                         {statusConf.label}
                                                     </span>
                                                     {t.status === 'CANCELLED' && t.rejectionReason && (
-                                                        <p className="text-[10px] text-rose-500 flex items-center gap-1 mt-1">
+                                                        <p className="text-xs text-rose-500 flex items-center gap-1 mt-1">
                                                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />
                                                             <span className="truncate max-w-[120px]">{t.rejectionReason}</span>
                                                         </p>
@@ -678,7 +678,7 @@ export default function TransactionsPage() {
                         <div className="p-6 space-y-4">
                             {/* Amount highlight */}
                             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
-                                <p className="text-3xl font-black text-emerald-700">
+                                <p className="text-3xl font-bold text-emerald-700">
                                     +${fmtAmount(Number(approvingTransaction.amount))}
                                 </p>
                                 <p className="text-xs text-emerald-600 mt-1">USD · se acreditará al saldo del cliente</p>

@@ -1093,7 +1093,7 @@ export default function ProductsPage() {
                           <p className="text-xs text-[#6a6c6b] mt-0.5">SKU: {product.sku}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 ml-2">
-                          <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${product.isActive
+                          <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${product.isActive
                             ? 'bg-green-100 text-green-700'
                             : 'bg-gray-100 text-gray-700'
                             }`}>
@@ -1173,7 +1173,7 @@ export default function ProductsPage() {
                             </div>
                             <div className="ml-4">
                               <div className="text-sm font-medium text-[#212529] max-w-[200px] truncate" title={product.name}>{product.name}</div>
-                              {product.isFeatured && <span className="text-[10px] text-yellow-600 bg-yellow-100 px-1.5 py-0.5 rounded ml-1">Destacado</span>}
+                              {product.isFeatured && <span className="text-xs text-yellow-600 bg-yellow-100 px-1.5 py-0.5 rounded ml-1">Destacado</span>}
                             </div>
                           </div>
                         </td>
@@ -1393,21 +1393,21 @@ export default function ProductsPage() {
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-[#f8f9fa] rounded-xl p-3">
-                      <p className="text-[10px] text-gray-400 uppercase font-semibold mb-0.5">Precio</p>
+                      <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Precio</p>
                       <p className="text-base font-bold text-gray-900">${Number(quickViewProduct.priceUSD).toFixed(2)} USD</p>
                     </div>
                     <div className="bg-[#f8f9fa] rounded-xl p-3">
-                      <p className="text-[10px] text-gray-400 uppercase font-semibold mb-0.5">Stock</p>
+                      <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Stock</p>
                       <p className={`text-base font-bold ${(quickViewProduct.stock || 0) <= 5 ? 'text-red-600' : 'text-gray-900'}`}>
                         {quickViewProduct.stock} u.
                       </p>
                     </div>
                     <div className="bg-[#f8f9fa] rounded-xl p-3">
-                      <p className="text-[10px] text-gray-400 uppercase font-semibold mb-0.5">Categoría</p>
+                      <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Categoría</p>
                       <p className="text-sm font-semibold text-gray-900 truncate">{quickViewProduct.category?.name || '-'}</p>
                     </div>
                     <div className="bg-[#f8f9fa] rounded-xl p-3">
-                      <p className="text-[10px] text-gray-400 uppercase font-semibold mb-0.5">Tipo</p>
+                      <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Tipo</p>
                       <p className="text-sm font-semibold text-gray-900">
                         {(quickViewProduct as any).productType === 'DIGITAL' ? '⚡ Digital' : '📦 Físico'}
                       </p>
@@ -1416,7 +1416,7 @@ export default function ProductsPage() {
 
                   {quickViewProduct.description && (
                     <div>
-                      <p className="text-[10px] text-gray-400 uppercase font-semibold mb-1">Descripción</p>
+                      <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Descripción</p>
                       <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed">{quickViewProduct.description}</p>
                     </div>
                   )}

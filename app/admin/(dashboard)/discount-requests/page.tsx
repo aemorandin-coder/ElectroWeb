@@ -152,7 +152,7 @@ export default function DiscountRequestsPage() {
                             <FiPercent className="w-7 h-7" />
                         </div>
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-black">Solicitudes de Descuento</h1>
+                            <h1 className="text-2xl md:text-3xl font-bold">Solicitudes de Descuento</h1>
                             <p className="text-amber-100">Gestiona las solicitudes de descuento de clientes</p>
                         </div>
                     </div>
@@ -160,11 +160,11 @@ export default function DiscountRequestsPage() {
                     {/* Stats */}
                     <div className="flex gap-3">
                         <div className="px-4 py-2 bg-white/20 backdrop-blur-md rounded-xl">
-                            <div className="text-2xl font-black">{stats.PENDING || 0}</div>
+                            <div className="text-2xl font-bold">{stats.PENDING || 0}</div>
                             <div className="text-xs text-amber-100">Pendientes</div>
                         </div>
                         <div className="px-4 py-2 bg-white/20 backdrop-blur-md rounded-xl">
-                            <div className="text-2xl font-black">{stats.APPROVED || 0}</div>
+                            <div className="text-2xl font-bold">{stats.APPROVED || 0}</div>
                             <div className="text-xs text-amber-100">Aprobados</div>
                         </div>
                     </div>
@@ -416,7 +416,7 @@ export default function DiscountRequestsPage() {
                                     {/* Final Price Preview */}
                                     <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
                                         <p className="text-sm text-emerald-700 mb-1">Precio final para el cliente</p>
-                                        <p className="text-3xl font-black text-emerald-600">
+                                        <p className="text-3xl font-bold text-emerald-600">
                                             ${(Number(selectedRequest.originalPrice) * (1 - approvedDiscount / 100)).toFixed(2)}
                                         </p>
                                         <p className="text-xs text-emerald-600 mt-1">

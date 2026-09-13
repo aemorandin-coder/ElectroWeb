@@ -110,7 +110,7 @@ export default function AdminCreatorsPage() {
             <div key={creator.id} className="bg-white border border-[#e9ecef] rounded-xl p-5 shadow-sm">
               <div className="flex items-start gap-4">
                 {/* Avatar */}
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2a63cd] to-cyan-500 flex items-center justify-center text-white text-lg font-black flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2a63cd] to-cyan-500 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
                   {creator.displayName[0]?.toUpperCase()}
                 </div>
 

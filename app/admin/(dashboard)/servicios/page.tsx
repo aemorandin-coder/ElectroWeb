@@ -170,7 +170,7 @@ export default function AdminServiciosPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-[#212529]">Trabajos Realizados</h1>
+          <h1 className="text-2xl font-bold text-[#212529]">Trabajos Realizados</h1>
           <p className="text-sm text-[#6a6c6b] mt-0.5">
             Portafolio de servicios — {videos.length} fichas
           </p>
@@ -191,7 +191,7 @@ export default function AdminServiciosPage() {
           <FiVideo className="w-6 h-6 animate-pulse" />
         </div>
         <div className="flex-1 space-y-2">
-          <h2 className="font-black text-[#212529] text-base">¿Cómo funciona y para qué sirve esta sección?</h2>
+          <h2 className="font-bold text-[#212529] text-base">¿Cómo funciona y para qué sirve esta sección?</h2>
           <p className="text-xs text-[#6a6c6b] leading-relaxed">
             Aquí gestionas el portafolio visual que los clientes verán en la sección pública de <a href="/servicios" target="_blank" className="text-[#2a63cd] font-bold hover:underline">Servicios</a>. Cada "Trabajo Realizado" publicado ayuda a demostrar la experiencia de la empresa y convencer a nuevos clientes mediante:
           </p>
@@ -281,11 +281,11 @@ export default function AdminServiciosPage() {
                 )}
                 {/* Badges */}
                 <div className="absolute top-2 left-2 flex gap-1">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${platformStyle(v.platform)}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${platformStyle(v.platform)}`}>
                     {platformLabel(v.platform)}
                   </span>
                   {v.category && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#2a63cd]/90 text-white">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#2a63cd]/90 text-white">
                       {categoryLabel(v.category)}
                     </span>
                   )}
@@ -306,10 +306,10 @@ export default function AdminServiciosPage() {
                 {(v.beforeImage || v.afterImage) && (
                   <div className="absolute bottom-2 left-2 flex gap-1">
                     {v.beforeImage && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500 text-white">ANTES</span>
+                      <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-500 text-white">ANTES</span>
                     )}
                     {v.afterImage && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-500 text-white">DESPUÉS</span>
+                      <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-green-500 text-white">DESPUÉS</span>
                     )}
                   </div>
                 )}
@@ -331,7 +331,7 @@ export default function AdminServiciosPage() {
                   ) : (
                     <span className="text-xs text-[#dee2e6]">Sin reseñas</span>
                   )}
-                  <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${
                     v.isActive ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
                   }`}>
                     {v.isActive ? 'Activo' : 'Inactivo'}
@@ -366,7 +366,7 @@ export default function AdminServiciosPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-[#e9ecef]">
-              <h2 className="text-lg font-black text-[#212529]">
+              <h2 className="text-lg font-bold text-[#212529]">
                 {editingId ? 'Editar Trabajo' : 'Nuevo Trabajo'}
               </h2>
               <button
@@ -469,7 +469,7 @@ export default function AdminServiciosPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-[#212529] mb-1.5">
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white mr-1">ANTES</span>
+                    <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-amber-500 text-white mr-1">ANTES</span>
                     URL imagen
                   </label>
                   <input
@@ -482,7 +482,7 @@ export default function AdminServiciosPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-[#212529] mb-1.5">
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-500 text-white mr-1">DESPUÉS</span>
+                    <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-green-500 text-white mr-1">DESPUÉS</span>
                     URL imagen
                   </label>
                   <input

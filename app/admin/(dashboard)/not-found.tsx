@@ -8,7 +8,7 @@ export default function AdminNotFound() {
         <div className="flex flex-col items-center justify-center py-12 px-4 text-center min-h-[60vh]">
             {/* 404 Visual */}
             <div className="flex flex-col items-center gap-2 mb-8">
-                <span className="text-[100px] font-black bg-gradient-to-br from-[#e9ecef] to-[#dee2e6] bg-clip-text text-transparent leading-none select-none">
+                <span className="text-[100px] font-bold bg-gradient-to-br from-[#e9ecef] to-[#dee2e6] bg-clip-text text-transparent leading-none select-none">
                     404
                 </span>
                 <div className="w-16 h-16 bg-gradient-to-br from-[#2a63cd]/10 to-[#1e4ba3]/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-[#2a63cd]/20 shadow-lg -mt-4">
@@ -17,7 +17,7 @@ export default function AdminNotFound() {
             </div>
 
             {/* Title & Description */}
-            <h1 className="text-2xl md:text-3xl font-extrabold text-[#212529] mb-3">
+            <h1 className="text-2xl md:text-3xl font-bold text-[#212529] mb-3">
                 Página no encontrada
             </h1>
             <p className="text-base text-[#6a6c6b] max-w-md mx-auto leading-relaxed mb-8">

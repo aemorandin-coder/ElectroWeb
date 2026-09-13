@@ -294,28 +294,28 @@ export default function OrdersPage() {
             <FiDollarSign className="w-5 h-5 opacity-80" />
             <span className="text-xs opacity-70">Ingresos</span>
           </div>
-          <p className="text-2xl font-black">${stats.totalRevenue.toFixed(2)}</p>
+          <p className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
           <div className="flex items-center justify-between mb-2">
             <FiClock className="w-5 h-5 text-amber-500" />
             <span className="text-xs text-[#6a6c6b]">Pendientes</span>
           </div>
-          <p className="text-2xl font-black text-[#212529]">{stats.pendingCount}</p>
+          <p className="text-2xl font-bold text-[#212529]">{stats.pendingCount}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
           <div className="flex items-center justify-between mb-2">
             <FiPackage className="w-5 h-5 text-[#2a63cd]" />
             <span className="text-xs text-[#6a6c6b]">En proceso</span>
           </div>
-          <p className="text-2xl font-black text-[#212529]">{stats.processingCount}</p>
+          <p className="text-2xl font-bold text-[#212529]">{stats.processingCount}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
           <div className="flex items-center justify-between mb-2">
             <FiCheck className="w-5 h-5 text-emerald-500" />
             <span className="text-xs text-[#6a6c6b]">Completadas</span>
           </div>
-          <p className="text-2xl font-black text-[#212529]">{stats.completedCount}</p>
+          <p className="text-2xl font-bold text-[#212529]">{stats.completedCount}</p>
         </div>
       </div>
 
@@ -393,17 +393,17 @@ export default function OrdersPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <h3 className="font-bold text-[#212529] text-sm">#{order.orderNumber}</h3>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
                         {getStatusText(order.status)}
                       </span>
                       {order.hasDigital && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 flex items-center gap-1">
                           <FiMonitor className="w-2.5 h-2.5" />
                           Digital
                         </span>
                       )}
                       {order.trackingNumber && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700">
                           {order.shippingCarrier}: {order.trackingNumber}
                         </span>
                       )}
@@ -420,8 +420,8 @@ export default function OrdersPage() {
                   {/* Price & Quick Actions */}
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className="text-lg font-black text-[#212529]">${(Number(order.totalUSD) || 0).toFixed(2)}</p>
-                      <p className="text-[10px] text-[#6a6c6b] uppercase">USD</p>
+                      <p className="text-lg font-bold text-[#212529]">${(Number(order.totalUSD) || 0).toFixed(2)}</p>
+                      <p className="text-xs text-[#6a6c6b] uppercase">USD</p>
                     </div>
 
                     {/* Quick action button */}
@@ -521,7 +521,7 @@ export default function OrdersPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <h4 className="text-xs font-bold text-[#6a6c6b] uppercase">Progreso del Pedido</h4>
                   {selectedOrder.isOnlyDigital && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-purple-500 to-blue-500 text-white flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-500 to-blue-500 text-white flex items-center gap-1">
                       <FiMonitor className="w-2.5 h-2.5" /> Solo Digital
                     </span>
                   )}
@@ -549,7 +549,7 @@ export default function OrdersPage() {
                           } ${isCurrent ? selectedOrder.isOnlyDigital ? 'ring-4 ring-purple-500/20' : 'ring-4 ring-[#2a63cd]/20' : ''}`}>
                           <IconComponent className="w-4 h-4" />
                         </div>
-                        <span className={`mt-2 text-[10px] font-medium ${isCompleted ? selectedOrder.isOnlyDigital ? 'text-purple-600' : 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`}>
+                        <span className={`mt-2 text-xs font-medium ${isCompleted ? selectedOrder.isOnlyDigital ? 'text-purple-600' : 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`}>
                           {step.label}
                         </span>
                       </div>
@@ -702,7 +702,7 @@ export default function OrdersPage() {
                     <tfoot className="bg-[#f8f9fa]">
                       <tr>
                         <td colSpan={3} className="px-4 py-3 text-right font-bold">Total</td>
-                        <td className="px-4 py-3 text-right text-xl font-black text-[#2a63cd]">${(Number(selectedOrder.totalUSD) || 0).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right text-xl font-bold text-[#2a63cd]">${(Number(selectedOrder.totalUSD) || 0).toFixed(2)}</td>
                       </tr>
                     </tfoot>
                   </table>

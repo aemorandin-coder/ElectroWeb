@@ -178,7 +178,7 @@ export default function MessagesPage() {
                                         {msg.message}
                                     </p>
                                     <div className="mt-2">
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getStatusColor(msg.status)}`}>
+                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getStatusColor(msg.status)}`}>
                                             {getStatusLabel(msg.status)}
                                         </span>
                                     </div>

@@ -259,7 +259,7 @@ export default function CustomersPage() {
               <FiShield className="w-4 h-4" />
               <span>Verificaciones</span>
               {pendingVerifications > 0 && (
-                <span className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1.5 bg-red-600 text-white text-[10px] font-bold rounded-full shadow-lg animate-bounce">
+                <span className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1.5 bg-red-600 text-white text-xs font-bold rounded-full shadow-lg animate-bounce">
                   {pendingVerifications > 99 ? '99+' : pendingVerifications}
                 </span>
               )}
@@ -298,7 +298,7 @@ export default function CustomersPage() {
                 </div>
                 <span className="text-sm font-medium text-white/80">Total Clientes</span>
               </div>
-              <p className="text-3xl font-black">{stats.total}</p>
+              <p className="text-3xl font-bold">{stats.total}</p>
             </div>
           </div>
 
@@ -313,7 +313,7 @@ export default function CustomersPage() {
                 </div>
                 <span className="text-sm font-medium text-white/80">Nuevos Este Mes</span>
               </div>
-              <p className="text-3xl font-black">{stats.thisMonth}</p>
+              <p className="text-3xl font-bold">{stats.thisMonth}</p>
             </div>
           </div>
 
@@ -328,7 +328,7 @@ export default function CustomersPage() {
                 </div>
                 <span className="text-sm font-medium text-white/80">Clientes Activos</span>
               </div>
-              <p className="text-3xl font-black">{stats.active}</p>
+              <p className="text-3xl font-bold">{stats.active}</p>
             </div>
           </div>
         </div>
@@ -407,16 +407,16 @@ export default function CustomersPage() {
 
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="bg-[#f8f9fa] p-2 rounded-lg">
-                        <p className="text-[10px] text-[#6a6c6b] uppercase tracking-wider font-semibold">Órdenes</p>
+                        <p className="text-xs text-[#6a6c6b] uppercase tracking-wider font-semibold">Órdenes</p>
                         <div className="flex items-baseline gap-1">
                           <span className="text-lg font-bold text-[#212529]">{customer.orderCount}</span>
                           {customer.activeOrders > 0 && (
-                            <span className="text-[10px] text-green-600 font-bold">({customer.activeOrders} activas)</span>
+                            <span className="text-xs text-green-600 font-bold">({customer.activeOrders} activas)</span>
                           )}
                         </div>
                       </div>
                       <div className="bg-[#f8f9fa] p-2 rounded-lg">
-                        <p className="text-[10px] text-[#6a6c6b] uppercase tracking-wider font-semibold">Total Gastado</p>
+                        <p className="text-xs text-[#6a6c6b] uppercase tracking-wider font-semibold">Total Gastado</p>
                         <p className="text-lg font-bold text-[#2a63cd]">
                           ${customer.totalSpent.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                         </p>

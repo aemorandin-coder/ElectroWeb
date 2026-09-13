@@ -310,7 +310,7 @@ Responde SOLO con JSON (sin markdown):
                     </div>
                     <div>
                         <h2 className="text-sm font-bold text-[#212529]">Generador Social</h2>
-                        <p className="text-[10px] text-[#6a6c6b]">{products.length} productos</p>
+                        <p className="text-xs text-[#6a6c6b]">{products.length} productos</p>
                     </div>
                 </div>
             </div>
@@ -323,7 +323,7 @@ Responde SOLO con JSON (sin markdown):
                     <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                         <div className="flex items-center gap-1.5 mb-1.5">
                             <FiCpu className="w-3.5 h-3.5 text-[#2a63cd]" />
-                            <span className="text-[10px] font-bold text-[#212529]">Gemini AI</span>
+                            <span className="text-xs font-bold text-[#212529]">Gemini AI</span>
                             {aiConfigured && <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>}
                         </div>
                         <div className="flex gap-1">
@@ -334,19 +334,19 @@ Responde SOLO con JSON (sin markdown):
                                     value={aiApiKey}
                                     onChange={(e) => setAiApiKey(e.target.value)}
                                     placeholder="API Key..."
-                                    className="w-full pl-7 pr-7 py-1 text-[10px] border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
+                                    className="w-full pl-7 pr-7 py-1 text-xs border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
                                 />
                                 <button onClick={() => setShowApiKey(!showApiKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#6a6c6b] hover:text-[#2a63cd]">
                                     {showApiKey ? <FiEyeOff className="w-3 h-3" /> : <FiEye className="w-3 h-3" />}
                                 </button>
                             </div>
-                            <button onClick={saveApiKey} className="px-2 py-1 bg-[#2a63cd] text-white rounded text-[10px] hover:bg-[#1e4ba3]" title="Guardar">
+                            <button onClick={saveApiKey} className="px-2 py-1 bg-[#2a63cd] text-white rounded text-xs hover:bg-[#1e4ba3]" title="Guardar">
                                 <FiSave className="w-3 h-3" />
                             </button>
                             <button
                                 onClick={generateWithAI}
                                 disabled={(campaignType === 'product' && !selectedProduct) || aiLoading || !aiConfigured}
-                                className="px-2 py-1 bg-[#2a63cd] text-white rounded text-[10px] hover:bg-[#1e4ba3] disabled:opacity-50"
+                                className="px-2 py-1 bg-[#2a63cd] text-white rounded text-xs hover:bg-[#1e4ba3] disabled:opacity-50"
                                 title="Generar con IA"
                             >
                                 {aiLoading ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FiCpu className="w-3 h-3" />}
@@ -358,19 +358,19 @@ Responde SOLO con JSON (sin markdown):
                     <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                         <div className="flex items-center gap-1.5 mb-1.5">
                             <FiLayers className="w-3.5 h-3.5 text-[#2a63cd]" />
-                            <span className="text-[10px] font-bold text-[#212529]">Tipo de Campaña</span>
+                            <span className="text-xs font-bold text-[#212529]">Tipo de Campaña</span>
                         </div>
                         <div className="flex gap-1">
                             <button
                                 onClick={() => setCampaignType('product')}
-                                className={`flex-1 py-1 px-2 text-[10px] font-bold rounded flex items-center justify-center gap-1.5 transition-all border ${campaignType === 'product' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'bg-transparent text-[#6a6c6b] border-[#e9ecef] hover:border-[#2a63cd]'}`}
+                                className={`flex-1 py-1 px-2 text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-all border ${campaignType === 'product' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'bg-transparent text-[#6a6c6b] border-[#e9ecef] hover:border-[#2a63cd]'}`}
                             >
                                 <FiPackage className="w-3 h-3" />
                                 Producto
                             </button>
                             <button
                                 onClick={() => setCampaignType('recruitment')}
-                                className={`flex-1 py-1 px-2 text-[10px] font-bold rounded flex items-center justify-center gap-1.5 transition-all border ${campaignType === 'recruitment' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'bg-transparent text-[#6a6c6b] border-[#e9ecef] hover:border-[#2a63cd]'}`}
+                                className={`flex-1 py-1 px-2 text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-all border ${campaignType === 'recruitment' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'bg-transparent text-[#6a6c6b] border-[#e9ecef] hover:border-[#2a63cd]'}`}
                             >
                                 <FiUsers className="w-3 h-3" />
                                 Captar Influencer
@@ -383,7 +383,7 @@ Responde SOLO con JSON (sin markdown):
                         <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                             <div className="flex items-center gap-1.5 mb-1.5">
                                 <FiPackage className="w-3.5 h-3.5 text-[#2a63cd]" />
-                                <span className="text-[10px] font-bold text-[#212529]">Producto</span>
+                                <span className="text-xs font-bold text-[#212529]">Producto</span>
                             </div>
                             <div className="relative mb-1.5">
                                 <FiSearch className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#6a6c6b]" />
@@ -392,7 +392,7 @@ Responde SOLO con JSON (sin markdown):
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Buscar..."
-                                    className="w-full pl-7 pr-2 py-1 text-[10px] border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
+                                    className="w-full pl-7 pr-2 py-1 text-xs border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
                                 />
                             </div>
                             <div className="grid grid-cols-5 gap-1 max-h-20 overflow-y-auto">
@@ -420,10 +420,10 @@ Responde SOLO con JSON (sin markdown):
                         <div className="bg-white rounded-lg border border-[#e9ecef] p-2 space-y-2">
                             <div className="flex items-center gap-1.5">
                                 <FiUsers className="w-3.5 h-3.5 text-[#2a63cd]" />
-                                <span className="text-[10px] font-bold text-[#212529]">Detalles de Captación</span>
+                                <span className="text-xs font-bold text-[#212529]">Detalles de Captación</span>
                             </div>
                             <div>
-                                <label className="text-[8px] font-bold text-[#6a6c6b] block mb-0.5">Título / Llamado</label>
+                                <label className="text-[11px] font-bold text-[#6a6c6b] block mb-0.5">Título / Llamado</label>
                                 <input
                                     type="text"
                                     value={recruitmentHeadline}
@@ -434,29 +434,29 @@ Responde SOLO con JSON (sin markdown):
                                     }}
                                     placeholder="¡ÚNETE COMO CREADOR!"
                                     maxLength={20}
-                                    className="w-full px-2 py-1 text-[10px] border border-[#e9ecef] rounded font-bold uppercase focus:ring-1 focus:ring-[#2a63cd]/20"
+                                    className="w-full px-2 py-1 text-xs border border-[#e9ecef] rounded font-bold uppercase focus:ring-1 focus:ring-[#2a63cd]/20"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-1.5">
                                 <div>
-                                    <label className="text-[8px] font-bold text-[#6a6c6b] block mb-0.5">Comisión (%)</label>
+                                    <label className="text-[11px] font-bold text-[#6a6c6b] block mb-0.5">Comisión (%)</label>
                                     <input
                                         type="number"
                                         value={recruitmentCommission}
                                         onChange={(e) => setRecruitmentCommission(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
                                         min={0} max={100}
-                                        className="w-full px-2 py-1 text-[10px] border border-[#e9ecef] rounded text-center focus:ring-1 focus:ring-[#2a63cd]/20"
+                                        className="w-full px-2 py-1 text-xs border border-[#e9ecef] rounded text-center focus:ring-1 focus:ring-[#2a63cd]/20"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[8px] font-bold text-[#6a6c6b] block mb-0.5">Beneficio Destacado</label>
+                                    <label className="text-[11px] font-bold text-[#6a6c6b] block mb-0.5">Beneficio Destacado</label>
                                     <input
                                         type="text"
                                         value={recruitmentBenefit}
                                         onChange={(e) => setRecruitmentBenefit(e.target.value.slice(0, 35))}
                                         placeholder="Ej. Ganancias semanales"
                                         maxLength={35}
-                                        className="w-full px-2 py-1 text-[10px] border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
+                                        className="w-full px-2 py-1 text-xs border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
                                     />
                                 </div>
                             </div>
@@ -469,14 +469,14 @@ Responde SOLO con JSON (sin markdown):
                         <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                             <div className="flex items-center gap-1 mb-1">
                                 <FiLayout className="w-3 h-3 text-[#2a63cd]" />
-                                <span className="text-[9px] font-bold text-[#212529]">Formato</span>
+                                <span className="text-[11px] font-bold text-[#212529]">Formato</span>
                             </div>
                             <div className="flex gap-1">
                                 {FORMATS.map((f) => (
                                     <button
                                         key={f.id}
                                         onClick={() => setSelectedFormat(f)}
-                                        className={`flex-1 py-1 text-[9px] rounded border transition-all hover:border-[#2a63cd] ${selectedFormat.id === f.id ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}
+                                        className={`flex-1 py-1 text-[11px] rounded border transition-all hover:border-[#2a63cd] ${selectedFormat.id === f.id ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}
                                     >
                                         {f.name}
                                     </button>
@@ -488,11 +488,11 @@ Responde SOLO con JSON (sin markdown):
                         <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                             <div className="flex items-center gap-1 mb-1">
                                 <FiType className="w-3 h-3 text-[#2a63cd]" />
-                                <span className="text-[9px] font-bold text-[#212529]">Texto</span>
+                                <span className="text-[11px] font-bold text-[#212529]">Texto</span>
                             </div>
                             <div className="flex gap-1">
-                                <button onClick={() => setTextPosition('top')} className={`flex-1 py-1 text-[9px] rounded border transition-all hover:border-[#2a63cd] ${textPosition === 'top' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}>Arriba</button>
-                                <button onClick={() => setTextPosition('bottom')} className={`flex-1 py-1 text-[9px] rounded border transition-all hover:border-[#2a63cd] ${textPosition === 'bottom' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}>Abajo</button>
+                                <button onClick={() => setTextPosition('top')} className={`flex-1 py-1 text-[11px] rounded border transition-all hover:border-[#2a63cd] ${textPosition === 'top' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}>Arriba</button>
+                                <button onClick={() => setTextPosition('bottom')} className={`flex-1 py-1 text-[11px] rounded border transition-all hover:border-[#2a63cd] ${textPosition === 'bottom' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}>Abajo</button>
                             </div>
                         </div>
                     </div>
@@ -501,7 +501,7 @@ Responde SOLO con JSON (sin markdown):
                     <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                         <div className="flex items-center gap-1.5 mb-1">
                             <FiLayers className="w-3.5 h-3.5 text-[#2a63cd]" />
-                            <span className="text-[10px] font-bold text-[#212529]">Plantilla</span>
+                            <span className="text-xs font-bold text-[#212529]">Plantilla</span>
                         </div>
                         <div className="grid grid-cols-8 gap-1">
                             {TEMPLATES.map((t) => (
@@ -523,11 +523,11 @@ Responde SOLO con JSON (sin markdown):
                             onChange={(e) => setCustomText(e.target.value.toUpperCase().slice(0, 20))}
                             placeholder="TEXTO PRINCIPAL"
                             maxLength={20}
-                            className="w-full px-2 py-1 text-[10px] border border-[#e9ecef] rounded text-center font-bold uppercase focus:ring-1 focus:ring-[#2a63cd]/20 mb-1"
+                            className="w-full px-2 py-1 text-xs border border-[#e9ecef] rounded text-center font-bold uppercase focus:ring-1 focus:ring-[#2a63cd]/20 mb-1"
                         />
                         <div className="flex gap-1 flex-wrap">
                             {QUICK_PHRASES.map((p) => (
-                                <button key={p} onClick={() => setCustomText(p)} className={`px-2 py-0.5 text-[8px] rounded border transition-all hover:border-[#2a63cd] ${customText === p ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}>{p}</button>
+                                <button key={p} onClick={() => setCustomText(p)} className={`px-2 py-0.5 text-[11px] rounded border transition-all hover:border-[#2a63cd] ${customText === p ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}>{p}</button>
                             ))}
                         </div>
                     </div>
@@ -536,14 +536,14 @@ Responde SOLO con JSON (sin markdown):
                     <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                         <div className="flex items-center gap-1 mb-1">
                             <FiAward className="w-3 h-3 text-[#2a63cd]" />
-                            <span className="text-[9px] font-bold text-[#212529]">Badge</span>
+                            <span className="text-[11px] font-bold text-[#212529]">Badge</span>
                         </div>
                         <div className="flex gap-1 flex-wrap">
                             {BADGES.map((b) => (
                                 <button
                                     key={b.id}
                                     onClick={() => setSelectedBadge(b)}
-                                    className={`px-2 py-0.5 text-[8px] rounded border transition-all hover:border-[#2a63cd] ${selectedBadge.id === b.id ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}
+                                    className={`px-2 py-0.5 text-[11px] rounded border transition-all hover:border-[#2a63cd] ${selectedBadge.id === b.id ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}
                                     title={b.label}
                                 >
                                     {b.label}
@@ -558,31 +558,31 @@ Responde SOLO con JSON (sin markdown):
                             <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                                 <div className="flex items-center gap-1 mb-1">
                                     <FiPercent className="w-3 h-3 text-[#2a63cd]" />
-                                    <span className="text-[9px] font-bold text-[#212529]">Descuento</span>
+                                    <span className="text-[11px] font-bold text-[#212529]">Descuento</span>
                                 </div>
                                 <input
                                     type="number"
                                     value={discountPercent}
                                     onChange={(e) => setDiscountPercent(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)))}
                                     min={0} max={99}
-                                    className="w-full px-2 py-1 text-[10px] border border-[#e9ecef] rounded text-center"
+                                    className="w-full px-2 py-1 text-xs border border-[#e9ecef] rounded text-center"
                                 />
                             </div>
                         ) : (
                             <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                                 <div className="flex items-center gap-1 mb-1">
                                     <FiUsers className="w-3 h-3 text-[#2a63cd]" />
-                                    <span className="text-[9px] font-bold text-[#212529]">Comisión</span>
+                                    <span className="text-[11px] font-bold text-[#212529]">Comisión</span>
                                 </div>
                                 <div className="flex items-center justify-center h-5">
-                                    <span className="text-[10px] font-extrabold text-[#2a63cd]">{recruitmentCommission}% por venta</span>
+                                    <span className="text-xs font-bold text-[#2a63cd]">{recruitmentCommission}% por venta</span>
                                 </div>
                             </div>
                         )}
                         <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
                             <div className="flex items-center gap-1 mb-1">
                                 <FiBox className="w-3 h-3 text-[#2a63cd]" />
-                                <span className="text-[9px] font-bold text-[#212529]">Opciones</span>
+                                <span className="text-[11px] font-bold text-[#212529]">Opciones</span>
                             </div>
                             <div className="flex gap-1">
                                 {campaignType === 'product' && (
@@ -606,12 +606,12 @@ Responde SOLO con JSON (sin markdown):
                             <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-1">
                                     <FiMessageCircle className="w-3 h-3 text-[#2a63cd]" />
-                                    <span className="text-[9px] font-bold text-[#212529]">Caption IA</span>
+                                    <span className="text-[11px] font-bold text-[#212529]">Caption IA</span>
                                 </div>
-                                <button onClick={copyCaption} className="text-[8px] text-[#2a63cd] hover:underline">Copiar</button>
+                                <button onClick={copyCaption} className="text-[11px] text-[#2a63cd] hover:underline">Copiar</button>
                             </div>
-                            <p className="text-[9px] text-[#6a6c6b] mb-1">{captionText}</p>
-                            <p className="text-[8px] text-[#2a63cd]">{hashtagText}</p>
+                            <p className="text-[11px] text-[#6a6c6b] mb-1">{captionText}</p>
+                            <p className="text-[11px] text-[#2a63cd]">{hashtagText}</p>
                         </div>
                     )}
 
@@ -632,9 +632,9 @@ Responde SOLO con JSON (sin markdown):
                         <div className="px-2 py-1.5 border-b border-[#e9ecef] flex items-center justify-between">
                             <div className="flex items-center gap-1">
                                 <FiImage className="w-3 h-3 text-[#2a63cd]" />
-                                <span className="text-[10px] font-bold text-[#212529]">Preview</span>
+                                <span className="text-xs font-bold text-[#212529]">Preview</span>
                             </div>
-                            <span className="text-[8px] text-[#6a6c6b]">{selectedFormat.width}x{selectedFormat.height}</span>
+                            <span className="text-[11px] text-[#6a6c6b]">{selectedFormat.width}x{selectedFormat.height}</span>
                         </div>
                         <div className="p-3 flex justify-center bg-[#f8f9fa] min-h-[500px]">
                             {/* Canvas */}

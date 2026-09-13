@@ -171,8 +171,8 @@ function Field({ label, hint, error, children }: {
     <div>
       <label className="block text-xs font-semibold text-gray-700 mb-1">{label}</label>
       {children}
-      {hint && !error && <p className="text-[10px] text-gray-400 mt-1">{hint}</p>}
-      {error && <p className="text-[10px] text-red-500 mt-1">{error}</p>}
+      {hint && !error && <p className="text-xs text-gray-400 mt-1">{hint}</p>}
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
 }
@@ -616,7 +616,7 @@ export default function SettingsPage() {
                   {SIcon || <FiGlobe className="w-4 h-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold text-gray-500 mb-0.5">{label}</p>
+                  <p className="text-xs font-semibold text-gray-500 mb-0.5">{label}</p>
                   <input
                     type="url"
                     name={name}
@@ -633,7 +633,7 @@ export default function SettingsPage() {
                 )}
               </div>
             ))}
-            <p className="text-[10px] text-gray-400 italic flex items-center gap-1 mt-1">
+            <p className="text-xs text-gray-400 italic flex items-center gap-1 mt-1">
               <FiAlertTriangle className="w-3 h-3 text-yellow-500" />
               Deja vacío las redes que no uses — solo se muestran las que tengan URL.
             </p>
@@ -1170,7 +1170,7 @@ export default function SettingsPage() {
                 }`}
               >
                 {tab.label}
-                <span className="block text-[9px] opacity-65 font-normal">{tab.path}</span>
+                <span className="block text-[11px] opacity-65 font-normal">{tab.path}</span>
               </button>
             ))}
           </div>
@@ -1269,7 +1269,7 @@ export default function SettingsPage() {
                 {previewDesc}
               </p>
             </div>
-            <p className="text-[10px] text-gray-400 mt-2 italic">Vista aproximada en motores de búsqueda.</p>
+            <p className="text-xs text-gray-400 mt-2 italic">Vista aproximada en motores de búsqueda.</p>
           </Card>
 
           {/* Social Media Preview */}
@@ -1287,12 +1287,12 @@ export default function SettingsPage() {
               </div>
               {/* Card Text Info */}
               <div className="p-3 bg-[#f2f3f5] space-y-1">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">ELECTROSHOPVE.COM</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">ELECTROSHOPVE.COM</p>
                 <p className="text-sm font-bold text-gray-800 leading-snug line-clamp-1">{previewTitle}</p>
                 <p className="text-xs text-gray-600 leading-normal line-clamp-2">{previewDesc}</p>
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-2 italic">Vista aproximada de enlace compartido.</p>
+            <p className="text-xs text-gray-400 mt-2 italic">Vista aproximada de enlace compartido.</p>
           </Card>
         </div>
       </div>
@@ -1310,7 +1310,7 @@ export default function SettingsPage() {
               Modo Mantenimiento
             </h3>
             {formData.maintenanceMode && (
-              <span className="px-2 py-0.5 text-[10px] bg-amber-500 text-white rounded-full font-bold">ACTIVO</span>
+              <span className="px-2 py-0.5 text-xs bg-amber-500 text-white rounded-full font-bold">ACTIVO</span>
             )}
           </div>
           <Toggle
@@ -1374,7 +1374,7 @@ export default function SettingsPage() {
                         <p className="text-sm font-medium text-gray-800 truncate">{u.name}</p>
                         <p className="text-xs text-gray-500 truncate">{u.email}</p>
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${u.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${u.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                         {u.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
                       </span>
                     </div>

@@ -254,7 +254,7 @@ function InfluencersTab() {
                                 return (
                                     <div key={idx} className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left space-y-2">
                                         <div className={`w-12 h-12 rounded-xl ${item.color} border flex items-center justify-center shadow-sm relative`}>
-                                            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#212529] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#212529] text-white text-xs font-bold rounded-full flex items-center justify-center">
                                                 {item.step}
                                             </span>
                                             <Icon className="w-5 h-5" />
@@ -276,7 +276,7 @@ function InfluencersTab() {
                         <FiUserCheck className="w-5 h-5 opacity-80" />
                         <span className="text-xs opacity-70">Influencers</span>
                     </div>
-                    <p className="text-2xl font-black">{influencers.length}</p>
+                    <p className="text-2xl font-bold">{influencers.length}</p>
                     <p className="text-xs opacity-60 mt-0.5">{influencers.filter(i => i.status === 'ACTIVE').length} activos</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
@@ -284,21 +284,21 @@ function InfluencersTab() {
                         <FiTrendingUp className="w-5 h-5 text-emerald-500" />
                         <span className="text-xs text-[#6a6c6b]">Conversiones</span>
                     </div>
-                    <p className="text-2xl font-black text-[#212529]">{totalConversions}</p>
+                    <p className="text-2xl font-bold text-[#212529]">{totalConversions}</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
                     <div className="flex items-center justify-between mb-2">
                         <FiDollarSign className="w-5 h-5 text-amber-500" />
                         <span className="text-xs text-[#6a6c6b]">Comisiones Pendientes</span>
                     </div>
-                    <p className="text-2xl font-black text-[#212529]">${pendingCommissionTotal.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-[#212529]">${pendingCommissionTotal.toFixed(2)}</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
                     <div className="flex items-center justify-between mb-2">
                         <FiDollarSign className="w-5 h-5 text-[#2a63cd]" />
                         <span className="text-xs text-[#6a6c6b]">Total Generado</span>
                     </div>
-                    <p className="text-2xl font-black text-[#212529]">
+                    <p className="text-2xl font-bold text-[#212529]">
                         ${influencers.reduce((s, i) => s + i.stats.totalGross, 0).toFixed(2)}
                     </p>
                 </div>
@@ -351,7 +351,7 @@ function InfluencersTab() {
                                             <span className="font-mono text-xs bg-[#f8f9fa] border border-[#e9ecef] px-2 py-0.5 rounded-md text-[#2a63cd] font-semibold">
                                                 {inf.code}
                                             </span>
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${inf.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${inf.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                                                 {inf.status === 'ACTIVE' ? 'Activo' : 'Pausado'}
                                             </span>
                                         </div>
@@ -416,7 +416,7 @@ function InfluencersTab() {
                                     </span>
                                     <button
                                         onClick={() => copyToClipboard(`${BASE_URL}/registro?ref=${inf.code}`)}
-                                        className="flex-shrink-0 text-[10px] text-[#2a63cd] hover:underline flex items-center gap-0.5"
+                                        className="flex-shrink-0 text-xs text-[#2a63cd] hover:underline flex items-center gap-0.5"
                                     >
                                         <FiCopy className="w-3 h-3" />
                                         Copiar
@@ -493,15 +493,15 @@ function InfluencersTab() {
                                             {!isPending && <div className="w-4 flex-shrink-0" />}
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${color}`}>{label}</span>
-                                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${conv.status === 'APPROVED' ? 'bg-green-100 text-green-700' : conv.status === 'REJECTED' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'}`}>
+                                                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${color}`}>{label}</span>
+                                                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${conv.status === 'APPROVED' ? 'bg-green-100 text-green-700' : conv.status === 'REJECTED' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'}`}>
                                                         {conv.status === 'APPROVED' ? 'Aprobado' : conv.status === 'REJECTED' ? 'Rechazado' : 'Pendiente'}
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-[#6a6c6b] mt-0.5 truncate">
                                                     {conv.referredUser.name || conv.referredUser.email}
                                                 </p>
-                                                <p className="text-[10px] text-[#aaa] mt-0.5">
+                                                <p className="text-xs text-[#aaa] mt-0.5">
                                                     {new Date(conv.createdAt).toLocaleDateString('es-VE')}
                                                 </p>
                                             </div>
@@ -614,7 +614,7 @@ function InfluencersTab() {
                             {/* Preview link */}
                             {createForm.code && (
                                 <div className="bg-[#f8f9fa] rounded-lg p-3 border border-[#e9ecef]">
-                                    <p className="text-[10px] text-[#6a6c6b] font-semibold uppercase mb-1">Link de referido</p>
+                                    <p className="text-xs text-[#6a6c6b] font-semibold uppercase mb-1">Link de referido</p>
                                     <p className="text-xs text-[#2a63cd] font-mono break-all">
                                         {BASE_URL}/registro?ref={createForm.code}
                                     </p>
@@ -707,7 +707,7 @@ function EmailTab() {
                             { label: 'Marketing', value: emailConfig.marketingEnabled ? '✓ Activo' : '✗ Inactivo' },
                         ].map(({ label, value }) => (
                             <div key={label} className="text-center p-3 bg-[#f8f9fa] rounded-lg">
-                                <p className="text-[10px] text-[#6a6c6b] uppercase font-semibold mb-0.5">{label}</p>
+                                <p className="text-xs text-[#6a6c6b] uppercase font-semibold mb-0.5">{label}</p>
                                 <p className="text-sm font-bold text-[#212529] capitalize">{value}</p>
                             </div>
                         ))}
@@ -924,7 +924,7 @@ function HotAdTab() {
                             <p className="text-xs text-gray-500">Popup de imagen en la pantalla principal</p>
                         </div>
                         {ad.hotAdEnabled && (
-                            <span className="px-2 py-0.5 text-[10px] bg-red-500 text-white rounded-full font-bold animate-pulse">ACTIVO</span>
+                            <span className="px-2 py-0.5 text-xs bg-red-500 text-white rounded-full font-bold animate-pulse">ACTIVO</span>
                         )}
                     </div>
                     <HotAdToggle checked={ad.hotAdEnabled} onChange={v => set('hotAdEnabled', v)} />
@@ -958,7 +958,7 @@ function HotAdTab() {
                                 ) : (
                                     <div className="text-center text-gray-400">
                                         <FiUpload className="w-6 h-6 mx-auto mb-1" />
-                                        <span className="text-[10px]">Subir imagen</span>
+                                        <span className="text-xs">Subir imagen</span>
                                     </div>
                                 )}
                             </div>
@@ -976,7 +976,7 @@ function HotAdTab() {
                                 >
                                     {ad.hotAdImage ? 'Cambiar imagen' : 'Seleccionar imagen'}
                                 </button>
-                                <span className="text-[10px] text-gray-400 block">PNG o JPG — máx 5MB</span>
+                                <span className="text-xs text-gray-400 block">PNG o JPG — máx 5MB</span>
                             </div>
                         </div>
                     </div>
@@ -1038,7 +1038,7 @@ function HotAdTab() {
                         <div className="flex items-center gap-3">
                             <input type="color" value={ad.hotAdBackdropColor} onChange={e => set('hotAdBackdropColor', e.target.value)} className="h-10 w-14 rounded-lg cursor-pointer border-2 border-gray-300 p-0" />
                             <span className="text-sm font-mono text-gray-600">{ad.hotAdBackdropColor}</span>
-                            <div className="w-16 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-[8px] text-white font-bold flex-shrink-0" style={{ backgroundColor: ad.hotAdBackdropColor, opacity: ad.hotAdBackdropOpacity / 100 }}>
+                            <div className="w-16 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-[11px] text-white font-bold flex-shrink-0" style={{ backgroundColor: ad.hotAdBackdropColor, opacity: ad.hotAdBackdropOpacity / 100 }}>
                                 PREVIEW
                             </div>
                         </div>
@@ -1094,7 +1094,7 @@ export default function MarketingPage() {
                         <Icon className="w-4 h-4" />
                         {label}
                         {badge && (
-                            <span className="ml-0.5 bg-white/20 text-[10px] px-1.5 py-0.5 rounded-full font-bold">{badge}</span>
+                            <span className="ml-0.5 bg-white/20 text-xs px-1.5 py-0.5 rounded-full font-bold">{badge}</span>
                         )}
                     </button>
                 ))}

@@ -453,7 +453,7 @@ export default function CategoriesPage() {
                         </div>
                       )}
                     </div>
-                    <p className="text-[10px] text-gray-400 mt-1">PNG · SVG · WebP · fondo transparente recomendado · máx. 2 MB</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG · SVG · WebP · fondo transparente recomendado · máx. 2 MB</p>
 
                     {/* ── Import from any react-icons library ── */}
                     <div className="mt-4 pt-4 border-t border-gray-100">
@@ -492,7 +492,7 @@ export default function CategoriesPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-mono font-semibold text-gray-800 truncate">{importParsedName}</p>
-                              <p className="text-[10px] text-gray-400">Ícono cargado correctamente</p>
+                              <p className="text-xs text-gray-400">Ícono cargado correctamente</p>
                             </div>
                             <button
                               type="button"
@@ -505,7 +505,7 @@ export default function CategoriesPage() {
                         );
                       })()}
 
-                      <p className="text-[10px] text-gray-400 mt-1.5">
+                      <p className="text-xs text-gray-400 mt-1.5">
                         Acepta la línea completa de import o solo el nombre: <span className="font-mono">GiLaptop</span>
                       </p>
                     </div>

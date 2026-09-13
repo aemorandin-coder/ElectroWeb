@@ -660,7 +660,7 @@ export default function PaymentsPage() {
                                                     <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-1.5 ${config.bgColor} ${config.color}`}>
                                                         {config.icon}
                                                     </div>
-                                                    <span className={`text-[10px] font-medium leading-tight text-center line-clamp-2 ${formData.type === type ? 'text-[#2a63cd]' : 'text-gray-600'}`}>
+                                                    <span className={`text-xs font-medium leading-tight text-center line-clamp-2 ${formData.type === type ? 'text-[#2a63cd]' : 'text-gray-600'}`}>
                                                         {config.label}
                                                     </span>
                                                 </button>
@@ -755,7 +755,7 @@ export default function PaymentsPage() {
                                                         ) : (
                                                             <>
                                                                 <FiPlus className="w-6 h-6 text-gray-400 mb-1" />
-                                                                <span className="text-[10px] text-gray-500 text-center">Subir Imagen</span>
+                                                                <span className="text-xs text-gray-500 text-center">Subir Imagen</span>
                                                             </>
                                                         )}
                                                     </div>
@@ -771,7 +771,7 @@ export default function PaymentsPage() {
                                                     <p className="text-xs text-gray-600 mb-1">
                                                         Sube una imagen cuadrada de tu banco o pasarela de pago para mostrarla en el checkout.
                                                     </p>
-                                                    <p className="text-[10px] text-gray-400">Formatos recomendados: PNG, JPG. Máx. 1MB.</p>
+                                                    <p className="text-xs text-gray-400">Formatos recomendados: PNG, JPG. Máx. 1MB.</p>
                                                 </div>
                                             </div>
                                         )}
@@ -795,7 +795,7 @@ export default function PaymentsPage() {
                                                         </div>
                                                         <div>
                                                             <p className="text-xs font-semibold text-gray-700">Vista previa de la imagen</p>
-                                                            <p className="text-[10px] text-gray-400">Cargada desde la URL ingresada.</p>
+                                                            <p className="text-xs text-gray-400">Cargada desde la URL ingresada.</p>
                                                         </div>
                                                     </div>
                                                 )}
@@ -811,7 +811,7 @@ export default function PaymentsPage() {
                                                             href="https://react-icons.github.io/react-icons/"
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-[10px] text-[#2a63cd] hover:underline font-semibold flex items-center gap-1"
+                                                            className="text-xs text-[#2a63cd] hover:underline font-semibold flex items-center gap-1"
                                                         >
                                                             <FiInfo className="w-3.5 h-3.5" />
                                                             Ver catálogo React Icons ↗
@@ -835,7 +835,7 @@ export default function PaymentsPage() {
                                                     </div>
                                                     <div>
                                                         <p className="text-xs font-semibold text-gray-700">Vista previa del icono</p>
-                                                        <p className="text-[10px] text-gray-400">
+                                                        <p className="text-xs text-gray-400">
                                                             {formData.logo && renderCustomIcon(formData.logo)
                                                                 ? `Icono "${formData.logo.includes('http') ? formData.logo.split('q=').pop() : formData.logo}" cargado con éxito.`
                                                                 : 'Introduce un nombre válido de la librería React Icons (sujeta a fa, fi, md, bs, fa6).'}

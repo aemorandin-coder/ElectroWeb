@@ -248,10 +248,10 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
                             {lesson.isFree && (
-                              <span className="text-[10px] text-green-400">Preview</span>
+                              <span className="text-xs text-green-400">Preview</span>
                             )}
                             {lesson.duration && (
-                              <span className="text-[10px] text-white/30">{formatDuration(lesson.duration)}</span>
+                              <span className="text-xs text-white/30">{formatDuration(lesson.duration)}</span>
                             )}
                           </div>
                         </div>
@@ -385,7 +385,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
             <div className="text-6xl mb-4">🏆</div>
-            <h2 className="text-2xl font-black text-[#212529] mb-2">¡Felicitaciones!</h2>
+            <h2 className="text-2xl font-bold text-[#212529] mb-2">¡Felicitaciones!</h2>
             <p className="text-[#6a6c6b] mb-2">Completaste el curso</p>
             <p className="text-xl font-bold text-[#2a63cd] mb-6">{course.title}</p>
             <div className="border-2 border-dashed border-[#2a63cd]/30 rounded-xl p-5 mb-5 bg-[#f8f9fa]">
@@ -397,7 +397,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
               </div>
               <p className="text-xs text-[#6a6c6b] mb-3">ElectroShop certifica que completaste este curso satisfactoriamente.</p>
               {certificateId && (
-                <p className="text-[10px] text-[#6a6c6b] font-mono bg-white border border-[#e9ecef] rounded px-2 py-1 truncate">
+                <p className="text-xs text-[#6a6c6b] font-mono bg-white border border-[#e9ecef] rounded px-2 py-1 truncate">
                   ID: {certificateId}
                 </p>
               )}

@@ -138,7 +138,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
           <Link href="/creator/dashboard/cursos" className="text-white/40 hover:text-white/70 text-sm transition-colors flex items-center gap-1 mb-2">
             ← Mis Cursos
           </Link>
-          <h1 className="text-xl font-black text-white line-clamp-1">{course.title}</h1>
+          <h1 className="text-xl font-bold text-white line-clamp-1">{course.title}</h1>
           <div className="flex items-center gap-2 mt-1">
             <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
               course.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-yellow-500/20 text-yellow-400'

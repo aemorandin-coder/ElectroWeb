@@ -57,7 +57,7 @@ export default function CreatorProfilePage() {
     <div className="max-w-xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white">Mi Perfil de Creador</h1>
+          <h1 className="text-2xl font-bold text-white">Mi Perfil de Creador</h1>
           <p className="text-white/40 text-sm mt-1">Esta información es visible para tus estudiantes.</p>
         </div>
         {msg && (
@@ -70,7 +70,7 @@ export default function CreatorProfilePage() {
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-5">
         {/* Avatar preview */}
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2a63cd] to-cyan-500 flex items-center justify-center text-white text-xl font-black overflow-hidden flex-shrink-0">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2a63cd] to-cyan-500 flex items-center justify-center text-white text-xl font-bold overflow-hidden flex-shrink-0">
             {form.avatar ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={form.avatar} alt="avatar" className="w-full h-full object-cover" />

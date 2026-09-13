@@ -118,14 +118,14 @@ export default function CreatorLandingPage() {
           <div className="inline-flex items-center gap-2 mb-2 lg:mb-4">
             <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
             <div className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <span className="text-[10px] lg:text-xs font-semibold text-white uppercase tracking-wider">
+              <span className="text-xs font-semibold text-white uppercase tracking-wider">
                 Programa de Creadores de Cursos
               </span>
             </div>
             <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
           </div>
 
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white max-w-4xl mx-auto">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-none text-white max-w-4xl mx-auto">
             Monetiza tu Experiencia. <br />
             <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">
               Quédate con el 90%.
@@ -157,7 +157,7 @@ export default function CreatorLandingPage() {
                 <div className="w-10 h-10 rounded-xl bg-[#2a63cd]/5 flex items-center justify-center border border-[#2a63cd]/10 mb-4 group-hover:bg-[#2a63cd]/10 group-hover:border-[#2a63cd]/20 transition-all duration-300">
                   <Icon className="w-5 h-5 text-[#2a63cd]" />
                 </div>
-                <h3 className="text-3xl font-black text-[#2a63cd] leading-none mb-2">{stat.value}</h3>
+                <h3 className="text-3xl font-bold text-[#2a63cd] leading-none mb-2">{stat.value}</h3>
                 <h4 className="text-sm font-semibold text-[#212529] mb-1">{stat.label}</h4>
                 <p className="text-xs text-[#6a6c6b] leading-relaxed">{stat.desc}</p>
               </div>
@@ -167,7 +167,7 @@ export default function CreatorLandingPage() {
 
         {/* How it works */}
         <div className="bg-[#f8f9fa] rounded-3xl border border-[#e9ecef] p-8 md:p-12 shadow-sm">
-          <h2 className="text-2xl md:text-3xl font-black text-[#212529] text-center mb-12">¿Cómo Funciona el Programa?</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-[#212529] text-center mb-12">¿Cómo Funciona el Programa?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
             {/* Connecting line for desktop */}
             <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-gray-200 to-transparent z-0" />
@@ -181,7 +181,7 @@ export default function CreatorLandingPage() {
               return (
                 <div key={idx} className="relative z-10 flex flex-col items-center text-center space-y-3 group">
                   <div className="relative w-16 h-16 rounded-2xl bg-white flex items-center justify-center border border-[#e9ecef] shadow-sm group-hover:border-[#2a63cd]/50 group-hover:shadow-[0_0_20px_rgba(42,99,205,0.1)] transition-all duration-300">
-                    <span className="absolute -top-2 -right-2 text-[10px] font-bold px-2 py-0.5 bg-[#2a63cd] rounded-full text-white">{item.step}</span>
+                    <span className="absolute -top-2 -right-2 text-xs font-bold px-2 py-0.5 bg-[#2a63cd] rounded-full text-white">{item.step}</span>
                     <Icon className="w-6 h-6 text-[#2a63cd]" />
                   </div>
                   <h3 className="text-lg font-bold text-[#212529] pt-2">{item.title}</h3>
@@ -207,7 +207,7 @@ export default function CreatorLandingPage() {
                     <FiCheckCircle className="w-8 h-8 text-emerald-500" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-2xl md:text-3xl font-black text-[#212529]">¡Eres Creador Oficial!</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#212529]">¡Eres Creador Oficial!</h2>
                     <p className="text-[#6a6c6b] text-sm md:text-base max-w-md mx-auto">
                       Tu solicitud ha sido aprobada. Tienes acceso completo para crear y publicar tus cursos en la plataforma.
                     </p>
@@ -226,7 +226,7 @@ export default function CreatorLandingPage() {
                     <FiClock className="w-8 h-8 text-amber-600" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-2xl md:text-3xl font-black text-[#212529]">Solicitud en Revisión</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#212529]">Solicitud en Revisión</h2>
                     <p className="text-[#6a6c6b] text-sm md:text-base max-w-md mx-auto">
                       Estamos evaluando tu perfil de creador. Normalmente respondemos en un plazo de 24 a 48 horas laborables. Te notificaremos vía correo electrónico.
                     </p>
@@ -238,7 +238,7 @@ export default function CreatorLandingPage() {
                     <FiAlertCircle className="w-8 h-8 text-rose-500" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-2xl md:text-3xl font-black text-[#212529]">Solicitud No Aprobada</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#212529]">Solicitud No Aprobada</h2>
                     <p className="text-[#6a6c6b] text-sm md:text-base max-w-md mx-auto">
                       Lo sentimos, pero tu perfil no cumple con nuestros requisitos actuales. Si crees que se trata de un error o deseas actualizar tus datos, por favor ponte en contacto con nuestro equipo de soporte.
                     </p>
@@ -250,7 +250,7 @@ export default function CreatorLandingPage() {
             /* Application Form */
             <div className="bg-white rounded-3xl border border-[#e9ecef] p-8 md:p-10 shadow-xl relative">
               <div className="mb-8">
-                <h2 className="text-2xl font-black text-[#212529] mb-2">Solicitar Acceso de Creador</h2>
+                <h2 className="text-2xl font-bold text-[#212529] mb-2">Solicitar Acceso de Creador</h2>
                 <p className="text-[#6a6c6b] text-sm">Cuéntanos un poco sobre ti y tu experiencia técnica para comenzar.</p>
               </div>
 
@@ -340,7 +340,7 @@ export default function CreatorLandingPage() {
                 <FiBookOpen className="w-8 h-8 text-[#2a63cd]" />
               </div>
               <div className="space-y-2">
-                <h2 className="text-2xl font-black text-[#212529]">Únete como Creador</h2>
+                <h2 className="text-2xl font-bold text-[#212529]">Únete como Creador</h2>
                 <p className="text-[#6a6c6b] text-sm md:text-base max-w-sm mx-auto">
                   Para enviar tu solicitud e iniciar el registro de tus cursos, primero debes contar con una cuenta de usuario.
                 </p>

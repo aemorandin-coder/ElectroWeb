@@ -63,7 +63,7 @@ export default function NuevoCursoPage() {
       </Link>
 
       <div>
-        <h1 className="text-2xl font-black text-white">Nuevo Curso</h1>
+        <h1 className="text-2xl font-bold text-white">Nuevo Curso</h1>
         <p className="text-white/40 text-sm mt-1">
           Completa la información básica. Podrás agregar el currículum después de crearlo.
         </p>

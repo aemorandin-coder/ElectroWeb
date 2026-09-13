@@ -254,12 +254,12 @@ export default async function CursosPage({
           <div className="inline-flex items-center gap-2 mb-2 lg:mb-4">
             <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
             <div className="px-2 lg:px-3 py-0.5 lg:py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <span className="text-[10px] lg:text-xs font-semibold text-white">Aprende con Expertos</span>
+              <span className="text-xs font-semibold text-white">Aprende con Expertos</span>
             </div>
             <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
           </div>
 
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white mb-1 lg:mb-3 tracking-tight">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 lg:mb-3 tracking-tight">
             Cursos <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Online</span>
           </h1>
           <p className="text-xs md:text-sm lg:text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
@@ -356,7 +356,7 @@ export default async function CursosPage({
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-cyan-200">
                 Únete como Creador
               </span>
-              <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">
                 ¿Eres un experto en tecnología? <br />
                 <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Enseña en ElectroShop</span>
               </h2>
@@ -367,15 +367,15 @@ export default async function CursosPage({
               {/* Micro stats inside banner */}
               <div className="grid grid-cols-3 gap-4 pt-2 max-w-md">
                 <div>
-                  <p className="text-xl md:text-2xl font-black text-cyan-300">90%</p>
+                  <p className="text-xl md:text-2xl font-bold text-cyan-300">90%</p>
                   <p className="text-xs text-white/60">Comisión para ti</p>
                 </div>
                 <div>
-                  <p className="text-xl md:text-2xl font-black text-cyan-300">Fácil</p>
+                  <p className="text-xl md:text-2xl font-bold text-cyan-300">Fácil</p>
                   <p className="text-xs text-white/60">Sube tus videos</p>
                 </div>
                 <div>
-                  <p className="text-xl md:text-2xl font-black text-cyan-300">Soporte</p>
+                  <p className="text-xl md:text-2xl font-bold text-cyan-300">Soporte</p>
                   <p className="text-xs text-white/60">De principio a fin</p>
                 </div>
               </div>

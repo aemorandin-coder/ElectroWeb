@@ -613,7 +613,7 @@ export default function GiftCardsPage() {
                         </div>
                         <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
                     </div>
-                    <h1 className="text-lg md:text-3xl lg:text-4xl font-black text-white mb-0.5 lg:mb-3 tracking-tight">
+                    <h1 className="text-lg md:text-3xl lg:text-4xl font-bold text-white mb-0.5 lg:mb-3 tracking-tight">
                         Regala <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Tecnología</span>
                     </h1>
                     <p className="text-[11px] md:text-sm lg:text-base text-white/90 max-w-3xl mx-auto">
@@ -680,12 +680,12 @@ export default function GiftCardsPage() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <p className="text-white font-black text-xl tracking-tight">ELECTRO</p>
+                                                    <p className="text-white font-bold text-xl tracking-tight">ELECTRO</p>
                                                     <p className="text-xs font-semibold tracking-widest" style={{ color: selectedDesign.accent }}>SHOP</p>
                                                 </div>
                                             </div>
                                             <div
-                                                className="px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest backdrop-blur-sm"
+                                                className="px-4 py-1.5 rounded-full text-xs font-bold tracking-widest backdrop-blur-sm"
                                                 style={{ background: `${selectedDesign.accent}25`, color: selectedDesign.accent, border: `1px solid ${selectedDesign.accent}40` }}
                                             >
                                                 GIFT CARD
@@ -715,7 +715,7 @@ export default function GiftCardsPage() {
                                             <div>
                                                 <p className="text-white/50 text-xs font-medium tracking-wider mb-1">VALOR</p>
                                                 <p
-                                                    className="text-5xl font-black tracking-tight"
+                                                    className="text-5xl font-bold tracking-tight"
                                                     style={{ color: selectedDesign.accent, textShadow: `0 0 30px ${selectedDesign.accent}60` }}
                                                 >
                                                     ${finalAmount.toFixed(0)}
@@ -781,7 +781,7 @@ export default function GiftCardsPage() {
 
                                         {/* Redemption Code */}
                                         <div className="text-center">
-                                            <p className="text-white/40 text-[10px] font-medium tracking-wider mb-2">CÓDIGO DE CANJE</p>
+                                            <p className="text-white/40 text-xs font-medium tracking-wider mb-2">CÓDIGO DE CANJE</p>
                                             <div
                                                 className="inline-block px-6 py-3 rounded-xl backdrop-blur-sm"
                                                 style={{ background: `${selectedDesign.accent}15`, border: `1px solid ${selectedDesign.accent}40` }}
@@ -793,7 +793,7 @@ export default function GiftCardsPage() {
                                                     {FAKE_CODE}
                                                 </p>
                                             </div>
-                                            <p className="text-white/30 text-[9px] mt-2 font-medium">Válido solo en electroshop.com</p>
+                                            <p className="text-white/30 text-[11px] mt-2 font-medium">Válido solo en electroshop.com</p>
                                         </div>
                                     </div>
                                 </div>
@@ -813,7 +813,7 @@ export default function GiftCardsPage() {
                                 <button
                                     key={cat.id}
                                     onClick={() => setDesignCategory(cat.id as typeof designCategory)}
-                                    className={`px-2 lg:px-3 py-1 lg:py-1.5 rounded-full text-[10px] lg:text-xs font-semibold transition-all flex items-center gap-1 ${designCategory === cat.id
+                                    className={`px-2 lg:px-3 py-1 lg:py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${designCategory === cat.id
                                         ? 'bg-blue-600 text-white shadow-md'
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
@@ -864,7 +864,7 @@ export default function GiftCardsPage() {
                                 {PRESET_AMOUNTS.map((amount) => (
                                     <div key={amount} className="relative">
                                         {amount === 50 && (
-                                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[8px] font-bold rounded-full shadow-lg z-20 whitespace-nowrap">
+                                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[11px] font-bold rounded-full shadow-lg z-20 whitespace-nowrap">
                                                 ⭐ Popular
                                             </span>
                                         )}
@@ -937,20 +937,20 @@ export default function GiftCardsPage() {
                                                 <li>• Máximo: $1,000</li>
                                                 <li>• Solo múltiplos de $5</li>
                                             </ul>
-                                            <div className="text-gray-400 mt-1 text-[10px]">Se redondea automáticamente</div>
+                                            <div className="text-gray-400 mt-1 text-xs">Se redondea automáticamente</div>
                                             <div className="absolute -bottom-1 right-3 w-2 h-2 bg-gray-900 rotate-45"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             {/* Min/Max indicator */}
-                            <p className="text-[10px] text-gray-400 text-center">Mínimo $5 — Máximo $1,000 (múltiplos de $5)</p>
+                            <p className="text-xs text-gray-400 text-center">Mínimo $5 — Máximo $1,000 (múltiplos de $5)</p>
                         </div>
 
                         {/* Step 2: Recipient Info */}
                         <div className="mb-3">
                             <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                <span className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                                <span className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-bold">2</span>
                                 Destinatario
                             </h3>
 
@@ -1005,7 +1005,7 @@ export default function GiftCardsPage() {
                                         </div>
                                     )}
                                     {errors.name && (
-                                        <div className="absolute -bottom-4 left-0 text-[10px] text-red-500 flex items-center gap-1">
+                                        <div className="absolute -bottom-4 left-0 text-xs text-red-500 flex items-center gap-1">
                                             <FiAlertCircle className="w-2.5 h-2.5" />
                                             {errors.name}
                                         </div>
@@ -1035,7 +1035,7 @@ export default function GiftCardsPage() {
                                         {!isForMyself && !isCheckingEmail && recipientExists === false && <FiAlertCircle className="w-3.5 h-3.5 text-amber-500" />}
                                     </div>
                                     {errors.email && (
-                                        <div className="absolute -bottom-4 left-0 text-[10px] text-red-500 flex items-center gap-1">
+                                        <div className="absolute -bottom-4 left-0 text-xs text-red-500 flex items-center gap-1">
                                             <FiAlertCircle className="w-2.5 h-2.5" />
                                             {errors.email}
                                         </div>
@@ -1043,7 +1043,7 @@ export default function GiftCardsPage() {
                                 </div>
                             </div>
                             {isForMyself && (
-                                <p className="text-[10px] text-blue-500 mt-1.5 flex items-center gap-1">
+                                <p className="text-xs text-blue-500 mt-1.5 flex items-center gap-1">
                                     <FiLock className="w-2.5 h-2.5" />
                                     Se usarán tus datos de cuenta automáticamente
                                 </p>
@@ -1059,7 +1059,7 @@ export default function GiftCardsPage() {
                         {/* Step 3: Personal Message */}
                         <div className="mb-3">
                             <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                <span className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-[10px] font-bold">3</span>
+                                <span className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-bold">3</span>
                                 Mensaje personal (opcional)
                             </h3>
                             <textarea
@@ -1070,7 +1070,7 @@ export default function GiftCardsPage() {
                                 rows={2}
                                 maxLength={200}
                             />
-                            <p className="text-[10px] text-gray-400 text-right">{personalMessage.length}/200</p>
+                            <p className="text-xs text-gray-400 text-right">{personalMessage.length}/200</p>
                         </div>
 
                         {/* Step 4: Scheduled Delivery (optional) - Collapsible */}
@@ -1104,7 +1104,7 @@ export default function GiftCardsPage() {
                                             min={new Date().toISOString().split('T')[0]}
                                             className="w-full px-3 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-0 outline-none text-xs"
                                         />
-                                        <p className="text-[10px] text-gray-400 mt-1">
+                                        <p className="text-xs text-gray-400 mt-1">
                                             {scheduledDate ? `Se enviará el ${new Date(scheduledDate + 'T12:00:00').toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' })}` : 'Dejar vacío para envío inmediato'}
                                         </p>
                                     </div>
@@ -1131,7 +1131,7 @@ export default function GiftCardsPage() {
                                 <div className="text-right">
                                     <span className="font-bold text-gray-900">${finalAmount.toFixed(2)}</span>
                                     {finalAmountBs && (
-                                        <p className="text-[10px] text-gray-500">≈ Bs. {finalAmountBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                        <p className="text-xs text-gray-500">≈ Bs. {finalAmountBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                     )}
                                 </div>
                             </div>
@@ -1146,7 +1146,7 @@ export default function GiftCardsPage() {
                         </div>
 
                         {/* Security Badge */}
-                        <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500 mb-3">
+                        <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mb-3">
                             <FiLock className="w-3 h-3" />
                             <span>Pago 100% seguro — Entrega garantizada</span>
                         </div>
@@ -1314,7 +1314,7 @@ export default function GiftCardsPage() {
                                 style={{ background: selectedDesign.gradient }}
                             >
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-3xl font-black text-white drop-shadow-lg">${finalAmount}</span>
+                                    <span className="text-3xl font-bold text-white drop-shadow-lg">${finalAmount}</span>
                                 </div>
                             </div>
 

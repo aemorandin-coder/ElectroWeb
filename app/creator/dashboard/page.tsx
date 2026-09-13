@@ -93,7 +93,7 @@ export default function CreatorDashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white">Hola, {creator.displayName}</h1>
+          <h1 className="text-2xl font-bold text-white">Hola, {creator.displayName}</h1>
           <p className="text-white/40 text-sm mt-1">Aquí está el resumen de tu actividad como creador.</p>
         </div>
         <Link
@@ -111,7 +111,7 @@ export default function CreatorDashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <div key={stat.label} className={`bg-gradient-to-br ${stat.color} border border-white/10 rounded-2xl p-5`}>
-            <p className="text-2xl font-black text-white">{stat.value}</p>
+            <p className="text-2xl font-bold text-white">{stat.value}</p>
             <p className="text-white/70 text-xs font-semibold mt-0.5">{stat.label}</p>
             <p className="text-white/30 text-xs">{stat.sub}</p>
           </div>

@@ -166,7 +166,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl lg:text-3xl font-black text-[#212529] mb-3">{course.title}</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[#212529] mb-3">{course.title}</h1>
           {course.shortDesc && <p className="text-lg text-[#6a6c6b] mb-4">{course.shortDesc}</p>}
 
           {/* Meta row */}
@@ -485,7 +485,7 @@ function EnrollCard({
       </div>
 
       {/* Price */}
-      <div className="text-3xl font-black text-[#212529] mb-4">
+      <div className="text-3xl font-bold text-[#212529] mb-4">
         {isFree ? 'Gratis' : `$${price.toFixed(2)}`}
       </div>
 

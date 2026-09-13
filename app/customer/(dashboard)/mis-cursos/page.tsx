@@ -60,25 +60,25 @@ export default function MisCursosPage() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#212529]">Mis Cursos</h1>
-        <p className="text-sm text-[#6a6c6b] mt-1">
+        <h1 className="text-2xl font-bold text-ink">Mis Cursos</h1>
+        <p className="text-sm text-muted mt-1">
           {enrollments.length} curso(s) inscrito(s)
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-[#f8f9fa] rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-[#2a63cd]">{enrollments.length}</p>
-          <p className="text-xs text-[#6a6c6b] mt-0.5">Total</p>
+        <div className="bg-surface rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-brand-500">{enrollments.length}</p>
+          <p className="text-xs text-muted mt-0.5">Total</p>
         </div>
-        <div className="bg-[#f8f9fa] rounded-xl p-4 text-center">
+        <div className="bg-surface rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-orange-500">{inProgressCount}</p>
-          <p className="text-xs text-[#6a6c6b] mt-0.5">En progreso</p>
+          <p className="text-xs text-muted mt-0.5">En progreso</p>
         </div>
-        <div className="bg-[#f8f9fa] rounded-xl p-4 text-center">
+        <div className="bg-surface rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-green-600">{completedCount}</p>
-          <p className="text-xs text-[#6a6c6b] mt-0.5">Completados</p>
+          <p className="text-xs text-muted mt-0.5">Completados</p>
         </div>
       </div>
 
@@ -92,7 +92,7 @@ export default function MisCursosPage() {
           <button
             key={key}
             onClick={() => setFilter(key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === key ? 'bg-[#2a63cd] text-white' : 'bg-[#f8f9fa] text-[#6a6c6b] hover:bg-[#e9ecef]'}`}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === key ? 'bg-brand-500 text-white' : 'bg-surface text-muted hover:bg-line'}`}
           >
             {label}
           </button>
@@ -101,11 +101,11 @@ export default function MisCursosPage() {
 
       {/* Course list */}
       {loading ? (
-        <div className="text-center py-16 text-[#6a6c6b]">Cargando cursos...</div>
+        <div className="text-center py-16 text-muted">Cargando cursos...</div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <div className="text-5xl mb-4">📚</div>
-          <p className="text-[#6a6c6b] font-medium mb-2">
+          <p className="text-muted font-medium mb-2">
             {filter === 'all'
               ? 'No estás inscrito en ningún curso aún'
               : filter === 'completed'
@@ -115,7 +115,7 @@ export default function MisCursosPage() {
           {filter === 'all' && (
             <Link
               href="/cursos"
-              className="inline-block mt-3 px-5 py-2 bg-[#2a63cd] text-white text-sm font-semibold rounded-xl hover:bg-[#1e4ba3] transition-colors"
+              className="inline-block mt-3 px-5 py-2 bg-brand-500 text-white text-sm font-semibold rounded-xl hover:bg-brand-600 transition-colors"
             >
               Ver catálogo de cursos
             </Link>
@@ -129,14 +129,14 @@ export default function MisCursosPage() {
             const isCompleted = !!enrollment.completedAt;
 
             return (
-              <div key={enrollment.id} className="flex gap-4 bg-[#f8f9fa] rounded-xl p-4 hover:bg-[#e9ecef] transition-colors">
+              <div key={enrollment.id} className="flex gap-4 bg-surface rounded-xl p-4 hover:bg-line transition-colors">
                 {/* Thumbnail */}
-                <div className="w-24 h-16 lg:w-32 lg:h-20 rounded-lg overflow-hidden bg-[#2a63cd]/10 shrink-0">
+                <div className="w-24 h-16 lg:w-32 lg:h-20 rounded-lg overflow-hidden bg-brand-500/10 shrink-0">
                   {course.thumbnail ? (
                     <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-[#2a63cd]/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-8 h-8 text-brand-500/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                       </svg>
                     </div>
@@ -146,7 +146,7 @@ export default function MisCursosPage() {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="font-semibold text-[#212529] text-sm line-clamp-2">{course.title}</h3>
+                    <h3 className="font-semibold text-ink text-sm line-clamp-2">{course.title}</h3>
                     {isCompleted && (
                       <span className="shrink-0 flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,17 +157,17 @@ export default function MisCursosPage() {
                     )}
                   </div>
 
-                  <p className="text-xs text-[#6a6c6b] mb-2">{instructorName}</p>
+                  <p className="text-xs text-muted mb-2">{instructorName}</p>
 
                   {/* Progress */}
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="flex-1 bg-[#dee2e6] rounded-full h-1.5">
+                    <div className="flex-1 bg-line-strong rounded-full h-1.5">
                       <div
-                        className={`h-1.5 rounded-full transition-all ${isCompleted ? 'bg-green-500' : 'bg-[#2a63cd]'}`}
+                        className={`h-1.5 rounded-full transition-all ${isCompleted ? 'bg-green-500' : 'bg-brand-500'}`}
                         style={{ width: `${enrollment.progress}%` }}
                       />
                     </div>
-                    <span className="text-xs font-semibold text-[#6a6c6b] shrink-0">{enrollment.progress}%</span>
+                    <span className="text-xs font-semibold text-muted shrink-0">{enrollment.progress}%</span>
                   </div>
 
                   {/* CTA */}
@@ -176,14 +176,14 @@ export default function MisCursosPage() {
                       href={`/cursos/${course.slug}/aprender`}
                       className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${isCompleted
                         ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                        : 'bg-[#2a63cd] text-white hover:bg-[#1e4ba3]'
+                        : 'bg-brand-500 text-white hover:bg-brand-600'
                       }`}
                     >
                       {isCompleted ? 'Repasar Curso' : enrollment.progress > 0 ? 'Continuar' : 'Comenzar'}
                     </Link>
                     <Link
                       href={`/cursos/${course.slug}`}
-                      className="px-3 py-1.5 text-xs font-semibold text-[#6a6c6b] border border-[#dee2e6] rounded-lg hover:bg-white transition-colors"
+                      className="px-3 py-1.5 text-xs font-semibold text-muted border border-line-strong rounded-lg hover:bg-white transition-colors"
                     >
                       Ver detalles
                     </Link>
@@ -202,12 +202,12 @@ export default function MisCursosPage() {
 
       {/* Browse more CTA */}
       {enrollments.length > 0 && (
-        <div className="mt-8 p-6 bg-gradient-to-br from-[#2a63cd]/5 to-[#2a63cd]/10 rounded-xl border border-[#2a63cd]/20 text-center">
-          <p className="text-sm font-semibold text-[#212529] mb-1">¿Quieres aprender más?</p>
-          <p className="text-xs text-[#6a6c6b] mb-3">Explora nuevos cursos y sigue creciendo</p>
+        <div className="mt-8 p-6 bg-gradient-to-br from-brand-500/5 to-brand-500/10 rounded-xl border border-brand-500/20 text-center">
+          <p className="text-sm font-semibold text-ink mb-1">¿Quieres aprender más?</p>
+          <p className="text-xs text-muted mb-3">Explora nuevos cursos y sigue creciendo</p>
           <Link
             href="/cursos"
-            className="inline-block px-5 py-2 bg-[#2a63cd] text-white text-sm font-bold rounded-xl hover:bg-[#1e4ba3] transition-colors"
+            className="inline-block px-5 py-2 bg-brand-500 text-white text-sm font-bold rounded-xl hover:bg-brand-600 transition-colors"
           >
             Ver más cursos
           </Link>

@@ -36,10 +36,10 @@ export default function NotificationsPage() {
         return (
             <div className="flex flex-col items-center justify-center h-64">
                 <div className="relative w-12 h-12">
-                    <div className="absolute inset-0 rounded-full border-2 border-[#e9ecef]" />
-                    <div className="absolute inset-0 rounded-full border-2 border-[#2a63cd] border-t-transparent animate-spin" />
+                    <div className="absolute inset-0 rounded-full border-2 border-line" />
+                    <div className="absolute inset-0 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
                 </div>
-                <p className="mt-4 text-sm text-[#6a6c6b]">Cargando notificaciones...</p>
+                <p className="mt-4 text-sm text-muted">Cargando notificaciones...</p>
             </div>
         );
     }
@@ -49,8 +49,8 @@ export default function NotificationsPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-[#212529]">Notificaciones</h1>
-                    <p className="text-sm text-[#6a6c6b]">
+                    <h1 className="text-xl font-bold text-ink">Notificaciones</h1>
+                    <p className="text-sm text-muted">
                         {unreadCount > 0 ? `${unreadCount} sin leer` : 'Todas leídas'}
                     </p>
                 </div>
@@ -58,7 +58,7 @@ export default function NotificationsPage() {
                     {unreadCount > 0 && (
                         <button
                             onClick={markAllAsRead}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#2a63cd] bg-[#2a63cd]/10 rounded-lg hover:bg-[#2a63cd]/20 transition-colors"
+                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-500 bg-brand-500/10 rounded-lg hover:bg-brand-500/20 transition-colors"
                         >
                             <FiCheckCircle className="w-4 h-4" />
                             Marcar todas como leídas
@@ -72,8 +72,8 @@ export default function NotificationsPage() {
                 <button
                     onClick={() => setFilter('all')}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filter === 'all'
-                            ? 'bg-[#2a63cd] text-white'
-                            : 'bg-[#f8f9fa] text-[#6a6c6b] hover:bg-[#e9ecef]'
+                            ? 'bg-brand-500 text-white'
+                            : 'bg-surface text-muted hover:bg-line'
                         }`}
                 >
                     Todas ({notifications.length})
@@ -81,8 +81,8 @@ export default function NotificationsPage() {
                 <button
                     onClick={() => setFilter('unread')}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filter === 'unread'
-                            ? 'bg-[#2a63cd] text-white'
-                            : 'bg-[#f8f9fa] text-[#6a6c6b] hover:bg-[#e9ecef]'
+                            ? 'bg-brand-500 text-white'
+                            : 'bg-surface text-muted hover:bg-line'
                         }`}
                 >
                     No leídas ({unreadCount})
@@ -91,19 +91,19 @@ export default function NotificationsPage() {
 
             {/* Notifications List */}
             {filteredNotifications.length === 0 ? (
-                <div className="bg-white rounded-xl border border-[#e9ecef] p-12 text-center">
-                    <div className="w-16 h-16 bg-[#f8f9fa] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <FiBell className="w-8 h-8 text-[#adb5bd]" />
+                <div className="bg-white rounded-xl border border-line p-12 text-center">
+                    <div className="w-16 h-16 bg-surface rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <FiBell className="w-8 h-8 text-subtle" />
                     </div>
-                    <h3 className="text-lg font-bold text-[#212529] mb-2">
+                    <h3 className="text-lg font-bold text-ink mb-2">
                         {filter === 'unread' ? 'No hay notificaciones sin leer' : 'No hay notificaciones'}
                     </h3>
-                    <p className="text-sm text-[#6a6c6b]">
+                    <p className="text-sm text-muted">
                         Te notificaremos cuando haya novedades sobre tus pedidos
                     </p>
                 </div>
             ) : (
-                <div className="bg-white rounded-xl border border-[#e9ecef] overflow-hidden divide-y divide-[#e9ecef]">
+                <div className="bg-white rounded-xl border border-line overflow-hidden divide-y divide-line">
                     {filteredNotifications.map((notification) => {
                         const iconConfig = getNotificationIcon(notification.type);
                         const IconComponent = iconConfig.icon;
@@ -111,7 +111,7 @@ export default function NotificationsPage() {
                         return (
                             <div
                                 key={notification.id}
-                                className={`p-4 transition-colors ${!notification.read ? 'bg-blue-50/50' : 'hover:bg-[#f8f9fa]'
+                                className={`p-4 transition-colors ${!notification.read ? 'bg-blue-50/50' : 'hover:bg-surface'
                                     }`}
                             >
                                 <div className="flex items-start gap-3">
@@ -124,25 +124,25 @@ export default function NotificationsPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start justify-between gap-2">
                                             <div>
-                                                <h4 className={`text-sm font-semibold ${!notification.read ? 'text-[#212529]' : 'text-[#495057]'}`}>
+                                                <h4 className={`text-sm font-semibold ${!notification.read ? 'text-ink' : 'text-ink-soft'}`}>
                                                     {notification.title}
                                                 </h4>
-                                                <p className="text-sm text-[#6a6c6b] mt-0.5">{notification.message}</p>
+                                                <p className="text-sm text-muted mt-0.5">{notification.message}</p>
                                             </div>
                                             {!notification.read && (
-                                                <div className="w-2 h-2 rounded-full bg-[#2a63cd] flex-shrink-0 mt-2" />
+                                                <div className="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0 mt-2" />
                                             )}
                                         </div>
 
                                         <div className="flex items-center gap-3 mt-2">
-                                            <span className="text-xs text-[#adb5bd]">
+                                            <span className="text-xs text-subtle">
                                                 {format(new Date(notification.createdAt), "d MMM, HH:mm", { locale: es })}
                                             </span>
 
                                             {notification.link && (
                                                 <Link
                                                     href={notification.link}
-                                                    className="text-xs font-medium text-[#2a63cd] hover:underline"
+                                                    className="text-xs font-medium text-brand-500 hover:underline"
                                                 >
                                                     Ver detalles
                                                 </Link>
@@ -151,7 +151,7 @@ export default function NotificationsPage() {
                                             {!notification.read && (
                                                 <button
                                                     onClick={() => handleMarkAsRead(notification.id)}
-                                                    className="text-xs font-medium text-[#6a6c6b] hover:text-[#212529] flex items-center gap-1"
+                                                    className="text-xs font-medium text-muted hover:text-ink flex items-center gap-1"
                                                 >
                                                     <FiCheck className="w-3 h-3" />
                                                     Marcar como leída

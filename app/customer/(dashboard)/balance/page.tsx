@@ -30,7 +30,7 @@ interface UserBalance {
 const MobileBalanceSkeleton = () => (
   <div className="lg:hidden space-y-4 p-4">
     {/* Hero Balance Skeleton */}
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-6">
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 p-6">
       <div className="animate-pulse">
         <div className="h-3 w-20 bg-white/20 rounded-full mb-3" />
         <div className="h-10 w-40 bg-white/30 rounded-lg mb-4" />
@@ -134,7 +134,7 @@ export default function BalancePage() {
 
         {/* Desktop loading - unchanged */}
         <div className="hidden lg:flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-[#2a63cd]"></div>
+          <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-brand-500"></div>
         </div>
       </>
     );
@@ -152,7 +152,7 @@ export default function BalancePage() {
             ======================================== */}
         <div className="relative rounded-2xl overflow-hidden">
           {/* Animated Gradient Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#0ea5e9]">
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-700 via-[#2563eb] to-[#0ea5e9]">
             {/* Floating Orbs with Animation */}
             <div className="absolute top-2 right-4 w-20 h-20 bg-white/10 rounded-full blur-2xl" />
             <div className="absolute bottom-4 left-2 w-16 h-16 bg-cyan-300/20 rounded-full blur-xl animate-pulse" style={{ animationDelay: '0.5s' }} />
@@ -212,7 +212,7 @@ export default function BalancePage() {
             >
               {/* Shimmer Animation */}
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full group-active:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-blue-100/60 to-transparent" />
-              <span className="relative flex items-center justify-center gap-2 text-[#1e3a8a]">
+              <span className="relative flex items-center justify-center gap-2 text-brand-700">
                 <FiPlus className="w-4 h-4" />
                 Recargar Saldo
               </span>
@@ -237,7 +237,7 @@ export default function BalancePage() {
                   key={filter.value}
                   onClick={() => setFilterType(filter.value)}
                   className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all ${filterType === filter.value
-                    ? 'bg-[#2a63cd] text-white shadow-md'
+                    ? 'bg-brand-500 text-white shadow-md'
                     : 'bg-gray-100/80 text-gray-500 hover:bg-gray-200/50'
                     }`}
                 >
@@ -301,7 +301,7 @@ export default function BalancePage() {
               </p>
               <button
                 onClick={() => setShowRechargeModal(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2a63cd] text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-500 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
               >
                 <FiPlus className="w-3.5 h-3.5" />
                 Recargar
@@ -317,7 +317,7 @@ export default function BalancePage() {
           ============================================ */}
       <div className="hidden lg:block space-y-2 lg:space-y-3 overflow-y-auto h-full">
         {/* Header - Responsive */}
-        <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-lg lg:rounded-xl p-3 lg:p-4 text-white shadow-lg animate-fadeIn">
+        <div className="bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg lg:rounded-xl p-3 lg:p-4 text-white shadow-lg animate-fadeIn">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 lg:gap-0">
             <div>
               <div className="flex items-center gap-2 mb-0.5 lg:mb-1">
@@ -330,7 +330,7 @@ export default function BalancePage() {
             </div>
             <button
               onClick={() => setShowRechargeModal(true)}
-              className="px-3 lg:px-4 py-2 bg-white text-[#2a63cd] font-bold rounded-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base w-full sm:w-auto"
+              className="px-3 lg:px-4 py-2 bg-white text-brand-500 font-bold rounded-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base w-full sm:w-auto"
             >
               <FiPlus className="w-4 h-4" />
               <span className="sm:hidden">Recargar</span>
@@ -344,7 +344,7 @@ export default function BalancePage() {
           <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-gray-100 shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
             <p className="text-[11px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Saldo</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
-              <span className="text-xl lg:text-2xl font-bold text-[#212529] whitespace-nowrap animate-marquee-text">
+              <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap animate-marquee-text">
                 ${userBalance?.balance.toFixed(2) || '0.00'}
               </span>
             </div>
@@ -354,7 +354,7 @@ export default function BalancePage() {
           <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-gray-100 shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
             <p className="text-[11px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
-              <span className="text-xl lg:text-2xl font-bold text-[#212529] whitespace-nowrap">
+              <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap">
                 ${userBalance?.totalRecharges.toFixed(0) || '0'}
               </span>
             </div>
@@ -364,7 +364,7 @@ export default function BalancePage() {
           <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-gray-100 shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
             <p className="text-[11px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Gastado</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
-              <span className="text-xl lg:text-2xl font-bold text-[#212529] whitespace-nowrap">
+              <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap">
                 ${userBalance?.totalSpent.toFixed(0) || '0'}
               </span>
             </div>
@@ -373,11 +373,11 @@ export default function BalancePage() {
         </div>
 
         {/* Transactions - Responsive & Optimized */}
-        <div className="bg-white rounded-lg border border-[#e9ecef] shadow-sm overflow-hidden animate-slideInUp">
-          <div className="px-3 lg:px-4 py-2.5 border-b border-[#e9ecef] bg-gradient-to-r from-[#f8f9fa] to-white">
+        <div className="bg-white rounded-lg border border-line shadow-sm overflow-hidden animate-slideInUp">
+          <div className="px-3 lg:px-4 py-2.5 border-b border-line bg-gradient-to-r from-surface to-white">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-xs lg:text-sm font-bold text-[#212529] flex items-center gap-1.5 lg:gap-2 flex-shrink-0">
-                <FiTrendingUp className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-[#2a63cd]" />
+              <h2 className="text-xs lg:text-sm font-bold text-ink flex items-center gap-1.5 lg:gap-2 flex-shrink-0">
+                <FiTrendingUp className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-brand-500" />
                 <span className="hidden sm:inline">Transacciones</span>
                 <span className="sm:hidden">Historial</span>
               </h2>
@@ -385,25 +385,25 @@ export default function BalancePage() {
                 <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-100">
                   <button
                     onClick={() => setFilterType('ALL')}
-                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'ALL' ? 'bg-[#2a63cd] text-white shadow-sm' : 'text-[#6a6c6b] hover:bg-gray-50'}`}
+                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'ALL' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-gray-50'}`}
                   >
                     Todas
                   </button>
                   <button
                     onClick={() => setFilterType('RECHARGE')}
-                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'RECHARGE' ? 'bg-[#2a63cd] text-white shadow-sm' : 'text-[#6a6c6b] hover:bg-gray-50'}`}
+                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'RECHARGE' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-gray-50'}`}
                   >
                     Recargas
                   </button>
                   <button
                     onClick={() => setFilterType('PURCHASE')}
-                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'PURCHASE' ? 'bg-[#2a63cd] text-white shadow-sm' : 'text-[#6a6c6b] hover:bg-gray-50'}`}
+                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'PURCHASE' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-gray-50'}`}
                   >
                     Compras
                   </button>
                 </div>
-                <button className="p-1.5 lg:p-2 hover:bg-[#f8f9fa] rounded-lg transition-colors hidden sm:block">
-                  <FiDownload className="w-4 h-4 lg:w-5 lg:h-5 text-[#6a6c6b]" />
+                <button className="p-1.5 lg:p-2 hover:bg-surface rounded-lg transition-colors hidden sm:block">
+                  <FiDownload className="w-4 h-4 lg:w-5 lg:h-5 text-muted" />
                 </button>
               </div>
             </div>
@@ -415,15 +415,15 @@ export default function BalancePage() {
                 {filteredTransactions.slice(0, 5).map((transaction) => (
                   <div
                     key={transaction.id}
-                    className="flex items-center justify-between p-2.5 lg:p-4 rounded-lg border border-[#e9ecef] hover:bg-[#f8f9fa] transition-colors gap-2"
+                    className="flex items-center justify-between p-2.5 lg:p-4 rounded-lg border border-line hover:bg-surface transition-colors gap-2"
                   >
                     <div className="flex items-center gap-2 lg:gap-4 min-w-0">
                       <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${getTransactionColor(transaction.type)}`}>
                         {getTransactionIcon(transaction.type)}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-[#212529] text-xs lg:text-base truncate">{transaction.description}</p>
-                        <div className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-[#6a6c6b]">
+                        <p className="font-semibold text-ink text-xs lg:text-base truncate">{transaction.description}</p>
+                        <div className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-muted">
                           <span className="truncate">
                             {new Date(transaction.createdAt).toLocaleDateString('es-ES', {
                               day: 'numeric',
@@ -458,11 +458,11 @@ export default function BalancePage() {
               </div>
             ) : (
               <div className="text-center py-8 lg:py-12">
-                <FiDollarSign className="w-12 h-12 lg:w-16 lg:h-16 text-[#e9ecef] mx-auto mb-3 lg:mb-4" />
-                <h3 className="text-base lg:text-lg font-bold text-[#212529] mb-1 lg:mb-2">
+                <FiDollarSign className="w-12 h-12 lg:w-16 lg:h-16 text-line mx-auto mb-3 lg:mb-4" />
+                <h3 className="text-base lg:text-lg font-bold text-ink mb-1 lg:mb-2">
                   No hay transacciones
                 </h3>
-                <p className="text-[#6a6c6b] text-xs lg:text-base mb-4 lg:mb-6 px-4">
+                <p className="text-muted text-xs lg:text-base mb-4 lg:mb-6 px-4">
                   {filterType === 'ALL'
                     ? 'Aún no has realizado ninguna transacción'
                     : `No tienes ${filterType === 'RECHARGE' ? 'recargas' : 'compras'}`
@@ -470,7 +470,7 @@ export default function BalancePage() {
                 </p>
                 <button
                   onClick={() => setShowRechargeModal(true)}
-                  className="inline-flex items-center gap-1.5 lg:gap-2 px-4 lg:px-6 py-2 lg:py-3 bg-[#2a63cd] text-white font-semibold rounded-lg hover:bg-[#1e4ba3] transition-all shadow-md text-sm lg:text-base"
+                  className="inline-flex items-center gap-1.5 lg:gap-2 px-4 lg:px-6 py-2 lg:py-3 bg-brand-500 text-white font-semibold rounded-lg hover:bg-brand-600 transition-all shadow-md text-sm lg:text-base"
                 >
                   <FiPlus className="w-4 h-4 lg:w-5 lg:h-5" />
                   Primera Recarga

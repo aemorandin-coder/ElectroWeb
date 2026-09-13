@@ -105,8 +105,8 @@ export default function CustomerDashboardLayout({
 
   if (status === 'loading') {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-[#f8f9fa]">
-        <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-[#2a63cd]"></div>
+      <div className="min-h-dvh flex items-center justify-center bg-surface">
+        <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-brand-500"></div>
       </div>
     );
   }
@@ -150,7 +150,7 @@ export default function CustomerDashboardLayout({
   };
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#2a63cd] relative">
+    <div className="min-h-dvh bg-gradient-to-br from-brand-700 via-[#2563eb] to-brand-500 relative">
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
@@ -177,8 +177,8 @@ export default function CustomerDashboardLayout({
         >
           <div className="h-full flex flex-col">
             {/* Logo */}
-            <div className="flex items-center gap-3 px-6 py-5 border-b border-[#e9ecef]">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2a63cd] shadow-md shadow-[#2a63cd]/20">
+            <div className="flex items-center gap-3 px-6 py-5 border-b border-line">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-500 shadow-md shadow-brand-500/20">
                 {companySettings?.logo ? (
                   <div className="relative w-full h-full">
                     <Image src={companySettings.logo} alt={companySettings.companyName} fill className="object-contain p-1" />
@@ -190,10 +190,10 @@ export default function CustomerDashboardLayout({
                 )}
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-[#212529]">
+                <h2 className="text-sm font-semibold text-ink">
                   {companySettings?.companyName || 'Electro Shop'}
                 </h2>
-                <p className="text-xs text-[#6a6c6b]">Mi Panel</p>
+                <p className="text-xs text-muted">Mi Panel</p>
               </div>
             </div>
 
@@ -209,11 +209,11 @@ export default function CustomerDashboardLayout({
                       <Link
                         href={item.href}
                         className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${isActive
-                          ? 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white shadow-lg shadow-[#2a63cd]/30 scale-[1.02]'
-                          : 'text-[#6a6c6b] hover:bg-[#f8f9fa] hover:text-[#212529] hover:scale-[1.01]'
+                          ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/30 scale-[1.02]'
+                          : 'text-muted hover:bg-surface hover:text-ink hover:scale-[1.01]'
                           }`}
                       >
-                        <span className={`relative z-10 transition-transform duration-300 ${isActive ? 'text-white scale-110' : 'text-[#6a6c6b] group-hover:scale-110'}`}>
+                        <span className={`relative z-10 transition-transform duration-300 ${isActive ? 'text-white scale-110' : 'text-muted group-hover:scale-110'}`}>
                           <item.icon className="w-5 h-5" />
                         </span>
                         <span className="relative z-10">{item.label}</span>
@@ -228,9 +228,9 @@ export default function CustomerDashboardLayout({
             </nav>
 
             {/* User Info & Logout - Desktop */}
-            <div className="border-t border-[#e9ecef] p-4">
+            <div className="border-t border-line p-4">
               <div className="flex items-center gap-3 mb-3 px-2">
-                <div className="relative w-9 h-9 rounded-full bg-[#f8f9fa] border border-[#dee2e6] overflow-hidden flex items-center justify-center flex-shrink-0">
+                <div className="relative w-9 h-9 rounded-full bg-surface border border-line-strong overflow-hidden flex items-center justify-center flex-shrink-0">
                   {userImage ? (
                     <Image
                       src={userImage}
@@ -239,23 +239,23 @@ export default function CustomerDashboardLayout({
                       className="object-cover"
                     />
                   ) : (
-                    <span className="text-sm font-semibold text-[#2a63cd]">
+                    <span className="text-sm font-semibold text-brand-500">
                       {userInitials}
                     </span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#212529] truncate">
+                  <p className="text-sm font-semibold text-ink truncate">
                     {session.user?.name}
                   </p>
-                  <p className="text-xs text-[#6a6c6b] truncate">
+                  <p className="text-xs text-muted truncate">
                     {session.user?.email}
                   </p>
                 </div>
               </div>
               <button
                 onClick={handleSignOut}
-                className="group relative w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#f8f9fa] hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 text-[#6a6c6b] hover:text-red-600 text-sm font-medium rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] overflow-hidden"
+                className="group relative w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-surface hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 text-muted hover:text-red-600 text-sm font-medium rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] overflow-hidden"
               >
                 <FiLogOut className="w-4 h-4 relative z-10" />
                 <span className="relative z-10">Cerrar Sesión</span>
@@ -346,17 +346,17 @@ export default function CustomerDashboardLayout({
           </header>
 
           {/* DESKTOP HEADER */}
-          <header className="hidden lg:block bg-white border-b border-[#e9ecef] sticky top-0 z-30 shadow-sm">
+          <header className="hidden lg:block bg-white border-b border-line sticky top-0 z-30 shadow-sm">
             <div className="px-6 py-4 flex items-center justify-between">
               {/* Menu Toggle */}
               <button
                 onClick={toggleSidebar}
-                className="relative p-2 hover:bg-[#f8f9fa] rounded-lg transition-all duration-300 group"
+                className="relative p-2 hover:bg-surface rounded-lg transition-all duration-300 group"
               >
                 {isSidebarOpen ? (
-                  <FiX className="w-5 h-5 text-[#6a6c6b] group-hover:text-[#2a63cd] transition-colors" />
+                  <FiX className="w-5 h-5 text-muted group-hover:text-brand-500 transition-colors" />
                 ) : (
-                  <FiMenu className="w-5 h-5 text-[#6a6c6b] group-hover:text-[#2a63cd] transition-colors" />
+                  <FiMenu className="w-5 h-5 text-muted group-hover:text-brand-500 transition-colors" />
                 )}
               </button>
 
@@ -366,7 +366,7 @@ export default function CustomerDashboardLayout({
               {/* Home Button */}
               <Link
                 href="/"
-                className="flex items-center px-4 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white rounded-lg hover:shadow-lg transition-all"
+                className="flex items-center px-4 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-lg hover:shadow-lg transition-all"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -387,7 +387,7 @@ export default function CustomerDashboardLayout({
               }}
             >
               <div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-[#2a63cd]/5 to-transparent"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-500/5 to-transparent"
                 style={{
                   transform: isTransitioning ? 'translateX(100%)' : 'translateX(-100%)',
                   transition: 'transform 0.5s ease-out'

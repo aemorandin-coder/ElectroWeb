@@ -66,7 +66,7 @@ export default function DocumentUpload({
 
     return (
         <div className="space-y-2">
-            <label className="block text-sm font-medium text-[#212529]">{label}</label>
+            <label className="block text-sm font-medium text-ink">{label}</label>
 
             {!file && !preview ? (
                 <div className="relative">
@@ -83,27 +83,27 @@ export default function DocumentUpload({
                         className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors
               ${disabled
                                 ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
-                                : 'border-[#2a63cd]/30 bg-blue-50/50 hover:bg-blue-50 hover:border-[#2a63cd]'
+                                : 'border-brand-500/30 bg-blue-50/50 hover:bg-blue-50 hover:border-brand-500'
                             }`}
                     >
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <FiUpload className={`w-8 h-8 mb-2 ${disabled ? 'text-gray-400' : 'text-[#2a63cd]'}`} />
-                            <p className={`text-sm ${disabled ? 'text-gray-400' : 'text-[#6a6c6b]'}`}>
+                            <FiUpload className={`w-8 h-8 mb-2 ${disabled ? 'text-gray-400' : 'text-brand-500'}`} />
+                            <p className={`text-sm ${disabled ? 'text-gray-400' : 'text-muted'}`}>
                                 <span className="font-semibold">Click para subir</span> o arrastra aquí
                             </p>
-                            <p className="text-xs text-[#6a6c6b] mt-1">{accept.replace(/\./g, '').toUpperCase()} (max 5MB)</p>
+                            <p className="text-xs text-muted mt-1">{accept.replace(/\./g, '').toUpperCase()} (max 5MB)</p>
                         </div>
                     </label>
                 </div>
             ) : (
-                <div className="relative p-4 border-2 border-[#2a63cd]/20 rounded-lg bg-blue-50/30">
+                <div className="relative p-4 border-2 border-brand-500/20 rounded-lg bg-blue-50/30">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             {preview && (file?.type.startsWith('image/') || currentFileUrl?.match(/\.(jpg|jpeg|png)$/i)) ? (
                                 <img
                                     src={preview}
                                     alt="Preview"
-                                    className="w-16 h-16 object-cover rounded-lg border border-[#e9ecef]"
+                                    className="w-16 h-16 object-cover rounded-lg border border-line"
                                 />
                             ) : (
                                 <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center">
@@ -111,10 +111,10 @@ export default function DocumentUpload({
                                 </div>
                             )}
                             <div>
-                                <p className="text-sm font-medium text-[#212529]">
+                                <p className="text-sm font-medium text-ink">
                                     {file?.name || 'Documento subido'}
                                 </p>
-                                <p className="text-xs text-[#6a6c6b]">
+                                <p className="text-xs text-muted">
                                     {file ? `${(file.size / 1024).toFixed(1)} KB` : 'Ver documento'}
                                 </p>
                             </div>
@@ -133,7 +133,7 @@ export default function DocumentUpload({
                             href={currentFileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-2 text-xs text-[#2a63cd] hover:underline flex items-center gap-1"
+                            className="mt-2 text-xs text-brand-500 hover:underline flex items-center gap-1"
                         >
                             <FiFile className="w-3 h-3" />
                             Ver documento actual

@@ -81,9 +81,9 @@ const TIERS: Record<Tier, {
     },
     silver: {
         label: 'Plata',
-        color: 'text-slate-500',
-        bg: 'bg-slate-50',
-        border: 'border-slate-200',
+        color: 'text-gray-500',
+        bg: 'bg-gray-50',
+        border: 'border-gray-200',
         icon: '🥈',
     },
     gold: {
@@ -147,16 +147,16 @@ function StatCard({
     suffix?: string;
 }) {
     return (
-        <div className="bg-white rounded-xl border border-[#e9ecef] p-4 shadow-sm">
+        <div className="bg-white rounded-xl border border-line p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
                 <div className={`w-7 h-7 rounded-lg ${bg} flex items-center justify-center`}>
                     <Icon className={`w-3.5 h-3.5 ${color}`} />
                 </div>
-                <span className="text-xs text-[#6a6c6b]">{label}</span>
+                <span className="text-xs text-muted">{label}</span>
             </div>
-            <p className="text-xl font-bold text-[#212529]">
+            <p className="text-xl font-bold text-ink">
                 {value}
-                <span className="text-xs font-normal text-[#6a6c6b]">{suffix}</span>
+                <span className="text-xs font-normal text-muted">{suffix}</span>
             </p>
         </div>
     );
@@ -166,13 +166,13 @@ function NotEnrolledView() {
     return (
         <div className="space-y-6">
             <div className="text-center pt-4 pb-2">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] mb-4 shadow-lg shadow-[#2a63cd]/30">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 mb-4 shadow-lg shadow-brand-500/30">
                     <FiGift className="w-8 h-8 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold text-[#212529] mb-2">Programa de Referidos</h1>
-                <p className="text-[#6a6c6b] max-w-md mx-auto text-sm leading-relaxed">
+                <h1 className="text-2xl font-bold text-ink mb-2">Programa de Referidos</h1>
+                <p className="text-muted max-w-md mx-auto text-sm leading-relaxed">
                     Comparte la tienda con tus amigos y gana{' '}
-                    <strong className="text-[#2a63cd]">comisiones reales</strong> por cada
+                    <strong className="text-brand-500">comisiones reales</strong> por cada
                     persona que use tu enlace para comprar o recargarse.
                 </p>
             </div>
@@ -203,7 +203,7 @@ function NotEnrolledView() {
                 ].map((b) => (
                     <div
                         key={b.title}
-                        className="flex items-start gap-3 p-4 bg-[#f8f9fa] rounded-xl border border-[#e9ecef]"
+                        className="flex items-start gap-3 p-4 bg-surface rounded-xl border border-line"
                     >
                         <div
                             className={`w-9 h-9 rounded-lg ${b.bg} flex items-center justify-center flex-shrink-0`}
@@ -211,15 +211,15 @@ function NotEnrolledView() {
                             <b.Icon className={`w-4 h-4 ${b.color}`} />
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-[#212529]">{b.title}</p>
-                            <p className="text-xs text-[#6a6c6b] mt-0.5">{b.desc}</p>
+                            <p className="text-sm font-semibold text-ink">{b.title}</p>
+                            <p className="text-xs text-muted mt-0.5">{b.desc}</p>
                         </div>
                     </div>
                 ))}
             </div>
 
             <div>
-                <h3 className="text-base font-bold text-[#212529] mb-3 text-center">¿Cómo funciona?</h3>
+                <h3 className="text-base font-bold text-ink mb-3 text-center">¿Cómo funciona?</h3>
                 <div className="flex flex-col sm:flex-row items-stretch gap-2">
                     {[
                         {
@@ -239,29 +239,29 @@ function NotEnrolledView() {
                         },
                     ].map((step, idx) => (
                         <Fragment key={step.n}>
-                            <div className="flex-1 text-center p-4 bg-gradient-to-br from-[#f8f9fa] to-white rounded-xl border border-[#e9ecef]">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-bold flex items-center justify-center mx-auto mb-2">
+                            <div className="flex-1 text-center p-4 bg-gradient-to-br from-surface to-white rounded-xl border border-line">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white text-sm font-bold flex items-center justify-center mx-auto mb-2">
                                     {step.n}
                                 </div>
-                                <p className="text-sm font-semibold text-[#212529]">{step.title}</p>
-                                <p className="text-xs text-[#6a6c6b] mt-0.5">{step.desc}</p>
+                                <p className="text-sm font-semibold text-ink">{step.title}</p>
+                                <p className="text-xs text-muted mt-0.5">{step.desc}</p>
                             </div>
                             {idx < 2 && (
-                                <FiChevronRight className="hidden sm:block w-5 h-5 text-[#dee2e6] flex-shrink-0 self-center" />
+                                <FiChevronRight className="hidden sm:block w-5 h-5 text-line-strong flex-shrink-0 self-center" />
                             )}
                         </Fragment>
                     ))}
                 </div>
             </div>
 
-            <div className="bg-gradient-to-r from-[#1e3a8a]/5 to-[#2a63cd]/5 border border-[#2a63cd]/15 rounded-xl p-5 text-center">
-                <p className="text-sm font-semibold text-[#212529] mb-1">¿Listo para empezar?</p>
-                <p className="text-xs text-[#6a6c6b] mb-4">
+            <div className="bg-gradient-to-r from-brand-700/5 to-brand-500/5 border border-brand-500/15 rounded-xl p-5 text-center">
+                <p className="text-sm font-semibold text-ink mb-1">¿Listo para empezar?</p>
+                <p className="text-xs text-muted mb-4">
                     Nuestro equipo revisará tu solicitud y activará tu enlace personalizado
                 </p>
                 <a
                     href="/contacto"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-semibold rounded-xl shadow-md shadow-[#2a63cd]/25 hover:shadow-lg hover:scale-[1.02] transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-semibold rounded-xl shadow-md shadow-brand-500/25 hover:shadow-lg hover:scale-[1.02] transition-all"
                 >
                     <FiGift className="w-4 h-4" />
                     Solicitar acceso al programa
@@ -337,7 +337,7 @@ export default function ReferralsPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#2a63cd]" />
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500" />
             </div>
         );
     }
@@ -370,16 +370,16 @@ export default function ReferralsPage() {
                 </div>
                 <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="text-xl font-bold text-[#212529]">Mi Programa de Referidos</h1>
+                        <h1 className="text-xl font-bold text-ink">Mi Programa de Referidos</h1>
                         {influencer.status === 'PAUSED' && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
                                 Pausado
                             </span>
                         )}
                     </div>
-                    <p className="text-sm text-[#6a6c6b]">
+                    <p className="text-sm text-muted">
                         Comisión de{' '}
-                        <span className="font-semibold text-[#2a63cd]">
+                        <span className="font-semibold text-brand-500">
                             {influencer.commissionRate}%
                         </span>{' '}
                         por cada conversión aprobada
@@ -421,7 +421,7 @@ export default function ReferralsPage() {
             </div>
 
             {/* Referral link card */}
-            <div className="bg-gradient-to-r from-[#1e3a8a] to-[#2a63cd] rounded-xl p-5 text-white">
+            <div className="bg-gradient-to-r from-brand-700 to-brand-500 rounded-xl p-5 text-white">
                 <div className="flex items-center gap-2 mb-3">
                     <FiShare2 className="w-4 h-4 opacity-80" />
                     <h3 className="text-sm font-semibold">Tu Enlace de Referido</h3>
@@ -437,7 +437,7 @@ export default function ReferralsPage() {
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all flex-shrink-0 ${
                             copied
                                 ? 'bg-green-500 text-white'
-                                : 'bg-white text-[#2a63cd] hover:bg-white/90'
+                                : 'bg-white text-brand-500 hover:bg-white/90'
                         }`}
                     >
                         {copied ? (
@@ -491,7 +491,7 @@ export default function ReferralsPage() {
 
             {/* How it works */}
             <div>
-                <h3 className="text-base font-bold text-[#212529] mb-3">¿Cómo funciona?</h3>
+                <h3 className="text-base font-bold text-ink mb-3">¿Cómo funciona?</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {[
                         {
@@ -521,7 +521,7 @@ export default function ReferralsPage() {
                     ].map((item) => (
                         <div
                             key={item.step}
-                            className="flex items-start gap-3 p-4 bg-[#f8f9fa] rounded-xl border border-[#e9ecef]"
+                            className="flex items-start gap-3 p-4 bg-surface rounded-xl border border-line"
                         >
                             <div
                                 className={`w-9 h-9 rounded-lg ${item.bg} flex items-center justify-center flex-shrink-0`}
@@ -530,12 +530,12 @@ export default function ReferralsPage() {
                             </div>
                             <div>
                                 <div className="flex items-center gap-1.5 mb-0.5">
-                                    <span className="text-xs font-bold text-[#2a63cd]">
+                                    <span className="text-xs font-bold text-brand-500">
                                         Paso {item.step}
                                     </span>
                                 </div>
-                                <p className="text-sm font-semibold text-[#212529]">{item.title}</p>
-                                <p className="text-xs text-[#6a6c6b] mt-0.5">{item.desc}</p>
+                                <p className="text-sm font-semibold text-ink">{item.title}</p>
+                                <p className="text-xs text-muted mt-0.5">{item.desc}</p>
                             </div>
                         </div>
                     ))}
@@ -543,8 +543,8 @@ export default function ReferralsPage() {
             </div>
 
             {/* Tier progression */}
-            <div className="bg-[#f8f9fa] rounded-xl border border-[#e9ecef] p-5">
-                <h3 className="text-base font-bold text-[#212529] mb-4">Progreso de Nivel</h3>
+            <div className="bg-surface rounded-xl border border-line p-5">
+                <h3 className="text-base font-bold text-ink mb-4">Progreso de Nivel</h3>
                 <div className="flex items-center justify-between mb-3">
                     {(['bronze', 'silver', 'gold'] as Tier[]).map((t, idx) => {
                         const info = TIERS[t];
@@ -561,18 +561,18 @@ export default function ReferralsPage() {
                                 >
                                     <span className="text-2xl">{info.icon}</span>
                                     <span
-                                        className={`text-xs font-semibold ${isActive ? info.color : 'text-[#6a6c6b]'}`}
+                                        className={`text-xs font-semibold ${isActive ? info.color : 'text-muted'}`}
                                     >
                                         {info.label}
                                     </span>
-                                    <span className="text-xs text-[#adb5bd]">
+                                    <span className="text-xs text-subtle">
                                         {t === 'bronze' ? '0+' : t === 'silver' ? '10+' : '50+'}
                                     </span>
                                 </div>
                                 {idx < 2 && (
-                                    <div className="flex-1 mx-3 h-2 bg-[#dee2e6] rounded-full overflow-hidden">
+                                    <div className="flex-1 mx-3 h-2 bg-line-strong rounded-full overflow-hidden">
                                         <div
-                                            className="h-full bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-full transition-all duration-700"
+                                            className="h-full bg-gradient-to-r from-brand-500 to-brand-600 rounded-full transition-all duration-700"
                                             style={{
                                                 width:
                                                     t === 'bronze'
@@ -593,9 +593,9 @@ export default function ReferralsPage() {
                     })}
                 </div>
                 {tierProgress.nextTier && (
-                    <p className="text-center text-xs text-[#6a6c6b]">
+                    <p className="text-center text-xs text-muted">
                         Necesitas{' '}
-                        <span className="font-semibold text-[#2a63cd]">{tierProgress.needed}</span>{' '}
+                        <span className="font-semibold text-brand-500">{tierProgress.needed}</span>{' '}
                         conversiones más para alcanzar nivel{' '}
                         <span className="font-semibold">{TIERS[tierProgress.nextTier].label}</span>
                     </p>
@@ -606,30 +606,30 @@ export default function ReferralsPage() {
             <div className="grid lg:grid-cols-2 gap-4">
                 {/* Conversions table */}
                 <div>
-                    <h3 className="text-base font-bold text-[#212529] mb-3">
+                    <h3 className="text-base font-bold text-ink mb-3">
                         Mis Conversiones Recientes
                     </h3>
                     {!conversions || conversions.length === 0 ? (
-                        <div className="text-center py-10 text-[#6a6c6b] text-sm bg-[#f8f9fa] rounded-xl border border-[#e9ecef]">
+                        <div className="text-center py-10 text-muted text-sm bg-surface rounded-xl border border-line">
                             <FiUsers className="w-8 h-8 mx-auto mb-2 opacity-25" />
                             <p>No hay conversiones aún.</p>
                             <p className="text-xs mt-1">¡Comparte tu enlace para empezar!</p>
                         </div>
                     ) : (
-                        <div className="border border-[#e9ecef] rounded-xl overflow-hidden">
+                        <div className="border border-line rounded-xl overflow-hidden">
                             <table className="w-full text-sm">
-                                <thead className="bg-[#f8f9fa] border-b border-[#e9ecef]">
+                                <thead className="bg-surface border-b border-line">
                                     <tr>
-                                        <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6a6c6b]">
+                                        <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted">
                                             Tipo
                                         </th>
-                                        <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#6a6c6b]">
+                                        <th className="px-3 py-2.5 text-right text-xs font-semibold text-muted">
                                             Comisión
                                         </th>
-                                        <th className="px-3 py-2.5 text-center text-xs font-semibold text-[#6a6c6b]">
+                                        <th className="px-3 py-2.5 text-center text-xs font-semibold text-muted">
                                             Estado
                                         </th>
-                                        <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#6a6c6b]">
+                                        <th className="px-3 py-2.5 text-right text-xs font-semibold text-muted">
                                             Fecha
                                         </th>
                                     </tr>
@@ -648,13 +648,13 @@ export default function ReferralsPage() {
                                                         <typeInfo.Icon
                                                             className={`w-3.5 h-3.5 ${typeInfo.color}`}
                                                         />
-                                                        <span className="text-xs text-[#212529]">
+                                                        <span className="text-xs text-ink">
                                                             {typeInfo.label}
                                                         </span>
                                                     </div>
                                                 </td>
                                                 <td className="px-3 py-2.5 text-right">
-                                                    <span className="text-xs font-semibold text-[#212529]">
+                                                    <span className="text-xs font-semibold text-ink">
                                                         ${conv.commission.toFixed(2)}
                                                     </span>
                                                 </td>
@@ -665,7 +665,7 @@ export default function ReferralsPage() {
                                                         {STATUS_LABELS[conv.status] || conv.status}
                                                     </span>
                                                 </td>
-                                                <td className="px-3 py-2.5 text-right text-xs text-[#6a6c6b]">
+                                                <td className="px-3 py-2.5 text-right text-xs text-muted">
                                                     {format(new Date(conv.createdAt), 'dd/MM/yy', {
                                                         locale: es,
                                                     })}
@@ -681,12 +681,12 @@ export default function ReferralsPage() {
 
                 {/* Leaderboard */}
                 <div>
-                    <h3 className="text-base font-bold text-[#212529] mb-3">
+                    <h3 className="text-base font-bold text-ink mb-3">
                         Clasificación{' '}
-                        <span className="text-[#6a6c6b] font-normal text-sm">· Top Referidores</span>
+                        <span className="text-muted font-normal text-sm">· Top Referidores</span>
                     </h3>
                     {!leaderboard || leaderboard.length === 0 ? (
-                        <div className="text-center py-10 text-[#6a6c6b] text-sm bg-[#f8f9fa] rounded-xl border border-[#e9ecef]">
+                        <div className="text-center py-10 text-muted text-sm bg-surface rounded-xl border border-line">
                             <FiAward className="w-8 h-8 mx-auto mb-2 opacity-25" />
                             <p>Sé el primero en el ranking.</p>
                             <p className="text-xs mt-1">El clasificador se actualiza en tiempo real.</p>
@@ -698,8 +698,8 @@ export default function ReferralsPage() {
                                     key={entry.rank}
                                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors ${
                                         entry.isCurrentUser
-                                            ? 'bg-[#2a63cd]/5 border-[#2a63cd]/20'
-                                            : 'bg-[#f8f9fa] border-[#e9ecef]'
+                                            ? 'bg-brand-500/5 border-brand-500/20'
+                                            : 'bg-surface border-line'
                                     }`}
                                 >
                                     <div
@@ -707,10 +707,10 @@ export default function ReferralsPage() {
                                             entry.rank === 1
                                                 ? 'bg-yellow-100 text-yellow-700'
                                                 : entry.rank === 2
-                                                  ? 'bg-slate-100 text-slate-600'
+                                                  ? 'bg-gray-100 text-gray-600'
                                                   : entry.rank === 3
                                                     ? 'bg-amber-100 text-amber-700'
-                                                    : 'bg-[#e9ecef] text-[#6a6c6b]'
+                                                    : 'bg-line text-muted'
                                         }`}
                                     >
                                         {entry.rank <= 3
@@ -718,33 +718,33 @@ export default function ReferralsPage() {
                                             : `#${entry.rank}`}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-[#212529] truncate">
+                                        <p className="text-sm font-semibold text-ink truncate">
                                             {entry.name}
                                             {entry.isCurrentUser && (
-                                                <span className="ml-1.5 text-xs text-[#2a63cd] font-normal">
+                                                <span className="ml-1.5 text-xs text-brand-500 font-normal">
                                                     (Tú)
                                                 </span>
                                             )}
                                         </p>
-                                        <p className="text-xs text-[#6a6c6b]">
+                                        <p className="text-xs text-muted">
                                             {entry.conversionsCount} conversiones
                                         </p>
                                     </div>
-                                    <span className="text-sm font-bold text-[#2a63cd]">
+                                    <span className="text-sm font-bold text-brand-500">
                                         ${entry.totalEarnings.toFixed(2)}
                                     </span>
                                 </div>
                             ))}
                             {currentUserRank && currentUserRank > 10 && (
-                                <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border bg-[#2a63cd]/5 border-[#2a63cd]/20">
-                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 bg-[#2a63cd]/10 text-[#2a63cd]">
+                                <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border bg-brand-500/5 border-brand-500/20">
+                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 bg-brand-500/10 text-brand-500">
                                         #{currentUserRank}
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-sm font-semibold text-[#2a63cd]">
+                                        <p className="text-sm font-semibold text-brand-500">
                                             Tu posición
                                         </p>
-                                        <p className="text-xs text-[#6a6c6b]">
+                                        <p className="text-xs text-muted">
                                             Sigue compartiendo para subir
                                         </p>
                                     </div>

@@ -49,7 +49,7 @@ interface Order {
 const MobileOrdersSkeleton = () => (
   <div className="lg:hidden space-y-4 p-4">
     {/* Hero Stats Skeleton */}
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 p-5">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-800 to-gray-900 p-5">
       <div className="animate-pulse">
         <div className="h-3 w-20 bg-white/20 rounded-full mb-3" />
         <div className="h-10 w-32 bg-white/30 rounded-lg mb-4" />
@@ -201,8 +201,8 @@ export default function OrdersPage() {
         {/* Desktop loading - unchanged */}
         <div className="hidden lg:flex items-center justify-center py-12">
           <div className="relative w-10 h-10">
-            <div className="absolute inset-0 rounded-full border-2 border-[#e9ecef]" />
-            <div className="absolute inset-0 rounded-full border-2 border-[#2a63cd] border-t-transparent animate-spin" />
+            <div className="absolute inset-0 rounded-full border-2 border-line" />
+            <div className="absolute inset-0 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
           </div>
         </div>
       </>
@@ -221,7 +221,7 @@ export default function OrdersPage() {
             ======================================== */}
         <div className="relative rounded-2xl overflow-hidden">
           {/* Animated Gradient Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#0ea5e9]">
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-700 via-[#2563eb] to-[#0ea5e9]">
             {/* Floating Orbs */}
             <div className="absolute top-2 right-4 w-16 h-16 bg-white/10 rounded-full blur-2xl" />
             <div className="absolute bottom-3 left-3 w-12 h-12 bg-cyan-300/15 rounded-full blur-xl animate-pulse" style={{ animationDelay: '0.5s' }} />
@@ -293,7 +293,7 @@ export default function OrdersPage() {
               placeholder="Buscar pedido..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 text-sm bg-white/70 border border-gray-200 rounded-xl focus:outline-none focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 hover:border-blue-400 transition-all duration-200 shadow-sm"
+              className="w-full pl-10 pr-10 py-2.5 text-sm bg-white/70 border border-gray-200 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 hover:border-blue-400 transition-all duration-200 shadow-sm"
             />
             <button
               onClick={fetchOrders}
@@ -316,7 +316,7 @@ export default function OrdersPage() {
                 key={filter.value}
                 onClick={() => setSelectedStatus(filter.value)}
                 className={`px-3.5 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all flex-shrink-0 ${selectedStatus === filter.value
-                  ? 'bg-[#2a63cd] text-white shadow-md shadow-[#2a63cd]/20'
+                  ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
                   : 'bg-white/80 text-gray-500 border border-gray-200 hover:bg-gray-50'
                   }`}
               >
@@ -342,7 +342,7 @@ export default function OrdersPage() {
               </p>
               <Link
                 href="/"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#2a63cd] text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-500 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
               >
                 <FiShoppingBag className="w-3 h-3" />
                 Explorar
@@ -412,7 +412,7 @@ export default function OrdersPage() {
         {/* STATS - Premium icons with counter on top */}
         < div className="flex items-center gap-1.5 overflow-x-auto pb-1" >
           {/* Total Spent - Only medal style */}
-          < div className="bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl px-3 py-2 text-white flex-shrink-0 min-w-[90px]" >
+          < div className="bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl px-3 py-2 text-white flex-shrink-0 min-w-[90px]" >
             <div className="flex items-center gap-1.5 mb-0.5">
               <FiDollarSign className="w-4 h-4 opacity-80" />
               <span className="text-[11px] opacity-70">Total</span>
@@ -466,13 +466,13 @@ export default function OrdersPage() {
               placeholder="Buscar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-7 pr-2 py-1.5 text-xs border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+              className="w-full pl-7 pr-2 py-1.5 text-xs border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
             />
           </div>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-2 py-1.5 text-xs border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 bg-white min-w-[65px]"
+            className="px-2 py-1.5 text-xs border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 bg-white min-w-[65px]"
           >
             <option value="ALL">Todos</option>
             <option value="PENDING">Pend</option>
@@ -483,7 +483,7 @@ export default function OrdersPage() {
           <button
             onClick={fetchOrders}
             disabled={loading}
-            className="p-1.5 bg-[#2a63cd] text-white rounded-lg hover:bg-[#1e4ba3] transition-colors disabled:opacity-50"
+            className="p-1.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-50"
           >
             <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -492,12 +492,12 @@ export default function OrdersPage() {
         {/* Orders List - Compact cards */}
         {
           filteredOrders.length === 0 ? (
-            <div className="text-center py-8 bg-[#f8f9fa] rounded-xl border border-dashed border-[#dee2e6]">
+            <div className="text-center py-8 bg-surface rounded-xl border border-dashed border-line-strong">
               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm">
-                <FiPackage className="w-5 h-5 text-[#adb5bd]" />
+                <FiPackage className="w-5 h-5 text-subtle" />
               </div>
-              <h3 className="text-sm font-bold text-[#212529] mb-1">Sin pedidos</h3>
-              <Link href="/" className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#2a63cd] text-white text-xs font-medium rounded-lg">
+              <h3 className="text-sm font-bold text-ink mb-1">Sin pedidos</h3>
+              <Link href="/" className="inline-flex items-center gap-1 px-3 py-1.5 bg-brand-500 text-white text-xs font-medium rounded-lg">
                 <FiShoppingBag className="w-3.5 h-3.5" /> Explorar
               </Link>
             </div>
@@ -508,13 +508,13 @@ export default function OrdersPage() {
                 return (
                   <div
                     key={order.id}
-                    className="bg-white rounded-lg border border-[#e9ecef] p-2 hover:shadow-sm transition-all"
+                    className="bg-white rounded-lg border border-line p-2 hover:shadow-sm transition-all"
                   >
                     <div className="flex items-center gap-2">
                       {/* Order Icon - Compact */}
                       <div className="relative flex-shrink-0">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#2a63cd]/10 to-[#2a63cd]/5 rounded-lg flex items-center justify-center">
-                          <FiPackage className="w-4 h-4 text-[#2a63cd]" />
+                        <div className="w-10 h-10 bg-gradient-to-br from-brand-500/10 to-brand-500/5 rounded-lg flex items-center justify-center">
+                          <FiPackage className="w-4 h-4 text-brand-500" />
                         </div>
                         <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ${statusConfig.bg} ${statusConfig.border} border flex items-center justify-center`}>
                           <span className={`${statusConfig.text} ${statusConfig.animation} scale-75`}>{statusConfig.icon}</span>
@@ -524,18 +524,18 @@ export default function OrdersPage() {
                       {/* Order Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 mb-0.5">
-                          <h3 className="font-bold text-[#212529] text-[11px] lg:text-xs">#{order.orderNumber}</h3>
+                          <h3 className="font-bold text-ink text-[11px] lg:text-xs">#{order.orderNumber}</h3>
                           <span className={`px-1 py-0.5 rounded text-[11px] lg:text-[11px] font-bold ${statusConfig.bg} ${statusConfig.text}`}>
                             {getStatusTextShort(order.status)}
                           </span>
                         </div>
-                        <p className="text-[11px] lg:text-xs text-[#6a6c6b]">
+                        <p className="text-[11px] lg:text-xs text-muted">
                           {getTimeSince(order.createdAt)} • {order.items.length} item{order.items.length > 1 ? 's' : ''}
                         </p>
                       </div>
 
                       {/* Price */}
-                      <p className="text-xs lg:text-sm font-bold text-[#212529] mr-1">${order.totalUSD.toFixed(0)}</p>
+                      <p className="text-xs lg:text-sm font-bold text-ink mr-1">${order.totalUSD.toFixed(0)}</p>
 
                       {/* Actions - Larger and centered */}
                       <div className="flex items-center gap-1">
@@ -549,7 +549,7 @@ export default function OrdersPage() {
                         )}
                         <button
                           onClick={() => { setSelectedOrder(order); setShowOrderDetails(true); }}
-                          className="w-9 h-9 bg-[#f8f9fa] hover:bg-[#2a63cd] text-[#6a6c6b] hover:text-white rounded-lg flex items-center justify-center transition-all active:scale-95"
+                          className="w-9 h-9 bg-surface hover:bg-brand-500 text-muted hover:text-white rounded-lg flex items-center justify-center transition-all active:scale-95"
                         >
                           <FiEye className="w-4 h-4" />
                         </button>
@@ -592,7 +592,7 @@ export default function OrdersPage() {
               style={{ zIndex: 1 }}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-5 sm:px-4 py-4 sm:py-3 text-white flex-shrink-0 flex items-center justify-between rounded-t-[32px] sm:rounded-none">
+              <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-5 sm:px-4 py-4 sm:py-3 text-white flex-shrink-0 flex items-center justify-between rounded-t-[32px] sm:rounded-none">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                     <FiPackage className="w-5 h-5" />
@@ -609,7 +609,7 @@ export default function OrdersPage() {
 
               {/* Content */}
               <div className="p-4 overflow-y-auto flex-1">
-                <div className="bg-[#f8f9fa] rounded-xl p-3 mb-4">
+                <div className="bg-surface rounded-xl p-3 mb-4">
                   <OrderTracking
                     status={selectedOrder.status}
                     createdAt={selectedOrder.createdAt}
@@ -625,44 +625,44 @@ export default function OrdersPage() {
                   />
                 </div>
 
-                <h4 className="text-xs font-bold text-[#212529] mb-2 flex items-center gap-1.5">
-                  <FiShoppingBag className="w-3.5 h-3.5 text-[#2a63cd]" />
+                <h4 className="text-xs font-bold text-ink mb-2 flex items-center gap-1.5">
+                  <FiShoppingBag className="w-3.5 h-3.5 text-brand-500" />
                   Productos ({selectedOrder.items.length})
                 </h4>
                 <div className="space-y-1.5">
                   {selectedOrder.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-2 p-2 bg-[#f8f9fa] rounded-lg">
-                      <div className="w-10 h-10 bg-white rounded-lg border border-[#e9ecef] flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div key={item.id} className="flex items-center gap-2 p-2 bg-surface rounded-lg">
+                      <div className="w-10 h-10 bg-white rounded-lg border border-line flex items-center justify-center overflow-hidden flex-shrink-0">
                         {item.productImage ? (
                           <img src={item.productImage} alt={item.productName} className="w-full h-full object-cover" />
                         ) : (
-                          <FiPackage className="w-4 h-4 text-[#adb5bd]" />
+                          <FiPackage className="w-4 h-4 text-subtle" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-[#212529] truncate">{item.productName}</p>
-                        <p className="text-xs text-[#6a6c6b]">x{item.quantity}</p>
+                        <p className="text-xs font-medium text-ink truncate">{item.productName}</p>
+                        <p className="text-xs text-muted">x{item.quantity}</p>
                       </div>
-                      <p className="text-xs font-bold text-[#2a63cd]">${item.totalUSD.toFixed(2)}</p>
+                      <p className="text-xs font-bold text-brand-500">${item.totalUSD.toFixed(2)}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="p-4 bg-[#f8f9fa] border-t border-[#e9ecef] flex-shrink-0">
+              <div className="p-4 bg-surface border-t border-line flex-shrink-0">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs text-[#6a6c6b]">
-                    {selectedOrder.paymentMethod && <>Pago: <strong className="text-[#212529]">{formatPaymentMethod(selectedOrder.paymentMethod)}</strong></>}
+                  <span className="text-xs text-muted">
+                    {selectedOrder.paymentMethod && <>Pago: <strong className="text-ink">{formatPaymentMethod(selectedOrder.paymentMethod)}</strong></>}
                   </span>
-                  <div className="bg-[#2a63cd] text-white px-3 py-1.5 rounded-lg">
+                  <div className="bg-brand-500 text-white px-3 py-1.5 rounded-lg">
                     <p className="text-[11px] opacity-70">Total</p>
                     <p className="text-base font-bold">USD {selectedOrder.totalUSD.toFixed(2)}</p>
                   </div>
                 </div>
                 <button
                   onClick={closeModal}
-                  className="w-full py-2.5 bg-white border-2 border-[#e9ecef] text-[#212529] font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all text-sm"
+                  className="w-full py-2.5 bg-white border-2 border-line text-ink font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all text-sm"
                 >
                   <FiArrowLeft className="w-4 h-4" />
                   Cerrar

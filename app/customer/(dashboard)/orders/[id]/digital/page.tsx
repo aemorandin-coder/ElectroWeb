@@ -175,7 +175,7 @@ function ScratchCard({
             {/* The Code underneath */}
             <div
                 onClick={() => isInternalRevealed && onCopy()}
-                className={`relative z-10 h-full bg-[#0f172a] flex items-center justify-center font-mono text-xs font-bold text-white tracking-widest ${isInternalRevealed ? 'cursor-pointer hover:bg-[#1e293b] active:bg-[#0f172a] transition-colors shadow-[inset_0_0_15px_rgba(6,182,212,0.3)]' : ''}`}
+                className={`relative z-10 h-full bg-brand-950 flex items-center justify-center font-mono text-xs font-bold text-white tracking-widest ${isInternalRevealed ? 'cursor-pointer hover:bg-[#1e293b] active:bg-brand-950 transition-colors shadow-[inset_0_0_15px_rgba(6,182,212,0.3)]' : ''}`}
             >
                 <span className="truncate px-2">{code}</span>
                 {isInternalRevealed && (
@@ -298,7 +298,7 @@ export default function DigitalCodesPage() {
 
     if (loading) {
         return (
-            <div className="min-h-dvh bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#0ea5e9] flex items-center justify-center">
+            <div className="min-h-dvh bg-gradient-to-br from-brand-700 via-[#2563eb] to-[#0ea5e9] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <div className="relative">
                         <div className="w-12 h-12 border-4 border-white/20 rounded-full"></div>
@@ -336,7 +336,7 @@ export default function DigitalCodesPage() {
                 <div className="absolute bottom-20 left-5 w-56 h-56 bg-purple-600/20 rounded-full blur-[100px]" style={{ animationDelay: '1s' }} />
                 <div className="absolute top-1/3 left-1/4 w-32 h-32 bg-blue-500/20 rounded-full blur-[60px] animate-bounce" style={{ animationDuration: '4s' }} />
                 {/* Shimmer overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0f172a]/50 to-[#0a0f1d]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-brand-950/50 to-[#0a0f1d]" />
             </div>
 
             {/* Compact Sticky Header */}
@@ -382,7 +382,7 @@ export default function DigitalCodesPage() {
                             >
                                 <button
                                     onClick={() => toggleExpand(item.orderItemId)}
-                                    className="w-full p-3 flex items-center gap-3 hover:bg-[#1e293b]/50 transition-colors bg-[#0f172a]/90 backdrop-blur-md border border-white/10 rounded-t-xl"
+                                    className="w-full p-3 flex items-center gap-3 hover:bg-[#1e293b]/50 transition-colors bg-brand-950/90 backdrop-blur-md border border-white/10 rounded-t-xl"
                                 >
                                     {/* Product Image */}
                                     {item.image && (
@@ -431,7 +431,7 @@ export default function DigitalCodesPage() {
                                             item.codes.map((code, index) => (
                                                 <div
                                                     key={code.id}
-                                                    className="bg-[#0f172a] rounded-lg p-2 border border-white/5 shadow-inner shadow-black/50 animate-slideInUp"
+                                                    className="bg-brand-950 rounded-lg p-2 border border-white/5 shadow-inner shadow-black/50 animate-slideInUp"
                                                     style={{ animationDelay: `${index * 0.05}s` }}
                                                 >
                                                     <div className="flex items-center justify-between mb-1.5">
@@ -494,7 +494,7 @@ export default function DigitalCodesPage() {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="text-center py-4 bg-[#0f172a] rounded-lg border border-dashed border-white/10">
+                                            <div className="text-center py-4 bg-brand-950 rounded-lg border border-dashed border-white/10">
                                                 <FiClock className="w-6 h-6 text-gray-600 mx-auto mb-1 animate-pulse" />
                                                 <p className="text-[11px] text-gray-500 font-bold uppercase">Preparando...</p>
                                             </div>
@@ -508,11 +508,11 @@ export default function DigitalCodesPage() {
 
                 {/* Compact Footer Badges */}
                 <div className="mt-6 flex justify-center gap-2">
-                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-[#0f172a] rounded-full border border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-brand-950 rounded-full border border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
                         <FiShield className="w-3 h-3 text-cyan-400" />
                         <span className="text-[11px] text-cyan-100 font-bold uppercase tracking-wider">Encriptado</span>
                     </div>
-                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-[#0f172a] rounded-full border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]">
+                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-brand-950 rounded-full border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]">
                         <FiCheck className="w-3 h-3 text-purple-400" />
                         <span className="text-[11px] text-purple-100 font-bold uppercase tracking-wider">Garantizado</span>
                     </div>

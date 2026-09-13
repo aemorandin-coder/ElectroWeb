@@ -75,7 +75,7 @@ export default function MyReviewsPage() {
                 <button
                     onClick={() => setFilter('all')}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all'
-                            ? 'bg-[#2a63cd] text-white'
+                            ? 'bg-brand-500 text-white'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                 >
@@ -84,7 +84,7 @@ export default function MyReviewsPage() {
                 <button
                     onClick={() => setFilter('approved')}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'approved'
-                            ? 'bg-[#2a63cd] text-white'
+                            ? 'bg-brand-500 text-white'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                 >
@@ -93,7 +93,7 @@ export default function MyReviewsPage() {
                 <button
                     onClick={() => setFilter('pending')}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'pending'
-                            ? 'bg-[#2a63cd] text-white'
+                            ? 'bg-brand-500 text-white'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                 >
@@ -104,7 +104,7 @@ export default function MyReviewsPage() {
             {/* Reviews List */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2a63cd]"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
                 </div>
             ) : filteredReviews.length === 0 ? (
                 <div className="text-center py-16">
@@ -121,7 +121,7 @@ export default function MyReviewsPage() {
                     </p>
                     <Link
                         href="/productos"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#2a63cd] text-white rounded-xl font-semibold hover:bg-[#1e4ba3] transition-colors"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-brand-500 text-white rounded-xl font-semibold hover:bg-brand-600 transition-colors"
                     >
                         <FiPackage className="w-5 h-5" />
                         Ver Productos
@@ -138,7 +138,7 @@ export default function MyReviewsPage() {
                                 <div className="flex-1">
                                     <Link
                                         href={`/productos/${review.product.slug}`}
-                                        className="text-lg font-bold text-gray-900 hover:text-[#2a63cd] transition-colors"
+                                        className="text-lg font-bold text-gray-900 hover:text-brand-500 transition-colors"
                                     >
                                         {review.product.name}
                                     </Link>

@@ -112,17 +112,17 @@ export default function WarrantyPage() {
         <div className="h-full space-y-3 lg:space-y-4">
             {/* Header */}
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center shadow-lg shadow-[#2a63cd]/20">
+                <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20">
                     <FiShield className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-base lg:text-lg font-bold text-[#212529]">Garantía</h1>
-                    <p className="text-xs text-[#6a6c6b]">Gestiona tus solicitudes</p>
+                    <h1 className="text-base lg:text-lg font-bold text-ink">Garantía</h1>
+                    <p className="text-xs text-muted">Gestiona tus solicitudes</p>
                 </div>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 border-b border-[#e9ecef]">
+            <div className="flex gap-1 border-b border-line">
                 {[
                     { id: 'info', label: 'Info', icon: FiHelpCircle },
                     { id: 'requests', label: 'Mis Solicitudes', icon: FiFileText },
@@ -132,8 +132,8 @@ export default function WarrantyPage() {
                         key={tab.id}
                         onClick={() => setSelectedTab(tab.id as any)}
                         className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-bold border-b-2 transition-all active:scale-95 ${selectedTab === tab.id
-                            ? 'border-[#2a63cd] text-[#2a63cd] bg-blue-50/50'
-                            : 'border-transparent text-[#6a6c6b] hover:text-[#212529]'
+                            ? 'border-brand-500 text-brand-500 bg-blue-50/50'
+                            : 'border-transparent text-muted hover:text-ink'
                             }`}
                     >
                         <tab.icon className={`w-3.5 h-3.5 ${selectedTab === tab.id ? 'animate-bounce' : ''}`} />
@@ -147,38 +147,38 @@ export default function WarrantyPage() {
                 <div className="space-y-4">
                     {/* Policy Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="bg-white rounded-xl border border-[#e9ecef] p-4 hover:shadow-md transition-shadow">
+                        <div className="bg-white rounded-xl border border-line p-4 hover:shadow-md transition-shadow">
                             <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center mb-2">
                                 <FiShield className="w-4 h-4 text-emerald-600" />
                             </div>
-                            <h3 className="font-bold text-[#212529] text-sm mb-0.5">Garantía de 30 días</h3>
-                            <p className="text-xs text-[#6a6c6b]">
+                            <h3 className="font-bold text-ink text-sm mb-0.5">Garantía de 30 días</h3>
+                            <p className="text-xs text-muted">
                                 Todos nuestros productos tienen garantía de 30 días por defectos de fábrica.
                             </p>
                         </div>
-                        <div className="bg-white rounded-xl border border-[#e9ecef] p-4 hover:shadow-md transition-shadow">
+                        <div className="bg-white rounded-xl border border-line p-4 hover:shadow-md transition-shadow">
                             <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
                                 <FiRefreshCw className="w-4 h-4 text-blue-600" />
                             </div>
-                            <h3 className="font-bold text-[#212529] text-sm mb-0.5">Devoluciones Fáciles</h3>
-                            <p className="text-xs text-[#6a6c6b]">
+                            <h3 className="font-bold text-ink text-sm mb-0.5">Devoluciones Fáciles</h3>
+                            <p className="text-xs text-muted">
                                 Puedes devolver productos sin usar en su empaque original dentro de 7 días.
                             </p>
                         </div>
-                        <div className="bg-white rounded-xl border border-[#e9ecef] p-4 hover:shadow-md transition-shadow">
+                        <div className="bg-white rounded-xl border border-line p-4 hover:shadow-md transition-shadow">
                             <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center mb-2">
                                 <FiPackage className="w-4 h-4 text-purple-600" />
                             </div>
-                            <h3 className="font-bold text-[#212529] text-sm mb-0.5">Soporte Técnico</h3>
-                            <p className="text-xs text-[#6a6c6b]">
+                            <h3 className="font-bold text-ink text-sm mb-0.5">Soporte Técnico</h3>
+                            <p className="text-xs text-muted">
                                 Asistencia especializada para configuración y problemas técnicos.
                             </p>
                         </div>
                     </div>
 
                     {/* How It Works */}
-                    <div className="bg-white rounded-xl border border-[#e9ecef] p-4">
-                        <h3 className="font-bold text-[#212529] text-sm mb-3">¿Cómo funciona?</h3>
+                    <div className="bg-white rounded-xl border border-line p-4">
+                        <h3 className="font-bold text-ink text-sm mb-3">¿Cómo funciona?</h3>
                         <div className="space-y-3">
                             {[
                                 { step: 1, title: 'Inicia tu solicitud', desc: 'Selecciona el pedido y producto afectado' },
@@ -187,12 +187,12 @@ export default function WarrantyPage() {
                                 { step: 4, title: 'Resolución', desc: 'Te contactaremos con la solución' },
                             ].map((item, i) => (
                                 <div key={i} className="flex items-start gap-3">
-                                    <div className="w-6 h-6 bg-[#2a63cd] rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                    <div className="w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                                         {item.step}
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-[#212529] text-xs">{item.title}</p>
-                                        <p className="text-xs text-[#6a6c6b]">{item.desc}</p>
+                                        <p className="font-semibold text-ink text-xs">{item.title}</p>
+                                        <p className="text-xs text-muted">{item.desc}</p>
                                     </div>
                                 </div>
                             ))}
@@ -200,17 +200,17 @@ export default function WarrantyPage() {
                     </div>
 
                     {/* Contact */}
-                    <div className="bg-gradient-to-r from-[#2a63cd]/10 to-[#2a63cd]/5 rounded-xl p-4 border border-[#2a63cd]/20">
-                        <h3 className="font-bold text-[#212529] text-sm mb-1">¿Necesitas ayuda?</h3>
-                        <p className="text-xs text-[#6a6c6b] mb-3">
+                    <div className="bg-gradient-to-r from-brand-500/10 to-brand-500/5 rounded-xl p-4 border border-brand-500/20">
+                        <h3 className="font-bold text-ink text-sm mb-1">¿Necesitas ayuda?</h3>
+                        <p className="text-xs text-muted mb-3">
                             Nuestro equipo de soporte está disponible para ayudarte.
                         </p>
                         <div className="flex flex-wrap gap-2">
-                            <a href="mailto:soporte@electroshop.com" className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg text-xs font-medium text-[#2a63cd] border border-[#2a63cd]/30 hover:bg-[#2a63cd] hover:text-white transition-colors">
+                            <a href="mailto:soporte@electroshop.com" className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg text-xs font-medium text-brand-500 border border-brand-500/30 hover:bg-brand-500 hover:text-white transition-colors">
                                 <FiMail className="w-3.5 h-3.5" />
                                 Email
                             </a>
-                            <a href="tel:+584121234567" className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg text-xs font-medium text-[#2a63cd] border border-[#2a63cd]/30 hover:bg-[#2a63cd] hover:text-white transition-colors">
+                            <a href="tel:+584121234567" className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg text-xs font-medium text-brand-500 border border-brand-500/30 hover:bg-brand-500 hover:text-white transition-colors">
                                 <FiPhone className="w-3.5 h-3.5" />
                                 Llamar
                             </a>
@@ -222,15 +222,15 @@ export default function WarrantyPage() {
             {selectedTab === 'requests' && (
                 <div className="space-y-3">
                     {submittedRequests.length === 0 ? (
-                        <div className="text-center py-10 bg-[#f8f9fa] rounded-xl border border-dashed border-[#dee2e6]">
+                        <div className="text-center py-10 bg-surface rounded-xl border border-dashed border-line-strong">
                             <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
-                                <FiFileText className="w-6 h-6 text-[#adb5bd]" />
+                                <FiFileText className="w-6 h-6 text-subtle" />
                             </div>
-                            <h3 className="text-sm font-bold text-[#212529] mb-1">Sin solicitudes</h3>
-                            <p className="text-xs text-[#6a6c6b] mb-3">No tienes solicitudes de garantía o devolución activas</p>
+                            <h3 className="text-sm font-bold text-ink mb-1">Sin solicitudes</h3>
+                            <p className="text-xs text-muted mb-3">No tienes solicitudes de garantía o devolución activas</p>
                             <button
                                 onClick={() => setSelectedTab('new')}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2a63cd] text-white text-xs font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-500 text-white text-xs font-medium rounded-lg hover:bg-brand-600 transition-colors"
                             >
                                 <FiRefreshCw className="w-3.5 h-3.5" />
                                 Nueva Solicitud
@@ -239,23 +239,23 @@ export default function WarrantyPage() {
                     ) : (
                         <div className="space-y-3">
                             {submittedRequests.map((req) => (
-                                <div key={req.id} className="bg-white rounded-xl border border-[#e9ecef] p-4">
+                                <div key={req.id} className="bg-white rounded-xl border border-line p-4">
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="font-bold text-[#212529] text-sm">Pedido #{req.orderNumber}</h3>
+                                                <h3 className="font-bold text-ink text-sm">Pedido #{req.orderNumber}</h3>
                                                 <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">En Revisión</span>
                                             </div>
-                                            <p className="text-xs text-[#6a6c6b]">{new Date(req.createdAt).toLocaleDateString()}</p>
+                                            <p className="text-xs text-muted">{new Date(req.createdAt).toLocaleDateString()}</p>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-xs font-bold text-[#6a6c6b] uppercase">{req.type}</span>
-                                            <p className="text-xs font-medium text-[#2a63cd] mt-0.5">{req.id}</p>
+                                            <span className="text-xs font-bold text-muted uppercase">{req.type}</span>
+                                            <p className="text-xs font-medium text-brand-500 mt-0.5">{req.id}</p>
                                         </div>
                                     </div>
-                                    <div className="bg-[#f8f9fa] rounded-lg p-3 text-xs text-[#212529]">
+                                    <div className="bg-surface rounded-lg p-3 text-xs text-ink">
                                         <p className="font-semibold mb-1">Motivo:</p>
-                                        <p className="text-[#6a6c6b]">{req.reason}</p>
+                                        <p className="text-muted">{req.reason}</p>
                                     </div>
                                 </div>
                             ))}
@@ -268,15 +268,15 @@ export default function WarrantyPage() {
                 <div className="space-y-4">
                     {/* Eligible Orders */}
                     <div>
-                        <h3 className="text-xs font-bold text-[#212529] mb-2">Pedidos Elegibles</h3>
+                        <h3 className="text-xs font-bold text-ink mb-2">Pedidos Elegibles</h3>
                         {loading ? (
                             <div className="flex items-center justify-center py-6">
-                                <div className="w-6 h-6 border-2 border-[#e9ecef] border-t-[#2a63cd] rounded-full animate-spin" />
+                                <div className="w-6 h-6 border-2 border-line border-t-brand-500 rounded-full animate-spin" />
                             </div>
                         ) : orders.length === 0 ? (
-                            <div className="text-center py-6 bg-[#f8f9fa] rounded-xl">
-                                <FiAlertCircle className="w-6 h-6 text-[#adb5bd] mx-auto mb-1" />
-                                <p className="text-xs text-[#6a6c6b]">No tienes pedidos entregados elegibles para garantía</p>
+                            <div className="text-center py-6 bg-surface rounded-xl">
+                                <FiAlertCircle className="w-6 h-6 text-subtle mx-auto mb-1" />
+                                <p className="text-xs text-muted">No tienes pedidos entregados elegibles para garantía</p>
                             </div>
                         ) : (
                             <div className="space-y-2">
@@ -289,17 +289,17 @@ export default function WarrantyPage() {
                                             key={order.id}
                                             onClick={() => handleOpenForm(order)}
                                             className={`bg-white rounded-xl border p-3 transition-all ${withinWarranty
-                                                ? 'border-[#e9ecef] hover:border-[#2a63cd] hover:shadow-md cursor-pointer'
+                                                ? 'border-line hover:border-brand-500 hover:shadow-md cursor-pointer'
                                                 : 'border-red-100 bg-red-50/50 opacity-60 cursor-not-allowed'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-[#f8f9fa] rounded-lg flex items-center justify-center">
-                                                    <FiPackage className="w-4 h-4 text-[#6a6c6b]" />
+                                                <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center">
+                                                    <FiPackage className="w-4 h-4 text-muted" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-1.5 mb-0.5">
-                                                        <h4 className="font-bold text-[#212529] text-xs">#{order.orderNumber}</h4>
+                                                        <h4 className="font-bold text-ink text-xs">#{order.orderNumber}</h4>
                                                         {withinWarranty ? (
                                                             <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full flex items-center gap-0.5">
                                                                 <FiCheck className="w-2.5 h-2.5" />
@@ -311,14 +311,14 @@ export default function WarrantyPage() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-xs text-[#6a6c6b]">
+                                                    <p className="text-xs text-muted">
                                                         {order.items.length} producto{order.items.length > 1 ? 's' : ''} •
                                                         Entregado hace {daysSince} días
                                                         {!withinWarranty && ' (fuera de garantía)'}
                                                     </p>
                                                 </div>
                                                 {withinWarranty && (
-                                                    <button className="p-1.5 bg-[#f8f9fa] text-[#2a63cd] rounded-lg transition-colors group-hover:bg-[#2a63cd] group-hover:text-white">
+                                                    <button className="p-1.5 bg-surface text-brand-500 rounded-lg transition-colors group-hover:bg-brand-500 group-hover:text-white">
                                                         <FiChevronRight className="w-4 h-4" />
                                                     </button>
                                                 )}
@@ -347,7 +347,7 @@ export default function WarrantyPage() {
             {showFormModal && selectedOrderForWarranty && (
                 <div className="fixed inset-0 z-[100000] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
                     <div className="bg-white rounded-t-[32px] sm:rounded-2xl shadow-2xl w-full max-w-lg h-[85vh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden animate-slideInUp sm:animate-scaleIn">
-                        <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-5 text-white flex-shrink-0 flex justify-between items-center rounded-t-[32px] sm:rounded-none">
+                        <div className="bg-gradient-to-r from-brand-500 to-brand-600 p-5 text-white flex-shrink-0 flex justify-between items-center rounded-t-[32px] sm:rounded-none">
                             <div>
                                 <h2 className="text-lg font-bold">Solicitar Garantía</h2>
                                 <p className="text-xs text-blue-100">Pedido #{selectedOrderForWarranty.orderNumber}</p>
@@ -360,12 +360,12 @@ export default function WarrantyPage() {
                         <div className="p-5 overflow-y-auto flex-1">
                             <form onSubmit={handleSubmitWarranty} className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">Motivo</label>
+                                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">Motivo</label>
                                     <select
                                         value={warrantyReason}
                                         onChange={(e) => setWarrantyReason(e.target.value)}
                                         required
-                                        className="w-full px-4 py-3 bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm text-sm"
+                                        className="w-full px-4 py-3 bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm text-sm"
                                     >
                                         <option value="">Selecciona un motivo...</option>
                                         <option value="DEFECT">Defecto de fábrica</option>
@@ -375,14 +375,14 @@ export default function WarrantyPage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">Descripción del problema</label>
+                                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">Descripción del problema</label>
                                     <textarea
                                         value={warrantyDescription}
                                         onChange={(e) => setWarrantyDescription(e.target.value)}
                                         required
                                         rows={4}
                                         placeholder="Por favor describe detalladamente el problema que presenta tu producto..."
-                                        className="w-full px-4 py-3 bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 resize-none text-[#212529] text-sm shadow-sm"
+                                        className="w-full px-4 py-3 bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 resize-none text-ink text-sm shadow-sm"
                                     ></textarea>
                                 </div>
                                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
@@ -394,7 +394,7 @@ export default function WarrantyPage() {
                                     <button
                                         type="submit"
                                         disabled={isSubmitting || !warrantyReason || !warrantyDescription}
-                                        className="w-full py-3.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full py-3.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {isSubmitting ? (
                                             <>

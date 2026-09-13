@@ -442,7 +442,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2a63cd]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
       </div>
     );
   }
@@ -450,7 +450,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-2 lg:space-y-3">
       {/* Header with Save Button - Mobile Optimized */}
-      <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-2xl p-4 lg:p-5 text-white shadow-lg relative overflow-hidden">
+      <div className="bg-gradient-to-r from-brand-500 to-brand-600 rounded-2xl p-4 lg:p-5 text-white shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-10 w-32 h-32 bg-cyan-400/10 rounded-full blur-2xl"></div>
         <div className="relative z-10 flex items-center justify-between">
@@ -467,7 +467,7 @@ export default function ProfilePage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 lg:px-6 py-2.5 bg-white text-[#2a63cd] font-bold rounded-xl hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-95 text-sm"
+              className="px-4 lg:px-6 py-2.5 bg-white text-brand-500 font-bold rounded-xl hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-95 text-sm"
             >
               {saving ? (
                 <>
@@ -489,13 +489,13 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl border border-[#e9ecef] shadow-sm overflow-hidden">
-        <div className="flex border-b border-[#e9ecef]">
+      <div className="bg-white rounded-xl border border-line shadow-sm overflow-hidden">
+        <div className="flex border-b border-line">
           <button
             onClick={() => setActiveTab('personal')}
             className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'personal'
-              ? 'bg-[#2a63cd] text-white'
-              : 'text-[#6a6c6b] hover:bg-[#f8f9fa]'
+              ? 'bg-brand-500 text-white'
+              : 'text-muted hover:bg-surface'
               }`}
           >
             Información Personal
@@ -503,8 +503,8 @@ export default function ProfilePage() {
           <button
             onClick={() => setActiveTab('business')}
             className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'business'
-              ? 'bg-[#2a63cd] text-white'
-              : 'text-[#6a6c6b] hover:bg-[#f8f9fa]'
+              ? 'bg-brand-500 text-white'
+              : 'text-muted hover:bg-surface'
               }`}
           >
             <FiBriefcase className="inline w-4 h-4 mr-1" />
@@ -513,8 +513,8 @@ export default function ProfilePage() {
           <button
             onClick={() => setActiveTab('stats')}
             className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'stats'
-              ? 'bg-[#2a63cd] text-white'
-              : 'text-[#6a6c6b] hover:bg-[#f8f9fa]'
+              ? 'bg-brand-500 text-white'
+              : 'text-muted hover:bg-surface'
               }`}
           >
             Estadísticas
@@ -536,7 +536,7 @@ export default function ProfilePage() {
                         onChange={handleAvatarChange}
                         className="hidden"
                       />
-                      <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center text-white text-4xl font-bold shadow-xl overflow-hidden ring-4 ring-blue-50 group-hover:ring-blue-100 transition-all">
+                      <div className="w-28 h-28 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-4xl font-bold shadow-xl overflow-hidden ring-4 ring-blue-50 group-hover:ring-blue-100 transition-all">
                         {avatarPreview || profile.avatar || profile.image ? (
                           <img
                             src={avatarPreview || profile.avatar || profile.image}
@@ -547,12 +547,12 @@ export default function ProfilePage() {
                           session?.user?.name?.charAt(0).toUpperCase()
                         )}
                       </div>
-                      <div className="absolute bottom-0 right-0 p-2 bg-[#2a63cd] rounded-full shadow-lg border-2 border-white group-hover:scale-110 transition-transform">
+                      <div className="absolute bottom-0 right-0 p-2 bg-brand-500 rounded-full shadow-lg border-2 border-white group-hover:scale-110 transition-transform">
                         <FiCamera className="w-4 h-4 text-white" />
                       </div>
                     </div>
-                    <h3 className="text-lg font-bold text-[#212529] mb-1">{profile.name || 'Usuario'}</h3>
-                    <p className="text-sm text-[#6a6c6b] font-medium mb-5">{profile.email}</p>
+                    <h3 className="text-lg font-bold text-ink mb-1">{profile.name || 'Usuario'}</h3>
+                    <p className="text-sm text-muted font-medium mb-5">{profile.email}</p>
 
                     {/* Quick Stats */}
                     <div className="w-full space-y-3 pt-4 border-t border-gray-100">
@@ -616,7 +616,7 @@ export default function ProfilePage() {
                             value={profile.name}
                             onChange={(e) => !isNameLocked && setProfile({ ...profile, name: e.target.value })}
                             disabled={isNameLocked}
-                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed font-medium shadow-sm"
+                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed font-medium shadow-sm"
                             placeholder="Ej: Juan Pérez"
                           />
                         </div>
@@ -645,7 +645,7 @@ export default function ProfilePage() {
                             onChange={(e) => !profile.idNumber && setProfile({ ...profile, idNumber: e.target.value })}
                             disabled={!!profile.idNumber}
                             maxLength={12}
-                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed uppercase font-medium shadow-sm"
+                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed uppercase font-medium shadow-sm"
                             placeholder="V-1234..."
                           />
                         </div>
@@ -710,7 +710,7 @@ export default function ProfilePage() {
                               value={profile.phone}
                               onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                               maxLength={11}
-                              className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                              className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
                               placeholder="4121234567"
                             />
                           </div>
@@ -744,7 +744,7 @@ export default function ProfilePage() {
                             type="date"
                             value={profile.birthdate}
                             onChange={(e) => setProfile({ ...profile, birthdate: e.target.value })}
-                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm"
+                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm"
                           />
                         </div>
                       </div>
@@ -759,7 +759,7 @@ export default function ProfilePage() {
                           <select
                             value={profile.gender}
                             onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
-                            className="w-full pl-10 pr-8 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm"
+                            className="w-full pl-10 pr-8 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm"
                           >
                             <option value="prefer_not_to_say">No especificar</option>
                             <option value="male">Masculino</option>
@@ -802,7 +802,7 @@ export default function ProfilePage() {
                             type="text"
                             value={profile.city}
                             onChange={(e) => setProfile({ ...profile, city: e.target.value })}
-                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                            className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
                             placeholder="Ej: Caracas"
                           />
                         </div>
@@ -816,7 +816,7 @@ export default function ProfilePage() {
                           <select
                             value={profile.state}
                             onChange={(e) => setProfile({ ...profile, state: e.target.value })}
-                            className="w-full pl-10 pr-8 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm"
+                            className="w-full pl-10 pr-8 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium text-gray-700 shadow-sm"
                           >
                             <option value="">Sel...</option>
                             {VENEZUELA_STATES.map(state => (
@@ -937,14 +937,14 @@ export default function ProfilePage() {
                     <FiBriefcase className="w-4 h-4 text-blue-600" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-base font-bold text-[#212529] mb-1">Certificación de Cuenta Empresarial</h3>
-                    <p className="text-xs text-[#6a6c6b] mb-2">
+                    <h3 className="text-base font-bold text-ink mb-1">Certificación de Cuenta Empresarial</h3>
+                    <p className="text-xs text-muted mb-2">
                       Verifica tu empresa para acceder a beneficios exclusivos, facturación fiscal y condiciones especiales.
                     </p>
 
                     {/* Verification Status */}
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-[#212529]">Estado:</span>
+                      <span className="text-xs font-medium text-ink">Estado:</span>
                       {getStatusBadge(profile.businessVerificationStatus || 'NONE')}
                     </div>
 
@@ -958,9 +958,9 @@ export default function ProfilePage() {
               </div>
 
               {/* Business Information Form - Compact */}
-              <div className="bg-transparent sm:bg-white rounded-xl border-0 sm:border border-[#e9ecef] shadow-none sm:shadow-sm p-0 sm:p-4">
-                <h3 className="text-base font-bold text-[#212529] mb-3 flex items-center gap-2">
-                  <FiFileText className="w-4 h-4 text-[#2a63cd]" />
+              <div className="bg-transparent sm:bg-white rounded-xl border-0 sm:border border-line shadow-none sm:shadow-sm p-0 sm:p-4">
+                <h3 className="text-base font-bold text-ink mb-3 flex items-center gap-2">
+                  <FiFileText className="w-4 h-4 text-brand-500" />
                   Información de la Empresa
                 </h3>
 
@@ -979,7 +979,7 @@ export default function ProfilePage() {
                           onChange={(e) => setProfile({ ...profile, companyName: e.target.value })}
                           disabled={profile.businessVerificationStatus === 'PENDING' || profile.businessVerificationStatus === 'APPROVED'}
                           placeholder="Ej: Tecnología Avanzada C.A."
-                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed font-medium shadow-sm"
+                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed font-medium shadow-sm"
                         />
                       </div>
                     </div>
@@ -995,7 +995,7 @@ export default function ProfilePage() {
                           onChange={(e) => setProfile({ ...profile, taxId: e.target.value })}
                           disabled={profile.businessVerificationStatus === 'PENDING' || profile.businessVerificationStatus === 'APPROVED'}
                           placeholder="Ej: J-12345678-9"
-                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed font-medium shadow-sm"
+                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-250 disabled:cursor-not-allowed font-medium shadow-sm"
                         />
                       </div>
                     </div>
@@ -1039,7 +1039,7 @@ export default function ProfilePage() {
                     <button
                       onClick={handleBusinessSubmit}
                       disabled={submittingBusiness}
-                      className="w-full px-4 py-2.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-semibold rounded-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-semibold rounded-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {submittingBusiness ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -1059,46 +1059,46 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div
-                  className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-[#e9ecef] shadow-sm hover:shadow-lg transition-all"
+                  className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-line shadow-sm hover:shadow-lg transition-all"
                   style={{ animation: 'fadeInUp 0.5s ease-out 0ms both' }}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
                       <FiPackage className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     </div>
-                    <p className="text-xl lg:text-3xl font-bold text-[#2a63cd]">{stats.totalOrders}</p>
+                    <p className="text-xl lg:text-3xl font-bold text-brand-500">{stats.totalOrders}</p>
                   </div>
-                  <h3 className="font-bold text-xs lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Pedidos</h3>
+                  <h3 className="font-bold text-xs lg:text-sm text-muted mt-1 lg:mt-2 uppercase tracking-wider">Pedidos</h3>
                 </div>
 
                 <div
-                  className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-[#e9ecef] shadow-sm hover:shadow-lg transition-all"
+                  className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-line shadow-sm hover:shadow-lg transition-all"
                   style={{ animation: 'fadeInUp 0.5s ease-out 100ms both' }}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
                       <HiMiniBanknotes className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     </div>
                     <div className="text-right">
-                      <p className="text-xl lg:text-3xl font-bold text-[#2a63cd]">${stats.totalSpent.toFixed(0)}</p>
+                      <p className="text-xl lg:text-3xl font-bold text-brand-500">${stats.totalSpent.toFixed(0)}</p>
                     </div>
                   </div>
-                  <h3 className="font-bold text-xs lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Gastado</h3>
+                  <h3 className="font-bold text-xs lg:text-sm text-muted mt-1 lg:mt-2 uppercase tracking-wider">Gastado</h3>
                 </div>
 
                 <div
-                  className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-[#e9ecef] shadow-sm hover:shadow-lg transition-all"
+                  className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-line shadow-sm hover:shadow-lg transition-all"
                   style={{ animation: 'fadeInUp 0.5s ease-out 200ms both' }}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
                       <FiAward className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     </div>
-                    <p className="text-xs lg:text-lg font-bold text-[#2a63cd]">
+                    <p className="text-xs lg:text-lg font-bold text-brand-500">
                       {new Date(stats.memberSince).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
                     </p>
                   </div>
-                  <h3 className="font-bold text-xs lg:text-sm text-[#6a6c6b] mt-1 lg:mt-2 uppercase tracking-wider">Cliente</h3>
+                  <h3 className="font-bold text-xs lg:text-sm text-muted mt-1 lg:mt-2 uppercase tracking-wider">Cliente</h3>
                 </div>
               </div>
 
@@ -1106,27 +1106,27 @@ export default function ProfilePage() {
                 className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100"
                 style={{ animation: 'fadeInUp 0.5s ease-out 300ms both' }}
               >
-                <h3 className="text-base font-bold text-[#212529] mb-3 flex items-center gap-2">
-                  <FiAward className="w-5 h-5 text-[#2a63cd]" />
+                <h3 className="text-base font-bold text-ink mb-3 flex items-center gap-2">
+                  <FiAward className="w-5 h-5 text-brand-500" />
                   Logros y Beneficios
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#e9ecef] shadow-sm">
-                    <div className="w-9 h-9 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-line shadow-sm">
+                    <div className="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
                       <FiTrendingUp className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm text-[#212529]">Cliente Frecuente</p>
-                      <p className="text-xs text-[#6a6c6b]">Más de 5 pedidos realizados</p>
+                      <p className="font-semibold text-sm text-ink">Cliente Frecuente</p>
+                      <p className="text-xs text-muted">Más de 5 pedidos realizados</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#e9ecef] shadow-sm opacity-50">
-                    <div className="w-9 h-9 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-line shadow-sm opacity-50">
+                    <div className="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
                       <HiMiniBanknotes className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm text-[#212529]">VIP</p>
-                      <p className="text-xs text-[#6a6c6b]">Gasta más de $500</p>
+                      <p className="font-semibold text-sm text-ink">VIP</p>
+                      <p className="text-xs text-muted">Gasta más de $500</p>
                     </div>
                   </div>
                 </div>
@@ -1152,7 +1152,7 @@ export default function ProfilePage() {
             }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-5 text-white">
+            <div className="bg-gradient-to-r from-brand-500 to-brand-600 p-5 text-white">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
                   <FiBriefcase className="w-6 h-6" />
@@ -1171,27 +1171,27 @@ export default function ProfilePage() {
                   <FiFileText className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#212529] text-lg mb-2">¿Necesitas facturación fiscal?</h3>
-                  <p className="text-sm text-[#6a6c6b] leading-relaxed">
-                    Puedes registrar tu empresa y obtener <strong className="text-[#2a63cd]">facturas fiscales automáticas</strong> en todas tus compras.
+                  <h3 className="font-bold text-ink text-lg mb-2">¿Necesitas facturación fiscal?</h3>
+                  <p className="text-sm text-muted leading-relaxed">
+                    Puedes registrar tu empresa y obtener <strong className="text-brand-500">facturas fiscales automáticas</strong> en todas tus compras.
                   </p>
                 </div>
               </div>
 
               {/* Benefits */}
               <div className="bg-blue-50 rounded-xl p-4 mb-5 border border-blue-100">
-                <p className="text-sm font-semibold text-[#1e4ba3] mb-2">Beneficios exclusivos:</p>
-                <ul className="text-sm text-[#212529] space-y-1">
+                <p className="text-sm font-semibold text-brand-600 mb-2">Beneficios exclusivos:</p>
+                <ul className="text-sm text-ink space-y-1">
                   <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-[#2a63cd] rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                     Facturación fiscal automática
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-[#2a63cd] rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                     Descuentos por volumen
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-[#2a63cd] rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                     Condiciones de pago especiales
                   </li>
                 </ul>
@@ -1201,13 +1201,13 @@ export default function ProfilePage() {
               <div className="flex gap-3">
                 <button
                   onClick={dismissBusinessTip}
-                  className="flex-1 px-4 py-3 bg-gray-100 text-[#6a6c6b] font-medium rounded-xl hover:bg-gray-200 transition-all"
+                  className="flex-1 px-4 py-3 bg-gray-100 text-muted font-medium rounded-xl hover:bg-gray-200 transition-all"
                 >
                   Ahora no
                 </button>
                 <button
                   onClick={goToBusinessAndDismiss}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
                 >
                   <FiBriefcase className="w-4 h-4" />
                   Ver más

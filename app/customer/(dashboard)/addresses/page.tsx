@@ -140,7 +140,7 @@ export default function AddressesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2a63cd]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
       </div>
     );
   }
@@ -148,7 +148,7 @@ export default function AddressesPage() {
   return (
     <div className="space-y-3 lg:space-y-6 overflow-y-auto h-full">
       {/* Header - Responsive */}
-      <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-lg lg:rounded-xl p-3 lg:p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg lg:rounded-xl p-3 lg:p-6 text-white shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 lg:gap-3">
             <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -165,7 +165,7 @@ export default function AddressesPage() {
               resetForm();
               setShowModal(true);
             }}
-            className="px-3 lg:px-4 py-2 bg-white text-[#2a63cd] font-semibold rounded-lg hover:bg-gray-50 transition-all shadow-md flex items-center gap-1.5 lg:gap-2 text-xs lg:text-base"
+            className="px-3 lg:px-4 py-2 bg-white text-brand-500 font-semibold rounded-lg hover:bg-gray-50 transition-all shadow-md flex items-center gap-1.5 lg:gap-2 text-xs lg:text-base"
           >
             <FiPlus className="w-4 h-4" />
             <span className="hidden sm:inline">Agregar</span>
@@ -191,22 +191,22 @@ export default function AddressesPage() {
             return (
               <div
                 key={address.id}
-                className="bg-white rounded-xl border border-[#e9ecef] shadow-sm hover:shadow-md transition-all p-6"
+                className="bg-white rounded-xl border border-line shadow-sm hover:shadow-md transition-all p-6"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${address.type === 'ZOOM' ? 'bg-orange-100' :
                       address.type === 'MRW' ? 'bg-red-100' :
-                        'bg-[#f8f9fa]'
+                        'bg-surface'
                       }`}>
                       <TypeIcon className={`w-4 h-4 ${address.type === 'ZOOM' ? 'text-orange-600' :
                         address.type === 'MRW' ? 'text-red-600' :
-                          'text-[#2a63cd]'
+                          'text-brand-500'
                         }`} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-[#212529]">
+                        <h3 className="font-semibold text-ink">
                           {typeInfo.label}
                         </h3>
                         {address.isDefault && (
@@ -216,13 +216,13 @@ export default function AddressesPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-[#6a6c6b] mt-0.5">{address.city}, {address.state}</p>
+                      <p className="text-xs text-muted mt-0.5">{address.city}, {address.state}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(address)}
-                      className="p-2 text-[#2a63cd] hover:bg-[#f8f9fa] rounded-lg transition-all"
+                      className="p-2 text-brand-500 hover:bg-surface rounded-lg transition-all"
                     >
                       <FiEdit className="w-4 h-4" />
                     </button>
@@ -235,9 +235,9 @@ export default function AddressesPage() {
                   </div>
                 </div>
 
-                <div className="space-y-1 text-sm text-[#6a6c6b]">
+                <div className="space-y-1 text-sm text-muted">
                   {(address.type === 'ZOOM' || address.type === 'MRW') && address.agencyName && (
-                    <p className="font-medium text-[#212529]">
+                    <p className="font-medium text-ink">
                       Agencia: {address.agencyName} {address.agencyCode && `(${address.agencyCode})`}
                     </p>
                   )}
@@ -250,17 +250,17 @@ export default function AddressesPage() {
           })}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-[#e9ecef] shadow-sm p-12 text-center">
-          <FiMapPin className="w-16 h-16 text-[#6a6c6b] mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-[#212529] mb-2">
+        <div className="bg-white rounded-xl border border-line shadow-sm p-12 text-center">
+          <FiMapPin className="w-16 h-16 text-muted mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-ink mb-2">
             No tienes direcciones guardadas
           </h3>
-          <p className="text-[#6a6c6b] mb-6">
+          <p className="text-muted mb-6">
             Agrega direcciones de envío para agilizar tus compras
           </p>
           <button
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#2a63cd] text-white font-semibold rounded-lg hover:bg-[#1e4ba3] transition-all shadow-md"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-brand-500 text-white font-semibold rounded-lg hover:bg-brand-600 transition-all shadow-md"
           >
             <FiPlus className="w-5 h-5" />
             Agregar Dirección
@@ -282,7 +282,7 @@ export default function AddressesPage() {
 
           <div className="bg-white rounded-t-[32px] sm:rounded-2xl shadow-2xl w-full max-w-[700px] h-[92vh] sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col animate-slideInUp sm:animate-fadeIn">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white px-5 lg:px-6 py-4 flex-shrink-0 rounded-t-[32px] sm:rounded-none">
+            <div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white px-5 lg:px-6 py-4 flex-shrink-0 rounded-t-[32px] sm:rounded-none">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <FiMapPin className="w-6 h-6" />
@@ -315,7 +315,7 @@ export default function AddressesPage() {
             <div className="p-4 lg:p-6 overflow-y-auto flex-1">
               {/* Address Type Selection */}
               <div className="mb-6">
-                <label className="block text-xs font-bold text-[#212529] mb-3 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-ink mb-3 uppercase tracking-wider">
                   Tipo de Dirección *
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -327,15 +327,15 @@ export default function AddressesPage() {
                         type="button"
                         onClick={() => setFormData({ ...formData, type: type.id })}
                         className={`p-2 lg:p-3 rounded-xl border-2 transition-all text-left group ${formData.type === type.id
-                          ? 'border-[#2a63cd] bg-blue-50/50 shadow-sm'
-                          : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
+                          ? 'border-brand-500 bg-blue-50/50 shadow-sm'
+                          : 'border-line hover:border-brand-500/30'
                           }`}
                       >
-                        <TypeIcon className={`w-4 h-4 lg:w-5 lg:h-5 mb-1 ${formData.type === type.id ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'
+                        <TypeIcon className={`w-4 h-4 lg:w-5 lg:h-5 mb-1 ${formData.type === type.id ? 'text-brand-500' : 'text-muted'
                           }`} />
-                        <p className={`text-xs lg:text-sm font-bold leading-tight mb-0.5 ${formData.type === type.id ? 'text-[#2a63cd]' : 'text-[#212529]'
+                        <p className={`text-xs lg:text-sm font-bold leading-tight mb-0.5 ${formData.type === type.id ? 'text-brand-500' : 'text-ink'
                           }`}>{type.label}</p>
-                        <p className={`text-xs ${formData.type === type.id ? 'text-[#2a63cd]/70' : 'text-[#6a6c6b]'}`}>{type.description}</p>
+                        <p className={`text-xs ${formData.type === type.id ? 'text-brand-500/70' : 'text-muted'}`}>{type.description}</p>
                       </button>
                     );
                   })}
@@ -359,7 +359,7 @@ export default function AddressesPage() {
                           value={formData.agencyName || ''}
                           onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
                           placeholder={formData.type === 'ZOOM' ? 'Zoom Centro Guanare' : 'MRW Guanare'}
-                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
                         />
                       </div>
                     </div>
@@ -372,7 +372,7 @@ export default function AddressesPage() {
                           value={formData.agencyCode || ''}
                           onChange={(e) => setFormData({ ...formData, agencyCode: e.target.value })}
                           placeholder="Ej: GUA-001"
-                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
                         />
                       </div>
                     </div>
@@ -393,7 +393,7 @@ export default function AddressesPage() {
                       value={formData.addressLine1}
                       onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
                       placeholder={isShippingCompany ? 'Av. Principal, Centro Comercial...' : 'Calle, Avenida, Casa/Apto...'}
-                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
                     />
                   </div>
                 </div>
@@ -407,7 +407,7 @@ export default function AddressesPage() {
                       value={formData.addressLine2}
                       onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
                       placeholder="Punto de referencia, local, piso..."
-                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
                     />
                   </div>
                 </div>
@@ -422,7 +422,7 @@ export default function AddressesPage() {
                         type="text"
                         value={formData.city}
                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                        className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
                       />
                     </div>
                   </div>
@@ -434,7 +434,7 @@ export default function AddressesPage() {
                         type="text"
                         value={formData.state}
                         onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                        className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
                       />
                     </div>
                   </div>
@@ -450,7 +450,7 @@ export default function AddressesPage() {
                       value={formData.postalCode}
                       onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
                       placeholder="(Opcional)"
-                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
                     />
                   </div>
                 </div>
@@ -462,9 +462,9 @@ export default function AddressesPage() {
                       type="checkbox"
                       checked={formData.isDefault}
                       onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-                      className="w-4 h-4 text-[#2a63cd] rounded focus:ring-[#2a63cd]"
+                      className="w-4 h-4 text-brand-500 rounded focus:ring-brand-500"
                     />
-                    <span className="text-sm text-[#212529]">Establecer como dirección predeterminada</span>
+                    <span className="text-sm text-ink">Establecer como dirección predeterminada</span>
                   </label>
                 </div>
 
@@ -479,16 +479,16 @@ export default function AddressesPage() {
             </div>
 
             {/* Modal Footer - Desktop only */}
-            <div className="hidden sm:flex p-6 border-t border-[#e9ecef] bg-white gap-3 flex-shrink-0">
+            <div className="hidden sm:flex p-6 border-t border-line bg-white gap-3 flex-shrink-0">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-6 py-3 bg-[#f8f9fa] text-[#212529] font-semibold rounded-xl hover:bg-[#e9ecef] transition-all"
+                className="flex-1 px-6 py-3 bg-surface text-ink font-semibold rounded-xl hover:bg-line transition-all"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSubmit}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
               >
                 {editingAddress ? 'Actualizar' : 'Guardar'}
               </button>

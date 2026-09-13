@@ -233,9 +233,9 @@ export default function WishlistPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="relative w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-4 border-[#2a63cd]/20"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#2a63cd] animate-spin"></div>
-          <PiListHeartBold className="absolute inset-0 m-auto w-6 h-6 text-[#2a63cd]" />
+          <div className="absolute inset-0 rounded-full border-4 border-brand-500/20"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-brand-500 animate-spin"></div>
+          <PiListHeartBold className="absolute inset-0 m-auto w-6 h-6 text-brand-500" />
         </div>
       </div>
     );
@@ -264,7 +264,7 @@ export default function WishlistPage() {
   return (
     <div className="space-y-3 lg:space-y-6">
       {/* Premium Header - Mobile Optimized */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] rounded-lg lg:rounded-2xl p-3 lg:p-6 text-white shadow-xl">
+      <div className="relative overflow-hidden bg-gradient-to-br from-brand-500 via-brand-600 to-brand-500 rounded-lg lg:rounded-2xl p-3 lg:p-6 text-white shadow-xl">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
           <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-white/5 rounded-full blur-3xl"></div>
@@ -303,13 +303,13 @@ export default function WishlistPage() {
         <div className="relative bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 rounded-xl border border-blue-200/60 p-4 shadow-sm overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative flex items-center gap-2">
-            <div className="flex-shrink-0 w-8 lg:w-10 h-8 lg:h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg lg:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div className="flex-shrink-0 w-8 lg:w-10 h-8 lg:h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg lg:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
               <FiPercent className="w-4 lg:w-5 h-4 lg:h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-gray-800 text-xs lg:text-sm mb-0 flex items-center gap-1.5">
                 <span className="truncate">¡Solicita descuentos exclusivos!</span>
-                <span className="px-1.5 py-0.5 bg-[#2a63cd] text-white text-[11px] font-bold rounded-full">NUEVO</span>
+                <span className="px-1.5 py-0.5 bg-brand-500 text-white text-[11px] font-bold rounded-full">NUEVO</span>
               </h3>
               <p className="text-xs text-gray-500 truncate">
                 Guarda productos y pide precio especial.
@@ -328,26 +328,26 @@ export default function WishlistPage() {
 
       {/* Toolbar */}
       {wishlist.length > 0 && (
-        <div className="bg-white rounded-xl border border-[#e9ecef] shadow-sm p-4">
+        <div className="bg-white rounded-xl border border-line shadow-sm p-4">
           <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
             <div className="relative flex-1 w-full md:max-w-md">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6a6c6b]" />
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
                 type="text"
                 placeholder="Buscar en tu lista..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-[#f8f9fa] border border-[#e9ecef] rounded-xl text-sm focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-surface border border-line rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
               />
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 bg-[#f8f9fa] rounded-xl p-1 border border-[#e9ecef]">
-                <FiFilter className="w-4 h-4 text-[#6a6c6b] ml-2" />
+              <div className="flex items-center gap-2 bg-surface rounded-xl p-1 border border-line">
+                <FiFilter className="w-4 h-4 text-muted ml-2" />
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-transparent text-sm text-[#212529] font-medium focus:outline-none pr-2 py-1.5"
+                  className="bg-transparent text-sm text-ink font-medium focus:outline-none pr-2 py-1.5"
                 >
                   <option value="recent">Recientes</option>
                   <option value="price-asc">Menor precio</option>
@@ -356,16 +356,16 @@ export default function WishlistPage() {
                 </select>
               </div>
 
-              <div className="flex items-center bg-[#f8f9fa] rounded-xl p-1 border border-[#e9ecef]">
+              <div className="flex items-center bg-surface rounded-xl p-1 border border-line">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow text-[#2a63cd]' : 'text-[#6a6c6b] hover:text-[#212529]'}`}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow text-brand-500' : 'text-muted hover:text-ink'}`}
                 >
                   <FiGrid className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow text-[#2a63cd]' : 'text-[#6a6c6b] hover:text-[#212529]'}`}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow text-brand-500' : 'text-muted hover:text-ink'}`}
                 >
                   <FiList className="w-4 h-4" />
                 </button>
@@ -387,7 +387,7 @@ export default function WishlistPage() {
                 <div
                   key={item.id}
                   className={`bg-white rounded-lg border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group relative
-                    ${hasActiveDiscount ? 'border-green-300 ring-1 ring-green-100' : 'border-[#e9ecef]'}
+                    ${hasActiveDiscount ? 'border-green-300 ring-1 ring-green-100' : 'border-line'}
                     ${removingId === item.id ? 'animate-pulse opacity-50' : ''}
                   `}
                   style={{ animationDelay: `${index * 50}ms` }}
@@ -400,7 +400,7 @@ export default function WishlistPage() {
                     </div>
                   )}
 
-                  <div className={`relative aspect-square bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] ${hasActiveDiscount ? 'mt-4' : ''}`}>
+                  <div className={`relative aspect-square bg-gradient-to-br from-surface to-line ${hasActiveDiscount ? 'mt-4' : ''}`}>
                     {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}
@@ -410,7 +410,7 @@ export default function WishlistPage() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <FiPackage className="w-10 h-10 text-[#adb5bd]" />
+                        <FiPackage className="w-10 h-10 text-subtle" />
                       </div>
                     )}
 
@@ -437,18 +437,18 @@ export default function WishlistPage() {
                   </div>
 
                   <div className="p-2.5">
-                    <h3 className="text-xs font-bold text-[#212529] mb-1.5 line-clamp-2 leading-tight">{item.productName}</h3>
+                    <h3 className="text-xs font-bold text-ink mb-1.5 line-clamp-2 leading-tight">{item.productName}</h3>
 
                     <div className="flex items-center gap-1.5 mb-2">
                       {hasActiveDiscount ? (
                         <>
-                          <span className="text-xs text-[#6a6c6b] line-through">${item.price.toFixed(2)}</span>
+                          <span className="text-xs text-muted line-through">${item.price.toFixed(2)}</span>
                           <span className="text-base font-bold text-green-600">
                             ${(item.price * (1 - (discountStatus?.approvedDiscount || 0) / 100)).toFixed(2)}
                           </span>
                         </>
                       ) : (
-                        <span className="text-base font-bold text-[#2a63cd]">${item.price.toFixed(2)}</span>
+                        <span className="text-base font-bold text-brand-500">${item.price.toFixed(2)}</span>
                       )}
                     </div>
 
@@ -456,7 +456,7 @@ export default function WishlistPage() {
                     <div className="flex gap-1.5 mb-1.5">
                       <Link
                         href={`/productos/${item.productId}`}
-                        className="flex-1 px-2 py-1.5 bg-[#f8f9fa] text-[#212529] text-xs font-semibold rounded-lg hover:bg-[#e9ecef] text-center flex items-center justify-center gap-1"
+                        className="flex-1 px-2 py-1.5 bg-surface text-ink text-xs font-semibold rounded-lg hover:bg-line text-center flex items-center justify-center gap-1"
                       >
                         <FiExternalLink className="w-3 h-3" />
                         Ver
@@ -464,7 +464,7 @@ export default function WishlistPage() {
                       <button
                         onClick={() => handleAddToCart(item)}
                         disabled={!item.inStock}
-                        className="flex-1 px-2 py-1.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-xs font-semibold rounded-lg hover:shadow-md disabled:opacity-50 flex items-center justify-center gap-1"
+                        className="flex-1 px-2 py-1.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-xs font-semibold rounded-lg hover:shadow-md disabled:opacity-50 flex items-center justify-center gap-1"
                       >
                         <FiShoppingCart className="w-3 h-3" />
                         Añadir
@@ -475,7 +475,7 @@ export default function WishlistPage() {
                     {item.inStock && !discountStatus && (
                       <button
                         onClick={() => openDiscountModal(item)}
-                        className="w-full px-2 py-1.5 bg-[#2a63cd]/10 text-[#2a63cd] border border-[#2a63cd]/20 text-xs font-semibold rounded-lg hover:bg-[#2a63cd]/20 transition-all flex items-center justify-center gap-1"
+                        className="w-full px-2 py-1.5 bg-brand-500/10 text-brand-500 border border-brand-500/20 text-xs font-semibold rounded-lg hover:bg-brand-500/20 transition-all flex items-center justify-center gap-1"
                       >
                         <FiPercent className="w-3 h-3" />
                         Pedir Descuento
@@ -495,23 +495,23 @@ export default function WishlistPage() {
           </div>
         ) : (
           /* List View - simplified */
-          <div className="bg-white rounded-xl border border-[#e9ecef] overflow-hidden divide-y divide-[#e9ecef]">
+          <div className="bg-white rounded-xl border border-line overflow-hidden divide-y divide-line">
             {filteredAndSortedWishlist.map((item) => {
               const discountStatus = getDiscountStatus(item.productId);
               return (
-                <div key={item.id} className="flex items-center gap-4 p-4 hover:bg-[#f8f9fa] transition-colors">
-                  <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#f8f9fa] flex-shrink-0">
+                <div key={item.id} className="flex items-center gap-4 p-4 hover:bg-surface transition-colors">
+                  <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-surface flex-shrink-0">
                     {item.imageUrl ? (
                       <Image src={item.imageUrl} alt={item.productName} fill className="object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <FiPackage className="w-8 h-8 text-[#adb5bd]" />
+                        <FiPackage className="w-8 h-8 text-subtle" />
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-[#212529] truncate">{item.productName}</h3>
-                    <p className="text-xl font-bold text-[#2a63cd]">${item.price.toFixed(2)}</p>
+                    <h3 className="font-bold text-ink truncate">{item.productName}</h3>
+                    <p className="text-xl font-bold text-brand-500">${item.price.toFixed(2)}</p>
                     <div className="flex items-center gap-2 mt-1">
                       {discountStatus && getStatusBadge(discountStatus.status, discountStatus.expiresAt)}
                     </div>
@@ -529,13 +529,13 @@ export default function WishlistPage() {
                     <button
                       onClick={() => handleAddToCart(item)}
                       disabled={!item.inStock}
-                      className="p-2.5 bg-[#2a63cd] text-white rounded-xl hover:bg-[#1e4ba3] disabled:opacity-50 transition-all"
+                      className="p-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 disabled:opacity-50 transition-all"
                     >
                       <FiShoppingCart className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => removeFromWishlist(item.id)}
-                      className="p-2.5 bg-[#f8f9fa] text-[#6a6c6b] rounded-xl hover:bg-red-50 hover:text-red-600 transition-all"
+                      className="p-2.5 bg-surface text-muted rounded-xl hover:bg-red-50 hover:text-red-600 transition-all"
                     >
                       <FiTrash2 className="w-4 h-4" />
                     </button>
@@ -546,29 +546,29 @@ export default function WishlistPage() {
           </div>
         )
       ) : searchTerm ? (
-        <div className="bg-white rounded-xl border border-[#e9ecef] p-12 text-center">
-          <FiSearch className="w-16 h-16 text-[#adb5bd] mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-[#212529] mb-2">Sin resultados para "{searchTerm}"</h3>
-          <button onClick={() => setSearchTerm('')} className="px-4 py-2 text-[#2a63cd] font-semibold hover:underline">
+        <div className="bg-white rounded-xl border border-line p-12 text-center">
+          <FiSearch className="w-16 h-16 text-subtle mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-ink mb-2">Sin resultados para "{searchTerm}"</h3>
+          <button onClick={() => setSearchTerm('')} className="px-4 py-2 text-brand-500 font-semibold hover:underline">
             Limpiar busqueda
           </button>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-white to-[#f8f9fa] rounded-2xl border border-[#e9ecef] p-12 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-[#2a63cd]/5 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-60 h-60 bg-[#2a63cd]/5 rounded-full blur-3xl"></div>
+        <div className="bg-gradient-to-br from-white to-surface rounded-2xl border border-line p-12 text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-brand-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-60 h-60 bg-brand-500/5 rounded-full blur-3xl"></div>
 
           <div className="relative">
-            <div className="w-24 h-24 bg-gradient-to-br from-[#2a63cd]/20 to-[#2a63cd]/5 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <PiHeartBreakBold className="w-12 h-12 text-[#2a63cd]" />
+            <div className="w-24 h-24 bg-gradient-to-br from-brand-500/20 to-brand-500/5 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <PiHeartBreakBold className="w-12 h-12 text-brand-500" />
             </div>
-            <h3 className="text-xl font-bold text-[#212529] mb-3">Tu lista de deseos está vacía</h3>
-            <p className="text-[#6a6c6b] mb-8 font-medium">
+            <h3 className="text-xl font-bold text-ink mb-3">Tu lista de deseos está vacía</h3>
+            <p className="text-muted mb-8 font-medium">
               Guarda favoritos y pide descuentos exclusivos
             </p>
             <Link
               href="/"
-              className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-xl transition-all"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-xl transition-all"
             >
               <PiSparkle className="w-5 h-5" />
               Ver Ofertas de Hoy
@@ -588,7 +588,7 @@ export default function WishlistPage() {
             className="bg-white rounded-t-[32px] sm:rounded-2xl shadow-2xl w-full max-w-[512px] max-h-[95vh] sm:max-h-[90vh] flex flex-col animate-slideInUp sm:animate-fadeIn"
           >
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-4 sm:p-5 text-white flex-shrink-0 rounded-t-[32px] sm:rounded-none">
+            <div className="bg-gradient-to-r from-brand-500 to-brand-600 p-4 sm:p-5 text-white flex-shrink-0 rounded-t-[32px] sm:rounded-none">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -609,20 +609,20 @@ export default function WishlistPage() {
             <div className="overflow-y-auto flex-1 pb-6 sm:pb-0">
 
             {/* Product Info */}
-            <div className="p-5 border-b border-[#e9ecef]">
+            <div className="p-5 border-b border-line">
               <div className="flex gap-4">
-                <div className="w-20 h-20 bg-[#f8f9fa] rounded-xl overflow-hidden flex-shrink-0">
+                <div className="w-20 h-20 bg-surface rounded-xl overflow-hidden flex-shrink-0">
                   {selectedItem.imageUrl ? (
                     <Image src={selectedItem.imageUrl} alt={selectedItem.productName} width={80} height={80} className="object-cover w-full h-full" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <FiPackage className="w-8 h-8 text-[#adb5bd]" />
+                      <FiPackage className="w-8 h-8 text-subtle" />
                     </div>
                   )}
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#212529] line-clamp-2">{selectedItem.productName}</h3>
-                  <p className="text-2xl font-bold text-[#2a63cd] mt-1">${selectedItem.price.toFixed(2)}</p>
+                  <h3 className="font-bold text-ink line-clamp-2">{selectedItem.productName}</h3>
+                  <p className="text-2xl font-bold text-brand-500 mt-1">${selectedItem.price.toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -630,15 +630,15 @@ export default function WishlistPage() {
             {/* Discount Selector */}
             <div className="p-5 space-y-5">
               <div>
-                <label className="block text-sm font-bold text-[#212529] mb-3">Descuento solicitado</label>
+                <label className="block text-sm font-bold text-ink mb-3">Descuento solicitado</label>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((percent) => (
                     <button
                       key={percent}
                       onClick={() => setDiscountPercent(percent)}
                       className={`flex-1 py-3 rounded-xl font-bold text-lg transition-all ${discountPercent === percent
-                        ? 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white shadow-lg shadow-blue-500/20'
-                        : 'bg-[#f8f9fa] text-[#212529] hover:bg-[#e9ecef]'
+                        ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-blue-500/20'
+                        : 'bg-surface text-ink hover:bg-line'
                         }`}
                     >
                       {percent}%
@@ -650,27 +650,27 @@ export default function WishlistPage() {
               {/* Price Preview */}
               <div className="bg-gradient-to-r from-blue-50/50 via-indigo-50/30 to-blue-50/50 rounded-xl border border-blue-100/60 p-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-[#6a6c6b]">Precio original:</span>
-                  <span className="font-semibold text-[#212529]">${selectedItem.price.toFixed(2)}</span>
+                  <span className="text-sm text-muted">Precio original:</span>
+                  <span className="font-semibold text-ink">${selectedItem.price.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-sm text-[#6a6c6b]">Descuento ({discountPercent}%):</span>
+                  <span className="text-sm text-muted">Descuento ({discountPercent}%):</span>
                   <span className="font-semibold text-blue-600">-${(selectedItem.price * discountPercent / 100).toFixed(2)}</span>
                 </div>
-                <div className="border-t border-[#e9ecef] mt-3 pt-3 flex justify-between items-center">
-                  <span className="font-bold text-[#212529]">Precio final:</span>
+                <div className="border-t border-line mt-3 pt-3 flex justify-between items-center">
+                  <span className="font-bold text-ink">Precio final:</span>
                   <span className="text-2xl font-bold text-emerald-600">${(selectedItem.price * (1 - discountPercent / 100)).toFixed(2)}</span>
                 </div>
               </div>
 
               {/* Message */}
               <div>
-                <label className="block text-sm font-bold text-[#212529] mb-2">Mensaje (opcional)</label>
+                <label className="block text-sm font-bold text-ink mb-2">Mensaje (opcional)</label>
                 <textarea
                   value={discountMessage}
                   onChange={(e) => setDiscountMessage(e.target.value)}
                   placeholder="Ejemplo: Tengo $95 disponibles, seria posible un pequeno descuento?"
-                  className="w-full px-4 py-3 bg-white/70 border border-gray-200 focus:border-[#2a63cd] focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 resize-none text-[#212529]"
+                  className="w-full px-4 py-3 bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 resize-none text-ink"
                   rows={3}
                 />
               </div>
@@ -679,7 +679,7 @@ export default function WishlistPage() {
               <button
                 onClick={handleRequestDiscount}
                 disabled={requestingDiscount}
-                className="w-full py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {requestingDiscount ? (
                   <>
@@ -694,7 +694,7 @@ export default function WishlistPage() {
                 )}
               </button>
 
-              <p className="text-xs text-center text-[#6a6c6b]">
+              <p className="text-xs text-center text-muted">
                 El administrador revisara tu solicitud y te notificara cuando sea aprobada.
                 Los descuentos aprobados tienen tiempo limitado.
               </p>

@@ -521,7 +521,7 @@ function EnrollCard({
             {enrolling ? 'Procesando...' : isFree ? 'Inscribirse Gratis' : 'Inscribirse Ahora'}
           </button>
           {!isFree && !hasBalance && (
-            <Link href="/customer/wallet" className="block w-full py-2.5 text-center text-sm font-semibold text-[#2a63cd] border border-[#2a63cd] rounded-xl hover:bg-[#2a63cd]/5 transition-colors">
+            <Link href="/customer/balance" className="block w-full py-2.5 text-center text-sm font-semibold text-[#2a63cd] border border-[#2a63cd] rounded-xl hover:bg-[#2a63cd]/5 transition-colors">
               Recargar Saldo
             </Link>
           )}

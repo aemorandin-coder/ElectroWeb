@@ -9,7 +9,7 @@ export default async function SolicitarProductoPage() {
   const settings = await prisma.companySettings.findFirst();
 
   return (
-    <div className="min-h-dvh bg-[#f8f9fa]">
+    <div className="min-h-dvh bg-surface">
       <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
 
       <SolicitarProductoClient />

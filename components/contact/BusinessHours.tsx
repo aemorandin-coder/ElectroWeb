@@ -88,7 +88,7 @@ export default function BusinessHours({ businessHours }: BusinessHoursProps) {
     const hours = parseHours();
 
     return (
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] rounded-2xl shadow-2xl">
+        <div className="relative overflow-hidden bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 rounded-2xl shadow-2xl">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-cyan-300/10 rounded-full blur-xl pointer-events-none"></div>

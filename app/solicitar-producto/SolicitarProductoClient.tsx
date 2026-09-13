@@ -214,7 +214,7 @@ export default function SolicitarProductoClient() {
   return (
     <>
       {/* Epic Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
+      <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
 
         {/* Animated Background Particles */}
         <div className="absolute inset-0 opacity-10">
@@ -268,7 +268,7 @@ export default function SolicitarProductoClient() {
       <main className="bg-white max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8 lg:-mt-10">
         {success ? (
           /* Success State - Epic Design */
-          <div className="bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] rounded-3xl shadow-2xl p-10 text-center relative overflow-hidden animate-scaleIn">
+          <div className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 rounded-3xl shadow-2xl p-10 text-center relative overflow-hidden animate-scaleIn">
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl"></div>
 
@@ -286,7 +286,7 @@ export default function SolicitarProductoClient() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={() => router.push('/')}
-                  className="px-6 py-2.5 bg-white text-[#2a63cd] font-bold rounded-xl hover:scale-105 transition-all shadow-lg text-sm"
+                  className="px-6 py-2.5 bg-white text-brand-500 font-bold rounded-xl hover:scale-105 transition-all shadow-lg text-sm"
                 >
                   Ir al Inicio
                 </button>
@@ -302,7 +302,7 @@ export default function SolicitarProductoClient() {
         ) : (
           <div className="max-w-3xl mx-auto">
             {/* Form Section */}
-            <div className="bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] rounded-3xl shadow-2xl p-6 lg:p-8 relative overflow-hidden border border-white/10">
+            <div className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 rounded-3xl shadow-2xl p-6 lg:p-8 relative overflow-hidden border border-white/10">
               {/* Decorative elements */}
               <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl"></div>
@@ -443,9 +443,9 @@ export default function SolicitarProductoClient() {
                         className={`w-full px-4 py-2.5 bg-white/10 border ${touchedFields.category && validationErrors.category ? 'border-red-500/50' : 'border-white/20'} rounded-xl text-white text-xs focus:outline-none focus:bg-white/20 focus:border-white/40 transition-all appearance-none cursor-pointer text-center`}
                         style={{ colorScheme: 'dark' }}
                       >
-                        <option value="" className="bg-slate-800">Selecciona categoría</option>
+                        <option value="" className="bg-gray-800">Selecciona categoría</option>
                         {categories.map((cat) => (
-                          <option key={cat} value={cat} className="bg-slate-800">{cat}</option>
+                          <option key={cat} value={cat} className="bg-gray-800">{cat}</option>
                         ))}
                       </select>
                       {touchedFields.category && validationErrors.category && (
@@ -503,9 +503,9 @@ export default function SolicitarProductoClient() {
                           className="w-full pl-12 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-xs focus:outline-none focus:bg-white/20 focus:border-white/40 transition-all appearance-none cursor-pointer text-center"
                           style={{ colorScheme: 'dark' }}
                         >
-                          <option value="low" className="bg-slate-800">Urgencia: Baja</option>
-                          <option value="normal" className="bg-slate-800">Urgencia: Normal</option>
-                          <option value="high" className="bg-slate-800">Urgencia: Alta</option>
+                          <option value="low" className="bg-gray-800">Urgencia: Baja</option>
+                          <option value="normal" className="bg-gray-800">Urgencia: Normal</option>
+                          <option value="high" className="bg-gray-800">Urgencia: Alta</option>
                         </select>
                       </div>
                     </div>
@@ -527,7 +527,7 @@ export default function SolicitarProductoClient() {
                   <button
                     type="submit"
                     disabled={loading || !captchaToken}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white text-[#2a63cd] text-sm font-bold rounded-xl hover:bg-white/90 hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white text-brand-500 text-sm font-bold rounded-xl hover:bg-white/90 hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
                   >
                     {loading ? (
                       <>
@@ -556,7 +556,7 @@ export default function SolicitarProductoClient() {
                 { step: '4', title: 'Recibes', icon: FiTruck },
               ].map((item) => (
                 <div key={item.step} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] text-white flex items-center justify-center mb-2 shadow-lg">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white flex items-center justify-center mb-2 shadow-lg">
                     <item.icon className="w-5 h-5" />
                   </div>
                   <p className="text-xs font-bold text-gray-800">{item.title}</p>

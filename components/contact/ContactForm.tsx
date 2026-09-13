@@ -210,7 +210,7 @@ export default function ContactForm() {
 
     if (success) {
         return (
-            <div className="bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] rounded-2xl shadow-2xl p-10 text-center animate-fadeIn relative overflow-hidden">
+            <div className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 rounded-2xl shadow-2xl p-10 text-center animate-fadeIn relative overflow-hidden">
                 {/* Decorative elements */}
                 <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl"></div>
@@ -227,7 +227,7 @@ export default function ContactForm() {
                     </p>
                     <button
                         onClick={() => setSuccess(false)}
-                        className="px-8 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-2xl hover:shadow-[#2a63cd]/30 hover:scale-105 transition-all duration-300"
+                        className="px-8 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-2xl hover:shadow-brand-500/30 hover:scale-105 transition-all duration-300"
                     >
                         Enviar Otro Mensaje
                     </button>
@@ -237,7 +237,7 @@ export default function ContactForm() {
     }
 
     return (
-        <div className="bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] rounded-2xl shadow-2xl p-4 md:p-8 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 rounded-2xl shadow-2xl p-4 md:p-8 relative overflow-hidden">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl"></div>
@@ -404,12 +404,12 @@ export default function ContactForm() {
                                     } rounded-xl text-white text-xs md:text-base focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200 appearance-none cursor-pointer text-center`}
                                 style={{ colorScheme: 'dark' }}
                             >
-                                <option value="" className="bg-slate-800 text-white">Selecciona...</option>
-                                <option value="consulta" className="bg-slate-800 text-white">Consulta General</option>
-                                <option value="producto" className="bg-slate-800 text-white">Información de Producto</option>
-                                <option value="orden" className="bg-slate-800 text-white">Estado de Orden</option>
-                                <option value="soporte" className="bg-slate-800 text-white">Soporte Técnico</option>
-                                <option value="otro" className="bg-slate-800 text-white">Otro</option>
+                                <option value="" className="bg-gray-800 text-white">Selecciona...</option>
+                                <option value="consulta" className="bg-gray-800 text-white">Consulta General</option>
+                                <option value="producto" className="bg-gray-800 text-white">Información de Producto</option>
+                                <option value="orden" className="bg-gray-800 text-white">Estado de Orden</option>
+                                <option value="soporte" className="bg-gray-800 text-white">Soporte Técnico</option>
+                                <option value="otro" className="bg-gray-800 text-white">Otro</option>
                             </select>
                             {/* Dropdown arrow */}
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-200/50 pointer-events-none">
@@ -470,7 +470,7 @@ export default function ContactForm() {
                     <button
                         type="submit"
                         disabled={loading || !captchaToken}
-                        className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white text-[#2a63cd] font-bold rounded-xl hover:bg-white/90 hover:shadow-2xl hover:shadow-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-2"
+                        className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white text-brand-500 font-bold rounded-xl hover:bg-white/90 hover:shadow-2xl hover:shadow-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-2"
                     >
                         {loading ? (
                             <>

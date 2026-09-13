@@ -167,8 +167,8 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
             onClick={() => setFilter(c.value)}
             className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
               filter === c.value
-                ? 'bg-[#2a63cd] text-white shadow-md shadow-[#2a63cd]/30'
-                : 'bg-white text-[#6a6c6b] border border-[#e9ecef] hover:border-[#2a63cd]/30 hover:text-[#2a63cd]'
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/30'
+                : 'bg-white text-muted border border-line hover:border-brand-500/30 hover:text-brand-500'
             }`}
           >
             {c.label}
@@ -192,10 +192,10 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
               <div
                 key={v.id}
                 onClick={() => openModal(v)}
-                className="group bg-white rounded-2xl border border-[#e9ecef] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer"
+                className="group bg-white rounded-2xl border border-line shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer"
               >
                 {/* Thumbnail */}
-                <div className="relative aspect-video bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] overflow-hidden">
+                <div className="relative aspect-video bg-gradient-to-br from-surface to-line overflow-hidden">
                   {computedThumbnail ? (
                     <img
                       src={computedThumbnail}
@@ -210,7 +210,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                   {/* Play overlay */}
                   <div className="absolute inset-0 bg-black/40 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                      <svg className="w-7 h-7 text-[#2a63cd] ml-1" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-7 h-7 text-brand-500 ml-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     </div>
@@ -223,7 +223,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                       </span>
                     )}
                     {v.category && (
-                      <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#2a63cd] text-white">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-brand-500 text-white">
                         {CATEGORIES.find((c) => c.value === v.category)?.label || v.category}
                       </span>
                     )}
@@ -243,24 +243,24 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
 
                 {/* Content */}
                 <div className="p-5">
-                  <h3 className="font-bold text-[#212529] mb-1.5 line-clamp-2 group-hover:text-[#2a63cd] transition-colors">
+                  <h3 className="font-bold text-ink mb-1.5 line-clamp-2 group-hover:text-brand-500 transition-colors">
                     {v.title}
                   </h3>
                   {v.description && (
-                    <p className="text-sm text-[#6a6c6b] line-clamp-2 mb-3">{v.description}</p>
+                    <p className="text-sm text-muted line-clamp-2 mb-3">{v.description}</p>
                   )}
                   {v.avgRating !== null && (
                     <div className="flex items-center gap-2 mb-2">
                       <StarDisplay rating={v.avgRating} />
-                      <span className="text-xs font-bold text-[#212529]">{v.avgRating.toFixed(1)}</span>
-                      <span className="text-xs text-[#6a6c6b]">({v.reviewCount} reseñas)</span>
+                      <span className="text-xs font-bold text-ink">{v.avgRating.toFixed(1)}</span>
+                      <span className="text-xs text-muted">({v.reviewCount} reseñas)</span>
                     </div>
                   )}
                   {v.testimonial && (
                     <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
-                      <p className="text-xs italic text-[#212529] line-clamp-2">"{v.testimonial}"</p>
+                      <p className="text-xs italic text-ink line-clamp-2">"{v.testimonial}"</p>
                       {v.customerName && (
-                        <p className="text-xs font-bold text-[#2a63cd] mt-1">— {v.customerName}</p>
+                        <p className="text-xs font-bold text-brand-500 mt-1">— {v.customerName}</p>
                       )}
                     </div>
                   )}
@@ -282,7 +282,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-start justify-between p-5 border-b border-[#e9ecef]">
+            <div className="flex items-start justify-between p-5 border-b border-line">
               <div className="flex-1 pr-4">
                 <div className="flex items-center gap-2 mb-1.5">
                   {platformBadge && (
@@ -291,18 +291,18 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                     </span>
                   )}
                   {activeModal.category && (
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#2a63cd] text-white">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-brand-500 text-white">
                       {CATEGORIES.find((c) => c.value === activeModal.category)?.label}
                     </span>
                   )}
                 </div>
-                <h2 className="text-lg font-bold text-[#212529]">{activeModal.title}</h2>
+                <h2 className="text-lg font-bold text-ink">{activeModal.title}</h2>
               </div>
               <button
                 onClick={closeModal}
-                className="p-2 hover:bg-[#f8f9fa] rounded-xl transition-colors flex-shrink-0"
+                className="p-2 hover:bg-surface rounded-xl transition-colors flex-shrink-0"
               >
-                <FiX className="w-5 h-5 text-[#6a6c6b]" />
+                <FiX className="w-5 h-5 text-muted" />
               </button>
             </div>
 
@@ -322,7 +322,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                     href={activeModal.videoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-white text-[#2a63cd] rounded-lg font-semibold text-sm"
+                    className="flex items-center gap-2 px-4 py-2 bg-white text-brand-500 rounded-lg font-semibold text-sm"
                   >
                     <FiExternalLink className="w-4 h-4" />
                     Ver en {platformBadge?.label || 'plataforma'}
@@ -333,7 +333,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
 
             {/* Before / After */}
             {(activeModal.beforeImage || activeModal.afterImage) && (
-              <div className="p-5 border-b border-[#e9ecef]">
+              <div className="p-5 border-b border-line">
                 <div className="flex gap-2 mb-3">
                   {activeModal.beforeImage && (
                     <button
@@ -360,7 +360,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                     </button>
                   )}
                 </div>
-                <div className="rounded-xl overflow-hidden border border-[#e9ecef]">
+                <div className="rounded-xl overflow-hidden border border-line">
                   <img
                     src={
                       beforeAfterView === 'before'
@@ -375,15 +375,15 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
             )}
 
             {/* Description & Testimonial */}
-            <div className="p-5 border-b border-[#e9ecef]">
+            <div className="p-5 border-b border-line">
               {activeModal.description && (
-                <p className="text-sm text-[#6a6c6b] mb-4 leading-relaxed">{activeModal.description}</p>
+                <p className="text-sm text-muted mb-4 leading-relaxed">{activeModal.description}</p>
               )}
               {activeModal.testimonial && (
                 <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
-                  <p className="text-sm italic text-[#212529]">"{activeModal.testimonial}"</p>
+                  <p className="text-sm italic text-ink">"{activeModal.testimonial}"</p>
                   {activeModal.customerName && (
-                    <p className="text-sm font-bold text-[#2a63cd] mt-1.5">— {activeModal.customerName}</p>
+                    <p className="text-sm font-bold text-brand-500 mt-1.5">— {activeModal.customerName}</p>
                   )}
                 </div>
               )}
@@ -391,32 +391,32 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
 
             {/* Reviews */}
             <div className="p-5">
-              <h3 className="font-bold text-[#212529] mb-4 flex items-center gap-2">
+              <h3 className="font-bold text-ink mb-4 flex items-center gap-2">
                 <FiStar className="w-4 h-4 text-amber-400" />
                 Reseñas
                 {reviews.length > 0 && (
-                  <span className="text-xs text-[#6a6c6b] font-normal">({reviews.length})</span>
+                  <span className="text-xs text-muted font-normal">({reviews.length})</span>
                 )}
               </h3>
 
               {loadingReviews ? (
                 <div className="flex justify-center py-6">
-                  <div className="w-6 h-6 border-2 border-[#2a63cd]/30 border-t-[#2a63cd] rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin" />
                 </div>
               ) : (
                 <div className="space-y-3 mb-5">
                   {reviews.length === 0 && (
-                    <p className="text-sm text-[#6a6c6b] text-center py-4">
+                    <p className="text-sm text-muted text-center py-4">
                       Sé el primero en dejar una reseña.
                     </p>
                   )}
                   {reviews.map((r: any) => (
-                    <div key={r.id} className="p-3 bg-[#f8f9fa] rounded-xl">
+                    <div key={r.id} className="p-3 bg-surface rounded-xl">
                       <div className="flex items-center gap-2 mb-1">
                         <StarDisplay rating={r.rating} />
-                        <span className="text-xs font-semibold text-[#212529]">{r.user?.name || 'Usuario'}</span>
+                        <span className="text-xs font-semibold text-ink">{r.user?.name || 'Usuario'}</span>
                       </div>
-                      {r.comment && <p className="text-xs text-[#6a6c6b]">{r.comment}</p>}
+                      {r.comment && <p className="text-xs text-muted">{r.comment}</p>}
                     </div>
                   ))}
                 </div>
@@ -429,20 +429,20 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                     <p className="text-sm font-semibold text-green-700">¡Gracias por tu reseña!</p>
                   </div>
                 ) : (
-                  <div className="p-4 bg-[#f8f9fa] rounded-xl border border-[#e9ecef]">
-                    <p className="text-sm font-semibold text-[#212529] mb-3">Deja tu calificación</p>
+                  <div className="p-4 bg-surface rounded-xl border border-line">
+                    <p className="text-sm font-semibold text-ink mb-3">Deja tu calificación</p>
                     <StarPicker value={ratingValue} onChange={setRatingValue} />
                     <textarea
                       value={ratingComment}
                       onChange={(e) => setRatingComment(e.target.value)}
                       rows={2}
                       placeholder="Comentario opcional..."
-                      className="w-full mt-3 px-3 py-2 border border-[#e9ecef] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd] resize-none bg-white"
+                      className="w-full mt-3 px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:border-brand-500 resize-none bg-white"
                     />
                     <button
                       onClick={submitReview}
                       disabled={!ratingValue || submitting}
-                      className="mt-3 w-full py-2 bg-[#2a63cd] disabled:opacity-50 text-white rounded-lg text-sm font-bold transition-all hover:bg-[#1e4ba3]"
+                      className="mt-3 w-full py-2 bg-brand-500 disabled:opacity-50 text-white rounded-lg text-sm font-bold transition-all hover:bg-brand-600"
                     >
                       {submitting ? 'Enviando...' : 'Enviar Reseña'}
                     </button>
@@ -450,7 +450,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                 )
               ) : (
                 <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 text-center">
-                  <p className="text-sm text-[#2a63cd] font-medium">
+                  <p className="text-sm text-brand-500 font-medium">
                     Inicia sesión para dejar una reseña
                   </p>
                 </div>

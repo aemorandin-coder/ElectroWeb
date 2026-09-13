@@ -134,7 +134,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
                     <h4 className="text-sm font-bold text-gray-700">Opiniones verificadas</h4>
                     <p className="text-xs text-gray-500">Solo los usuarios que han comprado este producto pueden dejar una reseña.</p>
                 </div>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 shadow-sm">
+                <div className="lg:opacity-0 lg:group-hover:opacity-100 transition-opacity px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 shadow-sm">
                     Ver requisitos
                 </div>
             </div>

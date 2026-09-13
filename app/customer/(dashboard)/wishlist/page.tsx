@@ -417,7 +417,7 @@ export default function WishlistPage() {
                     <button
                       onClick={() => removeFromWishlist(item.productId)}
                       disabled={removingId === item.productId}
-                      className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow hover:bg-red-50 hover:text-red-600 transition-all opacity-0 group-hover:opacity-100"
+                      className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow hover:bg-red-50 hover:text-red-600 transition-all lg:opacity-0 lg:group-hover:opacity-100"
                     >
                       <FiTrash2 className="w-3.5 h-3.5" />
                     </button>

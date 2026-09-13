@@ -125,7 +125,7 @@ function CourseCard({ course }: CourseCardProps) {
             </svg>
           </div>
         )}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+        <div className="absolute inset-0 flex items-center justify-center lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-black/20">
           <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
             <svg className="w-5 h-5 text-[#2a63cd] ml-0.5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />

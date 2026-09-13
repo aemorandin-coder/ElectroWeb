@@ -208,7 +208,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                     </div>
                   )}
                   {/* Play overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
                       <svg className="w-7 h-7 text-[#2a63cd] ml-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z" />

@@ -13,19 +13,16 @@ import MobileNavBar from "@/components/public/MobileNavBar";
 import { GuidedTourWrapper } from "@/components/onboarding/GuidedTourWrapper";
 import { getSiteSettings } from "@/lib/site-settings";
 
-// Use local fonts to avoid Google Fonts dependency during build
-// Inter uses system font fallback
-const inter = {
+// Fuentes locales (sin depender de Google Fonts en el build).
+// Inter variable, subconjunto latino (español, € y ™). Licencia OFL: public/fonts/Inter-LICENSE.txt
+const inter = localFont({
+  src: "../public/fonts/InterVariable.woff2",
   variable: "--font-inter",
-};
-
-const nakadai = localFont({
-  src: "../public/fonts/Nakadai.otf",
-  variable: "--font-nakadai",
+  weight: "100 900",
   display: "swap",
-  preload: false,
 });
 
+// Tektrron: solo el wordmark "ELECTRO SHOP" (clase font-brand)
 const tektrron = localFont({
   src: "../public/fonts/Tektrron.ttf",
   variable: "--font-tektrron",
@@ -137,8 +134,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className={`${inter.variable} ${nakadai.variable} ${tektrron.variable} antialiased`} suppressHydrationWarning>
+    <html lang="es" data-scroll-behavior="smooth" className={`${inter.variable} ${tektrron.variable}`} suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning>
         <Providers>
           <NotificationProvider>
             <MobileScrollProgress />

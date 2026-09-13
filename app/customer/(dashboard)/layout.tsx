@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { useSettings } from '@/contexts/SettingsContext';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -38,7 +39,7 @@ export default function CustomerDashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
-  const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
+  const { settings: companySettings } = useSettings();
   const [userImage, setUserImage] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -62,21 +63,7 @@ export default function CustomerDashboardLayout({
     }
   }, [status, router]);
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const response = await fetch('/api/settings/public');
-        if (response.ok) {
-          const data = await response.json();
-          setCompanySettings(data);
-        }
-      } catch (error) {
-        console.error('Error fetching settings:', error);
-      }
-    };
 
-    fetchSettings();
-  }, []);
 
   // Fetch user profile image
   useEffect(() => {

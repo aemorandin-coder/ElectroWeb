@@ -8,6 +8,7 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
+import { useSettings } from '@/contexts/SettingsContext';
 import ProcessingOverlay, { GIFT_CARD_STEPS } from '@/components/ProcessingOverlay';
 import Footer from '@/components/Footer';
 
@@ -304,7 +305,8 @@ export default function GiftCardsPage() {
     const [exchangeRate, setExchangeRate] = useState<number | null>(null);
 
     // Company logo for overlay
-    const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+    const { settings: publicSettings } = useSettings();
+    const companyLogo = publicSettings?.logo ?? null;
 
     // Form refs for validation focus
     const recipientNameRef = useRef<HTMLInputElement>(null);
@@ -353,13 +355,7 @@ export default function GiftCardsPage() {
             })
             .catch(console.error);
 
-        // Fetch company settings for logo
-        fetch('/api/settings/public')
-            .then(res => res.json())
-            .then(data => {
-                if (data.logo) setCompanyLogo(data.logo);
-            })
-            .catch(console.error);
+
     }, []);
 
     // NEW: Handle "for myself" checkbox

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiMail, FiArrowLeft, FiCheck, FiShield } from 'react-icons/fi';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
+import { useSettings } from '@/contexts/SettingsContext';
 
 export default function RecuperarContrasenaPage() {
     const [email, setEmail] = useState('');
@@ -13,22 +14,10 @@ export default function RecuperarContrasenaPage() {
     const [error, setError] = useState('');
     const [captchaToken, setCaptchaToken] = useState<string | null>(null);
     const captchaRef = useRef<any>(null);
-    const [companySettings, setCompanySettings] = useState<{
-        companyName: string;
-        logo: string | null;
-    } | null>(null);
-
-    useEffect(() => {
-        fetch('/api/settings/public')
-            .then(res => res.json())
-            .then(data => {
-                setCompanySettings({
-                    companyName: data.companyName || 'Electro Shop Morandin',
-                    logo: data.logo,
-                });
-            })
-            .catch(err => console.error('Error loading company settings:', err));
-    }, []);
+    const { settings: publicSettings } = useSettings();
+    const companySettings = publicSettings
+      ? { companyName: publicSettings.companyName || 'Electro Shop Morandin', logo: publicSettings.logo ?? null }
+      : null;
 
     const handleCaptchaVerify = (token: string) => {
         setCaptchaToken(token);

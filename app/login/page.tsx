@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import EpicTooltip from '@/components/EpicTooltip';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
+import { useSettings } from '@/contexts/SettingsContext';
 
 // Constants for failed attempts
 const FAILED_ATTEMPTS_KEY = 'login_failed_attempts';
@@ -26,12 +27,11 @@ function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
-  const [companySettings, setCompanySettings] = useState<{
-    companyName: string;
-    logo: string | null;
-    tagline: string | null;
-  } | null>(null);
-  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const { settings: publicSettings, isLoading: publicSettingsLoading } = useSettings();
+  const companySettings = publicSettings
+    ? { companyName: publicSettings.companyName || 'Electro Shop Morandin', logo: publicSettings.logo ?? null, tagline: publicSettings.tagline ?? null }
+    : null;
+  const settingsLoaded = !publicSettingsLoading;
 
   // Captcha state
   const captchaRef = useRef<any>(null);
@@ -105,20 +105,7 @@ function LoginPageContent() {
     localStorage.removeItem(FAILED_ATTEMPTS_EXPIRY_KEY);
   };
 
-  // Load company settings
-  useEffect(() => {
-    fetch('/api/settings/public')
-      .then(res => res.json())
-      .then(data => {
-        setCompanySettings({
-          companyName: data.companyName || 'Electro Shop Morandin',
-          logo: data.logo,
-          tagline: data.tagline,
-        });
-      })
-      .catch(err => console.error('Error loading company settings:', err))
-      .finally(() => setSettingsLoaded(true));
-  }, []);
+
 
   // Check if redirect is for admin and handle errors
   useEffect(() => {

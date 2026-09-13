@@ -108,7 +108,7 @@ export default function RecuperarContrasenaPage() {
                                 <FiCheck className="w-12 h-12 text-green-600" />
                             </div>
                             <div className="flex-1 text-center md:text-left">
-                                <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
+                                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
                                     ¡Correo Enviado Exitosamente!
                                 </h2>
                                 <p className="text-white/90 mb-6 text-base leading-relaxed">
@@ -146,7 +146,7 @@ export default function RecuperarContrasenaPage() {
                                         </div>
                                     )}
 
-                                    <h2 className="text-xl font-black text-white mb-2">
+                                    <h2 className="text-xl font-bold text-white mb-2">
                                         Recuperar Acceso
                                     </h2>
                                     <p className="text-white/80 text-sm leading-relaxed mb-4">
@@ -168,7 +168,7 @@ export default function RecuperarContrasenaPage() {
 
                                 {/* Footer Signature */}
                                 <div className="mt-4 pt-4 border-t border-white/10 w-full">
-                                    <p className="text-[10px] text-white/40 leading-tight">
+                                    <p className="text-xs text-white/40 leading-tight">
                                         Desarrollado por<br />
                                         <span className="text-white/50 font-medium">Electro Shop - Estudio de desarrollo software y soluciones tecnológicas</span>
                                     </p>

@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
                         <div className="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
                             <FiCheck className="w-10 h-10 text-green-600" />
                         </div>
-                        <h2 className="text-2xl font-black text-white mb-3">
+                        <h2 className="text-2xl font-bold text-white mb-3">
                             ¡Contraseña Restablecida!
                         </h2>
                         <p className="text-white/90 mb-6">
@@ -95,7 +95,7 @@ export default function ResetPasswordPage() {
                         </div>
 
                         {/* Title */}
-                        <h2 className="text-3xl font-black text-white text-center mb-3">
+                        <h2 className="text-3xl font-bold text-white text-center mb-3">
                             Nueva Contraseña
                         </h2>
                         <p className="text-white/80 text-center mb-8">

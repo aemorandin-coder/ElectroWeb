@@ -705,8 +705,8 @@ export default function RegisterPage() {
               {formData.password && (
                 <div className="mt-1">
                   <div className="flex justify-between mb-1">
-                    <span className="text-[10px] font-medium text-blue-200">Seguridad de contraseña</span>
-                    <span className={`text-[10px] font-medium ${passwordStrength < 40 ? 'text-red-300' :
+                    <span className="text-xs font-medium text-blue-200">Seguridad de contraseña</span>
+                    <span className={`text-xs font-medium ${passwordStrength < 40 ? 'text-red-300' :
                       passwordStrength < 80 ? 'text-yellow-300' : 'text-green-300'
                       }`}>
                       {passwordStrength < 40 ? 'Débil' : passwordStrength < 80 ? 'Media' : 'Fuerte'}

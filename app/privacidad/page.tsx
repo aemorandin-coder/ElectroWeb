@@ -37,7 +37,7 @@ export default function PrivacyPage() {
           <div className="p-8 border-b border-white/10 bg-white/5">
             <div className="flex items-center gap-3 mb-2">
               <FiShield className="w-8 h-8 text-cyan-200" />
-              <h1 className="text-3xl font-black text-white tracking-tight font-[family-name:var(--font-tektur)]">
+              <h1 className="text-3xl font-bold text-white tracking-tight font-[family-name:var(--font-tektur)]">
                 Política de <span className="text-cyan-200">Privacidad</span>
               </h1>
             </div>

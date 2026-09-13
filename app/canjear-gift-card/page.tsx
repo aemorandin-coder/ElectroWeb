@@ -119,7 +119,7 @@ export default function RedeemGiftCardPage() {
                             <span style={{ fontSize: '14px', color: '#666' }}>USD</span>
                         </div>
                         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                            <Link href="/customer/wallet" style={{ flex: 1, minWidth: '140px', padding: '16px', background: 'linear-gradient(90deg, #2a63cd, #1e4ba3)', color: 'white', fontWeight: '700', borderRadius: '12px', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            <Link href="/customer/balance" style={{ flex: 1, minWidth: '140px', padding: '16px', background: 'linear-gradient(90deg, #2a63cd, #1e4ba3)', color: 'white', fontWeight: '700', borderRadius: '12px', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                 <FiCreditCard /> Ver mi saldo
                             </Link>
                             <Link href="/productos" style={{ flex: 1, minWidth: '140px', padding: '16px', background: '#f3f4f6', color: '#374151', fontWeight: '700', borderRadius: '12px', textAlign: 'center', textDecoration: 'none' }}>

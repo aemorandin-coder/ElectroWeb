@@ -70,7 +70,7 @@ export default function AdminDigitalCodesPage() {
 
     useEffect(() => {
         if (status === 'unauthenticated') {
-            router.push('/auth/login');
+            router.push('/login?redirect=admin');
             return;
         }
 

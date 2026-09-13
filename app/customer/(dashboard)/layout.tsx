@@ -58,7 +58,7 @@ export default function CustomerDashboardLayout({
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/login');
     }
   }, [status, router]);
 
@@ -147,13 +147,13 @@ export default function CustomerDashboardLayout({
   const handleSignOut = async () => {
     try {
       await signOut({
-        callbackUrl: '/auth/signin',
+        callbackUrl: '/login',
         redirect: true
       });
       router.refresh();
     } catch (error) {
       console.error('Error signing out:', error);
-      router.push('/auth/signin');
+      router.push('/login');
       router.refresh();
     }
   };

@@ -23,11 +23,6 @@ import { FaMoneyCheckAlt } from 'react-icons/fa';
 import { PiListHeartBold } from 'react-icons/pi';
 import CustomerMobileNavBar from '@/components/customer/CustomerMobileNavBar';
 
-interface CompanySettings {
-  companyName: string;
-  logo: string | null;
-}
-
 export default function CustomerDashboardLayout({
   children,
 }: {

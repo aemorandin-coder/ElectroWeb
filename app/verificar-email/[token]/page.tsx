@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FiCheckCircle, FiXCircle, FiLoader, FiMail } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
 export default function VerifyEmailPage() {
     const params = useParams();
@@ -100,7 +101,7 @@ export default function VerifyEmailPage() {
                                                     body: JSON.stringify({ email }),
                                                 });
                                                 const data = await res.json();
-                                                alert(data.message || data.error);
+                                                if (res.ok) { toast.success(data.message || 'Email reenviado'); } else { toast.error(data.error || 'No se pudo reenviar el email'); }
                                             }
                                         }}
                                         className="block w-full py-3 border border-[#2a63cd] text-[#2a63cd] font-medium rounded-lg hover:bg-[#2a63cd]/5 transition-colors"

@@ -2,6 +2,7 @@
 
 > Reglas obligatorias: [`/GEMINI.md`](../../GEMINI.md). Tarjetas G-01 a G-08: `GEMINI.md` §5. Tarjetas G-09 a G-14: **este archivo**, §4.
 > Lo que hace Claude al mismo tiempo: [`PLAN_CLAUDE.md`](./PLAN_CLAUDE.md).
+> Última revisión de Claude: [`revisiones/R1-R3.md`](./revisiones/R1-R3.md) — R1, R2 y R3 **aprobadas**.
 
 ## 1. Qué detectó la auditoría en tu carril
 
@@ -10,18 +11,20 @@ Todo esto está en carpetas donde solo trabaja Gemini. Son arreglos repetitivos:
 | Problema | Cantidad | Tarea |
 |----------|----------|-------|
 | Links a rutas que no existen (`/customer/wallet`, `/auth/login`, `/auth/signin`) | 7 líneas | G-01 ✅ |
-| Componentes que nadie importa | 10 archivos | G-02 |
-| Páginas sin Header/Footer (privacidad, términos, canjear gift card) | 3 páginas | G-03 |
-| `alert()` en lugar de toast | 6 | G-04a / G-04b |
-| Textos ilegibles de 7 a 10px + `font-black` | ~200 | G-05a…g |
+| Componentes que nadie importa | 10 archivos | G-02 ✅ |
+| Páginas sin Header/Footer (privacidad, términos, canjear gift card) | 3 páginas | G-03 ✅ |
+| `alert()` en lugar de toast | 6 | G-04a ✅ / G-04b ⏸️ |
+| Textos ilegibles de 7 a 10px + `font-black` | ~200 | G-05a…f ✅ / G-05g ⏸️ |
 | Colores hex escritos a mano | ~1.900 clases | G-06a…g |
-| `h-screen`/`min-h-screen` (cortan contenido en celulares) | 33 | G-07 |
-| Botones que solo aparecen con hover (en celular no se ven) | 4 | G-08 |
-| Páginas que vuelven a pedir `/api/settings/public` aunque ya lo tiene el contexto | 5 | **G-09** |
+| `h-screen`/`min-h-screen` (cortan contenido en celulares) | 33 | G-07 ✅ |
+| Botones que solo aparecen con hover (en celular no se ven) | 4 | G-08 ✅ |
+| Páginas que vuelven a pedir `/api/settings/public` aunque ya lo tiene el contexto | 5 | G-09 ✅ |
 | z-index gigantes (`z-[100001]`, `z-[9998]`) | 9 | **G-10** |
 | `document.body.style.overflow` manual en modales (se traba el scroll) | 4 archivos | **G-11** |
-| Manchas de blur animadas con `animate-pulse` (lentas en Android barato) | 37 líneas | **G-12** |
-| Texto blanco casi transparente (`text-white/40…60`) difícil de leer | 69 | **G-13** |
+| Manchas de blur animadas con `animate-pulse` (lentas en Android barato) | 37 líneas | G-12 ✅ |
+| Texto blanco casi transparente (`text-white/40…60`) difícil de leer | 69 | G-13 ✅ |
+| Restos de la revisión R1-R3 (2 avisos de lint, 1 clase duplicada) | 3 | **G-15** |
+| Componente `FloatingTechIcons` copiado en 6 páginas, con íconos flotando en animación infinita | 6 archivos | **G-16** |
 | Inventario final de lo que quede pendiente | — | **G-14** |
 
 ## 2. Cómo se trabaja: una rama por ronda
@@ -47,7 +50,8 @@ Las rondas avanzan **en paralelo** con las de Claude, con el mismo número. Una 
 |-------|----------------------------------|------------------------|---------------------------|
 | **R1** | G-02 → G-03 → G-07 → G-08 → G-04a → G-12 | G-01 mergeada | C-01 órdenes · C-05 carrito |
 | **R2** | G-05a → G-05b → G-05c → G-05d → G-05e → G-13 | R1 mergeada | C-02 DTO · C-03 settings · C-04 · C-06 · C-07 |
-| **R3** | G-09 → G-05f → G-04b* → G-05g* | R2 mergeada. (*) solo si `C-01` y `C-05` están `HECHO` en `main`; si no, sáltalas | C-10 tokens · C-11 fuentes |
+| **R3** ✅ | G-09 → G-05f → G-04b* → G-05g* | R2 mergeada. (*) solo si `C-01` y `C-05` están `HECHO` en `main`; si no, sáltalas | C-10 tokens · C-11 fuentes |
+| **R3b** | G-15 → G-16 → (G-04b y G-05g si ya se cumplió su dependencia) | R3 y `claude/docs-R3` mergeadas en `main` | C-01/C-05 (en curso) · C-10 · C-11 |
 | **R4** | G-06a → G-06b → G-06c → G-06d → G-06e | R3 mergeada **y** `C-10` `HECHO` en `main` | C-12 componentes base · C-13 queries |
 | **R5** | G-06f → G-06g* → G-11 | R4 mergeada **y** `C-12` `HECHO`. (*) requiere `C-01` y `C-05` | C-20 header · C-21 barra móvil |
 | **R6** | G-10 → (pendientes de R3/R5 que se hayan saltado) | R5 mergeada **y** `C-21` `HECHO` | C-22 home · C-23 popup |
@@ -61,6 +65,7 @@ Lee GEMINI.md completo y docs/plan/PLAN_GEMINI.md.
 Estás en la Ronda R1. Verifica el requisito de la ronda en la tabla §3.
 Crea la rama gemini/R1 desde main. Haz SOLO estas tareas, en orden, un commit por tarea:
 G-02, G-03, G-07, G-08, G-04a, G-12.
+(Para otra ronda cambia el número de ronda y la lista de tareas según la tabla §3.)
 Para cada una: sigue su tarjeta al pie de la letra, corre su Verificación,
 compara tsc antes/después y crea docs/plan/estado/G-XX.md dentro del mismo commit.
 Si una tarea no cuadra, márcala BLOQUEADO y sigue con la siguiente.
@@ -226,6 +231,55 @@ bash -c 'RUTAS="app/customer components/customer app/creator app/cursos componen
 # Esperado: 0 y 0
 ```
 QA visual: login y gift-cards a 360px. Si algún ícono decorativo quedó demasiado brillante, anótalo en Notas; **no lo cambies**.
+
+---
+
+### G-15 · Retoques de la revisión R1-R3 · Depende: —
+Tres cambios exactos, nada más:
+
+| Archivo | Cambio |
+|---------|--------|
+| `app/customer/(dashboard)/layout.tsx` (~l.26) | Borra el bloque completo `interface CompanySettings { companyName: string; logo: string \| null; }` (4 líneas) y la línea en blanco que queda debajo. Antes, confirma que `grep -n "CompanySettings" "app/customer/(dashboard)/layout.tsx"` **solo** muestra la línea de la interface. |
+| `app/recuperar-contrasena/page.tsx` (l.3) | `import { useState, useRef, useEffect } from 'react';` → `import { useState, useRef } from 'react';`. Antes, confirma que `grep -n "useEffect" app/recuperar-contrasena/page.tsx` solo muestra la línea 3. |
+| `app/customer/(dashboard)/orders/page.tsx` (~l.528) | `text-[11px] lg:text-[11px]` → `text-[11px]` |
+
+No toques el aviso de `err` sin uso en `recuperar-contrasena` (l.57): es anterior a Gemini.
+
+Verificación:
+```bash
+npx eslint "app/customer/(dashboard)/layout.tsx" app/recuperar-contrasena/page.tsx 2>&1 | grep -E "CompanySettings|'useEffect'"
+# Esperado: vacío
+grep -rnE "text-\[11px\] (sm|md|lg):text-\[11px\]|text-xs (sm|md|lg):text-xs" app components
+# Esperado: 0
+```
+
+---
+
+### G-16 · Quitar los `FloatingTechIcons` duplicados · Depende: —
+Seis páginas tienen **copiada** la misma función local `FloatingTechIcons` (íconos flotando con animación infinita, prohibida por `PLAN.md` §1.1). No es un import: está definida dentro de cada archivo.
+
+| Archivo | Definición (según `gemini/R3`) | Usos a borrar |
+|---------|-------------------------------|---------------|
+| `app/servicios/page.tsx` | l.18–41 | l.115 (+ comentario l.114) |
+| `app/solicitar-producto/SolicitarProductoClient.tsx` | l.31–54 | l.244 (+ comentario l.243) |
+| `app/gift-cards/page.tsx` | l.109–132 | l.601 y l.1216 (+ comentario l.1215) |
+| `app/cursos/page.tsx` | l.183–206 | l.244 (+ comentario l.243) |
+| `app/creator/page.tsx` | l.35–58 | l.108 (+ comentario l.107) |
+| `app/contacto/page.tsx` | l.11–34 | l.46 (+ comentario l.45) |
+
+En **cada** archivo, en este orden (de abajo hacia arriba, para que no se muevan los números):
+1. Borra cada línea `<FloatingTechIcons />` y, si la línea anterior es un comentario `{/* Floating Icons Effect */}` o `{/* Floating Tech Icons */}`, bórralo también.
+2. Borra el bloque completo desde `const FloatingTechIcons = () => {` hasta su `};` de cierre, y una línea en blanco sobrante.
+3. Corre `npx eslint <archivo>`. Si reporta íconos como `'FiMonitor' is defined but never used` (o `FiCpu`, `FiHardDrive`, `FiSmartphone`, `FiHeadphones`, `FiWifi`, etc.), quítalos **solo a ellos** del import de `react-icons`. Si el import queda vacío, borra la línea entera.
+4. **No** borres ningún ícono que eslint no marque como sin uso.
+
+Verificación:
+```bash
+grep -rn "FloatingTechIcons" app components     # Esperado: 0
+npx tsc --noEmit                                 # sin errores nuevos
+npx eslint app/servicios/page.tsx app/solicitar-producto/SolicitarProductoClient.tsx app/gift-cards/page.tsx app/cursos/page.tsx app/creator/page.tsx app/contacto/page.tsx 2>&1 | grep -c "is defined but never used"
+# Anota el número. No debe ser mayor que antes de empezar (córrelo también al inicio).
+```
 
 ---
 

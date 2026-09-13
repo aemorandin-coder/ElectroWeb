@@ -44,6 +44,12 @@ Es lo que requiere criterio: dinero, datos, arquitectura y las piezas que todo e
 | **R7** | C-30 → C-31 → C-32 → C-33 | — | G-14 (inventario) |
 | **R8** | C-40: revisión final, README y tarjetas nuevas para Gemini a partir de G-14 | — | — |
 
+### Ajuste tras la revisión R1-R3 (2026-09-12)
+Gemini avanzó más rápido de lo previsto: R1, R2 y R3 están aprobadas ([`revisiones/R1-R3.md`](./revisiones/R1-R3.md)). Lo único que le queda sin dependencias es R3b (G-15, G-16); después **se bloquea hasta que exista C-10**.
+- **C-01/C-05** siguen en curso en la carpeta principal (rama `claude/C-01`, cambios sin commitear). No se tocan desde otra sesión.
+- **C-10 y C-11 se adelantan** y se hacen **en paralelo** con C-01, en un worktree separado (`claude/C-10`, `claude/C-11`), porque no comparten archivos (`globals.css`, `layout.tsx`, fuentes) con órdenes y checkout.
+- Orden efectivo: **C-01 + C-10 → C-05 + C-11 → C-02 → C-03 → C-04 → C-06 → C-07 → C-12 …**
+
 **Regla de oro:** si una tarea de Claude necesita editar un archivo del carril Gemini, no se edita. Se deja `PEDIDO PARA GEMINI:` en el estado y Claude escribe la tarjeta en `PLAN_GEMINI.md`.
 
 ---

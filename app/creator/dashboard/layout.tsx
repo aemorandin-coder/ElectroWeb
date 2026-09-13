@@ -53,7 +53,7 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
   if (status === 'loading') {
     return (
       <div className="min-h-dvh bg-[#0f1117] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -68,7 +68,7 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
       >
         {/* Logo */}
         <div className="px-4 py-5 border-b border-white/10 flex items-center gap-3 flex-shrink-0">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#2a63cd] to-cyan-500 flex items-center justify-center flex-shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
@@ -91,7 +91,7 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-[#2a63cd]/20 text-[#60a5fa] border border-[#2a63cd]/30'
+                    ? 'bg-brand-500/20 text-[#60a5fa] border border-brand-500/30'
                     : 'text-white/80 hover:text-white hover:bg-white/5'
                 }`}
                 title={!sidebarOpen ? item.label : undefined}
@@ -161,7 +161,7 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
             >
               Ver catálogo ↗
             </Link>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2a63cd] to-cyan-500 flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-cyan-500 flex items-center justify-center text-white text-xs font-bold">
               {session.user.name?.[0]?.toUpperCase() ?? 'C'}
             </div>
           </div>

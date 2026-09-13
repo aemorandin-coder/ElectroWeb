@@ -51,7 +51,7 @@ export default function CreatorCoursesPage() {
         </div>
         <Link
           href="/creator/dashboard/cursos/nuevo"
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#2a63cd] to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -62,7 +62,7 @@ export default function CreatorCoursesPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48">
-          <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : courses.length === 0 ? (
         <div className="bg-white/5 border border-white/10 rounded-2xl p-16 text-center">
@@ -70,7 +70,7 @@ export default function CreatorCoursesPage() {
           <p className="text-white/80 text-sm mb-6">Crea tu primer curso y comparte tu conocimiento.</p>
           <Link
             href="/creator/dashboard/cursos/nuevo"
-            className="inline-block px-6 py-2.5 bg-gradient-to-r from-[#2a63cd] to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
+            className="inline-block px-6 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
           >
             Crear primer curso
           </Link>
@@ -122,7 +122,7 @@ export default function CreatorCoursesPage() {
                   )}
                   <Link
                     href={`/creator/dashboard/cursos/${course.id}`}
-                    className="px-4 py-1.5 bg-[#2a63cd]/30 text-[#60a5fa] text-xs font-semibold rounded-lg hover:bg-[#2a63cd]/50 transition-colors"
+                    className="px-4 py-1.5 bg-brand-500/30 text-[#60a5fa] text-xs font-semibold rounded-lg hover:bg-brand-500/50 transition-colors"
                   >
                     Editar
                   </Link>

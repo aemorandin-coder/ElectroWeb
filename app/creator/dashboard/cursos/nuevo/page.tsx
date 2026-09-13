@@ -159,7 +159,7 @@ export default function NuevoCursoPage() {
           <button
             onClick={handleCreate}
             disabled={saving}
-            className="px-6 py-2.5 bg-gradient-to-r from-[#2a63cd] to-cyan-500 text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="px-6 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {saving ? 'Creando...' : 'Crear Curso →'}
           </button>
@@ -182,4 +182,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const INPUT = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-[#2a63cd] text-sm transition-colors';
+const INPUT = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-brand-500 text-sm transition-colors';

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import ImageUploadField from '@/components/ui/ImageUploadField';
 
-const INPUT = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-[#2a63cd] text-sm transition-colors';
+const INPUT = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-brand-500 text-sm transition-colors';
 
 export default function CreatorProfilePage() {
   const [form, setForm] = useState({ displayName: '', bio: '', expertise: '', avatar: '' });
@@ -48,7 +48,7 @@ export default function CreatorProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-48">
-        <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -70,7 +70,7 @@ export default function CreatorProfilePage() {
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-5">
         {/* Avatar preview */}
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2a63cd] to-cyan-500 flex items-center justify-center text-white text-xl font-bold overflow-hidden flex-shrink-0">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-500 to-cyan-500 flex items-center justify-center text-white text-xl font-bold overflow-hidden flex-shrink-0">
             {form.avatar ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={form.avatar} alt="avatar" className="w-full h-full object-cover" />
@@ -125,7 +125,7 @@ export default function CreatorProfilePage() {
           <button
             onClick={handleSave}
             disabled={saving || !form.displayName}
-            className="px-6 py-2.5 bg-gradient-to-r from-[#2a63cd] to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+            className="px-6 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
           >
             {saving ? 'Guardando...' : 'Guardar Perfil'}
           </button>

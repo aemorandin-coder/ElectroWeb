@@ -173,7 +173,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
         <div className="hidden sm:flex items-center gap-3">
           <div className="w-32 bg-white/10 rounded-full h-1.5">
             <div
-              className="h-1.5 rounded-full bg-gradient-to-r from-[#2a63cd] to-cyan-400 transition-all duration-500"
+              className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-cyan-400 transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -231,7 +231,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                       <button
                         key={lesson.id}
                         onClick={() => setActiveLesson(lesson)}
-                        className={`w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors ${active ? 'bg-[#2a63cd]/30 border-l-2 border-[#2a63cd]' : 'hover:bg-white/5 border-l-2 border-transparent'}`}
+                        className={`w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors ${active ? 'bg-brand-500/30 border-l-2 border-brand-500' : 'hover:bg-white/5 border-l-2 border-transparent'}`}
                       >
                         {/* Completion circle */}
                         <div className={`mt-0.5 w-4 h-4 rounded-full border shrink-0 flex items-center justify-center transition-colors ${done ? 'bg-green-500 border-green-500' : 'border-white/30'}`}>
@@ -328,7 +328,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                       disabled={saving}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${isCompleted
                         ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
-                        : 'bg-[#2a63cd] text-white hover:bg-[#1e4ba3]'
+                        : 'bg-brand-500 text-white hover:bg-brand-600'
                       }`}
                     >
                       {saving ? (
@@ -369,7 +369,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
               <div className="sm:hidden mt-2 flex items-center gap-2">
                 <div className="flex-1 bg-white/10 rounded-full h-1">
                   <div
-                    className="h-1 rounded-full bg-gradient-to-r from-[#2a63cd] to-cyan-400 transition-all duration-500"
+                    className="h-1 rounded-full bg-gradient-to-r from-brand-500 to-cyan-400 transition-all duration-500"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -385,19 +385,19 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
             <div className="text-6xl mb-4">🏆</div>
-            <h2 className="text-2xl font-bold text-[#212529] mb-2">¡Felicitaciones!</h2>
-            <p className="text-[#6a6c6b] mb-2">Completaste el curso</p>
-            <p className="text-xl font-bold text-[#2a63cd] mb-6">{course.title}</p>
-            <div className="border-2 border-dashed border-[#2a63cd]/30 rounded-xl p-5 mb-5 bg-[#f8f9fa]">
+            <h2 className="text-2xl font-bold text-ink mb-2">¡Felicitaciones!</h2>
+            <p className="text-muted mb-2">Completaste el curso</p>
+            <p className="text-xl font-bold text-brand-500 mb-6">{course.title}</p>
+            <div className="border-2 border-dashed border-brand-500/30 rounded-xl p-5 mb-5 bg-surface">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <svg className="w-5 h-5 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" />
                 </svg>
-                <span className="text-sm font-bold text-[#2a63cd]">Certificado de Finalización</span>
+                <span className="text-sm font-bold text-brand-500">Certificado de Finalización</span>
               </div>
-              <p className="text-xs text-[#6a6c6b] mb-3">ElectroShop certifica que completaste este curso satisfactoriamente.</p>
+              <p className="text-xs text-muted mb-3">ElectroShop certifica que completaste este curso satisfactoriamente.</p>
               {certificateId && (
-                <p className="text-xs text-[#6a6c6b] font-mono bg-white border border-[#e9ecef] rounded px-2 py-1 truncate">
+                <p className="text-xs text-muted font-mono bg-white border border-line rounded px-2 py-1 truncate">
                   ID: {certificateId}
                 </p>
               )}
@@ -405,7 +405,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCert(false)}
-                className="flex-1 py-2.5 border border-[#dee2e6] text-[#6a6c6b] text-sm font-semibold rounded-xl hover:bg-[#f8f9fa] transition-colors"
+                className="flex-1 py-2.5 border border-line-strong text-muted text-sm font-semibold rounded-xl hover:bg-surface transition-colors"
               >
                 Cerrar
               </button>
@@ -420,7 +420,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
               )}
               <Link
                 href="/customer/mis-cursos"
-                className="flex-1 py-2.5 bg-[#2a63cd] text-white text-sm font-semibold rounded-xl hover:bg-[#1e4ba3] transition-colors text-center"
+                className="flex-1 py-2.5 bg-brand-500 text-white text-sm font-semibold rounded-xl hover:bg-brand-600 transition-colors text-center"
               >
                 Mis Cursos
               </Link>

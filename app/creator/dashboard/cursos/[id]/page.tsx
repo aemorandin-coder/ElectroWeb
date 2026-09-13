@@ -7,7 +7,7 @@ import ImageUploadField from '@/components/ui/ImageUploadField';
 const CATEGORIES = ['Redes', 'CCTV', 'Electrónica', 'Gaming', 'Programación', 'Hardware', 'Software', 'Otro'];
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
 const LEVEL_LABELS: Record<string, string> = { BEGINNER: 'Principiante', INTERMEDIATE: 'Intermedio', ADVANCED: 'Avanzado' };
-const INPUT = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-[#2a63cd] text-sm transition-colors';
+const INPUT = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-brand-500 text-sm transition-colors';
 
 type Lesson = { id?: string; title: string; description: string; videoUrl: string; duration: string; isFree: boolean; order: number };
 type Module = { id?: string; title: string; order: number; lessons: Lesson[] };
@@ -114,7 +114,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -161,7 +161,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
             key={t}
             onClick={() => setTab(t)}
             className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all ${
-              tab === t ? 'bg-[#2a63cd] text-white' : 'text-white/80 hover:text-white'
+              tab === t ? 'bg-brand-500 text-white' : 'text-white/80 hover:text-white'
             }`}
           >
             {t === 'info' ? 'Información' : 'Currículum'}
@@ -210,7 +210,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
             <button
               onClick={saveInfo}
               disabled={saving}
-              className="px-6 py-2.5 bg-gradient-to-r from-[#2a63cd] to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+              className="px-6 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
             >
               {saving ? 'Guardando...' : 'Guardar Información'}
             </button>
@@ -253,7 +253,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                       <input
                         value={lesson.title}
                         onChange={(e) => updLesson(mIdx, lIdx, 'title', e.target.value)}
-                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs font-semibold focus:outline-none focus:border-[#2a63cd]"
+                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs font-semibold focus:outline-none focus:border-brand-500"
                         placeholder="Título de la lección"
                       />
                       <button
@@ -267,20 +267,20 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                       <input
                         value={lesson.videoUrl}
                         onChange={(e) => updLesson(mIdx, lIdx, 'videoUrl', e.target.value)}
-                        className="col-span-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white/80 text-xs focus:outline-none focus:border-[#2a63cd]"
+                        className="col-span-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white/80 text-xs focus:outline-none focus:border-brand-500"
                         placeholder="URL del video (YouTube/Vimeo)"
                       />
                       <input
                         value={lesson.description}
                         onChange={(e) => updLesson(mIdx, lIdx, 'description', e.target.value)}
-                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white/80 text-xs focus:outline-none focus:border-[#2a63cd]"
+                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white/80 text-xs focus:outline-none focus:border-brand-500"
                         placeholder="Descripción breve"
                       />
                       <input
                         type="number"
                         value={lesson.duration}
                         onChange={(e) => updLesson(mIdx, lIdx, 'duration', e.target.value)}
-                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white/80 text-xs focus:outline-none focus:border-[#2a63cd]"
+                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white/80 text-xs focus:outline-none focus:border-brand-500"
                         placeholder="Duración (minutos)"
                       />
                       <label className="flex items-center gap-2 col-span-2 cursor-pointer group pl-1">
@@ -288,7 +288,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                           type="checkbox"
                           checked={lesson.isFree}
                           onChange={(e) => updLesson(mIdx, lIdx, 'isFree', e.target.checked)}
-                          className="w-4 h-4 accent-[#2a63cd]"
+                          className="w-4 h-4 accent-brand-500"
                         />
                         <span className="text-white/80 text-xs group-hover:text-white/70 transition-colors">
                           Lección gratuita (visible sin inscripción)
@@ -321,7 +321,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
             <button
               onClick={saveCurriculum}
               disabled={savingCurr}
-              className="px-6 py-2.5 bg-gradient-to-r from-[#2a63cd] to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+              className="px-6 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
             >
               {savingCurr ? 'Guardando...' : 'Guardar Currículum'}
             </button>

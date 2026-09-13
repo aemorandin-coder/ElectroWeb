@@ -50,7 +50,7 @@ export default function CreatorDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -98,7 +98,7 @@ export default function CreatorDashboardPage() {
         </div>
         <Link
           href="/creator/dashboard/cursos/nuevo"
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#2a63cd] to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm w-fit"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm w-fit"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -132,7 +132,7 @@ export default function CreatorDashboardPage() {
               <p className="text-white/80 mb-4 text-sm">Aún no has creado ningún curso.</p>
             <Link
               href="/creator/dashboard/cursos/nuevo"
-              className="inline-block px-6 py-2.5 bg-gradient-to-r from-[#2a63cd] to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
+              className="inline-block px-6 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
             >
               Crear mi primer curso
             </Link>
@@ -175,7 +175,7 @@ export default function CreatorDashboardPage() {
       </div>
 
       {/* Info card */}
-      <div className="bg-gradient-to-r from-[#2a63cd]/20 to-cyan-500/20 border border-[#2a63cd]/30 rounded-2xl p-5">
+      <div className="bg-gradient-to-r from-brand-500/20 to-cyan-500/20 border border-brand-500/30 rounded-2xl p-5">
         <h3 className="text-white font-bold mb-1.5 text-sm">¿Cómo funcionan tus ingresos?</h3>
         <p className="text-white/80 text-xs leading-relaxed">
           Por cada venta recibes el{' '}

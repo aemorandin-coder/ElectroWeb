@@ -551,7 +551,7 @@ export default function GiftCardsPage() {
     };
 
     return (
-        <div className="min-h-dvh bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
+        <div className="min-h-dvh bg-gradient-to-br from-surface via-white to-surface">
             {/* CSS for animations */}
             <style jsx global>{`
                 @keyframes shimmer {
@@ -567,7 +567,7 @@ export default function GiftCardsPage() {
             <PublicHeader />
 
             {/* Hero Section */}
-            <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
+            <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-10 left-10 w-64 h-64 bg-white rounded-full blur-3xl"></div>
                     <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-300 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
@@ -1179,7 +1179,7 @@ export default function GiftCardsPage() {
             </main>
 
             {/* CTA Section - Like Homepage */}
-            <section className="py-12 bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] relative overflow-hidden">
+            <section className="py-12 bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 relative overflow-hidden">
                 {/* Background Effects */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-5 left-10 w-48 h-48 bg-white rounded-full blur-3xl"></div>
@@ -1196,7 +1196,7 @@ export default function GiftCardsPage() {
                         </div>
                         <Link
                             href="/canjear-gift-card"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#2a63cd] text-sm font-bold rounded-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl hover:scale-105 whitespace-nowrap"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand-500 text-sm font-bold rounded-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl hover:scale-105 whitespace-nowrap"
                         >
                             <FiGift className="w-4 h-4" />
                             Canjear Gift Card

@@ -68,11 +68,11 @@ export default function CreatorLandingPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-white text-[#212529] flex flex-col justify-between overflow-x-hidden">
+    <div className="min-h-dvh bg-white text-ink flex flex-col justify-between overflow-x-hidden">
       <PublicHeader />
       
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden text-center text-white">
+      <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden text-center text-white">
         {/* Animated Background Particles */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
@@ -119,22 +119,22 @@ export default function CreatorLandingPage() {
           ].map((stat, idx) => {
             const Icon = stat.icon;
             return (
-              <div key={idx} className="relative group overflow-hidden bg-white rounded-2xl p-6 border border-[#e9ecef] hover:border-[#2a63cd]/30 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#2a63cd]/5 to-transparent rounded-full blur-xl group-hover:scale-150 transition-all duration-500" />
-                <div className="w-10 h-10 rounded-xl bg-[#2a63cd]/5 flex items-center justify-center border border-[#2a63cd]/10 mb-4 group-hover:bg-[#2a63cd]/10 group-hover:border-[#2a63cd]/20 transition-all duration-300">
-                  <Icon className="w-5 h-5 text-[#2a63cd]" />
+              <div key={idx} className="relative group overflow-hidden bg-white rounded-2xl p-6 border border-line hover:border-brand-500/30 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-brand-500/5 to-transparent rounded-full blur-xl group-hover:scale-150 transition-all duration-500" />
+                <div className="w-10 h-10 rounded-xl bg-brand-500/5 flex items-center justify-center border border-brand-500/10 mb-4 group-hover:bg-brand-500/10 group-hover:border-brand-500/20 transition-all duration-300">
+                  <Icon className="w-5 h-5 text-brand-500" />
                 </div>
-                <h3 className="text-3xl font-bold text-[#2a63cd] leading-none mb-2">{stat.value}</h3>
-                <h4 className="text-sm font-semibold text-[#212529] mb-1">{stat.label}</h4>
-                <p className="text-xs text-[#6a6c6b] leading-relaxed">{stat.desc}</p>
+                <h3 className="text-3xl font-bold text-brand-500 leading-none mb-2">{stat.value}</h3>
+                <h4 className="text-sm font-semibold text-ink mb-1">{stat.label}</h4>
+                <p className="text-xs text-muted leading-relaxed">{stat.desc}</p>
               </div>
             );
           })}
         </div>
 
         {/* How it works */}
-        <div className="bg-[#f8f9fa] rounded-3xl border border-[#e9ecef] p-8 md:p-12 shadow-sm">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#212529] text-center mb-12">¿Cómo Funciona el Programa?</h2>
+        <div className="bg-surface rounded-3xl border border-line p-8 md:p-12 shadow-sm">
+          <h2 className="text-2xl md:text-3xl font-bold text-ink text-center mb-12">¿Cómo Funciona el Programa?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
             {/* Connecting line for desktop */}
             <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-gray-200 to-transparent z-0" />
@@ -147,12 +147,12 @@ export default function CreatorLandingPage() {
               const Icon = item.icon;
               return (
                 <div key={idx} className="relative z-10 flex flex-col items-center text-center space-y-3 group">
-                  <div className="relative w-16 h-16 rounded-2xl bg-white flex items-center justify-center border border-[#e9ecef] shadow-sm group-hover:border-[#2a63cd]/50 group-hover:shadow-[0_0_20px_rgba(42,99,205,0.1)] transition-all duration-300">
-                    <span className="absolute -top-2 -right-2 text-xs font-bold px-2 py-0.5 bg-[#2a63cd] rounded-full text-white">{item.step}</span>
-                    <Icon className="w-6 h-6 text-[#2a63cd]" />
+                  <div className="relative w-16 h-16 rounded-2xl bg-white flex items-center justify-center border border-line shadow-sm group-hover:border-brand-500/50 group-hover:shadow-[0_0_20px_rgba(42,99,205,0.1)] transition-all duration-300">
+                    <span className="absolute -top-2 -right-2 text-xs font-bold px-2 py-0.5 bg-brand-500 rounded-full text-white">{item.step}</span>
+                    <Icon className="w-6 h-6 text-brand-500" />
                   </div>
-                  <h3 className="text-lg font-bold text-[#212529] pt-2">{item.title}</h3>
-                  <p className="text-sm text-[#6a6c6b] max-w-xs">{item.desc}</p>
+                  <h3 className="text-lg font-bold text-ink pt-2">{item.title}</h3>
+                  <p className="text-sm text-muted max-w-xs">{item.desc}</p>
                 </div>
               );
             })}
@@ -163,25 +163,25 @@ export default function CreatorLandingPage() {
         <div className="max-w-2xl mx-auto w-full">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 space-y-4">
-              <div className="w-10 h-10 border-4 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
-              <p className="text-[#6a6c6b] text-sm animate-pulse">Consultando tu estado de creador...</p>
+              <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-muted text-sm animate-pulse">Consultando tu estado de creador...</p>
             </div>
           ) : creator ? (
-            <div className="bg-white rounded-3xl border border-[#e9ecef] p-8 md:p-10 shadow-xl relative overflow-hidden">
+            <div className="bg-white rounded-3xl border border-line p-8 md:p-10 shadow-xl relative overflow-hidden">
               {creator.status === 'APPROVED' ? (
                 <div className="text-center space-y-6">
                   <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(16,185,129,0.05)]">
                     <FiCheckCircle className="w-8 h-8 text-emerald-500" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-2xl md:text-3xl font-bold text-[#212529]">¡Eres Creador Oficial!</h2>
-                    <p className="text-[#6a6c6b] text-sm md:text-base max-w-md mx-auto">
+                    <h2 className="text-2xl md:text-3xl font-bold text-ink">¡Eres Creador Oficial!</h2>
+                    <p className="text-muted text-sm md:text-base max-w-md mx-auto">
                       Tu solicitud ha sido aprobada. Tienes acceso completo para crear y publicar tus cursos en la plataforma.
                     </p>
                   </div>
                   <Link
                     href="/creator/dashboard"
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl shadow-lg hover:shadow-cyan-500/10 hover:scale-[1.02] transition-all duration-300"
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl shadow-lg hover:shadow-cyan-500/10 hover:scale-[1.02] transition-all duration-300"
                   >
                     Ir a mi Panel de Creador
                     <FiArrowRight className="w-5 h-5" />
@@ -193,8 +193,8 @@ export default function CreatorLandingPage() {
                     <FiClock className="w-8 h-8 text-amber-600" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-2xl md:text-3xl font-bold text-[#212529]">Solicitud en Revisión</h2>
-                    <p className="text-[#6a6c6b] text-sm md:text-base max-w-md mx-auto">
+                    <h2 className="text-2xl md:text-3xl font-bold text-ink">Solicitud en Revisión</h2>
+                    <p className="text-muted text-sm md:text-base max-w-md mx-auto">
                       Estamos evaluando tu perfil de creador. Normalmente respondemos en un plazo de 24 a 48 horas laborables. Te notificaremos vía correo electrónico.
                     </p>
                   </div>
@@ -205,8 +205,8 @@ export default function CreatorLandingPage() {
                     <FiAlertCircle className="w-8 h-8 text-rose-500" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-2xl md:text-3xl font-bold text-[#212529]">Solicitud No Aprobada</h2>
-                    <p className="text-[#6a6c6b] text-sm md:text-base max-w-md mx-auto">
+                    <h2 className="text-2xl md:text-3xl font-bold text-ink">Solicitud No Aprobada</h2>
+                    <p className="text-muted text-sm md:text-base max-w-md mx-auto">
                       Lo sentimos, pero tu perfil no cumple con nuestros requisitos actuales. Si crees que se trata de un error o deseas actualizar tus datos, por favor ponte en contacto con nuestro equipo de soporte.
                     </p>
                   </div>
@@ -215,10 +215,10 @@ export default function CreatorLandingPage() {
             </div>
           ) : session ? (
             /* Application Form */
-            <div className="bg-white rounded-3xl border border-[#e9ecef] p-8 md:p-10 shadow-xl relative">
+            <div className="bg-white rounded-3xl border border-line p-8 md:p-10 shadow-xl relative">
               <div className="mb-8">
-                <h2 className="text-2xl font-bold text-[#212529] mb-2">Solicitar Acceso de Creador</h2>
-                <p className="text-[#6a6c6b] text-sm">Cuéntanos un poco sobre ti y tu experiencia técnica para comenzar.</p>
+                <h2 className="text-2xl font-bold text-ink mb-2">Solicitar Acceso de Creador</h2>
+                <p className="text-muted text-sm">Cuéntanos un poco sobre ti y tu experiencia técnica para comenzar.</p>
               </div>
 
               {submitted ? (
@@ -226,8 +226,8 @@ export default function CreatorLandingPage() {
                   <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto">
                     <FiCheck className="w-6 h-6 text-emerald-500" />
                   </div>
-                  <h3 className="text-lg font-bold text-[#212529]">¡Solicitud Enviada con Éxito!</h3>
-                  <p className="text-[#6a6c6b] text-sm max-w-xs mx-auto">
+                  <h3 className="text-lg font-bold text-ink">¡Solicitud Enviada con Éxito!</h3>
+                  <p className="text-muted text-sm max-w-xs mx-auto">
                     Hemos recibido tu postulación. El equipo de ElectroShop se comunicará contigo pronto.
                   </p>
                 </div>
@@ -241,41 +241,41 @@ export default function CreatorLandingPage() {
                   )}
                   
                   <div>
-                    <label className="block text-[#495057] text-xs font-semibold uppercase tracking-wider mb-2">
-                      Nombre Artístico / Marca Personal <span className="text-[#2a63cd]">*</span>
+                    <label className="block text-ink-soft text-xs font-semibold uppercase tracking-wider mb-2">
+                      Nombre Artístico / Marca Personal <span className="text-brand-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={form.displayName}
                       onChange={(e) => setForm({ ...form, displayName: e.target.value })}
-                      className="w-full px-4 py-3 bg-white border border-[#e9ecef] rounded-xl text-[#212529] placeholder-gray-400 focus:outline-none focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd] transition-all text-sm"
+                      className="w-full px-4 py-3 bg-white border border-line rounded-xl text-ink placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-sm"
                       placeholder="El nombre que verán tus estudiantes en la web"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[#495057] text-xs font-semibold uppercase tracking-wider mb-2">
+                    <label className="block text-ink-soft text-xs font-semibold uppercase tracking-wider mb-2">
                       Área de Especialidad / Expertise
                     </label>
                     <input
                       type="text"
                       value={form.expertise}
                       onChange={(e) => setForm({ ...form, expertise: e.target.value })}
-                      className="w-full px-4 py-3 bg-white border border-[#e9ecef] rounded-xl text-[#212529] placeholder-gray-400 focus:outline-none focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd] transition-all text-sm"
+                      className="w-full px-4 py-3 bg-white border border-line rounded-xl text-ink placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-sm"
                       placeholder="Ej: Fibra óptica, CCTV, Arduino, Consolas de Videojuegos..."
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[#495057] text-xs font-semibold uppercase tracking-wider mb-2">
+                    <label className="block text-ink-soft text-xs font-semibold uppercase tracking-wider mb-2">
                       Biografía & Plan de Cursos
                     </label>
                     <textarea
                       value={form.bio}
                       onChange={(e) => setForm({ ...form, bio: e.target.value })}
                       rows={4}
-                      className="w-full px-4 py-3 bg-white border border-[#e9ecef] rounded-xl text-[#212529] placeholder-gray-400 focus:outline-none focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd] transition-all text-sm resize-none"
+                      className="w-full px-4 py-3 bg-white border border-line rounded-xl text-ink placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-sm resize-none"
                       placeholder="Cuéntanos brevemente tus años de experiencia y qué tipo de cursos te gustaría subir."
                     />
                   </div>
@@ -283,7 +283,7 @@ export default function CreatorLandingPage() {
                   <button
                     onClick={handleApply}
                     disabled={submitting}
-                    className="w-full py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] hover:from-[#3572e8] hover:to-[#225ccb] text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-[1.01] flex items-center justify-center gap-2 shadow-lg shadow-[#2a63cd]/25 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
+                    className="w-full py-4 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-[#3572e8] hover:to-[#225ccb] text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-[1.01] flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
                   >
                     {submitting ? (
                       <>
@@ -302,26 +302,26 @@ export default function CreatorLandingPage() {
             </div>
           ) : (
             /* Not logged in state */
-            <div className="bg-white rounded-3xl border border-[#e9ecef] p-8 md:p-10 text-center shadow-xl space-y-6">
-              <div className="w-16 h-16 bg-[#2a63cd]/10 border border-[#2a63cd]/20 rounded-2xl flex items-center justify-center mx-auto">
-                <FiBookOpen className="w-8 h-8 text-[#2a63cd]" />
+            <div className="bg-white rounded-3xl border border-line p-8 md:p-10 text-center shadow-xl space-y-6">
+              <div className="w-16 h-16 bg-brand-500/10 border border-brand-500/20 rounded-2xl flex items-center justify-center mx-auto">
+                <FiBookOpen className="w-8 h-8 text-brand-500" />
               </div>
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-[#212529]">Únete como Creador</h2>
-                <p className="text-[#6a6c6b] text-sm md:text-base max-w-sm mx-auto">
+                <h2 className="text-2xl font-bold text-ink">Únete como Creador</h2>
+                <p className="text-muted text-sm md:text-base max-w-sm mx-auto">
                   Para enviar tu solicitud e iniciar el registro de tus cursos, primero debes contar con una cuenta de usuario.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
                 <Link 
                   href="/login?redirect=/creator" 
-                  className="px-8 py-3 bg-[#2a63cd] hover:bg-[#1e4ba3] text-white font-bold rounded-xl shadow-lg shadow-[#2a63cd]/20 transition-all duration-300 hover:scale-[1.02] inline-flex items-center justify-center gap-2 cursor-pointer"
+                  className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 transition-all duration-300 hover:scale-[1.02] inline-flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Iniciar Sesión
                 </Link>
                 <Link 
                   href="/registro" 
-                  className="px-8 py-3 bg-white border border-[#e9ecef] text-[#212529] font-bold rounded-xl hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02] inline-flex items-center justify-center gap-2 cursor-pointer"
+                  className="px-8 py-3 bg-white border border-line text-ink font-bold rounded-xl hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02] inline-flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Crear Cuenta
                 </Link>

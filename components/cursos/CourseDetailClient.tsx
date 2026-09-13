@@ -157,17 +157,17 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
         <div className="flex-1 min-w-0">
 
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-[#6a6c6b] mb-4">
-            <Link href="/cursos" className="hover:text-[#2a63cd] transition-colors">Cursos</Link>
+          <div className="flex items-center gap-2 text-sm text-muted mb-4">
+            <Link href="/cursos" className="hover:text-brand-500 transition-colors">Cursos</Link>
             <span>/</span>
             {course.category && <span>{course.category}</span>}
             {course.category && <span>/</span>}
-            <span className="text-[#212529] font-medium truncate">{course.title}</span>
+            <span className="text-ink font-medium truncate">{course.title}</span>
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl lg:text-3xl font-bold text-[#212529] mb-3">{course.title}</h1>
-          {course.shortDesc && <p className="text-lg text-[#6a6c6b] mb-4">{course.shortDesc}</p>}
+          <h1 className="text-2xl lg:text-3xl font-bold text-ink mb-3">{course.title}</h1>
+          {course.shortDesc && <p className="text-lg text-muted mb-4">{course.shortDesc}</p>}
 
           {/* Meta row */}
           <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -175,21 +175,21 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-bold text-yellow-600">{rating.toFixed(1)}</span>
                 <StarRow rating={rating} />
-                <span className="text-sm text-[#6a6c6b]">({course._count.reviews} reseñas)</span>
+                <span className="text-sm text-muted">({course._count.reviews} reseñas)</span>
               </div>
             )}
-            <span className="text-sm text-[#6a6c6b]">{course._count.enrollments} estudiantes</span>
+            <span className="text-sm text-muted">{course._count.enrollments} estudiantes</span>
             {course.level && (
-              <span className="px-2 py-0.5 bg-[#f8f9fa] border border-[#dee2e6] rounded-full text-xs font-semibold text-[#212529]">
+              <span className="px-2 py-0.5 bg-surface border border-line-strong rounded-full text-xs font-semibold text-ink">
                 {LEVEL_LABELS[course.level] || course.level}
               </span>
             )}
           </div>
 
-          <p className="text-sm text-[#6a6c6b] mb-6">Instructor: <span className="font-semibold text-[#212529]">{instructorName}</span></p>
+          <p className="text-sm text-muted mb-6">Instructor: <span className="font-semibold text-ink">{instructorName}</span></p>
 
           {/* Mobile CTA card */}
-          <div className="lg:hidden mb-6 bg-white rounded-xl border border-[#e9ecef] shadow-md p-5">
+          <div className="lg:hidden mb-6 bg-white rounded-xl border border-line shadow-md p-5">
             <EnrollCard
               price={price}
               isFree={isFree}
@@ -210,42 +210,42 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
           </div>
 
           {/* Description */}
-          <div className="bg-white rounded-xl border border-[#e9ecef] p-6 mb-6">
-            <h2 className="text-lg font-bold text-[#212529] mb-3">Descripción del Curso</h2>
-            <p className="text-[#6a6c6b] whitespace-pre-line leading-relaxed">{course.description}</p>
+          <div className="bg-white rounded-xl border border-line p-6 mb-6">
+            <h2 className="text-lg font-bold text-ink mb-3">Descripción del Curso</h2>
+            <p className="text-muted whitespace-pre-line leading-relaxed">{course.description}</p>
           </div>
 
           {/* Curriculum */}
           {course.modules.length > 0 && (
-            <div className="bg-white rounded-xl border border-[#e9ecef] p-6 mb-6">
-              <h2 className="text-lg font-bold text-[#212529] mb-1">Contenido del Curso</h2>
-              <p className="text-sm text-[#6a6c6b] mb-4">{course.modules.length} módulos · {totalLessons} lecciones</p>
+            <div className="bg-white rounded-xl border border-line p-6 mb-6">
+              <h2 className="text-lg font-bold text-ink mb-1">Contenido del Curso</h2>
+              <p className="text-sm text-muted mb-4">{course.modules.length} módulos · {totalLessons} lecciones</p>
 
               <div className="space-y-2">
                 {course.modules.map((mod) => (
-                  <div key={mod.id} className="border border-[#e9ecef] rounded-lg overflow-hidden">
+                  <div key={mod.id} className="border border-line rounded-lg overflow-hidden">
                     <button
                       onClick={() => setOpenModule(openModule === mod.id ? null : mod.id)}
-                      className="w-full flex items-center justify-between px-4 py-3 bg-[#f8f9fa] text-left hover:bg-[#e9ecef] transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-3 bg-surface text-left hover:bg-line transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <svg className={`w-4 h-4 text-[#6a6c6b] transition-transform ${openModule === mod.id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className={`w-4 h-4 text-muted transition-transform ${openModule === mod.id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                        <span className="font-semibold text-sm text-[#212529]">{mod.title}</span>
+                        <span className="font-semibold text-sm text-ink">{mod.title}</span>
                       </div>
-                      <span className="text-xs text-[#6a6c6b]">{mod.lessons.length} lecciones</span>
+                      <span className="text-xs text-muted">{mod.lessons.length} lecciones</span>
                     </button>
 
                     {openModule === mod.id && (
-                      <div className="divide-y divide-[#f8f9fa]">
+                      <div className="divide-y divide-surface">
                         {mod.lessons.map((lesson) => (
-                          <div key={lesson.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-[#f8f9fa] transition-colors">
+                          <div key={lesson.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-surface transition-colors">
                             <div className="flex items-center gap-3">
                               {lesson.videoUrl ? (
                                 <button
                                   onClick={() => setActiveLesson(lesson)}
-                                  className="flex items-center gap-2 text-sm text-[#2a63cd] hover:underline"
+                                  className="flex items-center gap-2 text-sm text-brand-500 hover:underline"
                                 >
                                   <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M8 5v14l11-7z" />
@@ -253,7 +253,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
                                   {lesson.title}
                                 </button>
                               ) : (
-                                <div className="flex items-center gap-2 text-sm text-[#6a6c6b]">
+                                <div className="flex items-center gap-2 text-sm text-muted">
                                   <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                   </svg>
@@ -265,7 +265,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
                               )}
                             </div>
                             {lesson.duration && (
-                              <span className="text-xs text-[#6a6c6b] shrink-0">{formatDuration(lesson.duration)}</span>
+                              <span className="text-xs text-muted shrink-0">{formatDuration(lesson.duration)}</span>
                             )}
                           </div>
                         ))}
@@ -279,23 +279,23 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
 
           {/* Instructor bio */}
           {course.creator && (
-            <div className="bg-white rounded-xl border border-[#e9ecef] p-6 mb-6">
-              <h2 className="text-lg font-bold text-[#212529] mb-4">Sobre el Instructor</h2>
+            <div className="bg-white rounded-xl border border-line p-6 mb-6">
+              <h2 className="text-lg font-bold text-ink mb-4">Sobre el Instructor</h2>
               <div className="flex items-start gap-4">
                 {course.creator.avatar ? (
                   <img src={course.creator.avatar} alt={course.creator.displayName} className="w-14 h-14 rounded-full object-cover shrink-0" />
                 ) : (
-                  <div className="w-14 h-14 rounded-full bg-[#2a63cd]/10 flex items-center justify-center shrink-0">
-                    <span className="text-xl font-bold text-[#2a63cd]">{course.creator.displayName[0]}</span>
+                  <div className="w-14 h-14 rounded-full bg-brand-500/10 flex items-center justify-center shrink-0">
+                    <span className="text-xl font-bold text-brand-500">{course.creator.displayName[0]}</span>
                   </div>
                 )}
                 <div>
-                  <h3 className="font-bold text-[#212529]">{course.creator.displayName}</h3>
+                  <h3 className="font-bold text-ink">{course.creator.displayName}</h3>
                   {course.creator.expertise && (
-                    <p className="text-sm text-[#2a63cd] mb-2">{course.creator.expertise}</p>
+                    <p className="text-sm text-brand-500 mb-2">{course.creator.expertise}</p>
                   )}
                   {course.creator.bio && (
-                    <p className="text-sm text-[#6a6c6b]">{course.creator.bio}</p>
+                    <p className="text-sm text-muted">{course.creator.bio}</p>
                   )}
                 </div>
               </div>
@@ -303,15 +303,15 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
           )}
 
           {/* Reviews */}
-          <div className="bg-white rounded-xl border border-[#e9ecef] p-6">
-            <h2 className="text-lg font-bold text-[#212529] mb-4">
+          <div className="bg-white rounded-xl border border-line p-6">
+            <h2 className="text-lg font-bold text-ink mb-4">
               Reseñas de Estudiantes ({course._count.reviews})
             </h2>
 
             {/* Write review (enrolled users only) */}
             {isEnrolled && !reviewSubmitted && (
-              <div className="bg-[#f8f9fa] rounded-xl p-4 mb-6">
-                <p className="text-sm font-semibold text-[#212529] mb-2">Deja tu reseña</p>
+              <div className="bg-surface rounded-xl p-4 mb-6">
+                <p className="text-sm font-semibold text-ink mb-2">Deja tu reseña</p>
                 <div className="flex items-center gap-1 mb-3">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <button key={s} onClick={() => setMyRating(s)}>
@@ -325,13 +325,13 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
                   value={myComment}
                   onChange={(e) => setMyComment(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd] resize-none mb-2"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500 resize-none mb-2"
                   placeholder="Comparte tu experiencia con este curso..."
                 />
                 <button
                   onClick={handleReview}
                   disabled={!myRating || submittingReview}
-                  className="px-4 py-2 bg-[#2a63cd] text-white text-sm font-semibold rounded-lg hover:bg-[#1e4ba3] transition-colors disabled:opacity-50"
+                  className="px-4 py-2 bg-brand-500 text-white text-sm font-semibold rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-50"
                 >
                   {submittingReview ? 'Enviando...' : 'Publicar Reseña'}
                 </button>
@@ -339,21 +339,21 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
             )}
 
             {course.reviews.length === 0 ? (
-              <p className="text-sm text-[#6a6c6b]">Este curso aún no tiene reseñas. ¡Sé el primero!</p>
+              <p className="text-sm text-muted">Este curso aún no tiene reseñas. ¡Sé el primero!</p>
             ) : (
               <div className="space-y-4">
                 {course.reviews.map((review) => (
                   <div key={review.id} className="flex gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#2a63cd]/10 flex items-center justify-center shrink-0 text-sm font-bold text-[#2a63cd]">
+                    <div className="w-9 h-9 rounded-full bg-brand-500/10 flex items-center justify-center shrink-0 text-sm font-bold text-brand-500">
                       {review.user.name?.[0]?.toUpperCase() || '?'}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-semibold text-[#212529]">{review.user.name || 'Usuario'}</span>
+                        <span className="text-sm font-semibold text-ink">{review.user.name || 'Usuario'}</span>
                         {review.isVerified && <span className="text-xs text-green-600 font-medium">✓ Verificado</span>}
                       </div>
                       <StarRow rating={review.rating} />
-                      {review.comment && <p className="text-sm text-[#6a6c6b] mt-1">{review.comment}</p>}
+                      {review.comment && <p className="text-sm text-muted mt-1">{review.comment}</p>}
                     </div>
                   </div>
                 ))}
@@ -364,7 +364,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
 
         {/* ===== RIGHT COLUMN (sticky, desktop) ===== */}
         <div className="hidden lg:block w-80 shrink-0">
-          <div className="sticky top-24 bg-white rounded-xl border border-[#e9ecef] shadow-lg overflow-hidden">
+          <div className="sticky top-24 bg-white rounded-xl border border-line shadow-lg overflow-hidden">
             <EnrollCard
               price={price}
               isFree={isFree}
@@ -453,7 +453,7 @@ function EnrollCard({
   return (
     <div className="p-5">
       {/* Thumbnail / Trailer preview */}
-      <div className="relative aspect-video rounded-lg overflow-hidden bg-[#212529] mb-4">
+      <div className="relative aspect-video rounded-lg overflow-hidden bg-ink mb-4">
         {showTrailer && trailerUrl && getEmbedUrl(trailerUrl) ? (
           <iframe src={getEmbedUrl(trailerUrl)!} className="w-full h-full" allowFullScreen allow="autoplay; encrypted-media" />
         ) : (
@@ -473,7 +473,7 @@ function EnrollCard({
                 className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 hover:bg-black/50 transition-colors group"
               >
                 <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform mb-2">
-                  <svg className="w-6 h-6 text-[#2a63cd] ml-1" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-brand-500 ml-1" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
@@ -485,20 +485,20 @@ function EnrollCard({
       </div>
 
       {/* Price */}
-      <div className="text-3xl font-bold text-[#212529] mb-4">
+      <div className="text-3xl font-bold text-ink mb-4">
         {isFree ? 'Gratis' : `$${price.toFixed(2)}`}
       </div>
 
       {/* CTA */}
       {isEnrolled ? (
         <div className="space-y-3">
-          <div className="w-full bg-[#e9ecef] rounded-full h-2 mb-1">
-            <div className="bg-[#2a63cd] h-2 rounded-full transition-all" style={{ width: `${progress}%` }} />
+          <div className="w-full bg-line rounded-full h-2 mb-1">
+            <div className="bg-brand-500 h-2 rounded-full transition-all" style={{ width: `${progress}%` }} />
           </div>
-          <p className="text-xs text-[#6a6c6b] text-center">{progress}% completado</p>
+          <p className="text-xs text-muted text-center">{progress}% completado</p>
           <Link
             href={`/cursos/${slug}/aprender`}
-            className="block w-full py-3 bg-[#2a63cd] text-white text-center font-bold rounded-xl hover:bg-[#1e4ba3] transition-colors"
+            className="block w-full py-3 bg-brand-500 text-white text-center font-bold rounded-xl hover:bg-brand-600 transition-colors"
           >
             Continuar Curso
           </Link>
@@ -506,7 +506,7 @@ function EnrollCard({
       ) : isLoggedIn ? (
         <div className="space-y-3">
           {!isFree && userBalance !== null && (
-            <p className="text-xs text-[#6a6c6b] text-center">
+            <p className="text-xs text-muted text-center">
               Tu saldo: <span className={`font-bold ${hasBalance ? 'text-green-600' : 'text-red-500'}`}>${userBalance.toFixed(2)}</span>
               {!hasBalance && ' — insuficiente'}
             </p>
@@ -516,12 +516,12 @@ function EnrollCard({
           <button
             onClick={onEnroll}
             disabled={enrolling || enrollSuccess || (!isFree && !hasBalance)}
-            className="w-full py-3 bg-[#2a63cd] text-white font-bold rounded-xl hover:bg-[#1e4ba3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-brand-500 text-white font-bold rounded-xl hover:bg-brand-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {enrolling ? 'Procesando...' : isFree ? 'Inscribirse Gratis' : 'Inscribirse Ahora'}
           </button>
           {!isFree && !hasBalance && (
-            <Link href="/customer/balance" className="block w-full py-2.5 text-center text-sm font-semibold text-[#2a63cd] border border-[#2a63cd] rounded-xl hover:bg-[#2a63cd]/5 transition-colors">
+            <Link href="/customer/balance" className="block w-full py-2.5 text-center text-sm font-semibold text-brand-500 border border-brand-500 rounded-xl hover:bg-brand-500/5 transition-colors">
               Recargar Saldo
             </Link>
           )}
@@ -530,20 +530,20 @@ function EnrollCard({
         <div className="space-y-3">
           <Link
             href={`/login?redirect=/cursos/${slug}`}
-            className="block w-full py-3 bg-[#2a63cd] text-white text-center font-bold rounded-xl hover:bg-[#1e4ba3] transition-colors"
+            className="block w-full py-3 bg-brand-500 text-white text-center font-bold rounded-xl hover:bg-brand-600 transition-colors"
           >
             Iniciar Sesión para Inscribirse
           </Link>
           <Link
             href="/registro"
-            className="block w-full py-2.5 text-center text-sm font-semibold text-[#2a63cd] border border-[#2a63cd] rounded-xl hover:bg-[#2a63cd]/5 transition-colors"
+            className="block w-full py-2.5 text-center text-sm font-semibold text-brand-500 border border-brand-500 rounded-xl hover:bg-brand-500/5 transition-colors"
           >
             Crear Cuenta
           </Link>
         </div>
       )}
 
-      <p className="text-xs text-[#6a6c6b] text-center mt-3">
+      <p className="text-xs text-muted text-center mt-3">
         {isFree ? 'Acceso inmediato y gratuito' : 'Pago único · Acceso de por vida'}
       </p>
     </div>

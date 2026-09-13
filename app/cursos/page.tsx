@@ -102,9 +102,9 @@ function CourseCard({ course }: CourseCardProps) {
   }
 
   return (
-    <Link href={`/cursos/${course.slug}`} className="group flex flex-col bg-white rounded-xl border border-[#e9ecef] overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+    <Link href={`/cursos/${course.slug}`} className="group flex flex-col bg-white rounded-xl border border-line overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       {/* Thumbnail */}
-      <div className="relative h-40 bg-gradient-to-br from-[#2a63cd]/10 to-[#2a63cd]/5 overflow-hidden">
+      <div className="relative h-40 bg-gradient-to-br from-brand-500/10 to-brand-500/5 overflow-hidden">
         {/* Botón Compartir y Ganar */}
         <ShareEarnButton
           url={`/cursos/${course.slug}`}
@@ -119,14 +119,14 @@ function CourseCard({ course }: CourseCardProps) {
           <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <svg className="w-12 h-12 text-[#2a63cd]/25" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-12 h-12 text-brand-500/25" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
         )}
         <div className="absolute inset-0 flex items-center justify-center lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-black/20">
           <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-            <svg className="w-5 h-5 text-[#2a63cd] ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-brand-500 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
@@ -145,32 +145,32 @@ function CourseCard({ course }: CourseCardProps) {
 
       {/* Content */}
       <div className="flex flex-col flex-1 p-4">
-        <h3 className="font-semibold text-[#212529] text-sm line-clamp-2 mb-1 group-hover:text-[#2a63cd] transition-colors">
+        <h3 className="font-semibold text-ink text-sm line-clamp-2 mb-1 group-hover:text-brand-500 transition-colors">
           {course.title}
         </h3>
         {course.shortDesc && (
-          <p className="text-xs text-[#6a6c6b] line-clamp-2 mb-2">{course.shortDesc}</p>
+          <p className="text-xs text-muted line-clamp-2 mb-2">{course.shortDesc}</p>
         )}
-        <p className="text-xs text-[#6a6c6b] mb-2">{instructorName}</p>
+        <p className="text-xs text-muted mb-2">{instructorName}</p>
 
         {/* Rating */}
         {rating && (
           <div className="flex items-center gap-1.5 mb-2">
             <span className="text-xs font-bold text-yellow-600">{rating.toFixed(1)}</span>
             <StarRating rating={rating} />
-            <span className="text-xs text-[#6a6c6b]">({course.enrollmentCount})</span>
+            <span className="text-xs text-muted">({course.enrollmentCount})</span>
           </div>
         )}
 
         {/* Stats */}
-        <div className="flex items-center gap-2 text-xs text-[#6a6c6b] mb-3">
+        <div className="flex items-center gap-2 text-xs text-muted mb-3">
           {course.totalLessons && <span>{course.totalLessons} lecciones</span>}
           {course.totalDuration && <span>· {formatDuration(course.totalDuration)}</span>}
         </div>
 
         {/* Price */}
         <div className="mt-auto">
-          <span className="text-base font-bold text-[#212529]">
+          <span className="text-base font-bold text-ink">
             {price === 0 ? 'Gratis' : `$${price.toFixed(2)}`}
           </span>
         </div>
@@ -213,7 +213,7 @@ export default async function CursosPage({
       <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
+      <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
         {/* Animated Background Particles */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
@@ -252,8 +252,8 @@ export default async function CursosPage({
             href="/cursos"
             className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
               !selectedCat
-                ? 'bg-[#2a63cd] text-white shadow-md shadow-[#2a63cd]/20'
-                : 'bg-[#f8f9fa] text-[#6a6c6b] hover:bg-[#e9ecef]'
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
+                : 'bg-surface text-muted hover:bg-line'
             }`}
           >
             Todos
@@ -266,8 +266,8 @@ export default async function CursosPage({
                 href={`/cursos?cat=${cat.value}`}
                 className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                   isActive
-                    ? 'bg-[#2a63cd] text-white shadow-md shadow-[#2a63cd]/20'
-                    : 'bg-[#f8f9fa] text-[#6a6c6b] hover:bg-[#e9ecef]'
+                    ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
+                    : 'bg-surface text-muted hover:bg-line'
                 }`}
               >
                 {cat.label}
@@ -281,7 +281,7 @@ export default async function CursosPage({
             {/* Featured courses */}
             {courses.some((c) => c.isFeatured) && (
               <div className="mb-10">
-                <h2 className="text-xl font-bold text-[#212529] mb-4">⭐ Cursos Destacados</h2>
+                <h2 className="text-xl font-bold text-ink mb-4">⭐ Cursos Destacados</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                   {courses.filter((c) => c.isFeatured).map((course) => (
                     <CourseCard key={course.id} course={course} />
@@ -292,7 +292,7 @@ export default async function CursosPage({
 
             {/* All courses */}
             <div>
-              <h2 className="text-xl font-bold text-[#212529] mb-4">Todos los Cursos</h2>
+              <h2 className="text-xl font-bold text-ink mb-4">Todos los Cursos</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {courses.map((course) => (
                   <CourseCard key={course.id} course={course} />
@@ -302,14 +302,14 @@ export default async function CursosPage({
           </>
         ) : (
           /* Elegant empty state - no massive blue banner */
-          <div className="text-center py-16 border border-dashed border-[#e9ecef] rounded-2xl p-8 bg-[#f8f9fa]">
-            <div className="w-12 h-12 bg-[#2a63cd]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center py-16 border border-dashed border-line rounded-2xl p-8 bg-surface">
+            <div className="w-12 h-12 bg-brand-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <h3 className="text-[#212529] font-bold text-lg mb-1">Próximamente más cursos</h3>
-            <p className="text-xs text-[#6a6c6b] max-w-sm mx-auto">
+            <h3 className="text-ink font-bold text-lg mb-1">Próximamente más cursos</h3>
+            <p className="text-xs text-muted max-w-sm mx-auto">
               Estamos preparando el mejor contenido educativo para ti. Regresa pronto para explorar nuestros nuevos cursos técnicos.
             </p>
           </div>
@@ -318,7 +318,7 @@ export default async function CursosPage({
 
       {/* Banner / CTA Enseña Aquí */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] text-white p-8 md:p-12 shadow-2xl border border-white/10">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white p-8 md:p-12 shadow-2xl border border-white/10">
           {/* Decorative background blur blobs */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-400/10 rounded-full blur-3xl pointer-events-none" />
@@ -356,7 +356,7 @@ export default async function CursosPage({
             <div className="lg:col-span-4 flex justify-start lg:justify-end">
               <Link
                 href="/creator"
-                className="px-8 py-4 bg-white text-[#2a63cd] hover:bg-gray-50 font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 inline-flex items-center gap-2"
+                className="px-8 py-4 bg-white text-brand-500 hover:bg-gray-50 font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 inline-flex items-center gap-2"
               >
                 Comenzar a Enseñar
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

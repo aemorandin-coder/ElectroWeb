@@ -70,7 +70,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
   };
 
   return (
-    <div className="min-h-dvh bg-[#f8f9fa]">
+    <div className="min-h-dvh bg-surface">
       <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
       <CourseDetailClient
         course={JSON.parse(JSON.stringify(gatedCourse))}

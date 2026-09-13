@@ -62,11 +62,7 @@ export default withAuth(
     }
 
     // ── CUSTOMER PROTECTION ──────────────────────────────────────────
-    const isCustomerRoute =
-      pathname.startsWith('/customer') ||
-      pathname.startsWith('/mis-pedidos');
-
-    if (isCustomerRoute && !token) {
+    if (pathname.startsWith('/customer') && !token) {
       const loginUrl = new URL('/login', req.url);
       loginUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(loginUrl);
@@ -114,26 +110,7 @@ export default withAuth(
           pathname.startsWith('/api/analytics') ||
           pathname.startsWith('/api/webhooks');
 
-        // Public pages — always allow (protection handled in proxy function above)
-        const isPublicPage =
-          pathname === '/' ||
-          pathname.startsWith('/p/') ||
-          pathname.startsWith('/productos') ||
-          pathname.startsWith('/categorias') ||
-          pathname.startsWith('/servicios') ||
-          pathname.startsWith('/contacto') ||
-          pathname.startsWith('/cursos') ||
-          pathname.startsWith('/comparar') ||
-          pathname.startsWith('/gift-cards') ||
-          pathname.startsWith('/canjear-gift-card') ||
-          pathname.startsWith('/solicitar-producto') ||
-          pathname.startsWith('/registro') ||
-          pathname.startsWith('/privacidad') ||
-          pathname.startsWith('/terminos') ||
-          pathname.startsWith('/verificar-email') ||
-          pathname.startsWith('/recuperar-contrasena');
-
-        if (isLoginPage || isPublicApiRoute || isPublicPage) return true;
+        if (isLoginPage || isPublicApiRoute) return true;
 
         return !!token;
       },

@@ -59,13 +59,11 @@ export async function generateMetadata(): Promise<Metadata> {
     ];
     icons.apple = absoluteFavicon;
     icons.shortcut = absoluteFavicon;
-  } else {
-    // Fallback to static favicon
-    icons.icon = '/favicon.ico';
   }
+  // Sin favicon en settings no se declara ninguno: /favicon.ico no existe en public/
 
-  // Open Graph image - use homeMetaImage if available, else logo, favicon, or default
-  const ogImage = ensureAbsoluteUrl(settings.homeMetaImage) || ensureAbsoluteUrl(settings.logo) || ensureAbsoluteUrl(settings.favicon) || `${baseUrl}/og-image.png`;
+  // Open Graph image: homeMetaImage, logo o favicon (no hay imagen por defecto en public/)
+  const ogImage = ensureAbsoluteUrl(settings.homeMetaImage) || ensureAbsoluteUrl(settings.logo) || ensureAbsoluteUrl(settings.favicon);
 
   const titleText = settings.metaTitle || settings.companyName || "Electro Shop Morandin C.A. | Gaming, Laptops & Tecnología";
   const descText = settings.metaDescription || settings.tagline || "Tienda de tecnología especializada en Guanare. Computadoras gaming, laptops, consolas, CCTV y más.";
@@ -87,7 +85,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: descText,
       url: baseUrl,
       siteName: settings.companyName || "Electro Shop",
-      images: [
+      images: ogImage ? [
         {
           url: ogImage,             // URL absoluta requerida para WhatsApp
           secureUrl: ogImage,       // HTTPS requerido para iOS preview
@@ -96,7 +94,7 @@ export async function generateMetadata(): Promise<Metadata> {
           alt: `${settings.companyName || 'Electro Shop'} — Tecnología especializada en Venezuela`,
           type: 'image/jpeg',       // WhatsApp prefiere JPEG vs PNG
         },
-      ],
+      ] : undefined,
       locale: 'es_VE',
       type: 'website',
     },
@@ -105,12 +103,12 @@ export async function generateMetadata(): Promise<Metadata> {
       card: 'summary_large_image',
       title: titleText,
       description: descText,
-      images: [{
+      images: ogImage ? [{
         url: ogImage,
         width: 1200,
         height: 630,
         alt: settings.companyName || 'Electro Shop',
-      }],
+      }] : undefined,
     },
     robots: {
       index: true,

@@ -26,8 +26,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = settings?.productsMetaDescription || 'Explora la mejor selección de saldo digital, gift cards, licencias y hardware gaming de vanguardia.';
   const keywords = settings?.productsMetaKeywords ? settings.productsMetaKeywords.split(',').map(k => k.trim()) : undefined;
 
-  const shareImage = settings?.productsMetaImage || settings?.logo || '/og-image.png';
-  const absoluteShareImage = shareImage.startsWith('http') ? shareImage : `${baseUrl}${shareImage.startsWith('/') ? '' : '/'}${shareImage}`;
+  // Sin imagen en settings no se declara ninguna: /og-image.png no existe en public/
+  const shareImage = settings?.productsMetaImage || settings?.logo || null;
+  const absoluteShareImage = shareImage && (shareImage.startsWith('http') ? shareImage : `${baseUrl}${shareImage.startsWith('/') ? '' : '/'}${shareImage}`);
 
   return {
     title,
@@ -36,14 +37,14 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      images: [{ url: absoluteShareImage }],
+      images: absoluteShareImage ? [{ url: absoluteShareImage }] : undefined,
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [{ url: absoluteShareImage }],
+      images: absoluteShareImage ? [{ url: absoluteShareImage }] : undefined,
     }
   };
 }

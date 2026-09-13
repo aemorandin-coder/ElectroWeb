@@ -15,10 +15,7 @@ export default function robots(): MetadataRoute.Robots {
           '/customer/',
           '/carrito',
           '/checkout/',
-          '/mis-pedidos',
           '/canjear-gift-card',
-          '/_next/',
-          '/uploads/',
         ],
       },
       {

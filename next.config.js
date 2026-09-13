@@ -17,6 +17,12 @@ const nextConfig = {
         destination: '/login',
         permanent: true,
       },
+      { source: '/auth/login', destination: '/login', permanent: true },
+      // Rutas eliminadas o duplicadas (C-06)
+      { source: '/mis-pedidos', destination: '/customer/orders', permanent: true },
+      { source: '/mi-cuenta', destination: '/customer', permanent: true },
+      { source: '/customer/wallet', destination: '/customer/balance', permanent: true },
+      { source: '/comparar', destination: '/productos', permanent: true },
     ];
   },
   async rewrites() {

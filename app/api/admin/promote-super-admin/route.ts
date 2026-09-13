@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
@@ -19,6 +20,15 @@ import { logAdminAction, createAuditLog, getRequestMetadata } from '@/lib/audit-
  */
 export async function POST(request: NextRequest) {
     try {
+        // SEGURIDAD: sin clave configurada en el entorno el endpoint no existe (no hay clave por defecto)
+        const validSecretKey = process.env.SUPER_ADMIN_PROMOTION_KEY;
+        if (!validSecretKey) {
+            return NextResponse.json(
+                { error: 'Promotion endpoint is disabled' },
+                { status: 503 }
+            );
+        }
+
         // Rate limiting - very strict for this critical endpoint
         const clientIP = getClientIP(request);
         const rateLimit = checkRateLimit(clientIP, 'admin:promote-super-admin', { maxRequests: 3, windowSeconds: 3600 });
@@ -55,9 +65,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Validate secret key - use environment variable or a fallback for first-time setup
-        const validSecretKey = process.env.SUPER_ADMIN_PROMOTION_KEY || 'PROMOTE_TO_SUPER_ADMIN_2024';
-        if (secretKey !== validSecretKey) {
+        // Validate secret key (comparación en tiempo constante)
+        const given = Buffer.from(String(secretKey));
+        const expected = Buffer.from(validSecretKey);
+        if (given.length !== expected.length || !timingSafeEqual(given, expected)) {
             // Log failed attempt
             await createAuditLog({
                 action: 'SECURITY_SUSPICIOUS_ACTIVITY',

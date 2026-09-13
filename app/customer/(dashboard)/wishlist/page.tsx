@@ -266,7 +266,7 @@ export default function WishlistPage() {
       {/* Premium Header - Mobile Optimized */}
       <div className="relative overflow-hidden bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] rounded-lg lg:rounded-2xl p-3 lg:p-6 text-white shadow-xl">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
+          <div className="absolute top-0 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
           <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-white/5 rounded-full blur-3xl"></div>
         </div>
 

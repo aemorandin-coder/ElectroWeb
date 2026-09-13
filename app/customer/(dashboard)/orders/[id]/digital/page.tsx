@@ -332,8 +332,8 @@ export default function DigitalCodesPage() {
         <div className="min-h-dvh bg-[#0a0f1d] relative overflow-hidden">
             {/* Epic Floating Orbs Background - Gaming Neon */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-10 right-10 w-40 h-40 bg-cyan-500/20 rounded-full blur-[80px] animate-pulse" />
-                <div className="absolute bottom-20 left-5 w-56 h-56 bg-purple-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute top-10 right-10 w-40 h-40 bg-cyan-500/20 rounded-full blur-[80px]" />
+                <div className="absolute bottom-20 left-5 w-56 h-56 bg-purple-600/20 rounded-full blur-[100px]" style={{ animationDelay: '1s' }} />
                 <div className="absolute top-1/3 left-1/4 w-32 h-32 bg-blue-500/20 rounded-full blur-[60px] animate-bounce" style={{ animationDuration: '4s' }} />
                 {/* Shimmer overlay */}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0f172a]/50 to-[#0a0f1d]" />

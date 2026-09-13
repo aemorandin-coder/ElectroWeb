@@ -154,7 +154,7 @@ export default function BalancePage() {
           {/* Animated Gradient Background */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#0ea5e9]">
             {/* Floating Orbs with Animation */}
-            <div className="absolute top-2 right-4 w-20 h-20 bg-white/10 rounded-full blur-2xl animate-pulse" />
+            <div className="absolute top-2 right-4 w-20 h-20 bg-white/10 rounded-full blur-2xl" />
             <div className="absolute bottom-4 left-2 w-16 h-16 bg-cyan-300/20 rounded-full blur-xl animate-pulse" style={{ animationDelay: '0.5s' }} />
             <div className="absolute top-1/2 left-1/3 w-12 h-12 bg-blue-200/10 rounded-full blur-lg animate-bounce" style={{ animationDelay: '1s', animationDuration: '3s' }} />
             {/* Shimmer Effect */}

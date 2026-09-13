@@ -3,12 +3,16 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FiArrowLeft, FiShield, FiLock, FiDatabase, FiEye, FiUsers, FiSettings, FiServer, FiEdit3 } from 'react-icons/fi';
+import PublicHeader from '@/components/public/PublicHeader';
+import Footer from '@/components/Footer';
 
 export default function PrivacyPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+    <>
+      <PublicHeader />
+      <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 py-12 relative overflow-hidden">
       {/* Back Button */}
       <button
         onClick={() => router.back()}
@@ -269,5 +273,7 @@ export default function PrivacyPage() {
         </div>
       </div>
     </div>
+      <Footer />
+    </>
   );
 }

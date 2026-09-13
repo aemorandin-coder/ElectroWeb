@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PublicHeader from '@/components/public/PublicHeader';
+import Footer from '@/components/Footer';
 import { FiGift, FiCheck, FiAlertCircle, FiCreditCard, FiLock, FiSearch } from 'react-icons/fi';
 import { HiSparkles } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
@@ -128,6 +129,7 @@ export default function RedeemGiftCardPage() {
                         </div>
                     </div>
                 </div>
+                <Footer />
             </div>
         );
     }
@@ -276,6 +278,7 @@ export default function RedeemGiftCardPage() {
                     </Link>
                 </div>
             </main>
+            <Footer />
         </div>
     );
 }

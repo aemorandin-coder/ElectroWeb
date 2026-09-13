@@ -3,16 +3,17 @@
 Lee este archivo COMPLETO antes de cada tarea. Si una instrucción de aquí choca con tu criterio, **gana este archivo**.
 
 Proyecto: tienda online (Next.js 16 App Router, React 19, Tailwind CSS 4, Prisma, NextAuth). Idioma de la interfaz: español de Venezuela.
-Contexto completo: `docs/plan/PLAN.md` (diseño y tablero) y `docs/plan/AUDITORIA.md` (problemas).
+**Tu orden de trabajo (rondas, prompts y tarjetas G-09 a G-14): `docs/plan/PLAN_GEMINI.md`.**
+Contexto: `docs/plan/PLAN.md` (diseño) y `docs/plan/AUDITORIA.md` (problemas). Lo que hace Claude en paralelo: `docs/plan/PLAN_CLAUDE.md`.
 
 ---
 
 ## 1. Las 12 reglas (no negociables)
 
-1. **Haz SOLO la tarea cuyo ID te asignaron** (ej. `G-05a`). Nada de "de paso arreglé…".
+1. **Haz SOLO las tareas de la ronda que te asignaron** (ej. Ronda R2: `G-05a`…), en el orden de `PLAN_GEMINI.md`. Nada de "de paso arreglé…".
 2. **Solo edita archivos de TU carril** (sección 2). Si el archivo no está en tu carril, NO lo toques, aunque veas un error.
 3. **No borres, renombres ni muevas archivos**, salvo la lista exacta de la tarea G-02.
-4. **No toques:** `app/api/**`, `prisma/**`, `lib/**`, `contexts/**`, `proxy.ts`, `next.config.js`, `package.json`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `components/ui/**`, `components/public/**`, `CLAUDE.md`, `GEMINI.md`, `docs/plan/PLAN.md`, `docs/plan/AUDITORIA.md`, `docs/plan/estado/C-*.md`.
+4. **No toques:** `app/api/**`, `prisma/**`, `lib/**`, `contexts/**`, `proxy.ts`, `next.config.js`, `package.json`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `components/ui/**`, `components/public/**`, `CLAUDE.md`, `GEMINI.md`, `docs/plan/PLAN.md`, `docs/plan/PLAN_CLAUDE.md`, `docs/plan/PLAN_GEMINI.md`, `docs/plan/AUDITORIA.md`, `docs/plan/estado/C-*.md`.
 5. **No instales dependencias.** No ejecutes `npm install`, `prisma migrate`, `prisma db push`, `git push --force`, `git reset --hard`, `git rebase`, `rm -rf` ni `git merge` a `main`.
 6. **Cambios mínimos.** No reformatees archivos, no cambies comillas, indentación ni orden de imports, y no reescribas componentes enteros. Si el diff tiene líneas que la tarea no pide, deshazlas.
 7. **No cambies textos visibles** (copys, mensajes) salvo que la tarea lo diga.
@@ -45,7 +46,7 @@ Excepciones puntuales (solo cuando la tarea lo dice):
 
 ---
 
-## 3. Flujo de trabajo (cada tarea)
+## 3. Flujo de trabajo (una rama por ronda, un commit por tarea)
 
 Trabajas en tu propia carpeta (worktree), **nunca** en la carpeta principal del proyecto.
 
@@ -59,9 +60,11 @@ cp .env "../ElectroShopVe-gemini/.env"                              # solo si Ge
 # Si Gemini levanta el servidor, que use otro puerto: npm run dev -- -p 3001
 # Si no puede levantarlo, anota "QA visual pendiente" y Andrés lo revisa tras el merge.
 
-# Cada tarea (dentro de ../ElectroShopVe-gemini):
+# Inicio de ronda (dentro de ../ElectroShopVe-gemini), solo cuando Andrés mergeó la ronda anterior:
 git status                                   # debe estar limpio
-git switch -c gemini/G-XX main               # rama nueva desde main actualizado
+git switch -c gemini/R1 main                 # R1, R2, R3… según la ronda
+
+# Cada tarea dentro de la ronda:
 npx tsc --noEmit > /tmp/tsc-antes.txt 2>&1   # guardar errores previos
 # ... hacer la tarea ...
 npx tsc --noEmit > /tmp/tsc-despues.txt 2>&1
@@ -75,7 +78,7 @@ Plantilla de `docs/plan/estado/G-XX.md`:
 ```
 # G-XX
 Estado: HECHO            (o: Estado: BLOQUEADO — motivo)
-Rama: gemini/G-XX
+Rama: gemini/RN
 - Archivos: N
 - Verificación: <salida de los greps>
 - tsc: sin errores nuevos

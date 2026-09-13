@@ -3,7 +3,7 @@
 Responde a Andrés en español. Tienda online de Electro Shop Morandin C.A. (Guanare, Venezuela).
 Stack: Next.js 16 (App Router, `proxy.ts` como middleware), React 19, Tailwind CSS 4 (`@theme` en `app/globals.css`), Prisma 6 + PostgreSQL, NextAuth 4, react-hot-toast.
 
-**Antes de trabajar:** lee `docs/plan/PLAN.md` (diseño, carriles y tablero) y, si la tarea toca un bug, su fila en `docs/plan/AUDITORIA.md`.
+**Antes de trabajar:** lee `docs/plan/PLAN_CLAUDE.md` (tu orden por rondas y el detalle de cada tarea), `docs/plan/PLAN.md` (diseño y carriles) y, si la tarea toca un bug, su fila en `docs/plan/AUDITORIA.md`.
 **Next.js 16 tiene cambios incompatibles** con versiones anteriores (ver `AGENTS.md`, generado por `next dev`). Antes de usar una API de Next (caché, `params`, `proxy`, fuentes, imágenes), consulta `node_modules/next/dist/docs/`.
 
 ## Rol en el equipo

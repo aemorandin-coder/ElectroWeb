@@ -2,6 +2,7 @@
 
 > Diagnóstico con evidencias: [`AUDITORIA.md`](./AUDITORIA.md)
 > Reglas por agente: [`/CLAUDE.md`](../../CLAUDE.md) y [`/GEMINI.md`](../../GEMINI.md)
+> **Planes de trabajo en paralelo (rondas):** [`PLAN_CLAUDE.md`](./PLAN_CLAUDE.md) y [`PLAN_GEMINI.md`](./PLAN_GEMINI.md)
 > Progreso: carpeta [`estado/`](./estado/) con **un archivo por tarea** (`C-01.md`, `G-05a.md`…). Cada agente crea solo archivos con su prefijo, así las ramas nunca chocan.
 
 ## 0. Objetivo
@@ -252,7 +253,7 @@ Borrado de archivos muertos (G-02): **solo** la lista exacta de esa tarea, aunqu
    ```bash
    git worktree add "../ElectroShopVe-gemini" -b gemini/base
    ```
-   Cada tarea de Gemini va en una rama `gemini/<id>` creada desde `main` actualizado.
+   Gemini usa **una rama por ronda** (`gemini/R1`, `gemini/R2`…) creada desde `main` actualizado, con un commit por tarea. Claude usa una rama por tarea (`claude/C-XX`).
 2. **Tú (Andrés) integras a `main`.** Ningún agente hace merge a `main`, push `--force`, `rebase` de ramas ajenas ni `reset --hard`.
 3. **Una tarea = una rama = uno o varios commits con prefijo** `[C-01]` o `[G-05a]`.
 4. **Dependencias duras:** una tarea no empieza si su dependencia no figura como `HECHO` y mergeada en `main`.
@@ -305,7 +306,7 @@ Leyenda de dependencias: `—` = puede empezar ya.
 | **C-40** | README actualizado, revisión de todas las ramas de Gemini y checklist QA final (§6). | todo | — |
 
 ### Tareas de GEMINI
-Cada tarjeta detallada (pasos exactos, prohibiciones y verificación) está en **`/GEMINI.md`**. Resumen:
+Tarjetas G-01 a G-08 en **`/GEMINI.md`**; G-09 a G-14 y el orden por rondas en **`PLAN_GEMINI.md`**. Resumen:
 
 | ID | Tarea | Depende |
 |----|-------|---------|
@@ -317,8 +318,14 @@ Cada tarjeta detallada (pasos exactos, prohibiciones y verificación) está en *
 | **G-06a…g** | Colores: hex → tokens por lotes | **C-10** (todos) · g: además C-01 y C-05 |
 | **G-07** | `h-screen`/`min-h-screen` → `h-dvh`/`min-h-dvh` en su carril | — |
 | **G-08** | Hacer visibles en táctil 4 controles que hoy solo aparecen con hover | — |
+| **G-09** | Settings desde `useSettings()` en 5 páginas (sin fetch duplicado) | — |
+| **G-10** | z-index gigantes → variables de capa | C-10 y C-21 |
+| **G-11** | Bloqueo de scroll con `useBodyScrollLock` en 4 archivos | C-12 |
+| **G-12** | Quitar `animate-pulse` de las manchas de blur | — |
+| **G-13** | Contraste: `text-white/30…60` → `/80` | — |
+| **G-14** | Inventario final (solo reporte) | R6 |
 
-Orden sugerido para Gemini mientras Claude hace la Fase 0: **G-01 → G-02 → G-03 → G-07 → G-08 → G-04a → G-05a…e**. Cuando C-10 esté en `main`: **G-06a…e**. Al final: **G-05f/G-06f (admin)** y **G-05g/G-06g (carrito y checkout)**.
+El orden por rondas, sincronizado con Claude, está en [`PLAN_GEMINI.md`](./PLAN_GEMINI.md) §3 y [`PLAN_CLAUDE.md`](./PLAN_CLAUDE.md) §3.
 
 ---
 

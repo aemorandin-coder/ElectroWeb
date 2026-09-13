@@ -271,8 +271,8 @@ const drawerNavItems = [
 ];
 
 export default function MobileNavBar() {
-    const { items } = useCart();
-    const cartCount = items.length;
+    // Unidades, igual que el contador del header
+    const { totalItems: cartCount } = useCart();
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeItem, setActiveItem] = useState<string | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -437,7 +437,7 @@ export default function MobileNavBar() {
                                     <Icon active={active} />
                                     {item.href === '/carrito' && cartCount > 0 && (
                                         <span className="absolute -top-1.5 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[8px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-[#0f172a] shadow-md shadow-red-500/30 animate-pulse">
-                                            {cartCount}
+                                            {cartCount > 9 ? '9+' : cartCount}
                                         </span>
                                     )}
                                 </div>

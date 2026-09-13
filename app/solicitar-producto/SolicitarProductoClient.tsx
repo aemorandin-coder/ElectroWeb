@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { FiUser, FiMail, FiPhone, FiPackage, FiDollarSign, FiClock, FiCheck, FiShield, FiTruck, FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiPackage, FiDollarSign, FiClock, FiCheck, FiShield, FiTruck } from 'react-icons/fi';
 import { IoMdPricetags } from 'react-icons/io';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import AnimatedWave from '@/components/AnimatedWave';
@@ -27,31 +27,6 @@ interface ValidationErrors {
   productDescription?: string;
   category?: string;
 }
-
-const FloatingTechIcons = () => {
-  const icons = [
-    { Icon: FiMonitor, delay: '0s', position: 'top-8 left-10' },
-    { Icon: FiCpu, delay: '0.5s', position: 'top-20 right-16' },
-    { Icon: FiHardDrive, delay: '1s', position: 'bottom-12 left-20' },
-    { Icon: FiSmartphone, delay: '1.5s', position: 'bottom-8 right-12' },
-    { Icon: FiHeadphones, delay: '2s', position: 'top-1/2 left-8' },
-    { Icon: FiWifi, delay: '2.5s', position: 'top-1/3 right-8' },
-  ];
-
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
-      {icons.map(({ Icon, delay, position }, i) => (
-        <div
-          key={i}
-          className={`absolute ${position} animate-bounce`}
-          style={{ animationDelay: delay, animationDuration: '3s' }}
-        >
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-      ))}
-    </div>
-  );
-};
 
 export default function SolicitarProductoClient() {
   const router = useRouter();
@@ -240,8 +215,6 @@ export default function SolicitarProductoClient() {
     <>
       {/* Epic Hero Section */}
       <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
-        {/* Floating Icons Effect */}
-        <FloatingTechIcons />
 
         {/* Animated Background Particles */}
         <div className="absolute inset-0 opacity-10">

@@ -12,7 +12,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import ProcessingOverlay, { GIFT_CARD_STEPS } from '@/components/ProcessingOverlay';
 import Footer from '@/components/Footer';
 
-import { FiGift, FiCheck, FiAlertCircle, FiMail, FiArrowRight, FiClock, FiShoppingCart, FiCreditCard, FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones, FiWifi, FiLock, FiCalendar, FiEye, FiUser, FiStar } from 'react-icons/fi';
+import { FiGift, FiCheck, FiAlertCircle, FiMail, FiArrowRight, FiClock, FiShoppingCart, FiCreditCard, FiMonitor, FiLock, FiCalendar, FiEye, FiUser, FiStar } from 'react-icons/fi';
 import { AiOutlineDeliveredProcedure } from 'react-icons/ai';
 
 // Predefined amounts
@@ -104,32 +104,6 @@ const CARD_DESIGNS = [
         holographic: true
     },
 ];
-
-// Floating Tech Icons component (like homepage)
-const FloatingTechIcons = () => {
-    const icons = [
-        { Icon: FiMonitor, delay: '0s', position: 'top-4 left-8' },
-        { Icon: FiCpu, delay: '0.5s', position: 'top-12 right-12' },
-        { Icon: FiHardDrive, delay: '1s', position: 'bottom-8 left-16' },
-        { Icon: FiSmartphone, delay: '1.5s', position: 'bottom-4 right-8' },
-        { Icon: FiHeadphones, delay: '2s', position: 'top-1/2 left-4' },
-        { Icon: FiWifi, delay: '2.5s', position: 'top-1/3 right-4' },
-    ];
-
-    return (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {icons.map(({ Icon, delay, position }, i) => (
-                <div
-                    key={i}
-                    className={`absolute ${position} opacity-20 animate-bounce`}
-                    style={{ animationDelay: delay, animationDuration: '3s' }}
-                >
-                    <Icon className="w-6 h-6 text-white" />
-                </div>
-            ))}
-        </div>
-    );
-};
 
 // Card Pattern Component - Creates epic holographic effect
 const CardPattern = ({ pattern, accent, secondAccent }: { pattern: string; accent: string; secondAccent?: string }) => {
@@ -598,7 +572,6 @@ export default function GiftCardsPage() {
                     <div className="absolute top-10 left-10 w-64 h-64 bg-white rounded-full blur-3xl"></div>
                     <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-300 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
                 </div>
-                <FloatingTechIcons />
 
                 <div className="relative max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-2 pb-0 lg:py-10 text-center">
                     <div className="hidden lg:inline-flex items-center gap-2 mb-2 lg:mb-4">
@@ -1212,8 +1185,6 @@ export default function GiftCardsPage() {
                     <div className="absolute top-5 left-10 w-48 h-48 bg-white rounded-full blur-3xl"></div>
                     <div className="absolute bottom-5 right-10 w-64 h-64 bg-cyan-300 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
                 </div>
-                {/* Floating Tech Icons */}
-                <FloatingTechIcons />
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">

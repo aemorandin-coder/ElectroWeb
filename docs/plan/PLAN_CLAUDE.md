@@ -108,7 +108,7 @@ Gemini avanzó más rápido de lo previsto: R1, R2 y R3 están aprobadas ([`revi
 - `:root`: `--z-*` de §1.3 y `--bottom-nav-h`.
 - Borrar keyframes y clases duplicadas, y las redefiniciones de `animate-spin`/`animate-pulse`.
 - `user-select: none` solo en `button, nav, [role=button]`; `html, body { overflow-x: clip }`; quitar `a, button { transition: all }` y `body.hot-ad-active [class*="z-40"]`.
-- Verificación: una página de prueba con `bg-brand-500 text-ink border-line` se ve bien; el texto de un producto se puede seleccionar; `grep -c "@keyframes fadeIn" app/globals.css` → 1.
+- Verificación: una página de prueba con `bg-brand-500 text-ink border-line` se ve bien; el texto de un producto se puede seleccionar; `grep -cw "@keyframes fadeIn" app/globals.css` → 1 (con `-w`, para no contar `fadeInUp`).
 - Al terminar, confirmar que la tabla de `GEMINI.md` §4 coincide con los tokens reales.
 
 ### R3 · C-11 — Fuentes

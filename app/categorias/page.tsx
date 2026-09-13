@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
-import PageAnimations from '@/components/public/PageAnimations';
 import Footer from '@/components/Footer';
 import CategoriasClient from './CategoriasClient';
 
@@ -135,7 +134,6 @@ export default async function CategoriasPage() {
         </div>
       </section>
 
-      <PageAnimations />
       <Footer />
     </div>
   );

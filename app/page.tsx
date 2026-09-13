@@ -11,7 +11,6 @@ import { PiSecurityCameraDuotone, PiStudentDuotone } from 'react-icons/pi';
 import { FaScrewdriverWrench, FaXbox } from 'react-icons/fa6';
 import dynamic from 'next/dynamic';
 
-const PageAnimations = dynamic(() => import('@/components/public/PageAnimations'));
 const HotAdOverlay = dynamic(() => import('@/components/HotAdOverlay'));
 
 export const revalidate = 60;
@@ -408,7 +407,6 @@ export default async function Home() {
 
       <Footer />
 
-      <PageAnimations />
       <HotAdOverlay />
     </div>
   );

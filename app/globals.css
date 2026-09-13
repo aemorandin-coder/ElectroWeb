@@ -2,11 +2,76 @@
 
 /* ============================================
    ELECTRO SHOP MORANDIN C.A. - DESIGN SYSTEM
+   Fuente de verdad: docs/plan/PLAN.md §1 (Gemini usa la tabla de GEMINI.md §4).
+   Solo se usan estos tokens: nada de hex en className.
    ============================================ */
 
-/* Font Fallbacks - Inter uses system fonts */
+@theme {
+  /* Marca */
+  --color-brand-50: #f4f7fc;
+  --color-brand-100: #eaeffa;
+  --color-brand-200: #d4e0f5;
+  --color-brand-300: #aac1eb;
+  --color-brand-400: #7599de;
+  --color-brand-500: #2a63cd;
+  --color-brand-600: #1e4ba3;
+  --color-brand-700: #1a3b7e;
+  --color-brand-800: #142d61;
+  --color-brand-900: #0e1f44;
+  --color-brand-950: #0a1530;
+
+  /* Neutros */
+  --color-ink: #212529;
+  --color-ink-soft: #495057;
+  --color-muted: #6a6c6b;
+  --color-subtle: #adb5bd;
+  --color-line: #e9ecef;
+  --color-line-strong: #dee2e6;
+  --color-surface: #f8f9fa;
+
+  /* Acentos y estados */
+  --color-accent: #22d3ee;
+  --color-deal: #dc2626;
+  --color-deal-bg: #fef2f2;
+  --color-tag: #f59e0b;
+  --color-success: #10b981;
+  --color-success-strong: #059669;
+  --color-warning: #f59e0b;
+  --color-warning-strong: #d97706;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+  --color-whatsapp: #25d366;
+}
+
+/* Fuentes: las variables las define app/layout.tsx en <body>, por eso van inline */
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-brand: var(--font-tektrron), var(--font-inter);
+}
+
 :root {
+  /* Inter todavía no se carga (C-11): pila de fuentes del sistema */
   --font-inter: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Capas (PLAN.md §1.3). Uso: z-[var(--z-modal)] */
+  --z-sticky: 30;
+  --z-header: 40;
+  --z-dropdown: 50;
+  --z-bottomnav: 60;
+  --z-drawer: 70;
+  --z-modal: 80;
+  --z-toast: 90;
+  --z-popup: 100;
+
+  /* Espacio que ocupa la barra inferior móvil: 64px de barra + 12px de separación + 4px de aire.
+     Uso: pb-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom))]. Vale 0 desde lg. */
+  --bottom-nav-h: 5rem;
+}
+
+@media (width >= 64rem) {
+  :root {
+    --bottom-nav-h: 0px;
+  }
 }
 
 /* Hide scrollbar utility */
@@ -31,53 +96,6 @@
 
 .animate-marquee-text {
   animation: marquee-text 12s linear infinite;
-}
-
-/* Premium Mobile Animations */
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 3s ease-in-out infinite;
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-@keyframes slideInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slideInUp {
-  animation: slideInUp 0.4s ease-out forwards;
 }
 
 /* --- Fun Header Icon Animations --- */
@@ -116,74 +134,6 @@
   transform-origin: top center;
 }
 
-
-:root {
-  /* Brand Colors */
-  --primary-blue: #2a63cd;
-  --primary-dark: #1e4ba3;
-  --primary-darker: #1a3b7e;
-  --secondary-gray: #6a6c6b;
-
-  /* Neutral Colors */
-  --white: #ffffff;
-  --near-white: #f8f9fa;
-  --light-gray: #e9ecef;
-  --medium-gray: #dee2e6;
-  --dark-gray: #495057;
-  --near-black: #212529;
-
-  /* Accent Colors */
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-  --info: #3b82f6;
-
-  /* Semantic Colors */
-  --background: var(--white);
-  --foreground: var(--near-black);
-  --muted: var(--light-gray);
-  --border: var(--medium-gray);
-
-  /* Typography */
-  --font-sans: var(--font-inter);
-
-  /* Spacing & Layout */
-  --container-max: 1280px;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-}
-
-@theme inline {
-  /* Colors */
-  --color-primary: var(--primary-blue);
-  --color-primary-dark: var(--primary-dark);
-  --color-primary-darker: var(--primary-darker);
-  --color-secondary: var(--secondary-gray);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-error: var(--error);
-  --color-info: var(--info);
-
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-
-  /* Typography */
-  --font-sans: var(--font-inter);
-
-  /* NOTE: Removed spacing overrides that were breaking Tailwind's max-width classes 
-   * In Tailwind v4, --spacing-* values affect max-w-* calculations
-   * The default Tailwind spacing scale should be used instead
-   */
-}
-
 /* Reset & Base Styles */
 * {
   box-sizing: border-box;
@@ -193,37 +143,14 @@ html {
   cursor: default;
 }
 
-/* ============================================
-   PREVENIR SELECCIÓN DE TEXTO EN ELEMENTOS UI
-   Aplica globalmente — evita la barra azul de
-   selección al hacer click en cualquier elemento
-   de interfaz: botones, cards, títulos, nav, etc.
-   ============================================ */
-* {
+/* El texto se puede seleccionar y copiar (nombres, precios, números de orden, datos de pago).
+   Solo los controles evitan la selección accidental al tocarlos. */
+button,
+nav,
+[role="button"] {
   user-select: none;
   -webkit-user-select: none;
 }
-
-/* Re-habilitar SOLO donde tiene sentido seleccionar */
-p,
-pre,
-code,
-blockquote,
-input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
-textarea,
-[contenteditable],
-.text-selectable {
-  user-select: text;
-  -webkit-user-select: text;
-}
-
-input[type="range"],
-input[type="checkbox"],
-input[type="radio"] {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
 
 a, button, [role="button"], label[for], select,
 input[type="submit"], input[type="button"], input[type="reset"],
@@ -241,8 +168,8 @@ textarea, [contenteditable="true"] {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #ffffff;
+  color: var(--color-ink);
   font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -250,8 +177,7 @@ body {
 }
 
 /* Hide floating elements when Hot Ad is active */
-body.hot-ad-active .fixed.z-40,
-body.hot-ad-active [class*="z-40"] {
+body.hot-ad-active .fixed.z-40 {
   opacity: 0 !important;
   pointer-events: none !important;
   visibility: hidden !important;
@@ -264,58 +190,45 @@ body.hot-ad-active [class*="z-40"] {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--near-white);
+  background: var(--color-surface);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--secondary-gray);
+  background: var(--color-muted);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-blue);
+  background: var(--color-brand-500);
 }
 
 /* Selection Color */
 ::selection {
-  background: var(--primary-blue);
-  color: var(--white);
+  background: var(--color-brand-500);
+  color: #ffffff;
 }
 
 /* Focus Styles */
 :focus-visible {
-  outline: 2px solid var(--primary-blue);
+  outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;
 }
 
 /* Utility Classes */
 .container {
   width: 100%;
-  max-width: var(--container-max);
+  max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
   padding-left: 1rem;
   padding-right: 1rem;
 }
 
-.text-balance {
-  text-wrap: balance;
-}
-
 /* ============================================
    ANIMATIONS & TRANSITIONS
+   Una sola definición por keyframe: varias se usan por nombre desde estilos inline.
+   animate-spin y animate-pulse vienen de Tailwind.
    ============================================ */
-
-/* Loading Spinner */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
 
 /* Fade In */
 @keyframes fadeIn {
@@ -353,19 +266,12 @@ body.hot-ad-active [class*="z-40"] {
 
 /* Slide In From Left */
 @keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .animate-slideInLeft {
-  animation: slideInLeft 0.3s ease-out forwards;
+  animation: slideInLeft 0.5s ease-out forwards;
 }
 
 /* Scale In */
@@ -382,24 +288,7 @@ body.hot-ad-active [class*="z-40"] {
 }
 
 .animate-scaleIn {
-  animation: scaleIn 0.2s ease-out forwards;
-}
-
-/* Pulse */
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: scaleIn 0.2s ease-out;
 }
 
 /* Shimmer Effect */
@@ -453,15 +342,6 @@ body.hot-ad-active [class*="z-40"] {
 
 .stagger-children>*:nth-child(8) {
   animation-delay: 0.4s;
-}
-
-/* Smooth Transitions */
-.transition-smooth {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.transition-smooth-slow {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Fade In Animation */
@@ -553,15 +433,8 @@ body.hot-ad-active [class*="z-40"] {
 }
 
 @keyframes float-delayed {
-
-  0%,
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-
-  50% {
-    transform: translateY(-20px) rotate(-5deg);
-  }
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(-5deg); }
 }
 
 .animate-float {
@@ -593,18 +466,6 @@ body.hot-ad-active [class*="z-40"] {
   }
 }
 
-@keyframes pageSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 .page-transition-wrapper {
   animation: pageFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
@@ -618,38 +479,6 @@ body.hot-ad-active [class*="z-40"] {
 /* Smooth page transitions */
 html {
   scroll-behavior: smooth;
-}
-
-/* Link transitions */
-a {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Button hover effects */
-button,
-.btn {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Card hover effects */
-.card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* Shimmer animation for hero */
-@keyframes shimmer-move {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  100% {
-    transform: translateX(200%);
-  }
 }
 
 /* Pulse Slow Animation (for checkout warnings) */
@@ -683,6 +512,10 @@ button,
 .animation-delay-300 {
   animation-delay: 0.3s;
   animation-fill-mode: both;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
 }
 
 /* Slide Down Animation (for checkout dropdowns) */
@@ -719,6 +552,64 @@ button,
 
 .animate-gradient-x {
   animation: gradient-x 3s ease infinite;
+}
+
+/* Cart & checkout animations */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out forwards;
+}
+
+@keyframes removeItem {
+  0% { opacity: 1; transform: translateX(0) scale(1); }
+  50% { opacity: 0.5; transform: translateX(-20px) scale(0.98); }
+  100% { opacity: 0; transform: translateX(-100px) scale(0.9); }
+}
+
+.animate-removeItem {
+  animation: removeItem 0.4s ease-out forwards;
+}
+
+@keyframes clearItem {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-30px) scale(0.8); }
+}
+
+.animate-clearItem {
+  animation: clearItem 0.4s ease-out forwards;
+}
+
+@keyframes progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.animate-progress {
+  animation: progress 3s linear;
+}
+
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(20px, -50px) scale(1.1); }
+  50% { transform: translate(-20px, 20px) scale(0.9); }
+  75% { transform: translate(50px, 50px) scale(1.05); }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.8s ease-out;
 }
 
 /* ============================================
@@ -759,10 +650,6 @@ button,
   .stagger-children>* {
     animation: none !important;
     opacity: 1 !important;
-  }
-
-  .card-hover:hover {
-    transform: none !important;
   }
 
   html {
@@ -847,126 +734,8 @@ button,
   }
 }
 
-/* Prevenir scroll horizontal global (Issue 19 & 4.4) */
-html, body { overflow-x: hidden; }
-
-/* Ajustes para iPhone SE y pantallas muy estrechas (Issue 4.5) */
-@media (max-width: 374px) {
-  .mobile-tab-bar .tab-label {
-    font-size: 9px !important;
-  }
-  .mobile-tab-bar .tab-icon {
-    width: 20px !important;
-    height: 20px !important;
-  }
-}
-
-/* ============================================
-   ELECTRO SHOP - ADICIONALES STYLE JSX MIGRADOS
-   ============================================ */
-
-@keyframes borderShine {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-@keyframes slide-in-right {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-30px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes float-delayed {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(-5deg); }
-}
-
-@keyframes removeItem {
-  0% { opacity: 1; transform: translateX(0) scale(1); }
-  50% { opacity: 0.5; transform: translateX(-20px) scale(0.98); }
-  100% { opacity: 0; transform: translateX(-100px) scale(0.9); }
-}
-
-@keyframes clearItem {
-  0% { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-30px) scale(0.8); }
-}
-
-.animate-borderShine {
-  animation: borderShine 4s linear infinite;
-}
-
-.animate-slide-in-right {
-  animation: slide-in-right 0.3s ease-out forwards;
-}
-
-.animate-slideInLeft {
-  animation: slideInLeft 0.5s ease-out forwards;
-}
-
-.animate-float-delayed {
-  animation: float-delayed 8s ease-in-out infinite;
-}
-
-.animate-removeItem {
-  animation: removeItem 0.4s ease-out forwards;
-}
-
-.animate-clearItem {
-  animation: clearItem 0.4s ease-out forwards;
-}
-
-/* Checkout Page Animations */
-@keyframes progress {
-  from { width: 0%; }
-  to { width: 100%; }
-}
-.animate-progress {
-  animation: progress 3s linear;
-}
-
-@keyframes blob {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(20px, -50px) scale(1.1); }
-  50% { transform: translate(-20px, 20px) scale(0.9); }
-  75% { transform: translate(50px, 50px) scale(1.05); }
-}
-.animate-blob {
-  animation: blob 7s infinite;
-}
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fadeInUp {
-  animation: fadeInUp 0.8s ease-out;
-}
-.animation-delay-200 {
-  animation-delay: 0.2s;
-  animation-fill-mode: both;
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-.animate-scaleIn {
-  animation: scaleIn 0.2s ease-out;
-}
+/* Prevenir scroll horizontal global. clip (no hidden) para no romper position: sticky */
+html, body { overflow-x: clip; }
 
 /* Tarjetas de plataforma con iluminación dinámica (Catálogo Digital) */
 .platform-card {
@@ -977,5 +746,3 @@ html, body { overflow-x: hidden; }
   box-shadow: 0 12px 30px -10px var(--platform-color) !important;
   background-color: rgba(255, 255, 255, 0.08) !important;
 }
-
-

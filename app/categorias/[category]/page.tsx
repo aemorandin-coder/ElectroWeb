@@ -4,7 +4,6 @@ import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import CategoryClient from '@/components/public/CategoryClient';
-import PageAnimations from '@/components/public/PageAnimations';
 import { getCategoryColor, getAutoIcon } from '@/lib/category-icons';
 import CategoryIconRenderer from '@/components/CategoryIconRenderer';
 
@@ -100,7 +99,6 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
       {/* Products (Client Component) */}
       <CategoryClient category={category} initialProducts={formattedProducts as any} />
 
-      <PageAnimations />
     </div>
   );
 }

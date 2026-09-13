@@ -1,10 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { CompanySettings } from '@/types/settings';
+import React, { createContext, useContext, useState } from 'react';
+import type { PublicSettings } from '@/lib/site-settings';
 
 interface SettingsContextType {
-    settings: CompanySettings | null;
+    settings: PublicSettings | null;
     isLoading: boolean;
     error: string | null;
     refreshSettings: () => Promise<void>;
@@ -13,12 +13,21 @@ interface SettingsContextType {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
-export function SettingsProvider({ children }: { children: React.ReactNode }) {
-    const [settings, setSettings] = useState<CompanySettings | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+// El layout lee los settings públicos en el servidor (getPublicSettings) y los pasa aquí:
+// no hay fetch al montar. refreshSettings sigue disponible para recargarlos bajo demanda.
+export function SettingsProvider({
+    children,
+    initialSettings = null,
+}: {
+    children: React.ReactNode;
+    initialSettings?: PublicSettings | null;
+}) {
+    const [settings, setSettings] = useState<PublicSettings | null>(initialSettings);
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const fetchSettings = async () => {
+        setIsLoading(true);
         try {
             const response = await fetch('/api/settings/public', {
                 cache: 'no-store',
@@ -46,10 +55,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             setIsLoading(false);
         }
     };
-
-    useEffect(() => {
-        fetchSettings();
-    }, []);
 
     const formatPrice = (priceUSD: number) => {
         const usd = new Intl.NumberFormat('en-US', {

@@ -52,7 +52,7 @@ Las rondas avanzan **en paralelo** con las de Claude, con el mismo número. Una 
 | **R2** | G-05a → G-05b → G-05c → G-05d → G-05e → G-13 | R1 mergeada | C-02 DTO · C-03 settings · C-04 · C-06 · C-07 |
 | **R3** ✅ | G-09 → G-05f → G-04b* → G-05g* | R2 mergeada. (*) solo si `C-01` y `C-05` están `HECHO` en `main`; si no, sáltalas | C-10 tokens · C-11 fuentes |
 | **R3b** | G-15 → G-16 → (G-04b y G-05g si ya se cumplió su dependencia) | R3 y `claude/docs-R3` mergeadas en `main` | C-01/C-05 (en curso) · C-10 · C-11 |
-| **R4** | G-06a → G-06b → G-06c → G-06d → G-06e | R3 mergeada **y** `C-10` `HECHO` en `main` | C-12 componentes base · C-13 queries |
+| **R4** | G-06a → G-06b → G-06c → G-06d → G-06e → G-17* | R3 mergeada **y** `C-10` `HECHO` en `main`. (*) G-17 solo si `C-03` está `HECHO` en `main`; si no, sáltala | C-12 componentes base · C-13 queries |
 | **R5** | G-06f → G-06g* → G-11 | R4 mergeada **y** `C-12` `HECHO`. (*) requiere `C-01` y `C-05` | C-20 header · C-21 barra móvil |
 | **R6** | G-10 → (pendientes de R3/R5 que se hayan saltado) | R5 mergeada **y** `C-21` `HECHO` | C-22 home · C-23 popup |
 | **R7** | G-14 (solo reporte, no edita código) | R6 mergeada | C-30…C-33 catálogo |
@@ -280,6 +280,29 @@ npx tsc --noEmit                                 # sin errores nuevos
 npx eslint app/servicios/page.tsx app/solicitar-producto/SolicitarProductoClient.tsx app/gift-cards/page.tsx app/cursos/page.tsx app/creator/page.tsx app/contacto/page.tsx 2>&1 | grep -c "is defined but never used"
 # Anota el número. No debe ser mayor que antes de empezar (córrelo también al inicio).
 ```
+
+---
+
+### G-17 · Settings públicos en 5 páginas (sin `CompanySettings` completo) · Depende: **C-03 HECHO en `main`**
+Estas páginas leen **toda** la fila `CompanySettings` y se la pasan a `<PublicHeader>`, así que el HTML incluye `adminAlertEmails`, `maintenanceAllowedIPs` y límites internos. Desde C-03, `PublicHeader` ignora esa prop (lee `useSettings()`), pero **pasarla igual la mete en el HTML**. Antes de empezar, comprueba: `grep -n "export const getPublicSettings" lib/site-settings.ts` → debe aparecer. Si no → `BLOQUEADO`.
+
+En los 5 archivos: `<PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />` → `<PublicHeader />`. Además:
+
+| Archivo | Cambio |
+|---------|--------|
+| `app/solicitar-producto/page.tsx` | Borra `const settings = await prisma.companySettings.findFirst();`. Si `prisma` queda sin uso, borra su import. |
+| `app/cursos/page.tsx` (página, **no** `generateMetadata`) | `const [settings, courses] = await Promise.all([prisma.companySettings.findFirst(), prisma.course.findMany({…})])` → `const [courses] = await Promise.all([prisma.course.findMany({…})])` (borra solo el primer elemento y `settings,`). |
+| `app/cursos/[slug]/page.tsx` (página, **no** `generateMetadata`) | `const [session, settings, course] = await Promise.all([getServerSession(authOptions), prisma.companySettings.findFirst(), prisma.course.findUnique({…})])` → borra `settings, ` y la línea `prisma.companySettings.findFirst(),`. |
+| `app/servicios/page.tsx` (usa `settings?.whatsapp`) | En la página, `prisma.companySettings.findFirst(),` → `getPublicSettings(),` y agrega `import { getPublicSettings } from '@/lib/site-settings';`. **No** toques el `findFirst({ select… })` de `generateMetadata`. |
+| `app/contacto/page.tsx` (usa whatsapp, email, phone, address, city, state, businessHours) | `const settings = await prisma.companySettings.findFirst();` → `const settings = await getPublicSettings();` + import. **Y** `<BusinessHours businessHours={settings?.businessHours} />` → `<BusinessHours businessHours={settings.businessHours ? JSON.stringify(settings.businessHours) : null} />` (el componente espera texto JSON). Si `prisma` queda sin uso, borra su import. |
+
+Verificación:
+```bash
+grep -rn "PublicHeader settings=" app components          # Esperado: 0
+grep -rn "companySettings.findFirst()" app/contacto app/cursos app/servicios app/solicitar-producto   # Esperado: 0 (los de generateMetadata usan select y no cuentan)
+npx tsc --noEmit                                           # sin errores nuevos
+```
+En tu estado: abre `/contacto` y `/servicios` en el navegador y confirma que se ven el WhatsApp, el correo y el horario.
 
 ---
 

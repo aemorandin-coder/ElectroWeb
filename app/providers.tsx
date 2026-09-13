@@ -5,8 +5,15 @@ import { CartProvider } from '@/contexts/CartContext';
 import { ConfirmDialogProvider } from '@/contexts/ConfirmDialogContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import { Toaster } from 'react-hot-toast';
+import type { PublicSettings } from '@/lib/site-settings';
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  initialSettings,
+}: {
+  children: React.ReactNode;
+  initialSettings: PublicSettings;
+}) {
   return (
     <SessionProvider
       // En dev Turbopack interrumpe HMR — valores conservadores evitan CLIENT_FETCH_ERROR
@@ -14,7 +21,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       refetchOnWindowFocus={false}     // Desactivado: cada hot-reload dispara un refetch con body vacío
     >
       <CartProvider>
-        <SettingsProvider>
+        <SettingsProvider initialSettings={initialSettings}>
           <ConfirmDialogProvider>
             {children}
             <Toaster

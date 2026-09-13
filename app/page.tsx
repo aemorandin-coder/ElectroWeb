@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
+import { getPublicSettings } from '@/lib/site-settings';
 import PublicHeader from '@/components/public/PublicHeader';
 import ProductCarousel from '@/components/home/ProductCarousel';
 import VideoPlayer from '@/components/home/VideoPlayer';
@@ -19,20 +20,20 @@ export const revalidate = 60;
 
 
 export default async function Home() {
-  const [featuredProducts, companySettings] = await Promise.all([
+  const [featuredProducts, settings] = await Promise.all([
     prisma.product.findMany({
       where: { status: 'PUBLISHED', isFeatured: true },
       take: 8,
       include: publicProductInclude,
       orderBy: { createdAt: 'desc' },
     }),
-    prisma.companySettings.findFirst(),
+    // Misma lectura que el layout (React cache): solo campos públicos
+    getPublicSettings(),
   ]);
 
   // SEGURIDAD: al componente cliente solo llegan campos públicos
   const formattedProducts = featuredProducts.map(toPublicProduct);
 
-  const settings = companySettings ? JSON.parse(JSON.stringify(companySettings)) : null;
 
   // Gift card platforms for display
   const GIFT_PLATFORMS = [
@@ -48,7 +49,7 @@ export default async function Home() {
 
   return (
     <div id="homepage-root" className="min-h-screen bg-white">
-      <PublicHeader settings={settings} />
+      <PublicHeader />
 
       {/* ═══ HERO — BUSCADOR PRIMERO ═══ */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#1a3b7e] via-[#2a63cd] to-[#1e4ba3] pt-8 pb-12 sm:pt-16 sm:pb-20">

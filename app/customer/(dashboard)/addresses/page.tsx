@@ -270,7 +270,7 @@ export default function AddressesPage() {
 
       {/* Modal - Using Portal */}
       {showModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100001] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
           {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL (Desktop Only) */}
           <button
             onClick={() => setShowModal(false)}

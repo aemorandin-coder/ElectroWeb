@@ -566,7 +566,7 @@ export default function OrdersPage() {
         mounted && showOrderDetails && selectedOrder && createPortal(
           <div
             className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-3 animate-fadeIn"
-            style={{ zIndex: 999999 }}
+            style={{ zIndex: 'var(--z-modal)' }}
           >
             {/* Backdrop */}
             <div
@@ -578,7 +578,7 @@ export default function OrdersPage() {
             <button
               onClick={closeModal}
               className="hidden sm:flex fixed top-4 right-4 w-12 h-12 bg-white/90 hover:bg-white rounded-full items-center justify-center shadow-lg active:scale-95 transition-all"
-              style={{ zIndex: 1000000 }}
+              style={{ zIndex: 'var(--z-modal)' }}
               aria-label="Cerrar"
             >
               <FiX className="w-6 h-6 text-gray-700" />

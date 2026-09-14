@@ -345,7 +345,7 @@ export default function WarrantyPage() {
             )}
             {/* Interactive Warranty Form Modal */}
             {showFormModal && selectedOrderForWarranty && (
-                <div className="fixed inset-0 z-[100000] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+                <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
                     <div className="bg-white rounded-t-[32px] sm:rounded-2xl shadow-2xl w-full max-w-lg h-[85vh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden animate-slideInUp sm:animate-scaleIn">
                         <div className="bg-gradient-to-r from-brand-500 to-brand-600 p-5 text-white flex-shrink-0 flex justify-between items-center rounded-t-[32px] sm:rounded-none">
                             <div>

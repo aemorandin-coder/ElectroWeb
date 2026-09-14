@@ -140,7 +140,7 @@ export default function ShareEarnModal() {
   return (
     <div
       onClick={handleOutsideClick}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 transition-all duration-300"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[var(--z-modal)] flex items-center justify-center p-4 transition-all duration-300"
     >
       <div
         ref={modalRef}

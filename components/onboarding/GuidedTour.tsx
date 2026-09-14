@@ -134,7 +134,7 @@ export function GuidedTour() {
       };
 
   return (
-    <div className="fixed inset-0 z-[9998]" aria-modal="true" role="dialog">
+    <div className="fixed inset-0 z-[var(--z-popup)]" aria-modal="true" role="dialog">
       {/* Backdrop con Spotlight usando SVG clipPath */}
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none"

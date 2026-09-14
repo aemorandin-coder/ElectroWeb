@@ -186,7 +186,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
 
     // Use portal to render outside of parent container constraints
     return createPortal(
-        <div className="fixed inset-0 z-[100001] flex items-center justify-center p-3 lg:p-4 bg-black/70 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-3 lg:p-4 bg-black/70 backdrop-blur-sm">
             {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL */}
             <button
                 onClick={onClose}

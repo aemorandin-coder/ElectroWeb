@@ -343,7 +343,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100000] flex items-end sm:items-center justify-center p-0 sm:p-2 lg:p-4">
+        <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center p-0 sm:p-2 lg:p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn"
@@ -354,7 +354,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             <button
                 onClick={onClose}
                 className="hidden sm:flex fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 hover:bg-white rounded-full items-center justify-center shadow-lg active:scale-95 transition-all"
-                style={{ zIndex: 100001 }}
+                style={{ zIndex: 'var(--z-modal)' }}
                 aria-label="Cerrar"
             >
                 <FiX className="w-6 h-6 text-gray-700" />

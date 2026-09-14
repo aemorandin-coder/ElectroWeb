@@ -153,7 +153,7 @@ export default function CustomerMobileNavBar() {
                 bottom: '12px',
                 left: '12px',
                 right: '12px',
-                zIndex: 99999,
+                zIndex: 'var(--z-bottomnav)',
                 borderRadius: '20px',
                 background: isScrolled
                     ? 'rgba(255, 255, 255, 0.92)'

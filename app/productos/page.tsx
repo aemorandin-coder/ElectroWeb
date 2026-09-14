@@ -50,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ProductosPage() {
-  const [products, categories, settings] = await Promise.all([
+  const [products, categories] = await Promise.all([
     prisma.product.findMany({
       where: { status: 'PUBLISHED' },
       include: publicProductInclude,
@@ -59,12 +59,11 @@ export default async function ProductosPage() {
     prisma.category.findMany({
       orderBy: { name: 'asc' }
     }),
-    prisma.companySettings.findFirst()
   ]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
-      <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
+      <PublicHeader />
 
       {/* Hero Section - Responsive, visible on all screens */}
       <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">

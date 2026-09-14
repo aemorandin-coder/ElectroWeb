@@ -7,6 +7,7 @@ import { validateSettings, normalizeSocialMedia, normalizeExchangeRate } from '@
 import { SettingsFormData } from '@/types/settings';
 import { Decimal } from '@prisma/client/runtime/library';
 import { clearSettingsCache } from '@/lib/site-settings';
+import { revalidatePath } from 'next/cache';
 
 // Helper to safely serialize Prisma objects (handle Decimals, Dates, etc.)
 function safeSerialize(obj: any): any {
@@ -223,6 +224,8 @@ export async function PUT(request: NextRequest) {
 
     // Clear cache so new settings (including favicon) take effect immediately
     await clearSettingsCache();
+    // Los settings públicos van en el HTML de todas las páginas (layout): regenerarlas ya
+    revalidatePath('/', 'layout');
 
     // Return parsed settings
     let socialMedia = [];

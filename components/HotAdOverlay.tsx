@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FiX, FiEyeOff } from 'react-icons/fi';
+import { useSettings } from '@/contexts/SettingsContext';
 
 // Helper function to convert hex color to rgba
 function hexToRgba(hex: string, opacity: number): string {
@@ -29,6 +30,8 @@ interface HotAdSettings {
 }
 
 export default function HotAdOverlay() {
+    // Settings públicos del servidor (SettingsProvider): sin fetch propio
+    const { settings: publicSettings } = useSettings();
     const [mounted, setMounted] = useState(false);
     const [settings, setSettings] = useState<HotAdSettings | null>(null);
     const [isVisible, setIsVisible] = useState(false);
@@ -55,9 +58,8 @@ export default function HotAdOverlay() {
 
         const fetchSettings = async () => {
             try {
-                const response = await fetch('/api/settings/public');
-                if (response.ok) {
-                    const data = await response.json();
+                const data = publicSettings;
+                if (data) {
                     if (data.hotAdEnabled && data.hotAdImage) {
                         setSettings({
                             hotAdEnabled: data.hotAdEnabled,
@@ -93,7 +95,7 @@ export default function HotAdOverlay() {
             document.body.style.overflow = '';
             document.body.classList.remove('hot-ad-active');
         };
-    }, [mounted]);
+    }, [mounted, publicSettings]);
 
     // Countdown timer — decrements every second, enables close when 0
     useEffect(() => {

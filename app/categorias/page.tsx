@@ -8,21 +8,18 @@ import CategoriasClient from './CategoriasClient';
 export const revalidate = 0;
 
 export default async function CategoriasPage() {
-  const [rawCategories, settings] = await Promise.all([
-    prisma.category.findMany({
-      orderBy: { name: 'asc' },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        icon: true,
-        color: true,
-        _count: { select: { products: { where: { status: 'PUBLISHED' } } } },
-      },
-    }),
-    prisma.companySettings.findFirst(),
-  ]);
+  const rawCategories = await prisma.category.findMany({
+    orderBy: { name: 'asc' },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      icon: true,
+      color: true,
+      _count: { select: { products: { where: { status: 'PUBLISHED' } } } },
+    },
+  });
 
   const categories = rawCategories as {
     id: string;
@@ -38,7 +35,7 @@ export default async function CategoriasPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
+      <PublicHeader />
 
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">

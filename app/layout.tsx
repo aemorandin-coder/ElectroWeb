@@ -11,7 +11,11 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 import MobileScrollProgress from "@/components/public/MobileScrollProgress";
 import MobileNavBar from "@/components/public/MobileNavBar";
 import { GuidedTourWrapper } from "@/components/onboarding/GuidedTourWrapper";
-import { getSiteSettings } from "@/lib/site-settings";
+import { getPublicSettings, getSiteSettings } from "@/lib/site-settings";
+
+// Los settings públicos se leen aquí para todo el sitio: cada ruta se regenera como mucho
+// cada 60 s para que la tasa BCV no quede congelada en las páginas estáticas.
+export const revalidate = 60;
 
 // Fuentes locales (sin depender de Google Fonts en el build).
 // Inter variable, subconjunto latino (español, € y ™). Licencia OFL: public/fonts/Inter-LICENSE.txt
@@ -128,15 +132,17 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const publicSettings = await getPublicSettings();
+
   return (
     <html lang="es" data-scroll-behavior="smooth" className={`${inter.variable} ${tektrron.variable}`} suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
-        <Providers>
+        <Providers initialSettings={publicSettings}>
           <NotificationProvider>
             <MobileScrollProgress />
             <div className="page-transition-wrapper">

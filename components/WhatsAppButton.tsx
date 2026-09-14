@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface WhatsAppButtonProps {
   phoneNumber?: string;
@@ -33,30 +34,18 @@ export default function WhatsAppButton({
 }: WhatsAppButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [settings, setSettings] = useState<{ whatsapp: string | null; companyName: string | null } | null>(null);
   const [mounted, setMounted] = useState(false); // Fix: Add mounted state
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
   const isAdminPanel = pathname?.startsWith('/admin');
+  // Settings públicos del servidor (SettingsProvider): sin fetch propio
+  const { settings } = useSettings();
   const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN';
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (!isAdminPanel) {
-      fetch('/api/settings/public')
-        .then(async res => {
-          if (!res.ok) return;
-          const text = await res.text();
-          if (!text || text.trim() === '') return;
-          try { setSettings(JSON.parse(text)); } catch { /* ignorar */ }
-        })
-        .catch(err => console.error('Error fetching WhatsApp settings:', err));
-    }
-  }, [isAdminPanel]);
 
   // Auto-minimize after 3 seconds
   useEffect(() => {

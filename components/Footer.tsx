@@ -1,27 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useSettings } from '@/contexts/SettingsContext';
 import { FiBox, FiMapPin, FiPhone, FiMessageCircle, FiMail } from 'react-icons/fi';
 import { FaInstagram, FaTiktok, FaTelegram, FaYoutube } from 'react-icons/fa6';
-
-interface SiteSettings {
-  companyName?: string;
-  tagline?: string;
-  logo?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  phone?: string;
-  email?: string;
-  whatsapp?: string;
-  instagram?: string;
-  tiktok?: string;
-  telegram?: string;
-  youtube?: string;
-  rif?: string;
-  legalName?: string;
-}
 
 const SEED_PHONES = ['584241234567', '4241234567'];
 const isSeedPhone = (p: string | null | undefined) => {
@@ -31,14 +13,8 @@ const isSeedPhone = (p: string | null | undefined) => {
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  const [settings, setSettings] = useState<SiteSettings>({});
-
-  useEffect(() => {
-    fetch('/api/settings/public')
-      .then(r => r.json())
-      .then(data => setSettings(data))
-      .catch(() => {});
-  }, []);
+  // Settings públicos del servidor (SettingsProvider): sin fetch propio
+  const { settings } = useSettings();
 
   // Sanitizar el número de WhatsApp (eliminar +, espacios, guiones)
   const waNumber = settings?.whatsapp?.replace(/\D/g, '') || '';

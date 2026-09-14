@@ -7,17 +7,12 @@ import { usePathname } from 'next/navigation';
 import CartIcon from '@/components/CartIcon';
 import UserAccountButton from '@/components/UserAccountButton';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import { useSettings } from '@/contexts/SettingsContext';
 
-interface CompanySettings {
-  companyName: string;
-  logo: string | null;
-  primaryColor: string | null;
-  secondaryColor: string | null;
-}
-
-export default function PublicHeader({ settings }: { settings?: CompanySettings | null }) {
+function PublicHeader() {
   const [mounted, setMounted] = useState(false);
-  const [companySettings, setCompanySettings] = useState<CompanySettings | null>(settings || null);
+  // Settings públicos del servidor (SettingsProvider): sin fetch propio
+  const { settings: companySettings } = useSettings();
   const [isOnDarkSection, setIsOnDarkSection] = useState(true); // Start with dark (hero)
   const [isCursosDropdownOpen, setIsCursosDropdownOpen] = useState(false);
   const pathname = usePathname();
@@ -30,30 +25,6 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (settings) return;
-
-    const fetchSettings = async () => {
-      try {
-        const response = await fetch('/api/settings/public', {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setCompanySettings(data);
-        }
-      } catch (error) {
-        console.error('Error fetching settings:', error);
-      }
-    };
-
-    fetchSettings();
-  }, [settings]);
 
   // Scroll detection to change header style
   const checkSectionUnderHeader = useCallback(() => {
@@ -311,4 +282,5 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
   );
 }
 
-
+// La prop `settings` ya no se usa (C-03): se acepta para no romper las páginas que todavía la pasan.
+export default PublicHeader as (props: { settings?: unknown }) => React.ReactElement;

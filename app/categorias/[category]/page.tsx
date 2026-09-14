@@ -13,10 +13,7 @@ export const revalidate = 0;
 export default async function CategoryDetailPage({ params }: { params: Promise<{ category: string }> }) {
   const { category: categorySlug } = await params;
 
-  const [category, settings] = await Promise.all([
-    prisma.category.findUnique({ where: { slug: categorySlug } }),
-    prisma.companySettings.findFirst(),
-  ]);
+  const category = await prisma.category.findUnique({ where: { slug: categorySlug } });
 
   if (!category) notFound();
 
@@ -34,7 +31,7 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="min-h-screen bg-[#f8f9fa]">
-      <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
+      <PublicHeader />
 
       {/* Hero Section */}
       <section

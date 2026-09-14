@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -106,6 +107,7 @@ export default function BalancePage() {
       }
     } catch (error) {
       console.error('Error fetching balance:', error);
+      toast.error('No se pudo cargar el saldo');
     } finally {
       setLoading(false);
     }

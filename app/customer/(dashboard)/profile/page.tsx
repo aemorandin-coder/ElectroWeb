@@ -233,6 +233,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
+      toast.error('No se pudieron cargar las estadísticas');
     }
   };
 

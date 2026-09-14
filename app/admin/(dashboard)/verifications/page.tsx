@@ -44,6 +44,7 @@ export default function VerificationsPage() {
             }
         } catch (error) {
             console.error('Error fetching requests:', error);
+            toast.error('No se pudieron cargar las solicitudes de verificación');
         } finally {
             setLoading(false);
         }

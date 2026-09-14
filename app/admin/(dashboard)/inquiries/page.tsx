@@ -122,6 +122,7 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error updating status:', error);
+            toast.error('No se pudo actualizar el estado del mensaje');
         }
     };
 
@@ -143,6 +144,7 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error deleting message:', error);
+            toast.error('No se pudo eliminar el mensaje');
         }
     };
 
@@ -184,6 +186,7 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error fetching requests:', error);
+            toast.error('No se pudieron cargar las solicitudes');
         } finally {
             setRequestsLoading(false);
         }
@@ -219,6 +222,7 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error updating request:', error);
+            toast.error('No se pudo actualizar la solicitud');
         }
     };
 
@@ -237,6 +241,7 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error deleting request:', error);
+            toast.error('No se pudo eliminar la solicitud');
         }
     };
 
@@ -271,6 +276,7 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error fetching alerts:', error);
+            toast.error('No se pudieron cargar las alertas');
         } finally {
             setAlertsLoading(false);
         }
@@ -283,6 +289,7 @@ export default function InquiriesPage() {
             window.dispatchEvent(new Event('refresh-sidebar-counts'));
         } catch (error) {
             console.error('Error marking alert as read:', error);
+            toast.error('No se pudo marcar la alerta como leída');
         }
     };
 
@@ -294,6 +301,7 @@ export default function InquiriesPage() {
             window.dispatchEvent(new Event('refresh-sidebar-counts'));
         } catch (error) {
             console.error('Error marking all alerts as read:', error);
+            toast.error('No se pudieron marcar todas las alertas como leídas');
         }
     };
 
@@ -304,6 +312,7 @@ export default function InquiriesPage() {
             window.dispatchEvent(new Event('refresh-sidebar-counts'));
         } catch (error) {
             console.error('Error deleting alert:', error);
+            toast.error('No se pudo eliminar la alerta');
         }
     };
 

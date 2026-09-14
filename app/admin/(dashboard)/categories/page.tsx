@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -66,6 +67,7 @@ export default function CategoriesPage() {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
+      toast.error('No se pudieron cargar las categorías');
     } finally {
       setIsLoading(false);
     }
@@ -144,6 +146,7 @@ export default function CategoriesPage() {
       }
     } catch (error) {
       console.error('Error saving category:', error);
+      toast.error('No se pudo guardar la categoría');
     } finally {
       setSaveLoading(false);
     }
@@ -162,6 +165,7 @@ export default function CategoriesPage() {
       }
     } catch (error) {
       console.error('Error deleting category:', error);
+      toast.error('No se pudo eliminar la categoría');
     } finally {
       setDeleteLoading(false);
     }
@@ -181,6 +185,7 @@ export default function CategoriesPage() {
       }
     } catch (err) {
       console.error('Error uploading icon:', err);
+      toast.error('No se pudo subir el ícono');
     } finally {
       setUploadingIcon(false);
       if (customIconRef.current) customIconRef.current.value = '';

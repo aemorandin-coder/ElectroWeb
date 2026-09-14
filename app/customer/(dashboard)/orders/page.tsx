@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
@@ -137,6 +138,7 @@ export default function OrdersPage() {
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
+      toast.error('No se pudieron cargar las órdenes');
     } finally {
       setLoading(false);
     }

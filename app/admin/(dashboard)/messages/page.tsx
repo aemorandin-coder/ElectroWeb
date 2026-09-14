@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -37,6 +38,7 @@ export default function MessagesPage() {
             }
         } catch (error) {
             console.error('Error fetching messages:', error);
+            toast.error('No se pudieron cargar los mensajes');
         } finally {
             setIsLoading(false);
         }
@@ -60,6 +62,7 @@ export default function MessagesPage() {
             }
         } catch (error) {
             console.error('Error updating status:', error);
+            toast.error('No se pudo actualizar el estado');
         }
     };
 
@@ -80,6 +83,7 @@ export default function MessagesPage() {
             }
         } catch (error) {
             console.error('Error deleting message:', error);
+            toast.error('No se pudo eliminar el mensaje');
         }
     };
 

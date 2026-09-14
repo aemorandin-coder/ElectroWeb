@@ -869,7 +869,10 @@ function HotAdTab() {
                 setAd(loaded);
                 setInitial(loaded);
             })
-            .catch(console.error)
+            .catch((err) => {
+                console.error(err);
+                toast.error('No se pudo cargar el anuncio destacado');
+            })
             .finally(() => setLoading(false));
     }, []);
 

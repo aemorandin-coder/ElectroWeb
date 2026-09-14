@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -44,6 +45,7 @@ export default function ProductRequestsPage() {
       }
     } catch (error) {
       console.error('Error fetching requests:', error);
+        toast.error('No se pudieron cargar las solicitudes');
     } finally {
       setIsLoading(false);
     }
@@ -71,6 +73,7 @@ export default function ProductRequestsPage() {
       }
     } catch (error) {
       console.error('Error updating request:', error);
+        toast.error('No se pudo actualizar la solicitud');
     }
   };
 
@@ -87,6 +90,7 @@ export default function ProductRequestsPage() {
       }
     } catch (error) {
       console.error('Error deleting request:', error);
+        toast.error('No se pudo eliminar la solicitud');
     }
   };
 

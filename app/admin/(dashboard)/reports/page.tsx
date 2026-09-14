@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
 import {
@@ -80,6 +81,7 @@ export default function ReportsPage() {
             }
         } catch (error) {
             console.error('Error fetching live users:', error);
+            toast.error('No se pudieron cargar los usuarios en vivo');
         }
     };
 
@@ -97,6 +99,7 @@ export default function ReportsPage() {
             }
         } catch (error) {
             console.error('Error fetching reports:', error);
+            toast.error('No se pudieron cargar los reportes');
         } finally {
             setLoading(false);
         }

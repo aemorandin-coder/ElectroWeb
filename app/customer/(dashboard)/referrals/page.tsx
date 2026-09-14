@@ -291,6 +291,7 @@ export default function ReferralsPage() {
                 }
             } catch (err) {
                 console.error(err);
+                toast.error('No se pudieron cargar los datos de referidos');
             } finally {
                 setLoading(false);
             }

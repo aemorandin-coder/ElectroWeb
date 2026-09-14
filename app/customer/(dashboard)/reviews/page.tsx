@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
 import { FiStar, FiUser, FiPackage, FiClock, FiCheck, FiX } from 'react-icons/fi';
@@ -36,6 +37,7 @@ export default function MyReviewsPage() {
             }
         } catch (error) {
             console.error('Error fetching reviews:', error);
+            toast.error('No se pudieron cargar las reseñas');
         } finally {
             setLoading(false);
         }

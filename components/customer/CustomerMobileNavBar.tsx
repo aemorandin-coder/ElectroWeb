@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 // [MOBILE ONLY] Cliente Panel - Premium Floating Bottom Navigation Bar
 // Uses Portal to render outside the layout DOM tree for proper fixed positioning
@@ -135,6 +136,7 @@ export default function CustomerMobileNavBar() {
             await signOut({ callbackUrl: '/', redirect: true });
         } catch (error) {
             console.error('Error signing out:', error);
+            toast.error('No se pudo cerrar la sesión');
             router.push('/');
         }
     };

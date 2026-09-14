@@ -103,6 +103,7 @@ export default function WishlistPage() {
       }
     } catch (error) {
       console.error('Error fetching wishlist:', error);
+      toast.error('No se pudo cargar la lista de favoritos');
     } finally {
       setLoading(false);
     }
@@ -117,6 +118,7 @@ export default function WishlistPage() {
       }
     } catch (error) {
       console.error('Error fetching discount requests:', error);
+      toast.error('No se pudieron cargar las solicitudes de descuento');
     }
   };
 

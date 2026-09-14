@@ -331,6 +331,7 @@ export default function PaymentsPage() {
             }
         } catch (error) {
             console.error('Error deleting method:', error);
+            toast.error('No se pudo eliminar el método de pago');
         }
     };
 
@@ -370,6 +371,7 @@ export default function PaymentsPage() {
             }
         } catch (error) {
             console.error('Error toggling status:', error);
+            toast.error('No se pudo cambiar el estado del método');
         }
     };
 

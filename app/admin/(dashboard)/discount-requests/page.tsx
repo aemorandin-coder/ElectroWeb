@@ -64,6 +64,7 @@ export default function DiscountRequestsPage() {
             }
         } catch (error) {
             console.error('Error fetching requests:', error);
+            toast.error('No se pudieron cargar las solicitudes');
         } finally {
             setLoading(false);
         }

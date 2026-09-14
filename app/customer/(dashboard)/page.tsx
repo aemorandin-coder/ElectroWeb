@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -41,6 +42,7 @@ export default function CustomerDashboard() {
       }
     } catch (error) {
       console.error('Error fetching dashboard:', error);
+      toast.error('No se pudieron cargar los datos del panel');
     } finally {
       setLoading(false);
     }

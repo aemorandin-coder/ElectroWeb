@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import Link from 'next/link';
 import { FiX, FiEyeOff } from 'react-icons/fi';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 // Helper function to convert hex color to rgba
 function hexToRgba(hex: string, opacity: number): string {

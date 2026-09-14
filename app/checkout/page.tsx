@@ -16,6 +16,43 @@ import { FaMobileScreen } from 'react-icons/fa6';
 import { FaCheck } from 'react-icons/fa';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWallet } from '@fortawesome/free-solid-svg-icons';
+import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalculation, type PricingLine } from '@/lib/pricing';
+
+type CheckoutCartItem = ReturnType<typeof useCart>['items'][number];
+
+// Los productos digitales usan ids de carrito "productId-monto" o "productId-monto-usuario"
+function parseCartItemId(item: CheckoutCartItem): { productId: string; digitalAmount?: number } {
+  if (item.productType !== 'DIGITAL' || !item.id.includes('-')) return { productId: item.id };
+  const [productId, amount] = item.id.split('-');
+  const digitalAmount = Number(amount);
+  return Number.isFinite(digitalAmount) && digitalAmount > 0 ? { productId, digitalAmount } : { productId };
+}
+
+// Lo único que se envía al servidor por producto: el precio lo pone el servidor
+function toOrderItem(item: CheckoutCartItem) {
+  return {
+    ...parseCartItemId(item),
+    quantity: item.quantity,
+    digitalUsername: item.digitalUsername,
+  };
+}
+
+function buildShippingAddress(form: {
+  deliveryMethod: DeliveryMethod;
+  isOfficeDelivery: boolean;
+  courierService: string;
+  courierOfficeId: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingState: string;
+}): string {
+  if (form.deliveryMethod === 'PICKUP') return 'Retiro en tienda';
+  if (form.isOfficeDelivery) return `Oficina ${form.courierService}: ${form.courierOfficeId}`.trim();
+  return [form.shippingAddress, form.shippingCity, form.shippingState]
+    .map(part => part.trim())
+    .filter(Boolean)
+    .join(', ');
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -95,7 +132,6 @@ export default function CheckoutPage() {
 
   // Active Discounts
   const [activeDiscounts, setActiveDiscounts] = useState<any[]>([]);
-  const [appliedDiscountIds, setAppliedDiscountIds] = useState<string[]>([]);
 
   // Mobile Payment Verification State
   const [mobilePaymentVerified, setMobilePaymentVerified] = useState(false);
@@ -197,44 +233,6 @@ export default function CheckoutPage() {
     }
   }, [session]);
 
-  // Calculate totals with discounts
-  const { cartSubtotal, cartDiscount, cartTotal, discountIds } = useMemo(() => {
-    let sub = 0;
-    let disc = 0;
-    const ids: string[] = [];
-
-    items.forEach(item => {
-      const itemTotal = item.price * item.quantity;
-      sub += itemTotal;
-
-      const activeDiscount = activeDiscounts.find(d =>
-        d.productId === item.id &&
-        d.status === 'APPROVED' &&
-        d.expiresAt &&
-        new Date(d.expiresAt) > new Date()
-      );
-
-      if (activeDiscount) {
-        const discountVal = activeDiscount.approvedDiscount || activeDiscount.requestedDiscount;
-        const discountAmount = itemTotal * (discountVal / 100);
-        disc += discountAmount;
-        ids.push(activeDiscount.id);
-      }
-    });
-
-    return {
-      cartSubtotal: sub,
-      cartDiscount: disc,
-      cartTotal: sub - disc,
-      discountIds: ids
-    };
-  }, [items, activeDiscounts]);
-
-  // Update applied discount IDs state
-  useEffect(() => {
-    setAppliedDiscountIds(discountIds);
-  }, [discountIds]);
-
   const fetchBalance = async () => {
     try {
       const response = await fetch('/api/customer/balance');
@@ -274,148 +272,73 @@ export default function CheckoutPage() {
     }
   }, [status, router]);
 
-  // Calculate volumetric weight from dimensions (L x W x H in cm / 5000)
-  const calculateVolumetricWeight = (dimensions: string | undefined): number => {
-    if (!dimensions) return 0;
-    try {
-      const dims = typeof dimensions === 'string' ? JSON.parse(dimensions) : dimensions;
-      const { length = 0, width = 0, height = 0 } = dims;
-      // Volumetric weight formula: L × W × H / 5000 (standard for courier companies)
-      return (length * width * height) / 5000;
-    } catch {
-      return 0;
-    }
-  };
+  // Mismo cálculo que el servidor (lib/pricing.ts) con los datos del carrito, para mostrar al instante
+  const pricingLines = useMemo<PricingLine[]>(() => items.map(item => {
+    const { productId } = parseCartItemId(item);
+    const activeDiscount = activeDiscounts.find(d =>
+      d.productId === productId &&
+      d.status === 'APPROVED' &&
+      d.expiresAt &&
+      new Date(d.expiresAt) > new Date()
+    );
 
-  // Calculate shipping cost with detailed breakdown
-  interface ShippingBreakdown {
-    total: number;
-    packagingFee: number;
-    consolidatedCost: number;
-    bulkyCost: number;
-    totalWeight: number;
-    isFreeShipping: boolean;
-    consolidableItems: Array<{ name: string; quantity: number; weight: number; volumetricWeight: number; usedWeight: number }>;
-    bulkyItems: Array<{ name: string; quantity: number; cost: number }>;
-    digitalItems: Array<{ name: string; quantity: number }>;
-  }
-
-  const getShippingBreakdown = (): ShippingBreakdown => {
-    const breakdown: ShippingBreakdown = {
-      total: 0,
-      packagingFee: 0,
-      consolidatedCost: 0,
-      bulkyCost: 0,
-      totalWeight: 0,
-      isFreeShipping: false,
-      consolidableItems: [],
-      bulkyItems: [],
-      digitalItems: [],
+    return {
+      productId,
+      name: item.name,
+      productType: item.productType === 'DIGITAL' ? 'DIGITAL' : 'PHYSICAL',
+      unitPriceUSD: item.price,
+      quantity: item.quantity,
+      weightKg: item.weightKg ?? null,
+      dimensions: item.dimensions ?? null,
+      isConsolidable: item.isConsolidable !== false,
+      shippingCostUSD: item.shippingCost || 0,
+      discountPercent: activeDiscount ? (activeDiscount.approvedDiscount || activeDiscount.requestedDiscount) : 0,
     };
+  }), [items, activeDiscounts]);
 
-    // No shipping for pickup
-    if (formData.deliveryMethod === 'PICKUP') {
-      return breakdown;
-    }
+  const localCalculation = useMemo(
+    () => calculateOrder(pricingLines, toPricingSettings(companySettings), formData.deliveryMethod),
+    [pricingLines, companySettings, formData.deliveryMethod]
+  );
 
-    // Check if all items are digital - no shipping needed
-    const allDigital = items.every(item => item.productType === 'DIGITAL');
-    if (allDigital) {
-      items.forEach(item => {
-        breakdown.digitalItems.push({ name: item.name, quantity: item.quantity });
-      });
-      return breakdown;
-    }
+  // Cotización del servidor: es lo que realmente se cobra (precios y pesos actualizados).
+  // Se guarda con la clave del carrito para no mostrar una cotización vieja.
+  const quoteBody = useMemo(
+    () => JSON.stringify({ items: items.map(toOrderItem), deliveryMethod: formData.deliveryMethod }),
+    [items, formData.deliveryMethod]
+  );
+  const [serverQuote, setServerQuote] = useState<{ key: string; calculation: OrderCalculation } | null>(null);
 
-    // Get shipping config from company settings
-    const packagingFee = companySettings?.packagingFeeUSD ? Number(companySettings.packagingFeeUSD) : 2.50;
-    const shippingCostPerKg = companySettings?.shippingCostPerKg ? Number(companySettings.shippingCostPerKg) : 2;
-    const minConsolidatedShipping = companySettings?.minConsolidatedShipping ? Number(companySettings.minConsolidatedShipping) : 3;
-    const freeThreshold = companySettings?.freeDeliveryThresholdUSD ? Number(companySettings.freeDeliveryThresholdUSD) : null;
+  useEffect(() => {
+    if (status !== 'authenticated' || items.length === 0) return;
 
-    breakdown.packagingFee = packagingFee;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetch('/api/orders/quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: quoteBody,
+        signal: controller.signal,
+      })
+        .then(res => (res.ok ? res.json() : null))
+        .then(data => {
+          if (data?.calculation) setServerQuote({ key: quoteBody, calculation: data.calculation });
+        })
+        .catch(() => { });
+    }, 400);
 
-    // Check if order qualifies for free shipping
-    if (freeThreshold && cartSubtotal >= freeThreshold) {
-      breakdown.isFreeShipping = true;
-      breakdown.total = packagingFee; // Only charge packaging fee
-      items.forEach(item => {
-        if (item.productType === 'DIGITAL') {
-          breakdown.digitalItems.push({ name: item.name, quantity: item.quantity });
-        } else if (item.isConsolidable !== false) {
-          breakdown.consolidableItems.push({
-            name: item.name,
-            quantity: item.quantity,
-            weight: (item.weightKg || 0.1) * item.quantity,
-            volumetricWeight: 0,
-            usedWeight: 0
-          });
-        } else {
-          breakdown.bulkyItems.push({ name: item.name, quantity: item.quantity, cost: 0 });
-        }
-      });
-      return breakdown;
-    }
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [quoteBody, status, items.length]);
 
-    // Separate items by shipping type
-    let consolidatedWeight = 0;
-    let bulkyItemsShipping = 0;
-
-    items.forEach(item => {
-      // Digital products
-      if (item.productType === 'DIGITAL') {
-        breakdown.digitalItems.push({ name: item.name, quantity: item.quantity });
-        return;
-      }
-
-      // Physical products
-      if (item.isConsolidable !== false) {
-        // Consolidable: use the greater of real weight vs volumetric weight
-        const realWeight = (item.weightKg || 0.1) * item.quantity;
-        const volumetricWeight = calculateVolumetricWeight((item as any).dimensions) * item.quantity;
-        const usedWeight = Math.max(realWeight, volumetricWeight);
-
-        consolidatedWeight += usedWeight;
-        breakdown.consolidableItems.push({
-          name: item.name,
-          quantity: item.quantity,
-          weight: realWeight,
-          volumetricWeight: volumetricWeight,
-          usedWeight: usedWeight
-        });
-      } else {
-        // Non-consolidable (bulky): add fixed shipping cost
-        const itemShipping = (item.shippingCost || 0) * item.quantity;
-        bulkyItemsShipping += itemShipping;
-        breakdown.bulkyItems.push({
-          name: item.name,
-          quantity: item.quantity,
-          cost: itemShipping
-        });
-      }
-    });
-
-    // Calculate consolidated shipping (by weight)
-    let consolidatedShipping = 0;
-    if (consolidatedWeight > 0) {
-      consolidatedShipping = Math.max(consolidatedWeight * shippingCostPerKg, minConsolidatedShipping);
-    }
-
-    breakdown.consolidatedCost = Math.round(consolidatedShipping * 100) / 100;
-    breakdown.bulkyCost = Math.round(bulkyItemsShipping * 100) / 100;
-    breakdown.totalWeight = Math.round(consolidatedWeight * 100) / 100;
-    breakdown.total = Math.round((consolidatedShipping + bulkyItemsShipping + packagingFee) * 100) / 100;
-
-    return breakdown;
-  };
-
-  // Memoize the shipping breakdown
-  const shippingBreakdown = getShippingBreakdown();
-  const shippingCost = shippingBreakdown.total;
-
-  // Override finalTotal to include shipping
-  const finalOrderTotal = cartTotal + shippingCost;
-  const finalTotal = finalOrderTotal; // Keep variable name for compatibility with rest of file
+  const orderCalculation = serverQuote?.key === quoteBody ? serverQuote.calculation : localCalculation;
+  const cartSubtotal = orderCalculation.subtotalUSD;
+  const cartDiscount = orderCalculation.discountUSD;
+  const shippingBreakdown = orderCalculation.shipping;
+  const shippingCost = orderCalculation.shippingUSD;
+  const finalTotal = orderCalculation.totalUSD;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -472,163 +395,38 @@ export default function CheckoutPage() {
       await new Promise(resolve => setTimeout(resolve, 1500));
       setProcessingStep(1);
 
-      // Get exchange rates
-      const exchangeRateVES = companySettings?.exchangeRateVES || 1;
-      const exchangeRateEUR = companySettings?.exchangeRateEUR || 1;
-      const primaryCurrency = companySettings?.primaryCurrency || 'USD';
+      const hasPhysical = items.some(item => item.productType !== 'DIGITAL');
 
-      // SEPARATE ITEMS INTO PHYSICAL AND DIGITAL
-      const physicalItems = items.filter(item => item.productType !== 'DIGITAL');
-      const digitalItems = items.filter(item => item.productType === 'DIGITAL');
+      // Step 2: Confirming payment
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setProcessingStep(2);
 
-      const hasPhysical = physicalItems.length > 0;
-      const hasDigital = digitalItems.length > 0;
-
-      const createdOrders: Array<{ orderNumber: string; type: 'physical' | 'digital'; total: number; itemCount: number }> = [];
-
-      // CREATE ORDER FOR PHYSICAL PRODUCTS (if any)
-      if (hasPhysical) {
-        const physicalOrderItems = physicalItems.map(item => ({
-          productId: item.id,
-          productName: item.name,
-          productSku: item.id,
-          productImage: item.imageUrl || null,
-          pricePerUnit: item.price,
-          quantity: item.quantity,
-          subtotal: item.price * item.quantity,
-        }));
-
-        const physicalSubtotal = physicalItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const physicalDiscount = physicalItems.reduce((sum, item) => {
-          const discount = activeDiscounts.find(d =>
-            d.productId === item.id && d.status === 'APPROVED' && d.expiresAt && new Date(d.expiresAt) > new Date()
-          );
-          if (discount) {
-            const discountVal = discount.approvedDiscount || discount.requestedDiscount;
-            return sum + ((item.price * item.quantity) * (discountVal / 100));
-          }
-          return sum;
-        }, 0);
-        const physicalTotal = (physicalSubtotal - physicalDiscount) + shippingCost;
-
-        const physicalOrderData = {
-          currency: primaryCurrency,
-          subtotal: physicalSubtotal,
-          tax: 0,
-          shipping: shippingCost,
-          discount: physicalDiscount,
-          total: physicalTotal,
-          exchangeRateVES,
-          exchangeRateEUR,
-          paymentMethod: finalPaymentMethod,
+      // Una sola petición: el servidor recalcula precios, envío y total, y separa la orden
+      // física de la digital. expectedTotalUSD solo evita cobrar un total distinto al que se ve.
+      const orderResponse = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map(toOrderItem),
           deliveryMethod: formData.deliveryMethod,
-          items: physicalOrderItems,
-          notes: formData.notes ? `${formData.notes} [Productos Físicos]` : '[Productos Físicos]',
-          appliedDiscountIds: appliedDiscountIds.filter(id => physicalItems.some(item =>
-            activeDiscounts.find(d => d.id === id && d.productId === item.id)
-          )),
-          mobilePaymentData: mobilePaymentData || null,
-        };
-
-        // Step 2: Confirming payment
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setProcessingStep(2);
-
-        const physicalResponse = await fetch('/api/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(physicalOrderData),
-        });
-
-        if (!physicalResponse.ok) {
-          const data = await physicalResponse.json();
-          throw new Error(data.error || 'Error al crear la orden de productos físicos');
-        }
-
-        const physicalOrder = await physicalResponse.json();
-        createdOrders.push({
-          orderNumber: physicalOrder.orderNumber,
-          type: 'physical',
-          total: physicalTotal,
-          itemCount: physicalItems.length,
-        });
-      }
-
-      // CREATE ORDER FOR DIGITAL PRODUCTS (if any)
-      if (hasDigital) {
-        const digitalOrderItems = digitalItems.map(item => {
-          // For digital products, the cart ID has format: "productId-amount-username" or "productId-amount"
-          // We extract the original product ID robustly by splitting on '-'
-          const originalProductId = item.productType === 'DIGITAL' && item.id.includes('-')
-            ? item.id.split('-')[0]
-            : item.id;
-
-          const finalItemName = item.digitalUsername
-            ? `${item.name} [Recarga para: ${item.digitalUsername}]`
-            : item.name;
-
-          return {
-            productId: originalProductId,
-            productName: finalItemName,
-            productSku: originalProductId, // Use original ID as SKU too
-            productImage: item.imageUrl || null,
-            pricePerUnit: item.price,
-            quantity: item.quantity,
-            subtotal: item.price * item.quantity,
-          };
-        });
-
-        const digitalSubtotal = digitalItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const digitalDiscount = digitalItems.reduce((sum, item) => {
-          const discount = activeDiscounts.find(d =>
-            d.productId === item.id && d.status === 'APPROVED' && d.expiresAt && new Date(d.expiresAt) > new Date()
-          );
-          if (discount) {
-            const discountVal = discount.approvedDiscount || discount.requestedDiscount;
-            return sum + ((item.price * item.quantity) * (discountVal / 100));
-          }
-          return sum;
-        }, 0);
-        const digitalTotal = digitalSubtotal - digitalDiscount; // No shipping for digital
-
-        const digitalOrderData = {
-          currency: primaryCurrency,
-          subtotal: digitalSubtotal,
-          tax: 0,
-          shipping: 0, // No shipping for digital products
-          discount: digitalDiscount,
-          total: digitalTotal,
-          exchangeRateVES,
-          exchangeRateEUR,
+          shippingAddress: hasPhysical ? buildShippingAddress(formData) : '',
           paymentMethod: finalPaymentMethod,
-          deliveryMethod: 'DIGITAL', // Special delivery method for digital
-          items: digitalOrderItems,
-          notes: formData.notes ? `${formData.notes} [Productos Digitales]` : '[Productos Digitales]',
-          appliedDiscountIds: appliedDiscountIds.filter(id => digitalItems.some(item =>
-            activeDiscounts.find(d => d.id === id && d.productId === item.id)
-          )),
           mobilePaymentData: mobilePaymentData || null,
-        };
+          notes: formData.notes,
+          expectedTotalUSD: finalTotal,
+        }),
+      });
 
-        const digitalResponse = await fetch('/api/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(digitalOrderData),
-        });
+      const orderData = await orderResponse.json().catch(() => ({}));
 
-        if (!digitalResponse.ok) {
-          const data = await digitalResponse.json();
-          throw new Error(data.error || 'Error al crear la orden de productos digitales');
+      if (!orderResponse.ok) {
+        if (orderResponse.status === 409 && orderData.calculation) {
+          setServerQuote({ key: quoteBody, calculation: orderData.calculation });
         }
-
-        const digitalOrder = await digitalResponse.json();
-        createdOrders.push({
-          orderNumber: digitalOrder.orderNumber,
-          type: 'digital',
-          total: digitalTotal,
-          itemCount: digitalItems.length,
-        });
+        throw new Error(orderData.details?.join(' ') || orderData.error || 'Error al crear la orden');
       }
+
+      const createdOrders: Array<{ orderNumber: string }> = orderData.orders || [];
 
       // Step 3: Preparing order
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -655,7 +453,7 @@ export default function CheckoutPage() {
 
       // Build success URL with order data as query params
       const orderNumbers = createdOrders.map(o => o.orderNumber).join(',');
-      const total = createdOrders.reduce((sum, o) => sum + o.total, 0).toFixed(2);
+      const total = Number(orderData.totalUSD ?? finalTotal).toFixed(2);
       router.push(`/checkout/success?orders=${encodeURIComponent(orderNumbers)}&total=${total}`);
 
     } catch (err) {

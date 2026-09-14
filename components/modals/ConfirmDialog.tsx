@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { FiAlertTriangle, FiInfo, FiAlertCircle, FiX } from 'react-icons/fi';
 
 export interface ConfirmDialogProps {
@@ -24,6 +25,8 @@ export default function ConfirmDialog({
     onCancel,
     type = 'warning',
 }: ConfirmDialogProps) {
+    useBodyScrollLock(isOpen);
+
     // Close on ESC key
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -34,13 +37,10 @@ export default function ConfirmDialog({
 
         if (isOpen) {
             document.addEventListener('keydown', handleEscape);
-            // Prevent body scroll
-            document.body.style.overflow = 'hidden';
         }
 
         return () => {
             document.removeEventListener('keydown', handleEscape);
-            document.body.style.overflow = 'unset';
         };
     }, [isOpen, onCancel]);
 

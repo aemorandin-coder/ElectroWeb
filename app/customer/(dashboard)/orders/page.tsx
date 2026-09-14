@@ -6,6 +6,7 @@ import { FiPackage, FiClock, FiCheck, FiX, FiTruck, FiShoppingBag, FiEye, FiSear
 import { BsCardList } from 'react-icons/bs';
 import Link from 'next/link';
 import OrderTracking from '@/components/orders/OrderTracking';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatPaymentMethod } from '@/lib/format-helpers';
 
 interface OrderItem {
@@ -113,10 +114,7 @@ export default function OrdersPage() {
     return () => document.removeEventListener('keydown', handleEscapeKey);
   }, [handleEscapeKey]);
 
-  useEffect(() => {
-    document.body.style.overflow = showOrderDetails ? 'hidden' : 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [showOrderDetails]);
+  useBodyScrollLock(showOrderDetails);
 
   const fetchOrders = async () => {
     setLoading(true);

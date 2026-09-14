@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
 import PublicHeader from '@/components/public/PublicHeader';
 import ProductCarousel from '@/components/home/ProductCarousel';
 import VideoPlayer from '@/components/home/VideoPlayer';
@@ -21,20 +22,14 @@ export default async function Home() {
     prisma.product.findMany({
       where: { status: 'PUBLISHED', isFeatured: true },
       take: 8,
-      include: { category: true, brand: true },
+      include: publicProductInclude,
       orderBy: { createdAt: 'desc' },
     }),
     prisma.companySettings.findFirst(),
   ]);
 
-  const formattedProducts = featuredProducts.map(p => ({
-    ...p,
-    priceUSD: Number(p.priceUSD),
-    priceVES: p.priceVES ? Number(p.priceVES) : null,
-    weightKg: p.weightKg ? Number(p.weightKg) : null,
-    shippingCost: p.shippingCost ? Number(p.shippingCost) : null,
-    images: typeof p.images === 'string' ? JSON.parse(p.images) : p.images,
-  }));
+  // SEGURIDAD: al componente cliente solo llegan campos públicos
+  const formattedProducts = featuredProducts.map(toPublicProduct);
 
   const settings = companySettings ? JSON.parse(JSON.stringify(companySettings)) : null;
 

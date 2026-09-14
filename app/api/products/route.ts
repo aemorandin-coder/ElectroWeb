@@ -8,7 +8,11 @@ import { createNotification } from '@/lib/notifications';
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    // GET is public, but we might use session for user-specific logic later
+    // SEGURIDAD: listado interno (borradores y costo). La tienda usa /api/products/public.
+    const canManageProducts = isAuthorized(session, 'MANAGE_PRODUCTS');
+    if (!canManageProducts && !isAuthorized(session, 'MANAGE_CONTENT')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+    }
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
@@ -59,7 +63,8 @@ export async function GET(request: NextRequest) {
       priceUSD: safeNum(p.priceUSD) ?? 0,
       priceVES: safeNum(p.priceVES),
       compareAtPriceUSD: safeNum(p.compareAtPriceUSD),
-      costPerItem: safeNum(p.costPerItem),
+      // Marketing (MANAGE_CONTENT) no necesita el costo interno
+      costPerItem: canManageProducts ? safeNum(p.costPerItem) : null,
       weightKg: safeNum(p.weightKg),
       shippingCost: safeNum(p.shippingCost),
     }));

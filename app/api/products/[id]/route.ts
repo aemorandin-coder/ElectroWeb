@@ -11,8 +11,9 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    // SEGURIDAD: devuelve borradores y costPerItem, solo para quien administra productos
+    if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: session ? 403 : 401 });
     }
 
     const { id } = await params;

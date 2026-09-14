@@ -20,10 +20,9 @@ interface Product {
     priceUSD: number;
     images: string[];
     category: Category;
-    brand?: { name: string };
+    brand?: { name: string } | null;
     stock: number;
     isFeatured: boolean;
-    status: string;
 }
 
 export default function CategoryClient({

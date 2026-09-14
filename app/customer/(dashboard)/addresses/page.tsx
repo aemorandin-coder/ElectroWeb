@@ -1,4 +1,5 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -31,6 +32,7 @@ interface Address {
 }
 
 export default function AddressesPage() {
+  const { confirm } = useConfirm();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -126,7 +128,8 @@ export default function AddressesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta dirección?')) return;
+    const confirmed = await confirm({ title: 'Eliminar dirección', message: '¿Estás seguro de eliminar esta dirección?', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+    if (!confirmed) return;
 
     try {
       const response = await fetch(`/api/customer/addresses?id=${id}`, {

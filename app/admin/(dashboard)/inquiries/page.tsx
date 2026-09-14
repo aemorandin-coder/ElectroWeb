@@ -1,4 +1,5 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -52,6 +53,7 @@ interface SystemNotification {
 // ============== MAIN COMPONENT ==============
 
 export default function InquiriesPage() {
+    const { confirm } = useConfirm();
     const { data: session } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -127,7 +129,8 @@ export default function InquiriesPage() {
     };
 
     const handleDeleteMessage = async (id: string) => {
-        if (!confirm('¿Estás seguro de eliminar este mensaje?')) return;
+        const confirmed = await confirm({ title: 'Eliminar mensaje', message: '¿Estás seguro de eliminar este mensaje?', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`/api/contact?id=${id}`, {
@@ -227,7 +230,8 @@ export default function InquiriesPage() {
     };
 
     const handleDeleteRequest = async (id: string) => {
-        if (!confirm('¿Estás seguro de eliminar esta solicitud?')) return;
+        const confirmed = await confirm({ title: 'Eliminar solicitud', message: '¿Estás seguro de eliminar esta solicitud?', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`/api/product-requests?id=${id}`, {

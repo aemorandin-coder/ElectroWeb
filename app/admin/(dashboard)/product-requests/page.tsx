@@ -1,4 +1,5 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
@@ -20,6 +21,7 @@ interface ProductRequest {
 }
 
 export default function ProductRequestsPage() {
+  const { confirm } = useConfirm();
   const [requests, setRequests] = useState<ProductRequest[]>([]);
   const [filterStatus, setFilterStatus] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -78,7 +80,8 @@ export default function ProductRequestsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta solicitud?')) return;
+    const confirmed = await confirm({ title: 'Eliminar solicitud', message: '¿Estás seguro de eliminar esta solicitud?', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+    if (!confirmed) return;
 
     try {
       const response = await fetch(`/api/product-requests?id=${id}`, {

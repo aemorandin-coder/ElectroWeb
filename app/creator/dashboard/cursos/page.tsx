@@ -1,4 +1,5 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -19,6 +20,7 @@ type Course = {
 };
 
 export default function CreatorCoursesPage() {
+  const { confirm } = useConfirm();
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,8 @@ export default function CreatorCoursesPage() {
   }, []);
 
   async function handleDelete(id: string, title: string) {
-    if (!confirm(`¿Eliminar "${title}"? Esta acción no se puede deshacer.`)) return;
+    const confirmed = await confirm({ title: 'Eliminar curso', message: `¿Eliminar "${title}"? Esta acción no se puede deshacer.`, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+    if (!confirmed) return;
     setDeleting(id);
     try {
       await fetch(`/api/creator/courses/${id}`, { method: 'DELETE' });

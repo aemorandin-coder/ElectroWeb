@@ -1,4 +1,5 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
@@ -18,6 +19,7 @@ interface ContactMessage {
 }
 
 export default function MessagesPage() {
+    const { confirm } = useConfirm();
     const { data: session } = useSession();
     const [messages, setMessages] = useState<ContactMessage[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -67,7 +69,8 @@ export default function MessagesPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('¿Estás seguro de eliminar este mensaje?')) return;
+        const confirmed = await confirm({ title: 'Eliminar mensaje', message: '¿Estás seguro de eliminar este mensaje?', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`/api/contact?id=${id}`, {

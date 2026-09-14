@@ -89,7 +89,7 @@ function AnimatedCheck() {
 function Step({ n, text }: { n: number; text: string }) {
   return (
     <li className="flex items-start gap-3">
-      <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] text-white flex items-center justify-center text-xs font-black shadow-md">
+      <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] text-white flex items-center justify-center text-xs font-bold shadow-md">
         {n}
       </span>
       <span className="text-sm text-slate-600 leading-relaxed pt-0.5">{text}</span>
@@ -143,7 +143,7 @@ function CheckoutSuccessContent() {
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
 
               <AnimatedCheck />
-              <h1 className="text-3xl md:text-4xl font-black text-white mb-2 drop-shadow-lg">
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 drop-shadow-lg">
                 ¡Pedido Confirmado!
               </h1>
               <p className="text-green-100 text-base">
@@ -170,7 +170,7 @@ function CheckoutSuccessContent() {
                         onClick={() => copyOrder(num)}
                         className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#2a63cd]/5 to-[#1e4ba3]/5 rounded-xl border border-[#2a63cd]/20 hover:border-[#2a63cd]/40 group transition-all"
                       >
-                        <span className="text-xl font-black text-[#2a63cd] tracking-wider">
+                        <span className="text-xl font-bold text-[#2a63cd] tracking-wider">
                           #{num}
                         </span>
                         <span className="flex items-center gap-1.5 text-xs text-slate-400 group-hover:text-[#2a63cd] transition-colors">
@@ -203,7 +203,7 @@ function CheckoutSuccessContent() {
                     <span className="text-sm font-medium text-slate-500">Total pagado:</span>
                     <div className="flex items-baseline gap-1">
                       <span className="text-xs font-bold text-slate-400">USD</span>
-                      <span className="text-2xl font-black text-slate-800">{formatUSD(total)}</span>
+                      <span className="text-2xl font-bold text-slate-800">{formatUSD(total)}</span>
                     </div>
                   </div>
                 )}

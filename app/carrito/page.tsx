@@ -160,7 +160,7 @@ export default function CarritoPage() {
               </svg>
               <span className="text-sm font-bold text-white">Carrito de Compras</span>
               {items.length > 0 && (
-                <span className="px-2.5 py-1 bg-white text-[#2a63cd] rounded-full text-xs font-black animate-bounce-subtle">
+                <span className="px-2.5 py-1 bg-white text-[#2a63cd] rounded-full text-xs font-bold animate-bounce-subtle">
                   {items.length}
                 </span>
               )}
@@ -169,7 +169,7 @@ export default function CarritoPage() {
 
           {/* Title */}
           <div className="animate-slideUp">
-            <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               Tu Carrito
             </h1>
             <p className="text-blue-100 text-sm">
@@ -193,7 +193,7 @@ export default function CarritoPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
-                  <span className="text-[10px] sm:text-xs font-black text-cyan-200 uppercase tracking-wide">1. Carrito</span>
+                  <span className="text-xs font-bold text-cyan-200 uppercase tracking-wide">1. Carrito</span>
                 </div>
 
                 {/* Step 2: Checkout (Inactive) */}
@@ -203,7 +203,7 @@ export default function CarritoPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
-                  <span className="text-[10px] sm:text-xs font-bold text-white/50 uppercase tracking-wide">2. Pago</span>
+                  <span className="text-xs font-bold text-white/50 uppercase tracking-wide">2. Pago</span>
                 </div>
 
                 {/* Step 3: Confirmación (Inactive) */}
@@ -213,7 +213,7 @@ export default function CarritoPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <span className="text-[10px] sm:text-xs font-bold text-white/50 uppercase tracking-wide">3. ¡Listo!</span>
+                  <span className="text-xs font-bold text-white/50 uppercase tracking-wide">3. ¡Listo!</span>
                 </div>
               </div>
             </div>
@@ -325,11 +325,11 @@ export default function CarritoPage() {
                                 <div className="relative w-full h-full p-2 flex flex-col justify-between">
                                   <div className="flex items-center gap-1">
                                     <div className="w-5 h-5 rounded flex items-center justify-center" style={{ background: `${design.accent}30` }}>
-                                      <span className="text-[8px] font-black text-white">ES</span>
+                                      <span className="text-[11px] font-bold text-white">ES</span>
                                     </div>
                                   </div>
                                   <div className="text-center py-1 rounded" style={{ background: `${design.accent}20` }}>
-                                    <span className="text-[10px] font-black tracking-widest" style={{ color: design.accent, textShadow: `0 0 10px ${design.accent}80` }}>
+                                    <span className="text-xs font-bold tracking-widest" style={{ color: design.accent, textShadow: `0 0 10px ${design.accent}80` }}>
                                       GIFT CARD
                                     </span>
                                   </div>
@@ -398,18 +398,18 @@ export default function CarritoPage() {
                           <div className="space-y-1">
                             <div className="flex items-baseline gap-1.5">
                               <span className="text-xs font-bold text-slate-400">USD</span>
-                              <span className="text-2xl font-black text-slate-800">
+                              <span className="text-2xl font-bold text-slate-800">
                                 {formatPriceUSD(item.price)}
                               </span>
                               <span className="text-xs text-slate-400">c/u</span>
                             </div>
                             {settings?.exchangeRateVES && (
                               <div className="flex items-baseline gap-1.5 animate-fadeIn">
-                                <span className="text-[10px] font-bold text-[#2a63cd]">Bs.</span>
+                                <span className="text-xs font-bold text-[#2a63cd]">Bs.</span>
                                 <span className="text-sm font-bold text-[#2a63cd]">
                                   {formatPriceVES(item.price)}
                                 </span>
-                                <span className="text-[10px] text-slate-400">ref.</span>
+                                <span className="text-xs text-slate-400">ref.</span>
                               </div>
                             )}
                           </div>
@@ -460,7 +460,7 @@ export default function CarritoPage() {
                                     </svg>
                                   </button>
                                   {item.quantity >= item.stock && (
-                                    <span className="text-[10px] text-amber-600 font-medium">Máx</span>
+                                    <span className="text-xs text-amber-600 font-medium">Máx</span>
                                   )}
                                 </div>
                               );
@@ -472,13 +472,13 @@ export default function CarritoPage() {
                             <div className="text-right">
                               <div className="flex items-baseline gap-1 justify-end">
                                 <span className="text-xs font-bold text-slate-400">USD</span>
-                                <span className="text-lg font-black text-slate-800">
+                                <span className="text-lg font-bold text-slate-800">
                                   {formatPriceUSD(item.price * item.quantity)}
                                 </span>
                               </div>
                               {settings?.exchangeRateVES && (
                                 <div className="flex items-baseline gap-1 justify-end">
-                                  <span className="text-[10px] font-bold text-[#2a63cd]">Bs.</span>
+                                  <span className="text-xs font-bold text-[#2a63cd]">Bs.</span>
                                   <span className="text-xs font-bold text-[#2a63cd]">
                                     {formatPriceVES(item.price * item.quantity)}
                                   </span>
@@ -558,7 +558,7 @@ export default function CarritoPage() {
                         <div className="text-right">
                           <div className="flex items-baseline gap-1 justify-end">
                             <span className="text-sm font-bold text-slate-400">USD</span>
-                            <span className="text-3xl font-black text-slate-800">{formatPriceUSD(total)}</span>
+                            <span className="text-3xl font-bold text-slate-800">{formatPriceUSD(total)}</span>
                           </div>
                           {settings?.exchangeRateVES && (
                             <div className="mt-1 px-3 py-1 bg-[#2a63cd]/10 rounded-lg inline-block">
@@ -617,8 +617,8 @@ export default function CarritoPage() {
                   <div className="flex items-center justify-between">
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Envíos Asegurados</h3>
                     <div className="flex gap-2">
-                      <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[9px] font-black">ZOOM</span>
-                      <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[9px] font-black">MRW</span>
+                      <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[11px] font-bold">ZOOM</span>
+                      <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[11px] font-bold">MRW</span>
                     </div>
                   </div>
                   <div className="space-y-3">

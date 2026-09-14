@@ -718,7 +718,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Title */}
-            <h2 className="text-3xl font-black text-white text-center mb-3 font-[family-name:var(--font-tektur)]">
+            <h2 className="text-3xl font-bold text-white text-center mb-3 font-[family-name:var(--font-tektur)]">
               ¡Un momento!
             </h2>
 
@@ -767,7 +767,7 @@ export default function CheckoutPage() {
           <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-black text-white mb-2 animate-fadeInUp">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 animate-fadeInUp">
             Finalizar Compra
           </h1>
           <p className="text-base text-blue-100 animate-fadeInUp animation-delay-200">
@@ -994,7 +994,7 @@ export default function CheckoutPage() {
                               <FiMapPin className="w-6 h-6 text-white" />
                             </div>
                             <div className="flex-1">
-                              <h4 className="font-black text-orange-900 text-sm mb-1 flex items-center gap-2">
+                              <h4 className="font-bold text-orange-900 text-sm mb-1 flex items-center gap-2">
                                 <FiMapPin className="w-4 h-4" />
                                 Ayuda de Google Maps
                               </h4>
@@ -1006,19 +1006,19 @@ export default function CheckoutPage() {
 
                           <div className="space-y-2 mb-3">
                             <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-black text-orange-600 flex-shrink-0">1.</span>
+                              <span className="font-bold text-orange-600 flex-shrink-0">1.</span>
                               <p>Abre <strong>Google Maps</strong> en otra pestaña</p>
                             </div>
                             <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-black text-orange-600 flex-shrink-0">2.</span>
+                              <span className="font-bold text-orange-600 flex-shrink-0">2.</span>
                               <p>Busca tu ubicación y haz clic derecho en el mapa</p>
                             </div>
                             <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-black text-orange-600 flex-shrink-0">3.</span>
+                              <span className="font-bold text-orange-600 flex-shrink-0">3.</span>
                               <p>Copia la dirección que aparece</p>
                             </div>
                             <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-black text-orange-600 flex-shrink-0">4.</span>
+                              <span className="font-bold text-orange-600 flex-shrink-0">4.</span>
                               <p>Haz clic en el botón de abajo para pegarla automáticamente</p>
                             </div>
                           </div>
@@ -1381,7 +1381,7 @@ export default function CheckoutPage() {
                               </div>
                               <div className="text-center py-4">
                                 <p className="text-sm text-gray-500 mb-1">Saldo disponible</p>
-                                <p className="text-4xl font-black text-green-600">
+                                <p className="text-4xl font-bold text-green-600">
                                   ${giftCardInfo.balanceUSD.toFixed(2)}
                                 </p>
                                 <p className="text-sm text-gray-500">USD</p>
@@ -1457,14 +1457,14 @@ export default function CheckoutPage() {
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                                   <FiCheck className="w-8 h-8 text-amber-600 mb-1" />
-                                  <span className="text-lg font-black text-amber-700">100%</span>
+                                  <span className="text-lg font-bold text-amber-700">100%</span>
                                 </div>
                               </div>
 
                               {/* Balance Info */}
                               <div className="flex-1 text-center md:text-left">
                                 <p className="text-sm text-amber-600 mb-1">Tu saldo disponible</p>
-                                <p className="text-3xl md:text-4xl font-black text-amber-700 mb-3">
+                                <p className="text-3xl md:text-4xl font-bold text-amber-700 mb-3">
                                   USD {userBalance.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$
                                 </p>
 
@@ -1599,7 +1599,7 @@ export default function CheckoutPage() {
                       {/* Balance Info */}
                       <div className="flex-1 text-center md:text-left">
                         <p className="text-sm text-[#6a6c6b] font-medium mb-1">Tu saldo disponible</p>
-                        <p className="text-4xl font-black text-[#212529] mb-3 tracking-tight">
+                        <p className="text-4xl font-bold text-[#212529] mb-3 tracking-tight">
                           {formatPrice(userBalance)}
                         </p>
 
@@ -1789,7 +1789,7 @@ export default function CheckoutPage() {
                   {(session?.user as any)?.emailVerified && (
                     <div className="flex items-center gap-1.5 px-2 py-1 bg-green-100 border border-green-300 rounded-full">
                       <FiCheckCircle className="w-3 h-3 text-green-700" />
-                      <span className="text-[10px] font-bold text-green-700">Verificado</span>
+                      <span className="text-xs font-bold text-green-700">Verificado</span>
                     </div>
                   )}
                 </div>
@@ -1797,7 +1797,7 @@ export default function CheckoutPage() {
                 <div className="space-y-3">
                   {/* Name */}
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Nombre</label>
+                    <label className="block text-xs font-semibold text-[#6a6c6b] uppercase mb-1">Nombre</label>
                     <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
                       <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
                       <span className="text-sm text-[#212529] font-medium truncate">{formData.customerName}</span>
@@ -1806,7 +1806,7 @@ export default function CheckoutPage() {
 
                   {/* Email */}
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Email</label>
+                    <label className="block text-xs font-semibold text-[#6a6c6b] uppercase mb-1">Email</label>
                     <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
                       <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
                       <span className="text-sm text-[#212529] font-medium truncate">{formData.customerEmail}</span>
@@ -1815,7 +1815,7 @@ export default function CheckoutPage() {
 
                   {/* Phone */}
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Teléfono</label>
+                    <label className="block text-xs font-semibold text-[#6a6c6b] uppercase mb-1">Teléfono</label>
                     <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
                       <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
                       <span className="text-sm text-[#212529] font-medium">{formData.customerPhone || 'No registrado'}</span>
@@ -1824,7 +1824,7 @@ export default function CheckoutPage() {
 
                   {/* ID */}
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Cédula</label>
+                    <label className="block text-xs font-semibold text-[#6a6c6b] uppercase mb-1">Cédula</label>
                     <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
                       <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
                       <span className="text-sm text-[#212529] font-medium">{formData.customerIdNumber || 'No registrado'}</span>
@@ -1899,7 +1899,7 @@ export default function CheckoutPage() {
                               <div className="text-right">
                                 {activeDiscount ? (
                                   <div className="flex flex-col items-end">
-                                    <span className="text-[10px] text-slate-400 line-through">{formatPrice(originalTotal)}</span>
+                                    <span className="text-xs text-slate-400 line-through">{formatPrice(originalTotal)}</span>
                                     <span className="text-sm font-bold text-green-600">{formatPrice(finalItemTotal)}</span>
                                   </div>
                                 ) : (
@@ -1998,7 +1998,7 @@ export default function CheckoutPage() {
                       {/* Shipping Breakdown Details (expandable) */}
                       {shippingCost > 0 && formData.deliveryMethod !== 'PICKUP' && (
                         <details className="group">
-                          <summary className="text-[10px] text-[#2a63cd] font-medium cursor-pointer hover:text-[#1e4ba3] flex items-center gap-1">
+                          <summary className="text-xs text-[#2a63cd] font-medium cursor-pointer hover:text-[#1e4ba3] flex items-center gap-1">
                             <svg className="w-3 h-3 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
@@ -2098,7 +2098,7 @@ export default function CheckoutPage() {
 
                             {/* Volumetric weight note */}
                             {shippingBreakdown.consolidableItems.some(item => item.volumetricWeight > item.weight) && (
-                              <div className="text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded flex items-start gap-1">
+                              <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded flex items-start gap-1">
                                 <span className="font-bold">*</span>
                                 <span>Se usó peso volumétrico (L×A×H÷5000) por ser mayor al peso real.</span>
                               </div>
@@ -2115,7 +2115,7 @@ export default function CheckoutPage() {
                         <div className="text-right">
                           <div className="flex items-baseline gap-1 justify-end">
                             <span className="text-sm font-bold text-slate-400">USD</span>
-                            <span className="text-3xl font-black text-slate-800">{formatNumber(finalTotal)}$</span>
+                            <span className="text-3xl font-bold text-slate-800">{formatNumber(finalTotal)}$</span>
                           </div>
                           {companySettings?.exchangeRateVES && (
                             <div className="mt-1 px-3 py-1 bg-[#2a63cd]/10 rounded-lg inline-block">
@@ -2130,7 +2130,7 @@ export default function CheckoutPage() {
 
                     {/* Exchange Rate Note */}
                     {companySettings?.exchangeRateVES && (
-                      <div className="text-[10px] text-slate-400 text-center pt-2">
+                      <div className="text-xs text-slate-400 text-center pt-2">
                         Tasa de cambio: 1 USD = Bs. {Number(companySettings.exchangeRateVES).toFixed(2)}
                       </div>
                     )}
@@ -2156,8 +2156,8 @@ export default function CheckoutPage() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Envíos Asegurados</h3>
                   <div className="flex gap-2">
-                    <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[9px] font-black">ZOOM</span>
-                    <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[9px] font-black">MRW</span>
+                    <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[11px] font-bold">ZOOM</span>
+                    <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[11px] font-bold">MRW</span>
                   </div>
                 </div>
                 <div className="space-y-3">

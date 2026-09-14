@@ -330,7 +330,7 @@ export default function CheckoutPagoMovilForm({
                         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
                             <div className="flex items-center justify-center gap-2 mb-1">
                                 <FiPhone className="w-3.5 h-3.5 text-blue-200" />
-                                <span className="text-[10px] font-medium text-blue-200 uppercase">Teléfono</span>
+                                <span className="text-xs font-medium text-blue-200 uppercase">Teléfono</span>
                             </div>
                             <p className="text-base font-bold text-white tracking-wide">{datosComercio.telefono || '-'}</p>
                         </div>
@@ -339,7 +339,7 @@ export default function CheckoutPagoMovilForm({
                         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
                             <div className="flex items-center justify-center gap-2 mb-1">
                                 <FiCreditCard className="w-3.5 h-3.5 text-blue-200" />
-                                <span className="text-[10px] font-medium text-blue-200 uppercase">CI/RIF</span>
+                                <span className="text-xs font-medium text-blue-200 uppercase">CI/RIF</span>
                             </div>
                             <p className="text-base font-bold text-white tracking-wide">{datosComercio.cedula || '-'}</p>
                         </div>
@@ -350,7 +350,7 @@ export default function CheckoutPagoMovilForm({
                                 <svg className="w-3.5 h-3.5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
-                                <span className="text-[10px] font-medium text-blue-200 uppercase">Banco</span>
+                                <span className="text-xs font-medium text-blue-200 uppercase">Banco</span>
                             </div>
                             <p className="text-sm font-bold text-white leading-tight">{(datosComercio.banco || 'BDV').replace('Banco de ', '')}</p>
                         </div>
@@ -363,7 +363,7 @@ export default function CheckoutPagoMovilForm({
                         >
                             <div className="flex items-center justify-center gap-2 mb-1">
                                 <HiOutlineQrcode className="w-3.5 h-3.5 text-blue-200" />
-                                <span className="text-[10px] font-medium text-blue-200 uppercase">Código QR</span>
+                                <span className="text-xs font-medium text-blue-200 uppercase">Código QR</span>
                             </div>
                             <p className="text-sm font-bold text-white group-hover:text-blue-200 transition-colors flex items-center justify-center gap-1">
                                 Ver QR
@@ -379,15 +379,15 @@ export default function CheckoutPagoMovilForm({
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                                    <span className="text-xl font-black text-white">Bs</span>
+                                    <span className="text-xl font-bold text-white">Bs</span>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-medium text-orange-100 uppercase">Monto a transferir</p>
-                                    <p className="text-2xl font-black text-white tracking-tight">{montoEnBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                    <p className="text-xs font-medium text-orange-100 uppercase">Monto a transferir</p>
+                                    <p className="text-2xl font-bold text-white tracking-tight">{montoEnBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-medium text-orange-100 uppercase">Equivalente</p>
+                                <p className="text-xs font-medium text-orange-100 uppercase">Equivalente</p>
                                 <p className="text-lg font-bold text-white">${montoEsperado.toFixed(2)}</p>
                             </div>
                         </div>
@@ -416,7 +416,7 @@ export default function CheckoutPagoMovilForm({
                             className="w-full pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
                     </div>
-                    <p className="text-[10px] text-[#6a6c6b] mt-1">Cédula del titular de la cuenta</p>
+                    <p className="text-xs text-[#6a6c6b] mt-1">Cédula del titular de la cuenta</p>
                 </div>
 
                 {/* Teléfono del pagador */}
@@ -512,7 +512,7 @@ export default function CheckoutPagoMovilForm({
                             className="w-full pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
                     </div>
-                    <p className="text-[10px] text-[#6a6c6b] mt-1">4 a 8 dígitos numéricos</p>
+                    <p className="text-xs text-[#6a6c6b] mt-1">4 a 8 dígitos numéricos</p>
                 </div>
 
                 {/* Fecha del pago */}
@@ -629,7 +629,7 @@ export default function CheckoutPagoMovilForm({
                                             : 'Verificación Fallida'}
                                 </h4>
                                 {resultado.code && !resultado.verified && (
-                                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">
+                                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">
                                         Código: {resultado.code}
                                     </span>
                                 )}
@@ -681,7 +681,7 @@ export default function CheckoutPagoMovilForm({
                 )}
             </button>
 
-            <p className="text-[10px] text-center text-[#6a6c6b]">
+            <p className="text-xs text-center text-[#6a6c6b]">
                 La verificacion se realiza en tiempo real. No podras continuar sin verificar el pago.
             </p>
 

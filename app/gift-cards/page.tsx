@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
@@ -1084,7 +1085,7 @@ export default function GiftCardsPage() {
                             <div className="flex justify-between mb-1">
                                 <span className="text-gray-600 text-sm">Gift Card</span>
                                 <div className="text-right">
-                                    <span className="font-bold text-gray-900">${finalAmount.toFixed(2)}</span>
+                                    <span className="font-bold text-gray-900">{formatUSD(finalAmount)}</span>
                                     {finalAmountBs && (
                                         <p className="text-xs text-gray-500">≈ Bs. {finalAmountBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                     )}
@@ -1094,7 +1095,7 @@ export default function GiftCardsPage() {
                                 <div className="flex justify-between pt-2 border-t border-gray-200">
                                     <span className="text-gray-600 text-sm">Tu saldo</span>
                                     <span className={`font-bold text-sm ${canPayWithBalance ? 'text-green-600' : 'text-amber-600'}`}>
-                                        ${(typeof userBalance === 'number' ? userBalance : 0).toFixed(2)}
+                                        {formatUSD(typeof userBalance === 'number' ? userBalance : 0)}
                                     </span>
                                 </div>
                             )}
@@ -1208,7 +1209,7 @@ export default function GiftCardsPage() {
                         <p className="text-gray-600 mb-6">
                             El email <strong>{recipientEmail}</strong> no está registrado en Electro Shop.
                             <br /><br />
-                            ¿Quieres enviarle una invitación para que cree su cuenta y pueda recibir tu regalo de <strong>${finalAmount.toFixed(2)}</strong>?
+                            ¿Quieres enviarle una invitación para que cree su cuenta y pueda recibir tu regalo de <strong>{formatUSD(finalAmount)}</strong>?
                         </p>
 
                         <div className="flex flex-col gap-3">

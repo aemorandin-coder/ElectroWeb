@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -644,7 +645,7 @@ export default function OrdersPage() {
                         <p className="text-xs font-medium text-ink truncate">{item.productName}</p>
                         <p className="text-xs text-muted">x{item.quantity}</p>
                       </div>
-                      <p className="text-xs font-bold text-brand-500">${item.totalUSD.toFixed(2)}</p>
+                      <p className="text-xs font-bold text-brand-500">{formatUSD(item.totalUSD)}</p>
                     </div>
                   ))}
                 </div>
@@ -658,7 +659,7 @@ export default function OrdersPage() {
                   </span>
                   <div className="bg-brand-500 text-white px-3 py-1.5 rounded-lg">
                     <p className="text-[11px] opacity-70">Total</p>
-                    <p className="text-base font-bold">USD {selectedOrder.totalUSD.toFixed(2)}</p>
+                    <p className="text-base font-bold">{formatUSD(selectedOrder.totalUSD)}</p>
                   </div>
                 </div>
                 <button

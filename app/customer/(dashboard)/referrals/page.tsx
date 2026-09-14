@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
 
 import { useState, useEffect, Fragment } from 'react';
 import {
@@ -392,21 +393,21 @@ export default function ReferralsPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <StatCard
                     label="Pendiente"
-                    value={`$${stats.pendingEarnings.toFixed(2)}`}
+                    value={formatUSD(stats.pendingEarnings)}
                     Icon={FiClock}
                     color="text-yellow-600"
                     bg="bg-yellow-50"
                 />
                 <StatCard
                     label="Aprobado"
-                    value={`$${stats.approvedEarnings.toFixed(2)}`}
+                    value={formatUSD(stats.approvedEarnings)}
                     Icon={FiCheckCircle}
                     color="text-green-600"
                     bg="bg-green-50"
                 />
                 <StatCard
                     label="Este mes"
-                    value={`$${stats.thisMonthEarnings.toFixed(2)}`}
+                    value={formatUSD(stats.thisMonthEarnings)}
                     Icon={FiTrendingUp}
                     color="text-blue-600"
                     bg="bg-blue-50"
@@ -656,7 +657,7 @@ export default function ReferralsPage() {
                                                 </td>
                                                 <td className="px-3 py-2.5 text-right">
                                                     <span className="text-xs font-semibold text-ink">
-                                                        ${conv.commission.toFixed(2)}
+                                                        {formatUSD(conv.commission)}
                                                     </span>
                                                 </td>
                                                 <td className="px-3 py-2.5 text-center">
@@ -732,7 +733,7 @@ export default function ReferralsPage() {
                                         </p>
                                     </div>
                                     <span className="text-sm font-bold text-brand-500">
-                                        ${entry.totalEarnings.toFixed(2)}
+                                        {formatUSD(entry.totalEarnings)}
                                     </span>
                                 </div>
                             ))}

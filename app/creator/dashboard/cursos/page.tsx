@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
@@ -108,7 +109,7 @@ export default function CreatorCoursesPage() {
                     <span>{course.rating?.toFixed(1) ?? '—'} ({course._count.reviews} reseñas)</span>
                     <span>{course.totalLessons} lecciones</span>
                     <span>{course._count.modules} módulos</span>
-                    <span className="text-white/80 font-bold">${course.priceUSD.toFixed(2)}</span>
+                    <span className="text-white/80 font-bold">{formatUSD(course.priceUSD)}</span>
                   </div>
                 </div>
 

@@ -17,13 +17,14 @@ export default function DigitalStrip() {
   return (
     <section aria-labelledby="digital-title" className="bg-white py-6 lg:py-8">
       <Container>
-        <div className="rounded-2xl bg-brand-950 p-4 lg:p-6">
+        {/* Mismos azules de la marca que la franja del header */}
+        <div className="rounded-2xl bg-gradient-to-r from-brand-700 via-brand-600 to-brand-500 p-4 lg:p-6">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
             <div>
               <h2 id="digital-title" className="text-xl font-bold text-white lg:text-2xl">Gift cards y saldo digital</h2>
               <p className="mt-1 text-sm text-white/80">Códigos para tus plataformas favoritas</p>
             </div>
-            <Link href="/gift-cards" className="text-sm font-semibold text-accent hover:text-white">
+            <Link href="/gift-cards" className="rounded-md text-sm font-semibold text-white underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-white">
               Ver gift cards <span aria-hidden="true">→</span>
             </Link>
           </div>
@@ -32,7 +33,7 @@ export default function DigitalStrip() {
               <li key={name} className="shrink-0">
                 <Link
                   href={href}
-                  className="flex h-12 items-center gap-2 whitespace-nowrap rounded-xl bg-white/10 px-4 text-sm font-semibold text-white hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-white lg:justify-center"
+                  className="flex h-12 items-center gap-2 whitespace-nowrap rounded-xl bg-white px-4 text-sm font-semibold text-brand-700 shadow-sm hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:justify-center"
                 >
                   <Icon className="h-5 w-5" aria-hidden="true" />
                   {name}

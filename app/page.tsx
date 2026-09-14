@@ -14,6 +14,7 @@ import Container from '@/components/ui/Container';
 import SectionHeader from '@/components/ui/SectionHeader';
 import type { PublicProduct } from '@/lib/dto/product';
 import {
+  getActivePaymentMethodKinds,
   getBestSellers,
   getCategoriesRail,
   getDeals,
@@ -41,7 +42,7 @@ function uniqueById(products: PublicProduct[]): PublicProduct[] {
  * Todo se renderiza en el servidor; solo carrito, compartir y buscador son cliente.
  */
 export default async function Home() {
-  const [settings, homeSettings, featured, deals, bestSellers, newArrivals, topCategories] = await Promise.all([
+  const [settings, homeSettings, featured, deals, bestSellers, newArrivals, topCategories, paymentMethods] = await Promise.all([
     getPublicSettings(),
     getHomeSettings(),
     getFeatured(),
@@ -49,6 +50,7 @@ export default async function Home() {
     getBestSellers(90, 12),
     getNewArrivals(12),
     getTopCategoriesWithProducts(3, 10),
+    getActivePaymentMethodKinds(),
   ]);
   const railCategories = homeSettings.showCategories ? await getCategoriesRail(homeSettings.maxCategoriesDisplay) : [];
 
@@ -107,7 +109,7 @@ export default async function Home() {
           />
         ))}
 
-        <TrustBar whatsapp={settings.whatsapp} />
+        <TrustBar whatsapp={settings.whatsapp} paymentMethods={paymentMethods} />
 
         <MoreFromElectroShop />
 

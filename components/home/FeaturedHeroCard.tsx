@@ -13,8 +13,9 @@ interface FeaturedHeroCardProps {
 }
 
 /**
- * Producto estrella de la vitrina (solo desktop). Toma la altura de la fila de al lado:
- * en lg la imagen va arriba y ocupa el alto sobrante; desde xl, imagen a la izquierda y datos a la derecha.
+ * Producto estrella de la vitrina (desde xl). Toma la altura de la fila de al lado.
+ * La imagen ocupa más de la mitad de la tarjeta y se ajusta con object-contain,
+ * así cualquier proporción (alta, ancha o cuadrada) llena su espacio sin recortarse.
  */
 export default function FeaturedHeroCard({ product, exchangeRateVES, lowStockThreshold }: FeaturedHeroCardProps) {
   const image = product.mainImage || product.images?.[0] || '/images/no-image.png';
@@ -24,9 +25,9 @@ export default function FeaturedHeroCard({ product, exchangeRateVES, lowStockThr
   const stockLabel = getStockLabel(product, lowStockThreshold);
 
   return (
-    <article className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition-shadow hover:shadow-md xl:flex-row">
-      <div className="relative min-h-48 flex-1 bg-white xl:min-h-80 xl:w-1/2 xl:flex-none">
-        <Image src={image} alt={product.name} fill priority sizes="(min-width: 1280px) 300px, 390px" className="object-contain p-4 xl:p-6" />
+    <article className="relative flex h-full min-h-96 overflow-hidden rounded-2xl border border-line bg-white transition-shadow hover:shadow-md">
+      <div className="relative w-[55%] shrink-0 bg-white">
+        <Image src={image} alt={product.name} fill priority sizes="360px" className="object-contain p-3" />
         {badges.length > 0 && (
           <div className="absolute left-3 top-3 flex flex-wrap gap-1">
             {badges.map((badge) => (
@@ -35,20 +36,20 @@ export default function FeaturedHeroCard({ product, exchangeRateVES, lowStockThr
           </div>
         )}
       </div>
-      <div className="flex min-w-0 flex-col gap-2 p-5 xl:flex-1 xl:justify-center xl:gap-3 xl:p-6">
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-3 py-5 pl-2 pr-5">
         {meta && <p className="truncate text-xs font-medium text-muted">{meta}</p>}
-        <h3 className="text-xl font-semibold text-ink xl:text-2xl">
+        <h3 className="text-xl font-semibold text-ink">
           <Link
             href={href}
-            className="line-clamp-2 after:absolute after:inset-0 after:content-[''] hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-brand-500 xl:line-clamp-3"
+            className="line-clamp-3 after:absolute after:inset-0 after:content-[''] hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-brand-500"
           >
             {product.name}
           </Link>
         </h3>
         <Price priceUSD={product.priceUSD} compareAtPriceUSD={product.compareAtPriceUSD} exchangeRateVES={exchangeRateVES} size="lg" />
         {stockLabel && <p className={`text-xs font-medium ${stockLabel.className}`}>{stockLabel.text}</p>}
-        <div className="flex items-center gap-3 pt-1">
-          <div className="min-w-0 flex-1 xl:max-w-60">
+        <div className="flex items-center gap-2 pt-1">
+          <div className="min-w-0 flex-1">
             <AddToCartButton product={product} />
           </div>
           <ShareButton path={product.shortCode ? `/p/${product.shortCode}` : href} title={product.name} />

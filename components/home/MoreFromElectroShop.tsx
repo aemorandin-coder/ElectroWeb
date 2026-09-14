@@ -29,7 +29,7 @@ export default function MoreFromElectroShop() {
                 <span className="min-w-0">
                   <span className="block text-lg font-semibold">{title}</span>
                   <span className="block text-sm text-white/80">{text}</span>
-                  <span className="mt-1 block text-sm font-semibold text-accent">Ver más <span aria-hidden="true">→</span></span>
+                  <span className="mt-1 block text-sm font-semibold text-white underline underline-offset-4">Ver más <span aria-hidden="true">→</span></span>
                 </span>
               </Link>
             </li>

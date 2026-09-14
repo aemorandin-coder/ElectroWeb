@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import FeaturedHeroCard from '@/components/home/FeaturedHeroCard';
 import Container from '@/components/ui/Container';
 import Price from '@/components/ui/Price';
 import ProductBadge from '@/components/ui/ProductBadge';
@@ -19,6 +20,19 @@ const SAMPLE: ProductCardData[] = [
   { id: 'd3', name: 'Gift Card Steam', slug: 'steam', priceUSD: 11, stock: 0, images: [], category: { name: 'Gift Cards' }, createdAt: daysAgo(90), productType: 'DIGITAL', specs: { digitalPricing: [{ amount: 10, salePrice: 11 }] } },
   { id: 'd4', name: 'Monitor Samsung 24" 75Hz', slug: 'monitor', priceUSD: 149, compareAtPriceUSD: 179, stock: 0, images: [], category: { name: 'Monitores' }, brand: { name: 'Samsung' }, createdAt: daysAgo(200), productType: 'PHYSICAL' },
   { id: 'd5', name: 'Audífonos HyperX Cloud II', slug: 'hyperx', priceUSD: 79, stock: 40, images: [], category: { name: 'Audio' }, brand: { name: 'HyperX' }, createdAt: daysAgo(10), productType: 'PHYSICAL' },
+];
+
+// Imágenes de proporciones extremas para probar el producto estrella (SVG en línea, sin archivos)
+const svgImage = (width: number, height: number, label: string) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" rx="24" fill="#1e4ba3"/><text x="50%" y="50%" font-family="sans-serif" font-size="${Math.min(width, height) / 6}" fill="white" text-anchor="middle" dominant-baseline="middle">${label}</text></svg>`
+  )}`;
+
+const HERO_SAMPLES: ProductCardData[] = [
+  { ...SAMPLE[0], id: 'h1', name: 'Torre gamer (imagen muy alta 500×1500)', mainImage: svgImage(500, 1500, 'Alta') },
+  { ...SAMPLE[1], id: 'h2', name: 'Barra de sonido (imagen muy ancha 1600×400)', mainImage: svgImage(1600, 400, 'Ancha') },
+  { ...SAMPLE[0], id: 'h3', name: 'PC Gamer Ryzen 9 7950X3D + RTX 4090 24GB + 64GB DDR5 6000MHz + SSD 4TB NVMe Gen4 + Fuente 1200W Platinum + Gabinete Lian Li O11', priceUSD: 12499, compareAtPriceUSD: 13999, mainImage: svgImage(4000, 4000, 'Gigante') },
+  { ...SAMPLE[4], id: 'h4', name: 'Producto sin imagen' },
 ];
 
 export default function UiDemoPage() {
@@ -61,6 +75,17 @@ export default function UiDemoPage() {
           <ProductShelf label="Destacados" variant="featured">
             {SAMPLE.map((p) => <ProductCard key={p.id} product={p} exchangeRateVES={RATE} />)}
           </ProductShelf>
+        </section>
+
+        <section aria-labelledby="demo-hero">
+          <SectionHeader id="demo-hero" title="Producto estrella (home desde xl)" subtitle="Cada tarjeta a 430px de alto, como en la vitrina" />
+          <div className="grid gap-4 xl:grid-cols-2">
+            {HERO_SAMPLES.map((p) => (
+              <div key={p.id} className="h-[430px]">
+                <FeaturedHeroCard product={p} exchangeRateVES={RATE} lowStockThreshold={3} />
+              </div>
+            ))}
+          </div>
         </section>
       </Container>
     </main>

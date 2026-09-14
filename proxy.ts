@@ -102,7 +102,8 @@ export default withAuth(
           pathname.startsWith('/api/auth') ||
           pathname.startsWith('/api/products') ||
           pathname.startsWith('/api/categories') ||
-          pathname.startsWith('/api/settings') ||
+          // Solo la versión pública: /api/settings (completa) exige sesión de admin (C-50a)
+          pathname === '/api/settings/public' ||
           pathname.startsWith('/api/exchange-rates') ||
           pathname.startsWith('/api/contact') ||
           // Exige sesión dentro del handler y responde 401 en JSON (sin redirigir al login)

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FiX, FiEyeOff } from 'react-icons/fi';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 // Helper function to convert hex color to rgba
 function hexToRgba(hex: string, opacity: number): string {
@@ -38,6 +39,9 @@ export default function HotAdOverlay() {
     const [countdown, setCountdown] = useState(5);
     const [canClose, setCanClose] = useState(false);
 
+    // Bloquea el scroll mientras el anuncio está cargado (settings se limpia al cerrar)
+    useBodyScrollLock(settings !== null);
+
     // Mark as mounted on client
     useEffect(() => {
         setMounted(true);
@@ -70,8 +74,6 @@ export default function HotAdOverlay() {
                             hotAdBackdropColor: data.hotAdBackdropColor || '#000000',
                             hotAdLink: data.hotAdLink,
                         });
-                        // Block body scroll and show overlay
-                        document.body.style.overflow = 'hidden';
                         // Hide other floating elements
                         document.body.classList.add('hot-ad-active');
                         // Small delay for smooth animation
@@ -90,7 +92,6 @@ export default function HotAdOverlay() {
 
         // Limpieza para evitar que el scroll se quede bloqueado si el componente se desmonta
         return () => {
-            document.body.style.overflow = '';
             document.body.classList.remove('hot-ad-active');
         };
     }, [mounted]);
@@ -113,8 +114,7 @@ export default function HotAdOverlay() {
         setTimeout(() => {
             setIsVisible(false);
             setSettings(null);
-            // Restore body scroll and floating elements
-            document.body.style.overflow = '';
+            // Restore floating elements (el scroll lo libera useBodyScrollLock)
             document.body.classList.remove('hot-ad-active');
 
             // If user checked "don't show again", save permanently

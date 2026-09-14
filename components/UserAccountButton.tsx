@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { FiLogOut, FiUser, FiPackage, FiSettings, FiCheckCircle, FiAlertCircle, FiChevronRight } from 'react-icons/fi';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 interface UserAccountButtonProps {
   useBlueHeader?: boolean;
@@ -37,17 +38,8 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
     }
   }, [isOpen]);
 
-  // Prevent background scroll when dropdown is open on mobile
-  useEffect(() => {
-    if (isOpen && window.innerWidth < 640) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  // Prevent background scroll when dropdown is open on mobile (mismo corte que su CSS: < sm)
+  useBodyScrollLock(isOpen && typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches);
 
   const handleSignOut = async () => {
     try {

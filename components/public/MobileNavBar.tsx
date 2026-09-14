@@ -8,6 +8,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { FiX } from 'react-icons/fi';
 
 // [MOBILE ONLY] Premium SVG Icons with refined design
@@ -280,16 +281,7 @@ export default function MobileNavBar() {
     const navRef = useRef<HTMLElement>(null);
 
     // Lock body scroll when drawer is open
-    useEffect(() => {
-        if (isDrawerOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => {
-            document.body.style.overflow = '';
-        };
-    }, [isDrawerOpen]);
+    useBodyScrollLock(isDrawerOpen);
 
     // [MOBILE ONLY] Scroll detection for opacity transition
     const handleScroll = useCallback(() => {

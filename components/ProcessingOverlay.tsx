@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 // Step configuration interface
 export interface ProcessingStep {
@@ -73,14 +74,9 @@ export default function ProcessingOverlay({
     useEffect(() => {
         if (isVisible) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
         }
-        return () => {
-            document.body.style.overflow = '';
-        };
     }, [isVisible]);
+    useBodyScrollLock(isVisible);
 
     if (!isVisible) return null;
 

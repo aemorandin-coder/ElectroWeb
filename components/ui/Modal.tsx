@@ -1,5 +1,6 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { Button } from './Button';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 interface ModalProps {
   isOpen: boolean;
@@ -18,16 +19,7 @@ export function Modal({
   footer,
   size = 'md',
 }: ModalProps) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

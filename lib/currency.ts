@@ -44,3 +44,26 @@ export function formatPrice(
   return `${symbol} ${formatted}`;
 }
 
+
+// ============================================
+// Formato único de precios de la tienda (PLAN.md §1.4, decisión D4)
+// formatUSD(1099) → "$1.099,00" · formatVES(40113.5) → "Bs. 40.113,50"
+// Formato manual (no Intl) para que servidor y navegador den exactamente el mismo texto.
+// ============================================
+
+function formatAmount(value: number): string {
+  const safe = Number.isFinite(value) ? value : 0;
+  const [integer, decimals] = Math.abs(safe).toFixed(2).split('.');
+  const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const sign = safe < 0 && Number(`${integer}.${decimals}`) !== 0 ? '-' : '';
+  return `${sign}${grouped},${decimals}`;
+}
+
+export function formatUSD(amount: number): string {
+  const text = formatAmount(amount);
+  return text.startsWith('-') ? `-$${text.slice(1)}` : `$${text}`;
+}
+
+export function formatVES(amount: number): string {
+  return `Bs. ${formatAmount(amount)}`;
+}

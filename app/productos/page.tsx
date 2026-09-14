@@ -1,190 +1,244 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { prisma } from '@/lib/prisma';
-import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
-import PublicHeader from '@/components/public/PublicHeader';
-import AnimatedWave from '@/components/AnimatedWave';
-import ProductosClient from './ProductosClient';
+import { redirect } from 'next/navigation';
+import { FiChevronRight, FiSearch, FiX } from 'react-icons/fi';
+import CatalogFilters from '@/components/catalog/CatalogFilters';
+import CatalogPagination from '@/components/catalog/CatalogPagination';
+import FiltersDrawer from '@/components/catalog/FiltersDrawer';
+import SortSelect from '@/components/catalog/SortSelect';
 import Footer from '@/components/Footer';
+import PublicHeader from '@/components/public/PublicHeader';
+import Container from '@/components/ui/Container';
+import ProductCard from '@/components/ui/ProductCard';
+import { formatUSD } from '@/lib/currency';
+import { prisma } from '@/lib/prisma';
+import {
+  CATALOG_PAGE_SIZE,
+  catalogHref,
+  getCatalog,
+  hasActiveFilters,
+  parseCatalogParams,
+  SORT_OPTIONS,
+  type CatalogParams,
+} from '@/lib/queries/catalog';
+import { getHomeSettings } from '@/lib/queries/home';
+import { getPublicSettings } from '@/lib/site-settings';
 
-export const revalidate = 0;
+type PageProps = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
-export async function generateMetadata(): Promise<Metadata> {
-  const settings = await prisma.companySettings.findFirst({
-    select: {
-      productsMetaTitle: true,
-      productsMetaDescription: true,
-      productsMetaKeywords: true,
-      productsMetaImage: true,
-      logo: true,
-      companyName: true,
-    }
-  });
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const params = parseCatalogParams(await searchParams);
+  const [settings, category] = await Promise.all([
+    prisma.companySettings.findFirst({
+      select: { productsMetaTitle: true, productsMetaDescription: true, productsMetaKeywords: true, productsMetaImage: true, logo: true },
+    }),
+    params.category ? prisma.category.findUnique({ where: { slug: params.category }, select: { name: true } }) : null,
+  ]);
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
-
-  const title = settings?.productsMetaTitle || `Productos | ${settings?.companyName || 'Electro Shop'}`;
-  const description = settings?.productsMetaDescription || 'Explora la mejor selección de saldo digital, gift cards, licencias y hardware gaming de vanguardia.';
-  const keywords = settings?.productsMetaKeywords ? settings.productsMetaKeywords.split(',').map(k => k.trim()) : undefined;
-
-  // Sin imagen en settings no se declara ninguna: /og-image.png no existe en public/
+  const description = settings?.productsMetaDescription || 'Tecnología, gaming, gift cards y saldo digital con envíos a toda Venezuela. Precios en dólares y bolívares.';
   const shareImage = settings?.productsMetaImage || settings?.logo || null;
   const absoluteShareImage = shareImage && (shareImage.startsWith('http') ? shareImage : `${baseUrl}${shareImage.startsWith('/') ? '' : '/'}${shareImage}`);
+
+  // El layout agrega " | Empresa": el título propio del admin se usa tal cual para no repetirla
+  const title: Metadata['title'] = params.search
+    ? `Resultados para "${params.search}"`
+    : category
+      ? category.name
+      : settings?.productsMetaTitle
+        ? { absolute: settings.productsMetaTitle }
+        : 'Productos';
+
+  // Búsquedas, filtros y páginas siguientes no se indexan; la categoría sí
+  const onlyCategory = !params.search && params.min === null && params.max === null && !params.offers && !params.inStock && !params.type && params.page === 1 && params.sort === 'recientes';
 
   return {
     title,
     description,
-    keywords,
-    openGraph: {
-      title,
-      description,
-      images: absoluteShareImage ? [{ url: absoluteShareImage }] : undefined,
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: absoluteShareImage ? [{ url: absoluteShareImage }] : undefined,
-    }
+    keywords: settings?.productsMetaKeywords ? settings.productsMetaKeywords.split(',').map((k) => k.trim()) : undefined,
+    alternates: { canonical: category ? `/productos?category=${params.category}` : '/productos' },
+    robots: onlyCategory ? undefined : { index: false, follow: true },
+    openGraph: { description, images: absoluteShareImage ? [{ url: absoluteShareImage }] : undefined, type: 'website' },
   };
 }
 
-export default async function ProductosPage() {
-  const [products, categories] = await Promise.all([
-    prisma.product.findMany({
-      where: { status: 'PUBLISHED' },
-      include: publicProductInclude,
-      orderBy: { createdAt: 'desc' }
-    }),
-    prisma.category.findMany({
-      orderBy: { name: 'asc' }
-    }),
-  ]);
+/** Filtros aplicados como chips con enlace para quitar cada uno. */
+function activeChips(params: CatalogParams, categoryName: string | null): Array<{ label: string; href: string }> {
+  const chips: Array<{ label: string; href: string }> = [];
+  if (params.search) chips.push({ label: `"${params.search}"`, href: catalogHref(params, { search: '' }) });
+  if (params.category) chips.push({ label: categoryName ?? params.category, href: catalogHref(params, { category: null }) });
+  if (params.min !== null) chips.push({ label: `Desde ${formatUSD(params.min)}`, href: catalogHref(params, { min: null }) });
+  if (params.max !== null) chips.push({ label: `Hasta ${formatUSD(params.max)}`, href: catalogHref(params, { max: null }) });
+  if (params.offers) chips.push({ label: 'Ofertas', href: catalogHref(params, { offers: false }) });
+  if (params.inStock) chips.push({ label: 'Disponibles', href: catalogHref(params, { inStock: false }) });
+  if (params.type) chips.push({ label: params.type === 'digital' ? 'Digitales' : 'Físicos', href: catalogHref(params, { type: null }) });
+  return chips;
+}
+
+/**
+ * Catálogo (C-30). Todo sale del servidor según la URL: búsqueda (`search`, la usa el buscador del header),
+ * `category`, `min`/`max`, `oferta`, `disponible`, `tipo`, `sort` y `page`.
+ * Lo primero que se ve en el teléfono son productos, no un mensaje.
+ */
+export default async function ProductosPage({ searchParams }: PageProps) {
+  const raw = await searchParams;
+  const params = parseCatalogParams(raw);
+  // El formulario de filtros envía también los campos vacíos (max=&tipo=): se redirige a la URL limpia
+  if (Object.values(raw).some((value) => value === '' || (Array.isArray(value) && value.includes('')))) {
+    redirect(catalogHref(params, { page: params.page }));
+  }
+  const [settings, homeSettings, catalog] = await Promise.all([getPublicSettings(), getHomeSettings(), getCatalog(params)]);
+  const { products, total, page, totalPages, categories, currentCategory } = catalog;
+  const current = { ...params, page };
+
+  const heading = params.search ? `Resultados para "${params.search}"` : currentCategory?.name ?? 'Productos';
+  const chips = activeChips(current, currentCategory?.name ?? null);
+  const filterCount = chips.filter((chip) => !chip.label.startsWith('"')).length;
+  const sortOptions = SORT_OPTIONS.map((option) => ({ ...option, href: catalogHref(current, { sort: option.value }) }));
+  const rangeStart = total === 0 ? 0 : (page - 1) * CATALOG_PAGE_SIZE + 1;
+  const rangeEnd = Math.min(page * CATALOG_PAGE_SIZE, total);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
+    <div className="min-h-dvh bg-surface">
       <PublicHeader />
 
-      {/* Hero Section - Responsive, visible on all screens */}
-      <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-10 left-10 w-48 h-48 bg-white rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-10 right-10 w-72 h-72 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        </div>
+      <main>
+        <Container className="pb-10 pt-4 lg:pt-6">
+          <nav aria-label="Ruta de navegación" className="mb-2">
+            <ol className="flex flex-wrap items-center gap-1 text-xs text-muted">
+              <li><Link href="/" className="hover:text-brand-600 hover:underline">Inicio</Link></li>
+              <li aria-hidden="true"><FiChevronRight className="h-3 w-3" /></li>
+              <li>
+                {currentCategory || params.search ? (
+                  <Link href="/productos" className="hover:text-brand-600 hover:underline">Productos</Link>
+                ) : (
+                  <span aria-current="page" className="text-ink-soft">Productos</span>
+                )}
+              </li>
+              {currentCategory && (
+                <>
+                  <li aria-hidden="true"><FiChevronRight className="h-3 w-3" /></li>
+                  <li><span aria-current="page" className="text-ink-soft">{currentCategory.name}</span></li>
+                </>
+              )}
+            </ol>
+          </nav>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 text-center">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-            Nuestros <span className="text-cyan-200">Productos</span>
-          </h1>
-
-          <p className="text-xs sm:text-sm text-white/80 max-w-2xl mx-auto mt-2 leading-relaxed">
-            Explora la mejor selección de saldo digital, gift cards, licencias y hardware gaming de vanguardia.
-          </p>
-
-          {/* How It Works - Premium Glassmorphic Step Indicator */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto text-left">
-            {/* Step 1 */}
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex gap-3 transition-all hover:bg-white/10 hover:scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
-              <div className="w-10 h-10 bg-white text-[#2a63cd] rounded-xl flex items-center justify-center font-black text-base shadow-md flex-shrink-0">
-                1
-              </div>
-              <div className="space-y-0.5">
-                <h3 className="text-xs font-black text-white uppercase tracking-wide">1. Selecciona tu Producto</h3>
-                <p className="text-[10px] leading-relaxed text-cyan-100/80">
-                  Elige tu saldo digital, recargas directas o el hardware y periféricos gaming de tu preferencia.
-                </p>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex gap-3 transition-all hover:bg-white/10 hover:scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
-              <div className="w-10 h-10 bg-white text-[#2a63cd] rounded-xl flex items-center justify-center font-black text-base shadow-md flex-shrink-0">
-                2
-              </div>
-              <div className="space-y-0.5">
-                <h3 className="text-xs font-black text-white uppercase tracking-wide">2. Paga de Forma Segura</h3>
-                <p className="text-[10px] leading-relaxed text-cyan-100/80">
-                  Realiza tu pago vía Pago Móvil, Binance, Transferencia o Divisas.
-                </p>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex gap-3 transition-all hover:bg-white/10 hover:scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
-              <div className="w-10 h-10 bg-white text-[#2a63cd] rounded-xl flex items-center justify-center font-black text-base shadow-md flex-shrink-0">
-                3
-              </div>
-              <div className="space-y-0.5">
-                <h3 className="text-xs font-black text-white uppercase tracking-wide">3. ¡Recibe tu Compra!</h3>
-                <p className="text-[10px] leading-relaxed text-cyan-100/80">
-                  Tu recarga digital se procesa en minutos, o recibe tu hardware directamente en tu dirección.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <AnimatedWave />
-      </section>
-
-      {/* Client Component with Products and Filters */}
-      <ProductosClient
-        initialProducts={products.map(toPublicProduct)}
-        initialCategories={JSON.parse(JSON.stringify(categories))}
-      />
-
-      {/* Footer CTA - Solicitar Producto */}
-      <section className="py-12 bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] relative overflow-hidden mt-20">
-        {/* Background Effects */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-5 left-10 w-48 h-48 bg-white rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-5 right-10 w-64 h-64 bg-cyan-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        </div>
-        {/* Floating Tech Icons */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-[10%] animate-float opacity-20">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div className="absolute top-1/3 right-[15%] animate-float-delayed opacity-20">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div className="absolute bottom-1/4 left-[20%] animate-float opacity-15">
-            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-            </svg>
-          </div>
-          <div className="absolute bottom-1/3 right-[25%] animate-float-delayed opacity-20">
-            <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-          </div>
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="text-white text-center md:text-left">
-              <h2 className="text-2xl font-bold mb-2">¿No encuentras lo que buscas?</h2>
-              <p className="text-base text-white/80">
-                Solicítanos cualquier producto tecnológico al mejor precio
+          <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+            <div className="min-w-0">
+              <h1 className="truncate text-2xl font-bold text-ink lg:text-3xl">{heading}</h1>
+              <p className="mt-0.5 text-sm text-muted" aria-live="polite">
+                {total === 0 ? 'Sin resultados' : totalPages > 1 ? `${rangeStart}–${rangeEnd} de ${total} productos` : `${total} ${total === 1 ? 'producto' : 'productos'}`}
               </p>
             </div>
-            <Link
-              href="/solicitar-producto"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#2a63cd] text-sm font-bold rounded-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl hover:scale-105 whitespace-nowrap"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Solicitar Producto
-            </Link>
+            <div className="hidden lg:block">
+              <SortSelect id="sort-desktop" value={params.sort} options={sortOptions} />
+            </div>
           </div>
-        </div>
-      </section>
+
+          {/* Móvil: filtros y orden en una fila, categorías deslizables debajo */}
+          <div className="mt-3 flex gap-2 lg:hidden">
+            <FiltersDrawer activeCount={filterCount}>
+              <CatalogFilters params={current} categories={categories} idPrefix="movil" />
+            </FiltersDrawer>
+            <SortSelect id="sort-mobile" value={params.sort} options={sortOptions} />
+          </div>
+          {categories.length > 1 && (
+            <ul className="scrollbar-hide -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:hidden" aria-label="Categorías">
+              <li className="shrink-0">
+                <Link
+                  href={catalogHref(current, { category: null })}
+                  aria-current={!params.category ? 'true' : undefined}
+                  className={`inline-flex h-9 items-center rounded-full border px-4 text-sm font-medium ${!params.category ? 'border-brand-500 bg-brand-500 text-white' : 'border-line bg-white text-ink-soft'}`}
+                >
+                  Todas
+                </Link>
+              </li>
+              {categories.map((category) => (
+                <li key={category.id} className="shrink-0">
+                  <Link
+                    href={catalogHref(current, { category: category.slug })}
+                    aria-current={params.category === category.slug ? 'true' : undefined}
+                    className={`inline-flex h-9 items-center rounded-full border px-4 text-sm font-medium ${params.category === category.slug ? 'border-brand-500 bg-brand-500 text-white' : 'border-line bg-white text-ink-soft'}`}
+                  >
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {chips.length > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-2" aria-label="Filtros aplicados">
+              {chips.map((chip) => (
+                <li key={chip.label}>
+                  <Link
+                    href={chip.href}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-full bg-brand-50 pl-3 pr-2 text-xs font-semibold text-brand-700 hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-brand-500"
+                    aria-label={`Quitar filtro ${chip.label}`}
+                  >
+                    {chip.label}
+                    <FiX className="h-3.5 w-3.5" aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="mt-4 lg:mt-6 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">
+            <aside className="hidden lg:block" aria-label="Filtros">
+              <div className="sticky top-28 rounded-xl border border-line bg-white p-4">
+                <CatalogFilters params={current} categories={categories} idPrefix="escritorio" />
+              </div>
+            </aside>
+
+            <section aria-label="Resultados">
+              {products.length > 0 ? (
+                <>
+                  <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-4 xl:grid-cols-4">
+                    {products.map((product, index) => (
+                      <li key={product.id}>
+                        <ProductCard product={product} exchangeRateVES={settings.exchangeRateVES} lowStockThreshold={homeSettings.lowStockThreshold} priority={index < 4} />
+                      </li>
+                    ))}
+                  </ul>
+                  <CatalogPagination params={current} page={page} totalPages={totalPages} />
+                </>
+              ) : (
+                <div className="rounded-xl border border-line bg-white px-6 py-12 text-center">
+                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                    <FiSearch className="h-6 w-6" aria-hidden="true" />
+                  </span>
+                  <h2 className="mt-4 text-lg font-semibold text-ink">No encontramos productos</h2>
+                  <p className="mx-auto mt-1 max-w-md text-sm text-muted">
+                    {hasActiveFilters(params) ? 'Prueba quitando algún filtro o buscando con otras palabras.' : 'Pronto tendremos productos en esta sección.'}
+                  </p>
+                  <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    {hasActiveFilters(params) && (
+                      <Link href="/productos" className="inline-flex h-11 items-center rounded-lg border border-line bg-white px-4 text-sm font-semibold text-ink-soft hover:bg-surface">
+                        Ver todos los productos
+                      </Link>
+                    )}
+                    <Link href="/solicitar-producto" className="inline-flex h-11 items-center rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600">
+                      Solicitar un producto
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+
+          <section aria-labelledby="solicitar-title" className="mt-10 flex flex-col items-start justify-between gap-4 rounded-2xl bg-gradient-to-r from-brand-700 via-brand-600 to-brand-500 p-5 text-white sm:flex-row sm:items-center lg:p-6">
+            <div>
+              <h2 id="solicitar-title" className="text-lg font-bold lg:text-xl">¿No encuentras lo que buscas?</h2>
+              <p className="mt-1 text-sm text-white/90">Dinos qué producto necesitas y te lo conseguimos al mejor precio.</p>
+            </div>
+            <Link href="/solicitar-producto" className="inline-flex h-11 shrink-0 items-center rounded-lg bg-white px-5 text-sm font-semibold text-brand-700 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+              Solicitar un producto
+            </Link>
+          </section>
+        </Container>
+      </main>
 
       <Footer />
     </div>

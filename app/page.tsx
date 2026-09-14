@@ -88,7 +88,7 @@ export default async function Home() {
 
         <CategoryRail categories={railCategories} />
 
-        <ProductSection id="ofertas" title="Ofertas" subtitle="Precios rebajados por tiempo limitado" products={deals} exchangeRateVES={rate} lowStockThreshold={lowStock} tone="surface" />
+        <ProductSection id="ofertas" title="Ofertas" subtitle="Precios rebajados por tiempo limitado" href="/productos?oferta=1" products={deals} exchangeRateVES={rate} lowStockThreshold={lowStock} tone="surface" />
 
         <ProductSection id="mas-vendidos" title="Lo más vendido" subtitle="Lo que más compran nuestros clientes" products={bestSellers} exchangeRateVES={rate} lowStockThreshold={lowStock} />
 

@@ -40,7 +40,7 @@ export const getHomeSettings = cache(async (): Promise<HomeSettings> => {
 });
 
 /** Publicados y, si autoHideOutOfStock está activo, con stock (salvo digitales). */
-async function visibleProducts(extra?: Prisma.ProductWhereInput): Promise<Prisma.ProductWhereInput> {
+export async function visibleProducts(extra?: Prisma.ProductWhereInput): Promise<Prisma.ProductWhereInput> {
   const { autoHideOutOfStock } = await getHomeSettings();
   const conditions: Prisma.ProductWhereInput[] = [{ status: 'PUBLISHED' }];
   if (autoHideOutOfStock) {

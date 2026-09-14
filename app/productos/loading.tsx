@@ -1,39 +1,36 @@
 import PublicHeader from '@/components/public/PublicHeader';
-import { ProductCardSkeleton } from '@/components/ui/Skeleton';
+import Container from '@/components/ui/Container';
 
+// Esqueleto con la misma estructura que el catálogo (C-30): título, barra de filtros y grilla
 export default function ProductosLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
-      {/* Header real: el esqueleto de 80px no coincidía con el header nuevo y causaba un salto */}
+    <div className="min-h-dvh bg-surface" aria-busy="true" aria-label="Cargando productos">
       <PublicHeader />
-
-      {/* Hero Skeleton */}
-      <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <div className="w-40 h-8 bg-white/20 rounded-full mx-auto mb-6 animate-pulse" />
-            <div className="w-96 h-14 bg-white/20 rounded-lg mx-auto mb-6 animate-pulse" />
-            <div className="w-2/3 h-6 bg-white/10 rounded mx-auto animate-pulse" />
-          </div>
+      <Container className="pb-10 pt-4 lg:pt-6">
+        <div className="mb-3 h-3 w-32 rounded bg-line" />
+        <div className="h-8 w-48 rounded bg-line" />
+        <div className="mt-2 h-4 w-24 rounded bg-line" />
+        <div className="mt-3 flex gap-2 lg:hidden">
+          <div className="h-11 flex-1 rounded-lg bg-line" />
+          <div className="h-11 flex-1 rounded-lg bg-line" />
         </div>
-        <div className="h-20" />
-      </section>
-
-      {/* Filters Skeleton */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-wrap gap-4 mb-8">
-          <div className="w-48 h-10 bg-[#e9ecef] rounded-lg animate-shimmer" />
-          <div className="w-32 h-10 bg-[#e9ecef] rounded-lg animate-shimmer" />
-          <div className="w-36 h-10 bg-[#e9ecef] rounded-lg animate-shimmer" />
+        <div className="mt-4 lg:mt-6 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">
+          <div className="hidden h-96 rounded-xl border border-line bg-white lg:block" />
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-4 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <li key={i} className="overflow-hidden rounded-xl border border-line bg-white">
+                <div className="aspect-square bg-line/60" />
+                <div className="space-y-2 p-3">
+                  <div className="h-3 w-2/3 rounded bg-line" />
+                  <div className="h-4 w-full rounded bg-line" />
+                  <div className="h-6 w-1/2 rounded bg-line" />
+                  <div className="h-10 w-full rounded-lg bg-line" />
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
-
-        {/* Products Grid Skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <ProductCardSkeleton key={i} />
-          ))}
-        </div>
-      </div>
+      </Container>
     </div>
   );
 }

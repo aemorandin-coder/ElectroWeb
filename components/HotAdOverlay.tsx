@@ -1,277 +1,182 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { FiX, FiEyeOff } from 'react-icons/fi';
+import { FiX } from 'react-icons/fi';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { safeHotAdLink, shouldShowHotAd, type HotAdRecord } from '@/lib/hot-ad';
 
-// Helper function to convert hex color to rgba
-function hexToRgba(hex: string, opacity: number): string {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (result) {
-        const r = parseInt(result[1], 16);
-        const g = parseInt(result[2], 16);
-        const b = parseInt(result[3], 16);
-        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-    }
-    return `rgba(0, 0, 0, ${opacity})`;
+// Popup promocional del home (C-23, decisión D2): se puede cerrar al instante (X, Esc o el fondo),
+// aparece como mucho una vez cada 24 h por promoción y no antes de SHOW_DELAY_MS.
+const STORAGE_KEY = 'hotAd:v2';
+const LEGACY_PERMANENT_KEY = 'hotAdPermanentlyDismissed';
+const LEGACY_SESSION_KEY = 'hotAdDismissed';
+const SHOW_DELAY_MS = 2500;
+
+function readRecord(): HotAdRecord | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as HotAdRecord) : null;
+  } catch {
+    return null;
+  }
 }
 
-interface HotAdSettings {
-    hotAdEnabled: boolean;
-    hotAdImage: string | null;
-    hotAdTransparentBg: boolean;
-    hotAdShadowEnabled: boolean;
-    hotAdShadowBlur: number;
-    hotAdShadowOpacity: number;
-    hotAdBackdropOpacity: number;
-    hotAdBackdropColor: string;
-    hotAdLink: string | null;
+function writeRecord(record: HotAdRecord) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+  } catch {
+    // Modo privado o almacenamiento lleno: el popup simplemente puede volver a salir
+  }
+}
+
+function hexToRgba(hex: string, opacity: number): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return `rgba(0, 0, 0, ${opacity})`;
+  return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${opacity})`;
 }
 
 export default function HotAdOverlay() {
-    // Settings públicos del servidor (SettingsProvider): sin fetch propio
-    const { settings: publicSettings } = useSettings();
-    const [mounted, setMounted] = useState(false);
-    const [settings, setSettings] = useState<HotAdSettings | null>(null);
-    const [isVisible, setIsVisible] = useState(false);
-    const [isClosing, setIsClosing] = useState(false);
-    const [dontShowAgain, setDontShowAgain] = useState(false);
-    // Countdown: 5 segundos obligatorios antes de poder cerrar
-    const [countdown, setCountdown] = useState(5);
-    const [canClose, setCanClose] = useState(false);
+  const { settings } = useSettings();
+  const image = settings?.hotAdEnabled && settings.hotAdImage ? settings.hotAdImage : null;
+  const [open, setOpen] = useState(false);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+  // Copia para el manejador de Esc (se registra una vez al abrir)
+  const dontShowAgainRef = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-    // Bloquea el scroll mientras el anuncio está cargado (settings se limpia al cerrar)
-    useBodyScrollLock(settings !== null);
+  useBodyScrollLock(open);
 
-    // Mark as mounted on client
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+  useEffect(() => {
+    if (!image) return;
+    const timer = setTimeout(() => {
+      let legacyPermanent = false;
+      try {
+        legacyPermanent = localStorage.getItem(LEGACY_PERMANENT_KEY) === 'true';
+        // Las claves viejas se migran: "no volver a mostrar" se respeta para la promoción actual
+        localStorage.removeItem(LEGACY_PERMANENT_KEY);
+        sessionStorage.removeItem(LEGACY_SESSION_KEY);
+      } catch {
+        // Sin acceso al almacenamiento: se decide solo con lo que haya
+      }
+      const now = Date.now();
+      if (legacyPermanent) {
+        writeRecord({ image, shownAt: now, dismissed: true });
+        return;
+      }
+      if (!shouldShowHotAd(readRecord(), image, now)) return;
+      writeRecord({ image, shownAt: now });
+      setOpen(true);
+    }, SHOW_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [image]);
 
-    useEffect(() => {
-        // Only run on client after mount
-        if (!mounted) return;
+  const close = () => {
+    if (image && dontShowAgainRef.current) writeRecord({ image, shownAt: Date.now(), dismissed: true });
+    setOpen(false);
+  };
+  // El manejador de teclado usa siempre la versión actual de close
+  const closeRef = useRef(close);
+  useEffect(() => {
+    closeRef.current = close;
+  });
 
-        // Check if permanently dismissed (localStorage) or session dismissed (sessionStorage)
-        const permanentlyDismissed = localStorage.getItem('hotAdPermanentlyDismissed');
-        const sessionDismissed = sessionStorage.getItem('hotAdDismissed');
+  useEffect(() => {
+    if (!open) return;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
 
-        if (permanentlyDismissed || sessionDismissed) return;
-
-        const fetchSettings = async () => {
-            try {
-                const data = publicSettings;
-                if (data) {
-                    if (data.hotAdEnabled && data.hotAdImage) {
-                        setSettings({
-                            hotAdEnabled: data.hotAdEnabled,
-                            hotAdImage: data.hotAdImage,
-                            hotAdTransparentBg: data.hotAdTransparentBg ?? false,
-                            hotAdShadowEnabled: data.hotAdShadowEnabled ?? true,
-                            hotAdShadowBlur: data.hotAdShadowBlur ?? 20,
-                            hotAdShadowOpacity: data.hotAdShadowOpacity ?? 50,
-                            hotAdBackdropOpacity: data.hotAdBackdropOpacity ?? 70,
-                            hotAdBackdropColor: data.hotAdBackdropColor || '#000000',
-                            hotAdLink: data.hotAdLink,
-                        });
-                        // Hide other floating elements
-                        document.body.classList.add('hot-ad-active');
-                        // Small delay for smooth animation
-                        setTimeout(() => setIsVisible(true), 100);
-                        // Start 5-second countdown
-                        setCountdown(5);
-                        setCanClose(false);
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching hot ad settings:', error);
-            }
-        };
-
-        fetchSettings();
-
-        // Limpieza para evitar que el scroll se quede bloqueado si el componente se desmonta
-        return () => {
-            document.body.classList.remove('hot-ad-active');
-        };
-    }, [mounted, publicSettings]);
-
-    // Countdown timer — decrements every second, enables close when 0
-    useEffect(() => {
-        if (!isVisible || canClose) return;
-        if (countdown <= 0) { setCanClose(true); return; }
-        const t = setInterval(() => {
-            setCountdown(prev => {
-                if (prev <= 1) { setCanClose(true); return 0; }
-                return prev - 1;
-            });
-        }, 1000);
-        return () => clearInterval(t);
-    }, [isVisible, canClose, countdown]);
-
-    const handleClose = () => {
-        setIsClosing(true);
-        setTimeout(() => {
-            setIsVisible(false);
-            setSettings(null);
-            // Restore floating elements (el scroll lo libera useBodyScrollLock)
-            document.body.classList.remove('hot-ad-active');
-
-            // If user checked "don't show again", save permanently
-            if (dontShowAgain) {
-                localStorage.setItem('hotAdPermanentlyDismissed', 'true');
-            } else {
-                // Otherwise, just dismiss for this session
-                sessionStorage.setItem('hotAdDismissed', 'true');
-            }
-        }, 300);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeRef.current();
+        return;
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('a[href], button, input'));
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
     };
 
-    const handleBackdropClick = (e: React.MouseEvent) => {
-        // Only allow close via backdrop after countdown ends
-        if (!canClose) return;
-        if (e.target === e.currentTarget) {
-            handleClose();
-        }
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      previouslyFocused?.focus({ preventScroll: true });
     };
+  }, [open]);
 
-    // Don't render anything on server or before mount
-    if (!mounted || !settings || !settings.hotAdEnabled || !settings.hotAdImage) {
-        return null;
-    }
+  if (!open || !image || !settings) return null;
 
-    const shadowStyle = settings.hotAdShadowEnabled
-        ? `0 0 ${settings.hotAdShadowBlur}px ${settings.hotAdShadowBlur / 2}px rgba(0, 0, 0, ${settings.hotAdShadowOpacity / 100})`
-        : 'none';
+  const link = safeHotAdLink(settings.hotAdLink);
+  const shadow = settings.hotAdShadowEnabled
+    ? `0 0 ${settings.hotAdShadowBlur}px ${settings.hotAdShadowBlur / 2}px rgba(0, 0, 0, ${settings.hotAdShadowOpacity / 100})`
+    : 'none';
 
-    const ImageContent = (
-        <div className="relative max-w-[1400px] max-h-[95vh] mx-4 flex items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-                src={settings.hotAdImage}
-                alt="Promoción especial"
-                className={`
-          w-auto h-auto max-w-full max-h-[95vh] object-contain
-          ${settings.hotAdTransparentBg ? '' : 'rounded-2xl'}
-          transition-transform duration-300 hover:scale-[1.02]
-        `}
-                style={{
-                    boxShadow: shadowStyle,
-                }}
-            />
+  const picture = (
+    // Dimensiones desconocidas (imagen subida por el admin): <img> con object-contain
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={image}
+      alt="Promoción especial"
+      className={`block h-auto max-h-[calc(100dvh-8rem)] w-auto max-w-full object-contain ${settings.hotAdTransparentBg ? '' : 'rounded-2xl'}`}
+      style={{ boxShadow: shadow }}
+    />
+  );
+
+  return (
+    <div
+      className="fixed inset-0 z-[var(--z-popup)] flex items-center justify-center overflow-y-auto p-4 motion-safe:animate-fadeIn pb-[calc(1rem+env(safe-area-inset-bottom))]"
+      style={{ backgroundColor: hexToRgba(settings.hotAdBackdropColor || '#000000', (settings.hotAdBackdropOpacity ?? 70) / 100) }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) close();
+      }}
+    >
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Promoción" className="flex max-w-full flex-col items-center gap-3">
+        <div className="relative max-w-full">
+          {link?.external ? (
+            <a href={link.href} target="_blank" rel="noopener noreferrer" onClick={close} className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+              {picture}
+            </a>
+          ) : link ? (
+            <Link href={link.href} onClick={close} className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+              {picture}
+            </Link>
+          ) : (
+            picture
+          )}
+          <button
+            ref={closeButtonRef}
+            type="button"
+            onClick={close}
+            aria-label="Cerrar promoción"
+            className="absolute -right-2 -top-2 flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink shadow-lg hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            <FiX className="h-6 w-6" aria-hidden="true" />
+          </button>
         </div>
-    );
 
-    return (
-        <div
-            className={`
-        fixed z-[99999] flex items-center justify-center
-        transition-all duration-300 ease-out
-        ${isVisible && !isClosing ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-      `}
-            style={{
-                top: 0,
-                left: 0,
-                width: '100vw',
-                height: '100vh',
-                backgroundColor: hexToRgba(settings.hotAdBackdropColor, settings.hotAdBackdropOpacity / 100),
-                backdropFilter: 'blur(8px)',
-                overscrollBehavior: 'contain',
-                touchAction: 'none',
+        <label className="flex h-11 cursor-pointer items-center gap-2 rounded-full bg-ink/60 px-4 text-sm font-medium text-white">
+          <input
+            type="checkbox"
+            checked={dontShowAgain}
+            onChange={(event) => {
+              dontShowAgainRef.current = event.target.checked;
+              setDontShowAgain(event.target.checked);
             }}
-            onWheel={(e) => e.preventDefault()}
-            onTouchMove={(e) => e.preventDefault()}
-            onClick={(e) => e.stopPropagation()}
-        >
-            {/* Close Button — disabled durante countdown */}
-            <button
-                onClick={canClose ? handleClose : undefined}
-                disabled={!canClose}
-                className={`absolute top-4 right-4 z-10 p-1 rounded-full transition-all duration-200 ${
-                    canClose
-                        ? 'bg-white/10 backdrop-blur-md hover:bg-white/20 cursor-pointer'
-                        : 'cursor-not-allowed'
-                }`}
-                aria-label={canClose ? 'Cerrar promoción' : `Espera ${countdown}s`}
-            >
-                {canClose ? (
-                    <span className="w-10 h-10 flex items-center justify-center">
-                        <FiX className="w-6 h-6 text-white" />
-                    </span>
-                ) : (
-                    /* Circular countdown SVG */
-                    <span className="relative w-10 h-10 flex items-center justify-center">
-                        <svg className="absolute inset-0" width="40" height="40" viewBox="0 0 40 40">
-                            <circle cx="20" cy="20" r="17" fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
-                            <circle
-                                cx="20" cy="20" r="17"
-                                fill="none"
-                                stroke="white"
-                                strokeWidth="2.5"
-                                strokeDasharray="106.8"
-                                strokeDashoffset={106.8 - (106.8 * (countdown / 5))}
-                                strokeLinecap="round"
-                                style={{ transform: 'rotate(-90deg)', transformOrigin: 'center', transition: 'stroke-dashoffset 1s linear' }}
-                            />
-                        </svg>
-                        <span className="relative text-white text-sm font-bold z-10">{countdown}</span>
-                    </span>
-                )}
-            </button>
-
-            {/* Image Container */}
-            <div
-                className={`
-          transform transition-all duration-500 ease-out
-          ${isVisible && !isClosing ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}
-        `}
-            >
-                {settings.hotAdLink ? (
-                    <Link
-                        href={settings.hotAdLink}
-                        onClick={handleClose}
-                        className="block cursor-pointer"
-                    >
-                        {ImageContent}
-                    </Link>
-                ) : (
-                    <div className="cursor-default">
-                        {ImageContent}
-                    </div>
-                )}
-            </div>
-
-            {/* Bottom Bar with "Don't show again" checkbox */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
-                {/* Premium Checkbox */}
-                <label
-                    className="flex items-center gap-3 px-5 py-2.5 bg-white/10 backdrop-blur-md rounded-full cursor-pointer hover:bg-white/15 transition-all group border border-white/20"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div className="relative">
-                        <input
-                            type="checkbox"
-                            checked={dontShowAgain}
-                            onChange={(e) => setDontShowAgain(e.target.checked)}
-                            className="sr-only peer"
-                        />
-                        <div className="w-5 h-5 rounded-md border-2 border-white/50 peer-checked:border-amber-400 peer-checked:bg-amber-400 transition-all flex items-center justify-center">
-                            {dontShowAgain && (
-                                <svg className="w-3 h-3 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                            )}
-                        </div>
-                    </div>
-                    <span className="text-white/90 text-sm font-medium flex items-center gap-2">
-                        <FiEyeOff className="w-4 h-4 text-white/60" />
-                        No volver a mostrar
-                    </span>
-                </label>
-            </div>
-        </div>
-    );
+            className="h-4 w-4 accent-brand-500"
+          />
+          No volver a mostrar esta promoción
+        </label>
+      </div>
+    </div>
+  );
 }
-

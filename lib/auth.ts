@@ -38,7 +38,6 @@ export const authOptions: NextAuthOptions = {
               await prisma.session.deleteMany({
                 where: { userId: user.id },
               });
-              console.log(`[AUTH] SUPER_ADMIN session cleared for: ${user.email}`);
             }
 
             // Update last login info

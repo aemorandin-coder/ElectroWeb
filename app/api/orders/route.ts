@@ -891,7 +891,6 @@ export async function PATCH(request: NextRequest) {
               subject: `Orden Cancelada - ${oldOrder.orderNumber}`,
               html: emailHtml,
             });
-            console.log('[ORDER] Cancellation email sent for order:', oldOrder.orderNumber);
           } catch (emailError) {
             console.error('Error sending cancellation email:', emailError);
             // Don't fail the cancellation if email fails

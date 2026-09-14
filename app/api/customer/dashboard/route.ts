@@ -56,7 +56,6 @@ export async function GET(request: NextRequest) {
             });
         } catch (error) {
             // Wishlist table might not exist yet
-            console.log('Wishlist table not found');
         }
 
         // Calculate total spent this month

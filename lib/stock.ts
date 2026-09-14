@@ -113,7 +113,6 @@ export async function reserveStock(userId: string, items: { productId: string; q
             product.name?.toLowerCase().includes('key') ||
             product.name?.toLowerCase().includes('suscripción') ||
             product.name?.toLowerCase().includes('suscripcion')) {
-            console.log(`[STOCK] Skipping digital product: ${product.name}`);
             continue;
         }
 

@@ -178,8 +178,6 @@ export async function POST(request: NextRequest) {
             severity: 'CRITICAL',
         });
 
-        console.log(`[SUCCESS] User ${email} promoted to SUPER_ADMIN`);
-
         return NextResponse.json({
             success: true,
             message: `User ${email} has been promoted to SUPER_ADMIN`,

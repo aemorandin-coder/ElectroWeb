@@ -60,7 +60,6 @@ const getTransporterWithSettings = async () => {
 
   // If we have database settings and they're configured, use them
   if (dbSettings && dbSettings.isConfigured && dbSettings.smtpHost && dbSettings.smtpUser && dbSettings.smtpPassword) {
-    console.log('[EMAIL] Using database SMTP configuration:', dbSettings.smtpHost);
     return nodemailer.createTransport({
       host: dbSettings.smtpHost,
       port: dbSettings.smtpPort || 465,
@@ -78,7 +77,6 @@ const getTransporterWithSettings = async () => {
 
   // Fallback to environment variables
   const provider = process.env.EMAIL_PROVIDER || 'gmail';
-  console.log('[EMAIL] Using environment variable configuration:', provider);
 
   const baseConfig = {
     auth: {
@@ -151,7 +149,7 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
       const isDevelopment = process.env.NODE_ENV === 'development';
 
       if (testEmail && isDevelopment) {
-        console.log(`[EMAIL] Modo prueba: Redirigiendo de ${toArray.join(', ')} a ${testEmail}`);
+        console.warn(`[EMAIL] Modo prueba: Redirigiendo de ${toArray.join(', ')} a ${testEmail}`);
         toArray = [testEmail];
       }
 
@@ -164,7 +162,6 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
       });
 
       if (result.data) {
-        console.log('[EMAIL] Enviado via Resend:', result.data.id);
         return { success: true, messageId: result.data.id };
       } else {
         console.error('[EMAIL] Error Resend:', result.error);
@@ -199,7 +196,6 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('[EMAIL] Enviado via SMTP:', info.messageId);
 
     return { success: true, messageId: info.messageId };
   } catch (error: any) {

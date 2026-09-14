@@ -88,11 +88,6 @@ export async function verificarPagoMovil(
         reqCed: params.reqCed || false,
     };
 
-    console.log('[BDV API] Verificando pago móvil:', {
-        ...requestBody,
-        apiUrl: usarCalidad ? 'CALIDAD' : 'PRODUCCION',
-    });
-
     try {
         // Issue #16 fix: AbortController con timeout de 15s para evitar peticiones zombi
         const controller = new AbortController();
@@ -114,7 +109,6 @@ export async function verificarPagoMovil(
         }
 
         const data = await response.json();
-        console.log('[BDV API] Respuesta:', data);
 
         // Verificar código de respuesta
         if (data.code === BDV_RESPONSE_CODES.SUCCESS) {

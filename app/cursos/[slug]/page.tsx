@@ -21,9 +21,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  const [session, settings, course] = await Promise.all([
+  const [session, course] = await Promise.all([
     getServerSession(authOptions),
-    prisma.companySettings.findFirst(),
     prisma.course.findUnique({
       where: { slug, isActive: true },
       include: {
@@ -71,7 +70,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
 
   return (
     <div className="min-h-dvh bg-surface">
-      <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
+      <PublicHeader />
       <CourseDetailClient
         course={JSON.parse(JSON.stringify(gatedCourse))}
         isEnrolled={!!enrollment}

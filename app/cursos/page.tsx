@@ -190,8 +190,7 @@ export default async function CursosPage({
   const { cat } = await searchParams;
   const selectedCat = CATEGORIES.find((c) => c.value === cat)?.value;
 
-  const [settings, courses] = await Promise.all([
-    prisma.companySettings.findFirst(),
+  const [courses] = await Promise.all([
     prisma.course.findMany({
       where: {
         isActive: true,
@@ -212,7 +211,7 @@ export default async function CursosPage({
 
   return (
     <div className="min-h-dvh bg-white">
-      <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
+      <PublicHeader />
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">

@@ -219,7 +219,6 @@ export default function PaymentsPage() {
             const response = await fetch('/api/admin/payments');
             if (response.ok) {
                 const data = await response.json();
-                console.log('Payment methods loaded:', data.length, 'methods');
                 // Sort by sortOrder
                 data.sort((a: PaymentMethod, b: PaymentMethod) => (a.sortOrder || 0) - (b.sortOrder || 0));
                 setMethods(data);

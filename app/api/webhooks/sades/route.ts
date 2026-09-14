@@ -48,7 +48,6 @@ export async function POST(req: NextRequest) {
 
         // 3. Procesar Eventos
         const { evento, data } = payload;
-        console.log(`Webhook Received: ${evento}`, data);
 
         if (!data?.sku) {
             return NextResponse.json({ error: 'Missing SKU in data' }, { status: 400 });
@@ -93,7 +92,7 @@ export async function POST(req: NextRequest) {
                 break;
 
             default:
-                console.log(`Webhook: Evento no manejado: ${evento}`);
+                console.warn(`Webhook: Evento no manejado: ${evento}`);
         }
 
         return NextResponse.json({ received: true });

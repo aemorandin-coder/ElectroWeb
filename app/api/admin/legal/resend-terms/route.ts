@@ -53,7 +53,6 @@ export async function POST(request: Request) {
         });
 
         // Log the action
-        console.log(`[LEGAL] Admin ${session.user.email} solicitó reaceptación de términos para usuario ${user.email} (acceptance: ${acceptanceId})`);
 
         return NextResponse.json({
             success: true,

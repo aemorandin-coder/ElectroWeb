@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { email, senderName, giftAmount } = body;
+        const { email } = body;
 
         if (!email) {
             return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
@@ -78,9 +78,6 @@ export async function POST(request: NextRequest) {
 
         // TODO: Send invitation email
         // For now, just log and return success
-        console.log(`Sending invitation email to: ${email}`);
-        console.log(`Sender: ${senderName || session.user.name}`);
-        console.log(`Gift Amount: $${giftAmount}`);
 
         // In production, you would send an email here with a link like:
         // https://electroshop.com/registro?ref=gift&from=senderEmail&amount=giftAmount

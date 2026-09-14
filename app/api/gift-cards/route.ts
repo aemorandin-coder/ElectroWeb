@@ -179,7 +179,6 @@ export async function POST(request: Request) {
                     personalMessage: personalMessage || undefined,
                     designName: giftCard.design?.name || undefined,
                 });
-                console.log('[GIFT CARD] Email sent to recipient:', recipientEmail);
             } catch (emailError) {
                 console.error('[GIFT CARD] Failed to send email to recipient:', emailError);
                 // Don't fail the request if email fails - gift card is still created

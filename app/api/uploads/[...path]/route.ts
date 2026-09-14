@@ -34,12 +34,8 @@ export async function GET(
         // Construct the file path
         const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
 
-        console.log(`[UPLOADS API] Requested: ${filename}`);
-        console.log(`[UPLOADS API] Full path: ${filePath}`);
-
         // Check if file exists
         if (!existsSync(filePath)) {
-            console.log(`[UPLOADS API] File not found: ${filePath}`);
             return NextResponse.json({ error: 'File not found' }, { status: 404 });
         }
 
@@ -49,8 +45,6 @@ export async function GET(
         // Get MIME type from extension
         const ext = path.extname(filePath).toLowerCase();
         const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-
-        console.log(`[UPLOADS API] Serving: ${filename} (${contentType}, ${buffer.length} bytes)`);
 
         // Return the file with proper headers
         return new NextResponse(buffer, {

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiCreditCard, FiUpload, FiImage, FiX, FiShield } from 'react-icons/fi';
 import { HiOutlineQrcode } from 'react-icons/hi';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 import { BANCOS_VENEZUELA, type BancoVenezuela } from '@/lib/pago-movil/bancos-venezuela';
 
 interface CheckoutPagoMovilFormProps {
@@ -123,13 +124,13 @@ export default function CheckoutPagoMovilForm({
 
         // Validate file type
         if (!file.type.startsWith('image/')) {
-            alert('Solo se permiten archivos de imagen');
+            toast.error('Solo se permiten archivos de imagen');
             return;
         }
 
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            alert('La imagen no puede superar 5MB');
+            toast.error('La imagen no puede superar 5MB');
             return;
         }
 
@@ -143,13 +144,13 @@ export default function CheckoutPagoMovilForm({
                 setUploadingImage(false);
             };
             reader.onerror = () => {
-                alert('Error al cargar la imagen');
+                toast.error('Error al cargar la imagen');
                 setUploadingImage(false);
             };
             reader.readAsDataURL(file);
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Error al subir la imagen');
+            toast.error('Error al subir la imagen');
             setUploadingImage(false);
         }
     };

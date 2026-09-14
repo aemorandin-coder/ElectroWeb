@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import Footer from '@/components/Footer';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -508,7 +509,7 @@ export default function CheckoutPage() {
       }
     } catch (err) {
       console.error('Error reading clipboard:', err);
-      alert('No se pudo leer del portapapeles. Por favor, copia manualmente la dirección.');
+      toast.error('No se pudo leer del portapapeles. Por favor, copia manualmente la dirección.');
     }
   };
 

@@ -35,9 +35,9 @@
   --color-deal-bg: #fef2f2;
   --color-tag: #f59e0b;
   --color-success: #10b981;
-  --color-success-strong: #059669;
+  --color-success-strong: #047857; /* 5,5:1 sobre blanco (C-30) */
   --color-warning: #f59e0b;
-  --color-warning-strong: #d97706;
+  --color-warning-strong: #b45309; /* 5,0:1 sobre blanco (C-30) */
   --color-danger: #ef4444;
   --color-info: #3b82f6;
   --color-whatsapp: #25d366;
@@ -83,6 +83,17 @@ body:has(#mobile-bottom-nav):has([data-site-footer]) {
 
 body:has(#mobile-bottom-nav) [data-site-footer] {
   padding-bottom: calc(2rem + var(--bottom-nav-h) + env(safe-area-inset-bottom));
+}
+
+/* Detalle de producto en móvil (C-31): con la barra fija "Agregar" visible, WhatsApp sube y el footer deja su espacio */
+@media (width < 64rem) {
+  body:has(#product-sticky-bar[data-visible="true"]) #global-whatsapp-button {
+    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 5rem);
+  }
+
+  body:has(#product-sticky-bar) [data-site-footer] {
+    padding-bottom: calc(6rem + var(--bottom-nav-h) + env(safe-area-inset-bottom));
+  }
 }
 
 /* Hide scrollbar utility */

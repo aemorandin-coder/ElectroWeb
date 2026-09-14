@@ -1,7 +1,8 @@
 export type ProductBadgeVariant = 'deal' | 'new' | 'digital' | 'soldout' | 'tag';
 
 const VARIANT_CLASSES: Record<ProductBadgeVariant, string> = {
-  deal: 'bg-deal-bg text-deal',
+  // Sólido: rojo sobre rojo claro no llegaba a 4,5:1 de contraste
+  deal: 'bg-deal text-white',
   new: 'bg-brand-50 text-brand-600',
   digital: 'bg-brand-600 text-white',
   soldout: 'bg-gray-100 text-ink-soft',

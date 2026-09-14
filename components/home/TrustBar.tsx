@@ -8,7 +8,7 @@ import type { PaymentMethodKind } from '@/lib/queries/home';
 type IconType = ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
 
 // Etiqueta e ícono por tipo de método de pago (el tipo lo elige el admin en Métodos de pago)
-const PAYMENT_LABELS: Record<PaymentMethodKind, { label: string; Icon: IconType }> = {
+export const PAYMENT_LABELS: Record<PaymentMethodKind, { label: string; Icon: IconType }> = {
   MOBILE_PAYMENT: { label: 'Pago Móvil', Icon: FiSmartphone },
   BANK_TRANSFER: { label: 'Transferencia', Icon: FiCreditCard },
   ZELLE: { label: 'Zelle', Icon: SiZelle },

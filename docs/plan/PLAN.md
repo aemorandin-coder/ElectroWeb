@@ -45,9 +45,9 @@ Claude lo implementa en C-10/C-11. Gemini **solo usa** estas clases y no inventa
 | `deal-bg` | `#fef2f2` | `bg-deal-bg` | Fondo del badge de oferta |
 | `tag` | `#f59e0b` | `bg-tag text-ink` | Etiqueta amarilla estilo BestBuy ("Oferta del día") |
 | `success` | `#10b981` | `text-success` | "En stock" |
-| `success-strong` | `#059669` | | Texto verde sobre blanco |
+| `success-strong` | `#047857` | | Texto verde sobre blanco (5,5:1; era `#059669`, 3,8:1, cambiado en C-30) |
 | `warning` | `#f59e0b` | | "Quedan 3" |
-| `warning-strong` | `#d97706` | | |
+| `warning-strong` | `#b45309` | | Texto ámbar sobre blanco (5,0:1; era `#d97706`, 3,2:1, cambiado en C-30) |
 | `danger` | `#ef4444` | `text-danger` | Errores |
 | `info` | `#3b82f6` | | Avisos informativos |
 | `whatsapp` | `#25d366` | `bg-whatsapp` | Única excepción de marca externa |
@@ -225,6 +225,7 @@ app/layout.tsx        app/providers.tsx     app/globals.css      app/page.tsx
 app/(public)/**       app/productos/**      app/categorias/**    app/comparar/**
 app/mis-pedidos/**    app/carrito/**   (*)  app/checkout/**  (*)  app/robots.ts  app/sitemap.ts
 components/public/**  components/home/**    components/ui/**     components/notifications/**
+components/catalog/**
 components/checkout/** (*)   components/Footer.tsx   components/CartIcon.tsx
 components/UserAccountButton.tsx   components/WhatsAppButton.tsx   components/HotAdOverlay.tsx
 components/MobileScrollProgress.tsx   components/DynamicFavicon.tsx   components/AnalyticsTracker.tsx

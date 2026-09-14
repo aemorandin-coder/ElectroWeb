@@ -35,9 +35,9 @@
   --color-deal-bg: #fef2f2;
   --color-tag: #f59e0b;
   --color-success: #10b981;
-  --color-success-strong: #059669;
+  --color-success-strong: #047857; /* 5,5:1 sobre blanco (C-30) */
   --color-warning: #f59e0b;
-  --color-warning-strong: #d97706;
+  --color-warning-strong: #b45309; /* 5,0:1 sobre blanco (C-30) */
   --color-danger: #ef4444;
   --color-info: #3b82f6;
   --color-whatsapp: #25d366;

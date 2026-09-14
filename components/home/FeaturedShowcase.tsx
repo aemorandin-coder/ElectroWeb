@@ -28,7 +28,7 @@ export default function FeaturedShowcase({ products, exchangeRateVES, lowStockTh
         <SectionHeader
           id="vitrina-title"
           title={<>Destacados<span className="hidden sm:inline"> de la semana</span></>}
-          href="/productos"
+          href="/productos?sort=destacados"
         />
 
         <div className="xl:hidden">

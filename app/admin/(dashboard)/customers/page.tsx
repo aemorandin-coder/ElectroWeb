@@ -229,7 +229,7 @@ export default function CustomersPage() {
       case 'REJECTED':
         return <span className="px-2.5 py-1 bg-rose-500/10 text-rose-700 text-xs font-bold rounded-full border border-rose-500/20 flex items-center gap-1"><FiX className="w-3 h-3" /> Rechazado</span>;
       default:
-        return <span className="px-2.5 py-1 bg-slate-500/10 text-slate-600 text-xs font-bold rounded-full border border-slate-500/20">No verificado</span>;
+        return <span className="px-2.5 py-1 bg-gray-500/10 text-gray-600 text-xs font-bold rounded-full border border-gray-500/20">No verificado</span>;
     }
   };
 
@@ -239,12 +239,12 @@ export default function CustomersPage() {
       <div className="flex-shrink-0 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl flex items-center justify-center shadow-lg shadow-[#2a63cd]/30">
+            <div className="w-12 h-12 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/30">
               <FiUser className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#212529]">Gestión de Clientes</h1>
-              <p className="text-sm text-[#6a6c6b]">Administra y analiza tu base de clientes</p>
+              <h1 className="text-2xl font-bold text-ink">Gestión de Clientes</h1>
+              <p className="text-sm text-muted">Administra y analiza tu base de clientes</p>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-2">
@@ -252,7 +252,7 @@ export default function CustomersPage() {
               href="/admin/verifications"
               className={`relative flex items-center gap-2 px-3 py-2 border rounded-lg transition-all text-sm font-medium ${pendingVerifications > 0
                   ? 'bg-gradient-to-r from-orange-500 to-red-500 border-red-400 text-white animate-pulse hover:from-orange-600 hover:to-red-600'
-                  : 'bg-white border-[#e9ecef] text-[#6a6c6b] hover:bg-[#f8f9fa] hover:text-[#2a63cd]'
+                  : 'bg-white border-line text-muted hover:bg-surface hover:text-brand-500'
                 }`}
               title="Verificaciones Empresariales"
             >
@@ -266,10 +266,10 @@ export default function CustomersPage() {
             </Link>
             <button
               onClick={() => fetchCustomers()}
-              className="p-2 bg-white border border-[#e9ecef] rounded-lg hover:bg-[#f8f9fa] transition-colors"
+              className="p-2 bg-white border border-line rounded-lg hover:bg-surface transition-colors"
               title="Actualizar"
             >
-              <svg className={`w-5 h-5 text-[#6a6c6b] ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-5 h-5 text-muted ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
@@ -287,7 +287,7 @@ export default function CustomersPage() {
 
         {/* Epic Stats Cards */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="relative bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl p-4 text-white overflow-hidden group hover:shadow-xl hover:shadow-[#2a63cd]/30 transition-all duration-300 hover:scale-[1.02]">
+          <div className="relative bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl p-4 text-white overflow-hidden group hover:shadow-xl hover:shadow-brand-500/30 transition-all duration-300 hover:scale-[1.02]">
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-2">
@@ -340,7 +340,7 @@ export default function CustomersPage() {
           <div className="p-4 border-b border-white/40 bg-gradient-to-r from-white/30 to-white/10">
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6a6c6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
@@ -348,7 +348,7 @@ export default function CustomersPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Buscar clientes por nombre, email..."
-                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-white/70 backdrop-blur-sm border border-white/60 rounded-xl focus:outline-none focus:border-[#2a63cd] focus:ring-2 focus:ring-[#2a63cd]/10 shadow-sm transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-white/70 backdrop-blur-sm border border-white/60 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 shadow-sm transition-all"
                 />
               </div>
             </div>
@@ -356,13 +356,13 @@ export default function CustomersPage() {
 
           {loading ? (
             <div className="p-8 text-center">
-              <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#f8f9fa] mb-2">
-                <svg className="animate-spin h-5 w-5 text-[#2a63cd]" fill="none" viewBox="0 0 24 24">
+              <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface mb-2">
+                <svg className="animate-spin h-5 w-5 text-brand-500" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               </div>
-              <p className="text-xs text-[#6a6c6b]">Cargando clientes...</p>
+              <p className="text-xs text-muted">Cargando clientes...</p>
             </div>
           ) : customers.length === 0 ? (
             <EmptyState
@@ -379,20 +379,20 @@ export default function CustomersPage() {
               {/* Mobile Card View */}
               <div className="grid grid-cols-1 gap-4 md:hidden">
                 {customers.map((customer: any) => (
-                  <div key={customer.id} className="bg-white rounded-lg border border-[#e9ecef] p-4 shadow-sm">
+                  <div key={customer.id} className="bg-white rounded-lg border border-line p-4 shadow-sm">
                     <div className="flex items-start gap-3 mb-3">
                       {customer.image ? (
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[#dee2e6] flex-shrink-0">
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-line-strong flex-shrink-0">
                           <Image src={customer.image} alt={customer.name || ''} fill className="object-cover" />
                         </div>
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                           {(customer.name || customer.email).charAt(0).toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-semibold text-[#212529] truncate">{customer.name || 'Sin nombre'}</h3>
-                        <p className="text-xs text-[#6a6c6b] truncate">{customer.email}</p>
+                        <h3 className="text-sm font-semibold text-ink truncate">{customer.name || 'Sin nombre'}</h3>
+                        <p className="text-xs text-muted truncate">{customer.email}</p>
                       </div>
                       {customer.profile?.customerType === 'COMPANY' ? (
                         <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 bg-blue-50 text-blue-700 rounded-full">
@@ -406,30 +406,30 @@ export default function CustomersPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="bg-[#f8f9fa] p-2 rounded-lg">
-                        <p className="text-xs text-[#6a6c6b] uppercase tracking-wider font-semibold">Órdenes</p>
+                      <div className="bg-surface p-2 rounded-lg">
+                        <p className="text-xs text-muted uppercase tracking-wider font-semibold">Órdenes</p>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-lg font-bold text-[#212529]">{customer.orderCount}</span>
+                          <span className="text-lg font-bold text-ink">{customer.orderCount}</span>
                           {customer.activeOrders > 0 && (
                             <span className="text-xs text-green-600 font-bold">({customer.activeOrders} activas)</span>
                           )}
                         </div>
                       </div>
-                      <div className="bg-[#f8f9fa] p-2 rounded-lg">
-                        <p className="text-xs text-[#6a6c6b] uppercase tracking-wider font-semibold">Total Gastado</p>
-                        <p className="text-lg font-bold text-[#2a63cd]">
+                      <div className="bg-surface p-2 rounded-lg">
+                        <p className="text-xs text-muted uppercase tracking-wider font-semibold">Total Gastado</p>
+                        <p className="text-lg font-bold text-brand-500">
                           ${customer.totalSpent.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t border-[#e9ecef]">
-                      <span className="text-xs text-[#6a6c6b]">
+                    <div className="flex items-center justify-between pt-3 border-t border-line">
+                      <span className="text-xs text-muted">
                         Registrado: {formatDate(customer.createdAt)}
                       </span>
                       <button
                         onClick={() => fetchCustomerDetails(customer.id)}
-                        className="text-[#2a63cd] hover:text-[#1e4ba3] text-xs font-bold hover:underline"
+                        className="text-brand-500 hover:text-brand-600 text-xs font-bold hover:underline"
                       >
                         Ver Detalles
                       </button>
@@ -443,13 +443,13 @@ export default function CustomersPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-white/40 backdrop-blur-sm border-b border-white/20">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Cliente</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Email</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Tipo</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Registro</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Órdenes</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#6a6c6b]">Total</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-[#6a6c6b]">Acciones</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Cliente</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Email</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Tipo</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Registro</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Órdenes</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Total</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-muted">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/20">
@@ -458,33 +458,33 @@ export default function CustomersPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             {customer.image ? (
-                              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#dee2e6]">
+                              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-line-strong">
                                 <Image src={customer.image} alt={customer.name || ''} fill className="object-cover" />
                               </div>
                             ) : (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center text-white text-xs font-bold">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-xs font-bold">
                                 {(customer.name || customer.email).charAt(0).toUpperCase()}
                               </div>
                             )}
-                            <span className="font-medium text-[#212529]">{customer.name || 'Sin nombre'}</span>
+                            <span className="font-medium text-ink">{customer.name || 'Sin nombre'}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-[#6a6c6b]">{customer.email}</td>
+                        <td className="px-4 py-3 text-muted">{customer.email}</td>
                         <td className="px-4 py-3">
                           {customer.profile?.customerType === 'COMPANY' ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500/10 text-blue-700 text-xs font-semibold rounded-full border border-blue-500/20">
                               <FiBriefcase className="w-3 h-3" /> Empresa
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-500/10 text-slate-600 text-xs font-semibold rounded-full border border-slate-500/20">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-500/10 text-gray-600 text-xs font-semibold rounded-full border border-gray-500/20">
                               <FiUser className="w-3 h-3" /> Persona
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-[#6a6c6b] text-xs">{formatDate(customer.createdAt)}</td>
+                        <td className="px-4 py-3 text-muted text-xs">{formatDate(customer.createdAt)}</td>
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center gap-1">
-                            <span className="font-medium text-[#212529]">{customer.orderCount}</span>
+                            <span className="font-medium text-ink">{customer.orderCount}</span>
                             {customer.activeOrders > 0 && (
                               <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
                                 {customer.activeOrders} activas
@@ -493,14 +493,14 @@ export default function CustomersPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="font-semibold text-[#212529]">
+                          <span className="font-semibold text-ink">
                             ${customer.totalSpent.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <button
                             onClick={() => fetchCustomerDetails(customer.id)}
-                            className="text-[#2a63cd] hover:text-[#1e4ba3] text-xs font-medium transition-colors"
+                            className="text-brand-500 hover:text-brand-600 text-xs font-medium transition-colors"
                           >
                             Ver detalles
                           </button>
@@ -532,7 +532,7 @@ export default function CustomersPage() {
               className="relative inline-block align-bottom sm:align-middle bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-3xl my-8 animate-scaleIn"
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-6 pt-6 pb-4">
+              <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     {selectedCustomer.image ? (
@@ -569,7 +569,7 @@ export default function CustomersPage() {
                     <button
                       onClick={() => setActiveTab('PERSONAL')}
                       className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'PERSONAL'
-                        ? 'bg-white text-[#2a63cd]'
+                        ? 'bg-white text-brand-500'
                         : 'text-white/80 hover:bg-white/10'
                         }`}
                     >
@@ -581,7 +581,7 @@ export default function CustomersPage() {
                     <button
                       onClick={() => setActiveTab('COMPANY')}
                       className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'COMPANY'
-                        ? 'bg-white text-[#2a63cd]'
+                        ? 'bg-white text-brand-500'
                         : 'text-white/80 hover:bg-white/10'
                         }`}
                     >
@@ -593,7 +593,7 @@ export default function CustomersPage() {
                     <button
                       onClick={() => setActiveTab('STATS')}
                       className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'STATS'
-                        ? 'bg-white text-[#2a63cd]'
+                        ? 'bg-white text-brand-500'
                         : 'text-white/80 hover:bg-white/10'
                         }`}
                     >
@@ -615,14 +615,14 @@ export default function CustomersPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
                     </div>
-                    <h4 className="text-lg font-semibold text-[#212529] mb-2">¿Eliminar cliente?</h4>
-                    <p className="text-sm text-[#6a6c6b] mb-6">
+                    <h4 className="text-lg font-semibold text-ink mb-2">¿Eliminar cliente?</h4>
+                    <p className="text-sm text-muted mb-6">
                       Esta acción no se puede deshacer. ¿Estás seguro de que deseas eliminar a {selectedCustomer.name || selectedCustomer.email}?
                     </p>
                     <div className="flex gap-3 justify-center">
                       <button
                         onClick={() => setIsDeleting(false)}
-                        className="px-4 py-2 bg-[#f8f9fa] hover:bg-[#e9ecef] text-[#212529] rounded-lg transition-colors"
+                        className="px-4 py-2 bg-surface hover:bg-line text-ink rounded-lg transition-colors"
                       >
                         Cancelar
                       </button>
@@ -639,50 +639,50 @@ export default function CustomersPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-[#212529] mb-1.5">Nombre</label>
+                        <label className="block text-xs font-semibold text-ink mb-1.5">Nombre</label>
                         <input
                           type="text"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full px-3 py-2 text-sm bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd]/20"
+                          className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-[#212529] mb-1.5">Email</label>
+                        <label className="block text-xs font-semibold text-ink mb-1.5">Email</label>
                         <input
                           type="email"
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="w-full px-3 py-2 text-sm bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd]/20"
+                          className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-[#212529] mb-1.5">Teléfono</label>
+                        <label className="block text-xs font-semibold text-ink mb-1.5">Teléfono</label>
                         <input
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full px-3 py-2 text-sm bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd]/20"
+                          className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-[#212529] mb-1.5">WhatsApp</label>
+                        <label className="block text-xs font-semibold text-ink mb-1.5">WhatsApp</label>
                         <input
                           type="tel"
                           value={formData.whatsapp}
                           onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                          className="w-full px-3 py-2 text-sm bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd]/20"
+                          className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#212529] mb-1.5">Tipo de Cliente</label>
+                      <label className="block text-xs font-semibold text-ink mb-1.5">Tipo de Cliente</label>
                       <select
                         value={formData.customerType}
                         onChange={(e) => setFormData({ ...formData, customerType: e.target.value as 'PERSON' | 'COMPANY' })}
-                        className="w-full px-3 py-2 text-sm bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd]/20"
+                        className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                       >
                         <option value="PERSON">Persona Natural</option>
                         <option value="COMPANY">Empresa</option>
@@ -691,29 +691,29 @@ export default function CustomersPage() {
                     {formData.customerType === 'COMPANY' && (
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs font-semibold text-[#212529] mb-1.5">Nombre Empresa</label>
+                          <label className="block text-xs font-semibold text-ink mb-1.5">Nombre Empresa</label>
                           <input
                             type="text"
                             value={formData.companyName}
                             onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                            className="w-full px-3 py-2 text-sm bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd]/20"
+                            className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-[#212529] mb-1.5">RIF/NIT</label>
+                          <label className="block text-xs font-semibold text-ink mb-1.5">RIF/NIT</label>
                           <input
                             type="text"
                             value={formData.taxId}
                             onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
-                            className="w-full px-3 py-2 text-sm bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd]/20"
+                            className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                           />
                         </div>
                         <div className="col-span-2">
-                          <label className="block text-xs font-semibold text-[#212529] mb-1.5">Estado de Verificación</label>
+                          <label className="block text-xs font-semibold text-ink mb-1.5">Estado de Verificación</label>
                           <select
                             value={formData.businessVerificationStatus}
                             onChange={(e) => setFormData({ ...formData, businessVerificationStatus: e.target.value })}
-                            className="w-full px-3 py-2 text-sm bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd]/20"
+                            className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                           >
                             <option value="NONE">No solicitado</option>
                             <option value="PENDING">Pendiente</option>
@@ -722,11 +722,11 @@ export default function CustomersPage() {
                           </select>
                         </div>
                         <div className="col-span-2">
-                          <label className="block text-xs font-semibold text-[#212529] mb-1.5">Notas de Verificación</label>
+                          <label className="block text-xs font-semibold text-ink mb-1.5">Notas de Verificación</label>
                           <textarea
                             value={formData.businessVerificationNotes}
                             onChange={(e) => setFormData({ ...formData, businessVerificationNotes: e.target.value })}
-                            className="w-full px-3 py-2 text-sm bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-1 focus:ring-[#2a63cd]/20"
+                            className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                             rows={3}
                             placeholder="Notas internas sobre la verificación..."
                           />
@@ -741,24 +741,24 @@ export default function CustomersPage() {
                       <div className="space-y-4 animate-fadeIn">
                         <div className="grid grid-cols-2 gap-6">
                           <div>
-                            <label className="text-xs font-semibold text-[#6a6c6b] mb-1 block">Nombre</label>
-                            <p className="text-sm text-[#212529] font-medium">{selectedCustomer.name || 'Sin nombre'}</p>
+                            <label className="text-xs font-semibold text-muted mb-1 block">Nombre</label>
+                            <p className="text-sm text-ink font-medium">{selectedCustomer.name || 'Sin nombre'}</p>
                           </div>
                           <div>
-                            <label className="text-xs font-semibold text-[#6a6c6b] mb-1 block">Email</label>
-                            <p className="text-sm text-[#212529] font-medium">{selectedCustomer.email}</p>
+                            <label className="text-xs font-semibold text-muted mb-1 block">Email</label>
+                            <p className="text-sm text-ink font-medium">{selectedCustomer.email}</p>
                           </div>
                           <div>
-                            <label className="text-xs font-semibold text-[#6a6c6b] mb-1 block">Teléfono</label>
-                            <p className="text-sm text-[#212529]">{selectedCustomer.profile?.phone || 'No registrado'}</p>
+                            <label className="text-xs font-semibold text-muted mb-1 block">Teléfono</label>
+                            <p className="text-sm text-ink">{selectedCustomer.profile?.phone || 'No registrado'}</p>
                           </div>
                           <div>
-                            <label className="text-xs font-semibold text-[#6a6c6b] mb-1 block">WhatsApp</label>
-                            <p className="text-sm text-[#212529]">{selectedCustomer.profile?.whatsapp || 'No registrado'}</p>
+                            <label className="text-xs font-semibold text-muted mb-1 block">WhatsApp</label>
+                            <p className="text-sm text-ink">{selectedCustomer.profile?.whatsapp || 'No registrado'}</p>
                           </div>
                           <div>
-                            <label className="text-xs font-semibold text-[#6a6c6b] mb-1 block">Fecha de Registro</label>
-                            <p className="text-sm text-[#212529]">{formatDate(selectedCustomer.createdAt)}</p>
+                            <label className="text-xs font-semibold text-muted mb-1 block">Fecha de Registro</label>
+                            <p className="text-sm text-ink">{formatDate(selectedCustomer.createdAt)}</p>
                           </div>
                         </div>
                       </div>
@@ -767,26 +767,26 @@ export default function CustomersPage() {
                     {/* COMPANY TAB */}
                     {activeTab === 'COMPANY' && (
                       <div className="space-y-6 animate-fadeIn">
-                        <div className="flex items-center justify-between p-4 bg-[#f8f9fa] rounded-xl border border-[#e9ecef]">
+                        <div className="flex items-center justify-between p-4 bg-surface rounded-xl border border-line">
                           <div>
-                            <p className="text-xs font-semibold text-[#6a6c6b] mb-1">Tipo de Cliente</p>
+                            <p className="text-xs font-semibold text-muted mb-1">Tipo de Cliente</p>
                             <div className="flex items-center gap-2">
                               {selectedCustomer.profile?.customerType === 'COMPANY' ? (
                                 <>
-                                  <FiBriefcase className="w-5 h-5 text-[#2a63cd]" />
-                                  <span className="font-bold text-[#212529]">Empresa</span>
+                                  <FiBriefcase className="w-5 h-5 text-brand-500" />
+                                  <span className="font-bold text-ink">Empresa</span>
                                 </>
                               ) : (
                                 <>
                                   <FiUser className="w-5 h-5 text-gray-500" />
-                                  <span className="font-bold text-[#212529]">Persona Natural</span>
+                                  <span className="font-bold text-ink">Persona Natural</span>
                                 </>
                               )}
                             </div>
                           </div>
                           {selectedCustomer.profile?.customerType === 'COMPANY' && (
                             <div>
-                              <p className="text-xs font-semibold text-[#6a6c6b] mb-1">Estado de Verificación</p>
+                              <p className="text-xs font-semibold text-muted mb-1">Estado de Verificación</p>
                               {getVerificationStatusBadge(selectedCustomer.profile?.businessVerificationStatus || 'NONE')}
                             </div>
                           )}
@@ -796,23 +796,23 @@ export default function CustomersPage() {
                           <>
                             <div className="grid grid-cols-2 gap-6">
                               <div>
-                                <label className="text-xs font-semibold text-[#6a6c6b] mb-1 block">Nombre de la Empresa</label>
-                                <p className="text-sm text-[#212529] font-medium">{selectedCustomer.profile?.companyName || 'No registrado'}</p>
+                                <label className="text-xs font-semibold text-muted mb-1 block">Nombre de la Empresa</label>
+                                <p className="text-sm text-ink font-medium">{selectedCustomer.profile?.companyName || 'No registrado'}</p>
                               </div>
                               <div>
-                                <label className="text-xs font-semibold text-[#6a6c6b] mb-1 block">RIF / NIT</label>
-                                <p className="text-sm text-[#212529] font-medium">{selectedCustomer.profile?.taxId || 'No registrado'}</p>
+                                <label className="text-xs font-semibold text-muted mb-1 block">RIF / NIT</label>
+                                <p className="text-sm text-ink font-medium">{selectedCustomer.profile?.taxId || 'No registrado'}</p>
                               </div>
                             </div>
 
                             <div>
-                              <h4 className="text-sm font-bold text-[#212529] mb-3 flex items-center gap-2">
+                              <h4 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
                                 <FiFileText className="w-4 h-4" /> Documentos
                               </h4>
                               <div className="grid grid-cols-2 gap-4">
-                                <div className="p-3 border border-[#e9ecef] rounded-lg hover:bg-[#f8f9fa] transition-colors">
+                                <div className="p-3 border border-line rounded-lg hover:bg-surface transition-colors">
                                   <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-medium text-[#6a6c6b]">Acta Constitutiva</span>
+                                    <span className="text-xs font-medium text-muted">Acta Constitutiva</span>
                                     {selectedCustomer.profile?.businessConstitutiveAct ? (
                                       <span className="text-xs text-green-600 font-bold">Subido</span>
                                     ) : (
@@ -824,15 +824,15 @@ export default function CustomersPage() {
                                       href={selectedCustomer.profile.businessConstitutiveAct}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-[#2a63cd] text-xs font-bold hover:underline flex items-center gap-1"
+                                      className="text-brand-500 text-xs font-bold hover:underline flex items-center gap-1"
                                     >
                                       <FiDownload className="w-3 h-3" /> Descargar
                                     </a>
                                   )}
                                 </div>
-                                <div className="p-3 border border-[#e9ecef] rounded-lg hover:bg-[#f8f9fa] transition-colors">
+                                <div className="p-3 border border-line rounded-lg hover:bg-surface transition-colors">
                                   <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-medium text-[#6a6c6b]">RIF Digital</span>
+                                    <span className="text-xs font-medium text-muted">RIF Digital</span>
                                     {selectedCustomer.profile?.businessRIFDocument ? (
                                       <span className="text-xs text-green-600 font-bold">Subido</span>
                                     ) : (
@@ -844,7 +844,7 @@ export default function CustomersPage() {
                                       href={selectedCustomer.profile.businessRIFDocument}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-[#2a63cd] text-xs font-bold hover:underline flex items-center gap-1"
+                                      className="text-brand-500 text-xs font-bold hover:underline flex items-center gap-1"
                                     >
                                       <FiDownload className="w-3 h-3" /> Descargar
                                     </a>
@@ -861,11 +861,11 @@ export default function CustomersPage() {
                             )}
                           </>
                         ) : (
-                          <div className="text-center py-8 text-[#6a6c6b]">
+                          <div className="text-center py-8 text-muted">
                             <p>Este cliente está registrado como Persona Natural.</p>
                             <button
                               onClick={() => setIsEditing(true)}
-                              className="mt-2 text-[#2a63cd] text-sm font-medium hover:underline"
+                              className="mt-2 text-brand-500 text-sm font-medium hover:underline"
                             >
                               Cambiar a Empresa
                             </button>
@@ -878,40 +878,40 @@ export default function CustomersPage() {
                     {activeTab === 'STATS' && (
                       <div className="space-y-6 animate-fadeIn">
                         <div className="grid grid-cols-3 gap-4">
-                          <div className="bg-[#f8f9fa] rounded-lg p-4 text-center border border-[#e9ecef]">
-                            <p className="text-xs text-[#6a6c6b] mb-1">Total Gastado</p>
-                            <p className="text-xl font-bold text-[#212529]">
+                          <div className="bg-surface rounded-lg p-4 text-center border border-line">
+                            <p className="text-xs text-muted mb-1">Total Gastado</p>
+                            <p className="text-xl font-bold text-ink">
                               ${(Number(selectedCustomer.stats?.totalSpent) || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                             </p>
                           </div>
-                          <div className="bg-[#f8f9fa] rounded-lg p-4 text-center border border-[#e9ecef]">
-                            <p className="text-xs text-[#6a6c6b] mb-1">Órdenes Totales</p>
-                            <p className="text-xl font-bold text-[#212529]">{selectedCustomer.stats?.orderCount || 0}</p>
+                          <div className="bg-surface rounded-lg p-4 text-center border border-line">
+                            <p className="text-xs text-muted mb-1">Órdenes Totales</p>
+                            <p className="text-xl font-bold text-ink">{selectedCustomer.stats?.orderCount || 0}</p>
                           </div>
-                          <div className="bg-[#f8f9fa] rounded-lg p-4 text-center border border-[#e9ecef]">
-                            <p className="text-xs text-[#6a6c6b] mb-1">Órdenes Activas</p>
-                            <p className="text-xl font-bold text-[#212529]">{selectedCustomer.stats?.activeOrders || 0}</p>
+                          <div className="bg-surface rounded-lg p-4 text-center border border-line">
+                            <p className="text-xs text-muted mb-1">Órdenes Activas</p>
+                            <p className="text-xl font-bold text-ink">{selectedCustomer.stats?.activeOrders || 0}</p>
                           </div>
                         </div>
 
                         <div>
-                          <h4 className="text-sm font-bold text-[#212529] mb-3">Últimas Órdenes</h4>
+                          <h4 className="text-sm font-bold text-ink mb-3">Últimas Órdenes</h4>
                           {selectedCustomer.orders && selectedCustomer.orders.length > 0 ? (
-                            <div className="border border-[#e9ecef] rounded-lg overflow-hidden">
+                            <div className="border border-line rounded-lg overflow-hidden">
                               <table className="w-full text-sm">
-                                <thead className="bg-[#f8f9fa]">
+                                <thead className="bg-surface">
                                   <tr>
-                                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6a6c6b]">Orden</th>
-                                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6a6c6b]">Fecha</th>
-                                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6a6c6b]">Estado</th>
-                                    <th className="px-4 py-2 text-right text-xs font-semibold text-[#6a6c6b]">Total</th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-muted">Orden</th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-muted">Fecha</th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-muted">Estado</th>
+                                    <th className="px-4 py-2 text-right text-xs font-semibold text-muted">Total</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#e9ecef]">
+                                <tbody className="divide-y divide-line">
                                   {selectedCustomer.orders.map((order: any) => (
-                                    <tr key={order.id} className="hover:bg-[#f8f9fa]">
-                                      <td className="px-4 py-2 font-medium text-[#2a63cd]">{order.orderNumber}</td>
-                                      <td className="px-4 py-2 text-[#6a6c6b]">{formatDate(order.createdAt)}</td>
+                                    <tr key={order.id} className="hover:bg-surface">
+                                      <td className="px-4 py-2 font-medium text-brand-500">{order.orderNumber}</td>
+                                      <td className="px-4 py-2 text-muted">{formatDate(order.createdAt)}</td>
                                       <td className="px-4 py-2">
                                         <span className={`px-2 py-0.5 text-xs rounded-full ${order.status === 'PAID' ? 'bg-green-100 text-green-700' :
                                           order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
@@ -920,7 +920,7 @@ export default function CustomersPage() {
                                           {order.status}
                                         </span>
                                       </td>
-                                      <td className="px-4 py-2 text-right font-medium text-[#212529]">
+                                      <td className="px-4 py-2 text-right font-medium text-ink">
                                         ${Number(order.total).toFixed(2)}
                                       </td>
                                     </tr>
@@ -929,7 +929,7 @@ export default function CustomersPage() {
                               </table>
                             </div>
                           ) : (
-                            <p className="text-sm text-[#6a6c6b] text-center py-4">No hay órdenes registradas.</p>
+                            <p className="text-sm text-muted text-center py-4">No hay órdenes registradas.</p>
                           )}
                         </div>
                       </div>
@@ -939,19 +939,19 @@ export default function CustomersPage() {
               </div>
 
               {/* Footer */}
-              <div className="bg-[#f8f9fa] px-6 py-4 flex items-center justify-end gap-3 border-t border-[#e9ecef]">
+              <div className="bg-surface px-6 py-4 flex items-center justify-end gap-3 border-t border-line">
                 {isEditing ? (
                   <>
                     <button
                       onClick={() => setIsEditing(false)}
-                      className="px-4 py-2 bg-[#e9ecef] hover:bg-[#dee2e6] text-[#212529] rounded-lg transition-colors text-sm font-medium"
+                      className="px-4 py-2 bg-line hover:bg-line-strong text-ink rounded-lg transition-colors text-sm font-medium"
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={saveLoading}
-                      className="px-4 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] hover:from-[#1e4ba3] hover:to-[#2a63cd] text-white rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 text-sm font-medium"
+                      className="px-4 py-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-500 text-white rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 text-sm font-medium"
                     >
                       {saveLoading ? 'Guardando...' : 'Guardar Cambios'}
                     </button>
@@ -966,7 +966,7 @@ export default function CustomersPage() {
                     </button>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="px-4 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] hover:from-[#1e4ba3] hover:to-[#2a63cd] text-white rounded-lg transition-all shadow-md hover:shadow-lg text-sm font-medium"
+                      className="px-4 py-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-500 text-white rounded-lg transition-all shadow-md hover:shadow-lg text-sm font-medium"
                     >
                       Editar
                     </button>

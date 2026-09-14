@@ -436,7 +436,7 @@ export default function ProductForm({ productId }: Props) {
             <Button variant="ghost" onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500">
               <FiArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="text-xl font-bold text-[#1a1a1a]">
+            <h1 className="text-xl font-bold text-ink">
               {isEditing ? 'Editar producto' : 'Agregar producto'}
             </h1>
           </div>
@@ -447,7 +447,7 @@ export default function ProductForm({ productId }: Props) {
             <Button
               onClick={handleSubmit}
               isLoading={isLoading}
-              className="bg-[#1a1a1a] hover:bg-[#333] text-white text-sm font-medium px-6 py-2 rounded-lg shadow-lg shadow-black/10 transition-transform active:scale-95"
+              className="bg-ink hover:bg-[#333] text-white text-sm font-medium px-6 py-2 rounded-lg shadow-lg shadow-black/10 transition-transform active:scale-95"
             >
               {isEditing ? 'Guardar cambios' : 'Guardar producto'}
             </Button>
@@ -807,10 +807,10 @@ export default function ProductForm({ productId }: Props) {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <h2 className="text-base font-bold text-gray-900 mb-4">Tipo de producto</h2>
               <div className="flex gap-3 mb-4">
-                <button type="button" onClick={() => updateFormData('productType', 'PHYSICAL')} className={`flex-1 p-4 rounded-xl border-2 transition-all ${formData.productType === 'PHYSICAL' ? 'border-[#2a63cd] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                <button type="button" onClick={() => updateFormData('productType', 'PHYSICAL')} className={`flex-1 p-4 rounded-xl border-2 transition-all ${formData.productType === 'PHYSICAL' ? 'border-brand-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
                   <div className="flex flex-col items-center gap-2">
-                    <MdOutlineLocalShipping className={`w-6 h-6 ${formData.productType === 'PHYSICAL' ? 'text-[#2a63cd]' : 'text-gray-400'}`} />
-                    <span className={`text-sm font-bold ${formData.productType === 'PHYSICAL' ? 'text-[#2a63cd]' : 'text-gray-600'}`}>Físico</span>
+                    <MdOutlineLocalShipping className={`w-6 h-6 ${formData.productType === 'PHYSICAL' ? 'text-brand-500' : 'text-gray-400'}`} />
+                    <span className={`text-sm font-bold ${formData.productType === 'PHYSICAL' ? 'text-brand-500' : 'text-gray-600'}`}>Físico</span>
                   </div>
                 </button>
                 <button type="button" onClick={() => { updateFormData('productType', 'DIGITAL'); if (parseInt(formData.stock) === 0) updateFormData('stock', '999'); }} className={`flex-1 p-4 rounded-xl border-2 transition-all ${formData.productType === 'DIGITAL' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-gray-300'}`}>
@@ -836,7 +836,7 @@ export default function ProductForm({ productId }: Props) {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Plataforma <span className="text-red-500">*</span></label>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg flex items-center justify-center text-[#2a63cd]">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg flex items-center justify-center text-brand-500">
                         {formData.digitalPlatform === 'ROBLOX' && <SiRoblox className="w-5 h-5" />}
                         {formData.digitalPlatform === 'STEAM' && <SiSteam className="w-5 h-5" />}
                         {formData.digitalPlatform === 'PLAYSTATION' && <SiPlaystation className="w-5 h-5" />}
@@ -847,7 +847,7 @@ export default function ProductForm({ productId }: Props) {
                         {!formData.digitalPlatform && <FiMonitor className="w-5 h-5 text-gray-300" />}
                         {formData.digitalPlatform && !['ROBLOX','STEAM','PLAYSTATION','NINTENDO','NETFLIX','SPOTIFY','APPLE'].includes(formData.digitalPlatform) && <FiMonitor className="w-5 h-5" />}
                       </div>
-                      <select value={formData.digitalPlatform} onChange={(e) => updateFormData('digitalPlatform', e.target.value)} className={`flex-1 appearance-none bg-white border text-gray-900 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#2a63cd] ${errors.digitalPlatform ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}>
+                      <select value={formData.digitalPlatform} onChange={(e) => updateFormData('digitalPlatform', e.target.value)} className={`flex-1 appearance-none bg-white border text-gray-900 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-brand-500 ${errors.digitalPlatform ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}>
                         <option value="">Seleccionar plataforma...</option>
                         <option value="STEAM">Steam</option>
                         <option value="PLAYSTATION">PlayStation</option>
@@ -875,10 +875,10 @@ export default function ProductForm({ productId }: Props) {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Región de cuenta</label>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg flex items-center justify-center text-[#2a63cd]">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg flex items-center justify-center text-brand-500">
                         {formData.digitalRegion === 'USA' ? <FaFlagUsa className="w-5 h-5" /> : <FaGlobeAmericas className="w-5 h-5" />}
                       </div>
-                      <select value={formData.digitalRegion} onChange={(e) => updateFormData('digitalRegion', e.target.value)} className="flex-1 appearance-none bg-white border border-gray-300 text-gray-900 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#2a63cd]">
+                      <select value={formData.digitalRegion} onChange={(e) => updateFormData('digitalRegion', e.target.value)} className="flex-1 appearance-none bg-white border border-gray-300 text-gray-900 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-brand-500">
                         <option value="GLOBAL">Global (Todas las regiones)</option>
                         <option value="USA">Estados Unidos</option>
                         <option value="LATAM">Latinoamérica</option>
@@ -891,9 +891,9 @@ export default function ProductForm({ productId }: Props) {
                   <div className="border-t border-gray-100 pt-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Método de entrega digital</label>
                     <div className="grid grid-cols-2 gap-3 mb-3">
-                      <button type="button" onClick={() => updateFormData('deliveryMethod', 'INSTANT')} className={`p-3 rounded-xl border-2 text-left transition-all ${formData.deliveryMethod === 'INSTANT' ? 'border-[#2a63cd] bg-blue-50/50' : 'border-gray-200 hover:border-gray-300'}`}>
+                      <button type="button" onClick={() => updateFormData('deliveryMethod', 'INSTANT')} className={`p-3 rounded-xl border-2 text-left transition-all ${formData.deliveryMethod === 'INSTANT' ? 'border-brand-500 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300'}`}>
                         <div className="flex flex-col gap-1">
-                          <span className={`text-sm font-bold flex items-center gap-1.5 ${formData.deliveryMethod === 'INSTANT' ? 'text-[#1e4ba3]' : 'text-gray-700'}`}><FiSend className="w-4 h-4" /> Envío Instantáneo</span>
+                          <span className={`text-sm font-bold flex items-center gap-1.5 ${formData.deliveryMethod === 'INSTANT' ? 'text-brand-600' : 'text-gray-700'}`}><FiSend className="w-4 h-4" /> Envío Instantáneo</span>
                           <span className="text-xs text-gray-500">Código automático al pagar.</span>
                         </div>
                       </button>
@@ -923,7 +923,7 @@ export default function ProductForm({ productId }: Props) {
             {formData.productType === 'PHYSICAL' && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 animate-fadeIn">
                 <div className="flex items-center gap-2 mb-4">
-                  <MdOutlineLocalShipping className="w-5 h-5 text-[#2a63cd]" />
+                  <MdOutlineLocalShipping className="w-5 h-5 text-brand-500" />
                   <h2 className="text-base font-bold text-gray-900">Envío</h2>
                 </div>
                 <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 rounded-xl p-4 mb-4">

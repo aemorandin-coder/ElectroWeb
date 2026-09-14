@@ -254,12 +254,12 @@ export default function AdminCursosPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#212529]">Cursos / Plataforma</h1>
-          <p className="text-sm text-[#6a6c6b] mt-1">{courses.length} cursos en total</p>
+          <h1 className="text-2xl font-bold text-ink">Cursos / Plataforma</h1>
+          <p className="text-sm text-muted mt-1">{courses.length} cursos en total</p>
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-[#2a63cd] text-white text-sm font-semibold rounded-lg hover:bg-[#1e4ba3] transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white text-sm font-semibold rounded-lg hover:bg-brand-600 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -272,7 +272,7 @@ export default function AdminCursosPage() {
       <div className="flex gap-2 flex-wrap mb-6">
         <button
           onClick={() => setFilterCat('')}
-          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${!filterCat ? 'bg-[#2a63cd] text-white' : 'bg-[#f8f9fa] text-[#6a6c6b] hover:bg-[#e9ecef]'}`}
+          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${!filterCat ? 'bg-brand-500 text-white' : 'bg-surface text-muted hover:bg-line'}`}
         >
           Todos ({courses.length})
         </button>
@@ -282,7 +282,7 @@ export default function AdminCursosPage() {
             <button
               key={cat.value}
               onClick={() => setFilterCat(cat.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${filterCat === cat.value ? 'bg-[#2a63cd] text-white' : 'bg-[#f8f9fa] text-[#6a6c6b] hover:bg-[#e9ecef]'}`}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${filterCat === cat.value ? 'bg-brand-500 text-white' : 'bg-surface text-muted hover:bg-line'}`}
             >
               {cat.label} ({count})
             </button>
@@ -292,22 +292,22 @@ export default function AdminCursosPage() {
 
       {/* Courses grid */}
       {loading ? (
-        <div className="text-center py-16 text-[#6a6c6b]">Cargando cursos...</div>
+        <div className="text-center py-16 text-muted">Cargando cursos...</div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <div className="text-5xl mb-3">📚</div>
-          <p className="text-[#6a6c6b]">No hay cursos aún. ¡Crea el primero!</p>
+          <p className="text-muted">No hay cursos aún. ¡Crea el primero!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((course) => (
-            <div key={course.id} className="bg-white border border-[#e9ecef] rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-              <div className="relative h-40 bg-gradient-to-br from-[#2a63cd]/10 to-[#2a63cd]/5">
+            <div key={course.id} className="bg-white border border-line rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+              <div className="relative h-40 bg-gradient-to-br from-brand-500/10 to-brand-500/5">
                 {course.thumbnail ? (
                   <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <svg className="w-12 h-12 text-[#2a63cd]/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-12 h-12 text-brand-500/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                   </div>
@@ -329,16 +329,16 @@ export default function AdminCursosPage() {
                 </div>
               </div>
               <div className="p-4">
-                <h3 className="font-semibold text-[#212529] text-sm line-clamp-2 mb-1">{course.title}</h3>
-                {course.shortDesc && <p className="text-xs text-[#6a6c6b] line-clamp-2 mb-2">{course.shortDesc}</p>}
-                <div className="flex items-center gap-3 text-xs text-[#6a6c6b] mb-3">
+                <h3 className="font-semibold text-ink text-sm line-clamp-2 mb-1">{course.title}</h3>
+                {course.shortDesc && <p className="text-xs text-muted line-clamp-2 mb-2">{course.shortDesc}</p>}
+                <div className="flex items-center gap-3 text-xs text-muted mb-3">
                   <span>${Number(course.priceUSD).toFixed(2)}</span>
                   <span>{course._count?.enrollments ?? course.enrollmentCount} inscritos</span>
                   <span>{course._count?.modules ?? 0} módulos</span>
                   {course.rating && <span>★ {Number(course.rating).toFixed(1)}</span>}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => openEdit(course)} className="flex-1 py-1.5 text-xs font-semibold text-[#2a63cd] border border-[#2a63cd] rounded-lg hover:bg-[#2a63cd] hover:text-white transition-colors">Editar</button>
+                  <button onClick={() => openEdit(course)} className="flex-1 py-1.5 text-xs font-semibold text-brand-500 border border-brand-500 rounded-lg hover:bg-brand-500 hover:text-white transition-colors">Editar</button>
                   <button
                     onClick={() => handleToggle(course)}
                     className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${course.isActive ? 'border-orange-300 text-orange-600 hover:bg-orange-50' : 'border-green-300 text-green-600 hover:bg-green-50'}`}
@@ -362,9 +362,9 @@ export default function AdminCursosPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             {/* Modal header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#e9ecef]">
-              <h2 className="text-lg font-bold text-[#212529]">{editingId ? 'Editar Curso' : 'Nuevo Curso'}</h2>
-              <button onClick={() => setShowModal(false)} className="text-[#6a6c6b] hover:text-[#212529]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+              <h2 className="text-lg font-bold text-ink">{editingId ? 'Editar Curso' : 'Nuevo Curso'}</h2>
+              <button onClick={() => setShowModal(false)} className="text-muted hover:text-ink">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -372,12 +372,12 @@ export default function AdminCursosPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-[#e9ecef] px-6">
+            <div className="flex border-b border-line px-6">
               {(['info', 'curriculum'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`py-3 px-4 text-sm font-semibold border-b-2 transition-colors ${activeTab === tab ? 'border-[#2a63cd] text-[#2a63cd]' : 'border-transparent text-[#6a6c6b] hover:text-[#212529]'}`}
+                  className={`py-3 px-4 text-sm font-semibold border-b-2 transition-colors ${activeTab === tab ? 'border-brand-500 text-brand-500' : 'border-transparent text-muted hover:text-ink'}`}
                 >
                   {tab === 'info' ? 'Información' : 'Currículum'}
                 </button>
@@ -389,55 +389,55 @@ export default function AdminCursosPage() {
               {activeTab === 'info' ? (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-[#6a6c6b] mb-1">Título *</label>
-                    <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full px-3 py-2 border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd]" placeholder="Título del curso" />
+                    <label className="block text-xs font-semibold text-muted mb-1">Título *</label>
+                    <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="Título del curso" />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-[#6a6c6b] mb-1">Descripción corta</label>
-                    <input value={form.shortDesc} onChange={(e) => setForm({ ...form, shortDesc: e.target.value })} className="w-full px-3 py-2 border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd]" placeholder="Resumen para la tarjeta (1-2 líneas)" />
+                    <label className="block text-xs font-semibold text-muted mb-1">Descripción corta</label>
+                    <input value={form.shortDesc} onChange={(e) => setForm({ ...form, shortDesc: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="Resumen para la tarjeta (1-2 líneas)" />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-[#6a6c6b] mb-1">Descripción completa *</label>
-                    <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} className="w-full px-3 py-2 border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd] resize-none" placeholder="Describe el curso en detalle..." />
+                    <label className="block text-xs font-semibold text-muted mb-1">Descripción completa *</label>
+                    <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500 resize-none" placeholder="Describe el curso en detalle..." />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#6a6c6b] mb-1">Categoría</label>
-                    <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd]">
+                    <label className="block text-xs font-semibold text-muted mb-1">Categoría</label>
+                    <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500">
                       <option value="">Seleccionar...</option>
                       {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#6a6c6b] mb-1">Nivel</label>
-                    <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="w-full px-3 py-2 border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd]">
+                    <label className="block text-xs font-semibold text-muted mb-1">Nivel</label>
+                    <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500">
                       <option value="">Seleccionar...</option>
                       {LEVELS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#6a6c6b] mb-1">Instructor</label>
-                    <input value={form.instructor} onChange={(e) => setForm({ ...form, instructor: e.target.value })} className="w-full px-3 py-2 border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd]" placeholder="Nombre del instructor" />
+                    <label className="block text-xs font-semibold text-muted mb-1">Instructor</label>
+                    <input value={form.instructor} onChange={(e) => setForm({ ...form, instructor: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="Nombre del instructor" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#6a6c6b] mb-1">Precio (USD) *</label>
-                    <input type="number" min="0" step="0.01" value={form.priceUSD} onChange={(e) => setForm({ ...form, priceUSD: e.target.value })} className="w-full px-3 py-2 border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd]" placeholder="0.00" />
+                    <label className="block text-xs font-semibold text-muted mb-1">Precio (USD) *</label>
+                    <input type="number" min="0" step="0.01" value={form.priceUSD} onChange={(e) => setForm({ ...form, priceUSD: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="0.00" />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-[#6a6c6b] mb-1">URL Miniatura</label>
-                    <input value={form.thumbnail} onChange={(e) => setForm({ ...form, thumbnail: e.target.value })} className="w-full px-3 py-2 border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd]" placeholder="https://..." />
+                    <label className="block text-xs font-semibold text-muted mb-1">URL Miniatura</label>
+                    <input value={form.thumbnail} onChange={(e) => setForm({ ...form, thumbnail: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="https://..." />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-[#6a6c6b] mb-1">URL Tráiler (YouTube/Vimeo unlisted)</label>
-                    <input value={form.trailerUrl} onChange={(e) => setForm({ ...form, trailerUrl: e.target.value })} className="w-full px-3 py-2 border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd]" placeholder="https://youtube.com/watch?v=..." />
+                    <label className="block text-xs font-semibold text-muted mb-1">URL Tráiler (YouTube/Vimeo unlisted)</label>
+                    <input value={form.trailerUrl} onChange={(e) => setForm({ ...form, trailerUrl: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="https://youtube.com/watch?v=..." />
                   </div>
                   <div className="col-span-2 flex gap-6">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} className="w-4 h-4 accent-[#2a63cd]" />
-                      <span className="text-sm font-medium text-[#212529]">Destacado</span>
+                      <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} className="w-4 h-4 accent-brand-500" />
+                      <span className="text-sm font-medium text-ink">Destacado</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="w-4 h-4 accent-[#2a63cd]" />
-                      <span className="text-sm font-medium text-[#212529]">Activo (visible en catálogo)</span>
+                      <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="w-4 h-4 accent-brand-500" />
+                      <span className="text-sm font-medium text-ink">Activo (visible en catálogo)</span>
                     </label>
                   </div>
                 </div>
@@ -445,40 +445,40 @@ export default function AdminCursosPage() {
                 /* Curriculum tab */
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-[#6a6c6b]">
+                    <p className="text-sm text-muted">
                       {curriculum.length} módulo(s) · {curriculum.reduce((s, m) => s + m.lessons.length, 0)} lección(es)
                     </p>
-                    <button onClick={addModule} className="px-3 py-1.5 bg-[#2a63cd] text-white text-xs font-semibold rounded-lg hover:bg-[#1e4ba3] transition-colors">
+                    <button onClick={addModule} className="px-3 py-1.5 bg-brand-500 text-white text-xs font-semibold rounded-lg hover:bg-brand-600 transition-colors">
                       + Añadir Módulo
                     </button>
                   </div>
 
                   {curriculum.length === 0 && (
-                    <div className="text-center py-10 text-[#6a6c6b] text-sm border-2 border-dashed border-[#dee2e6] rounded-xl">
+                    <div className="text-center py-10 text-muted text-sm border-2 border-dashed border-line-strong rounded-xl">
                       Aún no hay módulos. Añade el primero arriba.
                     </div>
                   )}
 
                   {curriculum.map((mod, mIdx) => (
-                    <div key={mIdx} className="border border-[#dee2e6] rounded-xl overflow-hidden">
-                      <div className="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa]">
-                        <span className="text-xs font-bold text-[#6a6c6b]">{mIdx + 1}.</span>
-                        <input value={mod.title} onChange={(e) => updateModule(mIdx, 'title', e.target.value)} className="flex-1 px-2 py-1 border border-[#dee2e6] rounded text-sm focus:outline-none focus:border-[#2a63cd] bg-white" placeholder="Nombre del módulo" />
-                        <button onClick={() => addLesson(mIdx)} className="text-xs text-[#2a63cd] font-semibold hover:underline whitespace-nowrap">+ Lección</button>
+                    <div key={mIdx} className="border border-line-strong rounded-xl overflow-hidden">
+                      <div className="flex items-center gap-3 px-4 py-3 bg-surface">
+                        <span className="text-xs font-bold text-muted">{mIdx + 1}.</span>
+                        <input value={mod.title} onChange={(e) => updateModule(mIdx, 'title', e.target.value)} className="flex-1 px-2 py-1 border border-line-strong rounded text-sm focus:outline-none focus:border-brand-500 bg-white" placeholder="Nombre del módulo" />
+                        <button onClick={() => addLesson(mIdx)} className="text-xs text-brand-500 font-semibold hover:underline whitespace-nowrap">+ Lección</button>
                         <button onClick={() => removeModule(mIdx)} className="text-red-400 hover:text-red-600">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                       </div>
                       {mod.lessons.map((lesson, lIdx) => (
-                        <div key={lIdx} className="border-t border-[#e9ecef] px-4 py-3 bg-white">
+                        <div key={lIdx} className="border-t border-line px-4 py-3 bg-white">
                           <div className="flex items-start gap-2">
-                            <span className="text-xs text-[#6a6c6b] pt-2 w-5 shrink-0">{lIdx + 1}.</span>
+                            <span className="text-xs text-muted pt-2 w-5 shrink-0">{lIdx + 1}.</span>
                             <div className="flex-1 grid grid-cols-2 gap-2">
-                              <input value={lesson.title} onChange={(e) => updateLesson(mIdx, lIdx, 'title', e.target.value)} className="col-span-2 px-2 py-1.5 border border-[#dee2e6] rounded text-sm focus:outline-none focus:border-[#2a63cd]" placeholder="Título de la lección" />
-                              <input value={lesson.videoUrl} onChange={(e) => updateLesson(mIdx, lIdx, 'videoUrl', e.target.value)} className="col-span-2 px-2 py-1.5 border border-[#dee2e6] rounded text-xs focus:outline-none focus:border-[#2a63cd]" placeholder="URL YouTube/Vimeo (sin listar)" />
-                              <input type="number" value={lesson.duration} onChange={(e) => updateLesson(mIdx, lIdx, 'duration', e.target.value)} className="px-2 py-1.5 border border-[#dee2e6] rounded text-xs focus:outline-none focus:border-[#2a63cd]" placeholder="Duración (segundos)" />
-                              <label className="flex items-center gap-2 text-xs text-[#6a6c6b] cursor-pointer">
-                                <input type="checkbox" checked={lesson.isFree} onChange={(e) => updateLesson(mIdx, lIdx, 'isFree', e.target.checked)} className="accent-[#2a63cd]" />
+                              <input value={lesson.title} onChange={(e) => updateLesson(mIdx, lIdx, 'title', e.target.value)} className="col-span-2 px-2 py-1.5 border border-line-strong rounded text-sm focus:outline-none focus:border-brand-500" placeholder="Título de la lección" />
+                              <input value={lesson.videoUrl} onChange={(e) => updateLesson(mIdx, lIdx, 'videoUrl', e.target.value)} className="col-span-2 px-2 py-1.5 border border-line-strong rounded text-xs focus:outline-none focus:border-brand-500" placeholder="URL YouTube/Vimeo (sin listar)" />
+                              <input type="number" value={lesson.duration} onChange={(e) => updateLesson(mIdx, lIdx, 'duration', e.target.value)} className="px-2 py-1.5 border border-line-strong rounded text-xs focus:outline-none focus:border-brand-500" placeholder="Duración (segundos)" />
+                              <label className="flex items-center gap-2 text-xs text-muted cursor-pointer">
+                                <input type="checkbox" checked={lesson.isFree} onChange={(e) => updateLesson(mIdx, lIdx, 'isFree', e.target.checked)} className="accent-brand-500" />
                                 Lección gratuita (preview)
                               </label>
                             </div>
@@ -495,11 +495,11 @@ export default function AdminCursosPage() {
             </div>
 
             {/* Footer */}
-            <div className="flex gap-3 justify-end px-6 py-4 border-t border-[#e9ecef]">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm font-semibold text-[#6a6c6b] hover:text-[#212529] transition-colors">
+            <div className="flex gap-3 justify-end px-6 py-4 border-t border-line">
+              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm font-semibold text-muted hover:text-ink transition-colors">
                 Cancelar
               </button>
-              <button onClick={handleSave} disabled={saving || !form.title || !form.description} className="px-6 py-2 bg-[#2a63cd] text-white text-sm font-semibold rounded-lg hover:bg-[#1e4ba3] transition-colors disabled:opacity-50">
+              <button onClick={handleSave} disabled={saving || !form.title || !form.description} className="px-6 py-2 bg-brand-500 text-white text-sm font-semibold rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-50">
                 {saving ? 'Guardando...' : editingId ? 'Guardar Cambios' : 'Crear Curso'}
               </button>
             </div>

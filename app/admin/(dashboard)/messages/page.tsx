@@ -108,7 +108,7 @@ export default function MessagesPage() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2a63cd]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
             </div>
         );
     }
@@ -118,14 +118,14 @@ export default function MessagesPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#212529]">Mensajes de Contacto</h1>
-                    <p className="text-sm text-[#6a6c6b]">Gestiona las consultas de los clientes</p>
+                    <h1 className="text-2xl font-bold text-ink">Mensajes de Contacto</h1>
+                    <p className="text-sm text-muted">Gestiona las consultas de los clientes</p>
                 </div>
                 <div className="flex gap-2">
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value as any)}
-                        className="px-4 py-2 border border-[#dee2e6] rounded-lg focus:outline-none focus:border-[#2a63cd] text-sm"
+                        className="px-4 py-2 border border-line-strong rounded-lg focus:outline-none focus:border-brand-500 text-sm"
                     >
                         <option value="ALL">Todos</option>
                         <option value="PENDING">Pendientes</option>
@@ -136,20 +136,20 @@ export default function MessagesPage() {
             </div>
 
             {/* Messages List */}
-            <div className="flex-1 bg-white rounded-xl border border-[#e9ecef] shadow-sm overflow-hidden flex">
+            <div className="flex-1 bg-white rounded-xl border border-line shadow-sm overflow-hidden flex">
                 {/* List Sidebar */}
-                <div className={`w-full md:w-1/3 border-r border-[#e9ecef] overflow-y-auto ${isDetailOpen ? 'hidden md:block' : 'block'}`}>
+                <div className={`w-full md:w-1/3 border-r border-line overflow-y-auto ${isDetailOpen ? 'hidden md:block' : 'block'}`}>
                     {filteredMessages.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center p-8 text-center text-[#6a6c6b]">
-                            <div className="w-12 h-12 bg-[#f8f9fa] rounded-full flex items-center justify-center mb-3">
-                                <svg className="w-6 h-6 text-[#adb5bd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted">
+                            <div className="w-12 h-12 bg-surface rounded-full flex items-center justify-center mb-3">
+                                <svg className="w-6 h-6 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                 </svg>
                             </div>
                             <p>No hay mensajes</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-[#e9ecef]">
+                        <div className="divide-y divide-line">
                             {filteredMessages.map((msg) => (
                                 <div
                                     key={msg.id}
@@ -160,21 +160,21 @@ export default function MessagesPage() {
                                             handleStatusChange(msg.id, 'READ');
                                         }
                                     }}
-                                    className={`p-4 cursor-pointer hover:bg-[#f8f9fa] transition-colors ${selectedMessage?.id === msg.id ? 'bg-blue-50' : ''
-                                        } ${msg.status === 'PENDING' ? 'border-l-4 border-[#2a63cd]' : ''}`}
+                                    className={`p-4 cursor-pointer hover:bg-surface transition-colors ${selectedMessage?.id === msg.id ? 'bg-blue-50' : ''
+                                        } ${msg.status === 'PENDING' ? 'border-l-4 border-brand-500' : ''}`}
                                 >
                                     <div className="flex justify-between items-start mb-1">
-                                        <h3 className={`text-sm font-semibold ${msg.status === 'PENDING' ? 'text-[#212529]' : 'text-[#6a6c6b]'}`}>
+                                        <h3 className={`text-sm font-semibold ${msg.status === 'PENDING' ? 'text-ink' : 'text-muted'}`}>
                                             {msg.name}
                                         </h3>
-                                        <span className="text-xs text-[#6a6c6b]">
+                                        <span className="text-xs text-muted">
                                             {format(new Date(msg.createdAt), 'dd MMM', { locale: es })}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-[#212529] font-medium truncate mb-1">
+                                    <p className="text-sm text-ink font-medium truncate mb-1">
                                         {msg.subject}
                                     </p>
-                                    <p className="text-xs text-[#6a6c6b] truncate">
+                                    <p className="text-xs text-muted truncate">
                                         {msg.message}
                                     </p>
                                     <div className="mt-2">
@@ -189,11 +189,11 @@ export default function MessagesPage() {
                 </div>
 
                 {/* Message Detail */}
-                <div className={`w-full md:w-2/3 bg-[#f8f9fa] flex flex-col ${isDetailOpen ? 'flex' : 'hidden md:flex'}`}>
+                <div className={`w-full md:w-2/3 bg-surface flex flex-col ${isDetailOpen ? 'flex' : 'hidden md:flex'}`}>
                     {selectedMessage ? (
                         <div className="h-full flex flex-col">
                             {/* Detail Header */}
-                            <div className="bg-white p-6 border-b border-[#e9ecef] flex justify-between items-start">
+                            <div className="bg-white p-6 border-b border-line flex justify-between items-start">
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
                                         <button
@@ -204,9 +204,9 @@ export default function MessagesPage() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                             </svg>
                                         </button>
-                                        <h2 className="text-xl font-bold text-[#212529]">{selectedMessage.subject}</h2>
+                                        <h2 className="text-xl font-bold text-ink">{selectedMessage.subject}</h2>
                                     </div>
-                                    <div className="flex items-center gap-4 text-sm text-[#6a6c6b]">
+                                    <div className="flex items-center gap-4 text-sm text-muted">
                                         <span className="flex items-center gap-1">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -226,7 +226,7 @@ export default function MessagesPage() {
                                             {selectedMessage.phone}
                                         </span>
                                     </div>
-                                    <div className="mt-2 text-xs text-[#6a6c6b]">
+                                    <div className="mt-2 text-xs text-muted">
                                         {format(new Date(selectedMessage.createdAt), "d 'de' MMMM, yyyy 'a las' HH:mm", { locale: es })}
                                     </div>
                                 </div>
@@ -235,7 +235,7 @@ export default function MessagesPage() {
                                     <select
                                         value={selectedMessage.status}
                                         onChange={(e) => handleStatusChange(selectedMessage.id, e.target.value)}
-                                        className="px-3 py-1.5 border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:border-[#2a63cd]"
+                                        className="px-3 py-1.5 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500"
                                     >
                                         <option value="PENDING">Pendiente</option>
                                         <option value="READ">Leído</option>
@@ -255,8 +255,8 @@ export default function MessagesPage() {
 
                             {/* Detail Content */}
                             <div className="flex-1 p-8 overflow-y-auto">
-                                <div className="bg-white p-8 rounded-xl shadow-sm border border-[#e9ecef] min-h-[200px]">
-                                    <p className="text-[#212529] whitespace-pre-wrap leading-relaxed">
+                                <div className="bg-white p-8 rounded-xl shadow-sm border border-line min-h-[200px]">
+                                    <p className="text-ink whitespace-pre-wrap leading-relaxed">
                                         {selectedMessage.message}
                                     </p>
                                 </div>
@@ -264,7 +264,7 @@ export default function MessagesPage() {
                                 <div className="mt-8 flex justify-end">
                                     <a
                                         href={`mailto:${selectedMessage.email}?subject=Re: ${selectedMessage.subject}`}
-                                        className="flex items-center gap-2 px-6 py-3 bg-[#2a63cd] hover:bg-[#1e4ba3] text-white rounded-xl transition-colors font-semibold shadow-lg shadow-[#2a63cd]/20"
+                                        className="flex items-center gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl transition-colors font-semibold shadow-lg shadow-brand-500/20"
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -275,9 +275,9 @@ export default function MessagesPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center text-[#6a6c6b] p-8">
-                            <div className="w-16 h-16 bg-[#e9ecef] rounded-full flex items-center justify-center mb-4">
-                                <svg className="w-8 h-8 text-[#adb5bd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="flex-1 flex flex-col items-center justify-center text-muted p-8">
+                            <div className="w-16 h-16 bg-line rounded-full flex items-center justify-center mb-4">
+                                <svg className="w-8 h-8 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
                             </div>

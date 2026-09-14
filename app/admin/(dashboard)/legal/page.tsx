@@ -284,50 +284,50 @@ export default function LegalDocumentsPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#212529] flex items-center gap-3">
-                        <FiShield className="w-7 h-7 text-[#2a63cd]" />
+                    <h1 className="text-2xl font-bold text-ink flex items-center gap-3">
+                        <FiShield className="w-7 h-7 text-brand-500" />
                         Documentos Legales
                     </h1>
-                    <p className="text-[#6a6c6b] text-sm">Términos y condiciones aceptados por clientes</p>
+                    <p className="text-muted text-sm">Términos y condiciones aceptados por clientes</p>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                     {/* Search */}
                     <form onSubmit={handleSearch} className="relative">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6a6c6b]" />
+                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Buscar por nombre, email o cédula..."
-                            className="pl-9 pr-4 py-2 bg-white border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent w-64"
+                            className="pl-9 pr-4 py-2 bg-white border border-line-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-64"
                         />
                     </form>
 
                     {/* Export CSV */}
                     <button
                         onClick={exportLegalCSV}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#dee2e6] rounded-lg hover:bg-[#f8f9fa] transition-all hover:scale-105 active:scale-95 text-sm text-[#6a6c6b] font-medium"
+                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-line-strong rounded-lg hover:bg-surface transition-all hover:scale-105 active:scale-95 text-sm text-muted font-medium"
                         title="Exportar a CSV"
                     >
-                        <FiDownload className="w-4 h-4 text-[#2a63cd]" />
+                        <FiDownload className="w-4 h-4 text-brand-500" />
                         <span className="hidden sm:inline">Exportar CSV</span>
                     </button>
 
                     {/* Refresh */}
                     <button
                         onClick={() => fetchAcceptances(pagination.page)}
-                        className="p-2 bg-white border border-[#dee2e6] rounded-lg hover:bg-[#f8f9fa] transition-all hover:scale-105 active:scale-95"
+                        className="p-2 bg-white border border-line-strong rounded-lg hover:bg-surface transition-all hover:scale-105 active:scale-95"
                         title="Actualizar"
                     >
-                        <FiRefreshCw className={`w-5 h-5 text-[#6a6c6b] ${loading ? 'animate-spin' : ''}`} />
+                        <FiRefreshCw className={`w-5 h-5 text-muted ${loading ? 'animate-spin' : ''}`} />
                     </button>
                 </div>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] text-white rounded-xl p-4">
+                <div className="bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                             <FiFileText className="w-5 h-5" />
@@ -363,62 +363,62 @@ export default function LegalDocumentsPage() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-hidden bg-white rounded-xl border border-[#e9ecef] shadow-sm flex flex-col">
+            <div className="flex-1 overflow-hidden bg-white rounded-xl border border-line shadow-sm flex flex-col">
                 {loading ? (
                     <div className="flex-1 flex items-center justify-center">
                         <div className="flex flex-col items-center gap-3">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#2a63cd]"></div>
-                            <span className="text-sm text-[#6a6c6b]">Cargando documentos...</span>
+                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500"></div>
+                            <span className="text-sm text-muted">Cargando documentos...</span>
                         </div>
                     </div>
                 ) : acceptances.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-[#6a6c6b]">
-                        <FiFileText className="w-16 h-16 mb-4 text-[#dee2e6]" />
+                    <div className="flex-1 flex flex-col items-center justify-center text-muted">
+                        <FiFileText className="w-16 h-16 mb-4 text-line-strong" />
                         <p className="text-lg font-medium">No hay documentos legales</p>
                         <p className="text-sm">Los clientes aún no han aceptado términos</p>
                     </div>
                 ) : (
                     <div className="overflow-auto flex-1">
                         <table className="w-full">
-                            <thead className="bg-[#f8f9fa] border-b border-[#e9ecef] sticky top-0 z-10">
+                            <thead className="bg-surface border-b border-line sticky top-0 z-10">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Usuario</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Cédula</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Contacto</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Versión</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Fecha Aceptación</th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-[#6a6c6b] uppercase tracking-wider">Acciones</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Usuario</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Cédula</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Contacto</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Versión</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Fecha Aceptación</th>
+                                    <th className="px-6 py-4 text-right text-xs font-semibold text-muted uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-[#e9ecef]">
+                            <tbody className="divide-y divide-line">
                                 {acceptances.map((acceptance) => (
-                                    <tr key={acceptance.id} className="hover:bg-[#f8f9fa] transition-colors">
+                                    <tr key={acceptance.id} className="hover:bg-surface transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-full flex items-center justify-center text-white font-bold">
+                                                <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-full flex items-center justify-center text-white font-bold">
                                                     {acceptance.userName.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-medium text-[#212529]">{acceptance.userName}</p>
-                                                    <p className="text-xs text-[#6a6c6b]">{acceptance.userEmail}</p>
+                                                    <p className="text-sm font-medium text-ink">{acceptance.userName}</p>
+                                                    <p className="text-xs text-muted">{acceptance.userEmail}</p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="text-sm font-mono text-[#212529]">
+                                            <span className="text-sm font-mono text-ink">
                                                 {acceptance.userIdNumber || '-'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col gap-1">
                                                 {acceptance.userPhone && (
-                                                    <span className="text-xs text-[#6a6c6b] flex items-center gap-1">
+                                                    <span className="text-xs text-muted flex items-center gap-1">
                                                         <FiPhone className="w-3 h-3" />
                                                         {acceptance.userPhone}
                                                     </span>
                                                 )}
                                                 {acceptance.userAddress && (
-                                                    <span className="text-xs text-[#6a6c6b] flex items-center gap-1">
+                                                    <span className="text-xs text-muted flex items-center gap-1">
                                                         <FiMapPin className="w-3 h-3" />
                                                         {acceptance.userAddress.substring(0, 30)}...
                                                     </span>
@@ -432,10 +432,10 @@ export default function LegalDocumentsPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col">
-                                                <span className="text-sm text-[#212529]">
+                                                <span className="text-sm text-ink">
                                                     {format(new Date(acceptance.acceptedAt), 'dd MMM yyyy', { locale: es })}
                                                 </span>
-                                                <span className="text-xs text-[#6a6c6b]">
+                                                <span className="text-xs text-muted">
                                                     {format(new Date(acceptance.acceptedAt), 'HH:mm:ss')}
                                                 </span>
                                             </div>
@@ -444,7 +444,7 @@ export default function LegalDocumentsPage() {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => setViewingDocument(acceptance)}
-                                                    className="p-2 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] text-white rounded-lg hover:shadow-lg hover:scale-110 active:scale-95 transition-all"
+                                                    className="p-2 bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-lg hover:shadow-lg hover:scale-110 active:scale-95 transition-all"
                                                     title="Ver Documento"
                                                 >
                                                     <FiEye className="w-4 h-4" />
@@ -485,22 +485,22 @@ export default function LegalDocumentsPage() {
 
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
-                    <div className="p-4 border-t border-[#e9ecef] flex items-center justify-between">
-                        <span className="text-sm text-[#6a6c6b]">
+                    <div className="p-4 border-t border-line flex items-center justify-between">
+                        <span className="text-sm text-muted">
                             Mostrando {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total}
                         </span>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => fetchAcceptances(pagination.page - 1)}
                                 disabled={pagination.page === 1}
-                                className="px-3 py-1 border border-[#dee2e6] rounded-lg text-sm disabled:opacity-50 hover:bg-[#f8f9fa]"
+                                className="px-3 py-1 border border-line-strong rounded-lg text-sm disabled:opacity-50 hover:bg-surface"
                             >
                                 Anterior
                             </button>
                             <button
                                 onClick={() => fetchAcceptances(pagination.page + 1)}
                                 disabled={pagination.page === pagination.totalPages}
-                                className="px-3 py-1 border border-[#dee2e6] rounded-lg text-sm disabled:opacity-50 hover:bg-[#f8f9fa]"
+                                className="px-3 py-1 border border-line-strong rounded-lg text-sm disabled:opacity-50 hover:bg-surface"
                             >
                                 Siguiente
                             </button>
@@ -514,7 +514,7 @@ export default function LegalDocumentsPage() {
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm print:bg-white print:p-0">
                     <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden flex flex-col print:max-w-none print:max-h-none print:rounded-none print:shadow-none">
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white px-6 py-4 flex items-center justify-between print:hidden">
+                        <div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white px-6 py-4 flex items-center justify-between print:hidden">
                             <div className="flex items-center gap-3">
                                 <FiFileText className="w-6 h-6" />
                                 <div>
@@ -550,58 +550,58 @@ export default function LegalDocumentsPage() {
                         <div className="p-6 overflow-y-auto flex-1 space-y-6">
                             {/* User Info */}
                             <div>
-                                <h3 className="text-sm font-bold text-[#212529] mb-3 flex items-center gap-2">
-                                    <FiUser className="w-4 h-4 text-[#2a63cd]" />
+                                <h3 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
+                                    <FiUser className="w-4 h-4 text-brand-500" />
                                     Datos del Usuario
                                 </h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Nombre</span>
-                                        <p className="text-sm font-medium text-[#212529]">{viewingDocument.userName}</p>
+                                    <div className="bg-surface rounded-lg p-3">
+                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Nombre</span>
+                                        <p className="text-sm font-medium text-ink">{viewingDocument.userName}</p>
                                     </div>
-                                    <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Email</span>
-                                        <p className="text-sm font-medium text-[#212529]">{viewingDocument.userEmail}</p>
+                                    <div className="bg-surface rounded-lg p-3">
+                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Email</span>
+                                        <p className="text-sm font-medium text-ink">{viewingDocument.userEmail}</p>
                                     </div>
-                                    <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Cédula</span>
-                                        <p className="text-sm font-medium text-[#212529]">{viewingDocument.userIdNumber || 'No proporcionada'}</p>
+                                    <div className="bg-surface rounded-lg p-3">
+                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Cédula</span>
+                                        <p className="text-sm font-medium text-ink">{viewingDocument.userIdNumber || 'No proporcionada'}</p>
                                     </div>
-                                    <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Teléfono</span>
-                                        <p className="text-sm font-medium text-[#212529]">{viewingDocument.userPhone || 'No proporcionado'}</p>
+                                    <div className="bg-surface rounded-lg p-3">
+                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Teléfono</span>
+                                        <p className="text-sm font-medium text-ink">{viewingDocument.userPhone || 'No proporcionado'}</p>
                                     </div>
-                                    <div className="bg-[#f8f9fa] rounded-lg p-3 col-span-2">
-                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Dirección</span>
-                                        <p className="text-sm font-medium text-[#212529]">{viewingDocument.userAddress || 'No proporcionada'}</p>
+                                    <div className="bg-surface rounded-lg p-3 col-span-2">
+                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Dirección</span>
+                                        <p className="text-sm font-medium text-ink">{viewingDocument.userAddress || 'No proporcionada'}</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Acceptance Details */}
                             <div>
-                                <h3 className="text-sm font-bold text-[#212529] mb-3 flex items-center gap-2">
-                                    <FiClock className="w-4 h-4 text-[#2a63cd]" />
+                                <h3 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
+                                    <FiClock className="w-4 h-4 text-brand-500" />
                                     Detalles de Aceptación
                                 </h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Fecha y Hora</span>
-                                        <p className="text-sm font-medium text-[#212529]">
+                                    <div className="bg-surface rounded-lg p-3">
+                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Fecha y Hora</span>
+                                        <p className="text-sm font-medium text-ink">
                                             {format(new Date(viewingDocument.acceptedAt), "dd 'de' MMMM 'de' yyyy, HH:mm:ss", { locale: es })}
                                         </p>
                                     </div>
-                                    <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Versión</span>
-                                        <p className="text-sm font-medium text-[#212529]">v{viewingDocument.termsVersion}</p>
+                                    <div className="bg-surface rounded-lg p-3">
+                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Versión</span>
+                                        <p className="text-sm font-medium text-ink">v{viewingDocument.termsVersion}</p>
                                     </div>
-                                    <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">Dirección IP</span>
-                                        <p className="text-sm font-medium text-[#212529] font-mono">{viewingDocument.ipAddress || 'No registrada'}</p>
+                                    <div className="bg-surface rounded-lg p-3">
+                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Dirección IP</span>
+                                        <p className="text-sm font-medium text-ink font-mono">{viewingDocument.ipAddress || 'No registrada'}</p>
                                     </div>
-                                    <div className="bg-[#f8f9fa] rounded-lg p-3">
-                                        <span className="text-xs text-[#6a6c6b] uppercase font-bold tracking-wider">ID Documento</span>
-                                        <p className="text-xs font-medium text-[#212529] font-mono">{viewingDocument.id}</p>
+                                    <div className="bg-surface rounded-lg p-3">
+                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">ID Documento</span>
+                                        <p className="text-xs font-medium text-ink font-mono">{viewingDocument.id}</p>
                                     </div>
                                 </div>
                             </div>
@@ -623,8 +623,8 @@ export default function LegalDocumentsPage() {
 
                             {/* Signature */}
                             <div>
-                                <h3 className="text-sm font-bold text-[#212529] mb-3">Firma Digital</h3>
-                                <div className="bg-[#f8f9fa] rounded-xl p-4 text-center border-2 border-dashed border-[#2a63cd]">
+                                <h3 className="text-sm font-bold text-ink mb-3">Firma Digital</h3>
+                                <div className="bg-surface rounded-xl p-4 text-center border-2 border-dashed border-brand-500">
                                     {viewingDocument.signatureData ? (
                                         <>
                                             <img
@@ -632,11 +632,11 @@ export default function LegalDocumentsPage() {
                                                 alt="Firma Digital"
                                                 className="max-w-[300px] mx-auto rounded-lg"
                                             />
-                                            <p className="text-sm font-medium text-[#212529] mt-3">{viewingDocument.userName}</p>
-                                            <p className="text-xs text-[#6a6c6b]">C.I.: {viewingDocument.userIdNumber || 'N/A'}</p>
+                                            <p className="text-sm font-medium text-ink mt-3">{viewingDocument.userName}</p>
+                                            <p className="text-xs text-muted">C.I.: {viewingDocument.userIdNumber || 'N/A'}</p>
                                         </>
                                     ) : (
-                                        <p className="text-sm text-[#6a6c6b]">Firma no disponible</p>
+                                        <p className="text-sm text-muted">Firma no disponible</p>
                                     )}
                                 </div>
                             </div>

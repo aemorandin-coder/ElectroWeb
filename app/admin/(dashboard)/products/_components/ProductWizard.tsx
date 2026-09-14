@@ -429,7 +429,7 @@ export default function ProductWizard({ productId }: Props) {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-[#1a1a1a] text-white font-semibold rounded-xl hover:bg-[#333] transition-all shadow-sm shadow-black/10"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-ink text-white font-semibold rounded-xl hover:bg-[#333] transition-all shadow-sm shadow-black/10"
                 >
                   {step === steps.length - 2 ? 'Revisar y publicar' : 'Continuar'}
                   <FiArrowRight className="w-4 h-4" />

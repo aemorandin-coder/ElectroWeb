@@ -58,12 +58,12 @@ export default function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative p-2 rounded-lg transition-all duration-300 hover:bg-white/10 ${shouldShake ? 'animate-shake' : ''} ${isOpen ? 'bg-white/10' : ''}`}
+        className={`relative p-2 rounded-lg transition-all duration-300 hover:bg-brand-50 ${shouldShake ? 'animate-shake' : ''} ${isOpen ? 'bg-brand-50' : ''}`}
         aria-label="Notificaciones"
         style={{ overflow: 'visible' }}
       >
         <FiBell
-          className={`transition-transform ${!shouldShake && !isOpen ? 'animate-periodic-ring' : ''}`}
+          className="transition-transform"
           style={{
             width: '20px',
             height: '20px',

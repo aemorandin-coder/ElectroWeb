@@ -12,6 +12,7 @@ import MobileScrollProgress from "@/components/public/MobileScrollProgress";
 import MobileNavBar from "@/components/public/MobileNavBar";
 import { GuidedTourWrapper } from "@/components/onboarding/GuidedTourWrapper";
 import { getPublicSettings, getSiteSettings } from "@/lib/site-settings";
+import { getNavCategories } from "@/lib/queries/navigation";
 
 // Los settings públicos se leen aquí para todo el sitio: cada ruta se regenera como mucho
 // cada 60 s para que la tasa BCV no quede congelada en las páginas estáticas.
@@ -135,12 +136,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const publicSettings = await getPublicSettings();
+  const [publicSettings, navCategories] = await Promise.all([getPublicSettings(), getNavCategories()]);
 
   return (
     <html lang="es" data-scroll-behavior="smooth" className={`${inter.variable} ${tektrron.variable}`} suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
-        <Providers initialSettings={publicSettings}>
+        <Providers initialSettings={publicSettings} navCategories={navCategories}>
           <NotificationProvider>
             <MobileScrollProgress />
             <div className="page-transition-wrapper">

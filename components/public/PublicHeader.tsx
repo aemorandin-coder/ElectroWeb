@@ -1,284 +1,161 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import { Suspense, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { FiMenu } from 'react-icons/fi';
 import CartIcon from '@/components/CartIcon';
 import UserAccountButton from '@/components/UserAccountButton';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import Container from '@/components/ui/Container';
+import { useNavCategories } from '@/contexts/CatalogNavContext';
 import { useSettings } from '@/contexts/SettingsContext';
+import { formatVES } from '@/lib/currency';
+import HeaderDropdown from './header/HeaderDropdown';
+import HeaderSearch, { SearchForm } from './header/HeaderSearch';
+import { useHideOnScroll } from './header/useHideOnScroll';
 
+// El panel de categorías (con sus íconos) solo se descarga al abrir el menú
+const CategoriesMenuPanel = dynamic(() => import('./header/CategoriesMenuPanel'), {
+  loading: () => <p className="p-4 text-sm text-muted">Cargando categorías…</p>,
+});
+
+/**
+ * Header de la tienda (PLAN.md §2).
+ * - Fila 1 (blanca): logo, buscador (desde lg) y notificaciones, carrito y cuenta.
+ * - Móvil: buscador en una segunda fila que se esconde al bajar y reaparece al subir.
+ * - Desde lg: franja brand-600 con Categorías (mega menú), accesos y tasa BCV.
+ * Alturas: 56px + 40px en desktop (96px, igual que los `sticky top-24` existentes); 56px + 48px en móvil.
+ */
 function PublicHeader() {
-  const [mounted, setMounted] = useState(false);
-  // Settings públicos del servidor (SettingsProvider): sin fetch propio
-  const { settings: companySettings } = useSettings();
-  const [isOnDarkSection, setIsOnDarkSection] = useState(true); // Start with dark (hero)
-  const [isCursosDropdownOpen, setIsCursosDropdownOpen] = useState(false);
+  const { settings } = useSettings();
+  const categories = useNavCategories();
   const pathname = usePathname();
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const hideMobileSearch = useHideOnScroll(mobileSearchRef);
 
-  const isActiveLink = (href: string) => {
-    if (href === '/') return pathname === '/';
-    return pathname.startsWith(href);
-  };
+  const companyName = settings?.companyName || 'Electro Shop';
+  // En móvil el nombre legal completo empujaba los íconos fuera de la pantalla
+  const shortName = companyName.split(/\s+/).slice(0, 2).join(' ');
+  const exchangeRate = settings?.exchangeRateVES;
+  const topCategories = categories.slice(0, 2);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Scroll detection to change header style
-  const checkSectionUnderHeader = useCallback(() => {
-    if (typeof window === 'undefined' || pathname !== '/') {
-      setIsOnDarkSection(false); // Other pages always light header
-      return;
-    }
-
-    const headerHeight = 80; // Header is 80px tall
-    const checkPoint = headerHeight / 2; // Check in the middle of the header
-
-    // Find all sections and check which one is under the header
-    const sections = document.querySelectorAll('section');
-    let isDark = true; // Default: hero is dark
-
-    sections.forEach((section) => {
-      const rect = section.getBoundingClientRect();
-      // If the section is visible at the header position
-      if (rect.top <= checkPoint && rect.bottom >= checkPoint) {
-        // Check if section has dark background (contains blue gradient classes)
-        const classList = section.className;
-        const hasDarkBg = classList.includes('from-[#2a63cd]') ||
-          classList.includes('from-[#1e4ba3]') ||
-          classList.includes('from-[#1a3b7e]') ||
-          classList.includes('bg-gradient-to-br from-[#2a63cd]');
-        isDark = hasDarkBg;
-      }
-    });
-
-    setIsOnDarkSection(isDark);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    checkSectionUnderHeader();
-    window.addEventListener('scroll', checkSectionUnderHeader, { passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', checkSectionUnderHeader);
-    };
-  }, [mounted, checkSectionUnderHeader]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && mounted) {
-      const primaryColor = companySettings?.primaryColor || '#2a63cd';
-      const secondaryColor = companySettings?.secondaryColor || '#1e4ba3';
-      document.documentElement.style.setProperty('--primary-color', primaryColor);
-      document.documentElement.style.setProperty('--secondary-color', secondaryColor);
-    }
-  }, [companySettings, mounted]);
-
-  const primaryColor = companySettings?.primaryColor || '#2a63cd';
-  const secondaryColor = companySettings?.secondaryColor || '#1e4ba3';
-
-  // Determine header style - ONLY change after mount to avoid hydration mismatch
-  // SSR always renders white header, client switches based on scroll
-  const isBlueHeader = mounted && pathname === '/' && !isOnDarkSection;
-
-  // Base classes that don't change between SSR and client
-  const baseClasses = 'sticky top-0 z-50 transition-all duration-300 backdrop-blur-md border-b';
-
-  // SSR-safe: Always render white header initially, then switch after mount
-  // This prevents hydration mismatch since server always renders 'white' style
-  const headerStyle = mounted ? (isBlueHeader ? 'blue' : 'white') : 'white';
-
-  // Calculate styles based on headerStyle to ensure SSR/Client match
-  const isBlueStyle = headerStyle === 'blue';
+  const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
+  const navLinkClass = (href: string) =>
+    `flex h-10 items-center whitespace-nowrap rounded-md px-3 text-sm font-semibold text-white hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white ${isActive(href) ? 'bg-brand-700' : ''}`;
 
   return (
-    <>
-      <header
-        className={baseClasses}
-        data-header-style={headerStyle}
-        style={{
-          backgroundColor: isBlueStyle ? 'rgba(30, 75, 163, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          backgroundImage: isBlueStyle ? 'linear-gradient(to right, rgba(42, 99, 205, 0.95), rgba(30, 75, 163, 0.95))' : 'none',
-          borderColor: isBlueStyle ? 'rgba(255, 255, 255, 0.1)' : '#e9ecef',
-          boxShadow: isBlueStyle ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-        }}
-        suppressHydrationWarning
-      >
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-1.5 sm:gap-3 group flex-shrink-0">
-              {companySettings?.logo && (
-                <div className="relative w-9 h-9 sm:w-12 sm:h-12 transition-transform duration-300 group-hover:scale-105 flex-shrink-0">
-                  <Image
-                    src={companySettings.logo}
-                    alt={companySettings.companyName}
-                    fill
-                    className="object-contain drop-shadow-md"
-                    priority
-                    quality={100}
-                    sizes="(max-width: 640px) 36px, 48px"
-                    unoptimized
-                  />
-                </div>
-              )}
-              <h1
-                className={`font-brand text-sm min-[380px]:text-base sm:text-2xl font-bold tracking-tight whitespace-nowrap transition-colors duration-300 ${isBlueStyle ? 'text-white' : 'text-transparent bg-clip-text'
-                  }`}
-                style={{
-                  backgroundImage: isBlueStyle ? 'none' : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
-                  WebkitBackgroundClip: isBlueStyle ? 'unset' : 'text',
-                }}
-              >
-                {companySettings?.companyName || 'Electro Shop'}
-              </h1>
-            </Link>
-
-            {/* Navigation Links */}
-            <nav className="hidden md:flex items-center gap-6">
-              {[
-                { href: '/productos', label: 'Productos', id: 'nav-productos' },
-                { href: '/categorias', label: 'Categorías' },
-                { href: '/gift-cards', label: 'Gift Cards' },
-                { href: '/servicios', label: 'Servicios' },
-                { href: '/cursos', label: 'Cursos Online', hasDropdown: true },
-                { href: '/contacto', label: 'Contáctanos' },
-              ].map((link) => {
-                const isActive = isActiveLink(link.href);
-                if (link.hasDropdown) {
-                  return (
-                    <div
-                      key={link.href}
-                      className="relative"
-                      onMouseEnter={() => setIsCursosDropdownOpen(true)}
-                      onMouseLeave={() => setIsCursosDropdownOpen(false)}
-                    >
-                      <Link
-                        href={link.href}
-                        className="relative text-sm font-normal transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 rounded-sm flex items-center gap-1 py-2"
-                        style={{
-                          color: isBlueStyle
-                            ? (isActive ? 'white' : 'rgba(255,255,255,0.8)')
-                            : (isActive ? primaryColor : '#6a6c6b')
-                        }}
-                      >
-                        <span className={`relative z-10 ${isBlueStyle
-                          ? 'group-hover:text-white'
-                          : (!isActive ? 'group-hover:text-[#2a63cd]' : '')
-                          }`}>
-                          {link.label}
-                        </span>
-                        <svg className={`w-3.5 h-3.5 transition-transform duration-300 ${isCursosDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                        <span
-                          className={`absolute bottom-1 left-0 h-0.5 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}
-                          style={{
-                            background: isBlueStyle
-                              ? 'white'
-                              : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
-                          }}
-                        ></span>
-                      </Link>
-
-                      {/* Dropdown Menu */}
-                      {isCursosDropdownOpen && (
-                        <div
-                          className="absolute left-0 mt-0 w-64 rounded-xl shadow-xl border p-2 transition-all duration-200 z-50"
-                          style={{
-                            backgroundColor: isBlueStyle ? 'rgba(27, 38, 59, 0.98)' : 'rgba(255, 255, 255, 0.98)',
-                            borderColor: isBlueStyle ? 'rgba(255, 255, 255, 0.1)' : '#e9ecef',
-                            backdropFilter: 'blur(10px)',
-                          }}
-                        >
-                          <Link
-                            href="/cursos"
-                            className={`flex flex-col gap-0.5 p-2.5 rounded-lg text-left transition-all ${
-                              isBlueStyle 
-                                ? 'hover:bg-white/10 text-white' 
-                                : 'hover:bg-[#f8f9fa] text-[#212529]'
-                            }`}
-                          >
-                            <span className="font-bold text-xs">Ver Cursos</span>
-                            <span className={`text-[10px] ${isBlueStyle ? 'text-white/60' : 'text-[#6a6c6b]'}`}>Explora nuestro catálogo de formación online</span>
-                          </Link>
-                          <Link
-                            href="/creator"
-                            className={`flex flex-col gap-0.5 p-2.5 rounded-lg text-left transition-all ${
-                              isBlueStyle 
-                                ? 'hover:bg-white/10 text-white' 
-                                : 'hover:bg-[#f8f9fa] text-[#212529]'
-                            }`}
-                          >
-                            <span className="font-bold text-xs flex items-center gap-1.5">
-                              Enseña aquí
-                              <span className="bg-[#2a63cd] text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold">¡Gana 90%!</span>
-                            </span>
-                            <span className={`text-[10px] ${isBlueStyle ? 'text-white/60' : 'text-[#6a6c6b]'}`}>Crea cursos y monetiza tu conocimiento</span>
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    id={link.id}
-                    className="relative text-sm font-normal transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 rounded-sm"
-                    style={{
-                      color: isBlueStyle
-                        ? (isActive ? 'white' : 'rgba(255,255,255,0.8)')
-                        : (isActive ? primaryColor : '#6a6c6b')
-                    }}
-                  >
-                    <span className={`relative z-10 ${isBlueStyle
-                      ? 'group-hover:text-white'
-                      : (!isActive ? 'group-hover:text-[#2a63cd]' : '')
-                      }`}>
-                      {link.label}
-                    </span>
-                    <span
-                      className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}
-                      style={{
-                        background: isBlueStyle
-                          ? 'white'
-                          : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
-                      }}
-                    ></span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-              <div
-                className="flex items-center gap-1.5 sm:gap-4"
-                style={{ color: isBlueStyle ? 'rgba(255,255,255,0.9)' : '#6a6c6b' }}
-              >
-                <NotificationBell />
-                {/* id="cart-icon" — target del tour guiado */}
-                <span id="cart-icon">
-                  <CartIcon />
-                </span>
-              </div>
-              {/* id="user-menu" — target del tour guiado */}
-              <span id="user-menu">
-                <UserAccountButton useBlueHeader={isBlueStyle} />
+    // pointer-events-none: cuando el buscador móvil se esconde, la franja vacía no bloquea los toques
+    <header className="pointer-events-none sticky top-0 z-[var(--z-header)]">
+      <div className="pointer-events-auto relative z-10 border-b border-line bg-white/95 backdrop-blur-md">
+        <Container className="flex h-14 items-center gap-3 lg:gap-6">
+          <Link href="/" aria-label={`${companyName}, ir al inicio`} className="flex min-w-0 items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-brand-500 lg:shrink-0">
+            {settings?.logo && (
+              <span className="relative h-9 w-9 shrink-0">
+                <Image src={settings.logo} alt="" fill sizes="36px" className="object-contain" priority />
               </span>
-            </div>
-          </div>
-        </div>
-      </header>
+            )}
+            <span className="font-brand min-w-0 truncate bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-base font-bold tracking-tight text-transparent sm:text-xl">
+              <span className="sm:hidden">{shortName}</span>
+              <span className="hidden sm:inline">{companyName}</span>
+            </span>
+          </Link>
 
-      {/* Mobile Navigation Bar - Now rendered globally in layout.tsx */}
-    </>
+          <div className="hidden min-w-0 flex-1 justify-center lg:flex">
+            <Suspense fallback={<SearchForm id="header-search" />}>
+              <HeaderSearch id="header-search" />
+            </Suspense>
+          </div>
+
+          <div className="ml-auto flex shrink-0 items-center gap-1 text-ink-soft sm:gap-2 lg:ml-0">
+            <NotificationBell />
+            {/* id="cart-icon" y id="user-menu": objetivos del tour guiado */}
+            <span id="cart-icon">
+              <CartIcon />
+            </span>
+            <span id="user-menu">
+              <UserAccountButton />
+            </span>
+          </div>
+        </Container>
+      </div>
+
+      {/* Móvil: buscador que se esconde al bajar (se desliza detrás de la fila 1) */}
+      <div
+        ref={mobileSearchRef}
+        inert={hideMobileSearch || undefined}
+        className={`pointer-events-auto flex h-12 items-center border-b border-line bg-white px-4 transition-transform duration-200 lg:hidden ${hideMobileSearch ? '-translate-y-full' : ''}`}
+      >
+        <Suspense fallback={<SearchForm id="header-search-mobile" compact />}>
+          <HeaderSearch id="header-search-mobile" compact />
+        </Suspense>
+      </div>
+
+      <nav aria-label="Principal" className="pointer-events-auto hidden bg-brand-600 lg:block">
+        <Container className="flex h-10 items-center gap-1">
+          <HeaderDropdown
+            label={<><FiMenu className="h-4 w-4" aria-hidden="true" /> Categorías</>}
+            panelClassName="w-[min(56rem,calc(100vw-4rem))]"
+          >
+            {(close) => <CategoriesMenuPanel categories={categories} onNavigate={close} />}
+          </HeaderDropdown>
+
+          {/* id="nav-productos": objetivo del tour guiado */}
+          <Link href="/productos" id="nav-productos" className={navLinkClass('/productos')} aria-current={isActive('/productos') ? 'page' : undefined}>
+            Productos
+          </Link>
+          <Link href="/gift-cards" className={navLinkClass('/gift-cards')} aria-current={isActive('/gift-cards') ? 'page' : undefined}>
+            Gift Cards
+          </Link>
+          {topCategories.map((category) => {
+            const href = `/categorias/${category.slug}`;
+            return (
+              <Link key={category.id} href={href} className={navLinkClass(href)} aria-current={isActive(href) ? 'page' : undefined}>
+                <span className="max-w-40 truncate">{category.name}</span>
+              </Link>
+            );
+          })}
+          <Link href="/servicios" className={navLinkClass('/servicios')} aria-current={isActive('/servicios') ? 'page' : undefined}>
+            Servicios
+          </Link>
+          <HeaderDropdown label="Cursos" panelClassName="w-72 p-2">
+            {(close) => (
+              <ul>
+                <li>
+                  <Link href="/cursos" onClick={close} className="block rounded-lg px-3 py-2 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500">
+                    <span className="block text-sm font-semibold text-ink">Ver cursos</span>
+                    <span className="block text-xs text-muted">Catálogo de formación online</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/creator" onClick={close} className="block rounded-lg px-3 py-2 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+                      Enseña aquí
+                      <span className="rounded-full bg-brand-500 px-1.5 py-0.5 text-[11px] font-semibold text-white">Gana 90%</span>
+                    </span>
+                    <span className="block text-xs text-muted">Crea cursos y monetiza tu conocimiento</span>
+                  </Link>
+                </li>
+              </ul>
+            )}
+          </HeaderDropdown>
+
+          {/* Compacto entre lg y xl para que la franja no se desborde */}
+          <p className="ml-auto whitespace-nowrap pl-2 text-xs font-medium text-white/80">
+            {exchangeRate ? (
+              <>
+                <span className="hidden xl:inline">Tasa BCV </span>
+                {formatVES(exchangeRate)}
+                <span className="hidden xl:inline"> · </span>
+              </>
+            ) : null}
+            <span className="hidden xl:inline">Envíos a toda Venezuela</span>
+          </p>
+        </Container>
+      </nav>
+    </header>
   );
 }
 

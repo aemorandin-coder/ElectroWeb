@@ -95,42 +95,6 @@
   animation: marquee-text 12s linear infinite;
 }
 
-/* --- Fun Header Icon Animations --- */
-@keyframes periodic-wave {
-  0%, 80% { transform: rotate(0deg); }
-  85% { transform: rotate(15deg); }
-  90% { transform: rotate(-10deg); }
-  95% { transform: rotate(15deg); }
-  100% { transform: rotate(0deg); }
-}
-.animate-periodic-wave {
-  animation: periodic-wave 4s infinite ease-in-out;
-  transform-origin: bottom center;
-}
-
-@keyframes periodic-bounce {
-  0%, 85% { transform: translateY(0); }
-  90% { transform: translateY(-6px); }
-  95% { transform: translateY(0); }
-  98% { transform: translateY(-3px); }
-  100% { transform: translateY(0); }
-}
-.animate-periodic-bounce {
-  animation: periodic-bounce 5s infinite ease-in-out;
-}
-
-@keyframes periodic-ring {
-  0%, 80% { transform: rotate(0deg); }
-  85% { transform: rotate(10deg); }
-  90% { transform: rotate(-10deg); }
-  95% { transform: rotate(10deg); }
-  100% { transform: rotate(0deg); }
-}
-.animate-periodic-ring {
-  animation: periodic-ring 6s infinite ease-in-out;
-  transform-origin: top center;
-}
-
 /* Reset & Base Styles */
 * {
   box-sizing: border-box;

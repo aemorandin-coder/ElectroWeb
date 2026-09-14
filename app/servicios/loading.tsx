@@ -1,24 +1,9 @@
+import PublicHeader from '@/components/public/PublicHeader';
+
 export default function ServiciosLoading() {
     return (
         <div className="min-h-dvh bg-gradient-to-br from-surface via-white to-surface">
-            {/* Header Skeleton */}
-            <header className="sticky top-0 z-50 bg-white border-b border-line shadow-sm h-20">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-line rounded-lg animate-pulse" />
-                        <div className="w-32 h-6 bg-line rounded animate-pulse" />
-                    </div>
-                    <div className="hidden md:flex gap-6">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="w-20 h-4 bg-line rounded animate-pulse" />
-                        ))}
-                    </div>
-                    <div className="flex gap-4">
-                        <div className="w-10 h-10 bg-line rounded-lg animate-pulse" />
-                        <div className="w-10 h-10 bg-line rounded-lg animate-pulse" />
-                    </div>
-                </div>
-            </header>
+            <PublicHeader />
 
             {/* Hero Skeleton */}
             <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">

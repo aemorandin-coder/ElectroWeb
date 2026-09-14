@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiCreditCard, FiUpload, FiImage, FiX, FiShield } from 'react-icons/fi';
 import { HiOutlineQrcode } from 'react-icons/hi';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 import { BANCOS_VENEZUELA, type BancoVenezuela } from '@/lib/pago-movil/bancos-venezuela';
 
 interface CheckoutPagoMovilFormProps {
@@ -123,13 +124,13 @@ export default function CheckoutPagoMovilForm({
 
         // Validate file type
         if (!file.type.startsWith('image/')) {
-            alert('Solo se permiten archivos de imagen');
+            toast.error('Solo se permiten archivos de imagen');
             return;
         }
 
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            alert('La imagen no puede superar 5MB');
+            toast.error('La imagen no puede superar 5MB');
             return;
         }
 
@@ -143,13 +144,13 @@ export default function CheckoutPagoMovilForm({
                 setUploadingImage(false);
             };
             reader.onerror = () => {
-                alert('Error al cargar la imagen');
+                toast.error('Error al cargar la imagen');
                 setUploadingImage(false);
             };
             reader.readAsDataURL(file);
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Error al subir la imagen');
+            toast.error('Error al subir la imagen');
             setUploadingImage(false);
         }
     };
@@ -298,17 +299,17 @@ export default function CheckoutPagoMovilForm({
         <div className={`space-y-4 ${className}`}>
             {/* Header con icono - CENTRADO */}
             <div className="flex flex-col items-center text-center gap-2 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <div className="w-12 h-12 bg-gradient-to-br from-brand-500 to-brand-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                     <FiShield className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-lg font-bold text-[#212529]">Verificación de Pago Móvil</h3>
-                    <p className="text-xs text-[#6a6c6b]">Completa los datos para validar tu pago</p>
+                    <h3 className="text-lg font-bold text-ink">Verificación de Pago Móvil</h3>
+                    <p className="text-xs text-muted">Completa los datos para validar tu pago</p>
                 </div>
             </div>
 
             {/* Datos del comercio - Premium Card */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#1a3b7e] via-[#2a63cd] to-[#1e4ba3] rounded-2xl p-5 shadow-xl shadow-blue-500/20">
+            <div className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-500 to-brand-600 rounded-2xl p-5 shadow-xl shadow-blue-500/20">
                 {/* Background pattern */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2" />
@@ -329,7 +330,7 @@ export default function CheckoutPagoMovilForm({
                         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
                             <div className="flex items-center justify-center gap-2 mb-1">
                                 <FiPhone className="w-3.5 h-3.5 text-blue-200" />
-                                <span className="text-[10px] font-medium text-blue-200 uppercase">Teléfono</span>
+                                <span className="text-xs font-medium text-blue-200 uppercase">Teléfono</span>
                             </div>
                             <p className="text-base font-bold text-white tracking-wide">{datosComercio.telefono || '-'}</p>
                         </div>
@@ -338,7 +339,7 @@ export default function CheckoutPagoMovilForm({
                         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
                             <div className="flex items-center justify-center gap-2 mb-1">
                                 <FiCreditCard className="w-3.5 h-3.5 text-blue-200" />
-                                <span className="text-[10px] font-medium text-blue-200 uppercase">CI/RIF</span>
+                                <span className="text-xs font-medium text-blue-200 uppercase">CI/RIF</span>
                             </div>
                             <p className="text-base font-bold text-white tracking-wide">{datosComercio.cedula || '-'}</p>
                         </div>
@@ -349,7 +350,7 @@ export default function CheckoutPagoMovilForm({
                                 <svg className="w-3.5 h-3.5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
-                                <span className="text-[10px] font-medium text-blue-200 uppercase">Banco</span>
+                                <span className="text-xs font-medium text-blue-200 uppercase">Banco</span>
                             </div>
                             <p className="text-sm font-bold text-white leading-tight">{(datosComercio.banco || 'BDV').replace('Banco de ', '')}</p>
                         </div>
@@ -362,7 +363,7 @@ export default function CheckoutPagoMovilForm({
                         >
                             <div className="flex items-center justify-center gap-2 mb-1">
                                 <HiOutlineQrcode className="w-3.5 h-3.5 text-blue-200" />
-                                <span className="text-[10px] font-medium text-blue-200 uppercase">Código QR</span>
+                                <span className="text-xs font-medium text-blue-200 uppercase">Código QR</span>
                             </div>
                             <p className="text-sm font-bold text-white group-hover:text-blue-200 transition-colors flex items-center justify-center gap-1">
                                 Ver QR
@@ -378,15 +379,15 @@ export default function CheckoutPagoMovilForm({
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                                    <span className="text-xl font-black text-white">Bs</span>
+                                    <span className="text-xl font-bold text-white">Bs</span>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-medium text-orange-100 uppercase">Monto a transferir</p>
-                                    <p className="text-2xl font-black text-white tracking-tight">{montoEnBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                    <p className="text-xs font-medium text-orange-100 uppercase">Monto a transferir</p>
+                                    <p className="text-2xl font-bold text-white tracking-tight">{montoEnBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-medium text-orange-100 uppercase">Equivalente</p>
+                                <p className="text-xs font-medium text-orange-100 uppercase">Equivalente</p>
                                 <p className="text-lg font-bold text-white">${montoEsperado.toFixed(2)}</p>
                             </div>
                         </div>
@@ -398,11 +399,11 @@ export default function CheckoutPagoMovilForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Cédula del pagador */}
                 <div>
-                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
                         Tu Cédula <span className="text-red-500">*</span>
                     </label>
                     <div className="form-field">
-                        <FiCreditCard className="field-icon text-[#6a6c6b]" />
+                        <FiCreditCard className="field-icon text-muted" />
                         <input
                             type="text"
                             name="cedulaPagador"
@@ -412,19 +413,19 @@ export default function CheckoutPagoMovilForm({
                             maxLength={10}
                             autoCapitalize="characters"
                             disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
                     </div>
-                    <p className="text-[10px] text-[#6a6c6b] mt-1">Cédula del titular de la cuenta</p>
+                    <p className="text-xs text-muted mt-1">Cédula del titular de la cuenta</p>
                 </div>
 
                 {/* Teléfono del pagador */}
                 <div>
-                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
                         Tu Teléfono <span className="text-red-500">*</span>
                     </label>
                     <div className="form-field">
-                        <FiPhone className="field-icon text-[#6a6c6b]" />
+                        <FiPhone className="field-icon text-muted" />
                         <input
                             type="tel"
                             name="telefonoPagador"
@@ -434,37 +435,37 @@ export default function CheckoutPagoMovilForm({
                             inputMode="tel"
                             maxLength={11}
                             disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
                     </div>
                 </div>
 
                 {/* Banco origen */}
                 <div className="relative">
-                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
                         Tu Banco
                     </label>
                     <button
                         type="button"
                         onClick={() => !verificando && setShowBankDropdown(!showBankDropdown)}
                         disabled={verificando}
-                        className="w-full flex items-center justify-between px-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-between px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
-                        <span className={bancoSeleccionado ? 'text-[#212529]' : 'text-[#6a6c6b]'}>
+                        <span className={bancoSeleccionado ? 'text-ink' : 'text-muted'}>
                             {bancoSeleccionado ? bancoSeleccionado.nombreCorto : 'Selecciona...'}
                         </span>
-                        <FiChevronDown className={`w-4 h-4 text-[#6a6c6b] transition-transform ${showBankDropdown ? 'rotate-180' : ''}`} />
+                        <FiChevronDown className={`w-4 h-4 text-muted transition-transform ${showBankDropdown ? 'rotate-180' : ''}`} />
                     </button>
 
                     {showBankDropdown && (
-                        <div className="absolute z-20 mt-1 w-full bg-white border border-[#e9ecef] rounded-xl shadow-xl max-h-64 overflow-hidden animate-fadeIn">
-                            <div className="p-2 border-b border-[#e9ecef]">
+                        <div className="absolute z-20 mt-1 w-full bg-white border border-line rounded-xl shadow-xl max-h-64 overflow-hidden animate-fadeIn">
+                            <div className="p-2 border-b border-line">
                                 <input
                                     type="text"
                                     value={bankSearchTerm}
                                     onChange={(e) => setBankSearchTerm(e.target.value)}
                                     placeholder="Buscar banco..."
-                                    className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2a63cd]"
+                                    className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500"
                                     autoFocus
                                 />
                             </div>
@@ -475,15 +476,15 @@ export default function CheckoutPagoMovilForm({
                                             key={banco.codigo}
                                             type="button"
                                             onClick={() => handleSelectBanco(banco)}
-                                            className={`w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 transition-colors flex items-center justify-between ${formData.bancoOrigen === banco.codigo ? 'bg-blue-50 text-[#2a63cd]' : 'text-[#212529]'
+                                            className={`w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 transition-colors flex items-center justify-between ${formData.bancoOrigen === banco.codigo ? 'bg-blue-50 text-brand-500' : 'text-ink'
                                                 }`}
                                         >
                                             <span>{banco.nombreCorto}</span>
-                                            <span className="text-xs text-[#6a6c6b]">{banco.codigo}</span>
+                                            <span className="text-xs text-muted">{banco.codigo}</span>
                                         </button>
                                     ))
                                 ) : (
-                                    <div className="px-4 py-3 text-sm text-[#6a6c6b] text-center">
+                                    <div className="px-4 py-3 text-sm text-muted text-center">
                                         No se encontraron bancos
                                     </div>
                                 )}
@@ -494,11 +495,11 @@ export default function CheckoutPagoMovilForm({
 
                 {/* Referencia */}
                 <div>
-                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
                         Referencia
                     </label>
                     <div className="form-field">
-                        <FiHash className="field-icon text-[#6a6c6b]" />
+                        <FiHash className="field-icon text-muted" />
                         <input
                             type="text"
                             name="referencia"
@@ -508,19 +509,19 @@ export default function CheckoutPagoMovilForm({
                             maxLength={8}
                             inputMode="numeric"
                             disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
                     </div>
-                    <p className="text-[10px] text-[#6a6c6b] mt-1">4 a 8 dígitos numéricos</p>
+                    <p className="text-xs text-muted mt-1">4 a 8 dígitos numéricos</p>
                 </div>
 
                 {/* Fecha del pago */}
                 <div>
-                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
                         Fecha del Pago <span className="text-red-500">*</span>
                     </label>
                     <div className="form-field">
-                        <FiCalendar className="field-icon text-[#6a6c6b]" />
+                        <FiCalendar className="field-icon text-muted" />
                         <input
                             type="date"
                             name="fechaPago"
@@ -528,14 +529,14 @@ export default function CheckoutPagoMovilForm({
                             onChange={handleChange}
                             max={new Date().toISOString().split('T')[0]}
                             disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-[#2a63cd] transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
                     </div>
                 </div>
 
                 {/* Subida de comprobante */}
                 <div>
-                    <label className="block text-xs font-bold text-[#212529] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
                         Comprobante (Opcional)
                     </label>
                     <input
@@ -551,14 +552,14 @@ export default function CheckoutPagoMovilForm({
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             disabled={uploadingImage}
-                            className="w-full py-2.5 px-4 border-2 border-dashed border-[#e9ecef] rounded-xl hover:border-[#2a63cd] hover:bg-blue-50/50 transition-all flex items-center justify-center gap-2 group"
+                            className="w-full py-2.5 px-4 border-2 border-dashed border-line rounded-xl hover:border-brand-500 hover:bg-blue-50/50 transition-all flex items-center justify-center gap-2 group"
                         >
                             {uploadingImage ? (
-                                <FiLoader className="w-4 h-4 text-[#2a63cd] animate-spin" />
+                                <FiLoader className="w-4 h-4 text-brand-500 animate-spin" />
                             ) : (
                                 <>
-                                    <FiUpload className="w-4 h-4 text-[#6a6c6b] group-hover:text-[#2a63cd]" />
-                                    <span className="text-sm text-[#6a6c6b] group-hover:text-[#2a63cd]">
+                                    <FiUpload className="w-4 h-4 text-muted group-hover:text-brand-500" />
+                                    <span className="text-sm text-muted group-hover:text-brand-500">
                                         Subir captura
                                     </span>
                                 </>
@@ -628,7 +629,7 @@ export default function CheckoutPagoMovilForm({
                                             : 'Verificación Fallida'}
                                 </h4>
                                 {resultado.code && !resultado.verified && (
-                                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">
+                                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">
                                         Código: {resultado.code}
                                     </span>
                                 )}
@@ -680,7 +681,7 @@ export default function CheckoutPagoMovilForm({
                 )}
             </button>
 
-            <p className="text-[10px] text-center text-[#6a6c6b]">
+            <p className="text-xs text-center text-muted">
                 La verificacion se realiza en tiempo real. No podras continuar sin verificar el pago.
             </p>
 
@@ -701,7 +702,7 @@ export default function CheckoutPagoMovilForm({
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-6 py-5 flex items-center justify-between">
+                        <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-6 py-5 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <HiOutlineQrcode className="w-7 h-7 text-white" />
                                 <div>
@@ -731,7 +732,7 @@ export default function CheckoutPagoMovilForm({
                             <p className="mt-4 text-sm text-gray-600 text-center">
                                 Escanea este código QR con tu app bancaria o VeQR para realizar el pago
                             </p>
-                            <div className="mt-3 flex items-center gap-2 text-xs text-[#2a63cd] bg-blue-50 px-3 py-2 rounded-lg">
+                            <div className="mt-3 flex items-center gap-2 text-xs text-brand-500 bg-blue-50 px-3 py-2 rounded-lg">
                                 <FiShield className="w-4 h-4" />
                                 <span className="font-medium">Pago seguro con Banco de Venezuela</span>
                             </div>

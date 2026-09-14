@@ -125,11 +125,11 @@ export default function CarritoPage() {
   const tax = 0; // Exento para saldos y códigos digitales
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <PublicHeader />
 
       {/* Hero Section - Premium Compact */}
-      <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
+      <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute top-5 left-5 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-float" />
@@ -160,7 +160,7 @@ export default function CarritoPage() {
               </svg>
               <span className="text-sm font-bold text-white">Carrito de Compras</span>
               {items.length > 0 && (
-                <span className="px-2.5 py-1 bg-white text-[#2a63cd] rounded-full text-xs font-black animate-bounce-subtle">
+                <span className="px-2.5 py-1 bg-white text-brand-500 rounded-full text-xs font-bold animate-bounce-subtle">
                   {items.length}
                 </span>
               )}
@@ -169,7 +169,7 @@ export default function CarritoPage() {
 
           {/* Title */}
           <div className="animate-slideUp">
-            <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               Tu Carrito
             </h1>
             <p className="text-blue-100 text-sm">
@@ -183,27 +183,27 @@ export default function CarritoPage() {
               <div className="relative flex justify-between items-center">
                 {/* Stepper Progress Line */}
                 <div className="absolute left-6 right-6 top-1/2 h-0.5 bg-white/10 -translate-y-1/2 z-0">
-                  <div className="w-1/3 h-full bg-gradient-to-r from-cyan-400 to-[#2a63cd] rounded-full"></div>
+                  <div className="w-1/3 h-full bg-gradient-to-r from-cyan-400 to-brand-500 rounded-full"></div>
                 </div>
 
                 {/* Step 1: Carrito (Active) */}
                 <div className="relative flex flex-col items-center gap-1.5 z-10">
-                  <div className="w-9 h-9 bg-gradient-to-br from-cyan-400 to-[#2a63cd] border-2 border-cyan-300 rounded-full flex items-center justify-center font-bold text-white text-xs shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+                  <div className="w-9 h-9 bg-gradient-to-br from-cyan-400 to-brand-500 border-2 border-cyan-300 rounded-full flex items-center justify-center font-bold text-white text-xs shadow-[0_0_15px_rgba(34,211,238,0.5)]">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
-                  <span className="text-[10px] sm:text-xs font-black text-cyan-200 uppercase tracking-wide">1. Carrito</span>
+                  <span className="text-xs font-bold text-cyan-200 uppercase tracking-wide">1. Carrito</span>
                 </div>
 
                 {/* Step 2: Checkout (Inactive) */}
                 <div className="relative flex flex-col items-center gap-1.5 z-10">
-                  <div className="w-9 h-9 bg-[#111a36] border-2 border-white/10 rounded-full flex items-center justify-center font-bold text-white/40 text-xs hover:border-[#2a63cd]/50 transition-all">
+                  <div className="w-9 h-9 bg-[#111a36] border-2 border-white/10 rounded-full flex items-center justify-center font-bold text-white/40 text-xs hover:border-brand-500/50 transition-all">
                     <svg className="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
-                  <span className="text-[10px] sm:text-xs font-bold text-white/50 uppercase tracking-wide">2. Pago</span>
+                  <span className="text-xs font-bold text-white/50 uppercase tracking-wide">2. Pago</span>
                 </div>
 
                 {/* Step 3: Confirmación (Inactive) */}
@@ -213,7 +213,7 @@ export default function CarritoPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <span className="text-[10px] sm:text-xs font-bold text-white/50 uppercase tracking-wide">3. ¡Listo!</span>
+                  <span className="text-xs font-bold text-white/50 uppercase tracking-wide">3. ¡Listo!</span>
                 </div>
               </div>
             </div>
@@ -226,24 +226,24 @@ export default function CarritoPage() {
         {items.length === 0 ? (
           /* Empty Cart State - Epic */
           <div
-            className="relative bg-white rounded-3xl border border-slate-200 p-12 md:p-16 text-center shadow-xl animate-fadeIn"
+            className="relative bg-white rounded-3xl border border-gray-200 p-12 md:p-16 text-center shadow-xl animate-fadeIn"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 rounded-3xl" />
             <div className="relative px-6 md:px-12">
-              <div className="w-28 h-28 md:w-32 md:h-32 mx-auto mb-6 md:mb-8 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center shadow-inner animate-pulse-slow">
-                <svg className="w-14 h-14 md:w-16 md:h-16 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-28 h-28 md:w-32 md:h-32 mx-auto mb-6 md:mb-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center shadow-inner animate-pulse-slow">
+                <svg className="w-14 h-14 md:w-16 md:h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-3">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
                 Tu carrito está vacío
               </h2>
-              <p className="text-base md:text-lg text-slate-500 mb-8">
+              <p className="text-base md:text-lg text-gray-500 mb-8">
                 Explora nuestros productos y añade tus favoritos al carrito
               </p>
               <Link
                 href="/productos"
-                className="inline-flex items-center gap-3 px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-2xl shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 hover:scale-105 hover:-translate-y-1"
+                className="inline-flex items-center gap-3 px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 hover:scale-105 hover:-translate-y-1"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -258,9 +258,9 @@ export default function CarritoPage() {
             <div className="lg:col-span-2 space-y-4">
               {/* Header */}
               <div className="flex justify-between items-center mb-6 animate-fadeIn">
-                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <span className="w-8 h-8 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center">
-                    <svg className="w-4 h-4 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <span className="w-8 h-8 bg-brand-500/10 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                   </span>
@@ -279,7 +279,7 @@ export default function CarritoPage() {
               {items.map((item, index) => (
                 <div
                   key={item.id}
-                  className={`group relative bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all duration-500 hover:shadow-xl hover:border-[#2a63cd]/30 ${removing === item.id
+                  className={`group relative bg-white rounded-2xl border border-gray-200 overflow-hidden transition-all duration-500 hover:shadow-xl hover:border-brand-500/30 ${removing === item.id
                     ? 'animate-removeItem'
                     : isClearing
                       ? 'animate-clearItem'
@@ -300,12 +300,12 @@ export default function CarritoPage() {
                   }
                 >
                   {/* Hover Glow */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#2a63cd]/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-brand-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                   <div className="relative p-5">
                     <div className="flex gap-5">
                       {/* Product Image */}
-                      <div className="relative w-28 h-28 flex-shrink-0 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl overflow-hidden group/img">
+                      <div className="relative w-28 h-28 flex-shrink-0 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden group/img">
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover/img:translate-x-full transition-transform duration-1000 z-10" />
                         {(() => {
                           const isGiftCard = item.id.startsWith('gift-card-') || item.name.toLowerCase().includes('gift card');
@@ -325,11 +325,11 @@ export default function CarritoPage() {
                                 <div className="relative w-full h-full p-2 flex flex-col justify-between">
                                   <div className="flex items-center gap-1">
                                     <div className="w-5 h-5 rounded flex items-center justify-center" style={{ background: `${design.accent}30` }}>
-                                      <span className="text-[8px] font-black text-white">ES</span>
+                                      <span className="text-[11px] font-bold text-white">ES</span>
                                     </div>
                                   </div>
                                   <div className="text-center py-1 rounded" style={{ background: `${design.accent}20` }}>
-                                    <span className="text-[10px] font-black tracking-widest" style={{ color: design.accent, textShadow: `0 0 10px ${design.accent}80` }}>
+                                    <span className="text-xs font-bold tracking-widest" style={{ color: design.accent, textShadow: `0 0 10px ${design.accent}80` }}>
                                       GIFT CARD
                                     </span>
                                   </div>
@@ -372,7 +372,7 @@ export default function CarritoPage() {
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <svg className="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                               </svg>
                             </div>
@@ -383,7 +383,7 @@ export default function CarritoPage() {
                       {/* Product Info */}
                       <div className="flex-1 flex flex-col min-w-0">
                         <div className="flex-1">
-                          <h3 className="text-base font-bold text-slate-800 mb-1.5 line-clamp-2 group-hover:text-[#2a63cd] transition-colors">
+                          <h3 className="text-base font-bold text-gray-800 mb-1.5 line-clamp-2 group-hover:text-brand-500 transition-colors">
                             {item.name}
                           </h3>
                           {item.digitalUsername && (
@@ -397,26 +397,26 @@ export default function CarritoPage() {
                           {/* Price Display - USD + Bs. */}
                           <div className="space-y-1">
                             <div className="flex items-baseline gap-1.5">
-                              <span className="text-xs font-bold text-slate-400">USD</span>
-                              <span className="text-2xl font-black text-slate-800">
+                              <span className="text-xs font-bold text-gray-400">USD</span>
+                              <span className="text-2xl font-bold text-gray-800">
                                 {formatPriceUSD(item.price)}
                               </span>
-                              <span className="text-xs text-slate-400">c/u</span>
+                              <span className="text-xs text-gray-400">c/u</span>
                             </div>
                             {settings?.exchangeRateVES && (
                               <div className="flex items-baseline gap-1.5 animate-fadeIn">
-                                <span className="text-[10px] font-bold text-[#2a63cd]">Bs.</span>
-                                <span className="text-sm font-bold text-[#2a63cd]">
+                                <span className="text-xs font-bold text-brand-500">Bs.</span>
+                                <span className="text-sm font-bold text-brand-500">
                                   {formatPriceVES(item.price)}
                                 </span>
-                                <span className="text-[10px] text-slate-400">ref.</span>
+                                <span className="text-xs text-gray-400">ref.</span>
                               </div>
                             )}
                           </div>
                         </div>
 
                         {/* Quantity Controls */}
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
                           <div className="flex items-center gap-3">
                             {(() => {
                               const isGiftCard = item.id.startsWith('gift-card-') || item.name.toLowerCase().includes('gift card');
@@ -424,8 +424,8 @@ export default function CarritoPage() {
                               if (isGiftCard) {
                                 return (
                                   <div className="flex items-center gap-2">
-                                    <div className="px-4 py-2 bg-slate-100 rounded-xl">
-                                      <span className="text-lg font-bold text-slate-800">1</span>
+                                    <div className="px-4 py-2 bg-gray-100 rounded-xl">
+                                      <span className="text-lg font-bold text-gray-800">1</span>
                                     </div>
                                     <span className="text-xs text-blue-600 font-medium flex items-center gap-1">
                                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -441,26 +441,26 @@ export default function CarritoPage() {
                                 <div className="flex items-center gap-2">
                                   <button
                                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                    className="w-9 h-9 flex items-center justify-center bg-slate-100 rounded-xl hover:bg-[#2a63cd] hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105"
+                                    className="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-xl hover:bg-brand-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105"
                                   >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
                                     </svg>
                                   </button>
-                                  <span className="w-12 text-center text-lg font-bold text-slate-800">
+                                  <span className="w-12 text-center text-lg font-bold text-gray-800">
                                     {item.quantity}
                                   </span>
                                   <button
                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                     disabled={item.quantity >= item.stock}
-                                    className="w-9 h-9 flex items-center justify-center bg-slate-100 rounded-xl hover:bg-[#2a63cd] hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-100 disabled:hover:text-slate-800"
+                                    className="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-xl hover:bg-brand-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 disabled:hover:text-gray-800"
                                   >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
                                     </svg>
                                   </button>
                                   {item.quantity >= item.stock && (
-                                    <span className="text-[10px] text-amber-600 font-medium">Máx</span>
+                                    <span className="text-xs text-amber-600 font-medium">Máx</span>
                                   )}
                                 </div>
                               );
@@ -471,15 +471,15 @@ export default function CarritoPage() {
                           <div className="flex items-center gap-4">
                             <div className="text-right">
                               <div className="flex items-baseline gap-1 justify-end">
-                                <span className="text-xs font-bold text-slate-400">USD</span>
-                                <span className="text-lg font-black text-slate-800">
+                                <span className="text-xs font-bold text-gray-400">USD</span>
+                                <span className="text-lg font-bold text-gray-800">
                                   {formatPriceUSD(item.price * item.quantity)}
                                 </span>
                               </div>
                               {settings?.exchangeRateVES && (
                                 <div className="flex items-baseline gap-1 justify-end">
-                                  <span className="text-[10px] font-bold text-[#2a63cd]">Bs.</span>
-                                  <span className="text-xs font-bold text-[#2a63cd]">
+                                  <span className="text-xs font-bold text-brand-500">Bs.</span>
+                                  <span className="text-xs font-bold text-brand-500">
                                     {formatPriceVES(item.price * item.quantity)}
                                   </span>
                                 </div>
@@ -507,9 +507,9 @@ export default function CarritoPage() {
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-5">
                 {/* Summary Card */}
-                <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl animate-slideUp">
+                <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xl animate-slideUp">
                   {/* Premium Header */}
-                  <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] px-6 py-4">
+                  <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-6 py-4">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -521,14 +521,14 @@ export default function CarritoPage() {
                   <div className="p-6 space-y-4">
                     {/* Subtotal */}
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 text-sm">Subtotal:</span>
+                      <span className="text-gray-500 text-sm">Subtotal:</span>
                       <div className="text-right">
                         <div className="flex items-baseline gap-1 justify-end">
-                          <span className="text-xs text-slate-400">USD</span>
-                          <span className="text-base font-bold text-slate-700">{formatPriceUSD(subtotal)}</span>
+                          <span className="text-xs text-gray-400">USD</span>
+                          <span className="text-base font-bold text-gray-700">{formatPriceUSD(subtotal)}</span>
                         </div>
                         {settings?.exchangeRateVES && (
-                          <div className="text-xs text-[#2a63cd] font-medium">
+                          <div className="text-xs text-brand-500 font-medium">
                             Bs. {formatPriceVES(subtotal)}
                           </div>
                         )}
@@ -537,14 +537,14 @@ export default function CarritoPage() {
 
                     {/* Tax */}
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 text-sm">Impuestos (Exento):</span>
+                      <span className="text-gray-500 text-sm">Impuestos (Exento):</span>
                       <div className="text-right">
                         <div className="flex items-baseline gap-1 justify-end">
-                          <span className="text-xs text-slate-400">USD</span>
-                          <span className="text-base font-bold text-slate-700">{formatPriceUSD(tax)}</span>
+                          <span className="text-xs text-gray-400">USD</span>
+                          <span className="text-base font-bold text-gray-700">{formatPriceUSD(tax)}</span>
                         </div>
                         {settings?.exchangeRateVES && (
-                          <div className="text-xs text-[#2a63cd] font-medium">
+                          <div className="text-xs text-brand-500 font-medium">
                             Bs. {formatPriceVES(tax)}
                           </div>
                         )}
@@ -552,17 +552,17 @@ export default function CarritoPage() {
                     </div>
 
                     {/* Total */}
-                    <div className="pt-4 border-t-2 border-dashed border-slate-200">
+                    <div className="pt-4 border-t-2 border-dashed border-gray-200">
                       <div className="flex justify-between items-start">
-                        <span className="text-lg font-bold text-slate-800">Total:</span>
+                        <span className="text-lg font-bold text-gray-800">Total:</span>
                         <div className="text-right">
                           <div className="flex items-baseline gap-1 justify-end">
-                            <span className="text-sm font-bold text-slate-400">USD</span>
-                            <span className="text-3xl font-black text-slate-800">{formatPriceUSD(total)}</span>
+                            <span className="text-sm font-bold text-gray-400">USD</span>
+                            <span className="text-3xl font-bold text-gray-800">{formatPriceUSD(total)}</span>
                           </div>
                           {settings?.exchangeRateVES && (
-                            <div className="mt-1 px-3 py-1 bg-[#2a63cd]/10 rounded-lg inline-block">
-                              <span className="text-sm font-bold text-[#2a63cd]">
+                            <div className="mt-1 px-3 py-1 bg-brand-500/10 rounded-lg inline-block">
+                              <span className="text-sm font-bold text-brand-500">
                                 Bs. {formatPriceVES(total)}
                               </span>
                             </div>
@@ -577,7 +577,7 @@ export default function CarritoPage() {
                     <button
                       onClick={handleCheckout}
                       disabled={isCheckingOut}
-                      className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-base font-bold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 group"
+                      className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-base font-bold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 group"
                     >
                       {isCheckingOut ? (
                         <>
@@ -602,7 +602,7 @@ export default function CarritoPage() {
 
                     <Link
                       href="/productos"
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-all duration-300 text-sm"
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all duration-300 text-sm"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -613,32 +613,32 @@ export default function CarritoPage() {
                 </div>
 
                 {/* Trust Badges */}
-                <div className="bg-gradient-to-br from-[#2a63cd]/5 to-purple-500/5 rounded-2xl border border-slate-200 p-5 shadow-lg space-y-4 animate-slideUp" style={{ animationDelay: '0.1s' }}>
+                <div className="bg-gradient-to-br from-brand-500/5 to-purple-500/5 rounded-2xl border border-gray-200 p-5 shadow-lg space-y-4 animate-slideUp" style={{ animationDelay: '0.1s' }}>
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Envíos Asegurados</h3>
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Envíos Asegurados</h3>
                     <div className="flex gap-2">
-                      <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[9px] font-black">ZOOM</span>
-                      <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[9px] font-black">MRW</span>
+                      <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[11px] font-bold">ZOOM</span>
+                      <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[11px] font-bold">MRW</span>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-start gap-3 text-xs text-slate-600">
-                      <div className="w-7 h-7 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <FiTruck className="w-3.5 h-3.5 text-[#2a63cd]" />
+                    <div className="flex items-start gap-3 text-xs text-gray-600">
+                      <div className="w-7 h-7 bg-brand-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <FiTruck className="w-3.5 h-3.5 text-brand-500" />
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-700">Despacho Nacional Garantizado</p>
-                        <p className="text-slate-500">Envíos Rápidos y Seguros a nivel nacional por ZOOM y MRW.</p>
+                        <p className="font-semibold text-gray-700">Despacho Nacional Garantizado</p>
+                        <p className="text-gray-500">Envíos Rápidos y Seguros a nivel nacional por ZOOM y MRW.</p>
                       </div>
                     </div>
                     
-                    <div className="flex items-start gap-3 text-xs text-slate-600">
+                    <div className="flex items-start gap-3 text-xs text-gray-600">
                       <div className="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                         <FiShield className="w-3.5 h-3.5 text-emerald-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-700">Protección del Comprador</p>
-                        <p className="text-slate-500">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
+                        <p className="font-semibold text-gray-700">Protección del Comprador</p>
+                        <p className="text-gray-500">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
                       </div>
                     </div>
                   </div>

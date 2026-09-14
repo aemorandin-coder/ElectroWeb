@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import Footer from '@/components/Footer';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -508,7 +509,7 @@ export default function CheckoutPage() {
       }
     } catch (err) {
       console.error('Error reading clipboard:', err);
-      alert('No se pudo leer del portapapeles. Por favor, copia manualmente la dirección.');
+      toast.error('No se pudo leer del portapapeles. Por favor, copia manualmente la dirección.');
     }
   };
 
@@ -643,7 +644,7 @@ export default function CheckoutPage() {
   // Show loading while checking authentication to prevent flash
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center">
         <div className="text-white text-center">
           <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-lg font-medium">Cargando...</p>
@@ -658,22 +659,22 @@ export default function CheckoutPage() {
   // Only show empty cart if not processing and not completed
   if (items.length === 0 && !showProcessingOverlay && !orderCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
+      <div className="min-h-screen bg-gradient-to-br from-surface via-white to-surface">
         <PublicHeader />
 
         {/* Empty Cart Message */}
         <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] p-12 text-center">
-            <svg className="w-20 h-20 text-[#e9ecef] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white rounded-lg shadow-md border border-line p-12 text-center">
+            <svg className="w-20 h-20 text-line mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            <h2 className="text-2xl font-bold text-[#212529] mb-2">Tu carrito está vacío</h2>
-            <p className="text-[#6a6c6b] mb-6">
+            <h2 className="text-2xl font-bold text-ink mb-2">Tu carrito está vacío</h2>
+            <p className="text-muted mb-6">
               Agrega productos a tu carrito para continuar con el proceso de pago
             </p>
             <Link
               href="/productos"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#2a63cd] text-white font-semibold rounded-lg hover:bg-[#1e4ba3] transition-all shadow-md"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-brand-500 text-white font-semibold rounded-lg hover:bg-brand-600 transition-all shadow-md"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -700,7 +701,7 @@ export default function CheckoutPage() {
   // Show redirect message IMMEDIATELY if not authenticated (check status directly)
   if (status === 'unauthenticated' || showRedirectMessage) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] flex items-center justify-center px-4 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center px-4 relative overflow-hidden">
         {/* Animated Background Orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
@@ -717,7 +718,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Title */}
-            <h2 className="text-3xl font-black text-white text-center mb-3 font-[family-name:var(--font-tektur)]">
+            <h2 className="text-3xl font-bold text-white text-center mb-3 font-[family-name:var(--font-tektur)]">
               ¡Un momento!
             </h2>
 
@@ -756,17 +757,17 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#f8f9fa]">
+    <div className="min-h-screen bg-gradient-to-br from-surface via-white to-surface">
       <PublicHeader />
 
       {/* Premium Hero Section - Compact */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#2a63cd] py-8">
+      <section className="relative overflow-hidden bg-gradient-to-br from-brand-500 via-brand-600 to-brand-500 py-8">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 -left-4 w-72 h-72 bg-white rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
           <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-black text-white mb-2 animate-fadeInUp">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 animate-fadeInUp">
             Finalizar Compra
           </h1>
           <p className="text-base text-blue-100 animate-fadeInUp animation-delay-200">
@@ -795,10 +796,10 @@ export default function CheckoutPage() {
 
 
               {/* Shipping Information */}
-              <div className="bg-white rounded-xl shadow-lg border border-[#e9ecef] p-6 animate-fadeIn animation-delay-100">
+              <div className="bg-white rounded-xl shadow-lg border border-line p-6 animate-fadeIn animation-delay-100">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-[#212529] flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+                  <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-sm">
                       <FiMapPin className="w-4 h-4 text-white" />
                     </div>
                     Dirección de Envío
@@ -821,7 +822,7 @@ export default function CheckoutPage() {
 
                 {/* ── Selector de Tipo de Entrega ── */}
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-[#212529] mb-3">
+                  <label className="block text-sm font-semibold text-ink mb-3">
                     Tipo de Entrega *
                   </label>
                   <div className={`grid gap-3 ${companySettings?.pickupEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
@@ -831,16 +832,16 @@ export default function CheckoutPage() {
                       type="button"
                       onClick={() => setFormData({ ...formData, deliveryMethod: 'HOME_DELIVERY', isOfficeDelivery: false, courierOfficeId: '' })}
                       className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.deliveryMethod === 'HOME_DELIVERY' && !formData.isOfficeDelivery
-                        ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
-                        : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
+                        ? 'border-brand-500 bg-brand-500/5 shadow-md'
+                        : 'border-line hover:border-brand-500/30'
                         }`}
                     >
-                      <FiMapPin className={`w-5 h-5 flex-shrink-0 ${formData.deliveryMethod === 'HOME_DELIVERY' && !formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
+                      <FiMapPin className={`w-5 h-5 flex-shrink-0 ${formData.deliveryMethod === 'HOME_DELIVERY' && !formData.isOfficeDelivery ? 'text-brand-500' : 'text-muted'}`} />
                       <div className="text-left">
-                        <p className={`text-sm font-bold ${formData.deliveryMethod === 'HOME_DELIVERY' && !formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                        <p className={`text-sm font-bold ${formData.deliveryMethod === 'HOME_DELIVERY' && !formData.isOfficeDelivery ? 'text-brand-500' : 'text-ink'}`}>
                           Dirección Personal
                         </p>
-                        <p className="text-xs text-[#6a6c6b]">Envío a domicilio</p>
+                        <p className="text-xs text-muted">Envío a domicilio</p>
                       </div>
                     </button>
 
@@ -849,16 +850,16 @@ export default function CheckoutPage() {
                       type="button"
                       onClick={() => setFormData({ ...formData, deliveryMethod: 'SHIPPING', isOfficeDelivery: true })}
                       className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.isOfficeDelivery
-                        ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
-                        : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
+                        ? 'border-brand-500 bg-brand-500/5 shadow-md'
+                        : 'border-line hover:border-brand-500/30'
                         }`}
                     >
-                      <FiPackage className={`w-5 h-5 flex-shrink-0 ${formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
+                      <FiPackage className={`w-5 h-5 flex-shrink-0 ${formData.isOfficeDelivery ? 'text-brand-500' : 'text-muted'}`} />
                       <div className="text-left">
-                        <p className={`text-sm font-bold ${formData.isOfficeDelivery ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                        <p className={`text-sm font-bold ${formData.isOfficeDelivery ? 'text-brand-500' : 'text-ink'}`}>
                           Oficina Courier
                         </p>
-                        <p className="text-xs text-[#6a6c6b]">ZOOM o MRW</p>
+                        <p className="text-xs text-muted">ZOOM o MRW</p>
                       </div>
                     </button>
 
@@ -869,15 +870,15 @@ export default function CheckoutPage() {
                         onClick={() => setFormData({ ...formData, deliveryMethod: 'PICKUP', isOfficeDelivery: false, courierOfficeId: '' })}
                         className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.deliveryMethod === 'PICKUP'
                           ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                          : 'border-[#e9ecef] hover:border-emerald-300'
+                          : 'border-line hover:border-emerald-300'
                           }`}
                       >
-                        <FiMapPin className={`w-5 h-5 flex-shrink-0 ${formData.deliveryMethod === 'PICKUP' ? 'text-emerald-600' : 'text-[#6a6c6b]'}`} />
+                        <FiMapPin className={`w-5 h-5 flex-shrink-0 ${formData.deliveryMethod === 'PICKUP' ? 'text-emerald-600' : 'text-muted'}`} />
                         <div className="text-left">
-                          <p className={`text-sm font-bold ${formData.deliveryMethod === 'PICKUP' ? 'text-emerald-700' : 'text-[#212529]'}`}>
+                          <p className={`text-sm font-bold ${formData.deliveryMethod === 'PICKUP' ? 'text-emerald-700' : 'text-ink'}`}>
                             Retiro en Tienda
                           </p>
-                          <p className="text-xs text-[#6a6c6b]">Sin costo de envío</p>
+                          <p className="text-xs text-muted">Sin costo de envío</p>
                         </div>
                       </button>
                     )}
@@ -927,8 +928,8 @@ export default function CheckoutPage() {
                               <FiMapPin className="w-5 h-5 text-white" />
                             </div>
                             <div className="text-left">
-                              <p className="text-sm font-bold text-[#212529]">Direcciones Guardadas</p>
-                              <p className="text-xs text-[#6a6c6b]">Tienes {savedAddresses.length} dirección(es) guardada(s)</p>
+                              <p className="text-sm font-bold text-ink">Direcciones Guardadas</p>
+                              <p className="text-xs text-muted">Tienes {savedAddresses.length} dirección(es) guardada(s)</p>
                             </div>
                           </div>
                           <FiArrowRight className={`w-5 h-5 text-blue-600 transition-transform ${showAddressSelector ? 'rotate-90' : ''}`} />
@@ -941,13 +942,13 @@ export default function CheckoutPage() {
                                 key={index}
                                 type="button"
                                 onClick={() => handleSelectSavedAddress(address)}
-                                className="w-full p-4 bg-white border-2 border-[#e9ecef] rounded-xl hover:border-[#2a63cd] hover:bg-blue-50/50 transition-all text-left group"
+                                className="w-full p-4 bg-white border-2 border-line rounded-xl hover:border-brand-500 hover:bg-blue-50/50 transition-all text-left group"
                               >
                                 <div className="flex items-start gap-3">
                                   <FiCheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                                   <div className="flex-1">
-                                    <p className="text-sm font-semibold text-[#212529] mb-1">{address.address}</p>
-                                    <p className="text-xs text-[#6a6c6b]">{address.city}, {address.state}</p>
+                                    <p className="text-sm font-semibold text-ink mb-1">{address.address}</p>
+                                    <p className="text-xs text-muted">{address.city}, {address.state}</p>
                                   </div>
                                 </div>
                               </button>
@@ -971,7 +972,7 @@ export default function CheckoutPage() {
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label htmlFor="shippingAddress" className="block text-sm font-semibold text-[#212529]">
+                        <label htmlFor="shippingAddress" className="block text-sm font-semibold text-ink">
                           Dirección Completa *
                         </label>
                         {/* Google Maps Helper Button */}
@@ -993,7 +994,7 @@ export default function CheckoutPage() {
                               <FiMapPin className="w-6 h-6 text-white" />
                             </div>
                             <div className="flex-1">
-                              <h4 className="font-black text-orange-900 text-sm mb-1 flex items-center gap-2">
+                              <h4 className="font-bold text-orange-900 text-sm mb-1 flex items-center gap-2">
                                 <FiMapPin className="w-4 h-4" />
                                 Ayuda de Google Maps
                               </h4>
@@ -1005,19 +1006,19 @@ export default function CheckoutPage() {
 
                           <div className="space-y-2 mb-3">
                             <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-black text-orange-600 flex-shrink-0">1.</span>
+                              <span className="font-bold text-orange-600 flex-shrink-0">1.</span>
                               <p>Abre <strong>Google Maps</strong> en otra pestaña</p>
                             </div>
                             <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-black text-orange-600 flex-shrink-0">2.</span>
+                              <span className="font-bold text-orange-600 flex-shrink-0">2.</span>
                               <p>Busca tu ubicación y haz clic derecho en el mapa</p>
                             </div>
                             <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-black text-orange-600 flex-shrink-0">3.</span>
+                              <span className="font-bold text-orange-600 flex-shrink-0">3.</span>
                               <p>Copia la dirección que aparece</p>
                             </div>
                             <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-black text-orange-600 flex-shrink-0">4.</span>
+                              <span className="font-bold text-orange-600 flex-shrink-0">4.</span>
                               <p>Haz clic en el botón de abajo para pegarla automáticamente</p>
                             </div>
                           </div>
@@ -1043,7 +1044,7 @@ export default function CheckoutPage() {
                       )}
 
                       <div className="relative">
-                        <FiMapPin className="absolute left-4 top-3.5 text-[#6a6c6b]" />
+                        <FiMapPin className="absolute left-4 top-3.5 text-muted" />
                         <input
                           ref={shippingAddressRef}
                           type="text"
@@ -1057,7 +1058,7 @@ export default function CheckoutPage() {
                           onFocus={() => setShowShippingWarning(true)}
                           onBlur={() => setTimeout(() => setShowShippingWarning(false), 200)}
                           required={!formData.isOfficeDelivery}
-                          className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent transition-all"
+                          className="w-full pl-12 pr-4 py-3 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                           placeholder="Av. Principal, Edif. Torre, Piso 5, Apto 5-B"
                         />
                       </div>
@@ -1071,7 +1072,7 @@ export default function CheckoutPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="shippingCity" className="block text-sm font-semibold text-[#212529] mb-2">
+                        <label htmlFor="shippingCity" className="block text-sm font-semibold text-ink mb-2">
                           Ciudad *
                         </label>
                         <input
@@ -1082,13 +1083,13 @@ export default function CheckoutPage() {
                           value={formData.shippingCity}
                           onChange={handleChange}
                           required={!formData.isOfficeDelivery}
-                          className="w-full px-4 py-3 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent transition-all"
+                          className="w-full px-4 py-3 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                           placeholder="Guanare"
                         />
                       </div>
 
                       <div>
-                        <label htmlFor="shippingState" className="block text-sm font-semibold text-[#212529] mb-2">
+                        <label htmlFor="shippingState" className="block text-sm font-semibold text-ink mb-2">
                           Estado *
                         </label>
                         <input
@@ -1099,7 +1100,7 @@ export default function CheckoutPage() {
                           value={formData.shippingState}
                           onChange={handleChange}
                           required={!formData.isOfficeDelivery}
-                          className="w-full px-4 py-3 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent transition-all"
+                          className="w-full px-4 py-3 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                           placeholder="Portuguesa"
                         />
                       </div>
@@ -1111,7 +1112,7 @@ export default function CheckoutPage() {
                 {formData.deliveryMethod !== 'PICKUP' && formData.isOfficeDelivery && (
                   <div className="space-y-4 animate-fadeIn">
                     <div>
-                      <label className="block text-sm font-semibold text-[#212529] mb-3">
+                      <label className="block text-sm font-semibold text-ink mb-3">
                         Empresa de Encomienda *
                       </label>
                       <div className="grid grid-cols-2 gap-3">
@@ -1119,12 +1120,12 @@ export default function CheckoutPage() {
                           type="button"
                           onClick={() => setFormData({ ...formData, courierService: 'ZOOM' })}
                           className={`p-4 rounded-xl border-2 transition-all ${formData.courierService === 'ZOOM'
-                            ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
-                            : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
+                            ? 'border-brand-500 bg-brand-500/5 shadow-md'
+                            : 'border-line hover:border-brand-500/30'
                             }`}
                         >
-                          <FiTruck className={`w-6 h-6 mx-auto mb-2 ${formData.courierService === 'ZOOM' ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
-                          <p className={`text-sm font-bold ${formData.courierService === 'ZOOM' ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                          <FiTruck className={`w-6 h-6 mx-auto mb-2 ${formData.courierService === 'ZOOM' ? 'text-brand-500' : 'text-muted'}`} />
+                          <p className={`text-sm font-bold ${formData.courierService === 'ZOOM' ? 'text-brand-500' : 'text-ink'}`}>
                             ZOOM
                           </p>
                         </button>
@@ -1133,12 +1134,12 @@ export default function CheckoutPage() {
                           type="button"
                           onClick={() => setFormData({ ...formData, courierService: 'MRW' })}
                           className={`p-4 rounded-xl border-2 transition-all ${formData.courierService === 'MRW'
-                            ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-md'
-                            : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
+                            ? 'border-brand-500 bg-brand-500/5 shadow-md'
+                            : 'border-line hover:border-brand-500/30'
                             }`}
                         >
-                          <FiTruck className={`w-6 h-6 mx-auto mb-2 ${formData.courierService === 'MRW' ? 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`} />
-                          <p className={`text-sm font-bold ${formData.courierService === 'MRW' ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                          <FiTruck className={`w-6 h-6 mx-auto mb-2 ${formData.courierService === 'MRW' ? 'text-brand-500' : 'text-muted'}`} />
+                          <p className={`text-sm font-bold ${formData.courierService === 'MRW' ? 'text-brand-500' : 'text-ink'}`}>
                             MRW
                           </p>
                         </button>
@@ -1147,11 +1148,11 @@ export default function CheckoutPage() {
 
                     {formData.courierService && (
                       <div className="animate-fadeIn">
-                        <label htmlFor="courierOfficeId" className="block text-sm font-semibold text-[#212529] mb-2">
+                        <label htmlFor="courierOfficeId" className="block text-sm font-semibold text-ink mb-2">
                           Oficina {formData.courierService} / Casillero *
                         </label>
                         <div className="relative">
-                          <FiPackage className="absolute left-4 top-3.5 text-[#6a6c6b]" />
+                          <FiPackage className="absolute left-4 top-3.5 text-muted" />
                           <input
                             type="text"
                             id="courierOfficeId"
@@ -1159,11 +1160,11 @@ export default function CheckoutPage() {
                             value={formData.courierOfficeId}
                             onChange={(e) => setFormData({ ...formData, courierOfficeId: e.target.value })}
                             required={formData.isOfficeDelivery}
-                            className="w-full pl-12 pr-4 py-3 border-2 border-[#e9ecef] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent transition-all"
+                            className="w-full pl-12 pr-4 py-3 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                             placeholder={`ID de oficina ${formData.courierService} o número de casillero`}
                           />
                         </div>
-                        <p className="mt-2 text-xs text-[#6a6c6b] flex items-center gap-1">
+                        <p className="mt-2 text-xs text-muted flex items-center gap-1">
                           <FiInfo className="w-3 h-3" />
                           Ingresa el código de la oficina {formData.courierService} más cercana o tu número de casillero
                         </p>
@@ -1172,11 +1173,11 @@ export default function CheckoutPage() {
 
                     {/* Info about courier services */}
                     <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                      <h4 className="font-bold text-sm text-[#212529] mb-2 flex items-center gap-2">
-                        <FiInfo className="w-4 h-4 text-[#2a63cd]" />
+                      <h4 className="font-bold text-sm text-ink mb-2 flex items-center gap-2">
+                        <FiInfo className="w-4 h-4 text-brand-500" />
                         Sobre las oficinas de encomienda
                       </h4>
-                      <ul className="text-xs text-[#6a6c6b] space-y-1 ml-6 list-disc">
+                      <ul className="text-xs text-muted space-y-1 ml-6 list-disc">
                         <li>Tu pedido será enviado a la oficina {formData.courierService || 'ZOOM/MRW'} que indiques</li>
                         <li>Recibirás una notificación cuando tu paquete llegue a la oficina</li>
                         <li>Debes retirar tu paquete con tu cédula de identidad</li>
@@ -1187,9 +1188,9 @@ export default function CheckoutPage() {
               </div>
 
               {/* Payment Method */}
-              <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] p-6 relative overflow-hidden">
-                <h2 className="text-lg font-bold text-[#212529] mb-4 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+              <div className="bg-white rounded-lg shadow-md border border-line p-6 relative overflow-hidden">
+                <h2 className="text-lg font-bold text-ink mb-4 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-sm">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
@@ -1206,8 +1207,8 @@ export default function CheckoutPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-bold text-[#212529] mb-1">Verificación requerida</h3>
-                      <p className="text-sm text-[#6a6c6b] mb-3">
+                      <h3 className="text-lg font-bold text-ink mb-1">Verificación requerida</h3>
+                      <p className="text-sm text-muted mb-3">
                         Debes verificar tu correo electrónico antes de continuar.
                       </p>
                       <p className="text-xs text-amber-600 font-medium mb-4 bg-amber-50 p-2 rounded-lg border border-amber-200">
@@ -1215,7 +1216,7 @@ export default function CheckoutPage() {
                       </p>
                       <Link
                         href="/customer/settings"
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-bold rounded-xl hover:shadow-lg transition-all"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-bold rounded-xl hover:shadow-lg transition-all"
                       >
                         <FiUser className="w-4 h-4" />
                         Ir a Mi Cuenta
@@ -1245,10 +1246,10 @@ export default function CheckoutPage() {
                       <div className="absolute inset-[-2px] rounded-full border-2 border-dashed border-amber-400/50 animate-spin" style={{ animationDuration: '8s' }}></div>
                       <FiGift className="w-6 h-6 relative z-10" />
                     </div>
-                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'DIRECT' ? 'text-amber-700' : 'text-[#212529]'}`}>
+                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'DIRECT' ? 'text-amber-700' : 'text-ink'}`}>
                       Canjear Gift Card
                     </h3>
-                    <p className="text-sm text-[#6a6c6b]">
+                    <p className="text-sm text-muted">
                       Usa una Gift Card para agregar saldo a tu cuenta
                     </p>
                     {paymentMode === 'DIRECT' && (
@@ -1262,37 +1263,37 @@ export default function CheckoutPage() {
                     type="button"
                     onClick={() => setPaymentMode(paymentMode === 'WALLET' ? null : 'WALLET')}
                     className={`relative p-6 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'WALLET'
-                      ? 'border-[#2a63cd] bg-[#2a63cd]/5 shadow-lg'
-                      : 'border-[#2a63cd]/30 bg-gradient-to-br from-white to-blue-50 hover:border-[#2a63cd]/50 hover:shadow-lg shadow-md'
+                      ? 'border-brand-500 bg-brand-500/5 shadow-lg'
+                      : 'border-brand-500/30 bg-gradient-to-br from-white to-blue-50 hover:border-brand-500/50 hover:shadow-lg shadow-md'
                       }`}
                   >
                     {/* Animated glow effect - Always active */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#2a63cd]/15 to-transparent animate-shimmer"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-500/15 to-transparent animate-shimmer"></div>
 
                     {/* Sparkle effects */}
-                    <div className="absolute top-2 right-8 w-2 h-2 bg-[#2a63cd] rounded-full animate-ping opacity-40"></div>
+                    <div className="absolute top-2 right-8 w-2 h-2 bg-brand-500 rounded-full animate-ping opacity-40"></div>
                     <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-[#6366f1] rounded-full animate-ping opacity-30" style={{ animationDelay: '0.5s' }}></div>
 
                     {/* Icon with epic animation - Always animated */}
                     <div className={`relative w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${paymentMode === 'WALLET'
-                      ? 'bg-gradient-to-br from-[#2a63cd] to-[#6366f1] text-white shadow-lg shadow-[#2a63cd]/40'
-                      : 'bg-gradient-to-br from-[#2a63cd]/20 to-[#6366f1]/20 text-[#2a63cd]'
+                      ? 'bg-gradient-to-br from-brand-500 to-[#6366f1] text-white shadow-lg shadow-brand-500/40'
+                      : 'bg-gradient-to-br from-brand-500/20 to-[#6366f1]/20 text-brand-500'
                       }`}
                     >
                       {/* Pulse ring animation - Always active */}
-                      <div className="absolute inset-0 rounded-full animate-ping opacity-20 bg-[#2a63cd]"></div>
+                      <div className="absolute inset-0 rounded-full animate-ping opacity-20 bg-brand-500"></div>
                       {/* Rotating ring - Always active */}
-                      <div className="absolute inset-[-3px] rounded-full border-2 border-dashed border-[#2a63cd]/40 animate-spin" style={{ animationDuration: '6s' }}></div>
+                      <div className="absolute inset-[-3px] rounded-full border-2 border-dashed border-brand-500/40 animate-spin" style={{ animationDuration: '6s' }}></div>
                       <FontAwesomeIcon icon={faWallet} className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110" />
                     </div>
-                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'WALLET' ? 'text-[#2a63cd]' : 'text-[#212529]'}`}>
+                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'WALLET' ? 'text-brand-500' : 'text-ink'}`}>
                       Usar Saldo / Recargar
                     </h3>
-                    <p className="text-sm text-[#6a6c6b]">
+                    <p className="text-sm text-muted">
                       Paga con tu saldo disponible en la plataforma
                     </p>
                     {paymentMode === 'WALLET' && (
-                      <div className="absolute top-4 right-4 w-6 h-6 bg-[#2a63cd] rounded-full flex items-center justify-center animate-bounce">
+                      <div className="absolute top-4 right-4 w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center animate-bounce">
                         <FiCheck className="w-4 h-4 text-white" />
                       </div>
                     )}
@@ -1380,7 +1381,7 @@ export default function CheckoutPage() {
                               </div>
                               <div className="text-center py-4">
                                 <p className="text-sm text-gray-500 mb-1">Saldo disponible</p>
-                                <p className="text-4xl font-black text-green-600">
+                                <p className="text-4xl font-bold text-green-600">
                                   ${giftCardInfo.balanceUSD.toFixed(2)}
                                 </p>
                                 <p className="text-sm text-gray-500">USD</p>
@@ -1456,14 +1457,14 @@ export default function CheckoutPage() {
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                                   <FiCheck className="w-8 h-8 text-amber-600 mb-1" />
-                                  <span className="text-lg font-black text-amber-700">100%</span>
+                                  <span className="text-lg font-bold text-amber-700">100%</span>
                                 </div>
                               </div>
 
                               {/* Balance Info */}
                               <div className="flex-1 text-center md:text-left">
                                 <p className="text-sm text-amber-600 mb-1">Tu saldo disponible</p>
-                                <p className="text-3xl md:text-4xl font-black text-amber-700 mb-3">
+                                <p className="text-3xl md:text-4xl font-bold text-amber-700 mb-3">
                                   USD {userBalance.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$
                                 </p>
 
@@ -1531,11 +1532,11 @@ export default function CheckoutPage() {
 
                 {/* Wallet Payment Options - Premium Circle Progress Design */}
                 {paymentMode === 'WALLET' && (
-                  <div className="bg-gradient-to-br from-[#f8f9fa] to-white rounded-2xl p-6 border border-[#e9ecef] animate-fadeIn shadow-sm overflow-hidden relative">
+                  <div className="bg-gradient-to-br from-surface to-white rounded-2xl p-6 border border-line animate-fadeIn shadow-sm overflow-hidden relative">
                     {/* Subtle animated background */}
                     <div className="absolute inset-0 opacity-30">
-                      <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#2a63cd]/10 to-transparent rounded-full blur-3xl animate-pulse" />
-                      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#2a63cd]/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-brand-500/10 to-transparent rounded-full blur-3xl animate-pulse" />
+                      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-brand-500/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
                     </div>
 
                     {/* Main Content - Circle + Info */}
@@ -1543,10 +1544,10 @@ export default function CheckoutPage() {
                       {/* Animated Circle Progress */}
                       <div className="relative flex-shrink-0">
                         {/* Outer rotating ring */}
-                        <div className="absolute inset-[-8px] rounded-full border-2 border-dashed border-[#2a63cd]/20 animate-spin" style={{ animationDuration: '20s' }} />
+                        <div className="absolute inset-[-8px] rounded-full border-2 border-dashed border-brand-500/20 animate-spin" style={{ animationDuration: '20s' }} />
 
                         {/* Pulse ring effect */}
-                        <div className="absolute inset-[-4px] rounded-full animate-ping opacity-20 bg-[#2a63cd]" style={{ animationDuration: '2s' }} />
+                        <div className="absolute inset-[-4px] rounded-full animate-ping opacity-20 bg-brand-500" style={{ animationDuration: '2s' }} />
 
                         <svg className="w-36 h-36 transform -rotate-90 relative z-10" viewBox="0 0 100 100">
                           {/* Background circle with subtle gradient */}
@@ -1582,14 +1583,14 @@ export default function CheckoutPage() {
                         </svg>
 
                         <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-                          <div className="w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-all duration-500 bg-gradient-to-br from-[#2a63cd]/10 to-[#2a63cd]/20 text-[#2a63cd]">
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-all duration-500 bg-gradient-to-br from-brand-500/10 to-brand-500/20 text-brand-500">
                             {userBalance >= finalTotal ? (
                               <FiCheckCircle className="w-6 h-6 animate-bounce" style={{ animationDuration: '2s' }} />
                             ) : (
                               <FontAwesomeIcon icon={faWallet} className="w-5 h-5" />
                             )}
                           </div>
-                          <span className="text-sm font-bold text-[#2a63cd]">
+                          <span className="text-sm font-bold text-brand-500">
                             {Math.min(Math.round((userBalance / finalTotal) * 100), 100)}%
                           </span>
                         </div>
@@ -1597,14 +1598,14 @@ export default function CheckoutPage() {
 
                       {/* Balance Info */}
                       <div className="flex-1 text-center md:text-left">
-                        <p className="text-sm text-[#6a6c6b] font-medium mb-1">Tu saldo disponible</p>
-                        <p className="text-4xl font-black text-[#212529] mb-3 tracking-tight">
+                        <p className="text-sm text-muted font-medium mb-1">Tu saldo disponible</p>
+                        <p className="text-4xl font-bold text-ink mb-3 tracking-tight">
                           {formatPrice(userBalance)}
                         </p>
 
                         {/* Status Badge */}
                         <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${userBalance >= finalTotal
-                          ? 'bg-[#2a63cd]/10 text-[#2a63cd] border border-[#2a63cd]/20'
+                          ? 'bg-brand-500/10 text-brand-500 border border-brand-500/20'
                           : 'bg-amber-50 text-amber-700 border border-amber-200'
                           }`}>
                           {userBalance >= finalTotal ? (
@@ -1622,14 +1623,14 @@ export default function CheckoutPage() {
 
                         {/* Order Total & Remaining Balance */}
                         <div className="mt-4 space-y-2">
-                          <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-[#6a6c6b]">
+                          <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-muted">
                             <FiPackage className="w-4 h-4" />
-                            <span>Total del pedido: <strong className="text-[#212529]">{formatPrice(finalTotal)}</strong></span>
+                            <span>Total del pedido: <strong className="text-ink">{formatPrice(finalTotal)}</strong></span>
                           </div>
                           {userBalance >= finalTotal && (
-                            <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-[#2a63cd] font-medium animate-fadeIn">
+                            <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-brand-500 font-medium animate-fadeIn">
                               <FiDollarSign className="w-4 h-4" />
-                              <span>Saldo restante después de la compra: <strong className="text-[#212529]">{formatPrice(userBalance - finalTotal)}</strong></span>
+                              <span>Saldo restante después de la compra: <strong className="text-ink">{formatPrice(userBalance - finalTotal)}</strong></span>
                             </div>
                           )}
                         </div>
@@ -1638,15 +1639,15 @@ export default function CheckoutPage() {
 
                     {/* Action Section */}
                     {userBalance < finalTotal ? (
-                      <div className="relative mt-6 pt-6 border-t border-[#e9ecef]">
+                      <div className="relative mt-6 pt-6 border-t border-line">
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                          <p className="text-sm text-[#6a6c6b]">
+                          <p className="text-sm text-muted">
                             Recarga tu saldo para completar esta compra
                           </p>
                           <button
                             type="button"
                             onClick={() => setShowRechargeModal(true)}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
                           >
                             <FiPlus className="w-5 h-5" />
                             Recargar Saldo
@@ -1654,14 +1655,14 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="relative mt-6 pt-6 border-t border-[#e9ecef]">
-                        <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-[#2a63cd]/5 to-[#1e4ba3]/10 border border-[#2a63cd]/20 rounded-xl">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#2a63cd]/30 animate-pulse">
+                      <div className="relative mt-6 pt-6 border-t border-line">
+                        <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-brand-500/5 to-brand-600/10 border border-brand-500/20 rounded-xl">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-500/30 animate-pulse">
                             <FaCheck className="w-5 h-5 text-white" />
                           </div>
                           <div>
-                            <p className="font-bold text-[#2a63cd] text-lg">Listo para pagar</p>
-                            <p className="text-sm text-[#6a6c6b]">
+                            <p className="font-bold text-brand-500 text-lg">Listo para pagar</p>
+                            <p className="text-sm text-muted">
                               Tu saldo cubre el total. Completa el pedido ahora.
                             </p>
                           </div>
@@ -1673,22 +1674,22 @@ export default function CheckoutPage() {
               </div>
 
               {/* Notes - Collapsible */}
-              <div className="bg-white rounded-lg shadow-md border border-[#e9ecef] overflow-hidden">
+              <div className="bg-white rounded-lg shadow-md border border-line overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setShowNotesSection(!showNotesSection)}
                   className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                 >
-                  <h2 className="text-lg font-bold text-[#212529] flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+                  <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-sm">
                       <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                       </svg>
                     </div>
                     Notas Adicionales
-                    <span className="text-xs text-[#6a6c6b] font-normal">(Opcional)</span>
+                    <span className="text-xs text-muted font-normal">(Opcional)</span>
                   </h2>
-                  <svg className={`w-5 h-5 text-[#6a6c6b] transition-transform duration-200 ${showNotesSection ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-5 h-5 text-muted transition-transform duration-200 ${showNotesSection ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -1701,7 +1702,7 @@ export default function CheckoutPage() {
                       value={formData.notes}
                       onChange={handleChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-[#e9ecef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2a63cd] focus:border-transparent text-sm resize-none"
+                      className="w-full px-3 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm resize-none"
                       placeholder="Instrucciones especiales de entrega, preferencias de horario, etc."
                     />
                   </div>
@@ -1709,21 +1710,21 @@ export default function CheckoutPage() {
               </div>
 
               {/* Terms and Conditions */}
-              <div className="bg-white rounded-xl shadow-lg border border-[#e9ecef] p-6 animate-fadeIn animation-delay-300">
+              <div className="bg-white rounded-xl shadow-lg border border-line p-6 animate-fadeIn animation-delay-300">
                 <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
                     id="acceptTerms"
                     checked={acceptedTerms}
                     onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="w-5 h-5 mt-1 text-[#2a63cd] rounded focus:ring-2 focus:ring-[#2a63cd] cursor-pointer"
+                    className="w-5 h-5 mt-1 text-brand-500 rounded focus:ring-2 focus:ring-brand-500 cursor-pointer"
                   />
-                  <label htmlFor="acceptTerms" className="flex-1 text-sm text-[#212529] leading-relaxed cursor-pointer">
+                  <label htmlFor="acceptTerms" className="flex-1 text-sm text-ink leading-relaxed cursor-pointer">
                     Acepto los{' '}
                     <button
                       type="button"
                       onClick={() => setShowTermsModal(true)}
-                      className="text-[#2a63cd] hover:underline font-bold"
+                      className="text-brand-500 hover:underline font-bold"
                     >
                       términos y condiciones
                     </button>
@@ -1740,7 +1741,7 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={loading || !acceptedTerms || (paymentMode === 'WALLET' && userBalance < finalTotal) || (paymentMode === 'DIRECT' && formData.paymentMethod === 'MOBILE_PAYMENT' && !mobilePaymentVerified)}
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold text-lg rounded-xl hover:from-[#1e4ba3] hover:to-[#2a63cd] transition-all shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold text-lg rounded-xl hover:from-brand-600 hover:to-brand-500 transition-all shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:scale-[1.02] active:scale-[0.98]"
               >
                 {loading ? (
                   <>
@@ -1779,8 +1780,8 @@ export default function CheckoutPage() {
               {/* Contact Information - Compact Version */}
               <div className="bg-gradient-to-br from-white to-blue-50/30 rounded-2xl shadow-lg border border-blue-100 p-5 animate-fadeIn">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-[#212529] flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+                  <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-sm">
                       <FiUser className="w-4 h-4 text-white" />
                     </div>
                     Información de Contacto
@@ -1788,7 +1789,7 @@ export default function CheckoutPage() {
                   {(session?.user as any)?.emailVerified && (
                     <div className="flex items-center gap-1.5 px-2 py-1 bg-green-100 border border-green-300 rounded-full">
                       <FiCheckCircle className="w-3 h-3 text-green-700" />
-                      <span className="text-[10px] font-bold text-green-700">Verificado</span>
+                      <span className="text-xs font-bold text-green-700">Verificado</span>
                     </div>
                   )}
                 </div>
@@ -1796,37 +1797,37 @@ export default function CheckoutPage() {
                 <div className="space-y-3">
                   {/* Name */}
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Nombre</label>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
-                      <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
-                      <span className="text-sm text-[#212529] font-medium truncate">{formData.customerName}</span>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-1">Nombre</label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-line rounded-lg">
+                      <FiLock className="w-3.5 h-3.5 text-muted" />
+                      <span className="text-sm text-ink font-medium truncate">{formData.customerName}</span>
                     </div>
                   </div>
 
                   {/* Email */}
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Email</label>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
-                      <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
-                      <span className="text-sm text-[#212529] font-medium truncate">{formData.customerEmail}</span>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-1">Email</label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-line rounded-lg">
+                      <FiLock className="w-3.5 h-3.5 text-muted" />
+                      <span className="text-sm text-ink font-medium truncate">{formData.customerEmail}</span>
                     </div>
                   </div>
 
                   {/* Phone */}
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Teléfono</label>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
-                      <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
-                      <span className="text-sm text-[#212529] font-medium">{formData.customerPhone || 'No registrado'}</span>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-1">Teléfono</label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-line rounded-lg">
+                      <FiLock className="w-3.5 h-3.5 text-muted" />
+                      <span className="text-sm text-ink font-medium">{formData.customerPhone || 'No registrado'}</span>
                     </div>
                   </div>
 
                   {/* ID */}
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#6a6c6b] uppercase mb-1">Cédula</label>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
-                      <FiLock className="w-3.5 h-3.5 text-[#6a6c6b]" />
-                      <span className="text-sm text-[#212529] font-medium">{formData.customerIdNumber || 'No registrado'}</span>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-1">Cédula</label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-line rounded-lg">
+                      <FiLock className="w-3.5 h-3.5 text-muted" />
+                      <span className="text-sm text-ink font-medium">{formData.customerIdNumber || 'No registrado'}</span>
                     </div>
                   </div>
                 </div>
@@ -1835,7 +1836,7 @@ export default function CheckoutPage() {
                 <div className="mt-4 pt-3 border-t border-blue-100">
                   <Link
                     href="/customer/profile"
-                    className="flex items-center justify-center gap-2 text-xs text-[#2a63cd] hover:text-[#1e4ba3] font-semibold transition-colors"
+                    className="flex items-center justify-center gap-2 text-xs text-brand-500 hover:text-brand-600 font-semibold transition-colors"
                   >
                     <FiInfo className="w-3.5 h-3.5" />
                     Editar datos en mi perfil
@@ -1844,11 +1845,11 @@ export default function CheckoutPage() {
               </div>
 
               {/* Summary Card */}
-              <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl animate-slideUp">
+              <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xl animate-slideUp">
                 {/* Header - Same style as other sections */}
-                <div className="px-6 py-4 border-b border-slate-200">
-                  <h2 className="text-lg font-bold text-[#212529] flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center shadow-sm">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-sm">
                       <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
@@ -1859,7 +1860,7 @@ export default function CheckoutPage() {
 
                 <div className="p-6">
                   {/* Products List */}
-                  <div className="space-y-3 mb-4 max-h-[250px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200">
+                  <div className="space-y-3 mb-4 max-h-[250px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200">
                     {items.map((item) => {
                       const originalTotal = item.price * item.quantity;
                       const activeDiscount = activeDiscounts.find(d =>
@@ -1872,8 +1873,8 @@ export default function CheckoutPage() {
                       const finalItemTotal = activeDiscount ? originalTotal * (1 - discountVal / 100) : originalTotal;
 
                       return (
-                        <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
-                          <div className="relative flex-shrink-0 w-14 h-14 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                        <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors">
+                          <div className="relative flex-shrink-0 w-14 h-14 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 overflow-hidden">
                             {item.imageUrl ? (
                               <Image
                                 src={item.imageUrl}
@@ -1883,26 +1884,26 @@ export default function CheckoutPage() {
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <svg className="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                 </svg>
                               </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-semibold text-slate-800 line-clamp-1">
+                            <h4 className="text-sm font-semibold text-gray-800 line-clamp-1">
                               {item.name}
                             </h4>
                             <div className="flex items-center justify-between mt-1">
-                              <span className="text-xs text-slate-500 font-medium">x{item.quantity}</span>
+                              <span className="text-xs text-gray-500 font-medium">x{item.quantity}</span>
                               <div className="text-right">
                                 {activeDiscount ? (
                                   <div className="flex flex-col items-end">
-                                    <span className="text-[10px] text-slate-400 line-through">{formatPrice(originalTotal)}</span>
+                                    <span className="text-xs text-gray-400 line-through">{formatPrice(originalTotal)}</span>
                                     <span className="text-sm font-bold text-green-600">{formatPrice(finalItemTotal)}</span>
                                   </div>
                                 ) : (
-                                  <span className="text-sm font-bold text-slate-800">{formatPrice(originalTotal)}</span>
+                                  <span className="text-sm font-bold text-gray-800">{formatPrice(originalTotal)}</span>
                                 )}
                               </div>
                             </div>
@@ -1913,20 +1914,20 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Divider */}
-                  <div className="border-t border-slate-200 my-4"></div>
+                  <div className="border-t border-gray-200 my-4"></div>
 
                   {/* Price Breakdown */}
                   <div className="space-y-3">
                     {/* Subtotal */}
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 text-sm">Subtotal:</span>
+                      <span className="text-gray-500 text-sm">Subtotal:</span>
                       <div className="text-right">
                         <div className="flex items-baseline gap-1 justify-end">
-                          <span className="text-xs text-slate-400">USD</span>
-                          <span className="text-base font-bold text-slate-700">{formatNumber(cartSubtotal)}$</span>
+                          <span className="text-xs text-gray-400">USD</span>
+                          <span className="text-base font-bold text-gray-700">{formatNumber(cartSubtotal)}$</span>
                         </div>
                         {companySettings?.exchangeRateVES && (
-                          <div className="text-xs text-[#2a63cd] font-medium">
+                          <div className="text-xs text-brand-500 font-medium">
                             Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cartSubtotal * Number(companySettings.exchangeRateVES))}
                           </div>
                         )}
@@ -1957,21 +1958,21 @@ export default function CheckoutPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-slate-500 text-sm">Envío:</span>
+                          <span className="text-gray-500 text-sm">Envío:</span>
                           {/* Info tooltip */}
                           <div className="group relative">
-                            <FiInfo className="w-3.5 h-3.5 text-slate-400 cursor-help" />
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-72 z-50">
+                            <FiInfo className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-72 z-50">
                               <div className="font-semibold mb-1">📦 Sobre el envío</div>
-                              <p className="text-slate-300 leading-relaxed">
+                              <p className="text-gray-300 leading-relaxed">
                                 Los costos de envío son manejados por las empresas de encomienda (ZOOM, MRW, TEALCA). Solo cobramos <strong className="text-white">${shippingBreakdown.packagingFee.toFixed(2)}</strong> por embalaje.
                               </p>
                               {shippingBreakdown.totalWeight > 0 && (
-                                <p className="text-slate-300 mt-1">
+                                <p className="text-gray-300 mt-1">
                                   Peso total: <strong className="text-white">{shippingBreakdown.totalWeight.toFixed(2)} kg</strong>
                                 </p>
                               )}
-                              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div>
+                              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800"></div>
                             </div>
                           </div>
                         </div>
@@ -1979,11 +1980,11 @@ export default function CheckoutPage() {
                           {shippingCost > 0 ? (
                             <>
                               <div className="flex items-baseline gap-1 justify-end">
-                                <span className="text-xs text-slate-400">USD</span>
-                                <span className="text-base font-bold text-slate-700">{formatNumber(shippingCost)}$</span>
+                                <span className="text-xs text-gray-400">USD</span>
+                                <span className="text-base font-bold text-gray-700">{formatNumber(shippingCost)}$</span>
                               </div>
                               {companySettings?.exchangeRateVES && (
-                                <div className="text-xs text-[#2a63cd] font-medium">
+                                <div className="text-xs text-brand-500 font-medium">
                                   Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(shippingCost * Number(companySettings.exchangeRateVES))}
                                 </div>
                               )}
@@ -1997,13 +1998,13 @@ export default function CheckoutPage() {
                       {/* Shipping Breakdown Details (expandable) */}
                       {shippingCost > 0 && formData.deliveryMethod !== 'PICKUP' && (
                         <details className="group">
-                          <summary className="text-[10px] text-[#2a63cd] font-medium cursor-pointer hover:text-[#1e4ba3] flex items-center gap-1">
+                          <summary className="text-xs text-brand-500 font-medium cursor-pointer hover:text-brand-600 flex items-center gap-1">
                             <svg className="w-3 h-3 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                             Ver desglose de envío
                           </summary>
-                          <div className="mt-2 p-3 bg-slate-50 rounded-lg text-xs space-y-2">
+                          <div className="mt-2 p-3 bg-gray-50 rounded-lg text-xs space-y-2">
                             {/* Free shipping badge */}
                             {shippingBreakdown.isFreeShipping && (
                               <div className="flex items-center gap-2 text-green-600 bg-green-50 px-2 py-1.5 rounded-lg">
@@ -2024,7 +2025,7 @@ export default function CheckoutPage() {
                                   Digitales (sin envío):
                                 </div>
                                 {shippingBreakdown.digitalItems.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-slate-500 pl-4">
+                                  <div key={idx} className="flex justify-between text-gray-500 pl-4">
                                     <span className="truncate max-w-[60%]">{item.name} x{item.quantity}</span>
                                     <span className="text-green-600 font-medium">$0.00</span>
                                   </div>
@@ -2042,9 +2043,9 @@ export default function CheckoutPage() {
                                   Consolidables (por peso):
                                 </div>
                                 {shippingBreakdown.consolidableItems.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-slate-500 pl-4">
+                                  <div key={idx} className="flex justify-between text-gray-500 pl-4">
                                     <span className="truncate max-w-[55%]">{item.name} x{item.quantity}</span>
-                                    <span className="text-slate-600">
+                                    <span className="text-gray-600">
                                       {item.volumetricWeight > item.weight ? (
                                         <span className="text-amber-600" title="Se usa peso volumétrico">
                                           {item.usedWeight.toFixed(2)} kg*
@@ -2055,8 +2056,8 @@ export default function CheckoutPage() {
                                     </span>
                                   </div>
                                 ))}
-                                <div className="flex justify-between pt-1 border-t border-slate-200 font-medium">
-                                  <span className="text-slate-600">Subtotal ({shippingBreakdown.totalWeight.toFixed(2)} kg × $2/kg):</span>
+                                <div className="flex justify-between pt-1 border-t border-gray-200 font-medium">
+                                  <span className="text-gray-600">Subtotal ({shippingBreakdown.totalWeight.toFixed(2)} kg × $2/kg):</span>
                                   <span className="text-blue-600">${shippingBreakdown.consolidatedCost.toFixed(2)}</span>
                                 </div>
                               </div>
@@ -2072,20 +2073,20 @@ export default function CheckoutPage() {
                                   Productos grandes (envío individual):
                                 </div>
                                 {shippingBreakdown.bulkyItems.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-slate-500 pl-4">
+                                  <div key={idx} className="flex justify-between text-gray-500 pl-4">
                                     <span className="truncate max-w-[60%]">{item.name} x{item.quantity}</span>
                                     <span className="text-amber-600 font-medium">${item.cost.toFixed(2)}</span>
                                   </div>
                                 ))}
-                                <div className="flex justify-between pt-1 border-t border-slate-200 font-medium">
-                                  <span className="text-slate-600">Subtotal envío individual:</span>
+                                <div className="flex justify-between pt-1 border-t border-gray-200 font-medium">
+                                  <span className="text-gray-600">Subtotal envío individual:</span>
                                   <span className="text-amber-600">${shippingBreakdown.bulkyCost.toFixed(2)}</span>
                                 </div>
                               </div>
                             )}
 
                             {/* Packaging fee */}
-                            <div className="flex justify-between pt-1 border-t border-slate-200 text-slate-600">
+                            <div className="flex justify-between pt-1 border-t border-gray-200 text-gray-600">
                               <span className="flex items-center gap-1">
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" />
@@ -2097,7 +2098,7 @@ export default function CheckoutPage() {
 
                             {/* Volumetric weight note */}
                             {shippingBreakdown.consolidableItems.some(item => item.volumetricWeight > item.weight) && (
-                              <div className="text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded flex items-start gap-1">
+                              <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded flex items-start gap-1">
                                 <span className="font-bold">*</span>
                                 <span>Se usó peso volumétrico (L×A×H÷5000) por ser mayor al peso real.</span>
                               </div>
@@ -2108,17 +2109,17 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Total - Premium Style */}
-                    <div className="pt-4 border-t-2 border-dashed border-slate-200">
+                    <div className="pt-4 border-t-2 border-dashed border-gray-200">
                       <div className="flex justify-between items-start">
-                        <span className="text-lg font-bold text-slate-800">Total:</span>
+                        <span className="text-lg font-bold text-gray-800">Total:</span>
                         <div className="text-right">
                           <div className="flex items-baseline gap-1 justify-end">
-                            <span className="text-sm font-bold text-slate-400">USD</span>
-                            <span className="text-3xl font-black text-slate-800">{formatNumber(finalTotal)}$</span>
+                            <span className="text-sm font-bold text-gray-400">USD</span>
+                            <span className="text-3xl font-bold text-gray-800">{formatNumber(finalTotal)}$</span>
                           </div>
                           {companySettings?.exchangeRateVES && (
-                            <div className="mt-1 px-3 py-1 bg-[#2a63cd]/10 rounded-lg inline-block">
-                              <span className="text-sm font-bold text-[#2a63cd]">
+                            <div className="mt-1 px-3 py-1 bg-brand-500/10 rounded-lg inline-block">
+                              <span className="text-sm font-bold text-brand-500">
                                 Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(finalTotal * Number(companySettings.exchangeRateVES))}
                               </span>
                             </div>
@@ -2129,7 +2130,7 @@ export default function CheckoutPage() {
 
                     {/* Exchange Rate Note */}
                     {companySettings?.exchangeRateVES && (
-                      <div className="text-[10px] text-slate-400 text-center pt-2">
+                      <div className="text-xs text-gray-400 text-center pt-2">
                         Tasa de cambio: 1 USD = Bs. {Number(companySettings.exchangeRateVES).toFixed(2)}
                       </div>
                     )}
@@ -2140,7 +2141,7 @@ export default function CheckoutPage() {
                 <div className="px-6 pb-6">
                   <Link
                     href="/productos"
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-all duration-300 text-sm"
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all duration-300 text-sm"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -2151,32 +2152,32 @@ export default function CheckoutPage() {
               </div>
 
               {/* Trust Badges */}
-              <div className="bg-gradient-to-br from-[#2a63cd]/5 to-purple-500/5 rounded-2xl border border-slate-200 p-5 shadow-lg space-y-4 animate-slideUp" style={{ animationDelay: '0.1s' }}>
+              <div className="bg-gradient-to-br from-brand-500/5 to-purple-500/5 rounded-2xl border border-gray-200 p-5 shadow-lg space-y-4 animate-slideUp" style={{ animationDelay: '0.1s' }}>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Envíos Asegurados</h3>
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Envíos Asegurados</h3>
                   <div className="flex gap-2">
-                    <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[9px] font-black">ZOOM</span>
-                    <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[9px] font-black">MRW</span>
+                    <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[11px] font-bold">ZOOM</span>
+                    <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[11px] font-bold">MRW</span>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <div className="flex items-start gap-3 text-xs text-slate-600">
-                    <div className="w-7 h-7 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <FiTruck className="w-3.5 h-3.5 text-[#2a63cd]" />
+                  <div className="flex items-start gap-3 text-xs text-gray-600">
+                    <div className="w-7 h-7 bg-brand-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <FiTruck className="w-3.5 h-3.5 text-brand-500" />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-700">Despacho Nacional Garantizado</p>
-                      <p className="text-slate-500">Envíos Rápidos y Seguros a nivel nacional por ZOOM y MRW.</p>
+                      <p className="font-semibold text-gray-700">Despacho Nacional Garantizado</p>
+                      <p className="text-gray-500">Envíos Rápidos y Seguros a nivel nacional por ZOOM y MRW.</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-start gap-3 text-xs text-slate-600">
+                  <div className="flex items-start gap-3 text-xs text-gray-600">
                     <div className="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                       <FiShield className="w-3.5 h-3.5 text-emerald-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-700">Protección del Comprador</p>
-                      <p className="text-slate-500">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
+                      <p className="font-semibold text-gray-700">Protección del Comprador</p>
+                      <p className="text-gray-500">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
                     </div>
                   </div>
                 </div>
@@ -2212,7 +2213,7 @@ export default function CheckoutPage() {
               }}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] p-6">
+              <div className="bg-gradient-to-r from-brand-500 to-brand-600 p-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-bold text-white">Términos y Condiciones</h2>
                   <button
@@ -2228,7 +2229,7 @@ export default function CheckoutPage() {
 
               {/* Content */}
               <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 180px)' }}>
-                <div className="space-y-6 text-sm text-[#212529]">
+                <div className="space-y-6 text-sm text-ink">
                   {/* Critical Warning */}
                   <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-orange-500 rounded-r-xl">
                     <h3 className="font-bold text-orange-900 mb-2 flex items-center gap-2">
@@ -2297,19 +2298,19 @@ export default function CheckoutPage() {
               </div>
 
               {/* Footer */}
-              <div className="p-6 bg-[#f8f9fa] border-t border-[#e9ecef] flex gap-3">
+              <div className="p-6 bg-surface border-t border-line flex gap-3">
                 <button
                   onClick={() => {
                     setAcceptedTerms(true);
                     setShowTermsModal(false);
                   }}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white font-bold rounded-xl hover:shadow-lg transition-all"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-lg transition-all"
                 >
                   Aceptar y Continuar
                 </button>
                 <button
                   onClick={() => setShowTermsModal(false)}
-                  className="px-6 py-3 bg-white border-2 border-[#e9ecef] text-[#212529] font-medium rounded-xl hover:bg-[#f8f9fa] transition-all"
+                  className="px-6 py-3 bg-white border-2 border-line text-ink font-medium rounded-xl hover:bg-surface transition-all"
                 >
                   Cerrar
                 </button>

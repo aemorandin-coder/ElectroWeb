@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { getPublicSettings } from '@/lib/site-settings';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import ContactForm from '@/components/contact/ContactForm';
@@ -8,11 +8,11 @@ import Footer from '@/components/Footer';
 export const revalidate = 0;
 
 export default async function ContactoPage() {
-  const settings = await prisma.companySettings.findFirst();
+  const settings = await getPublicSettings();
 
   return (
     <div className="min-h-dvh bg-white">
-      <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
+      <PublicHeader />
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
@@ -147,7 +147,7 @@ export default async function ContactoPage() {
               </div>
             </div>
 
-            <BusinessHours businessHours={settings?.businessHours} />
+            <BusinessHours businessHours={settings.businessHours ? JSON.stringify(settings.businessHours) : null} />
           </div>
 
           {/* Form for Desktop only (Mobile already has form at top) */}

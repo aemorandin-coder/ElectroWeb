@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
 import { FiX, FiCheck, FiAlertTriangle, FiFileText, FiEdit3, FiLoader } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 interface BalanceTermsModalProps {
     isOpen: boolean;
@@ -179,16 +180,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
         }
     };
 
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => {
-            document.body.style.overflow = '';
-        };
-    }, [isOpen]);
+    useBodyScrollLock(isOpen);
 
     if (!isOpen) return null;
 

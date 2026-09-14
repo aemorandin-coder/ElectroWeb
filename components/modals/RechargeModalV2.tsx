@@ -11,6 +11,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
 import BalanceTermsModal from './BalanceTermsModal';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import VerificarPagoMovilForm from '@/components/pago-movil/VerificarPagoMovilForm';
 
 interface RechargeModalProps {
@@ -199,16 +200,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         checkTerms();
     }, [isOpen, session]);
 
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => {
-            document.body.style.overflow = '';
-        };
-    }, [isOpen]);
+    useBodyScrollLock(isOpen);
 
     // Function to cancel pending transaction
     const cancelPendingTransaction = async (transactionId: string) => {

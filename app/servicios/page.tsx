@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
+import { getPublicSettings } from '@/lib/site-settings';
 import AnimatedWave from '@/components/AnimatedWave';
 import ServiciosPortfolio from '@/components/servicios/ServiciosPortfolio';
 import {
@@ -64,7 +65,7 @@ export default async function ServiciosPage() {
       orderBy: { order: 'asc' },
       include: { reviews: { select: { rating: true } } },
     }),
-    prisma.companySettings.findFirst(),
+    getPublicSettings(),
   ]);
 
   const videos = rawVideos.map((v) => {
@@ -82,7 +83,7 @@ export default async function ServiciosPage() {
 
   return (
     <div className="min-h-dvh bg-white">
-      <PublicHeader settings={settings ? JSON.parse(JSON.stringify(settings)) : null} />
+      <PublicHeader />
 
       {/* Hero Section - Keep current version as requested */}
       <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">

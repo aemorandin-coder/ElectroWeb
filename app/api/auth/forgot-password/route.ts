@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/email-service';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { verifyCaptcha } from '@/lib/captcha';
 
 export async function POST(request: NextRequest) {
     try {
@@ -20,7 +21,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { email } = await request.json();
+        const { email, captchaToken } = await request.json();
+
+        // SEGURIDAD: el captcha se verifica en el servidor, no solo en el navegador
+        const captcha = await verifyCaptcha(captchaToken, clientIP);
+        if (!captcha.ok) {
+            return NextResponse.json({ message: captcha.error }, { status: captcha.status });
+        }
 
         if (!email) {
             return NextResponse.json(

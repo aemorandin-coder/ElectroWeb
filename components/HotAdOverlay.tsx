@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { FiX } from 'react-icons/fi';
-import { useSettings } from '@/contexts/SettingsContext';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { safeHotAdLink, shouldShowHotAd, type HotAdRecord } from '@/lib/hot-ad';
+import type { HotAd } from '@/lib/queries/hot-ad';
 
 // Popup promocional del home (C-23, decisión D2): se puede cerrar al instante (X, Esc o el fondo),
 // aparece como mucho una vez cada 24 h por promoción y no antes de SHOW_DELAY_MS.
@@ -37,9 +37,9 @@ function hexToRgba(hex: string, opacity: number): string {
   return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${opacity})`;
 }
 
-export default function HotAdOverlay() {
-  const { settings } = useSettings();
-  const image = settings?.hotAdEnabled && settings.hotAdImage ? settings.hotAdImage : null;
+/** `hotAd` lo lee el home en el servidor (getHotAd): ya no viaja en los settings de todas las páginas (C-25). */
+export default function HotAdOverlay({ hotAd }: { hotAd: HotAd }) {
+  const image = hotAd.image;
   const [open, setOpen] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   // Copia para el manejador de Esc (se registra una vez al abrir)
@@ -50,7 +50,6 @@ export default function HotAdOverlay() {
   useBodyScrollLock(open);
 
   useEffect(() => {
-    if (!image) return;
     const timer = setTimeout(() => {
       let legacyPermanent = false;
       try {
@@ -74,7 +73,7 @@ export default function HotAdOverlay() {
   }, [image]);
 
   const close = () => {
-    if (image && dontShowAgainRef.current) writeRecord({ image, shownAt: Date.now(), dismissed: true });
+    if (dontShowAgainRef.current) writeRecord({ image, shownAt: Date.now(), dismissed: true });
     setOpen(false);
   };
   // El manejador de teclado usa siempre la versión actual de close
@@ -114,11 +113,11 @@ export default function HotAdOverlay() {
     };
   }, [open]);
 
-  if (!open || !image || !settings) return null;
+  if (!open) return null;
 
-  const link = safeHotAdLink(settings.hotAdLink);
-  const shadow = settings.hotAdShadowEnabled
-    ? `0 0 ${settings.hotAdShadowBlur}px ${settings.hotAdShadowBlur / 2}px rgba(0, 0, 0, ${settings.hotAdShadowOpacity / 100})`
+  const link = safeHotAdLink(hotAd.link);
+  const shadow = hotAd.shadowEnabled
+    ? `0 0 ${hotAd.shadowBlur}px ${hotAd.shadowBlur / 2}px rgba(0, 0, 0, ${hotAd.shadowOpacity / 100})`
     : 'none';
 
   const picture = (
@@ -127,7 +126,7 @@ export default function HotAdOverlay() {
     <img
       src={image}
       alt="Promoción especial"
-      className={`block h-auto max-h-[calc(100dvh-8rem)] w-auto max-w-full object-contain ${settings.hotAdTransparentBg ? '' : 'rounded-2xl'}`}
+      className={`block h-auto max-h-[calc(100dvh-8rem)] w-auto max-w-full object-contain ${hotAd.transparentBg ? '' : 'rounded-2xl'}`}
       style={{ boxShadow: shadow }}
     />
   );
@@ -135,7 +134,7 @@ export default function HotAdOverlay() {
   return (
     <div
       className="fixed inset-0 z-[var(--z-popup)] flex items-center justify-center overflow-y-auto p-4 motion-safe:animate-fadeIn pb-[calc(1rem+env(safe-area-inset-bottom))]"
-      style={{ backgroundColor: hexToRgba(settings.hotAdBackdropColor || '#000000', (settings.hotAdBackdropOpacity ?? 70) / 100) }}
+      style={{ backgroundColor: hexToRgba(hotAd.backdropColor, hotAd.backdropOpacity / 100) }}
       onClick={(event) => {
         if (event.target === event.currentTarget) close();
       }}

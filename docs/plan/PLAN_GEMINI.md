@@ -55,6 +55,7 @@ Las rondas avanzan **en paralelo** con las de Claude, con el mismo número. Una 
 | **R4** | G-06a → G-06b → G-06c → G-06d → G-06e → G-17* | R3 mergeada **y** `C-10` `HECHO` en `main`. (*) G-17 solo si `C-03` está `HECHO` en `main`; si no, sáltala | C-12 componentes base · C-13 queries |
 | **R5** | G-06f → G-06g* → G-11 | R4 mergeada **y** `C-12` `HECHO`. (*) requiere `C-01` y `C-05` | C-20 header · C-21 barra móvil |
 | **R6** | G-10 → (pendientes de R3/R5 que se hayan saltado) | R5 mergeada **y** `C-21` `HECHO` | C-22 home · C-23 popup |
+| **R6b** | G-20 (solo reporte, no edita código) | `docs/plan/scripts/` en `main` (llega con C-22) | C-21 · C-23 · C-24 |
 | **R7** | G-14 (solo reporte, no edita código) | R6 mergeada | C-30…C-33 catálogo |
 
 Si Claude va atrasado y no se cumple el requisito de la ronda siguiente, Gemini **no adelanta tareas bloqueadas**: termina las pendientes saltadas o espera.
@@ -358,4 +359,47 @@ Verificación:
 grep -n "h-20" app/cursos/loading.tsx app/servicios/loading.tsx app/contacto/loading.tsx app/gift-cards/loading.tsx   # sin <header ... h-20>
 grep -c "<PublicHeader />" app/cursos/loading.tsx app/servicios/loading.tsx app/contacto/loading.tsx app/gift-cards/loading.tsx   # 1 en cada uno
 npx tsc --noEmit
+```
+
+---
+
+### G-20 · Recorrido de los paneles admin y cliente (solo lectura) · Depende: **scripts en `main`**
+**No edites código.** El resultado es un reporte que Claude convierte en tarjetas.
+
+**Antes de empezar:** `git show main:docs/plan/scripts/inventario-paneles.sh` tiene que existir. Si no existe → `BLOQUEADO`.
+
+**Parte A: inventario automático.** Pega la salida completa en tu estado:
+```bash
+bash docs/plan/scripts/inventario-paneles.sh > /tmp/g20.md 2>&1; cat /tmp/g20.md
+```
+
+**Parte B: lectura página por página.** Abre cada archivo `page.tsx` de `app/admin/(dashboard)/**` y de `app/customer/(dashboard)/**`, más los componentes que importen de `components/admin` o `components/customer`. Responde **solo estas 6 preguntas** y anota la línea exacta de cada hallazgo:
+1. **Textos en inglés** visibles para el usuario (títulos, botones, mensajes de error, placeholders).
+2. **Acciones que no hacen nada:** botones con `onClick` vacío o solo `console`, `href="#"` o avisos de "próximamente".
+3. **Errores silenciosos:** `catch` vacío o que solo hace `console.error`, sin `toast` ni mensaje en pantalla.
+4. **Datos inventados** que se muestran como reales: números fijos, listas fijas, porcentajes o gráficos con datos de ejemplo.
+5. **Formularios sin validación visible:** campos obligatorios sin `required` ni mensaje, o se puede enviar vacío.
+6. **Estados que faltan:** listas sin mensaje de "vacío" o cargas sin indicador.
+
+Formato de `docs/plan/estado/G-20.md`:
+```md
+# G-20 — Recorrido de paneles
+Estado: HECHO
+## A. Inventario automático
+(salida del script)
+## B. Hallazgos por página
+### admin/(dashboard)/products/page.tsx
+| # | Pregunta | Línea | Qué se ve / qué pasa |
+|---|---|---|---|
+| 1 | Texto en inglés | 212 | Botón "Save changes" |
+```
+
+**Reglas:**
+- No propongas soluciones ni rediseños: solo hallazgos verificables con su línea.
+- Si una página no tiene hallazgos, escribe "Sin hallazgos".
+- Commit: `[G-20] Recorrido de paneles (solo reporte)`. Solo agrega `docs/plan/estado/G-20.md`.
+
+Verificación:
+```bash
+git diff --stat main    # solo docs/plan/estado/G-20.md
 ```

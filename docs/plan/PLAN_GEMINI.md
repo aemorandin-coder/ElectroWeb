@@ -403,3 +403,25 @@ Verificación:
 ```bash
 git diff --stat main    # solo docs/plan/estado/G-20.md
 ```
+
+---
+
+### G-21 · "Mis direcciones": mostrar los errores del servidor · Depende: **C-24 HECHO en `main`**
+Desde C-24, `/api/customer/addresses` responde `{ error: '...' }` con mensajes en español (400, 404, 500). La página los ignora: si el guardado falla, no pasa nada en pantalla. Antes de empezar: `git show main:docs/plan/estado/C-24.md` debe decir `Estado: HECHO`; si no → `BLOQUEADO`.
+
+Archivo: `app/customer/(dashboard)/addresses/page.tsx`.
+1. Agrega `import { toast } from 'react-hot-toast';`.
+2. En `handleSubmit`:
+   - Si `response.ok` → `toast.success(editingAddress ? 'Dirección actualizada' : 'Dirección guardada')` antes de cerrar el modal.
+   - Si no → `const data = await response.json().catch(() => ({})); toast.error(data.error || 'No se pudo guardar la dirección');`. El modal queda abierto.
+   - En el `catch` agrega `toast.error('No se pudo guardar la dirección');` (deja el `console.error`).
+3. En `handleDelete`: si `response.ok` → `toast.success('Dirección eliminada')`; si no → mismo patrón con `'No se pudo eliminar la dirección'`.
+4. En `fetchAddresses`: si `!response.ok` → `toast.error('No se pudieron cargar tus direcciones')`.
+5. No cambies URLs, métodos, cuerpos de las peticiones ni estilos.
+
+Verificación:
+```bash
+grep -c "toast\." "app/customer/(dashboard)/addresses/page.tsx"     # al menos 6
+grep -n "/api/customer/addresses" "app/customer/(dashboard)/addresses/page.tsx"   # las mismas 4 líneas que antes
+npx tsc --noEmit
+```

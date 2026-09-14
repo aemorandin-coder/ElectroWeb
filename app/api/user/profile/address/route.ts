@@ -1,157 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import {
+    addressInputSchema,
+    createSavedAddress,
+    firstIssue,
+    MAX_SAVED_ADDRESSES,
+    updateSavedAddresses,
+} from '@/lib/saved-addresses';
 
+// El checkout guarda aquí la dirección de envío usada. Misma libreta que /api/customer/addresses (C-24).
 export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
+        const userId = session?.user?.id;
 
-        if (!session?.user?.email) {
+        if (!userId) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
-        const { address, city, state } = await request.json();
+        const body = await request.json().catch(() => null);
+        const parsed = addressInputSchema.safeParse({
+            addressLine1: body?.address,
+            city: body?.city,
+            state: body?.state,
+        });
 
-        if (!address || !city || !state) {
-            return NextResponse.json(
-                { error: 'Dirección, ciudad y estado son requeridos' },
-                { status: 400 }
+        if (!parsed.success) {
+            return NextResponse.json({ error: firstIssue(parsed.error) }, { status: 400 });
+        }
+
+        const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+        const outcome = await updateSavedAddresses<string>(userId, (list) => {
+            const exists = list.some(
+                (entry) =>
+                    same(entry.addressLine1, parsed.data.addressLine1) &&
+                    same(entry.city, parsed.data.city) &&
+                    same(entry.state, parsed.data.state)
             );
-        }
-
-        // Find user by email
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-            include: { profile: true },
+            if (exists) return { list, result: 'Dirección ya guardada' };
+            // Al llegar al límite no se agrega, pero la compra sigue su curso
+            if (list.length >= MAX_SAVED_ADDRESSES) return { list, result: 'Límite de direcciones guardadas alcanzado' };
+            const created = createSavedAddress({ ...parsed.data, isDefault: list.length === 0 });
+            return { list: [...list, created], result: 'Dirección guardada exitosamente' };
         });
 
-        if (!user || !user.profile) {
-            return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 404 });
+        if ('error' in outcome) {
+            return NextResponse.json({ error: outcome.error }, { status: outcome.status });
         }
 
-        // Get current saved addresses or initialize empty array
-        let currentAddresses: any[] = [];
-        try {
-            currentAddresses = user.profile.savedAddresses
-                ? JSON.parse(user.profile.savedAddresses as string)
-                : [];
-        } catch {
-            currentAddresses = [];
-        }
-
-        // Check if address already exists
-        const addressExists = currentAddresses.some(
-            (addr: any) =>
-                addr.address === address &&
-                addr.city === city &&
-                addr.state === state
-        );
-
-        if (addressExists) {
-            return NextResponse.json({
-                message: 'Dirección ya guardada',
-                savedAddresses: currentAddresses,
-            });
-        }
-
-        // Add new address
-        const newAddress = {
-            address,
-            city,
-            state,
-            createdAt: new Date().toISOString(),
-        };
-
-        const updatedAddresses = [...currentAddresses, newAddress];
-
-        // Update profile with new addresses (store as JSON string)
-        const updatedProfile = await prisma.profile.update({
-            where: { userId: user.id },
-            data: {
-                savedAddresses: JSON.stringify(updatedAddresses),
-            },
-        });
-
-        return NextResponse.json({
-            message: 'Dirección guardada exitosamente',
-            savedAddresses: updatedAddresses,
-        });
+        return NextResponse.json({ message: outcome.result, savedAddresses: outcome.list });
     } catch (error) {
         console.error('Error saving address:', error);
         return NextResponse.json(
             { error: 'Error al guardar la dirección' },
-            { status: 500 }
-        );
-    }
-}
-
-export async function DELETE(request: NextRequest) {
-    try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user?.email) {
-            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-        }
-
-        const { searchParams } = new URL(request.url);
-        const index = searchParams.get('index');
-
-        if (index === null) {
-            return NextResponse.json(
-                { error: 'Índice de dirección requerido' },
-                { status: 400 }
-            );
-        }
-
-        const addressIndex = parseInt(index);
-
-        // Find user by email
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-            include: { profile: true },
-        });
-
-        if (!user || !user.profile) {
-            return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 404 });
-        }
-
-        // Get current saved addresses
-        let currentAddresses: any[] = [];
-        try {
-            currentAddresses = user.profile.savedAddresses
-                ? JSON.parse(user.profile.savedAddresses as string)
-                : [];
-        } catch {
-            currentAddresses = [];
-        }
-
-        if (addressIndex < 0 || addressIndex >= currentAddresses.length) {
-            return NextResponse.json(
-                { error: 'Índice de dirección inválido' },
-                { status: 400 }
-            );
-        }
-
-        // Remove address at index
-        const updatedAddresses = currentAddresses.filter((_, i) => i !== addressIndex);
-
-        // Update profile
-        await prisma.profile.update({
-            where: { userId: user.id },
-            data: {
-                savedAddresses: JSON.stringify(updatedAddresses),
-            },
-        });
-
-        return NextResponse.json({
-            message: 'Dirección eliminada exitosamente',
-            savedAddresses: updatedAddresses,
-        });
-    } catch (error) {
-        console.error('Error deleting address:', error);
-        return NextResponse.json(
-            { error: 'Error al eliminar la dirección' },
             { status: 500 }
         );
     }

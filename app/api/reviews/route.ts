@@ -5,60 +5,43 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email-service';
 import { generateReviewApprovedEmail } from '@/lib/email-templates/ReviewApproved';
 import { notifyReviewApproved } from '@/lib/notifications';
+import { hasPermission } from '@/lib/auth-helpers';
+import { getPublicReviews, getReviewSummary } from '@/lib/queries/product';
 
+/**
+ * GET /api/reviews (C-31):
+ * - `?productId=` (público): solo reseñas aprobadas, con nombre corto de quien reseña. Sin emails ni ids de usuario.
+ * - Sin productId, con MANAGE_CONTENT o admin: todas, para moderar (incluye el email).
+ * - Sin productId, cliente logueado: solo las suyas ("Mis reseñas").
+ * Antes era pública, devolvía el email de cada cliente y, sin `publishedOnly`, también las no aprobadas.
+ */
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const productId = searchParams.get('productId');
-        const userId = searchParams.get('userId');
-        const publishedOnly = searchParams.get('publishedOnly') === 'true';
-
-        const where: any = {};
 
         if (productId) {
-            where.productId = productId;
-        }
-
-        if (userId) {
-            where.userId = userId;
-        }
-
-        if (publishedOnly) {
-            where.isApproved = true;
-        }
-
-        const reviews = await prisma.review.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            include: {
-                product: {
-                    select: {
-                        name: true,
-                        slug: true,
-                    },
-                },
-                user: {
-                    select: {
-                        name: true,
-                        email: true,
-                    },
-                },
-            },
-        });
-
-        if (productId) {
-            const approvedReviews = reviews.filter(r => r.isApproved);
-            const totalRating = approvedReviews.reduce((sum, r) => sum + r.rating, 0);
-            const averageRating = approvedReviews.length > 0 ? totalRating / approvedReviews.length : 0;
-
+            const [reviews, stats] = await Promise.all([getPublicReviews(productId), getReviewSummary(productId)]);
             return NextResponse.json({
                 reviews,
-                stats: {
-                    averageRating,
-                    totalReviews: approvedReviews.length,
-                },
+                stats: { averageRating: stats.average, totalReviews: stats.count },
             });
         }
+
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        }
+
+        const canModerate = hasPermission(session, 'MANAGE_CONTENT');
+        const reviews = await prisma.review.findMany({
+            where: canModerate ? {} : { userId: session.user.id },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                product: { select: { name: true, slug: true } },
+                user: { select: { name: true, ...(canModerate ? { email: true } : {}) } },
+            },
+        });
 
         return NextResponse.json(reviews);
     } catch (error) {

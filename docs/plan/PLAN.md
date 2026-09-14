@@ -225,7 +225,7 @@ app/layout.tsx        app/providers.tsx     app/globals.css      app/page.tsx
 app/(public)/**       app/productos/**      app/categorias/**    app/comparar/**
 app/mis-pedidos/**    app/carrito/**   (*)  app/checkout/**  (*)  app/robots.ts  app/sitemap.ts
 components/public/**  components/home/**    components/ui/**     components/notifications/**
-components/catalog/**
+components/catalog/**  components/product/**
 components/checkout/** (*)   components/Footer.tsx   components/CartIcon.tsx
 components/UserAccountButton.tsx   components/WhatsAppButton.tsx   components/HotAdOverlay.tsx
 components/MobileScrollProgress.tsx   components/DynamicFavicon.tsx   components/AnalyticsTracker.tsx

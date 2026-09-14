@@ -704,7 +704,7 @@ export default function TransactionsPage() {
                                     </div>
                                 )}
                                 <div className="flex justify-between items-center">
-                                    <span className="text-muted">Email</span>
+                                    <span className="text-muted">Correo</span>
                                     <span className="text-ink text-xs">{approvingTransaction.balance.user.email}</span>
                                 </div>
                             </div>

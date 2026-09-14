@@ -560,7 +560,7 @@ export default function LegalDocumentsPage() {
                                         <p className="text-sm font-medium text-ink">{viewingDocument.userName}</p>
                                     </div>
                                     <div className="bg-surface rounded-lg p-3">
-                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Email</span>
+                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Correo</span>
                                         <p className="text-sm font-medium text-ink">{viewingDocument.userEmail}</p>
                                     </div>
                                     <div className="bg-surface rounded-lg p-3">

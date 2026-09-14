@@ -70,22 +70,22 @@ export default function AdminCreatorsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-[#212529]">Solicitudes de Creadores</h1>
-          <p className="text-sm text-[#6a6c6b] mt-0.5">Revisa y aprueba solicitudes para acceder a la plataforma de creadores.</p>
+          <h1 className="text-xl font-bold text-ink">Solicitudes de Creadores</h1>
+          <p className="text-sm text-muted mt-0.5">Revisa y aprueba solicitudes para acceder a la plataforma de creadores.</p>
         </div>
-        <span className="text-sm text-[#6a6c6b] bg-[#f8f9fa] px-3 py-1 rounded-full">{creators.length} total</span>
+        <span className="text-sm text-muted bg-surface px-3 py-1 rounded-full">{creators.length} total</span>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 mb-6 border-b border-[#e9ecef] pb-4">
+      <div className="flex gap-2 mb-6 border-b border-line pb-4">
         {(['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as const).map((s) => (
           <button
             key={s}
             onClick={() => setFilter(s)}
             className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
               filter === s
-                ? 'bg-[#2a63cd] text-white'
-                : 'bg-[#f8f9fa] text-[#6a6c6b] hover:bg-[#e9ecef]'
+                ? 'bg-brand-500 text-white'
+                : 'bg-surface text-muted hover:bg-line'
             }`}
           >
             {s === 'ALL' ? 'Todos' : STATUS_LABELS[s]}
@@ -98,50 +98,50 @@ export default function AdminCreatorsPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-[#6a6c6b]">No hay solicitudes {filter !== 'ALL' ? STATUS_LABELS[filter].toLowerCase() + 's' : ''}.</p>
+          <p className="text-muted">No hay solicitudes {filter !== 'ALL' ? STATUS_LABELS[filter].toLowerCase() + 's' : ''}.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {filtered.map((creator) => (
-            <div key={creator.id} className="bg-white border border-[#e9ecef] rounded-xl p-5 shadow-sm">
+            <div key={creator.id} className="bg-white border border-line rounded-xl p-5 shadow-sm">
               <div className="flex items-start gap-4">
                 {/* Avatar */}
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2a63cd] to-cyan-500 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-500 to-cyan-500 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
                   {creator.displayName[0]?.toUpperCase()}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold text-[#212529]">{creator.displayName}</h3>
+                    <h3 className="font-bold text-ink">{creator.displayName}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${STATUS_STYLES[creator.status]}`}>
                       {STATUS_LABELS[creator.status]}
                     </span>
                     {creator.expertise && (
-                      <span className="text-xs bg-[#f8f9fa] text-[#6a6c6b] px-2 py-0.5 rounded-full">
+                      <span className="text-xs bg-surface text-muted px-2 py-0.5 rounded-full">
                         {creator.expertise}
                       </span>
                     )}
                   </div>
 
-                  <div className="text-sm text-[#6a6c6b] mt-0.5">
+                  <div className="text-sm text-muted mt-0.5">
                     {creator.user.name} · {creator.user.email}
                   </div>
 
                   {creator.bio && (
-                    <p className="text-sm text-[#6a6c6b] mt-2 line-clamp-2">{creator.bio}</p>
+                    <p className="text-sm text-muted mt-2 line-clamp-2">{creator.bio}</p>
                   )}
 
                   {creator.notes && (
-                    <div className="mt-2 px-3 py-2 bg-[#f8f9fa] rounded-lg text-xs text-[#6a6c6b] border border-[#e9ecef]">
+                    <div className="mt-2 px-3 py-2 bg-surface rounded-lg text-xs text-muted border border-line">
                       <strong>Notas:</strong> {creator.notes}
                     </div>
                   )}
 
-                  <div className="flex items-center gap-4 mt-2 text-xs text-[#6a6c6b]">
+                  <div className="flex items-center gap-4 mt-2 text-xs text-muted">
                     <span>{creator._count.courses} cursos</span>
                     <span>${creator.totalRevenue.toFixed(2)} ingresos</span>
                     <span>{new Date(creator.createdAt).toLocaleDateString('es-VE')}</span>
@@ -185,28 +185,28 @@ export default function AdminCreatorsPage() {
       {modal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-xl p-6">
-            <h3 className="text-lg font-bold text-[#212529] mb-1">
+            <h3 className="text-lg font-bold text-ink mb-1">
               {modal.action === 'APPROVED' ? 'Aprobar' : modal.action === 'REJECTED' ? 'Rechazar' : 'Suspender'} a {modal.creator.displayName}
             </h3>
-            <p className="text-sm text-[#6a6c6b] mb-4">
+            <p className="text-sm text-muted mb-4">
               {modal.action === 'APPROVED'
                 ? 'El creador podrá publicar cursos en la plataforma.'
                 : modal.action === 'REJECTED'
                 ? 'El creador no podrá acceder a la plataforma de creadores.'
                 : 'El creador ya no podrá publicar nuevos cursos.'}
             </p>
-            <label className="block text-xs font-semibold text-[#6a6c6b] mb-1.5">Notas (opcional)</label>
+            <label className="block text-xs font-semibold text-muted mb-1.5">Notas (opcional)</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2.5 border border-[#dee2e6] rounded-xl text-sm text-[#212529] focus:outline-none focus:border-[#2a63cd] resize-none"
+              className="w-full px-3 py-2.5 border border-line-strong rounded-xl text-sm text-ink focus:outline-none focus:border-brand-500 resize-none"
               placeholder="Razón del rechazo, instrucciones, etc."
             />
             <div className="flex gap-3 mt-5 justify-end">
               <button
                 onClick={() => { setModal(null); setNotes(''); }}
-                className="px-5 py-2 bg-[#f8f9fa] text-[#6a6c6b] text-sm font-semibold rounded-xl hover:bg-[#e9ecef] transition-colors"
+                className="px-5 py-2 bg-surface text-muted text-sm font-semibold rounded-xl hover:bg-line transition-colors"
               >
                 Cancelar
               </button>

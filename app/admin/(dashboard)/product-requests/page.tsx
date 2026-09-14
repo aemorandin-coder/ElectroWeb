@@ -123,8 +123,8 @@ export default function ProductRequestsPage() {
         {/* Header */}
         <div className="flex items-center justify-between animate-fadeIn">
           <div>
-            <h1 className="text-xl font-semibold text-[#212529]">Solicitudes de Productos</h1>
-            <p className="text-xs text-[#6a6c6b] mt-0.5">
+            <h1 className="text-xl font-semibold text-ink">Solicitudes de Productos</h1>
+            <p className="text-xs text-muted mt-0.5">
               Gestiona las solicitudes de productos de los clientes
             </p>
           </div>
@@ -132,30 +132,30 @@ export default function ProductRequestsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 stagger-children">
-          <div className="bg-white rounded-lg border border-[#e9ecef] p-3 shadow-sm">
-            <p className="text-xs text-[#6a6c6b] font-medium mb-1">Total</p>
-            <p className="text-2xl font-semibold text-[#212529]">{stats.total}</p>
+          <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
+            <p className="text-xs text-muted font-medium mb-1">Total</p>
+            <p className="text-2xl font-semibold text-ink">{stats.total}</p>
           </div>
-          <div className="bg-white rounded-lg border border-[#e9ecef] p-3 shadow-sm">
-            <p className="text-xs text-[#6a6c6b] font-medium mb-1">Pendientes</p>
+          <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
+            <p className="text-xs text-muted font-medium mb-1">Pendientes</p>
             <p className="text-2xl font-semibold text-orange-600">{stats.pending}</p>
           </div>
-          <div className="bg-white rounded-lg border border-[#e9ecef] p-3 shadow-sm">
-            <p className="text-xs text-[#6a6c6b] font-medium mb-1">En Progreso</p>
+          <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
+            <p className="text-xs text-muted font-medium mb-1">En Progreso</p>
             <p className="text-2xl font-semibold text-blue-600">{stats.inProgress}</p>
           </div>
-          <div className="bg-white rounded-lg border border-[#e9ecef] p-3 shadow-sm">
-            <p className="text-xs text-[#6a6c6b] font-medium mb-1">Cumplidas</p>
+          <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
+            <p className="text-xs text-muted font-medium mb-1">Cumplidas</p>
             <p className="text-2xl font-semibold text-green-600">{stats.fulfilled}</p>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg border border-[#e9ecef] p-3 shadow-sm">
+        <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 text-sm bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:border-[#2a63cd] focus:ring-2 focus:ring-[#2a63cd]/10"
+            className="px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10"
           >
             <option value="all">Todas</option>
             <option value="PENDING">Pendientes</option>
@@ -170,23 +170,23 @@ export default function ProductRequestsPage() {
       <div className="flex-1 overflow-y-auto pr-2 mt-4">
         <div className="space-y-3">
         {isLoading ? (
-          <div className="bg-white rounded-lg border border-[#e9ecef] p-12 text-center">
-            <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-sm text-[#6a6c6b] mt-3">Cargando solicitudes...</p>
+          <div className="bg-white rounded-lg border border-line p-12 text-center">
+            <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-sm text-muted mt-3">Cargando solicitudes...</p>
           </div>
         ) : requests.length === 0 ? (
-          <div className="bg-white rounded-lg border border-[#e9ecef] p-12 text-center">
-            <svg className="w-16 h-16 text-[#adb5bd] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white rounded-lg border border-line p-12 text-center">
+            <svg className="w-16 h-16 text-subtle mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
-            <h3 className="text-lg font-semibold text-[#212529] mb-1">No hay solicitudes</h3>
-            <p className="text-sm text-[#6a6c6b]">No se encontraron solicitudes de productos</p>
+            <h3 className="text-lg font-semibold text-ink mb-1">No hay solicitudes</h3>
+            <p className="text-sm text-muted">No se encontraron solicitudes de productos</p>
           </div>
         ) : (
           requests.map((request) => (
             <div
               key={request.id}
-              className="bg-white rounded-lg border border-[#e9ecef] p-4 shadow-sm hover:shadow-md transition-all"
+              className="bg-white rounded-lg border border-line p-4 shadow-sm hover:shadow-md transition-all"
             >
               <div className="flex gap-4">
                 <div className="flex-shrink-0">
@@ -201,15 +201,15 @@ export default function ProductRequestsPage() {
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-semibold text-[#212529]">
+                        <h3 className="text-base font-semibold text-ink">
                           {request.productName}
                         </h3>
                         {getStatusBadge(request.status)}
                       </div>
-                      <p className="text-sm text-[#6a6c6b] mb-2">
+                      <p className="text-sm text-muted mb-2">
                         {request.description}
                       </p>
-                      <div className="flex flex-wrap gap-3 text-xs text-[#6a6c6b]">
+                      <div className="flex flex-wrap gap-3 text-xs text-muted">
                         <div className="flex items-center gap-1">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -239,7 +239,7 @@ export default function ProductRequestsPage() {
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-[#adb5bd] mt-2">
+                      <p className="text-xs text-subtle mt-2">
                         {new Date(request.createdAt).toLocaleString('es-VE')}
                       </p>
                     </div>
@@ -247,10 +247,10 @@ export default function ProductRequestsPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => openModal(request)}
-                        className="p-2 hover:bg-[#f8f9fa] rounded-lg transition-colors"
+                        className="p-2 hover:bg-surface rounded-lg transition-colors"
                         title="Gestionar"
                       >
-                        <svg className="w-4 h-4 text-[#2a63cd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
@@ -267,9 +267,9 @@ export default function ProductRequestsPage() {
                   </div>
 
                   {request.adminNotes && (
-                    <div className="mt-3 p-3 bg-[#f8f9fa] rounded-lg">
-                      <p className="text-xs font-semibold text-[#212529] mb-1">Notas del Admin:</p>
-                      <p className="text-xs text-[#6a6c6b]">{request.adminNotes}</p>
+                    <div className="mt-3 p-3 bg-surface rounded-lg">
+                      <p className="text-xs font-semibold text-ink mb-1">Notas del Admin:</p>
+                      <p className="text-xs text-muted">{request.adminNotes}</p>
                     </div>
                   )}
                 </div>
@@ -292,14 +292,14 @@ export default function ProductRequestsPage() {
             <div className="relative inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate-scaleIn">
               <div className="bg-white px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-[#212529]">
+                  <h3 className="text-xl font-semibold text-ink">
                     Gestionar Solicitud
                   </h3>
                   <button
                     onClick={() => setShowModal(false)}
-                    className="p-2 hover:bg-[#f8f9fa] rounded-lg transition-colors"
+                    className="p-2 hover:bg-surface rounded-lg transition-colors"
                   >
-                    <svg className="w-5 h-5 text-[#6a6c6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -307,13 +307,13 @@ export default function ProductRequestsPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-[#212529] mb-2">
+                    <label className="block text-sm font-semibold text-ink mb-2">
                       Estado
                     </label>
                     <select
                       value={newStatus}
                       onChange={(e) => setNewStatus(e.target.value)}
-                      className="w-full px-4 py-3 bg-[#f8f9fa] border border-[#dee2e6] rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-4 focus:ring-[#2a63cd]/10"
+                      className="w-full px-4 py-3 bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
                     >
                       <option value="PENDING">Pendiente</option>
                       <option value="IN_PROGRESS">En Progreso</option>
@@ -323,7 +323,7 @@ export default function ProductRequestsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-[#212529] mb-2">
+                    <label className="block text-sm font-semibold text-ink mb-2">
                       Notas del Administrador
                     </label>
                     <textarea
@@ -331,13 +331,13 @@ export default function ProductRequestsPage() {
                       onChange={(e) => setAdminNotes(e.target.value)}
                       rows={4}
                       placeholder="Agrega notas internas sobre esta solicitud..."
-                      className="w-full px-4 py-3 bg-[#f8f9fa] border border-[#dee2e6] rounded-lg text-[#212529] placeholder:text-[#adb5bd] focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-4 focus:ring-[#2a63cd]/10 resize-none"
+                      className="w-full px-4 py-3 bg-surface border border-line-strong rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 resize-none"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="bg-[#f8f9fa] px-6 py-4 flex items-center justify-end gap-3 border-t border-[#e9ecef]">
+              <div className="bg-surface px-6 py-4 flex items-center justify-end gap-3 border-t border-line">
                 <Button
                   variant="ghost"
                   onClick={() => setShowModal(false)}

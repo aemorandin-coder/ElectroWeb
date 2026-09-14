@@ -157,7 +157,7 @@ export default function ReportsPage() {
             {/* Header - Compact */}
             <div className="mb-4 animate-fadeIn">
                 <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center shadow-md">
                         <FiBarChart2 className="w-4 h-4 text-white" />
                     </div>
                     <div>
@@ -169,7 +169,7 @@ export default function ReportsPage() {
 
             {/* Live Users Counter - Compact */}
             <div className="mb-4 animate-slideInRight">
-                <div className="bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] rounded-xl p-3 shadow-lg">
+                <div className="bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl p-3 shadow-lg">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="relative">
@@ -234,7 +234,7 @@ export default function ReportsPage() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all flex-shrink-0 ${activeTab === tab.id
-                                    ? 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white shadow-md'
+                                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md'
                                     : 'text-gray-600 hover:bg-gray-100'
                                     }`}
                             >
@@ -258,7 +258,7 @@ export default function ReportsPage() {
                         </select>
                         <button
                             onClick={fetchData}
-                            className="p-1 text-gray-400 hover:text-[#2a63cd] rounded transition-colors"
+                            className="p-1 text-gray-400 hover:text-brand-500 rounded transition-colors"
                             title="Actualizar datos"
                         >
                             <FiRefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -267,7 +267,7 @@ export default function ReportsPage() {
 
                     <button
                         onClick={exportToCSV}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#dee2e6] rounded-lg hover:bg-[#f8f9fa] transition-all hover:scale-105 active:scale-95 text-xs text-gray-600 font-medium"
+                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-line-strong rounded-lg hover:bg-surface transition-all hover:scale-105 active:scale-95 text-xs text-gray-600 font-medium"
                         title="Exportar a CSV"
                     >
                         <FiDownload className="w-4 h-4" />
@@ -279,7 +279,7 @@ export default function ReportsPage() {
             {/* Content */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                    <div className="w-10 h-10 rounded-full border-3 border-gray-200 border-t-[#2a63cd] animate-spin" />
+                    <div className="w-10 h-10 rounded-full border-3 border-gray-200 border-t-brand-500 animate-spin" />
                 </div>
             ) : (
                 <>
@@ -288,7 +288,7 @@ export default function ReportsPage() {
                         <div className="space-y-4 animate-fadeIn">
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                                 {/* Users */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-[#2a63cd]/30 transition-all">
+                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-xs text-gray-400 font-medium uppercase">Clientes</p>
@@ -297,14 +297,14 @@ export default function ReportsPage() {
                                                 <FiTrendingUp className="w-3 h-3" />+{overview.users.new} nuevos
                                             </p>
                                         </div>
-                                        <div className="w-10 h-10 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                                            <FiUsers className="w-5 h-5 text-[#2a63cd]" />
+                                        <div className="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <FiUsers className="w-5 h-5 text-brand-500" />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Orders */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-[#2a63cd]/30 transition-all">
+                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-xs text-gray-400 font-medium uppercase">Pedidos</p>
@@ -313,14 +313,14 @@ export default function ReportsPage() {
                                                 <FiTrendingUp className="w-3 h-3" />+{overview.orders.recent} recientes
                                             </p>
                                         </div>
-                                        <div className="w-10 h-10 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                                            <FiShoppingCart className="w-5 h-5 text-[#2a63cd]" />
+                                        <div className="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <FiShoppingCart className="w-5 h-5 text-brand-500" />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Revenue */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-[#2a63cd]/30 transition-all">
+                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-xs text-gray-400 font-medium uppercase">Ingresos</p>
@@ -329,22 +329,22 @@ export default function ReportsPage() {
                                             </p>
                                             <p className="text-xs text-gray-400">En el período</p>
                                         </div>
-                                        <div className="w-10 h-10 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                                            <FiTrendingUp className="w-5 h-5 text-[#2a63cd]" />
+                                        <div className="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <FiTrendingUp className="w-5 h-5 text-brand-500" />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Products */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-[#2a63cd]/30 transition-all">
+                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-xs text-gray-400 font-medium uppercase">Productos</p>
                                             <p className="text-2xl font-bold text-gray-800">{overview.products.total}</p>
                                             <p className="text-xs text-amber-600">{overview.productRequests.pending} solicitudes</p>
                                         </div>
-                                        <div className="w-10 h-10 bg-[#2a63cd]/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                                            <FiPackage className="w-5 h-5 text-[#2a63cd]" />
+                                        <div className="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <FiPackage className="w-5 h-5 text-brand-500" />
                                         </div>
                                     </div>
                                 </div>
@@ -355,7 +355,7 @@ export default function ReportsPage() {
                                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-6">
                                     <div>
                                         <h3 className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                                            <FiTrendingUp className="w-4 h-4 text-[#2a63cd]" />
+                                            <FiTrendingUp className="w-4 h-4 text-brand-500" />
                                             Tendencias del Período
                                         </h3>
                                         <p className="text-xs text-gray-500">Visualización de ingresos, pedidos y nuevos registros de clientes</p>
@@ -414,19 +414,19 @@ export default function ReportsPage() {
                                 {/* Interactions */}
                                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                     <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                        <div className="w-6 h-6 bg-[#2a63cd]/10 rounded flex items-center justify-center">
-                                            <FiMousePointer className="w-3 h-3 text-[#2a63cd]" />
+                                        <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
+                                            <FiMousePointer className="w-3 h-3 text-brand-500" />
                                         </div>
                                         Interacciones
                                     </h3>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-gray-50 rounded-lg p-3 text-center group hover:bg-[#2a63cd]/5 transition-colors">
-                                            <FiEye className="w-5 h-5 text-[#2a63cd] mx-auto mb-1" />
+                                        <div className="bg-gray-50 rounded-lg p-3 text-center group hover:bg-brand-500/5 transition-colors">
+                                            <FiEye className="w-5 h-5 text-brand-500 mx-auto mb-1" />
                                             <p className="text-xl font-bold text-gray-800">{overview.interactions.pageViews}</p>
                                             <p className="text-xs text-gray-500">Vistas</p>
                                         </div>
-                                        <div className="bg-gray-50 rounded-lg p-3 text-center group hover:bg-[#2a63cd]/5 transition-colors">
-                                            <FiMousePointer className="w-5 h-5 text-[#2a63cd] mx-auto mb-1" />
+                                        <div className="bg-gray-50 rounded-lg p-3 text-center group hover:bg-brand-500/5 transition-colors">
+                                            <FiMousePointer className="w-5 h-5 text-brand-500 mx-auto mb-1" />
                                             <p className="text-xl font-bold text-gray-800">{overview.interactions.clicks}</p>
                                             <p className="text-xs text-gray-500">Clics</p>
                                         </div>
@@ -436,8 +436,8 @@ export default function ReportsPage() {
                                 {/* Security */}
                                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                     <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                        <div className="w-6 h-6 bg-[#2a63cd]/10 rounded flex items-center justify-center">
-                                            <FiShield className="w-3 h-3 text-[#2a63cd]" />
+                                        <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
+                                            <FiShield className="w-3 h-3 text-brand-500" />
                                         </div>
                                         Seguridad
                                     </h3>
@@ -499,8 +499,8 @@ export default function ReportsPage() {
                                 {/* Request Status Pie Chart */}
                                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                     <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                        <div className="w-6 h-6 bg-[#2a63cd]/10 rounded flex items-center justify-center">
-                                            <FiPackage className="w-3 h-3 text-[#2a63cd]" />
+                                        <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
+                                            <FiPackage className="w-3 h-3 text-brand-500" />
                                         </div>
                                         Solicitudes de Creadores por Estado
                                     </h3>
@@ -571,9 +571,9 @@ export default function ReportsPage() {
                                     {products.topSelling.length > 0 ? (
                                         <div className="space-y-2">
                                             {products.topSelling.slice(0, 5).map((product, index) => (
-                                                <div key={product.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-[#2a63cd]/5 transition-colors">
+                                                <div key={product.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-brand-500/5 transition-colors">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="w-5 h-5 bg-[#2a63cd] text-white rounded text-xs font-bold flex items-center justify-center">
+                                                        <span className="w-5 h-5 bg-brand-500 text-white rounded text-xs font-bold flex items-center justify-center">
                                                             {index + 1}
                                                         </span>
                                                         <span className="text-xs font-medium text-gray-700 truncate max-w-[180px]">{product.name}</span>
@@ -594,7 +594,7 @@ export default function ReportsPage() {
                                     {products.requests.length > 0 ? (
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                             {products.requests.map((req) => (
-                                                <div key={req.status} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-[#2a63cd]/5 transition-colors">
+                                                <div key={req.status} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-brand-500/5 transition-colors">
                                                     <p className="text-lg font-bold text-gray-800">{req._count}</p>
                                                     <p className="text-xs text-gray-500 capitalize">{req.status.toLowerCase()}</p>
                                                 </div>
@@ -622,8 +622,8 @@ export default function ReportsPage() {
                                         {/* Daily Interactions Trend Chart */}
                                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-[#2a63cd]/10 rounded flex items-center justify-center">
-                                                    <FiActivity className="w-3 h-3 text-[#2a63cd]" />
+                                                <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
+                                                    <FiActivity className="w-3 h-3 text-brand-500" />
                                                 </div>
                                                 Tendencia de Interacciones Diarias
                                             </h3>
@@ -655,8 +655,8 @@ export default function ReportsPage() {
                                         {/* Device Distribution Pie Chart */}
                                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-[#2a63cd]/10 rounded flex items-center justify-center">
-                                                    <FiMonitor className="w-3 h-3 text-[#2a63cd]" />
+                                                <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
+                                                    <FiMonitor className="w-3 h-3 text-brand-500" />
                                                 </div>
                                                 Distribución por Dispositivos
                                             </h3>
@@ -688,7 +688,7 @@ export default function ReportsPage() {
                                                     </div>
                                                     <div className="space-y-2">
                                                         {interactions.byDevice.map((entry, index) => {
-                                                            const colors = ['bg-[#2a63cd]', 'bg-[#10b981]', 'bg-[#f59e0b]', 'bg-[#ec4899]'];
+                                                            const colors = ['bg-brand-500', 'bg-success', 'bg-warning', 'bg-[#ec4899]'];
                                                             const labels: Record<string, string> = {
                                                                 desktop: 'Computadora',
                                                                 mobile: 'Móvil',
@@ -713,7 +713,7 @@ export default function ReportsPage() {
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                                <FiMonitor className="w-3 h-3 text-[#2a63cd]" />
+                                                <FiMonitor className="w-3 h-3 text-brand-500" />
                                                 Dispositivos (Detalle)
                                             </h3>
                                             <div className="grid grid-cols-3 gap-2">
@@ -721,8 +721,8 @@ export default function ReportsPage() {
                                                     const Icon = device.deviceType === 'mobile' ? FiSmartphone :
                                                         device.deviceType === 'tablet' ? FiTablet : FiMonitor;
                                                     return (
-                                                        <div key={device.deviceType} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-[#2a63cd]/5 transition-colors">
-                                                            <Icon className="w-5 h-5 text-[#2a63cd] mx-auto mb-1" />
+                                                        <div key={device.deviceType} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-brand-500/5 transition-colors">
+                                                            <Icon className="w-5 h-5 text-brand-500 mx-auto mb-1" />
                                                             <p className="text-lg font-bold text-gray-800">{device._count}</p>
                                                             <p className="text-xs text-gray-500 capitalize">{device.deviceType || 'Otro'}</p>
                                                         </div>
@@ -733,12 +733,12 @@ export default function ReportsPage() {
 
                                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                                <FiList className="w-3 h-3 text-[#2a63cd]" />
+                                                <FiList className="w-3 h-3 text-brand-500" />
                                                 Eventos
                                             </h3>
                                             <div className="grid grid-cols-3 gap-2">
                                                 {interactions.byType.length > 0 ? interactions.byType.slice(0, 6).map((event) => (
-                                                    <div key={event.eventType} className="bg-gray-50 rounded-lg p-2 text-center hover:bg-[#2a63cd]/5 transition-colors">
+                                                    <div key={event.eventType} className="bg-gray-50 rounded-lg p-2 text-center hover:bg-brand-500/5 transition-colors">
                                                         <p className="text-lg font-bold text-gray-800">{event._count}</p>
                                                         <p className="text-xs text-gray-500 capitalize truncate">{event.eventType.replace(/_/g, ' ')}</p>
                                                     </div>
@@ -749,22 +749,22 @@ export default function ReportsPage() {
 
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                         <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                            <div className="w-6 h-6 bg-[#2a63cd]/10 rounded flex items-center justify-center">
-                                                <FiGlobe className="w-3 h-3 text-[#2a63cd]" />
+                                            <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
+                                                <FiGlobe className="w-3 h-3 text-brand-500" />
                                             </div>
                                             Páginas Más Visitadas
                                         </h3>
                                         {interactions.topPages.length > 0 ? (
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                                                 {interactions.topPages.map((page, index) => (
-                                                    <div key={page.page} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-[#2a63cd]/5 transition-colors">
+                                                    <div key={page.page} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-brand-500/5 transition-colors">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="w-5 h-5 bg-[#2a63cd] text-white rounded text-xs font-bold flex items-center justify-center">
+                                                            <span className="w-5 h-5 bg-brand-500 text-white rounded text-xs font-bold flex items-center justify-center">
                                                                 {index + 1}
                                                             </span>
                                                             <span className="font-mono text-xs text-gray-600 truncate max-w-[120px]">{page.page}</span>
                                                         </div>
-                                                        <span className="text-xs font-bold text-[#2a63cd]">{page._count}</span>
+                                                        <span className="text-xs font-bold text-brand-500">{page._count}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -783,7 +783,7 @@ export default function ReportsPage() {
                             {/* Influencer counts */}
                             <div className="grid grid-cols-3 gap-3">
                                 {[
-                                    { label: 'Influencers Totales', value: referrals.totalInfluencers, Icon: FiUsers, color: 'text-[#2a63cd]', bg: 'bg-[#2a63cd]/10' },
+                                    { label: 'Influencers Totales', value: referrals.totalInfluencers, Icon: FiUsers, color: 'text-brand-500', bg: 'bg-brand-500/10' },
                                     { label: 'Activos', value: referrals.activeInfluencers, Icon: FiCheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                                     { label: 'Pausados', value: referrals.pausedInfluencers, Icon: FiActivity, color: 'text-amber-600', bg: 'bg-amber-50' },
                                 ].map((card) => (
@@ -811,15 +811,15 @@ export default function ReportsPage() {
                                     </p>
                                     <p className="text-xs text-emerald-600 mt-0.5">Monto bruto · período seleccionado</p>
                                 </div>
-                                <div className="bg-gradient-to-br from-[#2a63cd]/5 to-[#2a63cd]/10 border border-[#2a63cd]/20 rounded-xl p-4">
+                                <div className="bg-gradient-to-br from-brand-500/5 to-brand-500/10 border border-brand-500/20 rounded-xl p-4">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <FiDollarSign className="w-4 h-4 text-[#2a63cd]" />
-                                        <span className="text-xs text-[#2a63cd] uppercase font-semibold">Comisiones pagadas</span>
+                                        <FiDollarSign className="w-4 h-4 text-brand-500" />
+                                        <span className="text-xs text-brand-500 uppercase font-semibold">Comisiones pagadas</span>
                                     </div>
-                                    <p className="text-xl font-bold text-[#1e4ba3]">
+                                    <p className="text-xl font-bold text-brand-600">
                                         ${referrals.approvedRevenue.commission.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
                                     </p>
-                                    <p className="text-xs text-[#2a63cd]/70 mt-0.5">Comisiones aprobadas · período seleccionado</p>
+                                    <p className="text-xs text-brand-500/70 mt-0.5">Comisiones aprobadas · período seleccionado</p>
                                 </div>
                             </div>
 
@@ -862,8 +862,8 @@ export default function ReportsPage() {
                                 {/* Conversions Pie Chart */}
                                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                     <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                        <div className="w-6 h-6 bg-[#2a63cd]/10 rounded flex items-center justify-center">
-                                            <FiList className="w-3 h-3 text-[#2a63cd]" />
+                                        <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
+                                            <FiList className="w-3 h-3 text-brand-500" />
                                         </div>
                                         Distribución de Conversiones
                                     </h3>
@@ -902,7 +902,7 @@ export default function ReportsPage() {
                                                 {['PENDING', 'APPROVED', 'REJECTED'].map((status) => {
                                                     const entry = referrals.conversionsByStatus.find(c => c.status === status);
                                                     const count = entry?._count || 0;
-                                                    const colors = { PENDING: 'bg-[#f59e0b]', APPROVED: 'bg-[#10b981]', REJECTED: 'bg-[#ef4444]' };
+                                                    const colors = { PENDING: 'bg-warning', APPROVED: 'bg-success', REJECTED: 'bg-danger' };
                                                     const labels = { PENDING: 'Pendientes', APPROVED: 'Aprobadas', REJECTED: 'Rechazadas' };
                                                     return (
                                                         <div key={status} className="flex items-center gap-2 text-xs">
@@ -924,8 +924,8 @@ export default function ReportsPage() {
                             {referrals.conversionsByStatus.length > 0 && (
                                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                     <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                        <div className="w-6 h-6 bg-[#2a63cd]/10 rounded flex items-center justify-center">
-                                            <FiList className="w-3 h-3 text-[#2a63cd]" />
+                                        <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
+                                            <FiList className="w-3 h-3 text-brand-500" />
                                         </div>
                                         Conversiones por Estado (Detalle)
                                     </h3>
@@ -967,8 +967,8 @@ export default function ReportsPage() {
                                 ) : (
                                     <div className="space-y-2">
                                         {referrals.topInfluencers.map((inf, idx) => (
-                                            <div key={inf.id} className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg hover:bg-[#2a63cd]/5 transition-colors">
-                                                <span className="w-6 h-6 bg-[#2a63cd] text-white rounded text-xs font-bold flex items-center justify-center flex-shrink-0">
+                                            <div key={inf.id} className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg hover:bg-brand-500/5 transition-colors">
+                                                <span className="w-6 h-6 bg-brand-500 text-white rounded text-xs font-bold flex items-center justify-center flex-shrink-0">
                                                     {idx + 1}
                                                 </span>
                                                 <div className="flex-1 min-w-0">
@@ -981,7 +981,7 @@ export default function ReportsPage() {
                                                     </div>
                                                     <p className="text-xs text-gray-500">{inf.conversionsCount} conversiones · ${inf.totalGross.toFixed(2)} bruto</p>
                                                 </div>
-                                                <span className="text-sm font-bold text-[#2a63cd] flex-shrink-0">
+                                                <span className="text-sm font-bold text-brand-500 flex-shrink-0">
                                                     ${inf.totalCommission.toFixed(2)}
                                                 </span>
                                             </div>
@@ -1038,7 +1038,7 @@ export default function ReportsPage() {
                                 {['INFO', 'WARNING', 'CRITICAL'].map((sev) => {
                                     const count = security.bySeverity.find(s => s.severity === sev)?._count || 0;
                                     const config = {
-                                        INFO: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-[#2a63cd]', label: 'Info' },
+                                        INFO: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-brand-500', label: 'Info' },
                                         WARNING: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', label: 'Advertencias' },
                                         CRITICAL: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-600', label: 'Críticos' },
                                     };
@@ -1062,7 +1062,7 @@ export default function ReportsPage() {
                                 {security.byType.length > 0 ? (
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                         {security.byType.map((type) => (
-                                            <div key={type.eventType} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-[#2a63cd]/5 transition-colors">
+                                            <div key={type.eventType} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-brand-500/5 transition-colors">
                                                 <p className="text-lg font-bold text-gray-800">{type._count}</p>
                                                 <p className="text-xs text-gray-500 capitalize truncate">{type.eventType.replace(/_/g, ' ')}</p>
                                             </div>
@@ -1094,8 +1094,8 @@ export default function ReportsPage() {
 
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                 <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                    <div className="w-6 h-6 bg-[#2a63cd]/10 rounded flex items-center justify-center">
-                                        <FiClock className="w-3 h-3 text-[#2a63cd]" />
+                                    <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
+                                        <FiClock className="w-3 h-3 text-brand-500" />
                                     </div>
                                     Registros Recientes
                                 </h3>
@@ -1119,7 +1119,7 @@ export default function ReportsPage() {
                                                         <td className="py-2 font-mono">{log.eventType.replace(/_/g, ' ')}</td>
                                                         <td className="py-2">
                                                             <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium ${log.severity === 'critical' ? 'bg-red-100 text-red-700' :
-                                                                log.severity === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-[#2a63cd]'
+                                                                log.severity === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-brand-500'
                                                                 }`}>{log.severity}</span>
                                                         </td>
                                                         <td className="py-2 font-mono text-gray-500">{log.ipAddress || '-'}</td>

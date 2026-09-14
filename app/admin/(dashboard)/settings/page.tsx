@@ -1444,7 +1444,7 @@ export default function SettingsPage() {
                     id="newAdminEmail"
                     type="email"
                     placeholder="nuevo@correo.com"
-                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#2a63cd] bg-white"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-brand-500 bg-white"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -1482,7 +1482,7 @@ export default function SettingsPage() {
                         if (input) input.value = '';
                       }
                     }}
-                    className="px-4 py-2 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3] transition-colors"
+                    className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 transition-colors"
                   >
                     Agregar
                   </button>

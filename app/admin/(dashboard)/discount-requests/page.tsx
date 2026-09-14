@@ -137,7 +137,7 @@ export default function DiscountRequestsPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="w-12 h-12 border-4 border-[#2a63cd] border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -172,22 +172,22 @@ export default function DiscountRequestsPage() {
             </div>
 
             {/* Filters */}
-            <div className="bg-white rounded-xl border border-[#e9ecef] p-4">
+            <div className="bg-white rounded-xl border border-line p-4">
                 <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
                     {/* Search */}
                     <div className="relative flex-1 w-full md:max-w-md">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6a6c6b]" />
+                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                         <input
                             type="text"
                             placeholder="Buscar por producto o cliente..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-[#f8f9fa] border border-[#e9ecef] rounded-xl text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                            className="w-full pl-10 pr-4 py-2.5 bg-surface border border-line rounded-xl text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
                         />
                     </div>
 
                     {/* Filter tabs */}
-                    <div className="flex gap-2 bg-[#f8f9fa] p-1 rounded-xl">
+                    <div className="flex gap-2 bg-surface p-1 rounded-xl">
                         {[
                             { value: 'all', label: 'Todos' },
                             { value: 'PENDING', label: 'Pendientes' },
@@ -199,7 +199,7 @@ export default function DiscountRequestsPage() {
                                 onClick={() => setFilter(tab.value as any)}
                                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${filter === tab.value
                                     ? 'bg-white shadow text-amber-600'
-                                    : 'text-[#6a6c6b] hover:text-[#212529]'
+                                    : 'text-muted hover:text-ink'
                                     }`}
                             >
                                 {tab.label}
@@ -211,35 +211,35 @@ export default function DiscountRequestsPage() {
 
             {/* Requests List */}
             {filteredRequests.length > 0 ? (
-                <div className="bg-white rounded-xl border border-[#e9ecef] overflow-hidden">
-                    <div className="divide-y divide-[#e9ecef]">
+                <div className="bg-white rounded-xl border border-line overflow-hidden">
+                    <div className="divide-y divide-line">
                         {filteredRequests.map((request) => (
-                            <div key={request.id} className="p-4 hover:bg-[#f8f9fa] transition-colors">
+                            <div key={request.id} className="p-4 hover:bg-surface transition-colors">
                                 <div className="flex flex-col md:flex-row gap-4">
                                     {/* Customer Info */}
                                     <div className="flex items-center gap-3 md:w-48">
-                                        <div className="w-10 h-10 rounded-full bg-[#f8f9fa] flex items-center justify-center overflow-hidden">
+                                        <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center overflow-hidden">
                                             {request.user.image ? (
                                                 <Image src={request.user.image} alt="" width={40} height={40} className="rounded-full" />
                                             ) : (
-                                                <FiUser className="w-5 h-5 text-[#6a6c6b]" />
+                                                <FiUser className="w-5 h-5 text-muted" />
                                             )}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="font-semibold text-[#212529] text-sm truncate">{request.user.name || 'Usuario'}</p>
-                                            <p className="text-xs text-[#6a6c6b] truncate">{request.user.email}</p>
+                                            <p className="font-semibold text-ink text-sm truncate">{request.user.name || 'Usuario'}</p>
+                                            <p className="text-xs text-muted truncate">{request.user.email}</p>
                                         </div>
                                     </div>
 
                                     {/* Product Info */}
                                     <div className="flex-1 flex items-center gap-3">
-                                        <div className="w-12 h-12 bg-[#f8f9fa] rounded-lg flex items-center justify-center">
-                                            <FiPackage className="w-6 h-6 text-[#6a6c6b]" />
+                                        <div className="w-12 h-12 bg-surface rounded-lg flex items-center justify-center">
+                                            <FiPackage className="w-6 h-6 text-muted" />
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <p className="font-semibold text-[#212529] text-sm truncate">{request.productName}</p>
+                                            <p className="font-semibold text-ink text-sm truncate">{request.productName}</p>
                                             <div className="flex items-center gap-3 mt-1">
-                                                <span className="text-xs text-[#6a6c6b]">Precio: ${Number(request.originalPrice).toFixed(2)}</span>
+                                                <span className="text-xs text-muted">Precio: ${Number(request.originalPrice).toFixed(2)}</span>
                                                 <span className="text-xs font-bold text-amber-600">Solicita: {request.requestedDiscount}%</span>
                                                 <span className="text-xs text-emerald-600">(-${(Number(request.originalPrice) * request.requestedDiscount / 100).toFixed(2)})</span>
                                             </div>
@@ -269,7 +269,7 @@ export default function DiscountRequestsPage() {
                                             </div>
                                         )}
 
-                                        <span className="text-xs text-[#6a6c6b]">
+                                        <span className="text-xs text-muted">
                                             {new Date(request.createdAt).toLocaleDateString('es-VE')}
                                         </span>
                                     </div>
@@ -278,7 +278,7 @@ export default function DiscountRequestsPage() {
                                 {/* Customer Message */}
                                 {request.customerMessage && (
                                     <div className="mt-3 ml-13 pl-4 border-l-2 border-amber-200">
-                                        <p className="text-xs text-[#6a6c6b] italic">"{request.customerMessage}"</p>
+                                        <p className="text-xs text-muted italic">"{request.customerMessage}"</p>
                                     </div>
                                 )}
 
@@ -297,10 +297,10 @@ export default function DiscountRequestsPage() {
                     </div>
                 </div>
             ) : (
-                <div className="bg-white rounded-xl border border-[#e9ecef] p-12 text-center">
-                    <FiPercent className="w-16 h-16 text-[#adb5bd] mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-[#212529] mb-2">No hay solicitudes</h3>
-                    <p className="text-[#6a6c6b]">
+                <div className="bg-white rounded-xl border border-line p-12 text-center">
+                    <FiPercent className="w-16 h-16 text-subtle mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-ink mb-2">No hay solicitudes</h3>
+                    <p className="text-muted">
                         {filter === 'PENDING' ? 'No hay solicitudes pendientes de revisar' : 'No se encontraron solicitudes'}
                     </p>
                 </div>
@@ -358,17 +358,17 @@ export default function DiscountRequestsPage() {
 
                         <div className="p-5 space-y-5">
                             {/* Request Info */}
-                            <div className="bg-[#f8f9fa] rounded-xl p-4">
+                            <div className="bg-surface rounded-xl p-4">
                                 <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-[#6a6c6b]">Cliente:</span>
+                                    <span className="text-muted">Cliente:</span>
                                     <span className="font-semibold">{selectedRequest.user.name || selectedRequest.user.email}</span>
                                 </div>
                                 <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-[#6a6c6b]">Precio original:</span>
+                                    <span className="text-muted">Precio original:</span>
                                     <span className="font-semibold">${Number(selectedRequest.originalPrice).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-[#6a6c6b]">Descuento solicitado:</span>
+                                    <span className="text-muted">Descuento solicitado:</span>
                                     <span className="font-bold text-amber-600">{selectedRequest.requestedDiscount}%</span>
                                 </div>
                             </div>
@@ -377,7 +377,7 @@ export default function DiscountRequestsPage() {
                                 <>
                                     {/* Discount to approve */}
                                     <div>
-                                        <label className="block text-sm font-bold text-[#212529] mb-3">Descuento a aprobar</label>
+                                        <label className="block text-sm font-bold text-ink mb-3">Descuento a aprobar</label>
                                         <div className="flex gap-2">
                                             {[1, 2, 3, 4, 5].map((percent) => (
                                                 <button
@@ -385,7 +385,7 @@ export default function DiscountRequestsPage() {
                                                     onClick={() => setApprovedDiscount(percent)}
                                                     className={`flex-1 py-3 rounded-xl font-bold transition-all ${approvedDiscount === percent
                                                         ? 'bg-emerald-500 text-white shadow-lg'
-                                                        : 'bg-[#f8f9fa] text-[#212529] hover:bg-[#e9ecef]'
+                                                        : 'bg-surface text-ink hover:bg-line'
                                                         }`}
                                                 >
                                                     {percent}%
@@ -396,15 +396,15 @@ export default function DiscountRequestsPage() {
 
                                     {/* Expiration */}
                                     <div>
-                                        <label className="block text-sm font-bold text-[#212529] mb-2">Horas de validez</label>
+                                        <label className="block text-sm font-bold text-ink mb-2">Horas de validez</label>
                                         <div className="flex gap-2">
                                             {[12, 24, 48, 72].map((hours) => (
                                                 <button
                                                     key={hours}
                                                     onClick={() => setExpirationHours(hours)}
                                                     className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${expirationHours === hours
-                                                        ? 'bg-[#2a63cd] text-white'
-                                                        : 'bg-[#f8f9fa] text-[#212529] hover:bg-[#e9ecef]'
+                                                        ? 'bg-brand-500 text-white'
+                                                        : 'bg-surface text-ink hover:bg-line'
                                                         }`}
                                                 >
                                                     {hours}h
@@ -428,14 +428,14 @@ export default function DiscountRequestsPage() {
 
                             {/* Response message */}
                             <div>
-                                <label className="block text-sm font-bold text-[#212529] mb-2">
+                                <label className="block text-sm font-bold text-ink mb-2">
                                     {actionType === 'approve' ? 'Mensaje (opcional)' : 'Razon del rechazo (opcional)'}
                                 </label>
                                 <textarea
                                     value={adminResponse}
                                     onChange={(e) => setAdminResponse(e.target.value)}
                                     placeholder={actionType === 'approve' ? 'Ej: Aprovecha tu descuento!' : 'Ej: El precio ya es competitivo'}
-                                    className="w-full px-4 py-3 border border-[#e9ecef] rounded-xl text-sm focus:ring-2 focus:ring-[#2a63cd]/20 resize-none"
+                                    className="w-full px-4 py-3 border border-line rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 resize-none"
                                     rows={2}
                                 />
                             </div>

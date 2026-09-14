@@ -82,14 +82,14 @@ const TYPE_CONFIG: Record<string, { label: string; cls: string; icon: React.Reac
     PURCHASE:   { label: 'Compra',     cls: 'bg-violet-50 text-violet-700 border-violet-200', icon: <FiPackage         className="w-3 h-3" /> },
     REFUND:     { label: 'Reembolso',  cls: 'bg-orange-50 text-orange-700 border-orange-200', icon: <FiRepeat          className="w-3 h-3" /> },
     BONUS:      { label: 'Bono',       cls: 'bg-pink-50 text-pink-700 border-pink-200',    icon: <FiGift            className="w-3 h-3" /> },
-    WITHDRAWAL: { label: 'Retiro',     cls: 'bg-slate-50 text-slate-600 border-slate-200', icon: <FiArrowDownCircle className="w-3 h-3" /> },
+    WITHDRAWAL: { label: 'Retiro',     cls: 'bg-gray-50 text-gray-600 border-gray-200', icon: <FiArrowDownCircle className="w-3 h-3" /> },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string }> = {
     PENDING:   { label: 'Pendiente', dot: 'bg-amber-500',  cls: 'bg-amber-50  text-amber-700  border-amber-200'  },
     COMPLETED: { label: 'Aprobada',  dot: 'bg-emerald-500',cls: 'bg-emerald-50 text-emerald-700 border-emerald-200'},
     FAILED:    { label: 'Fallida',   dot: 'bg-rose-500',   cls: 'bg-rose-50   text-rose-700   border-rose-200'   },
-    CANCELLED: { label: 'Rechazada', dot: 'bg-slate-400',  cls: 'bg-slate-50  text-slate-600  border-slate-200'  },
+    CANCELLED: { label: 'Rechazada', dot: 'bg-gray-400',  cls: 'bg-gray-50  text-gray-600  border-gray-200'  },
 };
 
 const IS_CREDIT = (type: string) => ['RECHARGE', 'BONUS', 'REFUND'].includes(type);
@@ -103,13 +103,13 @@ function StatCard({
     sub: React.ReactNode; accent?: boolean;
 }) {
     return (
-        <div className={`rounded-xl border p-4 flex items-start gap-3 ${accent ? 'bg-amber-50 border-amber-200' : 'bg-white border-[#e9ecef]'}`}>
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${accent ? 'bg-amber-100 text-amber-600' : 'bg-[#f8f9fa] text-[#6a6c6b]'}`}>
+        <div className={`rounded-xl border p-4 flex items-start gap-3 ${accent ? 'bg-amber-50 border-amber-200' : 'bg-white border-line'}`}>
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${accent ? 'bg-amber-100 text-amber-600' : 'bg-surface text-muted'}`}>
                 {icon}
             </div>
             <div className="min-w-0">
-                <p className="text-xs font-semibold text-[#6a6c6b] uppercase tracking-widest mb-0.5">{label}</p>
-                <p className={`text-2xl font-bold leading-none ${accent ? 'text-amber-700' : 'text-[#212529]'}`}>{value}</p>
+                <p className="text-xs font-semibold text-muted uppercase tracking-widest mb-0.5">{label}</p>
+                <p className={`text-2xl font-bold leading-none ${accent ? 'text-amber-700' : 'text-ink'}`}>{value}</p>
                 <div className="text-xs mt-1">{sub}</div>
             </div>
         </div>
@@ -276,8 +276,8 @@ export default function TransactionsPage() {
             {/* ── Header ── */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h1 className="text-xl font-bold text-[#212529] flex items-center gap-2.5">
-                        <span className="w-8 h-8 rounded-lg bg-[#2a63cd] flex items-center justify-center shadow-sm flex-shrink-0">
+                    <h1 className="text-xl font-bold text-ink flex items-center gap-2.5">
+                        <span className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-sm flex-shrink-0">
                             <FiDollarSign className="w-4 h-4 text-white" />
                         </span>
                         Transacciones
@@ -287,20 +287,20 @@ export default function TransactionsPage() {
                             </span>
                         )}
                     </h1>
-                    <p className="text-[#6a6c6b] text-xs mt-1 ml-10.5">Recargas y movimientos de saldo · máx. 200 registros</p>
+                    <p className="text-muted text-xs mt-1 ml-10.5">Recargas y movimientos de saldo · máx. 200 registros</p>
                 </div>
                 <div className="flex gap-2">
                     <button
                         onClick={() => { fetchTransactions(); fetchStats(); }}
-                        className="p-2 bg-white border border-[#dee2e6] rounded-lg hover:bg-[#f8f9fa] transition-all"
+                        className="p-2 bg-white border border-line-strong rounded-lg hover:bg-surface transition-all"
                         title="Actualizar"
                     >
-                        <FiRefreshCw className={`w-4 h-4 text-[#6a6c6b] ${loading ? 'animate-spin' : ''}`} />
+                        <FiRefreshCw className={`w-4 h-4 text-muted ${loading ? 'animate-spin' : ''}`} />
                     </button>
                     <button
                         onClick={exportToCSV}
                         disabled={displayed.length === 0}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#dee2e6] rounded-lg text-xs font-semibold text-[#212529] hover:bg-[#f8f9fa] transition-all disabled:opacity-40"
+                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-line-strong rounded-lg text-xs font-semibold text-ink hover:bg-surface transition-all disabled:opacity-40"
                     >
                         <FiDownload className="w-3.5 h-3.5" />
                         Exportar CSV
@@ -315,7 +315,7 @@ export default function TransactionsPage() {
                         icon={<FiClock className="w-5 h-5" />}
                         label="Pendientes"
                         value={stats.pendingCount}
-                        sub={<span className={stats.pendingCount > 0 ? 'text-amber-600 font-semibold' : 'text-[#6a6c6b]'}>
+                        sub={<span className={stats.pendingCount > 0 ? 'text-amber-600 font-semibold' : 'text-muted'}>
                             ${fmtAmount(stats.pendingAmount)} por aprobar
                         </span>}
                         accent={stats.pendingCount > 0}
@@ -327,16 +327,16 @@ export default function TransactionsPage() {
                         sub={<span className="text-emerald-600 font-semibold">+${fmtAmount(stats.completedTodayAmount)}</span>}
                     />
                     <StatCard
-                        icon={<FiTrendingUp className="w-5 h-5 text-[#2a63cd]" />}
+                        icon={<FiTrendingUp className="w-5 h-5 text-brand-500" />}
                         label="Esta semana"
                         value={stats.weekCount}
-                        sub={<span className="text-[#2a63cd] font-semibold">${fmtAmount(stats.weekAmount)}</span>}
+                        sub={<span className="text-brand-500 font-semibold">${fmtAmount(stats.weekAmount)}</span>}
                     />
                     <StatCard
                         icon={<FiX className="w-5 h-5 text-rose-500" />}
                         label="Rechazadas hoy"
                         value={stats.cancelledTodayCount}
-                        sub={<span className="text-[#6a6c6b]">transacciones canceladas</span>}
+                        sub={<span className="text-muted">transacciones canceladas</span>}
                     />
                 </div>
             )}
@@ -345,16 +345,16 @@ export default function TransactionsPage() {
             <div className="flex flex-wrap gap-2 items-center">
                 {/* Search */}
                 <div className="relative flex-1 min-w-[200px]">
-                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#adb5bd]" />
+                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
                     <input
                         type="text"
                         placeholder="Buscar por nombre, email o referencia..."
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-white border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] transition-colors"
+                        className="w-full pl-9 pr-4 py-2 bg-white border border-line-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
                     />
                     {searchQuery && (
-                        <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#adb5bd] hover:text-[#212529]">
+                        <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-subtle hover:text-ink">
                             <FiX className="w-4 h-4" />
                         </button>
                     )}
@@ -362,11 +362,11 @@ export default function TransactionsPage() {
 
                 {/* Type */}
                 <div className="relative">
-                    <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#adb5bd] pointer-events-none" />
+                    <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle pointer-events-none" />
                     <select
                         value={filterType}
                         onChange={e => setFilterType(e.target.value)}
-                        className="pl-9 pr-8 py-2 bg-white border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] appearance-none cursor-pointer text-[#212529]"
+                        className="pl-9 pr-8 py-2 bg-white border border-line-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none cursor-pointer text-ink"
                     >
                         <option value="all">Todos los tipos</option>
                         <option value="RECHARGE">Recargas</option>
@@ -381,7 +381,7 @@ export default function TransactionsPage() {
                 <select
                     value={filterStatus}
                     onChange={e => setFilterStatus(e.target.value)}
-                    className="px-3 py-2 bg-white border border-[#dee2e6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] appearance-none cursor-pointer text-[#212529]"
+                    className="px-3 py-2 bg-white border border-line-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none cursor-pointer text-ink"
                 >
                     <option value="all">Todos los estados</option>
                     <option value="PENDING">Pendientes</option>
@@ -390,31 +390,31 @@ export default function TransactionsPage() {
                 </select>
 
                 {searchQuery && (
-                    <div className="px-3 py-2 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg text-xs text-[#6a6c6b] font-medium">
+                    <div className="px-3 py-2 bg-surface border border-line rounded-lg text-xs text-muted font-medium">
                         {displayed.length} / {transactions.length}
                     </div>
                 )}
             </div>
 
             {/* ── Content ── */}
-            <div className="flex-1 overflow-hidden bg-white rounded-xl border border-[#e9ecef] shadow-sm flex flex-col min-h-0">
+            <div className="flex-1 overflow-hidden bg-white rounded-xl border border-line shadow-sm flex flex-col min-h-0">
                 {loading ? (
                     <div className="flex-1 flex items-center justify-center">
                         <div className="flex flex-col items-center gap-3">
-                            <div className="animate-spin rounded-full h-9 w-9 border-2 border-[#e9ecef] border-t-[#2a63cd]" />
-                            <span className="text-sm text-[#6a6c6b]">Cargando transacciones...</span>
+                            <div className="animate-spin rounded-full h-9 w-9 border-2 border-line border-t-brand-500" />
+                            <span className="text-sm text-muted">Cargando transacciones...</span>
                         </div>
                     </div>
                 ) : displayed.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-[#6a6c6b] gap-3 py-16">
-                        <div className="w-14 h-14 rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center">
-                            <FiDollarSign className="w-6 h-6 text-[#dee2e6]" />
+                    <div className="flex-1 flex flex-col items-center justify-center text-muted gap-3 py-16">
+                        <div className="w-14 h-14 rounded-2xl bg-surface border border-line flex items-center justify-center">
+                            <FiDollarSign className="w-6 h-6 text-line-strong" />
                         </div>
                         <p className="text-sm font-medium">
                             {searchQuery ? 'Sin resultados para la búsqueda' : 'No hay transacciones'}
                         </p>
                         {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} className="text-xs text-[#2a63cd] hover:underline font-medium">
+                            <button onClick={() => setSearchQuery('')} className="text-xs text-brand-500 hover:underline font-medium">
                                 Limpiar búsqueda
                             </button>
                         )}
@@ -439,7 +439,7 @@ export default function TransactionsPage() {
                                                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold border ${typeConf.cls}`}>
                                                     {typeConf.icon}{typeConf.label}
                                                 </span>
-                                                <span className="text-xs text-[#6a6c6b]">
+                                                <span className="text-xs text-muted">
                                                     {format(new Date(t.createdAt), 'dd MMM · HH:mm', { locale: es })}
                                                 </span>
                                             </div>
@@ -451,27 +451,27 @@ export default function TransactionsPage() {
 
                                         {/* User */}
                                         <div className="flex items-center gap-2 mb-3">
-                                            <div className="w-7 h-7 rounded-full bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center flex-shrink-0">
-                                                <span className="text-xs font-bold text-[#2a63cd]">
+                                            <div className="w-7 h-7 rounded-full bg-surface border border-line flex items-center justify-center flex-shrink-0">
+                                                <span className="text-xs font-bold text-brand-500">
                                                     {(t.balance.user.name || t.balance.user.email)[0].toUpperCase()}
                                                 </span>
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-sm font-semibold text-[#212529] truncate">{t.balance.user.name || 'Usuario'}</p>
-                                                <p className="text-xs text-[#6a6c6b] truncate">{t.balance.user.email}</p>
+                                                <p className="text-sm font-semibold text-ink truncate">{t.balance.user.name || 'Usuario'}</p>
+                                                <p className="text-xs text-muted truncate">{t.balance.user.email}</p>
                                             </div>
                                         </div>
 
                                         {/* Amount + meta */}
-                                        <div className="bg-[#f8f9fa] rounded-lg px-3 py-2.5 flex justify-between items-center mb-3">
+                                        <div className="bg-surface rounded-lg px-3 py-2.5 flex justify-between items-center mb-3">
                                             <div className="space-y-0.5">
                                                 {t.reference && (
-                                                    <p className="text-xs text-[#6a6c6b]">
-                                                        Ref: <span className="font-mono text-[#212529]">{t.reference}</span>
+                                                    <p className="text-xs text-muted">
+                                                        Ref: <span className="font-mono text-ink">{t.reference}</span>
                                                     </p>
                                                 )}
                                                 {t.paymentMethod && (
-                                                    <p className="text-xs text-[#6a6c6b] flex items-center gap-1">
+                                                    <p className="text-xs text-muted flex items-center gap-1">
                                                         <PaymentIcon method={t.paymentMethod} className="w-3 h-3" />
                                                         {formatPaymentMethod(t.paymentMethod)}
                                                     </p>
@@ -518,14 +518,14 @@ export default function TransactionsPage() {
                         <div className="hidden md:block overflow-auto flex-1">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-[#f1f3f5] bg-[#f8f9fa]">
-                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Usuario</th>
-                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Tipo</th>
-                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Monto</th>
-                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Referencia</th>
-                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Estado</th>
-                                        <th className="px-5 py-3 text-left text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Fecha</th>
-                                        <th className="px-5 py-3 text-right text-xs font-bold text-[#6a6c6b] uppercase tracking-widest">Acciones</th>
+                                    <tr className="border-b border-[#f1f3f5] bg-surface">
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-muted uppercase tracking-widest">Usuario</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-muted uppercase tracking-widest">Tipo</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-muted uppercase tracking-widest">Monto</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-muted uppercase tracking-widest">Referencia</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-muted uppercase tracking-widest">Estado</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-muted uppercase tracking-widest">Fecha</th>
+                                        <th className="px-5 py-3 text-right text-xs font-bold text-muted uppercase tracking-widest">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#f1f3f5]">
@@ -542,16 +542,16 @@ export default function TransactionsPage() {
                                                 {/* Usuario */}
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex items-center gap-2.5">
-                                                        <div className="w-8 h-8 rounded-full bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center flex-shrink-0">
-                                                            <span className="text-xs font-bold text-[#2a63cd]">
+                                                        <div className="w-8 h-8 rounded-full bg-surface border border-line flex items-center justify-center flex-shrink-0">
+                                                            <span className="text-xs font-bold text-brand-500">
                                                                 {(t.balance.user.name || t.balance.user.email)[0].toUpperCase()}
                                                             </span>
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <p className="font-semibold text-[#212529] truncate max-w-[140px] text-sm">
+                                                            <p className="font-semibold text-ink truncate max-w-[140px] text-sm">
                                                                 {t.balance.user.name || 'Usuario'}
                                                             </p>
-                                                            <p className="text-[11px] text-[#6a6c6b] truncate max-w-[140px]">{t.balance.user.email}</p>
+                                                            <p className="text-[11px] text-muted truncate max-w-[140px]">{t.balance.user.email}</p>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -562,13 +562,13 @@ export default function TransactionsPage() {
                                                         {typeConf.icon}{typeConf.label}
                                                     </span>
                                                     {t.paymentMethod && (
-                                                        <p className="text-[11px] text-[#6a6c6b] mt-1 flex items-center gap-1">
+                                                        <p className="text-[11px] text-muted mt-1 flex items-center gap-1">
                                                             <PaymentIcon method={t.paymentMethod} className="w-3 h-3 flex-shrink-0" />
                                                             {formatPaymentMethod(t.paymentMethod)}
                                                         </p>
                                                     )}
                                                     {t.description && (
-                                                        <p className="text-xs text-[#adb5bd] mt-0.5 truncate max-w-[140px]">{t.description}</p>
+                                                        <p className="text-xs text-subtle mt-0.5 truncate max-w-[140px]">{t.description}</p>
                                                     )}
                                                 </td>
 
@@ -577,17 +577,17 @@ export default function TransactionsPage() {
                                                     <span className={`text-sm font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                         {isCredit ? '+' : '-'}${fmtAmount(Number(t.amount))}
                                                     </span>
-                                                    <p className="text-xs text-[#adb5bd] font-medium">USD</p>
+                                                    <p className="text-xs text-subtle font-medium">USD</p>
                                                 </td>
 
                                                 {/* Referencia */}
                                                 <td className="px-5 py-3.5">
                                                     {t.reference ? (
-                                                        <span className="font-mono text-xs bg-[#f8f9fa] border border-[#e9ecef] px-2 py-1 rounded-md text-[#212529] tracking-wide">
+                                                        <span className="font-mono text-xs bg-surface border border-line px-2 py-1 rounded-md text-ink tracking-wide">
                                                             {t.reference}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-xs text-[#dee2e6]">—</span>
+                                                        <span className="text-xs text-line-strong">—</span>
                                                     )}
                                                 </td>
 
@@ -607,10 +607,10 @@ export default function TransactionsPage() {
 
                                                 {/* Fecha */}
                                                 <td className="px-5 py-3.5 whitespace-nowrap">
-                                                    <p className="text-sm font-medium text-[#212529]">
+                                                    <p className="text-sm font-medium text-ink">
                                                         {format(new Date(t.createdAt), 'dd MMM yyyy', { locale: es })}
                                                     </p>
-                                                    <p className="text-[11px] text-[#6a6c6b]">
+                                                    <p className="text-[11px] text-muted">
                                                         {format(new Date(t.createdAt), 'HH:mm')}
                                                     </p>
                                                 </td>
@@ -645,7 +645,7 @@ export default function TransactionsPage() {
                                                             </div>
                                                         )
                                                     ) : (
-                                                        <span className="text-xs text-[#dee2e6]">—</span>
+                                                        <span className="text-xs text-line-strong">—</span>
                                                     )}
                                                 </td>
                                             </tr>
@@ -661,15 +661,15 @@ export default function TransactionsPage() {
             {/* ── Approval Modal ── */}
             {showApproveModal && approvingTransaction && typeof document !== 'undefined' && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[440px] overflow-hidden border border-[#e9ecef]">
+                    <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[440px] overflow-hidden border border-line">
                         {/* Header */}
                         <div className="flex items-center gap-3 px-6 py-4 border-b border-[#f1f3f5]">
                             <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
                                 <FiCheck className="w-5 h-5 text-emerald-600" />
                             </div>
                             <div>
-                                <h2 className="text-base font-bold text-[#212529]">Confirmar Aprobación</h2>
-                                <p className="text-xs text-[#6a6c6b]">
+                                <h2 className="text-base font-bold text-ink">Confirmar Aprobación</h2>
+                                <p className="text-xs text-muted">
                                     {approvingTransaction.balance.user.name || approvingTransaction.balance.user.email}
                                 </p>
                             </div>
@@ -688,28 +688,28 @@ export default function TransactionsPage() {
                             <div className="space-y-2.5 text-sm">
                                 {approvingTransaction.reference && (
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[#6a6c6b]">Referencia</span>
-                                        <span className="font-mono text-xs bg-[#f8f9fa] border border-[#e9ecef] px-2 py-1 rounded-md">
+                                        <span className="text-muted">Referencia</span>
+                                        <span className="font-mono text-xs bg-surface border border-line px-2 py-1 rounded-md">
                                             {approvingTransaction.reference}
                                         </span>
                                     </div>
                                 )}
                                 {approvingTransaction.paymentMethod && (
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[#6a6c6b]">Método de pago</span>
-                                        <span className="flex items-center gap-1.5 text-[#212529]">
+                                        <span className="text-muted">Método de pago</span>
+                                        <span className="flex items-center gap-1.5 text-ink">
                                             <PaymentIcon method={approvingTransaction.paymentMethod} />
                                             {formatPaymentMethod(approvingTransaction.paymentMethod)}
                                         </span>
                                     </div>
                                 )}
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[#6a6c6b]">Email</span>
-                                    <span className="text-[#212529] text-xs">{approvingTransaction.balance.user.email}</span>
+                                    <span className="text-muted">Email</span>
+                                    <span className="text-ink text-xs">{approvingTransaction.balance.user.email}</span>
                                 </div>
                             </div>
 
-                            <div className="bg-[#f8f9fa] border border-[#e9ecef] rounded-lg px-4 py-3 text-xs text-[#6a6c6b]">
+                            <div className="bg-surface border border-line rounded-lg px-4 py-3 text-xs text-muted">
                                 El cliente recibirá una notificación de aprobación automáticamente.
                             </div>
                         </div>
@@ -717,7 +717,7 @@ export default function TransactionsPage() {
                         <div className="px-6 pb-6 flex gap-3">
                             <button
                                 onClick={() => { setShowApproveModal(false); setApprovingTransaction(null); }}
-                                className="flex-1 py-2.5 border border-[#dee2e6] text-[#212529] font-semibold rounded-xl hover:bg-[#f8f9fa] transition-all text-sm"
+                                className="flex-1 py-2.5 border border-line-strong text-ink font-semibold rounded-xl hover:bg-surface transition-all text-sm"
                             >
                                 Cancelar
                             </button>
@@ -740,15 +740,15 @@ export default function TransactionsPage() {
             {/* ── Rejection Modal ── */}
             {showRejectModal && rejectingTransaction && typeof document !== 'undefined' && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[520px] max-h-[90vh] overflow-hidden flex flex-col border border-[#e9ecef]">
+                    <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[520px] max-h-[90vh] overflow-hidden flex flex-col border border-line">
                         {/* Header */}
                         <div className="flex items-center gap-3 px-6 py-4 border-b border-[#f1f3f5] flex-shrink-0">
                             <div className="w-9 h-9 rounded-lg bg-rose-100 flex items-center justify-center">
                                 <FiX className="w-5 h-5 text-rose-600" />
                             </div>
                             <div>
-                                <h2 className="text-base font-bold text-[#212529]">Rechazar Transacción</h2>
-                                <p className="text-xs text-[#6a6c6b]">
+                                <h2 className="text-base font-bold text-ink">Rechazar Transacción</h2>
+                                <p className="text-xs text-muted">
                                     ${fmtAmount(Number(rejectingTransaction.amount))} · {rejectingTransaction.balance.user.name || rejectingTransaction.balance.user.email}
                                 </p>
                             </div>
@@ -756,14 +756,14 @@ export default function TransactionsPage() {
 
                         <div className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div>
-                                <label className="block text-xs font-bold text-[#212529] mb-3 uppercase tracking-widest">
+                                <label className="block text-xs font-bold text-ink mb-3 uppercase tracking-widest">
                                     Motivo del Rechazo *
                                 </label>
                                 <div className="space-y-2">
                                     {REJECTION_REASONS.map(reason => (
                                         <label
                                             key={reason.id}
-                                            className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer border-2 transition-all ${selectedReason === reason.id ? 'border-[#2a63cd] bg-blue-50' : 'border-[#e9ecef] hover:border-[#2a63cd]/30 hover:bg-[#f8f9fa]'}`}
+                                            className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer border-2 transition-all ${selectedReason === reason.id ? 'border-brand-500 bg-blue-50' : 'border-line hover:border-brand-500/30 hover:bg-surface'}`}
                                         >
                                             <input
                                                 type="radio"
@@ -771,12 +771,12 @@ export default function TransactionsPage() {
                                                 value={reason.id}
                                                 checked={selectedReason === reason.id}
                                                 onChange={e => setSelectedReason(e.target.value)}
-                                                className="mt-0.5 w-4 h-4 text-[#2a63cd] focus:ring-[#2a63cd]/20 border-[#dee2e6]"
+                                                className="mt-0.5 w-4 h-4 text-brand-500 focus:ring-brand-500/20 border-line-strong"
                                             />
                                             <div>
-                                                <span className="text-sm font-semibold text-[#212529]">{reason.label}</span>
+                                                <span className="text-sm font-semibold text-ink">{reason.label}</span>
                                                 {reason.description && (
-                                                    <p className="text-xs text-[#6a6c6b] mt-0.5">{reason.description}</p>
+                                                    <p className="text-xs text-muted mt-0.5">{reason.description}</p>
                                                 )}
                                             </div>
                                         </label>
@@ -790,7 +790,7 @@ export default function TransactionsPage() {
                                     onChange={e => setCustomReason(e.target.value)}
                                     placeholder="Escribe el motivo del rechazo..."
                                     rows={3}
-                                    className="w-full px-4 py-3 border border-[#dee2e6] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] resize-none text-sm transition-colors"
+                                    className="w-full px-4 py-3 border border-line-strong rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none text-sm transition-colors"
                                 />
                             )}
 
@@ -802,7 +802,7 @@ export default function TransactionsPage() {
                         <div className="px-6 pb-6 border-t border-[#f1f3f5] pt-4 flex gap-3 flex-shrink-0 bg-white">
                             <button
                                 onClick={() => setShowRejectModal(false)}
-                                className="flex-1 py-2.5 border border-[#dee2e6] text-[#212529] font-semibold rounded-xl hover:bg-[#f8f9fa] transition-all text-sm"
+                                className="flex-1 py-2.5 border border-line-strong text-ink font-semibold rounded-xl hover:bg-surface transition-all text-sm"
                             >
                                 Cancelar
                             </button>

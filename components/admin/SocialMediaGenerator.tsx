@@ -59,7 +59,7 @@ const TEMPLATES: Template[] = [
     { id: 'promo', name: 'Promo', gradient: 'linear-gradient(135deg, #9333ea, #ec4899, #e11d48)', gradientClass: 'from-purple-600 via-pink-500 to-rose-500', accent: '#c084fc', textBg: 'rgba(0,0,0,0.3)' },
     { id: 'new', name: 'Nuevo', gradient: 'linear-gradient(135deg, #10b981, #14b8a6, #06b6d4)', gradientClass: 'from-emerald-500 via-teal-500 to-cyan-500', accent: '#34d399', textBg: 'rgba(255,255,255,0.25)' },
     { id: 'flash', name: 'Flash', gradient: 'linear-gradient(135deg, #f59e0b, #f97316, #dc2626)', gradientClass: 'from-amber-500 via-orange-500 to-red-500', accent: '#fcd34d', textBg: 'rgba(0,0,0,0.4)' },
-    { id: 'vip', name: 'VIP', gradient: 'linear-gradient(135deg, #1e293b, #334155, #0f172a)', gradientClass: 'from-slate-800 via-slate-700 to-slate-900', accent: '#fbbf24', textBg: 'rgba(245,158,11,0.3)' },
+    { id: 'vip', name: 'VIP', gradient: 'linear-gradient(135deg, #1e293b, #334155, #0f172a)', gradientClass: 'from-gray-800 via-gray-700 to-gray-900', accent: '#fbbf24', textBg: 'rgba(245,158,11,0.3)' },
     { id: 'hot', name: 'Hot', gradient: 'linear-gradient(135deg, #dc2626, #f43f5e, #db2777)', gradientClass: 'from-red-600 via-rose-500 to-pink-600', accent: '#ffffff', textBg: 'rgba(0,0,0,0.4)' },
     { id: 'minimal', name: 'Minimal', gradient: 'linear-gradient(135deg, #111827, #1f2937, #000000)', gradientClass: 'from-gray-900 via-gray-800 to-black', accent: '#ffffff', textBg: 'rgba(255,255,255,0.1)' },
 ];
@@ -295,7 +295,7 @@ Responde SOLO con JSON (sin markdown):
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <FiRefreshCw className="w-6 h-6 text-[#2a63cd] animate-spin" />
+                <FiRefreshCw className="w-6 h-6 text-brand-500 animate-spin" />
             </div>
         );
     }
@@ -305,12 +305,12 @@ Responde SOLO con JSON (sin markdown):
             {/* Header simple */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#2a63cd] rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
                         <FiInstagram className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-sm font-bold text-[#212529]">Generador Social</h2>
-                        <p className="text-xs text-[#6a6c6b]">{products.length} productos</p>
+                        <h2 className="text-sm font-bold text-ink">Generador Social</h2>
+                        <p className="text-xs text-muted">{products.length} productos</p>
                     </div>
                 </div>
             </div>
@@ -320,33 +320,33 @@ Responde SOLO con JSON (sin markdown):
                 <div className="col-span-5 space-y-2">
 
                     {/* AI Config */}
-                    <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                    <div className="bg-white rounded-lg border border-line p-2">
                         <div className="flex items-center gap-1.5 mb-1.5">
-                            <FiCpu className="w-3.5 h-3.5 text-[#2a63cd]" />
-                            <span className="text-xs font-bold text-[#212529]">Gemini AI</span>
+                            <FiCpu className="w-3.5 h-3.5 text-brand-500" />
+                            <span className="text-xs font-bold text-ink">Gemini AI</span>
                             {aiConfigured && <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>}
                         </div>
                         <div className="flex gap-1">
                             <div className="flex-1 relative">
-                                <FiKey className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#6a6c6b]" />
+                                <FiKey className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted" />
                                 <input
                                     type={showApiKey ? 'text' : 'password'}
                                     value={aiApiKey}
                                     onChange={(e) => setAiApiKey(e.target.value)}
                                     placeholder="API Key..."
-                                    className="w-full pl-7 pr-7 py-1 text-xs border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
+                                    className="w-full pl-7 pr-7 py-1 text-xs border border-line rounded focus:ring-1 focus:ring-brand-500/20"
                                 />
-                                <button onClick={() => setShowApiKey(!showApiKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#6a6c6b] hover:text-[#2a63cd]">
+                                <button onClick={() => setShowApiKey(!showApiKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-brand-500">
                                     {showApiKey ? <FiEyeOff className="w-3 h-3" /> : <FiEye className="w-3 h-3" />}
                                 </button>
                             </div>
-                            <button onClick={saveApiKey} className="px-2 py-1 bg-[#2a63cd] text-white rounded text-xs hover:bg-[#1e4ba3]" title="Guardar">
+                            <button onClick={saveApiKey} className="px-2 py-1 bg-brand-500 text-white rounded text-xs hover:bg-brand-600" title="Guardar">
                                 <FiSave className="w-3 h-3" />
                             </button>
                             <button
                                 onClick={generateWithAI}
                                 disabled={(campaignType === 'product' && !selectedProduct) || aiLoading || !aiConfigured}
-                                className="px-2 py-1 bg-[#2a63cd] text-white rounded text-xs hover:bg-[#1e4ba3] disabled:opacity-50"
+                                className="px-2 py-1 bg-brand-500 text-white rounded text-xs hover:bg-brand-600 disabled:opacity-50"
                                 title="Generar con IA"
                             >
                                 {aiLoading ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FiCpu className="w-3 h-3" />}
@@ -355,22 +355,22 @@ Responde SOLO con JSON (sin markdown):
                     </div>
 
                     {/* Campaign Type Toggle */}
-                    <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                    <div className="bg-white rounded-lg border border-line p-2">
                         <div className="flex items-center gap-1.5 mb-1.5">
-                            <FiLayers className="w-3.5 h-3.5 text-[#2a63cd]" />
-                            <span className="text-xs font-bold text-[#212529]">Tipo de Campaña</span>
+                            <FiLayers className="w-3.5 h-3.5 text-brand-500" />
+                            <span className="text-xs font-bold text-ink">Tipo de Campaña</span>
                         </div>
                         <div className="flex gap-1">
                             <button
                                 onClick={() => setCampaignType('product')}
-                                className={`flex-1 py-1 px-2 text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-all border ${campaignType === 'product' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'bg-transparent text-[#6a6c6b] border-[#e9ecef] hover:border-[#2a63cd]'}`}
+                                className={`flex-1 py-1 px-2 text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-all border ${campaignType === 'product' ? 'bg-brand-500 text-white border-brand-500' : 'bg-transparent text-muted border-line hover:border-brand-500'}`}
                             >
                                 <FiPackage className="w-3 h-3" />
                                 Producto
                             </button>
                             <button
                                 onClick={() => setCampaignType('recruitment')}
-                                className={`flex-1 py-1 px-2 text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-all border ${campaignType === 'recruitment' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'bg-transparent text-[#6a6c6b] border-[#e9ecef] hover:border-[#2a63cd]'}`}
+                                className={`flex-1 py-1 px-2 text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-all border ${campaignType === 'recruitment' ? 'bg-brand-500 text-white border-brand-500' : 'bg-transparent text-muted border-line hover:border-brand-500'}`}
                             >
                                 <FiUsers className="w-3 h-3" />
                                 Captar Influencer
@@ -380,19 +380,19 @@ Responde SOLO con JSON (sin markdown):
 
                     {/* Product Selection */}
                     {campaignType === 'product' && (
-                        <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                        <div className="bg-white rounded-lg border border-line p-2">
                             <div className="flex items-center gap-1.5 mb-1.5">
-                                <FiPackage className="w-3.5 h-3.5 text-[#2a63cd]" />
-                                <span className="text-xs font-bold text-[#212529]">Producto</span>
+                                <FiPackage className="w-3.5 h-3.5 text-brand-500" />
+                                <span className="text-xs font-bold text-ink">Producto</span>
                             </div>
                             <div className="relative mb-1.5">
-                                <FiSearch className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#6a6c6b]" />
+                                <FiSearch className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted" />
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Buscar..."
-                                    className="w-full pl-7 pr-2 py-1 text-xs border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
+                                    className="w-full pl-7 pr-2 py-1 text-xs border border-line rounded focus:ring-1 focus:ring-brand-500/20"
                                 />
                             </div>
                             <div className="grid grid-cols-5 gap-1 max-h-20 overflow-y-auto">
@@ -400,12 +400,12 @@ Responde SOLO con JSON (sin markdown):
                                     <button
                                         key={product.id}
                                         onClick={() => setSelectedProduct(product)}
-                                        className={`relative aspect-square rounded overflow-hidden border-2 transition-all hover:scale-105 ${selectedProduct?.id === product.id ? 'border-[#2a63cd]' : 'border-transparent'}`}
+                                        className={`relative aspect-square rounded overflow-hidden border-2 transition-all hover:scale-105 ${selectedProduct?.id === product.id ? 'border-brand-500' : 'border-transparent'}`}
                                         title={product.name}
                                     >
                                         <Image src={getProductImage(product)} alt={product.name} fill className="object-cover" />
                                         {selectedProduct?.id === product.id && (
-                                            <div className="absolute inset-0 bg-[#2a63cd]/30 flex items-center justify-center">
+                                            <div className="absolute inset-0 bg-brand-500/30 flex items-center justify-center">
                                                 <FiCheck className="w-3 h-3 text-white" />
                                             </div>
                                         )}
@@ -417,13 +417,13 @@ Responde SOLO con JSON (sin markdown):
 
                     {/* Recruitment Configuration */}
                     {campaignType === 'recruitment' && (
-                        <div className="bg-white rounded-lg border border-[#e9ecef] p-2 space-y-2">
+                        <div className="bg-white rounded-lg border border-line p-2 space-y-2">
                             <div className="flex items-center gap-1.5">
-                                <FiUsers className="w-3.5 h-3.5 text-[#2a63cd]" />
-                                <span className="text-xs font-bold text-[#212529]">Detalles de Captación</span>
+                                <FiUsers className="w-3.5 h-3.5 text-brand-500" />
+                                <span className="text-xs font-bold text-ink">Detalles de Captación</span>
                             </div>
                             <div>
-                                <label className="text-[11px] font-bold text-[#6a6c6b] block mb-0.5">Título / Llamado</label>
+                                <label className="text-[11px] font-bold text-muted block mb-0.5">Título / Llamado</label>
                                 <input
                                     type="text"
                                     value={recruitmentHeadline}
@@ -434,29 +434,29 @@ Responde SOLO con JSON (sin markdown):
                                     }}
                                     placeholder="¡ÚNETE COMO CREADOR!"
                                     maxLength={20}
-                                    className="w-full px-2 py-1 text-xs border border-[#e9ecef] rounded font-bold uppercase focus:ring-1 focus:ring-[#2a63cd]/20"
+                                    className="w-full px-2 py-1 text-xs border border-line rounded font-bold uppercase focus:ring-1 focus:ring-brand-500/20"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-1.5">
                                 <div>
-                                    <label className="text-[11px] font-bold text-[#6a6c6b] block mb-0.5">Comisión (%)</label>
+                                    <label className="text-[11px] font-bold text-muted block mb-0.5">Comisión (%)</label>
                                     <input
                                         type="number"
                                         value={recruitmentCommission}
                                         onChange={(e) => setRecruitmentCommission(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
                                         min={0} max={100}
-                                        className="w-full px-2 py-1 text-xs border border-[#e9ecef] rounded text-center focus:ring-1 focus:ring-[#2a63cd]/20"
+                                        className="w-full px-2 py-1 text-xs border border-line rounded text-center focus:ring-1 focus:ring-brand-500/20"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[11px] font-bold text-[#6a6c6b] block mb-0.5">Beneficio Destacado</label>
+                                    <label className="text-[11px] font-bold text-muted block mb-0.5">Beneficio Destacado</label>
                                     <input
                                         type="text"
                                         value={recruitmentBenefit}
                                         onChange={(e) => setRecruitmentBenefit(e.target.value.slice(0, 35))}
                                         placeholder="Ej. Ganancias semanales"
                                         maxLength={35}
-                                        className="w-full px-2 py-1 text-xs border border-[#e9ecef] rounded focus:ring-1 focus:ring-[#2a63cd]/20"
+                                        className="w-full px-2 py-1 text-xs border border-line rounded focus:ring-1 focus:ring-brand-500/20"
                                     />
                                 </div>
                             </div>
@@ -466,17 +466,17 @@ Responde SOLO con JSON (sin markdown):
                     {/* Format & Template in one row */}
                     <div className="grid grid-cols-2 gap-2">
                         {/* Format */}
-                        <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                        <div className="bg-white rounded-lg border border-line p-2">
                             <div className="flex items-center gap-1 mb-1">
-                                <FiLayout className="w-3 h-3 text-[#2a63cd]" />
-                                <span className="text-[11px] font-bold text-[#212529]">Formato</span>
+                                <FiLayout className="w-3 h-3 text-brand-500" />
+                                <span className="text-[11px] font-bold text-ink">Formato</span>
                             </div>
                             <div className="flex gap-1">
                                 {FORMATS.map((f) => (
                                     <button
                                         key={f.id}
                                         onClick={() => setSelectedFormat(f)}
-                                        className={`flex-1 py-1 text-[11px] rounded border transition-all hover:border-[#2a63cd] ${selectedFormat.id === f.id ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}
+                                        className={`flex-1 py-1 text-[11px] rounded border transition-all hover:border-brand-500 ${selectedFormat.id === f.id ? 'bg-brand-500 text-white border-brand-500' : 'border-line'}`}
                                     >
                                         {f.name}
                                     </button>
@@ -485,30 +485,30 @@ Responde SOLO con JSON (sin markdown):
                         </div>
 
                         {/* Text Position */}
-                        <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                        <div className="bg-white rounded-lg border border-line p-2">
                             <div className="flex items-center gap-1 mb-1">
-                                <FiType className="w-3 h-3 text-[#2a63cd]" />
-                                <span className="text-[11px] font-bold text-[#212529]">Texto</span>
+                                <FiType className="w-3 h-3 text-brand-500" />
+                                <span className="text-[11px] font-bold text-ink">Texto</span>
                             </div>
                             <div className="flex gap-1">
-                                <button onClick={() => setTextPosition('top')} className={`flex-1 py-1 text-[11px] rounded border transition-all hover:border-[#2a63cd] ${textPosition === 'top' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}>Arriba</button>
-                                <button onClick={() => setTextPosition('bottom')} className={`flex-1 py-1 text-[11px] rounded border transition-all hover:border-[#2a63cd] ${textPosition === 'bottom' ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}>Abajo</button>
+                                <button onClick={() => setTextPosition('top')} className={`flex-1 py-1 text-[11px] rounded border transition-all hover:border-brand-500 ${textPosition === 'top' ? 'bg-brand-500 text-white border-brand-500' : 'border-line'}`}>Arriba</button>
+                                <button onClick={() => setTextPosition('bottom')} className={`flex-1 py-1 text-[11px] rounded border transition-all hover:border-brand-500 ${textPosition === 'bottom' ? 'bg-brand-500 text-white border-brand-500' : 'border-line'}`}>Abajo</button>
                             </div>
                         </div>
                     </div>
 
                     {/* Template */}
-                    <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                    <div className="bg-white rounded-lg border border-line p-2">
                         <div className="flex items-center gap-1.5 mb-1">
-                            <FiLayers className="w-3.5 h-3.5 text-[#2a63cd]" />
-                            <span className="text-xs font-bold text-[#212529]">Plantilla</span>
+                            <FiLayers className="w-3.5 h-3.5 text-brand-500" />
+                            <span className="text-xs font-bold text-ink">Plantilla</span>
                         </div>
                         <div className="grid grid-cols-8 gap-1">
                             {TEMPLATES.map((t) => (
                                 <button
                                     key={t.id}
                                     onClick={() => setSelectedTemplate(t)}
-                                    className={`aspect-[9/16] rounded border-2 transition-all hover:scale-110 bg-gradient-to-br ${t.gradientClass} ${selectedTemplate.id === t.id ? 'border-[#212529] scale-90' : 'border-transparent'}`}
+                                    className={`aspect-[9/16] rounded border-2 transition-all hover:scale-110 bg-gradient-to-br ${t.gradientClass} ${selectedTemplate.id === t.id ? 'border-ink scale-90' : 'border-transparent'}`}
                                     title={t.name}
                                 />
                             ))}
@@ -516,34 +516,34 @@ Responde SOLO con JSON (sin markdown):
                     </div>
 
                     {/* Custom Text */}
-                    <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                    <div className="bg-white rounded-lg border border-line p-2">
                         <input
                             type="text"
                             value={customText}
                             onChange={(e) => setCustomText(e.target.value.toUpperCase().slice(0, 20))}
                             placeholder="TEXTO PRINCIPAL"
                             maxLength={20}
-                            className="w-full px-2 py-1 text-xs border border-[#e9ecef] rounded text-center font-bold uppercase focus:ring-1 focus:ring-[#2a63cd]/20 mb-1"
+                            className="w-full px-2 py-1 text-xs border border-line rounded text-center font-bold uppercase focus:ring-1 focus:ring-brand-500/20 mb-1"
                         />
                         <div className="flex gap-1 flex-wrap">
                             {QUICK_PHRASES.map((p) => (
-                                <button key={p} onClick={() => setCustomText(p)} className={`px-2 py-0.5 text-[11px] rounded border transition-all hover:border-[#2a63cd] ${customText === p ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}>{p}</button>
+                                <button key={p} onClick={() => setCustomText(p)} className={`px-2 py-0.5 text-[11px] rounded border transition-all hover:border-brand-500 ${customText === p ? 'bg-brand-500 text-white border-brand-500' : 'border-line'}`}>{p}</button>
                             ))}
                         </div>
                     </div>
 
                     {/* Badge */}
-                    <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                    <div className="bg-white rounded-lg border border-line p-2">
                         <div className="flex items-center gap-1 mb-1">
-                            <FiAward className="w-3 h-3 text-[#2a63cd]" />
-                            <span className="text-[11px] font-bold text-[#212529]">Badge</span>
+                            <FiAward className="w-3 h-3 text-brand-500" />
+                            <span className="text-[11px] font-bold text-ink">Badge</span>
                         </div>
                         <div className="flex gap-1 flex-wrap">
                             {BADGES.map((b) => (
                                 <button
                                     key={b.id}
                                     onClick={() => setSelectedBadge(b)}
-                                    className={`px-2 py-0.5 text-[11px] rounded border transition-all hover:border-[#2a63cd] ${selectedBadge.id === b.id ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`}
+                                    className={`px-2 py-0.5 text-[11px] rounded border transition-all hover:border-brand-500 ${selectedBadge.id === b.id ? 'bg-brand-500 text-white border-brand-500' : 'border-line'}`}
                                     title={b.label}
                                 >
                                     {b.label}
@@ -555,45 +555,45 @@ Responde SOLO con JSON (sin markdown):
                     {/* Price & Options - Compact */}
                     <div className="grid grid-cols-2 gap-2">
                         {campaignType === 'product' ? (
-                            <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                            <div className="bg-white rounded-lg border border-line p-2">
                                 <div className="flex items-center gap-1 mb-1">
-                                    <FiPercent className="w-3 h-3 text-[#2a63cd]" />
-                                    <span className="text-[11px] font-bold text-[#212529]">Descuento</span>
+                                    <FiPercent className="w-3 h-3 text-brand-500" />
+                                    <span className="text-[11px] font-bold text-ink">Descuento</span>
                                 </div>
                                 <input
                                     type="number"
                                     value={discountPercent}
                                     onChange={(e) => setDiscountPercent(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)))}
                                     min={0} max={99}
-                                    className="w-full px-2 py-1 text-xs border border-[#e9ecef] rounded text-center"
+                                    className="w-full px-2 py-1 text-xs border border-line rounded text-center"
                                 />
                             </div>
                         ) : (
-                            <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                            <div className="bg-white rounded-lg border border-line p-2">
                                 <div className="flex items-center gap-1 mb-1">
-                                    <FiUsers className="w-3 h-3 text-[#2a63cd]" />
-                                    <span className="text-[11px] font-bold text-[#212529]">Comisión</span>
+                                    <FiUsers className="w-3 h-3 text-brand-500" />
+                                    <span className="text-[11px] font-bold text-ink">Comisión</span>
                                 </div>
                                 <div className="flex items-center justify-center h-5">
-                                    <span className="text-xs font-bold text-[#2a63cd]">{recruitmentCommission}% por venta</span>
+                                    <span className="text-xs font-bold text-brand-500">{recruitmentCommission}% por venta</span>
                                 </div>
                             </div>
                         )}
-                        <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                        <div className="bg-white rounded-lg border border-line p-2">
                             <div className="flex items-center gap-1 mb-1">
-                                <FiBox className="w-3 h-3 text-[#2a63cd]" />
-                                <span className="text-[11px] font-bold text-[#212529]">Opciones</span>
+                                <FiBox className="w-3 h-3 text-brand-500" />
+                                <span className="text-[11px] font-bold text-ink">Opciones</span>
                             </div>
                             <div className="flex gap-1">
                                 {campaignType === 'product' && (
-                                    <button onClick={() => setShowPrice(!showPrice)} className={`flex-1 p-1 rounded border transition-all hover:border-[#2a63cd] ${showPrice ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`} title="Mostrar Precio">
+                                    <button onClick={() => setShowPrice(!showPrice)} className={`flex-1 p-1 rounded border transition-all hover:border-brand-500 ${showPrice ? 'bg-brand-500 text-white border-brand-500' : 'border-line'}`} title="Mostrar Precio">
                                         <FiDollarSign className="w-3 h-3 mx-auto" />
                                     </button>
                                 )}
-                                <button onClick={() => setShowLogo(!showLogo)} className={`flex-1 p-1 rounded border transition-all hover:border-[#2a63cd] ${showLogo ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`} title="Mostrar Logo">
+                                <button onClick={() => setShowLogo(!showLogo)} className={`flex-1 p-1 rounded border transition-all hover:border-brand-500 ${showLogo ? 'bg-brand-500 text-white border-brand-500' : 'border-line'}`} title="Mostrar Logo">
                                     <FiImage className="w-3 h-3 mx-auto" />
                                 </button>
-                                <button onClick={() => setShowInstagram(!showInstagram)} className={`flex-1 p-1 rounded border transition-all hover:border-[#2a63cd] ${showInstagram ? 'bg-[#2a63cd] text-white border-[#2a63cd]' : 'border-[#e9ecef]'}`} title="Mostrar Instagram">
+                                <button onClick={() => setShowInstagram(!showInstagram)} className={`flex-1 p-1 rounded border transition-all hover:border-brand-500 ${showInstagram ? 'bg-brand-500 text-white border-brand-500' : 'border-line'}`} title="Mostrar Instagram">
                                     <FiInstagram className="w-3 h-3 mx-auto" />
                                 </button>
                             </div>
@@ -602,16 +602,16 @@ Responde SOLO con JSON (sin markdown):
 
                     {/* Caption (AI Generated) */}
                     {(captionText || hashtagText) && (
-                        <div className="bg-white rounded-lg border border-[#e9ecef] p-2">
+                        <div className="bg-white rounded-lg border border-line p-2">
                             <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-1">
-                                    <FiMessageCircle className="w-3 h-3 text-[#2a63cd]" />
-                                    <span className="text-[11px] font-bold text-[#212529]">Caption IA</span>
+                                    <FiMessageCircle className="w-3 h-3 text-brand-500" />
+                                    <span className="text-[11px] font-bold text-ink">Caption IA</span>
                                 </div>
-                                <button onClick={copyCaption} className="text-[11px] text-[#2a63cd] hover:underline">Copiar</button>
+                                <button onClick={copyCaption} className="text-[11px] text-brand-500 hover:underline">Copiar</button>
                             </div>
-                            <p className="text-[11px] text-[#6a6c6b] mb-1">{captionText}</p>
-                            <p className="text-[11px] text-[#2a63cd]">{hashtagText}</p>
+                            <p className="text-[11px] text-muted mb-1">{captionText}</p>
+                            <p className="text-[11px] text-brand-500">{hashtagText}</p>
                         </div>
                     )}
 
@@ -619,7 +619,7 @@ Responde SOLO con JSON (sin markdown):
                     <button
                         onClick={downloadImage}
                         disabled={(campaignType === 'product' && !selectedProduct) || generating}
-                        className="w-full flex items-center justify-center gap-2 py-2 bg-[#2a63cd] text-white font-bold text-xs rounded-lg hover:bg-[#1e4ba3] transition-all disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 py-2 bg-brand-500 text-white font-bold text-xs rounded-lg hover:bg-brand-600 transition-all disabled:opacity-50"
                     >
                         {generating ? <FiRefreshCw className="w-4 h-4 animate-spin" /> : <FiDownload className="w-4 h-4" />}
                         Descargar {selectedFormat.name} HD
@@ -628,15 +628,15 @@ Responde SOLO con JSON (sin markdown):
 
                 {/* Right Panel - Preview */}
                 <div className="col-span-7">
-                    <div className="bg-white rounded-lg border border-[#e9ecef] overflow-hidden">
-                        <div className="px-2 py-1.5 border-b border-[#e9ecef] flex items-center justify-between">
+                    <div className="bg-white rounded-lg border border-line overflow-hidden">
+                        <div className="px-2 py-1.5 border-b border-line flex items-center justify-between">
                             <div className="flex items-center gap-1">
-                                <FiImage className="w-3 h-3 text-[#2a63cd]" />
-                                <span className="text-xs font-bold text-[#212529]">Preview</span>
+                                <FiImage className="w-3 h-3 text-brand-500" />
+                                <span className="text-xs font-bold text-ink">Preview</span>
                             </div>
-                            <span className="text-[11px] text-[#6a6c6b]">{selectedFormat.width}x{selectedFormat.height}</span>
+                            <span className="text-[11px] text-muted">{selectedFormat.width}x{selectedFormat.height}</span>
                         </div>
-                        <div className="p-3 flex justify-center bg-[#f8f9fa] min-h-[500px]">
+                        <div className="p-3 flex justify-center bg-surface min-h-[500px]">
                             {/* Canvas */}
                             <div
                                 ref={canvasRef}

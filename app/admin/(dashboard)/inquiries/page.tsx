@@ -309,7 +309,7 @@ export default function InquiriesPage() {
 
     const getAlertIcon = (type: string) => {
         switch (type) {
-            case 'NEW_ORDER': return <FiShoppingBag className="w-5 h-5 text-[#2a63cd]" />;
+            case 'NEW_ORDER': return <FiShoppingBag className="w-5 h-5 text-brand-500" />;
             case 'NEW_RECHARGE_REQUEST': return <FiRefreshCw className="w-5 h-5 text-green-600" />;
             case 'NEW_CUSTOMER': return <FiUserPlus className="w-5 h-5 text-purple-600" />;
             case 'NEW_CREATOR_REQUEST': return <FiUserPlus className="w-5 h-5 text-orange-600" />;
@@ -358,14 +358,14 @@ export default function InquiriesPage() {
                     <button
                         onClick={() => setActiveTab('messages')}
                         className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${activeTab === 'messages'
-                                ? 'bg-white text-[#2a63cd] shadow-sm'
+                                ? 'bg-white text-brand-500 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         <FiMessageSquare className="w-4 h-4" />
                         Mensajes
                         {messageStats.pending > 0 && (
-                            <span className="w-5 h-5 bg-[#2a63cd] text-white text-xs rounded-full flex items-center justify-center">
+                            <span className="w-5 h-5 bg-brand-500 text-white text-xs rounded-full flex items-center justify-center">
                                 {messageStats.pending}
                             </span>
                         )}
@@ -373,14 +373,14 @@ export default function InquiriesPage() {
                     <button
                         onClick={() => setActiveTab('requests')}
                         className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${activeTab === 'requests'
-                                ? 'bg-white text-[#2a63cd] shadow-sm'
+                                ? 'bg-white text-brand-500 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         <FiPackage className="w-4 h-4" />
                         Solicitudes de Productos
                         {requestStats.pending > 0 && (
-                            <span className="w-5 h-5 bg-[#2a63cd] text-white text-xs rounded-full flex items-center justify-center">
+                            <span className="w-5 h-5 bg-brand-500 text-white text-xs rounded-full flex items-center justify-center">
                                 {requestStats.pending}
                             </span>
                         )}
@@ -388,14 +388,14 @@ export default function InquiriesPage() {
                     <button
                         onClick={() => setActiveTab('alerts')}
                         className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${activeTab === 'alerts'
-                                ? 'bg-white text-[#2a63cd] shadow-sm'
+                                ? 'bg-white text-brand-500 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         <FiBell className="w-4 h-4" />
                         Alertas del Sistema
                         {unreadAlertsCount > 0 && (
-                            <span className="w-5 h-5 bg-[#2a63cd] text-white text-xs rounded-full flex items-center justify-center">
+                            <span className="w-5 h-5 bg-brand-500 text-white text-xs rounded-full flex items-center justify-center">
                                 {unreadAlertsCount > 99 ? '99+' : unreadAlertsCount}
                             </span>
                         )}
@@ -414,7 +414,7 @@ export default function InquiriesPage() {
                                 <select
                                     value={messageFilterStatus}
                                     onChange={(e) => setMessageFilterStatus(e.target.value as any)}
-                                    className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#2a63cd] text-sm bg-white"
+                                    className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-brand-500 text-sm bg-white"
                                 >
                                     <option value="ALL">Todos ({messages.length})</option>
                                     <option value="PENDING">Pendientes ({messageStats.pending})</option>
@@ -430,7 +430,7 @@ export default function InquiriesPage() {
                             <div className={`w-full md:w-1/3 border-r border-gray-200 overflow-y-auto ${selectedMessage ? 'hidden md:block' : 'block'}`}>
                                 {messagesLoading ? (
                                     <div className="h-full flex items-center justify-center">
-                                        <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+                                        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                                     </div>
                                 ) : filteredMessages.length === 0 ? (
                                     <div className="h-full flex flex-col items-center justify-center p-8 text-center text-gray-500">
@@ -449,7 +449,7 @@ export default function InquiriesPage() {
                                                     }
                                                 }}
                                                 className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${selectedMessage?.id === msg.id ? 'bg-blue-50' : ''
-                                                    } ${msg.status === 'PENDING' ? 'border-l-4 border-[#2a63cd]' : ''}`}
+                                                    } ${msg.status === 'PENDING' ? 'border-l-4 border-brand-500' : ''}`}
                                             >
                                                 <div className="flex justify-between items-start mb-1">
                                                     <h3 className={`text-sm font-semibold ${msg.status === 'PENDING' ? 'text-gray-900' : 'text-gray-600'}`}>
@@ -513,7 +513,7 @@ export default function InquiriesPage() {
                                                 <select
                                                     value={selectedMessage.status}
                                                     onChange={(e) => handleMessageStatusChange(selectedMessage.id, e.target.value)}
-                                                    className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#2a63cd]"
+                                                    className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                                                 >
                                                     <option value="PENDING">Pendiente</option>
                                                     <option value="READ">Leído</option>
@@ -540,7 +540,7 @@ export default function InquiriesPage() {
                                             <div className="mt-8 flex justify-end">
                                                 <a
                                                     href={`mailto:${selectedMessage.email}?subject=Re: ${selectedMessage.subject}`}
-                                                    className="flex items-center gap-2 px-6 py-3 bg-[#2a63cd] hover:bg-[#1e4ba3] text-white rounded-xl transition-colors font-semibold shadow-lg shadow-[#2a63cd]/20"
+                                                    className="flex items-center gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl transition-colors font-semibold shadow-lg shadow-brand-500/20"
                                                 >
                                                     <FiMail className="w-5 h-5" />
                                                     Responder por Email
@@ -588,7 +588,7 @@ export default function InquiriesPage() {
                                 <select
                                     value={requestFilterStatus}
                                     onChange={(e) => setRequestFilterStatus(e.target.value)}
-                                    className="px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-[#2a63cd]"
+                                    className="px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-brand-500"
                                 >
                                     <option value="all">Todas</option>
                                     <option value="PENDING">Pendientes</option>
@@ -604,7 +604,7 @@ export default function InquiriesPage() {
                             <div className="space-y-3">
                                 {requestsLoading ? (
                                     <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                                        <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin mx-auto" />
+                                        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
                                         <p className="text-sm text-gray-500 mt-3">Cargando solicitudes...</p>
                                     </div>
                                 ) : requests.length === 0 ? (
@@ -672,7 +672,7 @@ export default function InquiriesPage() {
                                                                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                                                 title="Gestionar"
                                                             >
-                                                                <FiCheck className="w-4 h-4 text-[#2a63cd]" />
+                                                                <FiCheck className="w-4 h-4 text-brand-500" />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteRequest(request.id)}
@@ -709,7 +709,7 @@ export default function InquiriesPage() {
                                 <button
                                     onClick={() => setAlertFilterRead('all')}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                        alertFilterRead === 'all' ? 'bg-[#2a63cd] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                        alertFilterRead === 'all' ? 'bg-brand-500 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                                     }`}
                                 >
                                     Todas ({alerts.length})
@@ -717,7 +717,7 @@ export default function InquiriesPage() {
                                 <button
                                     onClick={() => setAlertFilterRead('unread')}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                        alertFilterRead === 'unread' ? 'bg-[#2a63cd] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                        alertFilterRead === 'unread' ? 'bg-brand-500 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                                     }`}
                                 >
                                     Sin leer ({unreadAlertsCount})
@@ -725,7 +725,7 @@ export default function InquiriesPage() {
                                 <button
                                     onClick={() => setAlertFilterRead('read')}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                        alertFilterRead === 'read' ? 'bg-[#2a63cd] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                        alertFilterRead === 'read' ? 'bg-brand-500 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                                     }`}
                                 >
                                     Leídas
@@ -741,7 +741,7 @@ export default function InquiriesPage() {
                                 {unreadAlertsCount > 0 && (
                                     <button
                                         onClick={markAllAlertsRead}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#2a63cd]/10 text-[#2a63cd] hover:bg-[#2a63cd]/20 transition-all"
+                                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-brand-500/10 text-brand-500 hover:bg-brand-500/20 transition-all"
                                     >
                                         <FiCheckCircle className="w-4 h-4" /> Marcar todas como leídas
                                     </button>
@@ -753,7 +753,7 @@ export default function InquiriesPage() {
                         <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-y-auto">
                             {alertsLoading ? (
                                 <div className="flex items-center justify-center h-40">
-                                    <div className="w-6 h-6 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+                                    <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                                 </div>
                             ) : filteredAlerts.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-40 text-center">
@@ -775,11 +775,11 @@ export default function InquiriesPage() {
                                                 }
                                             }}
                                             className={`flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors group cursor-pointer ${
-                                                !alert.read ? 'bg-[#2a63cd]/5 border-l-4 border-l-[#2a63cd]' : ''
+                                                !alert.read ? 'bg-brand-500/5 border-l-4 border-l-brand-500' : ''
                                             }`}
                                         >
                                             <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
-                                                !alert.read ? 'bg-[#2a63cd]/10' : 'bg-gray-100'
+                                                !alert.read ? 'bg-brand-500/10' : 'bg-gray-100'
                                             }`}>
                                                 {getAlertIcon(alert.type)}
                                             </div>
@@ -796,7 +796,7 @@ export default function InquiriesPage() {
                                                             {format(new Date(alert.createdAt), "d MMM, HH:mm", { locale: es })}
                                                         </span>
                                                         {!alert.read && (
-                                                            <span className="w-2 h-2 rounded-full bg-[#2a63cd] flex-shrink-0" />
+                                                            <span className="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0" />
                                                         )}
                                                     </div>
                                                 </div>
@@ -812,7 +812,7 @@ export default function InquiriesPage() {
                                                                 }
                                                                 router.push(alert.link!);
                                                             }}
-                                                            className="flex items-center gap-1 text-xs text-[#2a63cd] hover:underline font-medium"
+                                                            className="flex items-center gap-1 text-xs text-brand-500 hover:underline font-medium"
                                                         >
                                                             <FiExternalLink className="w-3 h-3" />
                                                             Ver detalle
@@ -884,7 +884,7 @@ export default function InquiriesPage() {
                                         <select
                                             value={newStatus}
                                             onChange={(e) => setNewStatus(e.target.value)}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-2 focus:ring-[#2a63cd]/10"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10"
                                         >
                                             <option value="PENDING">Pendiente</option>
                                             <option value="IN_PROGRESS">En Progreso</option>
@@ -902,7 +902,7 @@ export default function InquiriesPage() {
                                             onChange={(e) => setAdminNotes(e.target.value)}
                                             rows={4}
                                             placeholder="Agrega notas internas sobre esta solicitud..."
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:border-[#2a63cd] focus:ring-2 focus:ring-[#2a63cd]/10 resize-none"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 resize-none"
                                         />
                                     </div>
                                 </div>

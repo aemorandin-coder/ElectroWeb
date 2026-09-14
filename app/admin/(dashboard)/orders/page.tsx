@@ -214,7 +214,7 @@ export default function OrdersPage() {
       PENDING: { bg: 'bg-amber-50', text: 'text-amber-700', icon: <FiClock className="w-3.5 h-3.5" />, animation: 'animate-pulse' },
       CONFIRMED: { bg: 'bg-blue-50', text: 'text-blue-700', icon: <FiCheck className="w-3.5 h-3.5" /> },
       PAID: { bg: 'bg-green-50', text: 'text-green-700', icon: <FiDollarSign className="w-3.5 h-3.5" /> },
-      PROCESSING: { bg: 'bg-[#2a63cd]/10', text: 'text-[#2a63cd]', icon: <FiPackage className="w-3.5 h-3.5" /> },
+      PROCESSING: { bg: 'bg-brand-500/10', text: 'text-brand-500', icon: <FiPackage className="w-3.5 h-3.5" /> },
       READY_FOR_PICKUP: { bg: 'bg-purple-50', text: 'text-purple-700', icon: <FiMapPin className="w-3.5 h-3.5" /> },
       SHIPPED: { bg: 'bg-indigo-50', text: 'text-indigo-700', icon: <FiTruck className="w-3.5 h-3.5" /> },
       DELIVERED: { bg: 'bg-emerald-50', text: 'text-emerald-700', icon: <FiCheck className="w-3.5 h-3.5" /> },
@@ -251,7 +251,7 @@ export default function OrdersPage() {
     const actions: Record<string, { label: string; color: string }> = {
       PENDING: { label: 'Confirmar Pedido', color: 'bg-blue-600 hover:bg-blue-700' },
       CONFIRMED: { label: 'Marcar Pagado', color: 'bg-green-600 hover:bg-green-700' },
-      PAID: { label: 'Comenzar Preparación', color: 'bg-[#2a63cd] hover:bg-[#1e4ba3]' },
+      PAID: { label: 'Comenzar Preparación', color: 'bg-brand-500 hover:bg-brand-600' },
       PROCESSING: { label: 'Marcar Enviado', color: 'bg-indigo-600 hover:bg-indigo-700' },
       SHIPPED: { label: 'Marcar Entregado', color: 'bg-emerald-600 hover:bg-emerald-700' },
     };
@@ -289,33 +289,33 @@ export default function OrdersPage() {
     <div className="space-y-5">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-between mb-2">
             <FiDollarSign className="w-5 h-5 opacity-80" />
             <span className="text-xs opacity-70">Ingresos</span>
           </div>
           <p className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
+        <div className="bg-white rounded-xl p-4 border border-line">
           <div className="flex items-center justify-between mb-2">
             <FiClock className="w-5 h-5 text-amber-500" />
-            <span className="text-xs text-[#6a6c6b]">Pendientes</span>
+            <span className="text-xs text-muted">Pendientes</span>
           </div>
-          <p className="text-2xl font-bold text-[#212529]">{stats.pendingCount}</p>
+          <p className="text-2xl font-bold text-ink">{stats.pendingCount}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
+        <div className="bg-white rounded-xl p-4 border border-line">
           <div className="flex items-center justify-between mb-2">
-            <FiPackage className="w-5 h-5 text-[#2a63cd]" />
-            <span className="text-xs text-[#6a6c6b]">En proceso</span>
+            <FiPackage className="w-5 h-5 text-brand-500" />
+            <span className="text-xs text-muted">En proceso</span>
           </div>
-          <p className="text-2xl font-bold text-[#212529]">{stats.processingCount}</p>
+          <p className="text-2xl font-bold text-ink">{stats.processingCount}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-[#e9ecef]">
+        <div className="bg-white rounded-xl p-4 border border-line">
           <div className="flex items-center justify-between mb-2">
             <FiCheck className="w-5 h-5 text-emerald-500" />
-            <span className="text-xs text-[#6a6c6b]">Completadas</span>
+            <span className="text-xs text-muted">Completadas</span>
           </div>
-          <p className="text-2xl font-bold text-[#212529]">{stats.completedCount}</p>
+          <p className="text-2xl font-bold text-ink">{stats.completedCount}</p>
         </div>
       </div>
 
@@ -323,19 +323,19 @@ export default function OrdersPage() {
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex items-center gap-3 flex-1">
           <div className="relative flex-1 max-w-xs">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6a6c6b]" />
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
             <input
               type="text"
               placeholder="Buscar orden o cliente..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+              className="w-full pl-9 pr-4 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 bg-white"
+            className="px-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 bg-white"
           >
             <option value="all">Todas</option>
             <option value="PENDING">Pendientes</option>
@@ -349,7 +349,7 @@ export default function OrdersPage() {
         <button
           onClick={fetchOrders}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3] disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50"
         >
           <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Actualizar
@@ -360,10 +360,10 @@ export default function OrdersPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16">
           <div className="relative w-12 h-12">
-            <div className="absolute inset-0 rounded-full border-2 border-[#e9ecef]" />
-            <div className="absolute inset-0 rounded-full border-2 border-[#2a63cd] border-t-transparent animate-spin" />
+            <div className="absolute inset-0 rounded-full border-2 border-line" />
+            <div className="absolute inset-0 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
           </div>
-          <p className="mt-4 text-sm text-[#6a6c6b]">Cargando órdenes...</p>
+          <p className="mt-4 text-sm text-muted">Cargando órdenes...</p>
         </div>
       ) : filteredOrders.length === 0 ? (
         <EmptyState
@@ -377,12 +377,12 @@ export default function OrdersPage() {
             const statusConfig = getStatusConfig(order.status);
             const nextAction = getNextStatusAction(order.status);
             return (
-              <div key={order.id} className="group bg-white rounded-xl border border-[#e9ecef] p-4 hover:shadow-md hover:border-[#2a63cd]/20 transition-all duration-300">
+              <div key={order.id} className="group bg-white rounded-xl border border-line p-4 hover:shadow-md hover:border-brand-500/20 transition-all duration-300">
                 <div className="flex items-center gap-4">
                   {/* Order Icon */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#2a63cd]/10 to-[#2a63cd]/5 rounded-xl flex items-center justify-center">
-                      <FiPackage className="w-5 h-5 text-[#2a63cd]" />
+                    <div className="w-12 h-12 bg-gradient-to-br from-brand-500/10 to-brand-500/5 rounded-xl flex items-center justify-center">
+                      <FiPackage className="w-5 h-5 text-brand-500" />
                     </div>
                     <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ${statusConfig.bg} border flex items-center justify-center`}>
                       <span className={statusConfig.animation}>{statusConfig.icon}</span>
@@ -392,7 +392,7 @@ export default function OrdersPage() {
                   {/* Order Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="font-bold text-[#212529] text-sm">#{order.orderNumber}</h3>
+                      <h3 className="font-bold text-ink text-sm">#{order.orderNumber}</h3>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
                         {getStatusText(order.status)}
                       </span>
@@ -408,8 +408,8 @@ export default function OrdersPage() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-[#6a6c6b]">
-                      <span className="font-medium text-[#212529]">{order.user?.name || 'Invitado'}</span>
+                    <div className="flex items-center gap-2 text-xs text-muted">
+                      <span className="font-medium text-ink">{order.user?.name || 'Invitado'}</span>
                       <span>•</span>
                       <span>{getTimeSince(order.createdAt)}</span>
                       <span>•</span>
@@ -420,8 +420,8 @@ export default function OrdersPage() {
                   {/* Price & Quick Actions */}
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className="text-lg font-bold text-[#212529]">${(Number(order.totalUSD) || 0).toFixed(2)}</p>
-                      <p className="text-xs text-[#6a6c6b] uppercase">USD</p>
+                      <p className="text-lg font-bold text-ink">${(Number(order.totalUSD) || 0).toFixed(2)}</p>
+                      <p className="text-xs text-muted uppercase">USD</p>
                     </div>
 
                     {/* Quick action button */}
@@ -478,7 +478,7 @@ export default function OrdersPage() {
                         setAdminNotes(order.adminNotes || '');
                         setShowDetailsModal(true);
                       }}
-                      className="p-2.5 bg-[#f8f9fa] hover:bg-[#2a63cd] text-[#6a6c6b] hover:text-white rounded-lg transition-all"
+                      className="p-2.5 bg-surface hover:bg-brand-500 text-muted hover:text-white rounded-lg transition-all"
                       title="Ver detalles"
                     >
                       <FiEye className="w-4 h-4" />
@@ -497,7 +497,7 @@ export default function OrdersPage() {
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={closeModal} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-[#e9ecef] bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white">
+            <div className="px-6 py-4 border-b border-line bg-gradient-to-r from-brand-500 to-brand-600 text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-bold">#{selectedOrder.orderNumber}</h3>
@@ -517,9 +517,9 @@ export default function OrdersPage() {
             {/* Content */}
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
               {/* Order Flow Progress */}
-              <div className={`mb-6 p-4 rounded-xl ${selectedOrder.isOnlyDigital ? 'bg-gradient-to-r from-purple-50 to-blue-50' : 'bg-[#f8f9fa]'}`}>
+              <div className={`mb-6 p-4 rounded-xl ${selectedOrder.isOnlyDigital ? 'bg-gradient-to-r from-purple-50 to-blue-50' : 'bg-surface'}`}>
                 <div className="flex items-center gap-2 mb-3">
-                  <h4 className="text-xs font-bold text-[#6a6c6b] uppercase">Progreso del Pedido</h4>
+                  <h4 className="text-xs font-bold text-muted uppercase">Progreso del Pedido</h4>
                   {selectedOrder.isOnlyDigital && (
                     <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-500 to-blue-500 text-white flex items-center gap-1">
                       <FiMonitor className="w-2.5 h-2.5" /> Solo Digital
@@ -528,10 +528,10 @@ export default function OrdersPage() {
                 </div>
                 <div className="flex items-center justify-between relative">
                   {/* Progress bar background */}
-                  <div className="absolute top-4 left-0 right-0 h-1 bg-[#e9ecef] mx-8" />
+                  <div className="absolute top-4 left-0 right-0 h-1 bg-line mx-8" />
                   {/* Progress bar fill */}
                   <div
-                    className={`absolute top-4 left-0 h-1 mx-8 transition-all duration-500 ${selectedOrder.isOnlyDigital ? 'bg-gradient-to-r from-purple-500 to-blue-500' : 'bg-[#2a63cd]'}`}
+                    className={`absolute top-4 left-0 h-1 mx-8 transition-all duration-500 ${selectedOrder.isOnlyDigital ? 'bg-gradient-to-r from-purple-500 to-blue-500' : 'bg-brand-500'}`}
                     style={{
                       width: `${(getCurrentFlowIndex(selectedOrder.status, selectedOrder.isOnlyDigital) / (getOrderFlow(selectedOrder.isOnlyDigital).length - 1)) * 100}%`
                     }}
@@ -544,12 +544,12 @@ export default function OrdersPage() {
                     return (
                       <div key={step.status} className="relative z-10 flex flex-col items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isCompleted
-                          ? selectedOrder.isOnlyDigital ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white' : 'bg-[#2a63cd] text-white'
-                          : 'bg-white border-2 border-[#e9ecef] text-[#6a6c6b]'
-                          } ${isCurrent ? selectedOrder.isOnlyDigital ? 'ring-4 ring-purple-500/20' : 'ring-4 ring-[#2a63cd]/20' : ''}`}>
+                          ? selectedOrder.isOnlyDigital ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white' : 'bg-brand-500 text-white'
+                          : 'bg-white border-2 border-line text-muted'
+                          } ${isCurrent ? selectedOrder.isOnlyDigital ? 'ring-4 ring-purple-500/20' : 'ring-4 ring-brand-500/20' : ''}`}>
                           <IconComponent className="w-4 h-4" />
                         </div>
-                        <span className={`mt-2 text-xs font-medium ${isCompleted ? selectedOrder.isOnlyDigital ? 'text-purple-600' : 'text-[#2a63cd]' : 'text-[#6a6c6b]'}`}>
+                        <span className={`mt-2 text-xs font-medium ${isCompleted ? selectedOrder.isOnlyDigital ? 'text-purple-600' : 'text-brand-500' : 'text-muted'}`}>
                           {step.label}
                         </span>
                       </div>
@@ -571,7 +571,7 @@ export default function OrdersPage() {
                   </button>
                 )}
                 {selectedOrder.status === 'PAID' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'PROCESSING')} disabled={updatingStatus} className="px-4 py-2 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3] disabled:opacity-50 flex items-center gap-2">
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'PROCESSING')} disabled={updatingStatus} className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50 flex items-center gap-2">
                     <FiPackage className="w-4 h-4" /> Comenzar Preparación
                   </button>
                 )}
@@ -647,14 +647,14 @@ export default function OrdersPage() {
               <div className="grid grid-cols-2 gap-6 mb-6">
                 {/* Customer Info */}
                 <div>
-                  <h4 className="text-xs font-bold text-[#212529] uppercase mb-3">Cliente</h4>
-                  <div className="bg-[#f8f9fa] p-4 rounded-xl">
-                    <p className="font-semibold text-[#212529]">{selectedOrder.user?.name || 'Invitado'}</p>
-                    <p className="text-sm text-[#6a6c6b]">{selectedOrder.user?.email}</p>
+                  <h4 className="text-xs font-bold text-ink uppercase mb-3">Cliente</h4>
+                  <div className="bg-surface p-4 rounded-xl">
+                    <p className="font-semibold text-ink">{selectedOrder.user?.name || 'Invitado'}</p>
+                    <p className="text-sm text-muted">{selectedOrder.user?.email}</p>
                     {selectedOrder.shippingAddress && (
-                      <div className="mt-2 pt-2 border-t border-[#e9ecef]">
-                        <p className="text-xs text-[#6a6c6b]">Dirección de envío:</p>
-                        <p className="text-sm text-[#212529]">{selectedOrder.shippingAddress}</p>
+                      <div className="mt-2 pt-2 border-t border-line">
+                        <p className="text-xs text-muted">Dirección de envío:</p>
+                        <p className="text-sm text-ink">{selectedOrder.shippingAddress}</p>
                       </div>
                     )}
                   </div>
@@ -662,7 +662,7 @@ export default function OrdersPage() {
 
                 {/* Admin Notes */}
                 <div>
-                  <h4 className="text-xs font-bold text-[#212529] uppercase mb-3">Notas Admin</h4>
+                  <h4 className="text-xs font-bold text-ink uppercase mb-3">Notas Admin</h4>
                   <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
                     <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 text-sm text-amber-800 placeholder-amber-600/50 resize-none" rows={3} placeholder="Agregar notas..." />
                     <div className="flex justify-end">
@@ -676,22 +676,22 @@ export default function OrdersPage() {
 
               {/* Products */}
               <div>
-                <h4 className="text-xs font-bold text-[#212529] uppercase mb-3">Productos</h4>
-                <div className="border border-[#e9ecef] rounded-xl overflow-hidden">
+                <h4 className="text-xs font-bold text-ink uppercase mb-3">Productos</h4>
+                <div className="border border-line rounded-xl overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-[#f8f9fa]">
+                    <thead className="bg-surface">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6a6c6b]">Producto</th>
-                        <th className="px-4 py-2 text-center text-xs font-semibold text-[#6a6c6b]">Cant.</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-[#6a6c6b]">Precio</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-[#6a6c6b]">Total</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-muted">Producto</th>
+                        <th className="px-4 py-2 text-center text-xs font-semibold text-muted">Cant.</th>
+                        <th className="px-4 py-2 text-right text-xs font-semibold text-muted">Precio</th>
+                        <th className="px-4 py-2 text-right text-xs font-semibold text-muted">Total</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#e9ecef]">
+                    <tbody className="divide-y divide-line">
                       {selectedOrder.items?.map((item: any) => (
                         <tr key={item.id}>
                           <td className="px-4 py-3">
-                            <div className="font-medium text-[#212529]">{item.productName || item.product?.name}</div>
+                            <div className="font-medium text-ink">{item.productName || item.product?.name}</div>
                           </td>
                           <td className="px-4 py-3 text-center">{item.quantity}</td>
                           <td className="px-4 py-3 text-right">${(Number(item.priceUSD || item.pricePerUnit) || 0).toFixed(2)}</td>
@@ -699,10 +699,10 @@ export default function OrdersPage() {
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot className="bg-[#f8f9fa]">
+                    <tfoot className="bg-surface">
                       <tr>
                         <td colSpan={3} className="px-4 py-3 text-right font-bold">Total</td>
-                        <td className="px-4 py-3 text-right text-xl font-bold text-[#2a63cd]">${(Number(selectedOrder.totalUSD) || 0).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right text-xl font-bold text-brand-500">${(Number(selectedOrder.totalUSD) || 0).toFixed(2)}</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -711,8 +711,8 @@ export default function OrdersPage() {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-[#e9ecef] bg-[#f8f9fa] flex justify-end">
-              <button onClick={closeModal} className="px-6 py-2 bg-white border border-[#dee2e6] text-[#212529] rounded-lg hover:bg-[#f8f9fa] font-medium">Cerrar</button>
+            <div className="px-6 py-4 border-t border-line bg-surface flex justify-end">
+              <button onClick={closeModal} className="px-6 py-2 bg-white border border-line-strong text-ink rounded-lg hover:bg-surface font-medium">Cerrar</button>
             </div>
           </div>
         </div>,

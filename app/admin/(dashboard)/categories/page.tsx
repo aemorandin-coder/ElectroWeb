@@ -284,8 +284,8 @@ export default function CategoriesPage() {
                     onClick={() => { setSelectedCategory(cat); setIsCreating(false); setIsEditing(false); }}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                       selectedCategory?.id === cat.id
-                        ? 'bg-[#2a63cd] text-white font-medium shadow-sm'
-                        : 'text-[#212529] hover:bg-[#f8f9fa] bg-white border border-gray-100'
+                        ? 'bg-brand-500 text-white font-medium shadow-sm'
+                        : 'text-ink hover:bg-surface bg-white border border-gray-100'
                     }`}
                   >
                     <span className="truncate">{cat.name}</span>
@@ -790,8 +790,8 @@ function CategoryTree({
             <div
               className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-sm transition-colors ${
                 selectedId === node.id
-                  ? 'bg-[#2a63cd] text-white font-medium shadow-sm'
-                  : 'text-[#212529] hover:bg-[#f8f9fa]'
+                  ? 'bg-brand-500 text-white font-medium shadow-sm'
+                  : 'text-ink hover:bg-surface'
               }`}
               style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}
             >

@@ -163,7 +163,7 @@ const PAYMENT_TYPE_CONFIG: Record<string, { icon: React.ReactNode; label: string
             </svg>
         ),
         label: 'Efectivo',
-        color: 'text-[#10B981]',
+        color: 'text-success',
         bgColor: 'bg-emerald-50 border border-emerald-100/50'
     },
     MERCANTIL_PANAMA: {
@@ -186,7 +186,7 @@ const PAYMENT_TYPE_CONFIG: Record<string, { icon: React.ReactNode; label: string
         ),
         label: 'Otro',
         color: 'text-[#64748B]',
-        bgColor: 'bg-slate-50 border border-slate-100/50'
+        bgColor: 'bg-gray-50 border border-gray-100/50'
     },
 };
 
@@ -397,7 +397,7 @@ export default function PaymentsPage() {
                             setFormData({ type: 'BANK_TRANSFER', name: '', isActive: true, sortOrder: methods.length });
                             setIsModalOpen(true);
                         }}
-                        className="px-4 py-2.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white rounded-xl hover:shadow-lg hover:shadow-[#2a63cd]/25 transition-all flex items-center gap-2 font-medium"
+                        className="px-4 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl hover:shadow-lg hover:shadow-brand-500/25 transition-all flex items-center gap-2 font-medium"
                     >
                         <FiPlus className="w-5 h-5" /> Nuevo Método
                     </button>
@@ -445,12 +445,12 @@ export default function PaymentsPage() {
             <div className="flex-1 overflow-y-auto">
                 {loading ? (
                     <div className="flex items-center justify-center h-64">
-                        <div className="w-8 h-8 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+                        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : methods.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-80 bg-white rounded-2xl border border-gray-200">
                         <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mb-6">
-                            <FiCreditCard className="w-10 h-10 text-[#2a63cd]" />
+                            <FiCreditCard className="w-10 h-10 text-brand-500" />
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">No hay métodos de pago</h3>
                         <p className="text-sm text-gray-500 mb-6 px-6 text-center max-w-md">
@@ -468,7 +468,7 @@ export default function PaymentsPage() {
                             </button>
                             <button
                                 onClick={() => setIsModalOpen(true)}
-                                className="px-5 py-2.5 bg-[#2a63cd] text-white rounded-xl hover:bg-[#1e4ba3] transition-all flex items-center gap-2 font-medium"
+                                className="px-5 py-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all flex items-center gap-2 font-medium"
                             >
                                 <FiPlus className="w-5 h-5" /> Crear Manual
                             </button>
@@ -586,7 +586,7 @@ export default function PaymentsPage() {
                                         <div className="flex gap-1">
                                             <button
                                                 onClick={() => handleEdit(method)}
-                                                className="p-2 text-gray-400 hover:text-[#2a63cd] hover:bg-blue-50 rounded-lg transition-colors"
+                                                className="p-2 text-gray-400 hover:text-brand-500 hover:bg-blue-50 rounded-lg transition-colors"
                                                 title="Editar"
                                             >
                                                 <FiEdit2 className="w-4 h-4" />
@@ -653,14 +653,14 @@ export default function PaymentsPage() {
                                                     type="button"
                                                     onClick={() => setFormData(prev => ({ ...prev, type }))}
                                                     className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center justify-center min-h-[80px] ${formData.type === type
-                                                        ? 'border-[#2a63cd] bg-blue-50 shadow-md'
+                                                        ? 'border-brand-500 bg-blue-50 shadow-md'
                                                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                                         }`}
                                                 >
                                                     <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-1.5 ${config.bgColor} ${config.color}`}>
                                                         {config.icon}
                                                     </div>
-                                                    <span className={`text-xs font-medium leading-tight text-center line-clamp-2 ${formData.type === type ? 'text-[#2a63cd]' : 'text-gray-600'}`}>
+                                                    <span className={`text-xs font-medium leading-tight text-center line-clamp-2 ${formData.type === type ? 'text-brand-500' : 'text-gray-600'}`}>
                                                         {config.label}
                                                     </span>
                                                 </button>
@@ -676,7 +676,7 @@ export default function PaymentsPage() {
                                             value={formData.name || ''}
                                             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                                             placeholder="Ej: Banco de Venezuela"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] text-base"
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-base"
                                             required
                                         />
                                     </div>
@@ -696,7 +696,7 @@ export default function PaymentsPage() {
                                                 onClick={() => setLogoMode('upload')}
                                                 className={`text-sm font-medium pb-2 border-b-2 px-1 transition-all ${
                                                     logoMode === 'upload'
-                                                        ? 'border-[#2a63cd] text-[#2a63cd]'
+                                                        ? 'border-brand-500 text-brand-500'
                                                         : 'border-transparent text-gray-500 hover:text-gray-700'
                                                 }`}
                                             >
@@ -707,7 +707,7 @@ export default function PaymentsPage() {
                                                 onClick={() => setLogoMode('url')}
                                                 className={`text-sm font-medium pb-2 border-b-2 px-1 transition-all ${
                                                     logoMode === 'url'
-                                                        ? 'border-[#2a63cd] text-[#2a63cd]'
+                                                        ? 'border-brand-500 text-brand-500'
                                                         : 'border-transparent text-gray-500 hover:text-gray-700'
                                                 }`}
                                             >
@@ -718,7 +718,7 @@ export default function PaymentsPage() {
                                                 onClick={() => setLogoMode('icon')}
                                                 className={`text-sm font-medium pb-2 border-b-2 px-1 transition-all ${
                                                     logoMode === 'icon'
-                                                        ? 'border-[#2a63cd] text-[#2a63cd]'
+                                                        ? 'border-brand-500 text-brand-500'
                                                         : 'border-transparent text-gray-500 hover:text-gray-700'
                                                 }`}
                                             >
@@ -748,10 +748,10 @@ export default function PaymentsPage() {
                                                 ) : (
                                                     <div
                                                         onClick={() => logoInputRef.current?.click()}
-                                                        className="w-20 h-20 flex-shrink-0 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#2a63cd] hover:bg-blue-50/50 transition-colors"
+                                                        className="w-20 h-20 flex-shrink-0 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-brand-500 hover:bg-blue-50/50 transition-colors"
                                                     >
                                                         {uploadingLogo ? (
-                                                            <div className="w-6 h-6 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+                                                            <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                                                         ) : (
                                                             <>
                                                                 <FiPlus className="w-6 h-6 text-gray-400 mb-1" />
@@ -785,7 +785,7 @@ export default function PaymentsPage() {
                                                         value={formData.logo || ''}
                                                         onChange={(e) => setFormData(prev => ({ ...prev, logo: e.target.value }))}
                                                         placeholder="Ej: https://mi-sitio.com/imagenes/visa.png"
-                                                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                                                     />
                                                 </div>
                                                 {formData.logo && (formData.logo.startsWith('/') || formData.logo.startsWith('http')) && !formData.logo.includes('react-icons.github.io') && (
@@ -811,7 +811,7 @@ export default function PaymentsPage() {
                                                             href="https://react-icons.github.io/react-icons/"
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-xs text-[#2a63cd] hover:underline font-semibold flex items-center gap-1"
+                                                            className="text-xs text-brand-500 hover:underline font-semibold flex items-center gap-1"
                                                         >
                                                             <FiInfo className="w-3.5 h-3.5" />
                                                             Ver catálogo React Icons ↗
@@ -822,7 +822,7 @@ export default function PaymentsPage() {
                                                         value={formData.logo || ''}
                                                         onChange={(e) => setFormData(prev => ({ ...prev, logo: e.target.value }))}
                                                         placeholder="Ej: FaCcVisa, FiCreditCard, MdPayment o https://react-icons.github.io/react-icons/search/#q=FiCreditCard"
-                                                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                                                     />
                                                 </div>
                                                 <div className="flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-200">
@@ -856,7 +856,7 @@ export default function PaymentsPage() {
                                                     value={formData.bankName || ''}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
                                                     placeholder="Banco de Venezuela"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                                                 />
                                             </div>
                                             <div>
@@ -866,7 +866,7 @@ export default function PaymentsPage() {
                                                     value={formData.holderId || ''}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, holderId: e.target.value }))}
                                                     placeholder="V-12345678"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                                                 />
                                             </div>
                                         </div>
@@ -881,7 +881,7 @@ export default function PaymentsPage() {
                                                     value={formData.accountNumber || ''}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
                                                     placeholder="0102-0000-00-0000000000"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] font-mono"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 font-mono"
                                                 />
                                             </div>
                                             <div>
@@ -889,7 +889,7 @@ export default function PaymentsPage() {
                                                 <select
                                                     value={formData.accountType || ''}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, accountType: e.target.value }))}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                                                 >
                                                     <option value="">Seleccionar</option>
                                                     <option value="Corriente">Corriente</option>
@@ -908,7 +908,7 @@ export default function PaymentsPage() {
                                                     value={formData.phone || ''}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                                                     placeholder="0412-1234567"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                                                 />
                                             </div>
 
@@ -939,10 +939,10 @@ export default function PaymentsPage() {
                                                     ) : (
                                                         <div
                                                             onClick={() => qrInputRef.current?.click()}
-                                                            className="w-32 h-32 flex-shrink-0 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#2a63cd] hover:bg-blue-50/50 transition-colors"
+                                                            className="w-32 h-32 flex-shrink-0 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-brand-500 hover:bg-blue-50/50 transition-colors"
                                                         >
                                                             {uploadingQR ? (
-                                                                <div className="w-6 h-6 border-2 border-[#2a63cd] border-t-transparent rounded-full animate-spin" />
+                                                                <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                                                             ) : (
                                                                 <>
                                                                     <FaQrcode className="w-8 h-8 text-gray-400 mb-2" />
@@ -977,7 +977,7 @@ export default function PaymentsPage() {
                                                 value={formData.email || ''}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                                                 placeholder="correo@ejemplo.com"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                                             />
                                         </div>
                                     )}
@@ -991,7 +991,7 @@ export default function PaymentsPage() {
                                                     value={formData.walletAddress || ''}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, walletAddress: e.target.value }))}
                                                     placeholder="0x..."
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] font-mono text-sm"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 font-mono text-sm"
                                                 />
                                             </div>
                                             <div>
@@ -999,7 +999,7 @@ export default function PaymentsPage() {
                                                 <select
                                                     value={formData.network || ''}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, network: e.target.value }))}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                                                 >
                                                     <option value="">Seleccionar red</option>
                                                     <option value="BTC">Bitcoin (BTC)</option>
@@ -1020,7 +1020,7 @@ export default function PaymentsPage() {
                                             onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
                                             placeholder="Notas internas para el equipo..."
                                             rows={2}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] resize-none"
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none"
                                         />
                                     </div>
 
@@ -1035,7 +1035,7 @@ export default function PaymentsPage() {
                                             value={formData.displayNote || ''}
                                             onChange={(e) => setFormData(prev => ({ ...prev, displayNote: e.target.value }))}
                                             placeholder="Ej: Incluir número de referencia en el concepto"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                                         />
                                         <p className="text-xs text-gray-400 mt-1">Este texto será visible para los clientes en el checkout.</p>
                                     </div>
@@ -1070,7 +1070,7 @@ export default function PaymentsPage() {
                                     <button
                                         type="submit"
                                         onClick={handleSubmit}
-                                        className="flex-1 py-3 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white rounded-xl hover:shadow-lg font-semibold transition-all"
+                                        className="flex-1 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl hover:shadow-lg font-semibold transition-all"
                                     >
                                         {editingMethod ? 'Guardar Cambios' : 'Crear Método'}
                                     </button>

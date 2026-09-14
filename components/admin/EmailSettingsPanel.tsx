@@ -185,7 +185,7 @@ export default function EmailSettingsPanel() {
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <FiRefreshCw className="w-6 h-6 text-[#2a63cd] animate-spin" />
+                <FiRefreshCw className="w-6 h-6 text-brand-500 animate-spin" />
             </div>
         );
     }
@@ -230,10 +230,10 @@ export default function EmailSettingsPanel() {
             </div>
 
             {/* Provider Selection - Compact Grid */}
-            <div className="bg-white rounded-xl border border-[#e9ecef] overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-[#e9ecef] flex items-center gap-2">
-                    <FiServer className="w-4 h-4 text-[#2a63cd]" />
-                    <h3 className="font-bold text-sm text-[#212529]">Proveedor de Email</h3>
+            <div className="bg-white rounded-xl border border-line overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-line flex items-center gap-2">
+                    <FiServer className="w-4 h-4 text-brand-500" />
+                    <h3 className="font-bold text-sm text-ink">Proveedor de Email</h3>
                 </div>
                 <div className="p-3">
                     <div className="grid grid-cols-3 lg:grid-cols-6 gap-2">
@@ -242,23 +242,23 @@ export default function EmailSettingsPanel() {
                                 key={key}
                                 onClick={() => handleProviderChange(key)}
                                 className={`group relative p-3 rounded-lg border-2 transition-all text-center ${formData.provider === key
-                                    ? 'border-[#2a63cd] bg-[#2a63cd]/5'
-                                    : 'border-[#e9ecef] hover:border-[#2a63cd]/30'
+                                    ? 'border-brand-500 bg-brand-500/5'
+                                    : 'border-line hover:border-brand-500/30'
                                     }`}
                             >
                                 {formData.provider === key && (
-                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#2a63cd] rounded-full flex items-center justify-center">
+                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-brand-500 rounded-full flex items-center justify-center">
                                         <FiCheck className="w-2.5 h-2.5 text-white" />
                                     </div>
                                 )}
                                 <div className={`mx-auto mb-1.5 w-8 h-8 rounded-lg flex items-center justify-center ${formData.provider === key
-                                    ? 'bg-[#2a63cd] text-white'
-                                    : 'bg-[#f8f9fa] text-[#2a63cd]'
+                                    ? 'bg-brand-500 text-white'
+                                    : 'bg-surface text-brand-500'
                                     }`}>
                                     {info.icon}
                                 </div>
-                                <h4 className="font-semibold text-xs text-[#212529]">{info.name}</h4>
-                                <p className="text-xs text-[#6a6c6b] mt-0.5">{info.description}</p>
+                                <h4 className="font-semibold text-xs text-ink">{info.name}</h4>
+                                <p className="text-xs text-muted mt-0.5">{info.description}</p>
                             </button>
                         ))}
                     </div>
@@ -266,8 +266,8 @@ export default function EmailSettingsPanel() {
                     {/* Provider tip */}
                     {formData.provider === 'godaddy' && (
                         <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-2.5 flex items-start gap-2">
-                            <FiInfo className="w-4 h-4 text-[#2a63cd] flex-shrink-0 mt-0.5" />
-                            <p className="text-xs text-[#2a63cd]">
+                            <FiInfo className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs text-brand-500">
                                 <strong>GoDaddy:</strong> Usa tu correo profesional. Puerto 465 (SSL) o 587 (TLS).
                             </p>
                         </div>
@@ -276,16 +276,16 @@ export default function EmailSettingsPanel() {
             </div>
 
             {/* SMTP Configuration - Compact */}
-            <div className="bg-white rounded-xl border border-[#e9ecef] overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-[#e9ecef] flex items-center gap-2">
-                    <FiSettings className="w-4 h-4 text-[#2a63cd]" />
-                    <h3 className="font-bold text-sm text-[#212529]">Configuración SMTP</h3>
+            <div className="bg-white rounded-xl border border-line overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-line flex items-center gap-2">
+                    <FiSettings className="w-4 h-4 text-brand-500" />
+                    <h3 className="font-bold text-sm text-ink">Configuración SMTP</h3>
                 </div>
                 <div className="p-3 space-y-3">
                     {/* Host, Port, SSL in one row */}
                     <div className="grid grid-cols-12 gap-3">
                         <div className="col-span-6">
-                            <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                            <label className="block text-xs font-bold text-muted uppercase tracking-wide mb-1">
                                 Servidor SMTP
                             </label>
                             <input
@@ -293,26 +293,26 @@ export default function EmailSettingsPanel() {
                                 value={formData.smtpHost || ''}
                                 onChange={(e) => handleInputChange('smtpHost', e.target.value)}
                                 placeholder="smtpout.secureserver.net"
-                                className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                            <label className="block text-xs font-bold text-muted uppercase tracking-wide mb-1">
                                 Puerto
                             </label>
                             <input
                                 type="number"
                                 value={formData.smtpPort || 465}
                                 onChange={(e) => handleInputChange('smtpPort', parseInt(e.target.value))}
-                                className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                             />
                         </div>
                         <div className="col-span-4 flex items-end">
                             <button
                                 onClick={() => handleInputChange('smtpSecure', !formData.smtpSecure)}
                                 className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-2 transition-all ${formData.smtpSecure
-                                    ? 'border-[#2a63cd] bg-[#2a63cd]/5 text-[#2a63cd]'
-                                    : 'border-[#e9ecef] text-[#6a6c6b]'
+                                    ? 'border-brand-500 bg-brand-500/5 text-brand-500'
+                                    : 'border-line text-muted'
                                     }`}
                             >
                                 <FiShield className="w-4 h-4" />
@@ -325,37 +325,37 @@ export default function EmailSettingsPanel() {
                     {/* Credentials */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                            <label className="block text-xs font-bold text-muted uppercase tracking-wide mb-1">
                                 Usuario / Email
                             </label>
                             <div className="relative">
-                                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6a6c6b]" />
+                                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                                 <input
                                     type="email"
                                     value={formData.smtpUser || ''}
                                     onChange={(e) => handleInputChange('smtpUser', e.target.value)}
                                     placeholder="correo@tudominio.com"
-                                    className="w-full pl-9 pr-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                    className="w-full pl-9 pr-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                                 />
                             </div>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                            <label className="block text-xs font-bold text-muted uppercase tracking-wide mb-1">
                                 Contraseña
                             </label>
                             <div className="relative">
-                                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6a6c6b]" />
+                                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={formData.smtpPassword || ''}
                                     onChange={(e) => handleInputChange('smtpPassword', e.target.value)}
                                     placeholder={settings?.hasPassword ? '••••••••' : 'Contraseña'}
-                                    className="w-full pl-9 pr-10 py-2 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                                    className="w-full pl-9 pr-10 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6a6c6b] hover:text-[#212529]"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink"
                                 >
                                     {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                                 </button>
@@ -366,14 +366,14 @@ export default function EmailSettingsPanel() {
             </div>
 
             {/* From Details - Compact */}
-            <div className="bg-white rounded-xl border border-[#e9ecef] overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-[#e9ecef] flex items-center gap-2">
-                    <FiMail className="w-4 h-4 text-[#2a63cd]" />
-                    <h3 className="font-bold text-sm text-[#212529]">Remitente</h3>
+            <div className="bg-white rounded-xl border border-line overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-line flex items-center gap-2">
+                    <FiMail className="w-4 h-4 text-brand-500" />
+                    <h3 className="font-bold text-sm text-ink">Remitente</h3>
                 </div>
                 <div className="p-3 grid grid-cols-3 gap-3">
                     <div>
-                        <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                        <label className="block text-xs font-bold text-muted uppercase tracking-wide mb-1">
                             Nombre
                         </label>
                         <input
@@ -381,11 +381,11 @@ export default function EmailSettingsPanel() {
                             value={formData.fromName || ''}
                             onChange={(e) => handleInputChange('fromName', e.target.value)}
                             placeholder="Electro Shop"
-                            className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                            className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                        <label className="block text-xs font-bold text-muted uppercase tracking-wide mb-1">
                             Email
                         </label>
                         <input
@@ -393,11 +393,11 @@ export default function EmailSettingsPanel() {
                             value={formData.fromEmail || ''}
                             onChange={(e) => handleInputChange('fromEmail', e.target.value)}
                             placeholder="info@dominio.com"
-                            className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                            className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-[#6a6c6b] uppercase tracking-wide mb-1">
+                        <label className="block text-xs font-bold text-muted uppercase tracking-wide mb-1">
                             Responder A
                         </label>
                         <input
@@ -405,17 +405,17 @@ export default function EmailSettingsPanel() {
                             value={formData.replyTo || ''}
                             onChange={(e) => handleInputChange('replyTo', e.target.value)}
                             placeholder="soporte@dominio.com"
-                            className="w-full px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd]"
+                            className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                         />
                     </div>
                 </div>
             </div>
 
             {/* Email Types Toggle - Compact Horizontal */}
-            <div className="bg-white rounded-xl border border-[#e9ecef] overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-[#e9ecef] flex items-center gap-2">
-                    <FiMail className="w-4 h-4 text-[#2a63cd]" />
-                    <h3 className="font-bold text-sm text-[#212529]">Tipos de Email</h3>
+            <div className="bg-white rounded-xl border border-line overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-line flex items-center gap-2">
+                    <FiMail className="w-4 h-4 text-brand-500" />
+                    <h3 className="font-bold text-sm text-ink">Tipos de Email</h3>
                 </div>
                 <div className="p-3 grid grid-cols-3 gap-2">
                     {[
@@ -431,7 +431,7 @@ export default function EmailSettingsPanel() {
                                 onClick={() => handleInputChange(item.key as keyof EmailSettingsData, !isEnabled)}
                                 className={`relative p-3 rounded-lg border-2 transition-all text-left ${isEnabled
                                     ? 'border-emerald-500 bg-emerald-50'
-                                    : 'border-[#e9ecef] hover:border-[#e9ecef]'
+                                    : 'border-line hover:border-line'
                                     }`}
                             >
                                 {isEnabled && (
@@ -440,13 +440,13 @@ export default function EmailSettingsPanel() {
                                     </div>
                                 )}
                                 <div className="flex items-center gap-2">
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isEnabled ? 'bg-emerald-500 text-white' : 'bg-[#f8f9fa] text-[#2a63cd]'
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isEnabled ? 'bg-emerald-500 text-white' : 'bg-surface text-brand-500'
                                         }`}>
                                         <Icon className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <h4 className="font-semibold text-xs text-[#212529]">{item.title}</h4>
-                                        <p className="text-xs text-[#6a6c6b]">{item.desc}</p>
+                                        <h4 className="font-semibold text-xs text-ink">{item.title}</h4>
+                                        <p className="text-xs text-muted">{item.desc}</p>
                                     </div>
                                 </div>
                             </button>
@@ -456,7 +456,7 @@ export default function EmailSettingsPanel() {
             </div>
 
             {/* Test Connection - Compact */}
-            <div className="bg-[#f8f9fa] rounded-xl border border-[#e9ecef] p-3">
+            <div className="bg-surface rounded-xl border border-line p-3">
                 <div className="flex items-center gap-3">
                     <div className="flex-1 flex items-center gap-2">
                         <input
@@ -464,12 +464,12 @@ export default function EmailSettingsPanel() {
                             value={testEmail}
                             onChange={(e) => setTestEmail(e.target.value)}
                             placeholder="Email de prueba (opcional)"
-                            className="flex-1 px-3 py-2 text-sm border border-[#e9ecef] rounded-lg focus:ring-2 focus:ring-[#2a63cd]/20 focus:border-[#2a63cd] bg-white"
+                            className="flex-1 px-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white"
                         />
                         <button
                             onClick={handleTest}
                             disabled={testing || !settings?.smtpHost}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#2a63cd] text-white text-sm font-medium rounded-lg hover:bg-[#1e4ba3] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                         >
                             {testing ? (
                                 <FiRefreshCw className="w-4 h-4 animate-spin" />
@@ -510,7 +510,7 @@ export default function EmailSettingsPanel() {
                 <button
                     onClick={handleSave}
                     disabled={!hasChanges || saving}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-sm font-bold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-bold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {saving ? (
                         <FiRefreshCw className="w-4 h-4 animate-spin" />

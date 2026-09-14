@@ -107,15 +107,15 @@ export default function AdminLayout({
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-[#2a63cd] mb-4 shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-brand-500 mb-4 shadow-lg">
             <svg className="animate-spin h-8 w-8 text-white" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </div>
-          <p className="text-sm text-[#6a6c6b] font-medium">Cargando panel...</p>
+          <p className="text-sm text-muted font-medium">Cargando panel...</p>
         </div>
       </div>
     );
@@ -315,7 +315,7 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#2a63cd] relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-brand-700 via-[#2563eb] to-brand-500 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
@@ -334,15 +334,15 @@ export default function AdminLayout({
         >
           <div className="h-full flex flex-col">
             {/* Logo */}
-            <div className="flex items-center gap-3 px-6 py-5 border-b border-[#e9ecef]">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2a63cd] shadow-md shadow-[#2a63cd]/20">
+            <div className="flex items-center gap-3 px-6 py-5 border-b border-line">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-500 shadow-md shadow-brand-500/20">
                 <MdAdminPanelSettings className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-[#212529]">
+                <h2 className="text-base font-bold text-ink">
                   Electro Shop
                 </h2>
-                <p className="text-sm text-[#6a6c6b]">Admin Panel</p>
+                <p className="text-sm text-muted">Admin Panel</p>
               </div>
             </div>
 
@@ -359,11 +359,11 @@ export default function AdminLayout({
                       <Link
                         href={item.href}
                         className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium transition-all duration-300 ${isActive
-                          ? 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white shadow-lg shadow-[#2a63cd]/30 scale-[1.02]'
-                          : 'text-[#6a6c6b] hover:bg-[#f8f9fa] hover:text-[#212529] hover:scale-[1.01]'
+                          ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/30 scale-[1.02]'
+                          : 'text-muted hover:bg-surface hover:text-ink hover:scale-[1.01]'
                           }`}
                       >
-                        <span className={`relative z-10 transition-transform duration-300 ${isActive ? 'text-white scale-110' : 'text-[#6a6c6b] group-hover:scale-110'}`}>
+                        <span className={`relative z-10 transition-transform duration-300 ${isActive ? 'text-white scale-110' : 'text-muted group-hover:scale-110'}`}>
                           {item.icon}
                         </span>
                         <span className="relative z-10 flex-1">{item.name}</span>
@@ -372,8 +372,8 @@ export default function AdminLayout({
                           <span
                             className={`relative z-10 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full transition-all duration-300 ${
                               isActive
-                                ? 'bg-white text-[#2a63cd]'
-                                : 'bg-[#2a63cd] text-white'
+                                ? 'bg-white text-brand-500'
+                                : 'bg-brand-500 text-white'
                             }`}
                           >
                             {badgeCount > 99 ? '99+' : badgeCount}
@@ -383,7 +383,7 @@ export default function AdminLayout({
                           <span className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-lg shadow-lg"></span>
                         )}
                         {!isActive && (
-                          <span className="absolute inset-0 bg-gradient-to-r from-[#2a63cd]/0 to-[#2a63cd]/0 group-hover:from-[#2a63cd]/5 group-hover:to-[#2a63cd]/0 rounded-lg transition-all duration-300"></span>
+                          <span className="absolute inset-0 bg-gradient-to-r from-brand-500/0 to-brand-500/0 group-hover:from-brand-500/5 group-hover:to-brand-500/0 rounded-lg transition-all duration-300"></span>
                         )}
                       </Link>
                     </li>
@@ -393,25 +393,25 @@ export default function AdminLayout({
             </nav>
 
             {/* User Info & Logout */}
-            <div className="border-t border-[#e9ecef] p-4">
+            <div className="border-t border-line p-4">
               <div className="flex items-center gap-3 mb-3 px-2">
-                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-[#f8f9fa] border border-[#dee2e6]">
-                  <span className="text-base font-semibold text-[#2a63cd]">
+                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-surface border border-line-strong">
+                  <span className="text-base font-semibold text-brand-500">
                     {session.user.email?.[0].toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-bold text-[#212529] truncate">
+                  <p className="text-base font-bold text-ink truncate">
                     {session.user.name}
                   </p>
-                  <p className="text-sm text-[#6a6c6b] truncate">
+                  <p className="text-sm text-muted truncate">
                     {session.user.email}
                   </p>
                 </div>
               </div>
               <button
                 onClick={handleSignOut}
-                className="group relative w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#f8f9fa] hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 text-[#6a6c6b] hover:text-red-600 text-base font-medium rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] overflow-hidden"
+                className="group relative w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-surface hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 text-muted hover:text-red-600 text-base font-medium rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] overflow-hidden"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-red-500/0 to-red-500/0 group-hover:from-red-500/10 group-hover:to-red-500/0 transition-all duration-300"></span>
                 <svg className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:translate-x-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,25 +426,25 @@ export default function AdminLayout({
         {/* Main Content */}
         <div className={`${isSidebarOpen ? 'ml-64' : 'ml-0'} transition-all duration-300`}>
           {/* Top Bar */}
-          <header className="bg-white border-b border-[#e9ecef] sticky top-0 z-30 shadow-sm backdrop-blur-sm bg-white/95">
+          <header className="bg-white border-b border-line sticky top-0 z-30 shadow-sm backdrop-blur-sm bg-white/95">
             <div className="px-6 py-4 flex items-center justify-between">
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="relative p-2 hover:bg-[#f8f9fa] rounded-lg transition-all duration-300 group hover:scale-110"
+                className="relative p-2 hover:bg-surface rounded-lg transition-all duration-300 group hover:scale-110"
               >
-                <svg className="w-6 h-6 text-[#6a6c6b] group-hover:text-[#2a63cd] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-muted group-hover:text-brand-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-                <span className="absolute inset-0 rounded-lg bg-[#2a63cd]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></span>
+                <span className="absolute inset-0 rounded-lg bg-brand-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></span>
               </button>
 
               <div className="flex items-center gap-4">
                 {/* Home Button */}
                 <Link
                   href="/"
-                  className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-base font-semibold rounded-lg hover:shadow-lg hover:shadow-[#2a63cd]/30 transition-all duration-300 hover:scale-105 group overflow-hidden"
+                  className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-base font-semibold rounded-lg hover:shadow-lg hover:shadow-brand-500/30 transition-all duration-300 hover:scale-105 group overflow-hidden"
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-[#1e4ba3] to-[#2a63cd] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-brand-600 to-brand-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                   <svg className="w-4 h-4 relative z-10 group-hover:translate-x-[-2px] transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
@@ -455,10 +455,10 @@ export default function AdminLayout({
                 <NotificationBell />
 
                 {/* User Role Badge */}
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-[#f8f9fa] to-white rounded-full border border-[#e9ecef] shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
-                  <div className={`w-2 h-2 rounded-full animate-pulse ${session.user.role === 'SUPER_ADMIN' ? 'bg-purple-500 shadow-sm shadow-purple-500/50' : session.user.role === 'ADMIN' ? 'bg-[#2a63cd] shadow-sm shadow-[#2a63cd]/50' : 'bg-[#6a6c6b]'
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-surface to-white rounded-full border border-line shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
+                  <div className={`w-2 h-2 rounded-full animate-pulse ${session.user.role === 'SUPER_ADMIN' ? 'bg-purple-500 shadow-sm shadow-purple-500/50' : session.user.role === 'ADMIN' ? 'bg-brand-500 shadow-sm shadow-brand-500/50' : 'bg-muted'
                     }`} />
-                  <span className="text-sm font-semibold text-[#212529]">
+                  <span className="text-sm font-semibold text-ink">
                     {session.user.role === 'SUPER_ADMIN' ? 'Super Admin' :
                       session.user.role === 'ADMIN' ? 'Administrador' :
                         session.user.role === 'SUPPORT' ? 'Soporte' : 'Usuario'}
@@ -479,7 +479,7 @@ export default function AdminLayout({
               }}
             >
               <div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-[#2a63cd]/5 to-transparent"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-500/5 to-transparent"
                 style={{
                   transform: isTransitioning ? 'translateX(100%)' : 'translateX(-100%)',
                   transition: 'transform 0.5s ease-out'

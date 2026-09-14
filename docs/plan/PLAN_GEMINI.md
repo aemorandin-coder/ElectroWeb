@@ -436,3 +436,118 @@ grep -c "toast\." "app/customer/(dashboard)/addresses/page.tsx"     # al menos 6
 grep -n "/api/customer/addresses" "app/customer/(dashboard)/addresses/page.tsx"   # las mismas 4 líneas que antes
 npx tsc --noEmit
 ```
+
+---
+
+## Ronda R7 (pesada) · G-23 → G-24 → G-25 → G-26
+Rama: `gemini/R7`, creada **desde `claude/docs-R7`** (trae estas tarjetas). Un commit por tarea con su `docs/plan/estado/G-XX.md`.
+**Nunca** toques `app/admin/(dashboard)/settings/**` ni `app/admin/(dashboard)/products/**`, ni archivos del carril Claude. Si algo no encaja → `BLOQUEADO` con `PEDIDO:` y sigues con la siguiente.
+
+### G-23 · Errores silenciosos → aviso visible · Depende: G-20 en `main` ✅
+Fuente: la sección B de `docs/plan/estado/G-20.md`, filas "Error silencioso", **solo en tu carril** (panel cliente, admin fuera de settings/products, `components/customer`). Las líneas pueden haberse movido: ubica cada `catch` por el nombre de la función que menciona el reporte.
+
+**Reglas (sin excepciones):**
+1. **Catch de una acción del usuario** (guardar, crear, actualizar, eliminar, aprobar, alternar, subir, descargar, exportar): agrega `toast.error('No se pudo <verbo en infinitivo> <cosa>');` justo después del `console.error` existente. Ejemplo: `toast.error('No se pudo eliminar el mensaje');`
+2. **Catch de una carga inicial** (`fetchX`, `loadX`, cargar datos al abrir la página): agrega `toast.error('No se pudieron cargar <cosa en plural>');`
+3. **Catch vacío al parsear** JSON, parámetros o imágenes, y `SocialMediaGenerator.tsx:173` (fallback de imagen): **no los toques**; son internos.
+4. **`CustomerMobileNavBar.tsx` (cierre de sesión):** `toast.error('No se pudo cerrar la sesión');`
+5. **Import:** si el archivo no importa toast, agrega `import { toast } from 'react-hot-toast';` (si ya importa `toast` de otra forma, usa esa).
+6. **Qué no cambiar:** `console.error`, URLs, cuerpos de las peticiones y el flujo (ningún `return` ni `throw` nuevo).
+7. **Si un `catch` ya muestra** `toast` o un mensaje en pantalla, déjalo como está.
+
+**En tu estado:** una tabla archivo | función | mensaje agregado.
+
+Verificación:
+```bash
+git diff --stat main                                   # solo archivos de tu carril
+git diff main | grep -c "^+.*toast.error("             # ≈ cantidad de filas de la tabla
+git diff main | grep -E "^-" | grep -v "^---" | grep -vE "import" | wc -l   # 0: no se borra nada (salvo reordenar un import)
+npx tsc --noEmit
+```
+
+### G-24 · `confirm()` nativo → diálogo de la tienda · Depende: —
+Reemplaza el `confirm()` del navegador por `useConfirm()` (`contexts/ConfirmDialogContext.tsx`, que ya se usa en `admin/(dashboard)/reviews/page.tsx`). Estos 10 usos exactos:
+
+| Archivo | Línea aprox. | Título | Botón |
+|---|---|---|---|
+| `app/customer/(dashboard)/addresses/page.tsx` | 129 | Eliminar dirección | Eliminar |
+| `app/creator/dashboard/cursos/page.tsx` | 35 | Eliminar curso | Eliminar |
+| `app/admin/(dashboard)/cursos/page.tsx` | 200 | Eliminar curso | Eliminar |
+| `app/admin/(dashboard)/messages/page.tsx` | 67 | Eliminar mensaje | Eliminar |
+| `app/admin/(dashboard)/marketing/page.tsx` | 185 | Eliminar influencer | Eliminar |
+| `app/admin/(dashboard)/inquiries/page.tsx` | 129 | Eliminar mensaje | Eliminar |
+| `app/admin/(dashboard)/inquiries/page.tsx` | 226 | Eliminar solicitud | Eliminar |
+| `app/admin/(dashboard)/legal/page.tsx` | 454 | Solicitar nueva aceptación | Solicitar |
+| `app/admin/(dashboard)/product-requests/page.tsx` | 78 | Eliminar solicitud | Eliminar |
+| `app/admin/(dashboard)/servicios/page.tsx` | 150 | Eliminar trabajo | Eliminar |
+
+**Patrón:**
+```tsx
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
+// dentro del componente, junto a los otros hooks:
+const { confirm } = useConfirm();
+// en lugar de: if (!confirm('texto')) return;
+const confirmed = await confirm({ title: 'Eliminar dirección', message: 'texto original sin cambios', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+if (!confirmed) return;
+```
+- **Mensaje:** usa el **texto original** del `confirm()` tal cual; con plantillas `${...}`, conserva la plantilla.
+- **Función:** la que lo contiene debe ser `async`. Si es un `onClick` en línea (legal:454), conviértelo en `async () => { ... }`. Solicitar aceptación usa `type: 'warning'`.
+- **Conflicto de nombres:** si el componente ya tiene una variable `confirm` (profile, payments, reviews, RechargeModalV2 ya usan `useConfirm`), **no toques ese archivo**.
+
+Verificación:
+```bash
+grep -rnE "(^|[^.a-zA-Z])(window\.)?confirm\('|confirm\(\`" app/customer app/creator app/admin components/admin | grep -v "settings/\|products/"   # 0
+npx tsc --noEmit
+```
+QA: en `/customer/addresses`, eliminar una dirección muestra el diálogo de la tienda; Cancelar no borra.
+
+### G-25 · Quitar `<style jsx>` y animaciones infinitas · Depende: —
+Borra el bloque completo `<style jsx>{`...`}</style>` (o `<style jsx global>`) en cada archivo y ajusta los usos así:
+
+| Archivo | Qué hacer con las animaciones |
+|---|---|
+| `components/modals/ConfirmDialog.tsx` | Nada más: `animate-fadeIn` y `animate-scaleIn` ya existen en `globals.css` |
+| `components/modals/BalanceTermsModal.tsx` | Nada más: `animate-scaleIn` ya existe |
+| `app/customer/(dashboard)/wishlist/page.tsx` | Nada más: `animate-slideInUp` ya existe |
+| `app/admin/(dashboard)/reports/page.tsx` | Nada más: `animate-fadeIn` y `animate-slideInRight` ya existen |
+| `app/customer/(dashboard)/layout.tsx` | Nada más (`verifiedPulse` y `verifiedCheck` no se usan) |
+| `app/customer/(dashboard)/profile/page.tsx` | En el `style` con `animation: 'modalScaleIn 0.3s ease-out'`, quita esa propiedad y agrega la clase `animate-scaleIn` a ese elemento |
+| `app/gift-cards/page.tsx` | Quita la propiedad `animation: 'shimmer 3s ease-in-out infinite'` (línea ~117) y cualquier otro `animation: '... infinite'` en `style` |
+| `app/customer/(dashboard)/orders/page.tsx` | Quita las clases `animate-spin-slow` y `animate-bounce-subtle` de todos los `className` |
+| `components/orders/OrderTracking.tsx` | Quita las clases `animate-epicShimmer`, `animate-epicPulse`, `animate-epicRing`, `animate-iconBounce`, `animate-checkDraw` y `animate-truck`. Si un elemento **solo existe para la animación** (un `<span className="absolute inset-0 ... animate-epicRing">` o un `<div className="absolute inset-0 animate-epicShimmer">` sin contenido), elimina ese elemento completo |
+
+- **Clases de Tailwind:** no agregues keyframes nuevos ni toques `globals.css`. Deja `animate-spin` y `animate-pulse` de Tailwind en los indicadores de carga.
+
+Verificación:
+```bash
+grep -rln "<style jsx" app/customer app/gift-cards components/modals components/orders app/admin/\(dashboard\)/reports   # 0
+grep -rnE "animate-(epic|iconBounce|checkDraw|truck|spin-slow|bounce-subtle)|modalScaleIn|infinite'" app/customer app/gift-cards components/orders   # 0
+npx tsc --noEmit
+```
+QA: en `/customer/orders` abre un pedido y confirma que el seguimiento se ve sin elementos rotos.
+
+### G-26 · Montos con `formatUSD` / `formatVES` · Depende: —
+`lib/currency.ts` exporta `formatUSD(n)` → `"$1.099,00"` y `formatVES(n)` → `"Bs. 40.113,50"`. Hoy hay unos 70 `toFixed(` en tu carril.
+
+**Reglas (sin excepciones):**
+1. **Qué reemplazar:** solo los `toFixed(2)` que se **muestran** como dinero en JSX o en textos de toast.
+   - `` `$${x.toFixed(2)}` `` o `${x.toFixed(2)}` pegado a `$` o `USD` → `formatUSD(x)`.
+   - `Bs. ${x.toFixed(2)}` o junto a `Bs`, `VES` o `bolívares` → `formatVES(x)`.
+   - Borra el `$`, el `USD` o el `Bs.` que quedaría duplicado.
+2. **No toques** `toFixed` en:
+   - Valores enviados a APIs (`body`, `JSON.stringify`, `fetch`).
+   - `value` de inputs y cálculos intermedios.
+   - Porcentajes (`%`), cantidades que no son dinero y `toFixed(0)` / `toFixed(1)`.
+   - Textos que se copian al portapapeles para pago móvil (`navigator.clipboard`).
+3. **Import:** `import { formatUSD, formatVES } from '@/lib/currency';` (solo lo que uses).
+4. **Duda:** si no sabes si un monto es USD o Bs, **no lo cambies** y anótalo en el estado.
+
+**En tu estado:** tabla archivo | línea | antes | después, y lista de los que dejaste por duda.
+
+Verificación:
+```bash
+git diff main | grep -E "^\+" | grep -cE "formatUSD\(|formatVES\("   # igual a las filas de la tabla
+git diff main | grep -E "^\+" | grep -E "body|JSON.stringify|clipboard" | grep -E "formatUSD|formatVES"   # 0
+npx tsc --noEmit
+```
+QA: `/customer/balance` y `/customer/orders` muestran montos como "$28,00" y "Bs. 22.050,55".

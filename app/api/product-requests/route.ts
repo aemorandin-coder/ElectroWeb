@@ -9,8 +9,10 @@ import { createNotification } from '@/lib/notifications';
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    // SEGURIDAD: incluye nombre, correo y teléfono de los clientes; solo para el admin
+    // (Solicitudes usa MANAGE_PRODUCTS y Mensajes y Alertas MANAGE_CONTENT)
+    if (!isAuthorized(session, 'MANAGE_PRODUCTS') && !isAuthorized(session, 'MANAGE_CONTENT')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: session ? 403 : 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -38,10 +40,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    // El dueño de la solicitud sale de la sesión (si hay), nunca del body
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id ?? null;
 
     const productRequest = await prisma.productRequest.create({
       data: {
-        userId: body.userId,
+        userId,
         customerName: body.customerName,
         customerEmail: body.customerEmail,
         customerPhone: body.customerPhone,
@@ -54,13 +59,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Create notification for new product request (if user is logged in)
-    if (body.userId) {
+    if (userId) {
       await createNotification({
-        userId: body.userId,
+        userId,
         type: 'SYSTEM_UPDATE',
         title: '📝 Solicitud de Producto Recibida',
         message: `Tu solicitud para "${body.productName}" ha sido recibida. Te notificaremos cuando tengamos novedades.`,
-        link: `/customer/product-requests`,
+        link: `/customer`,
         icon: '📝',
       });
     }

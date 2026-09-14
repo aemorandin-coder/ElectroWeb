@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { isAuthorized } from '@/lib/auth-helpers';
+import { hasPermission, isAuthorized } from '@/lib/auth-helpers';
 import { validateSettings, normalizeSocialMedia, normalizeExchangeRate } from '@/lib/validations/settings';
 import { SettingsFormData } from '@/types/settings';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -43,7 +43,32 @@ function safeSerialize(obj: any): any {
   return obj;
 }
 
+// Campos que solo ve quien administra la configuración (CLAUDE.md: nunca salen del servidor hacia otros)
+const SETTINGS_ONLY_FIELDS = ['adminAlertEmails', 'maintenanceAllowedIPs'] as const;
+
+/**
+ * GET /api/settings — configuración completa para el panel admin (C-50a).
+ * Antes era pública (el proxy dejaba pasar todo /api/settings): cualquiera leía los correos de alertas
+ * y las IPs que se saltan el mantenimiento. La tienda usa getPublicSettings() o /api/settings/public.
+ * Productos y Marketing también la leen (tasas, moneda, popup): con MANAGE_PRODUCTS o MANAGE_CONTENT
+ * se entrega sin los campos sensibles.
+ */
 export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+  const canManageSettings = hasPermission(session, 'MANAGE_SETTINGS');
+  if (!canManageSettings && !hasPermission(session, 'MANAGE_PRODUCTS') && !hasPermission(session, 'MANAGE_CONTENT')) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  }
+  const visible = <T extends Record<string, unknown>>(data: T) => {
+    if (canManageSettings) return data;
+    const copy: Record<string, unknown> = { ...data };
+    for (const field of SETTINGS_ONLY_FIELDS) delete copy[field];
+    return copy;
+  };
+
   try {
     const settings = await prisma.companySettings.findFirst({
       where: { id: 'default' },
@@ -56,7 +81,7 @@ export async function GET() {
           companyName: 'Electro Shop Morandin C.A.',
         },
       });
-      return NextResponse.json(safeSerialize(defaultSettings));
+      return NextResponse.json(safeSerialize(visible(defaultSettings)));
     }
 
     // Parse JSON fields safely
@@ -82,13 +107,10 @@ export async function GET() {
       businessHours,
     };
 
-    return NextResponse.json(safeSerialize(responseData));
-  } catch (error: any) {
+    return NextResponse.json(safeSerialize(visible(responseData)));
+  } catch (error) {
     console.error('[SETTINGS API] CRITICAL ERROR:', error);
-    return NextResponse.json({
-      error: 'Error interno del servidor',
-      details: error.message
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
 
@@ -250,11 +272,9 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(safeSerialize(parsedResponse));
 
-  } catch (error: any) {
+  } catch (error) {
+    // Sin error.message en la respuesta: puede traer detalles de la BD
     console.error('[SETTINGS API] Error:', error);
-    return NextResponse.json({
-      error: 'Error al actualizar configuración',
-      details: error.message,
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Error al actualizar configuración' }, { status: 500 });
   }
 }

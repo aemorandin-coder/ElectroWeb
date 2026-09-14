@@ -207,9 +207,14 @@ export default function CheckoutPage() {
                 if (addresses.length > 0) {
                   setShowAddressSelector(true);
                   setIsNewAddress(false);
+                  // La primera es la predeterminada (C-24). Antes se esparcía el objeto guardado
+                  // y sus claves (address, city…) no coincidían con las del formulario.
+                  const first = addresses[0];
                   setFormData(prev => ({
                     ...prev,
-                    ...addresses[0]
+                    shippingAddress: first.address || first.addressLine1 || '',
+                    shippingCity: first.city || '',
+                    shippingState: first.state || '',
                   }));
                 }
               }

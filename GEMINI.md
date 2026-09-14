@@ -40,7 +40,19 @@ components/pago-movil/**   components/onboarding/**
 docs/plan/estado/G-*.md      (solo archivos que empiecen con G-)
 ```
 Excepciones puntuales (solo cuando la tarea lo dice):
-- `app/admin/**` y `components/admin/**` → solo G-01 (una línea), G-05f y G-06f.
+- `app/admin/**` y `components/admin/**` → **solo arreglos mecánicos** y **solo cuando una tarjeta G lo pide**. Autorizado por Andrés el 2026-09-14.
+  - **Permitido:**
+    - `alert()`/`confirm()` → toast.
+    - hex → tokens, tipografía, z-index → capas.
+    - `type="button"` en botones.
+    - Quitar `<style jsx>`, imports y variables sin uso.
+    - Traducir al español los textos visibles.
+    - Estados de vacío y de carga con el texto que indique la tarjeta.
+  - **Prohibido** aunque la tarjeta parezca pedirlo (en ese caso → `BLOQUEADO` con `PEDIDO:` para Claude):
+    - Cambiar `fetch`, URLs de API, cuerpos de peticiones, validaciones, permisos o roles.
+    - Tocar cálculos de precios, costos, saldos o stock, o agregar o quitar campos de formularios.
+    - Mover lógica entre archivos o crear componentes nuevos.
+  - **Fuera de límites hasta nuevo aviso:** `app/admin/(dashboard)/settings/**` y `app/admin/(dashboard)/products/**`. Los rehace Claude en C-50 y C-51.
 - `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → solo G-04b, G-05g y G-06g, **y solo cuando en `main` existan `docs/plan/estado/C-01.md` y `docs/plan/estado/C-05.md` con `Estado: HECHO`**.
 - Borrado de la lista cerrada de G-02.
 

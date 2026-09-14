@@ -1,15 +1,30 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
+import { getMaintenanceState, getRequestIP, isMaintenanceExemptPath, maintenanceResponse } from '@/lib/maintenance';
 
 const REF_COOKIE = 'electroshop_ref';
 const REF_TTL_DAYS = 30;
 
 export default withAuth(
-  function proxy(req) {
+  async function proxy(req) {
     const token = req.nextauth.token;
     const { pathname } = req.nextUrl;
     const isAdminRoute = pathname.startsWith('/admin');
     const isLoginPage = pathname === '/login' || pathname === '/admin/login';
+    const userRole = (token as any)?.role;
+    const userType = (token as any)?.userType;
+    const isAdminUser = userType === 'admin' || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+
+    // ── MAINTENANCE MODE (D3) ────────────────────────────────────────
+    // Los visitantes ven la página de mantenimiento (503); los admins logueados, las IPs
+    // permitidas y las rutas de login, panel, auth y webhooks siguen funcionando.
+    if (!isAdminUser && !isMaintenanceExemptPath(pathname)) {
+      const maintenance = await getMaintenanceState();
+      const ip = getRequestIP(req.headers);
+      if (maintenance.active && !(ip && maintenance.allowedIPs.includes(ip))) {
+        return maintenanceResponse(maintenance, pathname.startsWith('/api/'));
+      }
+    }
 
     const response = NextResponse.next();
 
@@ -26,12 +41,7 @@ export default withAuth(
       }
     }
 
-    // ── SECURITY HEADERS ─────────────────────────────────────────────
-    response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('X-XSS-Protection', '1; mode=block');
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    // Cabeceras de seguridad: solo en next.config.js (una sola fuente)
 
     // ── REDIRECTS ────────────────────────────────────────────────────
     if (pathname === '/admin/login') {
@@ -46,10 +56,7 @@ export default withAuth(
         return NextResponse.redirect(loginUrl);
       }
 
-      const userType = (token as any)?.userType;
-      const role = (token as any)?.role;
-
-      if (userType !== 'admin' && role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+      if (!isAdminUser) {
         return NextResponse.redirect(new URL('/login?redirect=admin&error=admin_required', req.url));
       }
     }
@@ -78,22 +85,8 @@ export default withAuth(
       response.headers.set('X-RateLimit-Policy', 'sliding-window');
     }
 
-    // ── ADMIN IDENTITY HEADER ─────────────────────────────────────────
-    // Lets the frontend bypass maintenance mode for logged-in admins
-    // without requiring a DB round-trip in each component.
-    const userRole = (token as any)?.role;
-    const userType = (token as any)?.userType;
-    const isAdminUser = userType === 'admin' || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
-    if (isAdminUser) {
-      response.headers.set('X-Is-Admin', '1');
-      response.cookies.set('x-is-admin', '1', {
-        httpOnly: false, // readable by client JS for maintenance bypass
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 8, // 8 hours — matches typical session
-        path: '/',
-      });
-    } else {
-      // Clear the cookie if they're not an admin (logged out, role changed)
+    // La cookie x-is-admin (legible por JS y sin uso) ya no existe: se borra donde quedó guardada
+    if (req.cookies.get('x-is-admin')) {
       response.cookies.delete('x-is-admin');
     }
 
@@ -103,6 +96,10 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
+        // Páginas: la protección de /admin, /customer y /checkout está en la función de arriba
+        // (el matcher cubre toda la tienda por el modo mantenimiento)
+        if (!pathname.startsWith('/api/')) return true;
+
         const isLoginPage = pathname === '/login' || pathname === '/admin/login';
         const isPublicApiRoute =
           pathname.startsWith('/api/public') ||
@@ -146,30 +143,8 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    // Public pages — needed for referral cookie capture + security headers
-    '/',
-    '/p/:path*',
-    '/productos/:path*',
-    '/categorias/:path*',
-    '/servicios',
-    '/contacto',
-    '/cursos',
-    '/comparar',
-    '/gift-cards',
-    '/canjear-gift-card',
-    '/solicitar-producto',
-    '/registro',
-    '/privacidad',
-    '/terminos',
-    '/verificar-email/:path*',
-    '/recuperar-contrasena/:path*',
-    // Protected routes
-    '/admin/:path*',
-    '/customer/:path*',
-    '/mis-pedidos/:path*',
-    '/checkout/:path*',
-    '/login',
-    // API routes (for headers)
-    '/api/:path*',
+    // Toda la tienda (modo mantenimiento, cookie de referidos y protección de rutas),
+    // excepto archivos estáticos y de metadatos
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|uploads/|fonts/|images/|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|woff2?|ttf|otf|mp4|webm)$).*)',
   ],
 };

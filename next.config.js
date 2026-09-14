@@ -27,6 +27,7 @@ const nextConfig = {
       },
     ];
   },
+  // Única fuente de cabeceras de seguridad (proxy.ts ya no las pone)
   async headers() {
     return [
       {
@@ -38,7 +39,7 @@ const nextConfig = {
           { key: 'X-Content-Type-Options',       value: 'nosniff' },
           { key: 'X-XSS-Protection',             value: '1; mode=block' },
           { key: 'Referrer-Policy',              value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy',           value: 'camera=(), microphone=(), geolocation=(self), interest-cohort=()' },
+          { key: 'Permissions-Policy',           value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
         ],
       },
       {

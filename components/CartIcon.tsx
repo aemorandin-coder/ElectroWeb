@@ -31,12 +31,11 @@ const GIFT_CARD_DESIGNS: Record<string, { gradient: string; accent: string; name
 };
 
 export default function CartIcon() {
-  const { items, getTotalItems, getTotalPrice, removeItem, updateQuantity, clearCart } = useCartSafe();
+  const { items, totalItems, getTotalPrice, removeItem, updateQuantity, clearCart } = useCartSafe();
   const { confirm } = useConfirm();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const totalItems = getTotalItems();
   const totalPrice = getTotalPrice();
 
   // Close dropdown when clicking outside

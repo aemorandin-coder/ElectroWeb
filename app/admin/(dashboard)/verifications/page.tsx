@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FiCheckCircle, FiXCircle, FiClock, FiFileText, FiDownload, FiSearch, FiFilter, FiEye, FiUsers } from 'react-icons/fi';
 import Image from 'next/image';
+import { toast } from 'react-hot-toast';
 
 interface VerificationRequest {
     id: string;
@@ -52,7 +53,7 @@ export default function VerificationsPage() {
         if (!selectedRequest) return;
 
         if (status === 'REJECTED' && !actionNote.trim()) {
-            alert('Por favor indica el motivo del rechazo');
+            toast.error('Por favor indica el motivo del rechazo');
             return;
         }
 
@@ -69,16 +70,16 @@ export default function VerificationsPage() {
             });
 
             if (response.ok) {
-                alert(`Solicitud ${status === 'APPROVED' ? 'aprobada' : 'rechazada'} exitosamente`);
+                toast.success(`Solicitud ${status === 'APPROVED' ? 'aprobada' : 'rechazada'} exitosamente`);
                 setSelectedRequest(null);
                 setActionNote('');
                 fetchRequests();
             } else {
-                alert('Error al procesar la solicitud');
+                toast.error('Error al procesar la solicitud');
             }
         } catch (error) {
             console.error('Error processing request:', error);
-            alert('Error al procesar la solicitud');
+            toast.error('Error al procesar la solicitud');
         } finally {
             setProcessing(false);
         }

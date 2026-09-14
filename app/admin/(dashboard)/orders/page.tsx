@@ -504,7 +504,7 @@ export default function OrdersPage() {
                   <p className="text-sm opacity-70">{format(new Date(selectedOrder.createdAt), "d 'de' MMMM, yyyy", { locale: es })}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => alert('Próximamente')} className="flex items-center gap-2 px-3 py-1.5 bg-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/30">
+                  <button onClick={() => toast('Próximamente')} className="flex items-center gap-2 px-3 py-1.5 bg-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/30">
                     <FiPrinter className="w-4 h-4" /> Imprimir
                   </button>
                   <button onClick={closeModal} className="p-2 hover:bg-white/20 rounded-lg">

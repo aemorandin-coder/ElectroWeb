@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 
 const CATEGORIES = [
   { value: 'DESARROLLO', label: 'Desarrollo' },
@@ -180,7 +181,7 @@ export default function AdminCursosPage() {
       setShowModal(false);
       loadCourses();
     } catch {
-      alert('Error al guardar el curso');
+      toast.error('Error al guardar el curso');
     } finally {
       setSaving(false);
     }

@@ -1140,7 +1140,7 @@ export default function ProfilePage() {
       {showBusinessTip && isMounted && createPortal(
         <div
           className="fixed inset-0 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-          style={{ zIndex: 99999 }}
+          style={{ zIndex: 'var(--z-modal)' }}
         >
           <div
             className="bg-white rounded-2xl shadow-2xl overflow-hidden"

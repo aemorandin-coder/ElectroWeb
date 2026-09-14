@@ -581,7 +581,7 @@ export default function WishlistPage() {
       {showDiscountModal && selectedItem && typeof document !== 'undefined' && createPortal(
         <div
           onClick={() => setShowDiscountModal(false)}
-          className="fixed inset-0 z-[100001] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
         >
           <div
             onClick={(e) => e.stopPropagation()}

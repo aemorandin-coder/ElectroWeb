@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FiMapPin, FiPlus, FiEdit, FiTrash2, FiCheck, FiHome, FiBriefcase, FiPackage, FiTruck, FiX, FiInfo } from 'react-icons/fi';
+import { toast } from 'react-hot-toast';
 
 // Address types including shipping companies
 const ADDRESS_TYPES = [
@@ -60,9 +61,12 @@ export default function AddressesPage() {
       if (response.ok) {
         const data = await response.json();
         setAddresses(data.addresses || []);
+      } else {
+        toast.error('No se pudieron cargar tus direcciones');
       }
     } catch (error) {
       console.error('Error fetching addresses:', error);
+      toast.error('No se pudieron cargar tus direcciones');
     } finally {
       setLoading(false);
     }
@@ -82,13 +86,18 @@ export default function AddressesPage() {
       });
 
       if (response.ok) {
+        toast.success(editingAddress ? 'Dirección actualizada' : 'Dirección guardada');
         setShowModal(false);
         setEditingAddress(null);
         resetForm();
         fetchAddresses();
+      } else {
+        const data = await response.json().catch(() => ({}));
+        toast.error(data.error || 'No se pudo guardar la dirección');
       }
     } catch (error) {
       console.error('Error saving address:', error);
+      toast.error('No se pudo guardar la dirección');
     }
   };
 
@@ -124,10 +133,15 @@ export default function AddressesPage() {
         method: 'DELETE',
       });
       if (response.ok) {
+        toast.success('Dirección eliminada');
         fetchAddresses();
+      } else {
+        const data = await response.json().catch(() => ({}));
+        toast.error(data.error || 'No se pudo eliminar la dirección');
       }
     } catch (error) {
       console.error('Error deleting address:', error);
+      toast.error('No se pudo eliminar la dirección');
     }
   };
 
@@ -270,7 +284,7 @@ export default function AddressesPage() {
 
       {/* Modal - Using Portal */}
       {showModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100001] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
           {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL (Desktop Only) */}
           <button
             onClick={() => setShowModal(false)}

@@ -4,6 +4,28 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { createNotification } from '@/lib/notifications';
+import { verifyCaptcha } from '@/lib/captcha';
+import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
+import { z } from 'zod';
+
+// Solo usuarios con cuenta (decisión de Andrés, C-08): máximo 5 solicitudes por hora por usuario
+const PRODUCT_REQUEST_LIMIT = { maxRequests: 5, windowSeconds: 3600 };
+
+const optionalText = (max: number) =>
+  z.preprocess((v) => (typeof v === 'string' && v.trim() === '' ? undefined : v), z.string().trim().max(max).optional());
+
+const productRequestSchema = z.object({
+  customerName: z.string().trim().min(2, 'Ingresa tu nombre').max(100),
+  customerEmail: z.string().trim().email('Correo inválido').max(200),
+  customerPhone: optionalText(30),
+  productName: z.string().trim().min(2, 'Indica el producto que buscas').max(150),
+  description: optionalText(2000),
+  category: optionalText(60),
+  estimatedBudget: z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? undefined : Number(v)),
+    z.number().finite().min(0).max(10_000_000).optional()
+  ),
+});
 
 // GET - Get all product requests
 export async function GET(request: NextRequest) {
@@ -39,36 +61,63 @@ export async function GET(request: NextRequest) {
 // POST - Create new product request
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    // El dueño de la solicitud sale de la sesión (si hay), nunca del body
+    // Solo con cuenta: responde 401 en JSON (el formulario muestra el mensaje)
     const session = await getServerSession(authOptions);
-    const userId = session?.user?.id ?? null;
+    const userId = session?.user?.id;
+    if (!userId) {
+      return NextResponse.json({ error: 'Inicia sesión para solicitar un producto.' }, { status: 401 });
+    }
+
+    const body = await request.json().catch(() => null);
+
+    // SEGURIDAD: el captcha se verifica en el servidor, no solo en el navegador
+    const captcha = await verifyCaptcha(body?.captchaToken, getClientIP(request));
+    if (!captcha.ok) {
+      return NextResponse.json({ error: captcha.error }, { status: captcha.status });
+    }
+
+    // El formulario envía productDescription; se acepta también description
+    const parsed = productRequestSchema.safeParse({
+      ...body,
+      description: body?.productDescription ?? body?.description,
+    });
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      return NextResponse.json({ error: issue.message, field: issue.path[0] }, { status: 400 });
+    }
+    const data = parsed.data;
+
+    // Solo cuentan las solicitudes válidas (un error de tipeo no gasta intentos)
+    const rateLimit = checkRateLimit(userId, 'product-requests:create', PRODUCT_REQUEST_LIMIT);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Ya enviaste varias solicitudes. Intenta de nuevo en una hora.' },
+        { status: 429, headers: getRateLimitHeaders(rateLimit, PRODUCT_REQUEST_LIMIT) }
+      );
+    }
 
     const productRequest = await prisma.productRequest.create({
       data: {
         userId,
-        customerName: body.customerName,
-        customerEmail: body.customerEmail,
-        customerPhone: body.customerPhone,
-        productName: body.productName,
-        description: body.description,
-        category: body.category,
-        estimatedBudget: body.estimatedBudget ? parseFloat(body.estimatedBudget) : null,
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        customerPhone: data.customerPhone ?? null,
+        productName: data.productName,
+        description: data.description ?? null,
+        category: data.category ?? null,
+        estimatedBudget: data.estimatedBudget ?? null,
         status: 'PENDING',
       },
     });
 
-    // Create notification for new product request (if user is logged in)
-    if (userId) {
-      await createNotification({
-        userId,
-        type: 'SYSTEM_UPDATE',
-        title: '📝 Solicitud de Producto Recibida',
-        message: `Tu solicitud para "${body.productName}" ha sido recibida. Te notificaremos cuando tengamos novedades.`,
-        link: `/customer`,
-        icon: '📝',
-      });
-    }
+    await createNotification({
+      userId,
+      type: 'SYSTEM_UPDATE',
+      title: '📝 Solicitud de Producto Recibida',
+      message: `Tu solicitud para "${data.productName}" ha sido recibida. Te notificaremos cuando tengamos novedades.`,
+      link: `/customer`,
+      icon: '📝',
+    });
 
     return NextResponse.json(productRequest, { status: 201 });
   } catch (error) {

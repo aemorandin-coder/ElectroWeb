@@ -105,6 +105,8 @@ export default withAuth(
           pathname.startsWith('/api/settings') ||
           pathname.startsWith('/api/exchange-rates') ||
           pathname.startsWith('/api/contact') ||
+          // Exige sesión dentro del handler y responde 401 en JSON (sin redirigir al login)
+          pathname.startsWith('/api/product-requests') ||
           pathname.startsWith('/api/reviews') ||
           pathname.startsWith('/api/uploads') ||
           pathname.startsWith('/api/analytics') ||

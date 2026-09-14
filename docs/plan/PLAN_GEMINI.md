@@ -298,3 +298,22 @@ echo "innerWidth:";        grep -rn "innerWidth" $RUTAS
 '
 ```
 Claude usará ese reporte para preparar las siguientes tarjetas.
+
+---
+
+### G-18 · "Solicitar producto" solo con cuenta (aviso en el formulario) · Depende: **C-08 HECHO en `main`**
+Desde C-08, `POST /api/product-requests` exige sesión y responde `401 { error: 'Inicia sesión para solicitar un producto.' }`. El formulario ya muestra ese error, pero el invitado se entera recién al enviar. Antes de empezar: `git show main:docs/plan/estado/C-08.md` debe decir `Estado: HECHO`; si no → `BLOQUEADO`.
+
+Archivo: `app/solicitar-producto/SolicitarProductoClient.tsx` (ya tiene `const { data: session } = useSession();`).
+1. Si `!session`, muestra **encima del formulario** un aviso con este texto y enlace (usa solo tokens de color de GEMINI.md §4):
+   `Para solicitar un producto necesitas una cuenta.` + enlace `Iniciar sesión` → `/login?callbackUrl=%2Fsolicitar-producto` + enlace `Crear cuenta` → `/registro`.
+2. Si `!session`, el botón de envío queda `disabled` (agrega `|| !session` a su condición `disabled` actual). No borres el captcha ni la validación existente.
+3. Si hay sesión y `customerName`/`customerEmail` están vacíos, precárgalos una sola vez con `session.user.name` y `session.user.email` (un `useEffect` que dependa de `session`).
+4. No cambies otros textos ni estilos.
+
+Verificación:
+```bash
+grep -n "callbackUrl=%2Fsolicitar-producto" app/solicitar-producto/SolicitarProductoClient.tsx   # 1 resultado
+grep -n "!session" app/solicitar-producto/SolicitarProductoClient.tsx                             # al menos 2
+npx tsc --noEmit                                                                                  # sin errores nuevos
+```

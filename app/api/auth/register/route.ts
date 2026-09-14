@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { notifyAdminsNewCustomer } from '@/lib/notifications';
 import { sendVerificationEmail } from '@/lib/email-service';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { verifyCaptcha } from '@/lib/captcha';
 import { z } from 'zod';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 
@@ -51,6 +52,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+
+    // SEGURIDAD: el captcha se verifica en el servidor, no solo en el navegador
+    const captcha = await verifyCaptcha(body?.captchaToken, clientIP);
+    if (!captcha.ok) {
+      return NextResponse.json({ error: captcha.error }, { status: captcha.status });
+    }
 
     // Validate with Zod
     const validationResult = registerSchema.safeParse(body);

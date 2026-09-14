@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { verifyCaptcha } from '@/lib/captcha';
 
 // POST /api/contact - Submit contact form
 export async function POST(request: NextRequest) {
@@ -22,6 +23,12 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { name, email, phone, subject, message } = body;
+
+    // SEGURIDAD: el captcha se verifica en el servidor, no solo en el navegador
+    const captcha = await verifyCaptcha(body?.captchaToken, clientIP);
+    if (!captcha.ok) {
+      return NextResponse.json({ error: captcha.error }, { status: captcha.status });
+    }
 
     // Validation
     if (!name || !email || !phone || !subject || !message) {

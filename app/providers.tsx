@@ -30,13 +30,15 @@ export function Providers({
             {children}
             <Toaster
               position="top-right"
+              // Capa de toasts (PLAN.md §1.3): encima de modales y barra móvil, debajo del popup
+              containerStyle={{ zIndex: 'var(--z-toast)' }}
               toastOptions={{
                 duration: 4000,
                 style: {
-                  background: '#fff',
-                  color: '#212529',
+                  background: 'white',
+                  color: 'var(--color-ink)',
                   boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                  border: '1px solid #e9ecef',
+                  border: '1px solid var(--color-line)',
                   borderRadius: '12px',
                   padding: '16px',
                   fontSize: '14px',
@@ -44,13 +46,13 @@ export function Providers({
                 },
                 success: {
                   iconTheme: {
-                    primary: '#10b981',
+                    primary: 'var(--color-success-strong)',
                     secondary: '#fff',
                   },
                 },
                 error: {
                   iconTheme: {
-                    primary: '#ef4444',
+                    primary: 'var(--color-deal)',
                     secondary: '#fff',
                   },
                 },

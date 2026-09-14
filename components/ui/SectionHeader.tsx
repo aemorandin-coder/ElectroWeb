@@ -1,7 +1,8 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 
 interface SectionHeaderProps {
-  title: string;
+  title: ReactNode;
   subtitle?: string;
   href?: string;
   linkLabel?: string;

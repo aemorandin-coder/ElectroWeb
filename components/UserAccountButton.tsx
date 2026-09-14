@@ -90,7 +90,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
       {/* Mobile Backdrop Overlay */}
       {isOpen && (
         <div 
-          className="fixed left-0 right-0 bottom-0 top-14 bg-black/40 backdrop-blur-sm z-40 sm:hidden transition-opacity"
+          className="fixed left-0 right-0 bottom-0 top-14 bg-black/40 z-[var(--z-header)] lg:hidden transition-opacity"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -98,7 +98,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
       {/* User Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex items-center gap-1.5 px-1.5 py-1 hover:bg-brand-50 rounded-xl transition-all duration-300 group z-[60] sm:z-auto"
+        className="relative flex items-center gap-1.5 px-1.5 py-1 hover:bg-brand-50 rounded-xl transition-all duration-300 group z-[var(--z-dropdown)] lg:z-auto"
       >
         {userImage && !imageError ? (
           <div className={`relative w-9 h-9 rounded-full overflow-hidden border-2 shadow-md group-hover:shadow-lg transition-all ${isVerified
@@ -129,15 +129,15 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
       {isOpen && (
         <div 
           className={`
-            fixed sm:absolute z-[60] sm:z-50
-            top-20 sm:top-full
-            left-4 right-4 sm:left-auto sm:right-0 sm:mt-3
-            w-auto sm:w-[300px] 
+            fixed lg:absolute z-[var(--z-dropdown)]
+            top-20 lg:top-full
+            left-4 right-4 lg:left-auto lg:right-0 lg:mt-3
+            w-auto lg:w-[300px]
+            max-h-[calc(100dvh-6rem-var(--bottom-nav-h)-env(safe-area-inset-bottom))] overflow-y-auto lg:max-h-none lg:overflow-hidden
             bg-white rounded-2xl
-            shadow-2xl 
-            border border-gray-100 overflow-hidden 
-            animate-fade-in sm:animate-dropdown-enter
-            pb-safe sm:pb-0
+            shadow-2xl
+            border border-gray-100
+            animate-fade-in lg:animate-dropdown-enter
           `}
         >
 
@@ -242,7 +242,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
           </div>
 
           {/* Logout Section */}
-          <div className="p-3 border-t border-gray-100 bg-surface sm:rounded-b-2xl mb-safe sm:mb-0">
+          <div className="p-3 border-t border-gray-100 bg-surface lg:rounded-b-2xl">
             <button
               onClick={handleSignOut}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 hover:border-red-200 hover:bg-red-50 rounded-xl transition-all duration-200 group shadow-sm active:scale-95"

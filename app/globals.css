@@ -71,6 +71,20 @@
   }
 }
 
+/* Espacio para la barra inferior móvil, solo en las páginas donde existe (C-21).
+   Con Footer, el espacio va dentro del footer para que su fondo llegue hasta abajo. */
+body:has(#mobile-bottom-nav) {
+  padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
+}
+
+body:has(#mobile-bottom-nav):has([data-site-footer]) {
+  padding-bottom: 0;
+}
+
+body:has(#mobile-bottom-nav) [data-site-footer] {
+  padding-bottom: calc(2rem + var(--bottom-nav-h) + env(safe-area-inset-bottom));
+}
+
 /* Hide scrollbar utility */
 .scrollbar-hide {
   -ms-overflow-style: none;

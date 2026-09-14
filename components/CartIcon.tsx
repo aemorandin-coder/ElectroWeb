@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCartSafe } from '@/contexts/CartContext';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import { formatUSD } from '@/lib/currency';
 
 // Gift Card Designs for thumbnail display
 const GIFT_CARD_DESIGNS: Record<string, { gradient: string; accent: string; name: string }> = {
@@ -53,14 +54,6 @@ export default function CartIcon() {
       };
     }
   }, [isOpen]);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-VE', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(price);
-  };
 
   const handleClearCart = async () => {
     const confirmed = await confirm({
@@ -137,27 +130,25 @@ export default function CartIcon() {
         <>
           {/* Mobile Backdrop Overlay */}
           <div 
-            className="fixed left-0 right-0 bottom-0 top-14 bg-black/40 backdrop-blur-sm z-40 sm:hidden animate-fade-in" 
+            className="fixed left-0 right-0 bottom-0 top-14 bg-black/40 z-[var(--z-header)] lg:hidden animate-fade-in" 
             aria-hidden="true" 
             onClick={() => setIsOpen(false)}
           />
 
           <div
-            className="cart-dropdown bg-white z-[60] sm:z-50
-              fixed sm:absolute
-              top-20 sm:top-full
-              left-4 right-4 sm:left-auto sm:right-0
-              sm:mt-2
-              w-auto sm:w-[360px]
-              rounded-2xl sm:rounded-xl
-              shadow-2xl sm:shadow-lg
+            className="cart-dropdown bg-white z-[var(--z-dropdown)]
+              fixed lg:absolute
+              top-20 lg:top-full
+              left-4 right-4 lg:left-auto lg:right-0
+              lg:mt-2
+              w-auto lg:w-[360px]
+              max-h-[calc(100dvh-6rem-var(--bottom-nav-h)-env(safe-area-inset-bottom))] lg:max-h-[calc(100dvh-7.5rem)]
+              rounded-2xl lg:rounded-xl
+              shadow-2xl lg:shadow-lg
               border border-line
               overflow-hidden
               flex flex-col
-              animate-mobileDropdownIn sm:animate-none"
-            style={{
-              maxHeight: 'calc(100vh - 120px)',
-            }}
+              animate-mobileDropdownIn lg:animate-none"
           >
             {items.length === 0 ? (
               <div className="p-8 text-center flex flex-col items-center justify-center">
@@ -193,7 +184,7 @@ export default function CartIcon() {
               </div>
 
               {/* Items */}
-              <div className="max-h-96 overflow-y-auto">
+              <div className="min-h-0 flex-1 overflow-y-auto lg:max-h-96">
                 {items.map((item) => (
                   <div key={item.id} className="p-4 border-b border-line hover:bg-surface transition-colors">
                     <div className="flex gap-3">
@@ -304,7 +295,7 @@ export default function CartIcon() {
                           {item.name}
                         </h4>
                         <p className="text-sm font-semibold text-brand-500 mb-2">
-                          {formatPrice(item.price)}
+                          {formatUSD(item.price)}
                         </p>
 
                         {/* Quantity Controls */}
@@ -348,7 +339,7 @@ export default function CartIcon() {
               <div className="p-4 border-t border-line bg-surface">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-semibold text-ink">Total:</span>
-                  <span className="text-lg font-bold text-brand-500">{formatPrice(totalPrice)}</span>
+                  <span className="text-lg font-bold text-brand-500">{formatUSD(totalPrice)}</span>
                 </div>
                 <Link
                   href="/carrito"

@@ -4,7 +4,7 @@
 // Envueltas en React cache(): varias secciones de la misma página no repiten la consulta.
 
 import { cache } from 'react';
-import type { Prisma } from '@prisma/client';
+import type { PaymentMethodType, Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { publicProductInclude, toPublicProduct, type PublicProduct } from '@/lib/dto/product';
 
@@ -174,3 +174,19 @@ export const getTopCategoriesWithProducts = cache(
     );
   }
 );
+
+/** Tipos de método de pago que se muestran en el home ("OTHER" no dice nada al cliente). */
+export type PaymentMethodKind = Exclude<PaymentMethodType, 'OTHER'>;
+
+/**
+ * Tipos de los métodos de pago activos, sin repetir y en el orden del admin.
+ * Solo se lee `type`: los datos bancarios no salen de aquí.
+ */
+export const getActivePaymentMethodKinds = cache(async (): Promise<PaymentMethodKind[]> => {
+  const rows = await prisma.companyPaymentMethod.findMany({
+    where: { isActive: true, type: { not: 'OTHER' } },
+    select: { type: true },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+  });
+  return [...new Set(rows.map((row) => row.type as PaymentMethodKind))];
+});

@@ -970,7 +970,7 @@ export default function PaymentsPage() {
 
                                     {(formData.type === 'ZELLE' || formData.type === 'PAYPAL' || formData.type === 'ZINLI') && (
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-900 mb-2">Email</label>
+                                            <label className="block text-sm font-semibold text-gray-900 mb-2">Correo electrónico</label>
                                             <input
                                                 type="email"
                                                 value={formData.email || ''}

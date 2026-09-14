@@ -444,7 +444,7 @@ export default function CustomersPage() {
                   <thead className="bg-white/40 backdrop-blur-sm border-b border-white/20">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Cliente</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Email</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Correo</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Tipo</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Registro</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Órdenes</th>
@@ -648,7 +648,7 @@ export default function CustomersPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-ink mb-1.5">Email</label>
+                        <label className="block text-xs font-semibold text-ink mb-1.5">Correo electrónico</label>
                         <input
                           type="email"
                           value={formData.email}
@@ -745,7 +745,7 @@ export default function CustomersPage() {
                             <p className="text-sm text-ink font-medium">{selectedCustomer.name || 'Sin nombre'}</p>
                           </div>
                           <div>
-                            <label className="text-xs font-semibold text-muted mb-1 block">Email</label>
+                            <label className="text-xs font-semibold text-muted mb-1 block">Correo electrónico</label>
                             <p className="text-sm text-ink font-medium">{selectedCustomer.email}</p>
                           </div>
                           <div>

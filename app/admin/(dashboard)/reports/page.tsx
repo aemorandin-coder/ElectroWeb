@@ -596,7 +596,15 @@ export default function ReportsPage() {
                                             {products.requests.map((req) => (
                                                 <div key={req.status} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-brand-500/5 transition-colors">
                                                     <p className="text-lg font-bold text-gray-800">{req._count}</p>
-                                                    <p className="text-xs text-gray-500 capitalize">{req.status.toLowerCase()}</p>
+                                                    {(() => {
+    const statusLabels: Record<string, string> = {
+        PENDING: 'Pendiente',
+        IN_PROGRESS: 'En progreso',
+        FULFILLED: 'Cumplida',
+        REJECTED: 'Rechazada',
+    };
+    return <p className="text-xs text-gray-500">{statusLabels[req.status] || req.status}</p>;
+})()}
                                                 </div>
                                             ))}
                                         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { FiX, FiCopy, FiCheck, FiGift, FiUser, FiInfo, FiExternalLink } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -209,7 +210,7 @@ export default function ShareEarnModal() {
                   {/* Thumbnail Imagen */}
                   {item.image ? (
                     <div className="relative aspect-video w-full bg-white dark:bg-gray-800 flex items-center justify-center border-b border-gray-200/30 overflow-hidden">
-                      <img src={item.image} alt={item.title} className="max-h-full max-w-full object-contain p-2 hover:scale-105 transition-transform duration-500" />
+                      <Image src={item.image} alt={item.title} width={320} height={180} className="max-h-full max-w-full object-contain p-2 hover:scale-105 transition-transform duration-500" />
                     </div>
                   ) : (
                     <div className="w-full aspect-video bg-gray-200 dark:bg-gray-600 flex items-center justify-center">

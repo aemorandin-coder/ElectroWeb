@@ -538,9 +538,11 @@ export default function ProfilePage() {
                       />
                       <div className="w-28 h-28 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-4xl font-bold shadow-xl overflow-hidden ring-4 ring-blue-50 group-hover:ring-blue-100 transition-all">
                         {avatarPreview || profile.avatar || profile.image ? (
-                          <img
-                            src={avatarPreview || profile.avatar || profile.image}
+                          <Image
+                            src={(avatarPreview || profile.avatar || profile.image) as string}
                             alt="Profile"
+                            width={112}
+                            height={112}
                             className="w-full h-full rounded-full object-cover"
                           />
                         ) : (

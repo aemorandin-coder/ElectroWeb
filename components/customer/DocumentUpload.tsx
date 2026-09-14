@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { FiUpload, FiFile, FiX, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import Image from 'next/image';
 
 interface DocumentUploadProps {
     label: string;
@@ -100,10 +101,13 @@ export default function DocumentUpload({
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             {preview && (file?.type.startsWith('image/') || currentFileUrl?.match(/\.(jpg|jpeg|png)$/i)) ? (
-                                <img
+                                <Image
                                     src={preview}
                                     alt="Preview"
+                                    width={64}
+                                    height={64}
                                     className="w-16 h-16 object-cover rounded-lg border border-line"
+                                    unoptimized
                                 />
                             ) : (
                                 <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center">

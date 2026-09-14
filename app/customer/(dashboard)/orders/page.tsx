@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { FiPackage, FiClock, FiCheck, FiX, FiTruck, FiShoppingBag, FiEye, FiSearch, FiRefreshCw, FiArrowLeft, FiDollarSign, FiChevronRight } from 'react-icons/fi';
 import { BsCardList } from 'react-icons/bs';
 import Link from 'next/link';
+import Image from 'next/image';
 import OrderTracking from '@/components/orders/OrderTracking';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatPaymentMethod } from '@/lib/format-helpers';
@@ -632,7 +633,7 @@ export default function OrdersPage() {
                     <div key={item.id} className="flex items-center gap-2 p-2 bg-surface rounded-lg">
                       <div className="w-10 h-10 bg-white rounded-lg border border-line flex items-center justify-center overflow-hidden flex-shrink-0">
                         {item.productImage ? (
-                          <img src={item.productImage} alt={item.productName} className="w-full h-full object-cover" />
+                          <Image src={item.productImage} alt={item.productName} width={40} height={40} className="w-full h-full object-cover" />
                         ) : (
                           <FiPackage className="w-4 h-4 text-subtle" />
                         )}

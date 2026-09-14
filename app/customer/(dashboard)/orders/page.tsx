@@ -148,8 +148,8 @@ export default function OrdersPage() {
     const configs: Record<string, { bg: string; text: string; border: string; icon: React.ReactNode; animation?: string; gradient?: string }> = {
       PENDING: { bg: 'bg-amber-100', text: 'text-amber-600', border: 'border-amber-300', icon: <FiClock className="w-4 h-4" />, animation: 'animate-pulse', gradient: 'from-amber-400 to-amber-500' },
       PAID: { bg: 'bg-blue-100', text: 'text-blue-600', border: 'border-blue-300', icon: <FiCheck className="w-4 h-4" />, gradient: 'from-blue-400 to-blue-500' },
-      PROCESSING: { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-300', icon: <FiPackage className="w-4 h-4" />, animation: 'animate-spin-slow', gradient: 'from-purple-400 to-purple-500' },
-      SHIPPED: { bg: 'bg-indigo-100', text: 'text-indigo-600', border: 'border-indigo-300', icon: <FiTruck className="w-4 h-4" />, animation: 'animate-bounce-subtle', gradient: 'from-indigo-400 to-indigo-500' },
+      PROCESSING: { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-300', icon: <FiPackage className="w-4 h-4" />, gradient: 'from-purple-400 to-purple-500' },
+      SHIPPED: { bg: 'bg-indigo-100', text: 'text-indigo-600', border: 'border-indigo-300', icon: <FiTruck className="w-4 h-4" />, gradient: 'from-indigo-400 to-indigo-500' },
       DELIVERED: { bg: 'bg-emerald-100', text: 'text-emerald-600', border: 'border-emerald-300', icon: <FiCheck className="w-4 h-4" />, gradient: 'from-emerald-400 to-emerald-500' },
       CANCELLED: { bg: 'bg-red-100', text: 'text-red-600', border: 'border-red-300', icon: <FiX className="w-4 h-4" />, gradient: 'from-red-400 to-red-500' },
     };
@@ -674,13 +674,6 @@ export default function OrdersPage() {
           document.body
         )
       }
-
-      <style jsx>{`
-        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
-        .animate-spin-slow { animation: spin-slow 3s linear infinite; }
-        .animate-bounce-subtle { animation: bounce-subtle 1s ease-in-out infinite; }
-      `}</style>
     </>
   );
 }

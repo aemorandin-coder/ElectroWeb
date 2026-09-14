@@ -114,7 +114,6 @@ const CardPattern = ({ pattern, accent, secondAccent }: { pattern: string; accen
                 className="absolute inset-0 opacity-30"
                 style={{
                     background: `linear-gradient(45deg, transparent 30%, ${accent}15 50%, transparent 70%)`,
-                    animation: 'shimmer 3s ease-in-out infinite',
                 }}
             />
 
@@ -220,7 +219,6 @@ const CardPattern = ({ pattern, accent, secondAccent }: { pattern: string; accen
                 style={{
                     backgroundImage: `linear-gradient(105deg, transparent 40%, ${accent}10 45%, ${secondAccent || accent}15 50%, ${accent}10 55%, transparent 60%)`,
                     backgroundSize: '200% 200%',
-                    animation: 'gradient-x 4s ease infinite',
                 }}
             />
 
@@ -552,17 +550,6 @@ export default function GiftCardsPage() {
 
     return (
         <div className="min-h-dvh bg-gradient-to-br from-surface via-white to-surface">
-            {/* CSS for animations */}
-            <style jsx global>{`
-                @keyframes shimmer {
-                    0% { transform: translateX(-100%) skewX(-20deg); }
-                    100% { transform: translateX(200%) skewX(-20deg); }
-                }
-                @keyframes float {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-10px); }
-                }
-            `}</style>
 
             <PublicHeader />
 
@@ -708,7 +695,6 @@ export default function GiftCardsPage() {
                                         style={{
                                             backgroundImage: `linear-gradient(90deg, ${selectedDesign.accent}, ${(selectedDesign as any).secondAccent || selectedDesign.accent}, ${selectedDesign.accent})`,
                                             backgroundSize: '200% 100%',
-                                            animation: 'gradient-x 3s ease infinite',
                                         }}
                                     />
                                 </div>

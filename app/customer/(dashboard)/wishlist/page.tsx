@@ -706,21 +706,6 @@ export default function WishlistPage() {
         </div>,
         document.body
       )}
-
-      {/* Styles */}
-      <style jsx>{`
-        @keyframes slideInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slideInUp {
-          animation: slideInUp 0.3s ease-out;
-        }
-        .grid > div {
-          animation: slideInUp 0.5s ease-out forwards;
-          opacity: 0;
-        }
-      `}</style>
     </div>
   );
 }

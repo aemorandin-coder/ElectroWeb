@@ -28,3 +28,14 @@ export function needsProductPage(product: ProductCardData): boolean {
   const pricing = product.specs?.digitalPricing;
   return (Array.isArray(pricing) && pricing.length > 0) || product.deliveryMethod === 'MANUAL';
 }
+
+/** Texto de disponibilidad de una tarjeta. null si está agotado (lo dicen el badge y el botón). */
+export function getStockLabel(
+  product: Pick<ProductCardData, 'productType' | 'stock'>,
+  lowStockThreshold: number
+): { text: string; className: string } | null {
+  if (product.productType === 'DIGITAL') return { text: '● Entrega digital', className: 'text-success-strong' };
+  if (product.stock <= 0) return null;
+  if (product.stock <= lowStockThreshold) return { text: `● Quedan ${product.stock}`, className: 'text-warning-strong' };
+  return { text: '● En stock', className: 'text-success-strong' };
+}

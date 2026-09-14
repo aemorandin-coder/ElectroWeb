@@ -4,7 +4,7 @@ import AddToCartButton from './AddToCartButton';
 import Price from './Price';
 import ProductBadge, { getProductBadges } from './ProductBadge';
 import ShareButton from './ShareButton';
-import type { ProductCardData } from './productCardData';
+import { getStockLabel, type ProductCardData } from './productCardData';
 
 export type { ProductCardData } from './productCardData';
 
@@ -25,20 +25,9 @@ interface ProductCardProps {
 export default function ProductCard({ product, exchangeRateVES, lowStockThreshold = 3, priority = false }: ProductCardProps) {
   const image = product.mainImage || product.images?.[0] || '/images/no-image.png';
   const badges = getProductBadges(product);
-  const isDigital = product.productType === 'DIGITAL';
   const href = `/productos/${product.slug}`;
   const meta = [product.brand?.name, product.category?.name].filter(Boolean).join(' · ');
-
-  let stockLabel: { text: string; className: string } | null = null;
-  if (isDigital) {
-    stockLabel = { text: '● Entrega digital', className: 'text-success-strong' };
-  } else if (product.stock <= 0) {
-    stockLabel = null; // el badge y el botón ya dicen "Agotado"
-  } else if (product.stock <= lowStockThreshold) {
-    stockLabel = { text: `● Quedan ${product.stock}`, className: 'text-warning-strong' };
-  } else {
-    stockLabel = { text: '● En stock', className: 'text-success-strong' };
-  }
+  const stockLabel = getStockLabel(product, lowStockThreshold);
 
   return (
     <article className="relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-white transition-shadow lg:hover:shadow-md">

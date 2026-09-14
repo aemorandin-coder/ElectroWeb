@@ -43,16 +43,13 @@
   --color-whatsapp: #25d366;
 }
 
-/* Fuentes: las variables las define app/layout.tsx en <body>, por eso van inline */
+/* Fuentes: next/font define --font-inter y --font-tektrron en <html> (app/layout.tsx), por eso van inline */
 @theme inline {
-  --font-sans: var(--font-inter);
-  --font-brand: var(--font-tektrron), var(--font-inter);
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-brand: var(--font-tektrron), var(--font-inter), sans-serif;
 }
 
 :root {
-  /* Inter todavía no se carga (C-11): pila de fuentes del sistema */
-  --font-inter: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-
   /* Capas (PLAN.md §1.3). Uso: z-[var(--z-modal)] */
   --z-sticky: 30;
   --z-header: 40;
@@ -170,7 +167,7 @@ textarea, [contenteditable="true"] {
 body {
   background: #ffffff;
   color: var(--color-ink);
-  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

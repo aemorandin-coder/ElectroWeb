@@ -155,11 +155,10 @@ export default function PublicHeader({ settings }: { settings?: CompanySettings 
                 </div>
               )}
               <h1
-                className={`text-sm min-[380px]:text-base sm:text-2xl font-bold tracking-tight whitespace-nowrap transition-colors duration-300 ${isBlueStyle ? 'text-white' : 'text-transparent bg-clip-text'
+                className={`font-brand text-sm min-[380px]:text-base sm:text-2xl font-bold tracking-tight whitespace-nowrap transition-colors duration-300 ${isBlueStyle ? 'text-white' : 'text-transparent bg-clip-text'
                   }`}
                 style={{
                   backgroundImage: isBlueStyle ? 'none' : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
-                  fontFamily: 'var(--font-tektrron), sans-serif',
                   WebkitBackgroundClip: isBlueStyle ? 'unset' : 'text',
                 }}
               >

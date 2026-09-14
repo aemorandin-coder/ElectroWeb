@@ -49,7 +49,8 @@ function PublicHeader() {
   return (
     // pointer-events-none: cuando el buscador móvil se esconde, la franja vacía no bloquea los toques
     <header className="pointer-events-none sticky top-0 z-[var(--z-header)]">
-      <div className="pointer-events-auto relative z-10 border-b border-line bg-white/95 backdrop-blur-md">
+      {/* Sin backdrop-blur: crearía un contenedor para los "fixed" de adentro y los menús móviles de carrito y cuenta quedarían recortados */}
+      <div className="pointer-events-auto relative z-10 border-b border-line bg-white">
         <Container className="flex h-14 items-center gap-3 lg:gap-6">
           <Link href="/" aria-label={`${companyName}, ir al inicio`} className="flex min-w-0 items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-brand-500 lg:shrink-0">
             {settings?.logo && (

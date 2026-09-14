@@ -8,7 +8,6 @@ import ShareEarnModal from "@/components/social/ShareEarnModal";
 import NotificationToast from "@/components/notifications/NotificationToast";
 import DynamicFavicon from "@/components/DynamicFavicon";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
-import MobileScrollProgress from "@/components/public/MobileScrollProgress";
 import MobileNavBar from "@/components/public/MobileNavBar";
 import { GuidedTourWrapper } from "@/components/onboarding/GuidedTourWrapper";
 import { getPublicSettings, getSiteSettings } from "@/lib/site-settings";
@@ -143,11 +142,10 @@ export default async function RootLayout({
       <body className="antialiased" suppressHydrationWarning>
         <Providers initialSettings={publicSettings} navCategories={navCategories}>
           <NotificationProvider>
-            <MobileScrollProgress />
             <div className="page-transition-wrapper">
               {children}
             </div>
-            {/* [MOBILE ONLY] Global floating nav bar - OUTSIDE wrapper for fixed positioning */}
+            {/* Barra inferior móvil: fuera del wrapper para que "fixed" sea relativo a la ventana */}
             <MobileNavBar />
             <WhatsAppButton />
             <NotificationToast />

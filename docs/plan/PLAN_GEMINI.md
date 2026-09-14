@@ -153,8 +153,9 @@ Además, `tsc` sin errores nuevos. Si `tsc` marca un tipo en el layout de custom
 
 ---
 
-### G-10 · z-index a capas · Depende: **C-10 y C-21 HECHO**
-(Antes de C-21 la barra móvil usa `z-[999]`; si bajas los modales antes, quedarían debajo de la barra.)
+### G-10 · z-index a capas · Depende: **C-10 y C-21 HECHO en `main`**
+Desde C-21 la barra inferior de la tienda usa `z-[var(--z-bottomnav)]` (60) y los toasts `--z-toast` (90). Antes de empezar: `git show main:docs/plan/estado/C-21.md` debe decir `Estado: HECHO`; si no → `BLOQUEADO`.
+**Importante:** la barra del panel de cliente (`CustomerMobileNavBar`) tiene `zIndex: 99999` en línea. Hay que bajarla **en la misma tarea**: si solo bajas los modales, quedan debajo de esa barra.
 ```bash
 bash -c '
 sed -i -E "s/z-\[10000[01]\]/z-[var(--z-modal)]/g" \
@@ -166,14 +167,24 @@ sed -i -E "s/z-\[10000[01]\]/z-[var(--z-modal)]/g" \
   components/modals/RechargeModalV2.tsx
 sed -i -E "s/z-\[999\]/z-[var(--z-modal)]/g" components/social/ShareEarnModal.tsx
 sed -i -E "s/z-\[9998\]/z-[var(--z-popup)]/g" components/onboarding/GuidedTour.tsx
+sed -i "s/zIndex: 99999,/zIndex: '"'"'var(--z-bottomnav)'"'"',/" components/customer/CustomerMobileNavBar.tsx
+sed -i -E "s/style=\{\{ zIndex: (99999|999999|1000000|100001) \}\}/style={{ zIndex: '"'"'var(--z-modal)'"'"' }}/" \
+  "app/customer/(dashboard)/profile/page.tsx" \
+  "app/customer/(dashboard)/orders/page.tsx" \
+  components/modals/RechargeModalV2.tsx
 '
 ```
+(Claude probó estos comandos sobre una copia de `main` el 2026-09-14.)
+
 Verificación:
 ```bash
-grep -rnoE "z-\[[0-9]{3,}\]" app/customer components/modals components/social components/onboarding   # Esperado: 0
-grep -n "\-\-z-modal" app/globals.css                                                                  # Debe existir
+grep -rnoE "z-\[[0-9]{3,}\]|zIndex: ?[0-9]{3,}" app/customer components/customer components/modals components/social components/onboarding
+# Esperado: solo 3 líneas de components/onboarding/GuidedTour.tsx (9998, 9999, 10000). Son internas
+# de su propia capa y NO se tocan.
+grep -rn "var(--z-" app/customer components/customer components/modals components/social components/onboarding | wc -l   # 13
+npx tsc --noEmit
 ```
-QA: a 360px, abre un diálogo de confirmación en `/customer/addresses` y verifica que tapa la barra inferior.
+QA: a 360px, en `/customer/addresses` abre "Agregar dirección" y verifica que el modal tapa la barra inferior del panel.
 
 ---
 

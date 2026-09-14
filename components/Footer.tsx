@@ -19,8 +19,9 @@ export default function Footer() {
   // Sanitizar el número de WhatsApp (eliminar +, espacios, guiones)
   const waNumber = settings?.whatsapp?.replace(/\D/g, '') || '';
 
+  // data-site-footer: en móvil, globals.css le suma el alto de la barra inferior (C-21)
   return (
-    <footer className="bg-[#212529] text-white pt-10 pb-20 lg:pb-8">
+    <footer data-site-footer className="bg-ink text-white pt-10 pb-8">
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 

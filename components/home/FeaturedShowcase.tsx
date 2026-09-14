@@ -24,7 +24,12 @@ export default function FeaturedShowcase({ products, exchangeRateVES, lowStockTh
   return (
     <section aria-labelledby="vitrina-title" className="bg-surface pb-6 pt-3 lg:py-8">
       <Container>
-        <SectionHeader id="vitrina-title" title="Destacados de la semana" href="/productos" />
+        {/* En móvil, "Destacados" en una línea: el título en dos líneas empujaba el botón de la primera tarjeta bajo la barra */}
+        <SectionHeader
+          id="vitrina-title"
+          title={<>Destacados<span className="hidden sm:inline"> de la semana</span></>}
+          href="/productos"
+        />
 
         <div className="xl:hidden">
           <ProductShelf label="Destacados de la semana" variant="featured">

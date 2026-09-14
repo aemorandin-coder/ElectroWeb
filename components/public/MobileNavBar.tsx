@@ -1,524 +1,207 @@
 'use client';
 
-// [MOBILE ONLY] Premium Floating Bottom Navigation Bar
-// Features: Floating design with rounded corners, scroll-based opacity transitions,
-// premium icons with glow effects, smooth animations, and tactile feedback
-
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState, type ComponentType } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  FiBookOpen,
+  FiGift,
+  FiGrid,
+  FiHome,
+  FiLayers,
+  FiMail,
+  FiMoreHorizontal,
+  FiPackage,
+  FiShoppingCart,
+  FiTool,
+  FiX,
+} from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
-import { FiX } from 'react-icons/fi';
 
-// [MOBILE ONLY] Premium SVG Icons with refined design
-const PremiumHomeIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
-    >
-        <path
-            d="M3 9.5L12 3L21 9.5V20C21 20.5523 20.5523 21 20 21H15V14H9V21H4C3.44772 21 3 20.5523 3 20V9.5Z"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-        <path
-            d="M9 21V14H15V21"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-    </svg>
-);
+type IconType = ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
 
-const PremiumProductsIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
-    >
-        <rect
-            x="3" y="3" width="7" height="7" rx="1.5"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-        <rect
-            x="14" y="3" width="7" height="7" rx="1.5"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-        <rect
-            x="3" y="14" width="7" height="7" rx="1.5"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-        <rect
-            x="14" y="14" width="7" height="7" rx="1.5"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-    </svg>
-);
-
-const PremiumCategoriesIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
-    >
-        <circle
-            cx="12" cy="7" r="4"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-        <circle
-            cx="6" cy="17" r="3"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-        <circle
-            cx="18" cy="17" r="3"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-    </svg>
-);
-
-const PremiumGiftIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
-    >
-        <rect
-            x="3" y="8" width="18" height="13" rx="2"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-        <path
-            d="M12 8V21"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-        />
-        <path
-            d="M3 12H21"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-        />
-        <path
-            d="M7.5 8C7.5 8 7.5 4 10 4C12 4 12 6 12 8"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            strokeLinecap="round"
-        />
-        <path
-            d="M16.5 8C16.5 8 16.5 4 14 4C12 4 12 6 12 8"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            strokeLinecap="round"
-        />
-    </svg>
-);
-
-const PremiumMenuIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
-    >
-        <circle
-            cx="12" cy="5" r="2"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.5)' : 'currentColor'}
-        />
-        <circle
-            cx="12" cy="12" r="2"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.5)' : 'currentColor'}
-        />
-        <circle
-            cx="12" cy="19" r="2"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.5)' : 'currentColor'}
-        />
-    </svg>
-);
-
-// [MOBILE ONLY] Premium icon for Servicios (Gear)
-const PremiumServiciosIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
-    >
-        <path
-            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-        <circle
-            cx="12" cy="12" r="3"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-    </svg>
-);
-
-// [MOBILE ONLY] Premium icon for Cursos (Book)
-const PremiumCursosIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
-    >
-        <path
-            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill={active ? 'rgba(42, 99, 205, 0.15)' : 'none'}
-        />
-    </svg>
-);
-
-// [MOBILE ONLY] Premium icon for Contacto (Envelope)
-const PremiumContactoIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
-    >
-        <path
-            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-    </svg>
-);
-
-// [MOBILE ONLY] Premium icon for Solicitar Producto (Package/Box)
-const PremiumSolicitarIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
-    >
-        <path
-            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill={active ? 'rgba(42, 99, 205, 0.15)' : 'none'}
-        />
-    </svg>
-);
-
-// [MOBILE ONLY] Premium icon for Cart (Shopping Cart)
-const PremiumCartIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
-    >
-        <path
-            d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.07 15.93 4.52 17 5.41 17H17M17 17A2 2 0 1017 21 2 2 0 0017 17ZM9 17A2 2 0 109 21 2 2 0 009 17Z"
-            stroke="currentColor"
-            strokeWidth={active ? 2.5 : 2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'}
-        />
-    </svg>
-);
-
-const mainNavItems = [
-    { href: '/', label: 'Inicio', Icon: PremiumHomeIcon },
-    { href: '/productos', label: 'Productos', Icon: PremiumProductsIcon },
-    { href: '/categorias', label: 'Categorias', Icon: PremiumCategoriesIcon },
-    { href: '/carrito', label: 'Carrito', Icon: PremiumCartIcon },
+const MAIN_ITEMS: Array<{ href: string; label: string; Icon: IconType }> = [
+  { href: '/', label: 'Inicio', Icon: FiHome },
+  { href: '/productos', label: 'Productos', Icon: FiGrid },
+  { href: '/categorias', label: 'Categorías', Icon: FiLayers },
+  { href: '/carrito', label: 'Carrito', Icon: FiShoppingCart },
 ];
 
-const drawerNavItems = [
-    { href: '/gift-cards', label: 'Gift Cards', Icon: PremiumGiftIcon },
-    { href: '/servicios', label: 'Servicios', Icon: PremiumServiciosIcon },
-    { href: '/cursos', label: 'Cursos', Icon: PremiumCursosIcon },
-    { href: '/contacto', label: 'Contacto', Icon: PremiumContactoIcon },
-    { href: '/solicitar-producto', label: 'Solicitar', Icon: PremiumSolicitarIcon },
+const DRAWER_ITEMS: Array<{ href: string; label: string; Icon: IconType }> = [
+  { href: '/gift-cards', label: 'Gift Cards', Icon: FiGift },
+  { href: '/servicios', label: 'Servicios', Icon: FiTool },
+  { href: '/cursos', label: 'Cursos', Icon: FiBookOpen },
+  { href: '/contacto', label: 'Contacto', Icon: FiMail },
+  { href: '/solicitar-producto', label: 'Solicitar un producto', Icon: FiPackage },
 ];
 
+/**
+ * Barra inferior de la tienda (solo < lg, PLAN.md §2). Deja libre `--bottom-nav-h` abajo:
+ * globals.css agrega ese espacio al final de la página para que nada quede tapado.
+ * "Más" abre un panel accesible: Esc para cerrar, foco atrapado dentro y devuelto al botón.
+ */
 export default function MobileNavBar() {
-    // Unidades, igual que el contador del header
-    const { totalItems: cartCount } = useCart();
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [activeItem, setActiveItem] = useState<string | null>(null);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const pathname = usePathname();
-    const navRef = useRef<HTMLElement>(null);
+  const { totalItems } = useCart();
+  const pathname = usePathname();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  // Al cerrar con Esc, la X o el fondo, el foco vuelve a "Más"; al elegir un enlace, no
+  const restoreFocusRef = useRef(true);
 
-    // Lock body scroll when drawer is open
-    useBodyScrollLock(isDrawerOpen);
+  useBodyScrollLock(isDrawerOpen);
 
-    // [MOBILE ONLY] Scroll detection for opacity transition
-    const handleScroll = useCallback(() => {
-        const scrollY = window.scrollY;
-        setIsScrolled(scrollY > 100);
-    }, []);
+  useEffect(() => {
+    if (!isDrawerOpen) return;
+    const drawer = drawerRef.current;
+    const moreButton = moreButtonRef.current;
+    drawer?.querySelector<HTMLElement>('a[href], button')?.focus();
 
-    useEffect(() => {
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        handleScroll(); // Initial check
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [handleScroll]);
-
-    const isActive = (href: string) => {
-        if (href === '/') return pathname === '/';
-        return pathname.startsWith(href);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setIsDrawerOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab' || !drawer) return;
+      const focusable = Array.from(drawer.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
 
-    // [MOBILE ONLY] Tactile feedback on touch
-    const handleTouchStart = (href: string) => {
-        setActiveItem(href);
+    // Botón "atrás" del teléfono con el panel abierto: se cierra en vez de quedar abierto en otra página
+    const onPopState = () => {
+      restoreFocusRef.current = false;
+      setIsDrawerOpen(false);
     };
 
-    const handleTouchEnd = () => {
-        setTimeout(() => setActiveItem(null), 150);
+    document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('popstate', onPopState);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('popstate', onPopState);
+      if (restoreFocusRef.current) moreButton?.focus({ preventScroll: true });
+      restoreFocusRef.current = true;
     };
+  }, [isDrawerOpen]);
 
-    // [MOBILE ONLY] Don't render on customer or admin routes - they have their own nav
-    const isCustomerRoute = pathname?.startsWith('/customer');
-    const isAdminRoute = pathname?.startsWith('/admin');
-    const shouldHide = isCustomerRoute || isAdminRoute;
+  // Paneles de cliente y admin tienen su propia navegación
+  if (pathname?.startsWith('/customer') || pathname?.startsWith('/admin')) return null;
 
-    // Always render the fragment but conditionally show content
-    // This ensures hooks are always called in the same order
-    if (shouldHide) {
-        return null;
-    }
+  const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname?.startsWith(href));
+  const closeDrawer = () => setIsDrawerOpen(false);
+  const navigateFromDrawer = () => {
+    restoreFocusRef.current = false;
+    setIsDrawerOpen(false);
+  };
+  const itemClass = 'flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-medium focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white';
 
-    return (
-        <>
-            {/* Backdrop Overlay for Drawer */}
-            {isDrawerOpen && (
-                <div
-                    className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[998] transition-opacity duration-300 animate-fadeIn"
-                    onClick={() => setIsDrawerOpen(false)}
-                />
-            )}
-
-            {/* Premium Floating Drawer / Modal Menu */}
-            {isDrawerOpen && (
-                <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0f172a]/95 backdrop-blur-2xl border-t border-white/10 rounded-t-[28px] p-6 z-[999] shadow-[0_-15px_30px_rgba(0,0,0,0.5)] safe-area-bottom animate-slideUp">
-                    {/* Drag Handle */}
-                    <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-5" />
-                    
-                    <div className="flex justify-between items-center mb-5">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Menú de Navegación</h3>
-                        <button
-                            onClick={() => setIsDrawerOpen(false)}
-                            className="text-white/60 hover:text-white p-1.5 rounded-full bg-white/5 active:scale-90 transition-all cursor-pointer"
-                        >
-                            <FiX className="w-5 h-5" />
-                        </button>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3.5 mb-6">
-                        {drawerNavItems.map((item) => {
-                            const { Icon } = item;
-                            const active = isActive(item.href);
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    onClick={() => setIsDrawerOpen(false)}
-                                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 ${
-                                        active
-                                            ? 'bg-[#2a63cd]/15 border-[#2a63cd]/40 text-[#60a5fa] shadow-[0_4px_15px_rgba(42,99,205,0.15)]'
-                                            : 'bg-white/5 border-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-                                    } ${
-                                        item.href === '/solicitar-producto'
-                                            ? 'col-span-2 flex-row gap-3 py-3 bg-gradient-to-r from-[#2a63cd]/10 to-blue-500/5 border-[#2a63cd]/30 text-white hover:opacity-90'
-                                            : ''
-                                    }`}
-                                >
-                                    <Icon active={active} />
-                                    <span className={`text-[11px] font-bold tracking-wide ${item.href === '/solicitar-producto' ? 'mt-0' : 'mt-1.5'}`}>
-                                        {item.label}
-                                    </span>
-                                </Link>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* [MOBILE ONLY] Premium Floating Bottom Tab Bar */}
-            <nav
-                ref={navRef}
-                className="lg:hidden fixed z-[999] safe-area-bottom mobile-floating-nav"
-                style={{
-                    bottom: '12px',
-                    left: '12px',
-                    right: '12px',
-                    borderRadius: '20px',
-                    background: isScrolled
-                        ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)'
-                        : 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.95) 100%)',
-                    boxShadow: isScrolled
-                        ? '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 12px rgba(42, 99, 205, 0.08)'
-                        : '0 8px 32px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.08)',
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                    transition: 'all 0.3s ease-in-out',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                }}
-            >
-                <div className="flex items-center justify-around h-16 w-full px-2">
-                    {/* Main Nav Items */}
-                    {mainNavItems.map((item) => {
-                        const { Icon } = item;
-                        const active = isActive(item.href);
-                        const isTouched = activeItem === item.href;
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onTouchStart={() => handleTouchStart(item.href)}
-                                onTouchEnd={handleTouchEnd}
-                                className="flex flex-col items-center justify-center h-14 relative flex-1"
-                                style={{
-                                    color: active ? '#60a5fa' : 'rgba(255, 255, 255, 0.65)',
-                                    transform: isTouched ? 'scale(0.92)' : 'scale(1)',
-                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                }}
-                            >
-                                {active && (
-                                    <div
-                                        className="absolute inset-0 rounded-xl"
-                                        style={{
-                                            background: 'radial-gradient(ellipse at center, rgba(42, 99, 205, 0.25) 0%, transparent 70%)',
-                                            pointerEvents: 'none',
-                                        }}
-                                    />
-                                )}
-                                <div className="relative">
-                                    <Icon active={active} />
-                                    {item.href === '/carrito' && cartCount > 0 && (
-                                        <span className="absolute -top-1.5 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[8px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-[#0f172a] shadow-md shadow-red-500/30 animate-pulse">
-                                            {cartCount > 9 ? '9+' : cartCount}
-                                        </span>
-                                    )}
-                                </div>
-                                <span
-                                    className="text-[9.5px] mt-0.5 relative z-10 text-center truncate font-bold"
-                                    style={{
-                                        letterSpacing: active ? '0.01em' : '0',
-                                    }}
-                                >
-                                    {item.label}
-                                </span>
-                            </Link>
-                        );
-                    })}
-
-                    {/* More button */}
-                    <button
-                        onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-                        onTouchStart={() => handleTouchStart('more')}
-                        onTouchEnd={handleTouchEnd}
-                        className="flex flex-col items-center justify-center h-14 relative flex-1 cursor-pointer bg-transparent border-0 outline-none"
-                        style={{
-                            color: isDrawerOpen ? '#60a5fa' : 'rgba(255, 255, 255, 0.65)',
-                            transform: activeItem === 'more' ? 'scale(0.92)' : 'scale(1)',
-                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        }}
+  return (
+    <>
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-[var(--z-drawer)] lg:hidden">
+          <div className="absolute inset-0 bg-ink/60 motion-safe:animate-fadeIn" onClick={closeDrawer} aria-hidden="true" />
+          <div
+            ref={drawerRef}
+            id="mobile-more-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-more-title"
+            className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-brand-950 px-4 pt-3 text-white shadow-lg motion-safe:animate-slideInUp pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
+          >
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20" aria-hidden="true" />
+            <div className="mb-4 flex items-center justify-between">
+              <h2 id="mobile-more-title" className="text-sm font-semibold text-white/80">Más secciones</h2>
+              <button
+                type="button"
+                onClick={closeDrawer}
+                aria-label="Cerrar menú"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-white"
+              >
+                <FiX className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+            <ul className="grid grid-cols-2 gap-3">
+              {DRAWER_ITEMS.map(({ href, label, Icon }, index) => {
+                const active = isActive(href);
+                const wide = index === DRAWER_ITEMS.length - 1;
+                return (
+                  <li key={href} className={wide ? 'col-span-2' : undefined}>
+                    <Link
+                      href={href}
+                      onClick={navigateFromDrawer}
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-white ${
+                        active ? 'bg-brand-500 text-white' : 'bg-white/10 text-white hover:bg-white/15'
+                      }`}
                     >
-                        {isDrawerOpen && (
-                            <div
-                                className="absolute inset-0 rounded-xl"
-                                style={{
-                                    background: 'radial-gradient(ellipse at center, rgba(42, 99, 205, 0.25) 0%, transparent 70%)',
-                                    pointerEvents: 'none',
-                                }}
-                            />
-                        )}
-                        <div className="relative">
-                            <PremiumMenuIcon active={isDrawerOpen} />
-                        </div>
-                        <span className="text-[9.5px] mt-0.5 relative z-10 text-center truncate font-bold">
-                            Más
-                        </span>
-                    </button>
-                </div>
-            </nav>
+                      <Icon className="h-5 w-5 shrink-0" aria-hidden />
+                      {label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      )}
 
-            <style jsx>{`
-                /* [MOBILE ONLY] Slide up animation for menu sheet */
-                @keyframes slide-up {
-                    from { 
-                        transform: translateY(100%); 
-                        opacity: 0.8;
-                    }
-                    to { 
-                        transform: translateY(0); 
-                        opacity: 1;
-                    }
-                }
-                .animate-slide-up {
-                    animation: slide-up 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-                
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                .animate-fadeIn {
-                    animation: fadeIn 0.2s ease-out forwards;
-                }
-                
-                @keyframes slideUp {
-                    from { transform: translateY(100%); }
-                    to { transform: translateY(0); }
-                }
-                .animate-slideUp {
-                    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                }
-                
-                /* [MOBILE ONLY] Safe area for iOS */
-                .safe-area-bottom {
-                    padding-bottom: env(safe-area-inset-bottom, 0);
-                }
-                
-                /* [MOBILE ONLY] Remove tap highlight */
-                .mobile-floating-nav a,
-                .mobile-floating-nav button {
-                    -webkit-tap-highlight-color: transparent;
-                }
-            `}</style>
-        </>
-    );
+      {/* id="mobile-bottom-nav": globals.css reserva su alto al final de la página */}
+      <nav
+        id="mobile-bottom-nav"
+        aria-label="Navegación inferior"
+        className="fixed inset-x-3 z-[var(--z-bottomnav)] rounded-2xl bg-brand-950/95 shadow-lg ring-1 ring-white/10 backdrop-blur-md lg:hidden bottom-[calc(0.75rem+env(safe-area-inset-bottom))]"
+      >
+        <ul className="flex h-16 items-stretch px-1.5 py-1.5">
+          {MAIN_ITEMS.map(({ href, label, Icon }) => {
+            const active = isActive(href);
+            const isCart = href === '/carrito';
+            return (
+              <li key={href} className="flex min-w-0 flex-1">
+                <Link
+                  href={href}
+                  aria-current={active ? 'page' : undefined}
+                  aria-label={isCart && totalItems > 0 ? `Carrito, ${totalItems} ${totalItems === 1 ? 'producto' : 'productos'}` : undefined}
+                  className={`${itemClass} ${active ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white'}`}
+                >
+                  <span className="relative">
+                    <Icon className="h-5 w-5" aria-hidden />
+                    {isCart && totalItems > 0 && (
+                      <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-deal px-1 text-[11px] font-semibold leading-none text-white" aria-hidden="true">
+                        {totalItems > 99 ? '99+' : totalItems}
+                      </span>
+                    )}
+                  </span>
+                  <span className="max-w-full truncate">{label}</span>
+                </Link>
+              </li>
+            );
+          })}
+          <li className="flex min-w-0 flex-1">
+            <button
+              ref={moreButtonRef}
+              type="button"
+              onClick={() => setIsDrawerOpen((open) => !open)}
+              aria-haspopup="dialog"
+              aria-expanded={isDrawerOpen}
+              aria-controls="mobile-more-menu"
+              className={`${itemClass} ${isDrawerOpen ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white'}`}
+            >
+              <FiMoreHorizontal className="h-5 w-5" aria-hidden="true" />
+              <span>Más</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </>
+  );
 }

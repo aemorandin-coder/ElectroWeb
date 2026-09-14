@@ -4,8 +4,9 @@ import { Children, useCallback, useEffect, useRef, useState, type ReactNode } fr
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 const ITEM_WIDTHS = {
-  // Vitrina: en móvil una tarjeta grande y se asoma la siguiente; tres visibles desde lg
-  featured: 'w-[78vw] sm:w-[45vw] lg:w-[calc((100%-2rem)/3)]',
+  // Vitrina: en móvil una tarjeta grande y se asoma buena parte de la siguiente; tres visibles desde lg.
+  // 60vw: a 360×740 el botón de la primera tarjeta queda por encima de la barra inferior (C-21)
+  featured: 'w-[60vw] sm:w-[40vw] lg:w-[calc((100%-2rem)/3)]',
   // Shelves: dos visibles y se asoma la tercera en móvil; cuatro en desktop
   default: 'w-[44vw] sm:w-[30vw] lg:w-[calc((100%-3rem)/4)]',
 };

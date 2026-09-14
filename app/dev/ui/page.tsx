@@ -17,7 +17,7 @@ const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 10
 const SAMPLE: ProductCardData[] = [
   { id: 'd1', name: 'Laptop Lenovo IdeaPad 3 15" Ryzen 5 7520U 16GB RAM 512GB SSD', slug: 'laptop-lenovo', shortCode: 'LAP1', priceUSD: 1099, compareAtPriceUSD: 1299, stock: 12, images: [], category: { name: 'Laptops' }, brand: { name: 'Lenovo' }, createdAt: daysAgo(3), productType: 'PHYSICAL' },
   { id: 'd2', name: 'Control DualSense PS5', slug: 'dualsense', priceUSD: 69.99, stock: 2, images: [], category: { name: 'Consolas' }, brand: { name: 'Sony' }, createdAt: daysAgo(60), productType: 'PHYSICAL' },
-  { id: 'd3', name: 'Gift Card Steam', slug: 'steam', priceUSD: 11, stock: 0, images: [], category: { name: 'Gift Cards' }, createdAt: daysAgo(90), productType: 'DIGITAL', specs: { digitalPricing: [{ amount: 10, salePrice: 11 }] } },
+  { id: 'd3', name: 'Gift Card Steam', slug: 'steam', priceUSD: 11, stock: 0, images: [], category: { name: 'Gift Cards' }, createdAt: daysAgo(90), productType: 'DIGITAL', digitalVariants: [{ id: 'v10', label: '$10', priceUSD: 11 }, { id: 'v20', label: '$20', priceUSD: 21.5 }] },
   { id: 'd4', name: 'Monitor Samsung 24" 75Hz', slug: 'monitor', priceUSD: 149, compareAtPriceUSD: 179, stock: 0, images: [], category: { name: 'Monitores' }, brand: { name: 'Samsung' }, createdAt: daysAgo(200), productType: 'PHYSICAL' },
   { id: 'd5', name: 'Audífonos HyperX Cloud II', slug: 'hyperx', priceUSD: 79, stock: 40, images: [], category: { name: 'Audio' }, brand: { name: 'HyperX' }, createdAt: daysAgo(10), productType: 'PHYSICAL' },
 ];

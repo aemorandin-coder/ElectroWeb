@@ -16,17 +16,24 @@ export interface ProductCardData {
   brand?: { name: string } | null;
   createdAt?: string | Date | null;
   specs?: Record<string, unknown> | null;
+  /** Montos de productos digitales (C-60) */
+  digitalVariants?: { id: string; label: string; priceUSD: number }[];
   weightKg?: number | null;
   dimensions?: string | null;
   isConsolidable?: boolean;
   shippingCost?: number | null;
 }
 
-/** Los productos digitales con denominaciones o con recarga manual se compran desde su página. */
+/** Los productos digitales con montos o con recarga directa se compran desde su página (se elige monto o cuenta). */
 export function needsProductPage(product: ProductCardData): boolean {
   if (product.productType !== 'DIGITAL') return false;
-  const pricing = product.specs?.digitalPricing;
-  return (Array.isArray(pricing) && pricing.length > 0) || product.deliveryMethod === 'MANUAL';
+  return (product.digitalVariants?.length ?? 0) > 0 || product.deliveryMethod === 'MANUAL';
+}
+
+/** Hay varios montos: el precio de la tarjeta es "Desde". */
+export function hasPriceRange(product: ProductCardData): boolean {
+  const prices = new Set((product.digitalVariants ?? []).map((v) => v.priceUSD));
+  return prices.size > 1;
 }
 
 /** Texto de disponibilidad de una tarjeta. null si está agotado (lo dicen el badge y el botón). */

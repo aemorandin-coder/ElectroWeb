@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type DigitalVariantInput } from '@/lib/digital-variants';
 import { createNotification } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
@@ -101,7 +102,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate required fields
-    if (!body.name || !body.sku || !body.categoryId || body.priceUSD === undefined) {
+    // En digitales el precio sale de las variantes (C-60)
+    if (!body.name || !body.sku || !body.categoryId || (body.productType !== 'DIGITAL' && body.priceUSD === undefined)) {
       return NextResponse.json({
         error: 'Campos requeridos: name, sku, categoryId, priceUSD'
       }, { status: 400 });
@@ -161,8 +163,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 400 });
     }
 
+    // Variantes digitales (C-60): se validan antes de crear nada
+    let variants: DigitalVariantInput[] = [];
+    if (body.productType === 'DIGITAL') {
+      const parsed = digitalVariantsInputSchema.safeParse(body.digitalVariants ?? []);
+      if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error.issues[0]?.message || 'Montos digitales inválidos' }, { status: 400 });
+      }
+      variants = parsed.data;
+    }
+
     const stock = parseInt(body.stock) || 0;
-    const priceUSD = parseFloat(body.priceUSD);
+    const priceUSD = body.productType === 'DIGITAL' ? minActivePrice(variants) : parseFloat(body.priceUSD);
 
     // Validar y procesar imágenes
     let imageArray: string[] = [];
@@ -178,7 +190,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const product = await prisma.product.create({
+    const product = await prisma.$transaction(async (tx) => {
+      const created = await tx.product.create({
       data: {
         name: body.name,
         sku: body.sku,
@@ -209,28 +222,19 @@ export async function POST(request: NextRequest) {
         digitalPlatform: body.productType === 'DIGITAL' ? body.digitalPlatform : null,
         digitalRegion: body.productType === 'DIGITAL' ? body.digitalRegion : null,
         deliveryMethod: body.productType === 'DIGITAL' ? (body.deliveryMethod || 'MANUAL') : null,
+        redemptionInstructions: body.productType === 'DIGITAL' ? (body.redemptionInstructions || null) : null,
+        accountFieldLabel: body.productType === 'DIGITAL' && body.accountFieldLabel ? String(body.accountFieldLabel).slice(0, 80) : null,
+        accountFieldHint: body.productType === 'DIGITAL' && body.accountFieldHint ? String(body.accountFieldHint).slice(0, 160) : null,
         // Shipping Fields (only for PHYSICAL products)
         weightKg: body.productType === 'PHYSICAL' ? (body.weightKg || 0) : null,
         dimensions: body.productType === 'PHYSICAL' ? (body.dimensions || null) : null,
         isConsolidable: body.productType === 'PHYSICAL' ? (body.isConsolidable !== false) : false,
         shippingCost: body.productType === 'PHYSICAL' && !body.isConsolidable ? (body.shippingCost || 0) : 0,
       },
-    });
-
-    // Si es producto digital con precios por denominación, guardarlos en specs
-    if (body.productType === 'DIGITAL' && body.digitalPricing && Array.isArray(body.digitalPricing)) {
-      // Guardamos la configuración de precios digitales en el campo specs
-      const digitalSpecs = {
-        digitalPricing: body.digitalPricing,
-        ...body.specifications
-      };
-      await prisma.product.update({
-        where: { id: product.id },
-        data: {
-          specs: JSON.stringify(digitalSpecs)
-        }
       });
-    }
+      if (variants.length > 0) await syncDigitalVariants(tx, created.id, variants);
+      return created;
+    });
 
     // Notifications logic removed as NotificationTemplates is not defined
     // TODO: Implement proper admin notifications

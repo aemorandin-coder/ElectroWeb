@@ -6,16 +6,19 @@ interface PriceProps {
   /** Tasa BCV. Si no se pasa, no se muestra el precio en bolívares. */
   exchangeRateVES?: number | null;
   size?: 'card' | 'lg';
+  /** "Desde": productos digitales con varios montos (se muestra el más barato) */
+  from?: boolean;
 }
 
 /** Precio en USD, precio anterior tachado con ahorro, y equivalente en Bs. */
-export default function Price({ priceUSD, compareAtPriceUSD, exchangeRateVES, size = 'card' }: PriceProps) {
+export default function Price({ priceUSD, compareAtPriceUSD, exchangeRateVES, size = 'card', from = false }: PriceProps) {
   const hasDeal = typeof compareAtPriceUSD === 'number' && compareAtPriceUSD > priceUSD;
   const savings = hasDeal ? compareAtPriceUSD - priceUSD : 0;
 
   return (
     <div className="flex flex-col gap-0.5">
       <span className={size === 'lg' ? 'text-3xl font-bold text-ink lg:text-4xl' : 'text-xl font-bold text-ink'}>
+        {from && <span className="mr-1 text-xs font-medium text-muted">Desde</span>}
         {formatUSD(priceUSD)}
       </span>
       {hasDeal && (

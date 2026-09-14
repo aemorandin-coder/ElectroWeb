@@ -4,7 +4,7 @@ import AddToCartButton from '@/components/ui/AddToCartButton';
 import Price from '@/components/ui/Price';
 import ProductBadge, { getProductBadges } from '@/components/ui/ProductBadge';
 import ShareButton from '@/components/ui/ShareButton';
-import { getStockLabel, type ProductCardData } from '@/components/ui/productCardData';
+import { getStockLabel, hasPriceRange, type ProductCardData } from '@/components/ui/productCardData';
 
 interface FeaturedHeroCardProps {
   product: ProductCardData;
@@ -46,7 +46,7 @@ export default function FeaturedHeroCard({ product, exchangeRateVES, lowStockThr
             {product.name}
           </Link>
         </h3>
-        <Price priceUSD={product.priceUSD} compareAtPriceUSD={product.compareAtPriceUSD} exchangeRateVES={exchangeRateVES} size="lg" />
+        <Price priceUSD={product.priceUSD} compareAtPriceUSD={product.compareAtPriceUSD} exchangeRateVES={exchangeRateVES} size="lg" from={hasPriceRange(product)} />
         {stockLabel && <p className={`text-xs font-medium ${stockLabel.className}`}>{stockLabel.text}</p>}
         <div className="flex items-center gap-2 pt-1">
           <div className="min-w-0 flex-1">

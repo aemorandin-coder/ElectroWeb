@@ -4,7 +4,7 @@ import AddToCartButton from './AddToCartButton';
 import Price from './Price';
 import ProductBadge, { getProductBadges } from './ProductBadge';
 import ShareButton from './ShareButton';
-import { getStockLabel, type ProductCardData } from './productCardData';
+import { getStockLabel, hasPriceRange, type ProductCardData } from './productCardData';
 
 export type { ProductCardData } from './productCardData';
 
@@ -62,7 +62,7 @@ export default function ProductCard({ product, exchangeRateVES, lowStockThreshol
             {product.name}
           </Link>
         </h3>
-        <Price priceUSD={product.priceUSD} compareAtPriceUSD={product.compareAtPriceUSD} exchangeRateVES={exchangeRateVES} />
+        <Price priceUSD={product.priceUSD} compareAtPriceUSD={product.compareAtPriceUSD} exchangeRateVES={exchangeRateVES} from={hasPriceRange(product)} />
         {stockLabel && <p className={`text-xs font-medium ${stockLabel.className}`}>{stockLabel.text}</p>}
         <div className="mt-auto pt-1">
           <AddToCartButton product={product} />

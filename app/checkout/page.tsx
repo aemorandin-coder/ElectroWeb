@@ -21,10 +21,12 @@ import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalcu
 
 type CheckoutCartItem = ReturnType<typeof useCart>['items'][number];
 
-// Los productos digitales usan ids de carrito "productId-monto" o "productId-monto-usuario"
-function parseCartItemId(item: CheckoutCartItem): { productId: string; digitalAmount?: number } {
+// Los productos digitales usan ids de carrito "productId-variante[-cuenta]" (C-60) o, en carritos
+// guardados antes, "productId-monto[-usuario]": el servidor acepta ambos
+function parseCartItemId(item: CheckoutCartItem): { productId: string; digitalAmount?: number; digitalVariantId?: string } {
   if (item.productType !== 'DIGITAL' || !item.id.includes('-')) return { productId: item.id };
   const [productId, amount] = item.id.split('-');
+  if (item.digitalVariantId) return { productId, digitalVariantId: item.digitalVariantId };
   const digitalAmount = Number(amount);
   return Number.isFinite(digitalAmount) && digitalAmount > 0 ? { productId, digitalAmount } : { productId };
 }

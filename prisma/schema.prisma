@@ -231,6 +231,9 @@ model Product {
   digitalRegion         String?  // GLOBAL, USA, LATAM, EU, etc.
   deliveryMethod        String?  // INSTANT (code delivered immediately) or MANUAL (admin sends code)
   redemptionInstructions String? // Custom instructions for redeeming the digital code
+  // C-60: campo que se le pide al cliente en recargas directas ("Usuario de Roblox", "Correo de la cuenta de PSN")
+  accountFieldLabel     String?
+  accountFieldHint      String?
   
   // Shipping Fields (for PHYSICAL products only)
   weightKg        Decimal?  @default(0)     // Weight in kilograms
@@ -268,6 +271,7 @@ model Product {
   reservations  StockReservation[]
   wishlistItems WishlistItem[]
   digitalCodes  DigitalCode[]
+  digitalVariants DigitalVariant[]
 
   @@map("products")
 }
@@ -281,6 +285,29 @@ enum ProductStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+// C-60: montos que se venden de un producto digital ("$25", "800 Robux").
+// El costo es el de referencia en el proveedor (Eneba, Coinsbee…): nunca sale del servidor hacia la tienda.
+model DigitalVariant {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  faceValue  Decimal  // 25, 800
+  unit       String   // USD, EUR, ROBUX, VBUCKS, … (lib/digital-catalog.ts)
+  label      String   // "$25", "800 Robux"
+  costUSD    Decimal  @default(0)
+  priceUSD   Decimal
+  provider   String?  // ENEBA, COINSBEE, OTRO
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  orderItems OrderItem[]
+
+  @@index([productId, isActive])
+  @@map("digital_variants")
 }
 
 // Digital Codes for products like Steam, PlayStation, Xbox cards
@@ -570,6 +597,15 @@ model OrderItem {
   productName String?
   productImage String?
   productSku  String?
+
+  // C-60: variante digital comprada y datos de la compra al proveedor (se compra al confirmarse el pago)
+  digitalVariantId    String?
+  digitalVariant      DigitalVariant? @relation(fields: [digitalVariantId], references: [id], onDelete: SetNull)
+  digitalVariantLabel String?
+  digitalAccount      String?
+  supplier            String?
+  supplierOrderRef    String?
+  supplierCostUSD     Decimal?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -231,7 +231,7 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
 }
 
 // POST - Create new order
-// Contrato: { items: [{ productId, quantity, digitalAmount?, digitalUsername? }], deliveryMethod,
+// Contrato: { items: [{ productId, quantity, digitalVariantId?, digitalAmount?, digitalUsername? }], deliveryMethod,
 //   shippingAddress, paymentMethod, mobilePaymentData?, notes?, expectedTotalUSD? }
 // Precios, envío, descuentos, total y dueño de la orden se calculan aquí; el resto del body se ignora.
 export async function POST(request: NextRequest) {
@@ -468,6 +468,9 @@ export async function POST(request: NextRequest) {
                 priceUSD: line.unitPriceUSD,
                 quantity: line.quantity,
                 totalUSD: roundMoney(line.unitPriceUSD * line.quantity),
+                digitalVariantId: line.digitalVariantId,
+                digitalVariantLabel: line.digitalVariantLabel,
+                digitalAccount: line.digitalAccount,
               })),
             },
           },

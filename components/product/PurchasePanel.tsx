@@ -8,8 +8,9 @@ import { FiMinus, FiPlus, FiShoppingCart } from 'react-icons/fi';
 import Price from '@/components/ui/Price';
 import { getStockLabel } from '@/components/ui/productCardData';
 import { useCart } from '@/contexts/CartContext';
-import type { PublicProduct } from '@/lib/dto/product';
+import type { PublicDigitalVariant, PublicProduct } from '@/lib/dto/product';
 import { formatUSD } from '@/lib/currency';
+import { getPlatform } from '@/lib/digital-catalog';
 
 interface PurchasePanelProps {
   product: PublicProduct;
@@ -17,25 +18,12 @@ interface PurchasePanelProps {
   lowStockThreshold: number;
 }
 
-interface Denomination {
-  amount: number;
-  salePrice: number;
-}
-
 const MAX_DIGITAL_QUANTITY = 10;
-
-function denominationsOf(product: PublicProduct): Denomination[] {
-  const raw = product.specs?.digitalPricing;
-  if (product.productType !== 'DIGITAL' || !Array.isArray(raw)) return [];
-  return raw
-    .map((d) => ({ amount: Number((d as Denomination).amount), salePrice: Number((d as Denomination).salePrice) }))
-    .filter((d) => Number.isFinite(d.amount) && d.amount > 0 && Number.isFinite(d.salePrice) && d.salePrice > 0);
-}
 
 /**
  * Precio, disponibilidad y compra del detalle (C-31).
  * - Físico: cantidad con tope de stock (contando lo que ya está en el carrito).
- * - Digital: monto a elegir y, en recargas manuales, el usuario de la cuenta.
+ * - Digital: monto a elegir ("800 Robux", "$25") y, en recargas directas, el dato de la cuenta (C-60).
  * - "Comprar ahora" exige sesión y solo va al checkout si se pudo agregar (antes iba aunque faltara el monto).
  * - En móvil, mientras los botones no están a la vista aparece una barra fija encima de la barra inferior.
  * El precio real lo vuelve a calcular el servidor al crear la orden (C-01).
@@ -45,11 +33,14 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
   const { data: session } = useSession();
   const router = useRouter();
   const usernameId = useId();
-  const denominations = denominationsOf(product);
+  const variants = product.digitalVariants;
   const isDigital = product.productType === 'DIGITAL';
   const isManual = isDigital && product.deliveryMethod === 'MANUAL';
+  const platform = getPlatform(product.digitalPlatform);
+  const accountLabel = product.accountFieldLabel || platform?.accountFieldLabel || 'Usuario o cuenta a recargar';
+  const accountHint = product.accountFieldHint || platform?.accountFieldHint || 'Recargamos el saldo directo a esta cuenta. Revisa que esté bien escrita.';
 
-  const [selected, setSelected] = useState<Denomination | null>(denominations[0] ?? null);
+  const [selected, setSelected] = useState<PublicDigitalVariant | null>(variants[0] ?? null);
   const [quantity, setQuantity] = useState(1);
   const [username, setUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
@@ -59,7 +50,7 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
   const inCart = isDigital ? 0 : items.find((item) => item.id === product.id)?.quantity ?? 0;
   const soldOut = !isDigital && product.stock <= 0;
   const maxQuantity = isDigital ? MAX_DIGITAL_QUANTITY : Math.max(1, product.stock - inCart);
-  const unitPrice = selected ? selected.salePrice : product.priceUSD;
+  const unitPrice = selected ? selected.priceUSD : product.priceUSD;
   const stockLabel = getStockLabel(product, lowStockThreshold);
 
   // Barra fija en móvil: visible mientras los botones principales no se ven (arriba, ya pasados, o abajo,
@@ -91,12 +82,12 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
   }, [soldOut]);
 
   const addToCart = (): boolean => {
-    if (denominations.length > 0 && !selected) {
+    if (variants.length > 0 && !selected) {
       toast.error('Elige un monto');
       return false;
     }
     if (isManual && !username.trim()) {
-      setUsernameError('Escribe el usuario o la cuenta donde recargamos el saldo');
+      setUsernameError(`Escribe tu ${accountLabel.charAt(0).toLowerCase()}${accountLabel.slice(1)}`);
       actionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       document.getElementById(usernameId)?.focus({ preventScroll: true });
       return false;
@@ -107,14 +98,15 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
     }
 
     const cleanUser = username.trim();
-    // Formato que entiende el checkout: "productoId-monto" o "productoId-monto-usuario" (0 = sin montos)
+    // Id de carrito "productoId-variante[-cuenta]": el checkout toma el productId y envía digitalVariantId aparte.
+    // Montos o cuentas distintas quedan en líneas separadas.
     const cartId = isDigital
-      ? [product.id, selected ? selected.amount : 0, ...(isManual ? [cleanUser.toLowerCase()] : [])].join('-')
+      ? [product.id, selected ? selected.id : '0', ...(isManual ? [cleanUser.toLowerCase()] : [])].join('-')
       : product.id;
     addItem(
       {
         id: isDigital && !selected && !isManual ? product.id : cartId,
-        name: selected ? `${product.name} ($${selected.amount})` : product.name,
+        name: selected ? `${product.name} (${selected.label})` : product.name,
         price: unitPrice,
         imageUrl: product.mainImage || product.images[0] || undefined,
         stock: isDigital ? 999 : product.stock,
@@ -124,10 +116,11 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
         isConsolidable: product.isConsolidable !== false,
         shippingCost: product.shippingCost ?? undefined,
         digitalUsername: isManual ? cleanUser : undefined,
+        digitalVariantId: selected?.id,
       },
       quantity
     );
-    toast.success(selected ? `Agregado: ${product.name} ($${selected.amount})` : 'Agregado al carrito');
+    toast.success(selected ? `Agregado: ${product.name} (${selected.label})` : 'Agregado al carrito');
     setQuantity(1);
     return true;
   };
@@ -155,15 +148,15 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
         )}
       </div>
 
-      {denominations.length > 0 && (
+      {variants.length > 0 && (
         <fieldset>
           <legend className="mb-2 text-sm font-semibold text-ink">Elige el monto</legend>
-          <div role="radiogroup" aria-label="Monto de la recarga" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {denominations.map((d) => {
-              const checked = selected?.amount === d.amount;
+          <div role="radiogroup" aria-label="Monto" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {variants.map((d) => {
+              const checked = selected?.id === d.id;
               return (
                 <button
-                  key={d.amount}
+                  key={d.id}
                   type="button"
                   role="radio"
                   aria-checked={checked}
@@ -172,8 +165,8 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
                     checked ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-line bg-white text-ink hover:border-brand-200'
                   }`}
                 >
-                  <span className="text-base font-bold">${d.amount}</span>
-                  <span className={`text-xs ${checked ? 'text-brand-700' : 'text-muted'}`}>{formatUSD(d.salePrice)}</span>
+                  <span className="text-base font-bold">{d.label}</span>
+                  <span className={`text-xs ${checked ? 'text-brand-700' : 'text-muted'}`}>{formatUSD(d.priceUSD)}</span>
                 </button>
               );
             })}
@@ -184,7 +177,7 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
       {isManual && (
         <div>
           <label htmlFor={usernameId} className="mb-1.5 block text-sm font-semibold text-ink">
-            Usuario o cuenta a recargar <span className="text-deal" aria-hidden="true">*</span>
+            {accountLabel} <span className="text-deal" aria-hidden="true">*</span>
           </label>
           <input
             id={usernameId}
@@ -198,11 +191,11 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
             }}
             aria-invalid={Boolean(usernameError)}
             aria-describedby={`${usernameId}-hint`}
-            placeholder="Ej: JugadorPro#1234 o micuenta@gmail.com"
+            placeholder={accountLabel}
             className={`h-11 w-full rounded-lg border bg-white px-3 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${usernameError ? 'border-deal' : 'border-line focus:border-brand-500'}`}
           />
           <p id={`${usernameId}-hint`} className={`mt-1 text-xs ${usernameError ? 'font-semibold text-deal' : 'text-muted'}`}>
-            {usernameError || 'Recargamos el saldo directo a esta cuenta. Revisa que esté bien escrita.'}
+            {usernameError || accountHint}
           </p>
         </div>
       )}

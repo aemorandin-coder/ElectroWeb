@@ -53,6 +53,8 @@ interface CartItem {
   shippingCost?: number;
   dimensions?: string; // JSON string: {length, width, height} in cm
   digitalUsername?: string;
+  // C-60: variante digital elegida (el precio lo vuelve a calcular el servidor)
+  digitalVariantId?: string;
 }
 
 interface CartContextType {

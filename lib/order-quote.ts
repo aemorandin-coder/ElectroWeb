@@ -3,6 +3,7 @@
 
 import type { CompanySettings } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { legacyDigitalVariants } from '@/lib/dto/product';
 import { parseProductImages } from '@/lib/product-utils';
 import {
   calculateOrder,
@@ -31,6 +32,9 @@ export class OrderInputError extends Error {
 export interface OrderItemInput {
   productId: string;
   quantity: number;
+  /** Variante digital elegida (C-60) */
+  digitalVariantId?: string;
+  /** Monto de carritos guardados antes de C-60: se busca la variante con ese valor */
   digitalAmount?: number;
   digitalUsername?: string;
 }
@@ -39,6 +43,9 @@ export interface QuotedLine extends PricingLine {
   productSku: string;
   productImage: string | null;
   discountRequestId: string | null;
+  digitalVariantId: string | null;
+  digitalVariantLabel: string | null;
+  digitalAccount: string | null;
 }
 
 export interface OrderQuote {
@@ -48,7 +55,7 @@ export interface OrderQuote {
   settings: CompanySettings | null;
 }
 
-/** Valida `items` del body. Solo se aceptan productId, quantity, digitalAmount y digitalUsername. */
+/** Valida `items` del body. Solo se aceptan productId, quantity, digitalVariantId, digitalAmount y digitalUsername. */
 export function parseOrderItems(raw: unknown): OrderItemInput[] {
   if (!Array.isArray(raw) || raw.length === 0) {
     throw new OrderInputError('La orden debe contener al menos un producto');
@@ -70,6 +77,13 @@ export function parseOrderItems(raw: unknown): OrderItemInput[] {
     }
 
     const parsed: OrderItemInput = { productId, quantity };
+
+    if (item.digitalVariantId !== undefined && item.digitalVariantId !== null) {
+      if (typeof item.digitalVariantId !== 'string' || !/^[A-Za-z0-9-]{1,60}$/.test(item.digitalVariantId)) {
+        throw new OrderInputError('Hay un monto digital inválido en la orden');
+      }
+      parsed.digitalVariantId = item.digitalVariantId;
+    }
 
     if (item.digitalAmount !== undefined && item.digitalAmount !== null) {
       if (typeof item.digitalAmount !== 'number' || !Number.isFinite(item.digitalAmount) || item.digitalAmount <= 0) {
@@ -94,27 +108,6 @@ export function parseDeliveryMethod(raw: unknown): DeliveryMethod {
   return method;
 }
 
-interface DigitalDenomination {
-  amount: number;
-  salePrice: number;
-}
-
-// Las denominaciones de un producto digital se guardan en specs.digitalPricing (wizard del admin).
-function getDigitalPricing(specs: string | null): DigitalDenomination[] {
-  if (!specs) return [];
-  try {
-    const parsed = JSON.parse(specs);
-    const pricing: unknown = parsed?.digitalPricing;
-    if (!Array.isArray(pricing)) return [];
-    return pricing
-      .filter((p) => p && p.enabled !== false)
-      .map((p) => ({ amount: Number(p.amount), salePrice: Number(p.salePrice) }))
-      .filter((p) => Number.isFinite(p.amount) && Number.isFinite(p.salePrice) && p.salePrice > 0);
-  } catch {
-    return [];
-  }
-}
-
 export async function quoteOrder(
   userId: string,
   items: OrderItemInput[],
@@ -137,6 +130,12 @@ export async function quoteOrder(
         mainImage: true,
         images: true,
         specs: true,
+        digitalPlatform: true,
+        deliveryMethod: true,
+        digitalVariants: {
+          where: { isActive: true },
+          select: { id: true, label: true, faceValue: true, unit: true, priceUSD: true },
+        },
         weightKg: true,
         dimensions: true,
         isConsolidable: true,
@@ -184,19 +183,34 @@ export async function quoteOrder(
     const isDigital = product.productType === 'DIGITAL';
     let unitPriceUSD = Number(product.priceUSD);
     let name = product.name;
+    let digitalVariantId: string | null = null;
+    let digitalVariantLabel: string | null = null;
+    let digitalAccount: string | null = null;
 
     if (isDigital) {
-      const denominations = getDigitalPricing(product.specs);
-      if (denominations.length > 0) {
-        const denomination = denominations.find((d) => d.amount === item.digitalAmount);
-        if (!denomination) {
-          errors.push(`La denominación elegida de "${product.name}" ya no está disponible`);
+      // Variantes de la tabla (C-60) o, si el producto aún no se migró, las de specs.digitalPricing
+      const variants = product.digitalVariants.length > 0
+        ? product.digitalVariants.map((v) => ({ id: v.id, label: v.label, faceValue: Number(v.faceValue), priceUSD: Number(v.priceUSD), stored: true }))
+        : legacyDigitalVariants(product.specs, product.digitalPlatform).map((v) => ({ ...v, stored: false }));
+      if (variants.length > 0) {
+        const variant =
+          (item.digitalVariantId ? variants.find((v) => v.id === item.digitalVariantId) : undefined) ??
+          (item.digitalAmount !== undefined ? variants.find((v) => v.faceValue === item.digitalAmount) : undefined);
+        if (!variant) {
+          errors.push(`El monto elegido de "${product.name}" ya no está disponible. Vuelve a elegirlo.`);
           continue;
         }
-        unitPriceUSD = denomination.salePrice;
-        name = `${product.name} ($${denomination.amount})`;
+        unitPriceUSD = variant.priceUSD;
+        name = `${product.name} (${variant.label})`;
+        digitalVariantId = variant.stored ? variant.id : null;
+        digitalVariantLabel = variant.label;
+      }
+      if (product.deliveryMethod === 'MANUAL' && !item.digitalUsername) {
+        errors.push(`Indica la cuenta donde recargamos "${product.name}"`);
+        continue;
       }
       if (item.digitalUsername) {
+        digitalAccount = item.digitalUsername;
         name = `${name} [Recarga para: ${item.digitalUsername}]`;
       }
     }
@@ -230,6 +244,9 @@ export async function quoteOrder(
       productSku: product.sku,
       productImage: product.mainImage || parseProductImages(product.images)[0] || null,
       discountRequestId: discount?.id ?? null,
+      digitalVariantId,
+      digitalVariantLabel,
+      digitalAccount,
     });
   }
 

@@ -16,19 +16,16 @@ import ProductCard from '@/components/ui/ProductCard';
 import ProductShelf from '@/components/ui/ProductShelf';
 import SectionHeader from '@/components/ui/SectionHeader';
 import ShareButton from '@/components/ui/ShareButton';
+import { DELIVERY_MODES, DIGITAL_REGIONS, getPlatform } from '@/lib/digital-catalog';
 import { getActivePaymentMethodKinds, getHomeSettings } from '@/lib/queries/home';
 import { getProductBySlug, getPublicReviews, getRelatedProducts, getReviewSummary } from '@/lib/queries/product';
 import { getPublicSettings } from '@/lib/site-settings';
 
 type PageProps = { params: Promise<{ id: string }> };
 
-const PLATFORM_NAMES: Record<string, string> = {
-  ROBLOX: 'Roblox', STEAM: 'Steam', PLAYSTATION: 'PlayStation', XBOX: 'Xbox', NINTENDO: 'Nintendo', NETFLIX: 'Netflix',
-  SPOTIFY: 'Spotify', APPLE: 'Apple', GOOGLE_PLAY: 'Google Play', FREEFIRE: 'Free Fire', VALORANT: 'Valorant', FORTNITE: 'Fortnite', PUBG: 'PUBG Mobile',
-};
-const REGION_NAMES: Record<string, string> = { GLOBAL: 'Global', USA: 'Estados Unidos', LATAM: 'Latinoamérica', EU: 'Europa', ASIA: 'Asia' };
 // Claves de specs que son datos internos del producto digital, no especificaciones
 const HIDDEN_SPEC_KEYS = new Set(['digitalPricing', 'redemptionInstructions']);
+const regionName = (value: string) => DIGITAL_REGIONS.find((r) => r.value === value)?.label ?? value;
 
 const baseUrl = () => process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
 function absoluteUrl(url: string | null | undefined): string | null {
@@ -89,7 +86,9 @@ export default async function ProductPage({ params }: PageProps) {
   const specs = Object.entries(product.specs ?? {}).filter(
     ([key, value]) => !HIDDEN_SPEC_KEYS.has(key) && value !== null && value !== '' && typeof value !== 'object'
   );
-  const instructions = typeof product.specs?.redemptionInstructions === 'string' ? product.specs.redemptionInstructions.trim() : '';
+  // Las instrucciones son una columna del producto (C-60; antes se leían de specs y nunca aparecían)
+  const instructions = product.redemptionInstructions?.trim() ?? '';
+  const deliveryMode = DELIVERY_MODES[product.deliveryMethod === 'MANUAL' ? 'MANUAL' : 'INSTANT'];
   const waNumber = settings.whatsapp?.replace(/\D/g, '');
   const sharePath = product.shortCode ? `/p/${product.shortCode}` : `/productos/${product.slug}`;
   const inStock = isDigital || product.stock > 0;
@@ -114,7 +113,7 @@ export default async function ProductPage({ params }: PageProps) {
 
   const delivery = [
     isDigital
-      ? { Icon: FiZap, title: product.deliveryMethod === 'MANUAL' ? 'Recarga directa a tu cuenta' : 'Entrega digital', text: product.deliveryMethod === 'MANUAL' ? 'Normalmente en 5 a 15 minutos tras confirmar el pago' : 'Recibes tu código al confirmar el pago' }
+      ? { Icon: FiZap, title: deliveryMode.store, text: deliveryMode.storeHelp }
       : { Icon: FiTruck, title: 'Envíos a toda Venezuela', text: 'El costo se calcula en el checkout según el peso' },
     ...(!isDigital && settings.pickupEnabled ? [{ Icon: FiMapPin, title: 'Retiro en tienda', text: settings.pickupAddress || 'Coordina el retiro al comprar' }] : []),
     { Icon: FiShield, title: 'Producto 100% original', text: 'Con respaldo de la tienda' },
@@ -186,10 +185,10 @@ export default async function ProductPage({ params }: PageProps) {
                 {isDigital && (product.digitalPlatform || product.digitalRegion) && (
                   <dl className="mt-3 flex flex-wrap gap-2 text-xs">
                     {product.digitalPlatform && (
-                      <div className="flex gap-1 rounded-full bg-surface px-3 py-1"><dt className="text-muted">Plataforma:</dt><dd className="font-semibold text-ink">{PLATFORM_NAMES[product.digitalPlatform] ?? product.digitalPlatform}</dd></div>
+                      <div className="flex gap-1 rounded-full bg-surface px-3 py-1"><dt className="text-muted">Plataforma:</dt><dd className="font-semibold text-ink">{getPlatform(product.digitalPlatform)?.label ?? product.digitalPlatform}</dd></div>
                     )}
                     {product.digitalRegion && (
-                      <div className="flex gap-1 rounded-full bg-surface px-3 py-1"><dt className="text-muted">Región:</dt><dd className="font-semibold text-ink">{REGION_NAMES[product.digitalRegion] ?? product.digitalRegion}</dd></div>
+                      <div className="flex gap-1 rounded-full bg-surface px-3 py-1"><dt className="text-muted">Región:</dt><dd className="font-semibold text-ink">{regionName(product.digitalRegion)}</dd></div>
                     )}
                   </dl>
                 )}

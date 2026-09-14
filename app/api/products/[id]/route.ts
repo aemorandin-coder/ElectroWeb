@@ -3,6 +3,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type DigitalVariantInput } from '@/lib/digital-variants';
+
+// Variantes con costo y proveedor: esta ruta es solo para quien administra productos (C-60)
+const adminVariantsInclude = { orderBy: [{ sortOrder: 'asc' as const }] };
+function formatVariants(variants: { faceValue: unknown; costUSD: unknown; priceUSD: unknown }[]) {
+  return variants.map((v) => ({ ...v, faceValue: Number(v.faceValue), costUSD: Number(v.costUSD), priceUSD: Number(v.priceUSD) }));
+}
 
 // GET /api/products/[id] - Get a single product
 export async function GET(
@@ -30,6 +37,7 @@ export async function GET(
       where: { id },
       include: {
         category: true,
+        digitalVariants: adminVariantsInclude,
       },
     });
 
@@ -55,6 +63,7 @@ export async function GET(
       costPerItem: safeNumber(product.costPerItem),
       weightKg: safeNumber(product.weightKg),
       shippingCost: safeNumber(product.shippingCost),
+      digitalVariants: formatVariants(product.digitalVariants),
     };
 
     return NextResponse.json(formattedProduct);
@@ -193,6 +202,19 @@ export async function PATCH(
     if (body.digitalRegion !== undefined) updateData.digitalRegion = body.digitalRegion;
     if (body.deliveryMethod !== undefined) updateData.deliveryMethod = body.deliveryMethod;
     if (body.redemptionInstructions !== undefined) updateData.redemptionInstructions = body.redemptionInstructions;
+    if (body.accountFieldLabel !== undefined) updateData.accountFieldLabel = body.accountFieldLabel ? String(body.accountFieldLabel).slice(0, 80) : null;
+    if (body.accountFieldHint !== undefined) updateData.accountFieldHint = body.accountFieldHint ? String(body.accountFieldHint).slice(0, 160) : null;
+
+    // Variantes digitales (C-60): se validan y el precio "desde" del producto es la más barata activa
+    let variants: DigitalVariantInput[] | null = null;
+    if (body.digitalVariants !== undefined) {
+      const parsed = digitalVariantsInputSchema.safeParse(body.digitalVariants);
+      if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error.issues[0]?.message || 'Montos digitales inválidos' }, { status: 400 });
+      }
+      variants = parsed.data;
+      updateData.priceUSD = minActivePrice(variants);
+    }
 
     // Shipping Fields (for PHYSICAL products)
     if (body.weightKg !== undefined) updateData.weightKg = body.weightKg !== null ? parseFloat(body.weightKg) : null;
@@ -200,12 +222,10 @@ export async function PATCH(
     if (body.isConsolidable !== undefined) updateData.isConsolidable = body.isConsolidable;
     if (body.shippingCost !== undefined) updateData.shippingCost = body.shippingCost !== null ? parseFloat(body.shippingCost) : null;
 
-    const product = await prisma.product.update({
-      where: { id },
-      data: updateData,
-      include: {
-        category: true,
-      },
+    const product = await prisma.$transaction(async (tx) => {
+      await tx.product.update({ where: { id }, data: updateData });
+      if (variants) await syncDigitalVariants(tx, id, variants);
+      return tx.product.findUniqueOrThrow({ where: { id }, include: { category: true, digitalVariants: adminVariantsInclude } });
     });
 
     const safeNum = (v: any) => v != null ? Number(v) : null;
@@ -217,6 +237,7 @@ export async function PATCH(
       costPerItem: safeNum(product.costPerItem),
       weightKg: safeNum(product.weightKg),
       shippingCost: safeNum(product.shippingCost),
+      digitalVariants: formatVariants(product.digitalVariants),
     };
 
     return NextResponse.json(formattedProduct);

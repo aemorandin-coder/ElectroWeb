@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { FiUser, FiMail, FiPhone, FiPackage, FiDollarSign, FiClock, FiCheck, FiShield, FiTruck } from 'react-icons/fi';
 import { IoMdPricetags } from 'react-icons/io';
@@ -55,6 +56,17 @@ export default function SolicitarProductoClient() {
   useEffect(() => {
     nameInputRef.current?.focus();
   }, []);
+
+  // Precargar nombre y email si hay sesion
+  useEffect(() => {
+    if (session?.user) {
+      setFormData(prev => ({
+        ...prev,
+        customerName: prev.customerName || session.user?.name || '',
+        customerEmail: prev.customerEmail || session.user?.email || '',
+      }));
+    }
+  }, [session]);
 
   const validateField = (fieldName: string, value: string): string => {
     switch (fieldName) {
@@ -324,6 +336,26 @@ export default function SolicitarProductoClient() {
                   </div>
                 )}
 
+                {!session && (
+                  <div className="mb-4 p-3 bg-white/10 border border-white/20 rounded-xl text-xs text-white">
+                    <span>Para solicitar un producto necesitas una cuenta. </span>
+                    <Link
+                      href="/login?callbackUrl=%2Fsolicitar-producto"
+                      className="font-bold text-white underline hover:text-white/80 transition-colors"
+                    >
+                      Iniciar sesión
+                    </Link>
+                    <span> o </span>
+                    <Link
+                      href="/registro"
+                      className="font-bold text-white underline hover:text-white/80 transition-colors"
+                    >
+                      Crear cuenta
+                    </Link>
+                    <span>.</span>
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-3">
                   {/* Contact Info Header */}
                   <div className="flex items-center justify-center gap-2 mb-1">
@@ -526,7 +558,7 @@ export default function SolicitarProductoClient() {
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    disabled={loading || !captchaToken}
+                    disabled={loading || !captchaToken || !session}
                     className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white text-brand-500 text-sm font-bold rounded-xl hover:bg-white/90 hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
                   >
                     {loading ? (

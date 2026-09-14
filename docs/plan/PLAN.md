@@ -243,7 +243,8 @@ app/login/**  app/registro/**  app/recuperar-contrasena/**  app/verificar-email/
 app/solicitar-producto/**  app/privacidad/**  app/terminos/**
 components/modals/**  components/reviews/**  components/orders/**  components/social/**
 components/pago-movil/**  components/onboarding/**
-app/admin/**  components/admin/**   ← SOLO para G-05f y G-06f (tipografía y colores). Nada de lógica.
+app/admin/**  components/admin/**   ← SOLO arreglos mecánicos pedidos por una tarjeta G (ver GEMINI.md §2). Nada de lógica.
+                                        Excepto admin/(dashboard)/settings/** y products/** (C-50 y C-51).
 docs/plan/estado/G-*.md
 ```
 Borrado de archivos muertos (G-02): **solo** la lista exacta de esa tarea, aunque el archivo esté en el carril de Claude.

@@ -1,0 +1,162 @@
+'use client';
+// Tarjeta anterior al rediseño. La reemplaza components/ui/ProductCard (v2) en C-22/C-30/C-32; después se borra.
+import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useSettings } from '@/contexts/SettingsContext';
+import ShareEarnButton from '@/components/social/ShareEarnButton';
+
+interface Product {
+    id: string;
+    name: string;
+    slug: string;
+    priceUSD: any;
+    images: string | string[];
+    mainImage?: string | null;
+    category: { name: string };
+    stock: number;
+    isFeatured?: boolean;
+    description?: string;
+}
+
+interface ProductCardProps {
+    product: Product;
+    index?: number;
+}
+
+// Formatear precio en formato venezolano: 1.234.567,89
+const formatVESPrice = (price: number): string => {
+    return price.toLocaleString('es-VE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+};
+
+export default function ProductCard({ product, index = 0 }: ProductCardProps) {
+    const { settings } = useSettings();
+    const [imageError, setImageError] = useState(false);
+
+    let images: string[] = [];
+    try {
+        if (typeof product.images === 'string' && product.images) {
+            images = JSON.parse(product.images);
+        } else if (Array.isArray(product.images)) {
+            images = product.images;
+        }
+    } catch (e) {
+        images = [];
+    }
+
+    const mainImage = product.mainImage || (images.length > 0 ? images[0] : null);
+    const priceUSD = Number(product.priceUSD);
+    const priceVES = settings?.exchangeRateVES ? priceUSD * settings.exchangeRateVES : null;
+
+    return (
+        <Link href={`/productos/${product.slug}`} className="group relative block">
+            <div className="relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-gray-100 h-full flex flex-col hover:shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#2a63cd]/20 via-purple-500/20 to-pink-500/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl -z-10"></div>
+
+                {/* Imagen del producto */}
+                <div className="relative aspect-square bg-gradient-to-br from-[#f8f9fa] to-gray-100 overflow-hidden">
+                    {/* Botón Compartir y Ganar */}
+                    <ShareEarnButton
+                        url={`/productos/${product.slug}`}
+                        title={product.name}
+                        description={product.description || ''}
+                        image={mainImage || ''}
+                        price={priceUSD}
+                        type="product"
+                        className="absolute top-3 right-3 z-30 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 transition-opacity duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-10"></div>
+
+                    {mainImage && !imageError ? (
+                        <Image
+                            src={mainImage}
+                            alt={product.name}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            className="object-contain p-3 group-hover:scale-105 transition-transform duration-700"
+                            onError={() => setImageError(true)}
+                        />
+                    ) : (
+                        <Image
+                            src="/images/no-image.png"
+                            alt="Imagen no disponible"
+                            fill
+                            className="object-contain p-3"
+                            unoptimized
+                        />
+                    )}
+
+
+
+                    {product.description && product.stock > 0 && (
+                        <div className="absolute inset-x-0 bottom-0 bg-black/75 backdrop-blur-md p-3.5 transform translate-y-full group-hover:translate-y-0 transition-transform duration-350 ease-out z-20 flex flex-col justify-end">
+                            <span className="text-[10px] uppercase tracking-wider text-blue-400 font-extrabold mb-1">Descripción</span>
+                            <p className="text-[11px] text-gray-200 line-clamp-3 leading-relaxed font-medium">
+                                {product.description}
+                            </p>
+                        </div>
+                    )}
+
+                    {product.stock === 0 && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
+                            <span className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-full shadow-2xl">Agotado</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Contenido de la tarjeta */}
+                <div className="p-4 flex-1 flex flex-col">
+                    {/* Featured Badge en el contenido (Mobile and Desktop) */}
+                    {product.isFeatured && (
+                        <div className="flex justify-center mb-2">
+                            <div className="inline-flex items-center gap-1 bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 text-white px-2 py-0.5 rounded-full shadow-sm">
+                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
+                                </svg>
+                                <span className="text-[10px] font-black tracking-wide uppercase">Destacado</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Nombre del producto - más grande y centrado */}
+                    <h3 className="text-base font-bold text-[#212529] text-center line-clamp-2 group-hover:text-[#2a63cd] transition-colors duration-300 min-h-[48px] flex items-center justify-center leading-tight">
+                        {product.name}
+                    </h3>
+
+
+
+                    {/* Sección de precios - centrada y protagonista */}
+                    <div className="mt-auto">
+                        <div className="flex flex-col items-center pt-2 sm:pt-3 border-t border-gray-100">
+                            {/* Precio USD - protagonista */}
+                            <div className="flex items-baseline gap-1.5 mb-1">
+                                <span className="text-xl sm:text-2xl font-black text-[#2a63cd]">${priceUSD.toFixed(2)}</span>
+                            </div>
+
+                            {/* Precio Bs - formato venezolano */}
+                            {priceVES && (
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-xs font-semibold text-gray-500">Bs.</span>
+                                    <span className="text-sm font-bold text-gray-500">{formatVESPrice(priceVES)}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Botón Ver Detalles (Solo Desktop) */}
+                        <div className="mt-3 hidden sm:block opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="w-full px-3 py-2 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white text-xs font-bold rounded-xl text-center shadow-lg flex items-center justify-center gap-1.5">
+                                Ver Detalles
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Link>
+    );
+}

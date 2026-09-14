@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import ProductCard from '@/components/ui/ProductCard';
+import ProductCard from '@/components/ui/LegacyProductCard';
 import FadeIn from '@/components/ui/FadeIn';
 import { FiSearch, FiChevronDown } from 'react-icons/fi';
 

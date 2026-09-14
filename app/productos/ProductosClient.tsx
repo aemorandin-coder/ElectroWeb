@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import ProductCard from '@/components/ui/ProductCard';
+import ProductCard from '@/components/ui/LegacyProductCard';
 import FadeIn from '@/components/ui/FadeIn';
 import { FiSearch, FiFilter, FiX, FiChevronLeft, FiChevronRight, FiSliders } from 'react-icons/fi';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 interface Category {
   id: string;
@@ -132,14 +133,7 @@ export default function ProductosClient({ initialProducts, initialCategories }: 
   }, []);
 
   // Lock body scroll when mobile filters are open
-  useEffect(() => {
-    if (showMobileFilters) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [showMobileFilters]);
+  useBodyScrollLock(showMobileFilters);
 
   const filteredProducts = initialProducts
     .filter(product => {

@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { FiClock } from 'react-icons/fi';
-import ProductCard from '@/components/ui/ProductCard';
+import ProductCard from '@/components/ui/LegacyProductCard';
 
 interface Product {
     id: string;

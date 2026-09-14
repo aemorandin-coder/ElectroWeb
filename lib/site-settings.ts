@@ -164,15 +164,8 @@ export interface PublicSettings {
     maintenanceEndTime: string | null;
     rif: string | null;
     legalName: string | null;
-    hotAdEnabled: boolean;
-    hotAdImage: string | null;
-    hotAdTransparentBg: boolean;
-    hotAdShadowEnabled: boolean;
-    hotAdShadowBlur: number;
-    hotAdShadowOpacity: number;
-    hotAdBackdropOpacity: number;
-    hotAdBackdropColor: string;
-    hotAdLink: string | null;
+    // El popup (hotAd*) no va aquí: estos settings viajan en el HTML de TODAS las páginas y la imagen
+    // podía ser un base64 de cientos de KB. El home lo lee aparte con getHotAd() (C-25).
 }
 
 const PUBLIC_SETTINGS_SELECT = {
@@ -193,8 +186,6 @@ const PUBLIC_SETTINGS_SELECT = {
     ctaEnabled: true, ctaTitle: true, ctaDescription: true, ctaButtonText: true, ctaButtonLink: true,
     maintenanceMode: true, maintenanceMessage: true, maintenanceStartTime: true, maintenanceEndTime: true,
     rif: true, legalName: true,
-    hotAdEnabled: true, hotAdImage: true, hotAdTransparentBg: true, hotAdShadowEnabled: true, hotAdShadowBlur: true,
-    hotAdShadowOpacity: true, hotAdBackdropOpacity: true, hotAdBackdropColor: true, hotAdLink: true,
 } satisfies Prisma.CompanySettingsSelect;
 
 type PublicSettingsRow = Prisma.CompanySettingsGetPayload<{ select: typeof PUBLIC_SETTINGS_SELECT }>;
@@ -219,8 +210,6 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     ctaEnabled: false, ctaTitle: null, ctaDescription: null, ctaButtonText: null, ctaButtonLink: null,
     maintenanceMode: false, maintenanceMessage: null, maintenanceStartTime: null, maintenanceEndTime: null,
     rif: null, legalName: null,
-    hotAdEnabled: false, hotAdImage: null, hotAdTransparentBg: false, hotAdShadowEnabled: true, hotAdShadowBlur: 20,
-    hotAdShadowOpacity: 50, hotAdBackdropOpacity: 70, hotAdBackdropColor: '#000000', hotAdLink: null,
 };
 
 function parseJson<T>(value: string | null, fallback: T): T {

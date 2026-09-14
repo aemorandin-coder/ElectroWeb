@@ -184,9 +184,11 @@ export const revalidate = 0;
 export default async function CursosPage({
   searchParams,
 }: {
-  searchParams?: { cat?: string };
+  searchParams: Promise<{ cat?: string | string[] }>;
 }) {
-  const selectedCat = searchParams?.cat;
+  // Next 16: searchParams es una Promise. Solo se acepta una categoría conocida.
+  const { cat } = await searchParams;
+  const selectedCat = CATEGORIES.find((c) => c.value === cat)?.value;
 
   const [settings, courses] = await Promise.all([
     prisma.companySettings.findFirst(),

@@ -340,3 +340,22 @@ grep -n "callbackUrl=%2Fsolicitar-producto" app/solicitar-producto/SolicitarProd
 grep -n "!session" app/solicitar-producto/SolicitarProductoClient.tsx                             # al menos 2
 npx tsc --noEmit                                                                                  # sin errores nuevos
 ```
+
+---
+
+### G-19 · Header real en los esqueletos de carga · Depende: **C-20 HECHO en `main`**
+Desde C-20 el header mide 96px (desktop) y 104px (móvil). Los `loading.tsx` de estas páginas dibujan un header falso de 80px (`h-20`): al terminar de cargar, la página "salta". Antes de empezar: `git show main:docs/plan/estado/C-20.md` debe decir `Estado: HECHO`; si no → `BLOQUEADO`.
+
+Archivos: `app/cursos/loading.tsx`, `app/servicios/loading.tsx`, `app/contacto/loading.tsx`, `app/gift-cards/loading.tsx`.
+En cada uno:
+1. Borra el bloque completo desde `<header className="sticky top-0 z-50 bg-white border-b border-line shadow-sm h-20">` hasta su `</header>`, y el comentario `{/* Header Skeleton */}` de la línea anterior si existe.
+2. En su lugar escribe `<PublicHeader />` con la misma indentación.
+3. Agrega arriba del archivo: `import PublicHeader from '@/components/public/PublicHeader';`
+4. No toques el resto del esqueleto.
+
+Verificación:
+```bash
+grep -n "h-20" app/cursos/loading.tsx app/servicios/loading.tsx app/contacto/loading.tsx app/gift-cards/loading.tsx   # sin <header ... h-20>
+grep -c "<PublicHeader />" app/cursos/loading.tsx app/servicios/loading.tsx app/contacto/loading.tsx app/gift-cards/loading.tsx   # 1 en cada uno
+npx tsc --noEmit
+```

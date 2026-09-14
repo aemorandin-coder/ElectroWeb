@@ -56,8 +56,8 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
 
   if (status === 'loading') {
     return (
-      <button className="relative p-2 hover:bg-[#f8f9fa] rounded-lg transition-all duration-300 group hover:scale-110">
-        <svg className="w-5 h-5 text-[#6a6c6b] animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button className="relative p-2 hover:bg-surface rounded-lg transition-all duration-300 group hover:scale-110">
+        <svg className="w-5 h-5 text-muted animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
       </button>
@@ -66,8 +66,8 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
 
   if (!session) {
     const buttonClasses = useBlueHeader
-      ? "relative flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-[#2a63cd] bg-white hover:bg-gray-100 rounded-lg transition-all duration-300 shadow-md shadow-white/20 hover:shadow-lg hover:shadow-white/30 hover:scale-105"
-      : "relative flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-white bg-[#2a63cd] hover:bg-[#1e4ba3] rounded-lg transition-all duration-300 shadow-md shadow-[#2a63cd]/20 hover:shadow-lg hover:shadow-[#2a63cd]/30 hover:scale-105";
+      ? "relative flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-brand-500 bg-white hover:bg-gray-100 rounded-lg transition-all duration-300 shadow-md shadow-white/20 hover:shadow-lg hover:shadow-white/30 hover:scale-105"
+      : "relative flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-white bg-brand-500 hover:bg-brand-600 rounded-lg transition-all duration-300 shadow-md shadow-brand-500/20 hover:shadow-lg hover:shadow-brand-500/30 hover:scale-105";
 
     return (
       <Link href="/login" id="login-btn" className={buttonClasses}>
@@ -90,7 +90,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
       {/* Mobile Backdrop Overlay */}
       {isOpen && (
         <div 
-          className="fixed left-0 right-0 bottom-0 top-20 bg-black/40 backdrop-blur-sm z-40 sm:hidden transition-opacity"
+          className="fixed left-0 right-0 bottom-0 top-14 bg-black/40 backdrop-blur-sm z-40 sm:hidden transition-opacity"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -98,12 +98,12 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
       {/* User Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex items-center gap-1.5 px-1.5 py-1 hover:bg-white/10 rounded-xl transition-all duration-300 group hover:scale-105 z-[60] sm:z-auto"
+        className="relative flex items-center gap-1.5 px-1.5 py-1 hover:bg-brand-50 rounded-xl transition-all duration-300 group z-[60] sm:z-auto"
       >
         {userImage && !imageError ? (
-          <div className={`relative w-9 h-9 rounded-full overflow-hidden border-2 shadow-md group-hover:shadow-lg transition-all animate-periodic-wave ${isVerified
+          <div className={`relative w-9 h-9 rounded-full overflow-hidden border-2 shadow-md group-hover:shadow-lg transition-all ${isVerified
             ? 'border-emerald-400 shadow-emerald-500/20'
-            : 'border-amber-400 shadow-amber-500/20 animate-pulse'
+            : 'border-amber-400 shadow-amber-500/20'
             }`}>
             <Image
               src={userImage}
@@ -116,9 +116,9 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
             />
           </div>
         ) : (
-          <div className={`w-9 h-9 rounded-full bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center text-white text-xs font-black shadow-md group-hover:shadow-lg transition-all border-2 animate-periodic-wave ${isVerified
+          <div className={`w-9 h-9 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-xs font-black shadow-md group-hover:shadow-lg transition-all border-2 ${isVerified
             ? 'border-emerald-400 shadow-emerald-500/20'
-            : 'border-amber-400 shadow-amber-500/20 animate-pulse'
+            : 'border-amber-400 shadow-amber-500/20'
             }`}>
             {userName.charAt(0).toUpperCase()}
           </div>
@@ -142,7 +142,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
         >
 
           {/* Premium Header Profile Section */}
-          <div className="px-5 py-4 bg-gradient-to-b from-[#f8f9fa] to-white border-b border-gray-100">
+          <div className="px-5 py-4 bg-gradient-to-b from-surface to-white border-b border-gray-100">
             <div className="flex items-center gap-4">
               {userImage && !imageError ? (
                 <div className="relative w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-md flex-shrink-0">
@@ -156,14 +156,14 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                   />
                 </div>
               ) : (
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#2a63cd] to-[#1e4ba3] flex items-center justify-center text-white text-xl font-bold shadow-md flex-shrink-0 border-2 border-white">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-xl font-bold shadow-md flex-shrink-0 border-2 border-white">
                   {userName.charAt(0).toUpperCase()}
                 </div>
               )}
               
               <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-[#1a1a1a] font-black text-base truncate leading-tight">{userName}</span>
-                <span className="text-[#6a6c6b] text-xs truncate mt-0.5">{userEmail}</span>
+                <span className="text-ink font-black text-base truncate leading-tight">{userName}</span>
+                <span className="text-muted text-xs truncate mt-0.5">{userEmail}</span>
                 
                 {/* Status Badge */}
                 <div className="mt-2">
@@ -192,15 +192,15 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                   className="group flex items-center justify-between px-3 py-3 rounded-xl hover:bg-blue-50 transition-colors duration-200 active:scale-95"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-blue-100/50 flex items-center justify-center text-[#2a63cd] group-hover:bg-[#2a63cd] group-hover:text-white transition-colors">
+                    <div className="w-9 h-9 rounded-lg bg-blue-100/50 flex items-center justify-center text-brand-500 group-hover:bg-brand-500 group-hover:text-white transition-colors">
                       <FiUser className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-[#1a1a1a] font-bold text-sm block">Mi Panel</span>
-                      <span className="text-[#6a6c6b] text-xs">Gestión de cuenta</span>
+                      <span className="text-ink font-bold text-sm block">Mi Panel</span>
+                      <span className="text-muted text-xs">Gestión de cuenta</span>
                     </div>
                   </div>
-                  <FiChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#2a63cd] group-hover:translate-x-1 transition-all" />
+                  <FiChevronRight className="w-4 h-4 text-gray-300 group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
                 </Link>
 
                 <Link
@@ -213,8 +213,8 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                       <FiPackage className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-[#1a1a1a] font-bold text-sm block">Mis Pedidos</span>
-                      <span className="text-[#6a6c6b] text-xs">Historial de compras</span>
+                      <span className="text-ink font-bold text-sm block">Mis Pedidos</span>
+                      <span className="text-muted text-xs">Historial de compras</span>
                     </div>
                   </div>
                   <FiChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
@@ -232,8 +232,8 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                     <FiSettings className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-[#1a1a1a] font-bold text-sm block">Panel Admin</span>
-                    <span className="text-[#6a6c6b] text-xs">Administración del sitio</span>
+                    <span className="text-ink font-bold text-sm block">Panel Admin</span>
+                    <span className="text-muted text-xs">Administración del sitio</span>
                   </div>
                 </div>
                 <FiChevronRight className="w-4 h-4 text-gray-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
@@ -242,13 +242,13 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
           </div>
 
           {/* Logout Section */}
-          <div className="p-3 border-t border-gray-100 bg-[#f8f9fa] sm:rounded-b-2xl mb-safe sm:mb-0">
+          <div className="p-3 border-t border-gray-100 bg-surface sm:rounded-b-2xl mb-safe sm:mb-0">
             <button
               onClick={handleSignOut}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 hover:border-red-200 hover:bg-red-50 rounded-xl transition-all duration-200 group shadow-sm active:scale-95"
             >
-              <FiLogOut className="w-4 h-4 text-[#6a6c6b] group-hover:text-red-600 transition-colors" />
-              <span className="text-[#1a1a1a] group-hover:text-red-600 font-bold text-sm transition-colors">Cerrar Sesión</span>
+              <FiLogOut className="w-4 h-4 text-muted group-hover:text-red-600 transition-colors" />
+              <span className="text-ink group-hover:text-red-600 font-bold text-sm transition-colors">Cerrar Sesión</span>
             </button>
           </div>
         </div>

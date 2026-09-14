@@ -6,13 +6,16 @@ import { ConfirmDialogProvider } from '@/contexts/ConfirmDialogContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import { Toaster } from 'react-hot-toast';
 import type { PublicSettings } from '@/lib/site-settings';
+import { CatalogNavProvider, type NavCategory } from '@/contexts/CatalogNavContext';
 
 export function Providers({
   children,
   initialSettings,
+  navCategories = [],
 }: {
   children: React.ReactNode;
   initialSettings: PublicSettings;
+  navCategories?: NavCategory[];
 }) {
   return (
     <SessionProvider
@@ -22,6 +25,7 @@ export function Providers({
     >
       <CartProvider>
         <SettingsProvider initialSettings={initialSettings}>
+          <CatalogNavProvider categories={navCategories}>
           <ConfirmDialogProvider>
             {children}
             <Toaster
@@ -53,6 +57,7 @@ export function Providers({
               }}
             />
           </ConfirmDialogProvider>
+          </CatalogNavProvider>
         </SettingsProvider>
       </CartProvider>
     </SessionProvider>

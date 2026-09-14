@@ -108,14 +108,13 @@ export default function CartIcon() {
       {/* Cart Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 hover:bg-white/10 rounded-lg transition-all duration-300"
+        className="relative p-2 hover:bg-brand-50 rounded-lg transition-all duration-300"
         style={{ overflow: 'visible' }}
       >
         <svg
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          className="animate-periodic-bounce"
           style={{
             width: '20px',
             height: '20px',
@@ -138,7 +137,7 @@ export default function CartIcon() {
         <>
           {/* Mobile Backdrop Overlay */}
           <div 
-            className="fixed left-0 right-0 bottom-0 top-20 bg-black/40 backdrop-blur-sm z-40 sm:hidden animate-fade-in" 
+            className="fixed left-0 right-0 bottom-0 top-14 bg-black/40 backdrop-blur-sm z-40 sm:hidden animate-fade-in" 
             aria-hidden="true" 
             onClick={() => setIsOpen(false)}
           />
@@ -152,7 +151,7 @@ export default function CartIcon() {
               w-auto sm:w-[360px]
               rounded-2xl sm:rounded-xl
               shadow-2xl sm:shadow-lg
-              border border-[#e9ecef]
+              border border-line
               overflow-hidden
               flex flex-col
               animate-mobileDropdownIn sm:animate-none"
@@ -162,14 +161,14 @@ export default function CartIcon() {
           >
             {items.length === 0 ? (
               <div className="p-8 text-center flex flex-col items-center justify-center">
-                <svg className="w-16 h-16 text-[#e9ecef] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-16 h-16 text-line mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                <p className="text-[#6a6c6b] text-sm mb-4">Tu carrito está vacío</p>
+                <p className="text-muted text-sm mb-4">Tu carrito está vacío</p>
                 <Link
                   href="/productos"
                   onClick={() => setIsOpen(false)}
-                  className="inline-block px-5 py-2.5 bg-[#2a63cd] text-white text-sm font-semibold rounded-xl hover:bg-[#1e4ba3] transition-all shadow-md"
+                  className="inline-block px-5 py-2.5 bg-brand-500 text-white text-sm font-semibold rounded-xl hover:bg-brand-600 transition-all shadow-md"
                 >
                   Explorar Productos
                 </Link>
@@ -177,8 +176,8 @@ export default function CartIcon() {
           ) : (
             <>
               {/* Header with Clear Button */}
-              <div className="px-4 py-3 border-b border-[#e9ecef] flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-[#212529]">
+              <div className="px-4 py-3 border-b border-line flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-ink">
                   Carrito de Compras ({totalItems} {totalItems === 1 ? 'item' : 'items'})
                 </h3>
                 <button
@@ -196,7 +195,7 @@ export default function CartIcon() {
               {/* Items */}
               <div className="max-h-96 overflow-y-auto">
                 {items.map((item) => (
-                  <div key={item.id} className="p-4 border-b border-[#e9ecef] hover:bg-[#f8f9fa] transition-colors">
+                  <div key={item.id} className="p-4 border-b border-line hover:bg-surface transition-colors">
                     <div className="flex gap-3">
                       {/* Image */}
                       <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded flex-shrink-0 relative overflow-hidden">
@@ -301,10 +300,10 @@ export default function CartIcon() {
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-[#212529] line-clamp-1 mb-1">
+                        <h4 className="text-sm font-medium text-ink line-clamp-1 mb-1">
                           {item.name}
                         </h4>
-                        <p className="text-sm font-semibold text-[#2a63cd] mb-2">
+                        <p className="text-sm font-semibold text-brand-500 mb-2">
                           {formatPrice(item.price)}
                         </p>
 
@@ -312,19 +311,19 @@ export default function CartIcon() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="w-6 h-6 flex items-center justify-center border border-[#e9ecef] rounded hover:bg-white transition-colors"
+                            className="w-6 h-6 flex items-center justify-center border border-line rounded hover:bg-white transition-colors"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                             </svg>
                           </button>
-                          <span className="text-xs font-medium text-[#212529] w-8 text-center">
+                          <span className="text-xs font-medium text-ink w-8 text-center">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             disabled={item.quantity >= item.stock}
-                            className="w-6 h-6 flex items-center justify-center border border-[#e9ecef] rounded hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-6 h-6 flex items-center justify-center border border-line rounded hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -346,15 +345,15 @@ export default function CartIcon() {
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t border-[#e9ecef] bg-[#f8f9fa]">
+              <div className="p-4 border-t border-line bg-surface">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-semibold text-[#212529]">Total:</span>
-                  <span className="text-lg font-bold text-[#2a63cd]">{formatPrice(totalPrice)}</span>
+                  <span className="text-sm font-semibold text-ink">Total:</span>
+                  <span className="text-lg font-bold text-brand-500">{formatPrice(totalPrice)}</span>
                 </div>
                 <Link
                   href="/carrito"
                   onClick={() => setIsOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#2a63cd] text-white text-sm font-semibold rounded-lg hover:bg-[#1e4ba3] transition-all shadow-md mb-2"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-500 text-white text-sm font-semibold rounded-lg hover:bg-brand-600 transition-all shadow-md mb-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -364,7 +363,7 @@ export default function CartIcon() {
                 <Link
                   href="/productos"
                   onClick={() => setIsOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white text-[#2a63cd] text-sm font-medium border border-[#e9ecef] rounded-lg hover:bg-[#f8f9fa] transition-all"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white text-brand-500 text-sm font-medium border border-line rounded-lg hover:bg-surface transition-all"
                 >
                   Seguir Comprando
                 </Link>

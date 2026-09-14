@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 
 type EnrolledCourse = {
@@ -133,7 +134,7 @@ export default function MisCursosPage() {
                 {/* Thumbnail */}
                 <div className="w-24 h-16 lg:w-32 lg:h-20 rounded-lg overflow-hidden bg-brand-500/10 shrink-0">
                   {course.thumbnail ? (
-                    <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                    <Image src={course.thumbnail} alt={course.title} width={128} height={80} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <svg className="w-8 h-8 text-brand-500/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { FiStar, FiVideo, FiX, FiExternalLink } from 'react-icons/fi';
 
@@ -197,9 +198,11 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                 {/* Thumbnail */}
                 <div className="relative aspect-video bg-gradient-to-br from-surface to-line overflow-hidden">
                   {computedThumbnail ? (
-                    <img
+                    <Image
                       src={computedThumbnail}
                       alt={v.title}
+                      width={640}
+                      height={360}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                   ) : (
@@ -361,13 +364,15 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                   )}
                 </div>
                 <div className="rounded-xl overflow-hidden border border-line">
-                  <img
+                  <Image
                     src={
                       beforeAfterView === 'before'
                         ? activeModal.beforeImage!
                         : activeModal.afterImage!
                     }
                     alt={beforeAfterView === 'before' ? 'Antes' : 'Después'}
+                    width={640}
+                    height={360}
                     className="w-full object-cover max-h-64"
                   />
                 </div>

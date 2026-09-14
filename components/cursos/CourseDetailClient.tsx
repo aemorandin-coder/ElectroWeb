@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 type Lesson = {
   id: string;
@@ -283,7 +284,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
               <h2 className="text-lg font-bold text-ink mb-4">Sobre el Instructor</h2>
               <div className="flex items-start gap-4">
                 {course.creator.avatar ? (
-                  <img src={course.creator.avatar} alt={course.creator.displayName} className="w-14 h-14 rounded-full object-cover shrink-0" />
+                  <Image src={course.creator.avatar} alt={course.creator.displayName} width={56} height={56} className="w-14 h-14 rounded-full object-cover shrink-0" />
                 ) : (
                   <div className="w-14 h-14 rounded-full bg-brand-500/10 flex items-center justify-center shrink-0">
                     <span className="text-xl font-bold text-brand-500">{course.creator.displayName[0]}</span>
@@ -459,7 +460,7 @@ function EnrollCard({
         ) : (
           <>
             {thumbnail ? (
-              <img src={thumbnail} alt="" className="w-full h-full object-cover" />
+              <Image src={thumbnail} alt="Miniatura del curso" width={640} height={360} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-[#1a1a2e]">
                 <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">

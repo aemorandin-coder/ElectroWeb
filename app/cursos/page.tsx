@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
@@ -116,7 +117,7 @@ function CourseCard({ course }: CourseCardProps) {
           className="absolute top-2 right-2 z-30 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 transition-opacity duration-300"
         />
         {course.thumbnail ? (
-          <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <Image src={course.thumbnail} alt={course.title} width={640} height={360} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
           <div className="flex items-center justify-center h-full">
             <svg className="w-12 h-12 text-brand-500/25" fill="none" stroke="currentColor" viewBox="0 0 24 24">

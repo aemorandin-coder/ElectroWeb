@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import ImageUploadField from '@/components/ui/ImageUploadField';
 
 const INPUT = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-brand-500 text-sm transition-colors';
@@ -72,8 +73,7 @@ export default function CreatorProfilePage() {
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-500 to-cyan-500 flex items-center justify-center text-white text-xl font-bold overflow-hidden flex-shrink-0">
             {form.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={form.avatar} alt="avatar" className="w-full h-full object-cover" />
+              <Image src={form.avatar} alt="avatar" width={64} height={64} className="w-full h-full object-cover" />
             ) : (
               form.displayName?.[0]?.toUpperCase() || 'C'
             )}

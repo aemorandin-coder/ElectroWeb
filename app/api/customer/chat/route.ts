@@ -13,7 +13,9 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = (session.user as any).id;
-    const { userName, userEmail } = await req.json();
+    // Nombre y correo salen de la sesión, no del cuerpo (C-70)
+    const userName = session.user.name || null;
+    const userEmail = session.user.email || null;
 
     // Check if user already has an open conversation
     const existingConversation = await prisma.chatConversation.findFirst({

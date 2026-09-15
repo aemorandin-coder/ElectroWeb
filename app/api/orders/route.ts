@@ -26,6 +26,18 @@ import { es } from 'date-fns/locale';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { parseDeliveryMethod, parseOrderItems, quoteOrder, OrderInputError, type QuotedLine } from '@/lib/order-quote';
 import { roundMoney, type OrderGroupTotals } from '@/lib/pricing';
+import {
+  orderPatchSchema,
+  transicionPermitida,
+  estadosSiguientes,
+  ETIQUETA_ESTADO,
+  pideConfirmarPago,
+  stockYaDescontado,
+  devolverStock,
+  liberarReservas,
+  escaparHtml,
+  MOTIVO_CANCELACION_MINIMO,
+} from '@/lib/order-admin';
 
 
 // GET - Get all orders
@@ -604,7 +616,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH - Update order status
+// PATCH - El panel cambia el estado de una orden (C-74)
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -619,122 +631,195 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
     }
 
-    const body = await request.json();
-    const oldOrder = await prisma.order.findUnique({ where: { id } });
-
-    if (!oldOrder) {
-      return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 });
+    // Lista blanca: el body ya no se copia entero a la orden (antes se podía cambiar totalUSD o userId)
+    const parseado = orderPatchSchema.safeParse(await request.json());
+    if (!parseado.success) {
+      const problema = parseado.error.issues[0];
+      const campo = problema?.path.join('.') || 'body';
+      return NextResponse.json(
+        { error: `No se puede cambiar "${campo}" desde el panel.`, detalle: problema?.message },
+        { status: 400 }
+      );
     }
+    const patch = parseado.data;
 
-    const updateData: any = {
-      ...body,
-    };
+    const resultado = await prisma.$transaction(async (tx) => {
+      const orden = await tx.order.findUnique({
+        where: { id },
+        include: { items: true, user: { select: { name: true, email: true } } },
+      });
+      if (!orden) return { tipo: 'no-encontrada' as const };
 
-    // Handle payment status updates
-    if (body.paymentStatus === PaymentStatus.PAID && oldOrder.paymentStatus !== PaymentStatus.PAID) {
-      updateData.paidAt = new Date();
-    }
+      // Máquina de estados: ni saltos hacia atrás ni cancelar dos veces
+      const esTerminal = orden.status === OrderStatus.CANCELLED || orden.status === OrderStatus.REFUNDED;
+      if (patch.status && (!transicionPermitida(orden.status, patch.status) || (esTerminal && patch.status === orden.status))) {
+        return {
+          tipo: 'transicion-invalida' as const,
+          repetida: esTerminal && patch.status === orden.status,
+          desde: ETIQUETA_ESTADO[orden.status],
+          hasta: ETIQUETA_ESTADO[patch.status],
+          permitidos: estadosSiguientes(orden.status).map((e) => ETIQUETA_ESTADO[e]),
+        };
+      }
 
-    // Handle order status-specific updates with timestamps
-    if (body.status && body.status !== oldOrder.status) {
-      // VALIDATION: Require cancellation note for CANCELLED status
-      if (body.status === 'CANCELLED') {
-        if (!body.notes || body.notes.trim().length < 10) {
-          return NextResponse.json(
-            { error: 'Se requiere una nota de cancelación con al menos 10 caracteres para informar al cliente del motivo.' },
-            { status: 400 }
-          );
+      const cancelando = patch.status === OrderStatus.CANCELLED && orden.status !== OrderStatus.CANCELLED;
+      const motivo = patch.notes?.trim() ?? '';
+      if (cancelando && motivo.length < MOTIVO_CANCELACION_MINIMO) {
+        return { tipo: 'sin-motivo' as const };
+      }
+
+      const confirmandoPago = pideConfirmarPago(patch) && orden.paymentStatus !== PaymentStatus.PAID;
+
+      const data: Prisma.OrderUncheckedUpdateInput = {};
+      if (patch.shippingCarrier !== undefined) data.shippingCarrier = patch.shippingCarrier;
+      if (patch.trackingNumber !== undefined) data.trackingNumber = patch.trackingNumber;
+      if (patch.trackingUrl !== undefined) data.trackingUrl = patch.trackingUrl;
+      if (patch.shippingNotes !== undefined) data.shippingNotes = patch.shippingNotes;
+      if (patch.adminNotes !== undefined) data.adminNotes = patch.adminNotes;
+      if (patch.estimatedDelivery !== undefined) {
+        data.estimatedDelivery = patch.estimatedDelivery ? new Date(patch.estimatedDelivery) : null;
+      }
+
+      if (patch.status && patch.status !== orden.status) {
+        data.status = patch.status;
+        switch (patch.status) {
+          case OrderStatus.CONFIRMED:
+            data.confirmedAt = new Date();
+            break;
+          case OrderStatus.PROCESSING:
+            data.processingAt = new Date();
+            break;
+          case OrderStatus.SHIPPED:
+          case OrderStatus.READY_FOR_PICKUP:
+            data.shippedAt = new Date();
+            break;
+          case OrderStatus.DELIVERED:
+            data.deliveredAt = new Date();
+            break;
+          case OrderStatus.CANCELLED:
+            data.cancelledAt = new Date();
+            data.notes = motivo;
+            break;
         }
       }
 
-      switch (body.status) {
-        case 'CONFIRMED':
-          updateData.confirmedAt = new Date();
-          break;
-        case 'PROCESSING':
-          updateData.processingAt = new Date();
-          break;
-        case 'SHIPPED':
-          updateData.shippedAt = new Date();
-          // Validate shipping info is provided when marking as shipped
-          if (!body.trackingNumber && !body.shippingCarrier) {
-            // Allow shipping without tracking for store pickup
-            if ((oldOrder as any).deliveryMethod !== 'STORE_PICKUP') {
-              // We'll allow it but it's recommended
-            }
+      // Confirmar el pago descuenta el stock una sola vez y llena paidAt,
+      // venga del botón "Marcar pagado" o del estado de pago.
+      const cambiosStock: { productId: string; quantity: number }[] = [];
+      if (confirmandoPago) {
+        data.paymentStatus = PaymentStatus.PAID;
+        data.paidAt = new Date();
+
+        for (const item of orden.items) {
+          const producto = await tx.product.findUnique({
+            where: { id: item.productId },
+            select: { stock: true, productType: true },
+          });
+          if (!producto || producto.productType === 'DIGITAL') continue;
+          const descuento = Math.min(item.quantity, producto.stock); // nunca stock negativo
+          if (descuento > 0) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stock: { decrement: descuento } },
+            });
           }
-          break;
-        case 'READY_FOR_PICKUP':
-          updateData.shippedAt = new Date(); // Reuse shippedAt for pickup ready
-          break;
-        case 'DELIVERED':
-          updateData.deliveredAt = new Date();
-          break;
-        case 'CANCELLED':
-          updateData.cancelledAt = new Date();
-          updateData.notes = body.notes; // Save cancellation reason
-          break;
+          cambiosStock.push({ productId: item.productId, quantity: descuento });
+        }
+        await liberarReservas(tx, orden.userId, orden.items);
       }
-    }
 
-    // Handle shipping info updates
-    if (body.shippingCarrier !== undefined) {
-      updateData.shippingCarrier = body.shippingCarrier;
-    }
-    if (body.trackingNumber !== undefined) {
-      updateData.trackingNumber = body.trackingNumber;
-    }
-    if (body.trackingUrl !== undefined) {
-      updateData.trackingUrl = body.trackingUrl;
-    }
-    if (body.shippingNotes !== undefined) {
-      updateData.shippingNotes = body.shippingNotes;
-    }
-    if (body.estimatedDelivery !== undefined) {
-      updateData.estimatedDelivery = body.estimatedDelivery ? new Date(body.estimatedDelivery) : null;
-    }
+      // Cancelar: devolver stock solo si se había descontado, y una sola vez
+      let reintegro = 0;
+      if (cancelando) {
+        if (stockYaDescontado(orden.paymentStatus)) {
+          await devolverStock(tx, orden.items);
+        }
+        await liberarReservas(tx, orden.userId, orden.items);
 
-    const order = await prisma.order.update({
-      where: { id },
-      data: updateData,
-      include: {
-        items: true,
-        user: { select: { name: true, email: true } }
-      },
+        // Pago con saldo: el total vuelve al saldo de la tienda (nunca sale dinero de la empresa).
+        // Decisión de Andrés (2026-09-15): es crédito para comprar aquí, no un reembolso.
+        const pagoConSaldo = orden.paymentMethod === 'WALLET' && orden.paymentStatus === PaymentStatus.PAID;
+        if (pagoConSaldo && orden.userId) {
+          const saldo = await tx.userBalance.findUnique({
+            where: { userId: orden.userId },
+            select: { id: true },
+          });
+          if (saldo) {
+            const total = Number(orden.totalUSD);
+            await tx.userBalance.update({
+              where: { id: saldo.id },
+              data: {
+                balance: { increment: total },
+                totalSpent: { decrement: total },
+              },
+            });
+            await tx.transaction.create({
+              data: {
+                balanceId: saldo.id,
+                type: 'REFUND',
+                status: 'COMPLETED',
+                amount: total,
+                currency: 'USD',
+                description: `Saldo devuelto por la cancelación de la orden #${orden.orderNumber}`,
+                reference: orden.orderNumber,
+                paymentMethod: 'WALLET',
+              },
+            });
+            data.paymentStatus = PaymentStatus.REFUNDED;
+            reintegro = total;
+          }
+        }
+      }
+
+      const actualizada = await tx.order.update({
+        where: { id },
+        data,
+        include: { items: true, user: { select: { name: true, email: true } } },
+      });
+
+      return {
+        tipo: 'ok' as const,
+        ordenPrevia: orden,
+        orden: actualizada,
+        confirmandoPago,
+        cancelando,
+        motivo,
+        reintegro,
+        cambiosStock,
+      };
     });
 
-    // Create notifications for status changes
-    if (body.paymentStatus === PaymentStatus.PAID && oldOrder.paymentStatus !== PaymentStatus.PAID) {
-      // PAYMENT CONFIRMED: Now deduct stock (for DIRECT payment orders that had reservations)
-      // This happens when admin confirms the payment was received
-      const stockChanges: { productId: string; quantity: number }[] = [];
-      for (const item of order.items) {
-        const product = await prisma.product.findUnique({
-          where: { id: item.productId },
-          select: { stock: true, productType: true }
-        });
+    if (resultado.tipo === 'no-encontrada') {
+      return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 });
+    }
+    if (resultado.tipo === 'transicion-invalida') {
+      return NextResponse.json(
+        {
+          error: resultado.repetida
+            ? `La orden ya está ${resultado.desde.toLowerCase()}.`
+            : `Una orden ${resultado.desde.toLowerCase()} no puede pasar a ${resultado.hasta.toLowerCase()}.`,
+          permitidos: resultado.permitidos,
+        },
+        { status: 409 }
+      );
+    }
+    if (resultado.tipo === 'sin-motivo') {
+      return NextResponse.json(
+        { error: 'Se requiere una nota de cancelación con al menos 10 caracteres para informar al cliente del motivo.' },
+        { status: 400 }
+      );
+    }
 
-        // Only deduct stock for physical products
-        if (product && product.productType !== 'DIGITAL') {
-          const newStock = product.stock - item.quantity;
-          await prisma.product.update({
-            where: { id: item.productId },
-            data: { stock: Math.max(0, newStock) },
-          });
-          stockChanges.push({ productId: item.productId, quantity: Math.min(item.quantity, product.stock) });
-        }
-      }
-      notifyStockCrossings(stockChanges).catch((error) => console.error('Error enviando avisos de stock:', error));
+    const { ordenPrevia: oldOrder, orden: order, confirmandoPago, cancelando, motivo, reintegro, cambiosStock } = resultado;
 
-      // Release the stock reservation since stock is now actually deducted
-      if (oldOrder.userId) {
-        await prisma.stockReservation.deleteMany({
-          where: { userId: oldOrder.userId },
-        });
-      }
+    if (cambiosStock.length > 0) {
+      notifyStockCrossings(cambiosStock).catch((error) => console.error('Error enviando avisos de stock:', error));
+    }
 
+    // Avisos al cliente (fuera de la transacción: correos y notificaciones no deben bloquear el cambio)
+    if (confirmandoPago && oldOrder.userId) {
       await createNotification({
-        userId: oldOrder.userId!,
+        userId: oldOrder.userId,
         type: 'ORDER_PAID',
         title: 'Pago Confirmado',
         message: `El pago de tu orden #${oldOrder.orderNumber} ha sido confirmado.`,
@@ -743,8 +828,8 @@ export async function PATCH(request: NextRequest) {
       });
     }
 
-    if (body.status && body.status !== oldOrder.status && oldOrder.userId) {
-      switch (body.status) {
+    if (patch.status && patch.status !== oldOrder.status && oldOrder.userId) {
+      switch (patch.status) {
         case 'CONFIRMED':
           await createNotification({
             userId: oldOrder.userId,
@@ -778,9 +863,9 @@ export async function PATCH(request: NextRequest) {
           });
           break;
 
-        case 'SHIPPED':
-          const carrierInfo = body.shippingCarrier ? ` vía ${body.shippingCarrier}` : '';
-          const trackingInfo = body.trackingNumber ? ` - Guía: ${body.trackingNumber}` : '';
+        case 'SHIPPED': {
+          const carrierInfo = patch.shippingCarrier ? ` vía ${patch.shippingCarrier}` : '';
+          const trackingInfo = patch.trackingNumber ? ` - Guía: ${patch.trackingNumber}` : '';
           // Una sola notificación (antes salían dos: la genérica y esta con guía y transportista)
           await createNotification({
             userId: oldOrder.userId,
@@ -790,25 +875,24 @@ export async function PATCH(request: NextRequest) {
             link: `/customer/orders`,
             icon: 'shipping'
           });
-          // Send shipped email to customer
           if (order.user?.email) {
             try {
               await sendOrderShippedEmail(order.user.email, {
                 orderNumber: oldOrder.orderNumber,
                 customerName: order.user.name || 'Cliente',
-                trackingNumber: body.trackingNumber || order.trackingNumber || undefined,
-                shippingCarrier: body.shippingCarrier || order.shippingCarrier || undefined,
+                trackingNumber: patch.trackingNumber || order.trackingNumber || undefined,
+                shippingCarrier: patch.shippingCarrier || order.shippingCarrier || undefined,
               });
             } catch (emailError) {
               console.error('Error sending shipped email:', emailError);
             }
           }
           break;
+        }
 
         case 'DELIVERED':
           await notifyOrderDelivered(oldOrder.userId, oldOrder.orderNumber, order.id);
 
-          // Send delivered email to customer
           if (order.user?.email) {
             try {
               await sendOrderDeliveredEmail(order.user.email, {
@@ -820,7 +904,7 @@ export async function PATCH(request: NextRequest) {
             }
           }
 
-          // Send review reminder email when order is delivered (optional, additional reminder)
+          // Recordatorio de reseña con el primer producto de la orden
           try {
             const orderWithUser = await prisma.order.findUnique({
               where: { id },
@@ -859,52 +943,62 @@ export async function PATCH(request: NextRequest) {
           }
           break;
 
-        case 'CANCELLED':
+        case 'CANCELLED': {
+          const avisoSaldo = reintegro > 0
+            ? ` Devolvimos ${formatUSD(reintegro)} a tu saldo para tu próxima compra.`
+            : '';
           await createNotification({
             userId: oldOrder.userId,
             type: 'ORDER_CANCELLED',
             title: 'Orden Cancelada',
-            message: `Tu orden #${oldOrder.orderNumber} ha sido cancelada. ${body.notes || ''}`,
+            message: `Tu orden #${oldOrder.orderNumber} ha sido cancelada. ${motivo}${avisoSaldo}`,
             link: `/customer/orders`,
             icon: 'cancel'
           });
 
-          // Send cancellation email to customer
           try {
-            const companySettings = await prisma.companySettings.findFirst();
+            const bloqueSaldo = reintegro > 0
+              ? `
+              <div style="background:#f0f7f4;border-left:4px solid #047857;padding:15px 20px;margin:20px 0;border-radius:0 8px 8px 0;">
+                <p style="margin:0;color:#047857;font-size:14px;font-weight:600;">Saldo devuelto</p>
+                <p style="margin:8px 0 0;color:#047857;font-size:14px;">
+                  Devolvimos ${escaparHtml(formatUSD(reintegro))} a tu saldo de la tienda para tu próxima compra.
+                </p>
+              </div>`
+              : '';
+            // Todo lo que escribe el admin o el cliente va escapado: antes entraba crudo en el HTML
             const cancellationEmailContent = `
               <h2 style="margin:0 0 20px;color:#dc3545;font-size:24px;font-weight:600;">Orden Cancelada</h2>
               <p style="color:#6a6c6b;font-size:16px;line-height:1.6;">
-                Hola <strong>${order.user?.name || 'Cliente'}</strong>,
+                Hola <strong>${escaparHtml(order.user?.name || 'Cliente')}</strong>,
               </p>
               <p style="color:#6a6c6b;font-size:16px;line-height:1.6;">
-                Lamentamos informarte que tu orden <strong>#${oldOrder.orderNumber}</strong> ha sido cancelada.
+                Lamentamos informarte que tu orden <strong>#${escaparHtml(oldOrder.orderNumber)}</strong> ha sido cancelada.
               </p>
-              
+
               <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:15px 20px;margin:20px 0;border-radius:0 8px 8px 0;">
                 <p style="margin:0;color:#856404;font-size:14px;font-weight:600;">Motivo de la cancelación:</p>
-                <p style="margin:8px 0 0;color:#856404;font-size:14px;">${body.notes}</p>
+                <p style="margin:8px 0 0;color:#856404;font-size:14px;">${escaparHtml(motivo)}</p>
               </div>
-              
+              ${bloqueSaldo}
               <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:20px 0;">
                 <p style="margin:0;color:#6a6c6b;font-size:14px;">
-                  <strong>Número de orden:</strong> ${oldOrder.orderNumber}<br>
-                  <strong>Total:</strong> $${Number(oldOrder.totalUSD).toFixed(2)}<br>
+                  <strong>Número de orden:</strong> ${escaparHtml(oldOrder.orderNumber)}<br>
+                  <strong>Total:</strong> ${escaparHtml(formatUSD(Number(oldOrder.totalUSD)))}<br>
                   <strong>Fecha de cancelación:</strong> ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
-              
+
               <p style="color:#6a6c6b;font-size:14px;line-height:1.6;">
-                Si realizaste algún pago, el reembolso será procesado según nuestras políticas.
                 Si tienes alguna pregunta, no dudes en contactarnos.
               </p>
-              
+
               <div style="text-align:center;margin:30px 0;">
-                <a href="${process.env.NEXTAUTH_URL || ''}/contacto" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
+                <a href="${process.env.NEXTAUTH_URL || ''}/contacto" style="display:inline-block;background:#2a63cd;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
                   Contactar Soporte
                 </a>
               </div>
-              
+
               <p style="color:#adb5bd;font-size:12px;margin:30px 0 0;border-top:1px solid #e9ecef;padding-top:20px;">
                 Gracias por tu comprensión. Esperamos poder atenderte en otra oportunidad.
               </p>
@@ -913,48 +1007,25 @@ export async function PATCH(request: NextRequest) {
             const { getBaseTemplate } = await import('@/lib/email-service');
             const emailHtml = await getBaseTemplate(cancellationEmailContent, 'Tu orden ha sido cancelada');
 
-            await sendEmail({
-              to: order.user?.email || '',
-              subject: `Orden Cancelada - ${oldOrder.orderNumber}`,
-              html: emailHtml,
-            });
+            if (order.user?.email) {
+              await sendEmail({
+                to: order.user.email,
+                subject: `Orden Cancelada - ${oldOrder.orderNumber}`,
+                html: emailHtml,
+              });
+            }
           } catch (emailError) {
             console.error('Error sending cancellation email:', emailError);
             // Don't fail the cancellation if email fails
           }
-
-          // Restore stock if order is cancelled
-          for (const item of order.items) {
-            const product = await prisma.product.findUnique({ where: { id: item.productId } });
-            if (product) {
-              const newStock = product.stock + item.quantity;
-              await prisma.product.update({
-                where: { id: item.productId },
-                data: {
-                  stock: newStock,
-                },
-              });
-            }
-          }
-
-          // Also release any stock reservations for this user
-          if (oldOrder.userId) {
-            await prisma.stockReservation.deleteMany({
-              where: { userId: oldOrder.userId },
-            });
-          }
-
-          // Mark discounts as used
-          // TODO: Logic to restore discounts if needed
           break;
+        }
       }
     }
 
     // Avisos al equipo (C-73): quién confirmó el pago o canceló, para que el resto lo sepa
     const actor = session?.user?.name || session?.user?.email || 'Un administrador';
-    const becamePaid = (body.status === 'PAID' && oldOrder.status !== 'PAID')
-      || (body.paymentStatus === PaymentStatus.PAID && oldOrder.paymentStatus !== PaymentStatus.PAID);
-    if (becamePaid) {
+    if (confirmandoPago) {
       emitAdminEvent({
         type: 'ORDER_PAID',
         title: `Pago confirmado · ${oldOrder.orderNumber}`,
@@ -967,15 +1038,16 @@ export async function PATCH(request: NextRequest) {
         link: '/admin/orders',
       });
     }
-    if (body.status === 'CANCELLED' && oldOrder.status !== 'CANCELLED') {
+    if (cancelando) {
       emitAdminEvent({
         type: 'ORDER_CANCELLED',
         title: `Orden cancelada · ${oldOrder.orderNumber}`,
         summary: `${actor} canceló la orden`,
         fields: [
           ['Total', formatUSD(Number(oldOrder.totalUSD))],
-          ['Motivo', typeof body.notes === 'string' ? body.notes.slice(0, 300) : null],
+          ['Motivo', motivo.slice(0, 300)],
           ['Cliente', order.user?.name || order.user?.email],
+          ['Saldo devuelto', reintegro > 0 ? formatUSD(reintegro) : null],
         ],
         link: '/admin/orders',
       });
@@ -987,5 +1059,3 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Error al actualizar orden' }, { status: 500 });
   }
 }
-
-

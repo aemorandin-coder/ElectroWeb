@@ -1,0 +1,382 @@
+/* Tarjeta 3D de gift card (C-71). Mundo visual propio: sus colores vienen del diseño (variables en línea). */
+
+.scene {
+  position: relative;
+  width: 100%;
+  perspective: 1100px;
+}
+
+.floor {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -16px;
+  height: 24px;
+  background: radial-gradient(closest-side, rgba(16, 24, 48, 0.32), transparent);
+  filter: blur(6px);
+  transform: translateX(var(--shx, 0px)) scaleX(var(--shs, 1));
+  pointer-events: none;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.586;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  touch-action: pan-y;
+  cursor: grab;
+  container-type: inline-size;
+  border-radius: 18px;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card:active {
+  cursor: grabbing;
+}
+
+.card:focus-visible {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--color-brand-500);
+}
+
+.static .card {
+  cursor: default;
+  touch-action: auto;
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  border-radius: 5.2cqw;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: var(--gc-bg);
+  color: var(--gc-text);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 18px 40px -18px rgba(16, 24, 48, 0.55);
+}
+
+.back {
+  transform: rotateY(180deg);
+}
+
+.foil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(115deg, #ff7ac6 0%, #ffd36e 7%, #7dffb2 14%, #6ec8ff 21%, #b58bff 28%, #ff7ac6 35%);
+  background-size: 220% 220%;
+  background-position: var(--fx, 50%) var(--fy, 50%);
+  mix-blend-mode: color-dodge;
+  opacity: var(--gc-foil, 0.16);
+}
+
+.glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--gx, 30%) var(--gy, 20%), rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 46%);
+  mix-blend-mode: soft-light;
+  opacity: 0.7;
+}
+
+.sweep {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  transform: translateX(-70%);
+  opacity: 0;
+}
+
+.sweepRun {
+  animation: sweep 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 1;
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-70%); opacity: 1; }
+  100% { transform: translateX(70%); opacity: 0; }
+}
+
+.inner {
+  position: absolute;
+  inset: 0;
+  padding: 6.2cqw 6.6cqw;
+  display: grid;
+}
+
+.frontInner {
+  grid-template-rows: auto 1fr auto;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3cqw;
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  gap: 2.4cqw;
+}
+
+.monogram {
+  width: 9.4cqw;
+  height: 9.4cqw;
+  border-radius: 2.4cqw;
+  background: var(--gc-chip);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22) inset;
+  color: var(--gc-text);
+}
+
+.monogram svg {
+  width: 58%;
+  height: 58%;
+}
+
+.wordmark {
+  font-family: var(--font-brand);
+  line-height: 1.05;
+  letter-spacing: 0.06em;
+}
+
+.wordmark b {
+  display: block;
+  font-weight: 400;
+  font-size: 4.3cqw;
+  color: var(--gc-text);
+}
+
+.wordmark span {
+  display: block;
+  font-size: 2.6cqw;
+  letter-spacing: 0.42em;
+  color: var(--gc-accent);
+}
+
+.tag {
+  font-size: 2.5cqw;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  padding: 1.2cqw 2.4cqw;
+  border-radius: 99px;
+  border: 1px solid var(--gc-line);
+  color: var(--gc-accent);
+  white-space: nowrap;
+}
+
+.foilBand {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 15%;
+  width: 7cqw;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+}
+
+.foilBand::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0 1px, transparent 1px 3px);
+}
+
+.valueRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 3cqw;
+}
+
+.label {
+  font-size: 2.4cqw;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gc-muted);
+}
+
+.amount {
+  font-size: 12.5cqw;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--gc-text);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+}
+
+.amount small {
+  font-size: 4.2cqw;
+  font-weight: 600;
+  margin-left: 1.4cqw;
+  color: var(--gc-accent);
+  letter-spacing: 0.04em;
+}
+
+.to {
+  text-align: right;
+  font-size: 3cqw;
+  line-height: 1.25;
+  color: var(--gc-muted);
+  max-width: 38cqw;
+  min-width: 0;
+}
+
+.to b {
+  display: block;
+  color: var(--gc-text);
+  font-weight: 600;
+  font-size: 3.4cqw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.backInner {
+  grid-template-rows: auto auto 1fr auto;
+  gap: 2.6cqw;
+}
+
+.backInner > :first-child {
+  margin-top: 13cqw;
+}
+
+.strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 7cqw;
+  height: 10cqw;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.code {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-weight: 700;
+  font-size: 5.2cqw;
+  letter-spacing: 0.08em;
+  color: var(--gc-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pinZone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3cqw;
+}
+
+.pinBox {
+  position: relative;
+  width: 44cqw;
+  height: 13cqw;
+  border-radius: 2.2cqw;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.92);
+  color: #10182b;
+}
+
+.pinBox.scratchCover {
+  background: linear-gradient(120deg, #b9c0cc, #eef1f6 45%, #aeb6c3 55%, #d9dee7);
+  color: #5b6474;
+}
+
+.pin {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-weight: 700;
+  font-size: 6cqw;
+  letter-spacing: 0.16em;
+}
+
+.scratchText {
+  font-size: 3.2cqw;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.note {
+  font-size: 3cqw;
+  line-height: 1.35;
+  color: var(--gc-muted);
+  max-width: 60cqw;
+}
+
+.note b {
+  color: var(--gc-text);
+  font-weight: 600;
+}
+
+.stamp {
+  font-size: 2.6cqw;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 1.4cqw 2.4cqw;
+  border-radius: 1.6cqw;
+  border: 0.5cqw solid currentColor;
+  transform: rotate(-6deg);
+  white-space: nowrap;
+}
+
+.stampInactive {
+  color: #ffcf8a;
+}
+
+.stampActive {
+  color: #7ef0c1;
+}
+
+.redeem {
+  font-size: 2.8cqw;
+  color: var(--gc-muted);
+  display: flex;
+  justify-content: space-between;
+  gap: 3cqw;
+}
+
+.redeem b {
+  color: var(--gc-text);
+  font-weight: 600;
+}
+
+/* Movimiento reducido: sin 3D, la cara cambia con un fundido */
+.reduced .card {
+  transform: none !important;
+}
+
+.reduced .face {
+  transition: opacity 260ms ease;
+}
+
+.reduced .back {
+  transform: none;
+  opacity: 0;
+}
+
+.reduced .card[data-back="true"] .back {
+  opacity: 1;
+}
+
+.reduced .card[data-back="true"] .front {
+  opacity: 0;
+}
+
+.reduced .floor {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweepRun {
+    animation: none;
+  }
+}

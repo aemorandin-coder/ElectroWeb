@@ -3,6 +3,7 @@
  * Uses Node.js built-in crypto module
  */
 import crypto from 'crypto';
+import { GIFT_CARD_PIN_LENGTH } from './gift-card-pin';
 
 /**
  * Generate a cryptographically secure random code
@@ -65,38 +66,59 @@ export function getCodeLastFour(code: string): string {
     return normalized.slice(-4);
 }
 
+
 /**
- * Generate a secure PIN (4-6 digits)
+ * Generate a secure PIN (6 digits by default). crypto.randomInt: sin sesgo de módulo.
  */
-export function generateSecurePin(length: number = 4): string {
-    const bytes = crypto.randomBytes(length);
+export function generateSecurePin(length: number = GIFT_CARD_PIN_LENGTH): string {
     let pin = '';
     for (let i = 0; i < length; i++) {
-        pin += (bytes[i] % 10).toString();
+        pin += crypto.randomInt(10).toString();
     }
     return pin;
 }
 
-/**
- * Hash a PIN for storage
- */
-export function hashPin(pin: string): string {
-    return crypto.createHash('sha256').update(pin).digest('hex');
+const PIN_HMAC_PREFIX = 'h1$';
+
+function pinSecret(): string {
+    const secret = process.env.GIFT_CARD_PIN_SECRET || process.env.NEXTAUTH_SECRET;
+    if (!secret) throw new Error('Falta GIFT_CARD_PIN_SECRET o NEXTAUTH_SECRET para proteger los PIN');
+    return secret;
 }
 
 /**
- * Verify a PIN against stored hash
+ * Hash a PIN for storage: HMAC-SHA256 con clave del servidor (C-71).
+ * Antes era SHA-256 sin clave: con 4 dígitos, cualquiera con el hash lo descifraba en milisegundos.
  */
-export function verifyPin(pin: string, storedHash: string): boolean {
-    const pinHash = hashPin(pin);
+export function hashPin(pin: string): string {
+    return PIN_HMAC_PREFIX + crypto.createHmac('sha256', pinSecret()).update(pin).digest('hex');
+}
+
+function safeEqualHex(a: string, b: string): boolean {
     try {
-        return crypto.timingSafeEqual(
-            Buffer.from(pinHash, 'hex'),
-            Buffer.from(storedHash, 'hex')
-        );
+        const bufA = Buffer.from(a, 'hex');
+        const bufB = Buffer.from(b, 'hex');
+        return bufA.length === bufB.length && bufA.length > 0 && crypto.timingSafeEqual(bufA, bufB);
     } catch {
         return false;
     }
+}
+
+/**
+ * Verify a PIN against what is stored. Acepta los 3 formatos que existen en la base de datos:
+ * HMAC (`h1$…`, desde C-71), SHA-256 sin clave (64 hex, tarjetas viejas) y texto plano (muy viejas).
+ */
+export function verifyPin(pin: string, stored: string): boolean {
+    if (!pin || !stored) return false;
+    if (stored.startsWith(PIN_HMAC_PREFIX)) {
+        return safeEqualHex(hashPin(pin).slice(PIN_HMAC_PREFIX.length), stored.slice(PIN_HMAC_PREFIX.length));
+    }
+    if (/^[0-9a-f]{64}$/i.test(stored)) {
+        return safeEqualHex(crypto.createHash('sha256').update(pin).digest('hex'), stored);
+    }
+    const given = Buffer.from(pin);
+    const expected = Buffer.from(stored);
+    return given.length === expected.length && crypto.timingSafeEqual(given, expected);
 }
 
 /**

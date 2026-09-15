@@ -15,6 +15,7 @@ import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverla
 import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle, FiGift, FiShield } from 'react-icons/fi';
 import { FaMobileScreen } from 'react-icons/fa6';
 import { FaCheck } from 'react-icons/fa';
+import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWallet } from '@fortawesome/free-solid-svg-icons';
 import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalculation, type PricingLine } from '@/lib/pricing';
@@ -156,6 +157,7 @@ export default function CheckoutPage() {
   const [giftCardInfo, setGiftCardInfo] = useState<{
     balanceUSD: number;
     status: string;
+    requiresPin: boolean;
   } | null>(null);
 
   // Load company settings for exchange rates
@@ -602,7 +604,8 @@ export default function CheckoutPage() {
       } else {
         setGiftCardInfo({
           balanceUSD: Number(data.balanceUSD) || 0,
-          status: data.status
+          status: data.status,
+          requiresPin: Boolean(data.requiresPin)
         });
       }
     } catch (err) {
@@ -1395,20 +1398,21 @@ export default function CheckoutPage() {
                               </div>
                             </div>
 
-                            {/* PIN Input */}
-                            {giftCardInfo.status === 'ACTIVE' && giftCardInfo.balanceUSD > 0 && (
+                            {/* PIN: solo tarjetas impresas (C-71) */}
+                            {giftCardInfo.status === 'ACTIVE' && giftCardInfo.balanceUSD > 0 && giftCardInfo.requiresPin && (
                               <div>
                                 <label className="block text-sm font-semibold text-amber-800 mb-2">
                                   <FiLock className="inline w-4 h-4 mr-1" />
-                                  PIN (opcional)
+                                  PIN de la tarjeta
                                 </label>
                                 <input
                                   type="text"
+                                  inputMode="numeric"
                                   value={giftCardPin}
-                                  onChange={(e) => setGiftCardPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                                  maxLength={4}
+                                  onChange={(e) => setGiftCardPin(e.target.value.replace(/\D/g, '').slice(0, GIFT_CARD_PIN_LENGTH))}
+                                  maxLength={GIFT_CARD_PIN_LENGTH}
                                   className="w-full px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.5em] border-2 border-amber-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                                  placeholder="••••"
+                                  placeholder="••••••"
                                 />
                               </div>
                             )}

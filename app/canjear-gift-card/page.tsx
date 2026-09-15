@@ -1,285 +1,291 @@
 'use client';
-import { formatUSD } from '@/lib/currency';
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
+import { FiAlertCircle, FiArrowRight, FiCheck, FiCreditCard, FiGift, FiLock, FiSearch } from 'react-icons/fi';
 import PublicHeader from '@/components/public/PublicHeader';
 import Footer from '@/components/Footer';
-import { FiGift, FiCheck, FiAlertCircle, FiCreditCard, FiLock, FiSearch } from 'react-icons/fi';
-import { HiSparkles } from 'react-icons/hi2';
-import toast from 'react-hot-toast';
+import Container from '@/components/ui/Container';
+import GiftCard3D, { type GiftCardFace } from '@/components/gift-card/GiftCard3D';
+import { formatUSD } from '@/lib/currency';
+import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
 
+interface CardInfo {
+  codeLast4: string;
+  status: string;
+  isValid: boolean;
+  requiresPin: boolean;
+  balanceUSD?: number;
+  message?: string;
+  design?: { slug?: string | null; name?: string } | null;
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  ACTIVE: 'Activa',
+  INACTIVE: 'Sin activar',
+  DEPLETED: 'Ya canjeada',
+  EXPIRED: 'Vencida',
+  SUSPENDED: 'Suspendida',
+  CANCELLED: 'Cancelada',
+  PARTIALLY_USED: 'Activa',
+};
+
+/** "esmc7k2p..." → "ESMC-7K2P-..." mientras se escribe (16 caracteres). */
+function formatCodeInput(value: string): string {
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16).replace(/(.{4})(?=.)/g, '$1-');
+}
+
+/**
+ * Canje de gift card (C-71): se verifica el código, se pide el PIN solo si la tarjeta lo tiene (impresas),
+ * y al acreditar la tarjeta gira al frente y el saldo cuenta hasta el monto.
+ */
 export default function RedeemGiftCardPage() {
-    const { data: session, status } = useSession();
-    const router = useRouter();
+  const { data: session, status: sessionStatus } = useSession();
 
-    const [code, setCode] = useState('');
-    const [pin, setPin] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [isChecking, setIsChecking] = useState(false);
-    const [cardInfo, setCardInfo] = useState<any>(null);
-    const [error, setError] = useState('');
-    const [redeemSuccess, setRedeemSuccess] = useState(false);
-    const [redeemedAmount, setRedeemedAmount] = useState(0);
+  const [code, setCode] = useState('');
+  const [pin, setPin] = useState('');
+  const [cardInfo, setCardInfo] = useState<CardInfo | null>(null);
+  const [error, setError] = useState('');
+  const [isChecking, setIsChecking] = useState(false);
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [redeemed, setRedeemed] = useState<{ amount: number; newBalance: number } | null>(null);
+  const [face, setFace] = useState<GiftCardFace>('back');
 
-    const handleCodeChange = (value: string) => {
-        let cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        let formatted = '';
-        if (cleaned.length > 0) {
-            formatted += cleaned.substring(0, 4);
-            if (cleaned.length > 4) {
-                formatted += '-' + cleaned.substring(4, 8);
-                if (cleaned.length > 8) {
-                    formatted += '-' + cleaned.substring(8, 12);
-                    if (cleaned.length > 12) {
-                        formatted += '-' + cleaned.substring(12, 16);
-                    }
-                }
-            }
-        }
-        setCode(formatted);
-        setError('');
-        setCardInfo(null);
-    };
+  const codeComplete = code.length === 19;
+  const canRedeem = Boolean(cardInfo?.isValid) && !redeemed;
 
-    const handleCheckBalance = async () => {
-        if (code.length < 19) {
-            setError('Ingresa un código completo');
-            return;
-        }
-        setIsChecking(true);
-        setError('');
-        try {
-            const response = await fetch(`/api/gift-cards/redeem?code=${code}`);
-            const data = await response.json();
-            if (!response.ok) {
-                setError(data.error);
-                setCardInfo(null);
-            } else {
-                setCardInfo(data);
-            }
-        } catch (err) {
-            setError('Error al verificar la Gift Card');
-        } finally {
-            setIsChecking(false);
-        }
-    };
+  const resetCard = (value: string) => {
+    setCode(formatCodeInput(value));
+    setCardInfo(null);
+    setPin('');
+    setError('');
+    setFace('back');
+  };
 
-    const handleRedeem = async () => {
-        if (!session) {
-            toast.error('Debes iniciar sesión para canjear una Gift Card');
-            router.push('/login?redirect=/canjear-gift-card');
-            return;
-        }
-        if (!cardInfo || Number(cardInfo.balanceUSD) <= 0) {
-            setError('Esta Gift Card no tiene saldo disponible');
-            return;
-        }
-        setIsLoading(true);
-        setError('');
-        try {
-            const response = await fetch('/api/gift-cards/redeem', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code, pin })
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                setError(data.error);
-                toast.error(data.error);
-            } else {
-                setRedeemSuccess(true);
-                setRedeemedAmount(data.amountRedeemed);
-                toast.success(`¡${formatUSD(data.amountRedeemed)} agregados a tu saldo!`);
-            }
-        } catch (err) {
-            setError('Error al canjear la Gift Card');
-            toast.error('Error al canjear la Gift Card');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    if (redeemSuccess) {
-        return (
-            <div className="min-h-dvh bg-gradient-to-b from-gray-50 to-white">
-                <PublicHeader />
-                <div style={{ maxWidth: '600px', margin: '0 auto', padding: '80px 24px' }}>
-                    <div style={{ background: 'white', borderRadius: '24px', padding: '48px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-                        <div style={{ width: '96px', height: '96px', margin: '0 auto 32px', background: 'linear-gradient(135deg, #22c55e, #10b981)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <FiCheck style={{ width: '48px', height: '48px', color: 'white' }} />
-                        </div>
-                        <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#111', marginBottom: '16px' }}>¡Canjeada Exitosamente!</h1>
-                        <p style={{ color: '#666', marginBottom: '24px' }}>Hemos agregado el saldo de tu Gift Card a tu cuenta</p>
-                        <div style={{ background: 'linear-gradient(135deg, #eff6ff, #eef2ff)', borderRadius: '16px', padding: '24px', marginBottom: '32px' }}>
-                            <span style={{ fontSize: '14px', color: '#666' }}>Monto acreditado</span>
-                            <div style={{ fontSize: '48px', fontWeight: '900', background: 'linear-gradient(90deg, #2a63cd, #1e4ba3)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                {formatUSD(redeemedAmount)}
-                            </div>
-                            <span style={{ fontSize: '14px', color: '#666' }}>USD</span>
-                        </div>
-                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                            <Link href="/customer/balance" style={{ flex: 1, minWidth: '140px', padding: '16px', background: 'linear-gradient(90deg, #2a63cd, #1e4ba3)', color: 'white', fontWeight: '700', borderRadius: '12px', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                <FiCreditCard /> Ver mi saldo
-                            </Link>
-                            <Link href="/productos" style={{ flex: 1, minWidth: '140px', padding: '16px', background: '#f3f4f6', color: '#374151', fontWeight: '700', borderRadius: '12px', textAlign: 'center', textDecoration: 'none' }}>
-                                Ir a comprar
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-                <Footer />
-            </div>
-        );
+  const handleCheck = async () => {
+    if (!codeComplete) {
+      setError('Escribe los 16 caracteres del código');
+      return;
     }
+    setIsChecking(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/gift-cards/redeem?code=${encodeURIComponent(code)}`);
+      const data = await response.json();
+      if (!response.ok) {
+        setCardInfo(null);
+        setError(data.error || 'No encontramos esa gift card');
+      } else {
+        setCardInfo(data);
+        if (!data.isValid) setError(data.message || 'Esta gift card no está disponible para canje');
+      }
+    } catch {
+      setError('No se pudo verificar la gift card. Revisa tu conexión e intenta de nuevo.');
+    } finally {
+      setIsChecking(false);
+    }
+  };
 
-    return (
-        <div className="min-h-dvh bg-gradient-to-b from-gray-50 to-white">
-            <PublicHeader />
+  const handleRedeem = async () => {
+    if (!cardInfo) return;
+    if (cardInfo.requiresPin && pin.length !== GIFT_CARD_PIN_LENGTH) {
+      setError(`Escribe los ${GIFT_CARD_PIN_LENGTH} dígitos del PIN que está bajo el raspadito`);
+      return;
+    }
+    setIsRedeeming(true);
+    setError('');
+    try {
+      const response = await fetch('/api/gift-cards/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, pin: cardInfo.requiresPin ? pin : undefined }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || 'No se pudo canjear la gift card');
+        return;
+      }
+      setRedeemed({ amount: Number(data.amountRedeemed) || 0, newBalance: Number(data.newBalance) || 0 });
+      setFace('front');
+      toast.success(`Listo: ${formatUSD(Number(data.amountRedeemed) || 0)} en tu saldo`);
+    } catch {
+      setError('No se pudo canjear la gift card. Revisa tu conexión e intenta de nuevo.');
+    } finally {
+      setIsRedeeming(false);
+    }
+  };
 
-            {/* Hero */}
-            <section style={{ background: 'linear-gradient(135deg, #2a63cd, #1e4ba3, #1a3b7e)', padding: '32px 0 80px', textAlign: 'center' }}>
-                <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(255,255,255,0.1)', borderRadius: '50px', marginBottom: '24px' }}>
-                        <FiGift style={{ color: '#fcd34d' }} />
-                        <span style={{ fontSize: '14px', fontWeight: '600', color: 'white' }}>Canjea tu Gift Card</span>
-                    </div>
-                    <h1 style={{ fontSize: '36px', fontWeight: '900', color: 'white', marginBottom: '16px' }}>
-                        Agregar saldo con <span style={{ color: '#fcd34d' }}>Gift Card</span>
-                    </h1>
-                    <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.8)' }}>
-                        Ingresa el código de tu Gift Card para agregar el saldo a tu cuenta
-                    </p>
-                </div>
+  // Antes de canjear el monto solo se ve con sesión; al canjear, cuenta desde 0 hasta lo acreditado
+  const cardAmount = redeemed ? redeemed.amount : 0;
+  const amountLabel = redeemed ? null : cardInfo?.balanceUSD !== undefined ? formatUSD(cardInfo.balanceUSD) : '$ ••••';
+
+  return (
+    <div className="min-h-dvh bg-surface">
+      <PublicHeader />
+
+      <main>
+        <Container className="py-8 lg:py-12">
+          <header className="mb-8 max-w-2xl">
+            <p className="text-sm font-semibold text-brand-600">Gift Cards</p>
+            <h1 className="mt-1 text-2xl font-bold text-ink lg:text-4xl">Canjear gift card</h1>
+            <p className="mt-2 text-base text-ink-soft">
+              Escribe el código de tu tarjeta. El saldo pasa a tu cuenta y lo usas en cualquier compra de la tienda.
+            </p>
+          </header>
+
+          <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:gap-12">
+            <section aria-label="Tu gift card" className="flex min-w-0 flex-col items-center gap-4 lg:sticky lg:top-24">
+              <GiftCard3D
+                className="w-full max-w-[440px]"
+                design={cardInfo?.design?.slug}
+                amountUSD={cardAmount}
+                amountLabel={amountLabel}
+                kind={cardInfo?.requiresPin ? 'print' : 'digital'}
+                code={codeComplete ? code : null}
+                status={cardInfo?.requiresPin ? (cardInfo.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE') : null}
+                face={face}
+                onFaceChange={setFace}
+              />
+              <p className="text-center text-sm text-muted">
+                {redeemed ? 'Saldo acreditado. Puedes girarla para ver el código.' : 'Así se ve tu tarjeta. Arrástrala de lado para girarla.'}
+              </p>
             </section>
 
-            {/* Form */}
-            <main style={{ maxWidth: '600px', margin: '-48px auto 0', padding: '0 24px 80px' }}>
-                <div style={{ background: 'white', borderRadius: '24px', padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-
-                    {/* Code Input */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <label style={{ display: 'block', fontSize: '14px', fontWeight: '700', color: '#374151', marginBottom: '8px' }}>
-                            <FiCreditCard style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
-                            Código de Gift Card
-                        </label>
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                type="text"
-                                value={code}
-                                onChange={(e) => handleCodeChange(e.target.value)}
-                                maxLength={19}
-                                style={{ width: '100%', padding: '16px', textAlign: 'center', fontSize: '20px', fontFamily: 'monospace', fontWeight: '700', letterSpacing: '2px', border: '2px solid #e5e7eb', borderRadius: '12px', textTransform: 'uppercase', outline: 'none' }}
-                                placeholder="ESMC-XXXX-XXXX-XXXX"
-                            />
-                            {code.length === 19 && !cardInfo && (
-                                <button
-                                    onClick={handleCheckBalance}
-                                    disabled={isChecking}
-                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', padding: '8px 16px', background: '#2a63cd', color: 'white', fontSize: '14px', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                                >
-                                    {isChecking ? '...' : <><FiSearch /> Verificar</>}
-                                </button>
-                            )}
-                        </div>
-                        <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '8px', textAlign: 'center' }}>
-                            El código está en el email de confirmación o en el reverso de la tarjeta
-                        </p>
+            <section className="min-w-0 rounded-2xl border border-line bg-white p-5 lg:p-6">
+              {redeemed ? (
+                <div className="flex flex-col gap-5" role="status">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-success-strong/10 text-success-strong">
+                      <FiCheck className="h-6 w-6" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <h2 className="text-lg font-bold text-ink">Gift card canjeada</h2>
+                      <p className="text-sm text-muted">El saldo ya está en tu cuenta.</p>
                     </div>
-
-                    {/* Error */}
-                    {error && (
-                        <div style={{ marginBottom: '24px', padding: '16px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <FiAlertCircle style={{ flexShrink: 0 }} />
-                            <span style={{ fontSize: '14px', fontWeight: '500' }}>{error}</span>
-                        </div>
-                    )}
-
-                    {/* Card Info */}
-                    {cardInfo && (
-                        <div style={{ marginBottom: '24px' }}>
-                            <div style={{ padding: '24px', borderRadius: '16px', border: '2px solid', borderColor: cardInfo.status === 'ACTIVE' ? '#86efac' : '#e5e7eb', background: cardInfo.status === 'ACTIVE' ? '#f0fdf4' : '#f9fafb' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                    <span style={{ fontSize: '14px', color: '#6b7280' }}>Estado</span>
-                                    <span style={{ padding: '4px 12px', borderRadius: '50px', fontSize: '12px', fontWeight: '700', background: cardInfo.status === 'ACTIVE' ? '#22c55e' : '#9ca3af', color: 'white' }}>
-                                        {cardInfo.status === 'ACTIVE' ? 'Activa' : cardInfo.status === 'DEPLETED' ? 'Sin saldo' : cardInfo.status}
-                                    </span>
-                                </div>
-                                <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                                    <span style={{ fontSize: '14px', color: '#6b7280' }}>Saldo disponible</span>
-                                    <div style={{ fontSize: '48px', fontWeight: '900', background: 'linear-gradient(90deg, #22c55e, #10b981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                        {formatUSD(Number(cardInfo.balanceUSD))}
-                                    </div>
-                                    <span style={{ fontSize: '14px', color: '#6b7280' }}>USD</span>
-                                </div>
-                            </div>
-
-                            {/* PIN Input */}
-                            {cardInfo.status === 'ACTIVE' && Number(cardInfo.balanceUSD) > 0 && (
-                                <div style={{ marginTop: '24px' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '700', color: '#374151', marginBottom: '8px' }}>
-                                        <FiLock style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
-                                        PIN (opcional)
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={pin}
-                                        onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                                        maxLength={4}
-                                        style={{ width: '100%', padding: '12px', textAlign: 'center', fontSize: '18px', fontFamily: 'monospace', fontWeight: '700', letterSpacing: '8px', border: '2px solid #e5e7eb', borderRadius: '12px', outline: 'none' }}
-                                        placeholder="••••"
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Login Warning */}
-                    {!session && status !== 'loading' && cardInfo && (
-                        <div style={{ marginBottom: '24px', padding: '16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', color: '#92400e', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <FiAlertCircle style={{ flexShrink: 0 }} />
-                            <div style={{ fontSize: '14px' }}>
-                                <p style={{ fontWeight: '500', margin: 0 }}>Debes iniciar sesión para canjear</p>
-                                <Link href="/login?redirect=/canjear-gift-card" style={{ color: '#78350f', textDecoration: 'underline' }}>
-                                    Iniciar sesión
-                                </Link>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Redeem Button */}
-                    {cardInfo && cardInfo.status === 'ACTIVE' && Number(cardInfo.balanceUSD) > 0 && (
-                        <button
-                            onClick={handleRedeem}
-                            disabled={isLoading || !session}
-                            style={{ width: '100%', padding: '16px', background: 'linear-gradient(90deg, #22c55e, #10b981)', color: 'white', fontWeight: '700', fontSize: '16px', borderRadius: '12px', border: 'none', cursor: isLoading || !session ? 'not-allowed' : 'pointer', opacity: isLoading || !session ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                        >
-                            {isLoading ? '...' : <><HiSparkles /> Canjear {formatUSD(Number(cardInfo.balanceUSD))}</>}
-                        </button>
-                    )}
-
-                    {/* Help Link */}
-                    <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                        <Link href="/contacto" style={{ fontSize: '14px', color: '#6b7280', textDecoration: 'none' }}>
-                            ¿Problemas con tu Gift Card? Contáctanos
-                        </Link>
+                  </div>
+                  <dl className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-surface p-4">
+                      <dt className="text-xs font-medium text-muted">Acreditado</dt>
+                      <dd className="mt-1 text-2xl font-bold text-success-strong">{formatUSD(redeemed.amount)}</dd>
                     </div>
-                </div>
-
-                {/* Buy Gift Card CTA */}
-                <div style={{ marginTop: '32px', textAlign: 'center' }}>
-                    <p style={{ color: '#4b5563', marginBottom: '16px' }}>¿No tienes una Gift Card?</p>
-                    <Link
-                        href="/gift-cards"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', background: 'linear-gradient(90deg, #2a63cd, #1e4ba3)', color: 'white', fontWeight: '700', borderRadius: '12px', textDecoration: 'none' }}
-                    >
-                        <FiGift /> Comprar Gift Card
+                    <div className="rounded-xl bg-surface p-4">
+                      <dt className="text-xs font-medium text-muted">Tu saldo ahora</dt>
+                      <dd className="mt-1 text-2xl font-bold text-ink">{formatUSD(redeemed.newBalance)}</dd>
+                    </div>
+                  </dl>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Link href="/productos" className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">
+                      Ir a comprar <FiArrowRight className="h-4 w-4" aria-hidden="true" />
                     </Link>
+                    <Link href="/customer/balance" className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-line px-5 text-sm font-semibold text-ink hover:bg-surface">
+                      <FiCreditCard className="h-4 w-4" aria-hidden="true" /> Ver mi saldo
+                    </Link>
+                  </div>
                 </div>
-            </main>
-            <Footer />
-        </div>
-    );
+              ) : (
+                <form className="flex flex-col gap-5" onSubmit={(event) => { event.preventDefault(); if (cardInfo?.isValid) handleRedeem(); else handleCheck(); }}>
+                  <div>
+                    <label htmlFor="gift-code" className="mb-1.5 block text-sm font-semibold text-ink">Código de la gift card</label>
+                    <div className="flex gap-2">
+                      <input
+                        id="gift-code"
+                        value={code}
+                        onChange={(event) => resetCard(event.target.value)}
+                        autoComplete="off"
+                        autoCapitalize="characters"
+                        spellCheck={false}
+                        inputMode="text"
+                        placeholder="ESMC-XXXX-XXXX-XXXX"
+                        className="h-12 min-w-0 flex-1 rounded-lg border border-line bg-white px-3 text-center font-mono text-base font-bold tracking-widest text-ink placeholder:text-subtle focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                      />
+                      {!cardInfo?.isValid && (
+                        <button
+                          type="submit"
+                          disabled={!codeComplete || isChecking}
+                          className="inline-flex h-12 items-center gap-2 rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <FiSearch className="h-4 w-4" aria-hidden="true" />
+                          {isChecking ? 'Verificando…' : 'Verificar'}
+                        </button>
+                      )}
+                    </div>
+                    <p className="mt-1.5 text-xs text-muted">Está en el correo que recibiste o en el reverso de la tarjeta impresa.</p>
+                  </div>
+
+                  {cardInfo && (
+                    <div className="flex items-center justify-between gap-3 rounded-xl bg-surface p-4">
+                      <div>
+                        <p className="text-xs font-medium text-muted">Tarjeta terminada en {cardInfo.codeLast4}</p>
+                        <p className="mt-0.5 text-lg font-bold text-ink">
+                          {cardInfo.balanceUSD !== undefined ? formatUSD(cardInfo.balanceUSD) : session ? '—' : 'Inicia sesión para ver el saldo'}
+                        </p>
+                      </div>
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${cardInfo.isValid ? 'bg-success-strong/10 text-success-strong' : 'bg-warning/15 text-warning-strong'}`}>
+                        {STATUS_LABELS[cardInfo.status] || cardInfo.status}
+                      </span>
+                    </div>
+                  )}
+
+                  {cardInfo?.isValid && cardInfo.requiresPin && (
+                    <div>
+                      <label htmlFor="gift-pin" className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-ink">
+                        <FiLock className="h-4 w-4" aria-hidden="true" /> PIN
+                      </label>
+                      <input
+                        id="gift-pin"
+                        value={pin}
+                        onChange={(event) => { setPin(event.target.value.replace(/\D/g, '').slice(0, GIFT_CARD_PIN_LENGTH)); setError(''); }}
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={GIFT_CARD_PIN_LENGTH}
+                        placeholder="••••••"
+                        className="h-12 w-full rounded-lg border border-line bg-white px-3 text-center font-mono text-xl font-bold tracking-[0.4em] text-ink placeholder:text-subtle focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                      />
+                      <p className="mt-1.5 text-xs text-muted">Tarjeta impresa: raspa la franja plateada del reverso para ver los {GIFT_CARD_PIN_LENGTH} dígitos.</p>
+                    </div>
+                  )}
+
+                  {error && (
+                    <p className="flex items-start gap-2 rounded-xl border border-deal/30 bg-deal-bg p-3 text-sm font-medium text-deal" role="alert">
+                      <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> {error}
+                    </p>
+                  )}
+
+                  {canRedeem && (
+                    session ? (
+                      <button
+                        type="submit"
+                        disabled={isRedeeming}
+                        className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-success-strong px-5 text-base font-semibold text-white hover:bg-success-strong/90 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <FiGift className="h-5 w-5" aria-hidden="true" />
+                        {isRedeeming ? 'Canjeando…' : `Canjear ${cardInfo?.balanceUSD !== undefined ? formatUSD(cardInfo.balanceUSD) : ''}`}
+                      </button>
+                    ) : sessionStatus !== 'loading' && (
+                      <Link
+                        href="/login?redirect=/canjear-gift-card"
+                        className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 text-base font-semibold text-white hover:bg-brand-600"
+                      >
+                        Inicia sesión para canjear
+                      </Link>
+                    )
+                  )}
+
+                  <p className="border-t border-line pt-4 text-sm text-muted">
+                    ¿Problemas con tu tarjeta? <Link href="/contacto" className="font-semibold text-brand-600 hover:text-brand-700">Escríbenos</Link>
+                    {' · '}
+                    <Link href="/gift-cards" className="font-semibold text-brand-600 hover:text-brand-700">Comprar una gift card</Link>
+                  </p>
+                </form>
+              )}
+            </section>
+          </div>
+        </Container>
+      </main>
+
+      <Footer />
+    </div>
+  );
 }

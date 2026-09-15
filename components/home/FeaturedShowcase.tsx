@@ -12,7 +12,7 @@ interface FeaturedShowcaseProps {
 }
 
 /**
- * Vitrina del home (reemplaza al hero de mensaje).
+ * Vitrina del home (reemplaza al hero de mensaje). Fondo azul suave para separarla del resto del home.
  * Hasta xl: fila deslizable (tarjeta a 78vw en móvil, 3 visibles en lg).
  * Desde xl: producto estrella + fila deslizable con el resto, todo a la altura de una tarjeta
  * para que quepa en la primera pantalla. En lg no hay estrella: a ese ancho su imagen quedaba pequeña.
@@ -22,7 +22,7 @@ export default function FeaturedShowcase({ products, exchangeRateVES, lowStockTh
   const [star, ...rest] = products;
 
   return (
-    <section aria-labelledby="vitrina-title" className="bg-surface pb-6 pt-3 lg:py-8">
+    <section aria-labelledby="vitrina-title" className="bg-brand-100 pb-6 pt-3 lg:py-8">
       <Container>
         {/* En móvil, "Destacados" en una línea: el título en dos líneas empujaba el botón de la primera tarjeta bajo la barra */}
         <SectionHeader

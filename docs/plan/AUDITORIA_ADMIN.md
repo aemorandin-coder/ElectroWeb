@@ -40,7 +40,7 @@ Leyenda de estado: ✅ resuelto en rama · 🟦 tarjeta asignada · ⬜ pendient
 | F2 | El dashboard muestra "BD: Conectado · Auth: Activo · Modo: Desarrollo" escritos a mano (en producción dice "Desarrollo"). | 🟦 G-34 |
 | F3 | `/admin/orders` no tiene título de página. | 🟦 G-31 |
 | F4 | Montos con formatos mezclados: `$1231.96`, `$1,252.00` y `$341.96` conviven con `$1.514,96`. 54 `toFixed` en el admin. | 🟦 R7 |
-| F5 | `/admin/notifications` redirige a Mensajes y Alertas (no hay página propia). | ⬜ decidir si se quita del menú o se hace página |
+| F5 | `/admin/notifications` redirige a Mensajes y Alertas (no hay página propia). | ✅ C-73 (bandeja, qué avisar por canal y bot de Telegram) |
 | F6 | `favicon.ico` da 404 en todas las páginas cuando no hay favicon configurado. | ✅ C-50b (sin favicon se declara el logo) |
 | F7 | Pedido digital: no hay campos para anotar proveedor, referencia y costo, aunque la BD ya los tiene (C-60). | ⬜ Claude (C-60b) |
 | F8 | `alert()` (10) y `confirm()` nativo (1) en productos y configuración. | ✅ configuración en C-50b · ⬜ productos en C-51 |
@@ -61,5 +61,5 @@ Leyenda de estado: ✅ resuelto en rama · 🟦 tarjeta asignada · ⬜ pendient
 - **Claude (siguiente):**
   - **C-51:** lista de productos del admin; borrar `ProductForm.tsx`, que no se usa.
   - **C-60b:** surtido de pedidos digitales.
-  - F5 (página de notificaciones).
+  - F5 hecho en C-73.
   - C-50b hecho: configuración, F6 y la parte de F8 que le tocaba.

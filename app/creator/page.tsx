@@ -6,6 +6,7 @@ import Link from 'next/link';
 import PublicHeader from '@/components/public/PublicHeader';
 import PageHeader from '@/components/ui/PageHeader';
 import Footer from '@/components/Footer';
+import { adminPrimaryButton } from '@/lib/admin-ui';
 import { FiAward, FiTrendingUp, FiDollarSign, FiCheckCircle, FiClock, FiAlertCircle, FiBookOpen, FiUploadCloud, FiArrowRight, FiSend, FiCheck } from 'react-icons/fi';
 
 type CreatorProfile = {
@@ -80,7 +81,6 @@ export default function CreatorLandingPage() {
             const Icon = stat.icon;
             return (
               <div key={idx} className="relative group overflow-hidden bg-white rounded-2xl p-6 border border-line hover:border-brand-500/30 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-brand-500/5 to-transparent rounded-full blur-xl group-hover:scale-150 transition-all duration-500" />
                 <div className="w-10 h-10 rounded-xl bg-brand-500/5 flex items-center justify-center border border-brand-500/10 mb-4 group-hover:bg-brand-500/10 group-hover:border-brand-500/20 transition-all duration-300">
                   <Icon className="w-5 h-5 text-brand-500" />
                 </div>
@@ -97,7 +97,7 @@ export default function CreatorLandingPage() {
           <h2 className="text-2xl md:text-3xl font-bold text-ink text-center mb-12">¿Cómo Funciona el Programa?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
             {/* Connecting line for desktop */}
-            <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-gray-200 to-transparent z-0" />
+            <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-[1px] bg-line z-0" />
             
             {[
               { step: '01', title: 'Postúlate en Minutos', desc: 'Llena el formulario abajo con tu perfil y experiencia. Nuestro equipo te revisará en 24/48 horas.', icon: FiSend },
@@ -130,8 +130,8 @@ export default function CreatorLandingPage() {
             <div className="bg-white rounded-3xl border border-line p-8 md:p-10 shadow-xl relative overflow-hidden">
               {creator.status === 'APPROVED' ? (
                 <div className="text-center space-y-6">
-                  <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(16,185,129,0.05)]">
-                    <FiCheckCircle className="w-8 h-8 text-emerald-500" />
+                  <div className="w-16 h-16 bg-success/10 border border-success/20 rounded-2xl flex items-center justify-center mx-auto">
+                    <FiCheckCircle className="w-8 h-8 text-success" />
                   </div>
                   <div className="space-y-2">
                     <h2 className="text-2xl md:text-3xl font-bold text-ink">¡Eres Creador Oficial!</h2>
@@ -141,7 +141,7 @@ export default function CreatorLandingPage() {
                   </div>
                   <Link
                     href="/creator/dashboard"
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl shadow-lg hover:shadow-cyan-500/10 hover:scale-[1.02] transition-all duration-300"
+                    className={`${adminPrimaryButton} h-12 px-8`}
                   >
                     Ir a mi Panel de Creador
                     <FiArrowRight className="w-5 h-5" />
@@ -149,8 +149,8 @@ export default function CreatorLandingPage() {
                 </div>
               ) : creator.status === 'PENDING' ? (
                 <div className="text-center space-y-6">
-                  <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(245,158,11,0.05)]">
-                    <FiClock className="w-8 h-8 text-amber-600" />
+                  <div className="w-16 h-16 bg-warning/10 border border-warning/20 rounded-2xl flex items-center justify-center mx-auto">
+                    <FiClock className="w-8 h-8 text-warning" />
                   </div>
                   <div className="space-y-2">
                     <h2 className="text-2xl md:text-3xl font-bold text-ink">Solicitud en Revisión</h2>
@@ -161,8 +161,8 @@ export default function CreatorLandingPage() {
                 </div>
               ) : (
                 <div className="text-center space-y-6">
-                  <div className="w-16 h-16 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(239,68,68,0.05)]">
-                    <FiAlertCircle className="w-8 h-8 text-rose-500" />
+                  <div className="w-16 h-16 bg-deal-bg border border-deal/30 rounded-2xl flex items-center justify-center mx-auto">
+                    <FiAlertCircle className="w-8 h-8 text-deal" />
                   </div>
                   <div className="space-y-2">
                     <h2 className="text-2xl md:text-3xl font-bold text-ink">Solicitud No Aprobada</h2>
@@ -183,8 +183,8 @@ export default function CreatorLandingPage() {
 
               {submitted ? (
                 <div className="text-center py-12 space-y-4">
-                  <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto">
-                    <FiCheck className="w-6 h-6 text-emerald-500" />
+                  <div className="w-12 h-12 bg-success/10 border border-success/20 rounded-full flex items-center justify-center mx-auto">
+                    <FiCheck className="w-6 h-6 text-success" />
                   </div>
                   <h3 className="text-lg font-bold text-ink">¡Solicitud Enviada con Éxito!</h3>
                   <p className="text-muted text-sm max-w-xs mx-auto">
@@ -194,7 +194,7 @@ export default function CreatorLandingPage() {
               ) : (
                 <div className="space-y-5">
                   {error && (
-                    <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2">
+                    <div className="p-4 bg-deal-bg border border-deal/30 text-deal rounded-xl text-xs flex items-center gap-2">
                       <FiAlertCircle className="w-4 h-4 shrink-0" />
                       <span>{error}</span>
                     </div>
@@ -208,7 +208,7 @@ export default function CreatorLandingPage() {
                       type="text"
                       value={form.displayName}
                       onChange={(e) => setForm({ ...form, displayName: e.target.value })}
-                      className="w-full px-4 py-3 bg-white border border-line rounded-xl text-ink placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-sm"
+                      className="w-full px-4 py-3 bg-white border border-line rounded-xl text-ink placeholder-muted focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-sm"
                       placeholder="El nombre que verán tus estudiantes en la web"
                       required
                     />
@@ -222,7 +222,7 @@ export default function CreatorLandingPage() {
                       type="text"
                       value={form.expertise}
                       onChange={(e) => setForm({ ...form, expertise: e.target.value })}
-                      className="w-full px-4 py-3 bg-white border border-line rounded-xl text-ink placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-sm"
+                      className="w-full px-4 py-3 bg-white border border-line rounded-xl text-ink placeholder-muted focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-sm"
                       placeholder="Ej: Fibra óptica, CCTV, Arduino, Consolas de Videojuegos..."
                     />
                   </div>
@@ -235,7 +235,7 @@ export default function CreatorLandingPage() {
                       value={form.bio}
                       onChange={(e) => setForm({ ...form, bio: e.target.value })}
                       rows={4}
-                      className="w-full px-4 py-3 bg-white border border-line rounded-xl text-ink placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-sm resize-none"
+                      className="w-full px-4 py-3 bg-white border border-line rounded-xl text-ink placeholder-muted focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-sm resize-none"
                       placeholder="Cuéntanos brevemente tus años de experiencia y qué tipo de cursos te gustaría subir."
                     />
                   </div>
@@ -243,7 +243,7 @@ export default function CreatorLandingPage() {
                   <button
                     onClick={handleApply}
                     disabled={submitting}
-                    className="w-full py-4 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-[#3572e8] hover:to-[#225ccb] text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-[1.01] flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
+                    className={`${adminPrimaryButton} h-12 w-full`}
                   >
                     {submitting ? (
                       <>
@@ -281,7 +281,7 @@ export default function CreatorLandingPage() {
                 </Link>
                 <Link 
                   href="/registro" 
-                  className="px-8 py-3 bg-white border border-line text-ink font-bold rounded-xl hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02] inline-flex items-center justify-center gap-2 cursor-pointer"
+                  className="px-8 py-3 bg-white border border-line text-ink font-bold rounded-xl hover:bg-surface transition-all duration-300 hover:scale-[1.02] inline-flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Crear Cuenta
                 </Link>

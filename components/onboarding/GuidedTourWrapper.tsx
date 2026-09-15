@@ -15,6 +15,7 @@ const GuidedTour = dynamic(
 
 export function GuidedTourWrapper() {
   const pathname = usePathname();
-  if (pathname?.startsWith('/admin')) return null;
+  // El tour habla de la tienda (catálogo, carrito): no pinta nada sobre los paneles.
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/creator/dashboard')) return null;
   return <GuidedTour />;
 }

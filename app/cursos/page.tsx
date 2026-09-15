@@ -65,16 +65,16 @@ const LEVEL_LABELS: Record<string, string> = {
 };
 
 const LEVEL_COLORS: Record<string, string> = {
-  PRINCIPIANTE: 'bg-green-100 text-green-700',
-  INTERMEDIO: 'bg-yellow-100 text-yellow-700',
-  AVANZADO: 'bg-red-100 text-red-700',
+  PRINCIPIANTE: 'bg-success/15 text-success-strong',
+  INTERMEDIO: 'bg-warning/15 text-warning-strong',
+  AVANZADO: 'bg-deal-bg text-deal',
 };
 
 function StarRating({ rating }: { rating: number }) {
   return (
     <span className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((s) => (
-        <svg key={s} className={`w-3 h-3 ${s <= Math.round(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300 fill-gray-300'}`} viewBox="0 0 20 20">
+        <svg key={s} className={`w-3 h-3 ${s <= Math.round(rating) ? 'text-warning fill-warning' : 'text-line fill-line'}`} viewBox="0 0 20 20">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       ))}
@@ -107,7 +107,7 @@ function CourseCard({ course }: CourseCardProps) {
   return (
     <Link href={`/cursos/${course.slug}`} className="group flex flex-col bg-white rounded-xl border border-line overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       {/* Thumbnail */}
-      <div className="relative h-40 bg-gradient-to-br from-brand-500/10 to-brand-500/5 overflow-hidden">
+      <div className="relative h-40 bg-brand-50 overflow-hidden">
         {/* Botón Compartir y Ganar */}
         <ShareEarnButton
           url={`/cursos/${course.slug}`}
@@ -127,7 +127,7 @@ function CourseCard({ course }: CourseCardProps) {
             </svg>
           </div>
         )}
-        <div className="absolute inset-0 flex items-center justify-center lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-black/20">
+        <div className="absolute inset-0 flex items-center justify-center lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-ink/20">
           <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
             <svg className="w-5 h-5 text-brand-500 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
@@ -136,12 +136,12 @@ function CourseCard({ course }: CourseCardProps) {
         </div>
         <div className="absolute top-2 left-2 flex gap-1">
           {course.level && (
-            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${LEVEL_COLORS[course.level] || 'bg-gray-100 text-gray-600'}`}>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${LEVEL_COLORS[course.level] || 'bg-surface text-ink-soft'}`}>
               {LEVEL_LABELS[course.level] || course.level}
             </span>
           )}
           {course.isFeatured && (
-            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700" aria-label="Destacado">
+            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-warning/15 text-warning-strong" aria-label="Destacado">
               <FiStar className="h-3 w-3 fill-current" aria-hidden="true" />
             </span>
           )}
@@ -161,7 +161,7 @@ function CourseCard({ course }: CourseCardProps) {
         {/* Rating */}
         {rating && (
           <div className="flex items-center gap-1.5 mb-2">
-            <span className="text-xs font-bold text-yellow-600">{rating.toFixed(1)}</span>
+            <span className="text-xs font-bold text-warning-strong">{rating.toFixed(1)}</span>
             <StarRating rating={rating} />
             <span className="text-xs text-muted">({course.enrollmentCount})</span>
           </div>
@@ -301,19 +301,15 @@ export default async function CursosPage({
 
       {/* Banner / CTA Enseña Aquí */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white p-8 md:p-12 shadow-2xl border border-white/10">
-          {/* Decorative background blur blobs */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-400/10 rounded-full blur-3xl pointer-events-none" />
-          
+        <div className="relative rounded-3xl overflow-hidden bg-brand-600 text-white p-8 md:p-12">
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-8 space-y-4">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-cyan-200">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-white">
                 Únete como Creador
               </span>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">
                 ¿Eres un experto en tecnología? <br />
-                <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Enseña en ElectroShop</span>
+                <span>Enseña en ElectroShop</span>
               </h2>
               <p className="text-white/80 text-sm md:text-base max-w-2xl">
                 Crea cursos prácticos de reparación, redes, CCTV, gaming o electrónica. Sube tu material y obtén el 90% de comisión por cada venta directa. Nosotros nos encargamos de la plataforma y el procesamiento de pagos.
@@ -322,15 +318,15 @@ export default async function CursosPage({
               {/* Micro stats inside banner */}
               <div className="grid grid-cols-3 gap-4 pt-2 max-w-md">
                 <div>
-                  <p className="text-xl md:text-2xl font-bold text-cyan-300">90%</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">90%</p>
                   <p className="text-xs text-white/80">Comisión para ti</p>
                 </div>
                 <div>
-                  <p className="text-xl md:text-2xl font-bold text-cyan-300">Fácil</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">Fácil</p>
                   <p className="text-xs text-white/80">Sube tus videos</p>
                 </div>
                 <div>
-                  <p className="text-xl md:text-2xl font-bold text-cyan-300">Soporte</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">Soporte</p>
                   <p className="text-xs text-white/80">De principio a fin</p>
                 </div>
               </div>
@@ -339,7 +335,7 @@ export default async function CursosPage({
             <div className="lg:col-span-4 flex justify-start lg:justify-end">
               <Link
                 href="/creator"
-                className="px-8 py-4 bg-white text-brand-500 hover:bg-gray-50 font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 inline-flex items-center gap-2"
+                className="px-8 py-4 bg-white text-brand-500 hover:bg-surface font-bold rounded-2xl transition-all duration-300 inline-flex items-center gap-2"
               >
                 Comenzar a Enseñar
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

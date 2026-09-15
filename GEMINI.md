@@ -20,7 +20,7 @@ Contexto: `docs/plan/PLAN.md` (diseño) y `docs/plan/AUDITORIA.md` (problemas). 
 8. **Colores:** solo los tokens de la sección 4. Nunca escribas un hex nuevo en un className.
 9. **Tipografía:** nunca `text-[7px]`, `text-[8px]`, `text-[9px]`, `text-[9.5px]`, `text-[10px]`, `font-black` ni `font-extrabold`.
 10. **Nada de** `any` nuevo, `console.log`, `alert()`, `<style jsx>`, `style={{ color/background }}` ni **emojis** nuevos (en textos, toasts o comentarios: usa íconos de `react-icons/fi`).
-11. **Verifica antes de decir "listo"**: corre los comandos de "Verificación" de la tarea y pega la salida en `docs/plan/estado/G-XX.md` (un archivo por tarea, con el ID de la tarea).
+11. **Verifica antes de decir "listo"**: corre los comandos de "Verificación" de la tarea y pega la salida en `docs/plan/estado/G-XX.md` (un archivo por tarea, con el ID de la tarea). **`npx tsc --noEmit` se corre de verdad y se pega su salida**: en R10 los estados de G-36 y G-37 decían "0 errores" y el build estaba roto por dos imports que faltaban (`adminPrimaryButton` en `app/creator/page.tsx`, `useBodyScrollLock` y `adminModalOverlay` en `components/cursos/CourseDetailClient.tsx`). **Si usas una receta de `@/lib/admin-ui` o un hook, agrégalo al import de ese archivo.**
 12. **Si algo no cuadra** (la línea no existe, el grep da un resultado distinto al esperado, un error que no entiendes): PARA, escribe `BLOQUEADO: <motivo>` en `docs/plan/estado/G-XX.md` y pasa a la siguiente tarea. **No improvises.**
 
 ---
@@ -133,6 +133,8 @@ Aplica **solo** a clases con la forma `utilidad-[#hex]` (ej. `bg-[#2a63cd]`, `ho
 | `#dc2626` | `deal` |
 | `#3b82f6` | `info` |
 | `#0f172a` | `brand-950` |
+
+**Rojos:** para **texto, bordes y fondos de error** usa la familia `deal` (`text-deal`, `bg-deal-bg`, `border-deal/30`), como manda la tabla R3 de `PLAN_GEMINI.md`. `danger` (#ef4444) solo se queda donde ya venía en un hex: sobre blanco da 3,8:1 y no se lee. En R10 hubo que cambiar `text-danger` por `text-deal` en 6 archivos.
 
 Además: `slate-` → `gray-` (ej. `bg-slate-100` → `bg-gray-100`).
 **No toques** hex dentro de `style={{ }}`, dentro de strings de JavaScript ni dentro de sombras arbitrarias (`shadow-[0_4px_20px_rgba(...)]`). Solo cuéntalos y anótalos en tu estado.

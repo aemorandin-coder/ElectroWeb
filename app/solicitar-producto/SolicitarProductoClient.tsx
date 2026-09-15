@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { FiUser, FiMail, FiPhone, FiPackage, FiDollarSign, FiClock, FiCheck, FiShield, FiTruck, FiSearch } from 'react-icons/fi';
 import { IoMdPricetags } from 'react-icons/io';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
+import { adminPrimaryButton } from '@/lib/admin-ui';
 import PageHeader, { PageHeaderChip } from '@/components/ui/PageHeader';
 
 const categories = [
@@ -243,32 +244,29 @@ export default function SolicitarProductoClient() {
       {/* Main Content */}
       <main className="bg-white max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {success ? (
-          /* Success State - Epic Design */
-          <div className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 rounded-3xl shadow-2xl p-10 text-center relative overflow-hidden animate-scaleIn">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl"></div>
-
+          /* Success State */
+          <div className="rounded-2xl border border-line bg-white shadow-sm p-8 text-center relative overflow-hidden">
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/30 animate-bounce">
-                <FiCheck className="w-10 h-10 text-white" />
+              <div className="w-16 h-16 bg-success-strong/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-success-strong">
+                <FiCheck className="w-8 h-8 text-success-strong" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">¡Solicitud Enviada!</h2>
-              <p className="text-blue-200/90 text-base mb-4 max-w-md mx-auto">
+              <h2 className="text-2xl font-bold text-ink mb-3">¡Solicitud Enviada!</h2>
+              <p className="text-muted text-base mb-3 max-w-md mx-auto">
                 Hemos recibido tu solicitud y nuestro equipo ya está buscando las mejores opciones para ti.
               </p>
-              <p className="text-white/80 text-xs mb-8">
+              <p className="text-muted text-xs mb-8">
                 Te contactaremos en las próximas 24-48 horas • Serás redirigido al inicio...
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={() => router.push('/')}
-                  className="px-6 py-2.5 bg-white text-brand-500 font-bold rounded-xl hover:scale-105 transition-all shadow-lg text-sm"
+                  className={adminPrimaryButton}
                 >
                   Ir al Inicio
                 </button>
                 <button
                   onClick={() => setSuccess(false)}
-                  className="px-6 py-2.5 bg-white/10 text-white font-bold rounded-xl border border-white/20 hover:bg-white/20 transition-all text-sm"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold border border-line bg-white text-ink hover:bg-surface transition-colors"
                 >
                   Nueva Solicitud
                 </button>
@@ -278,22 +276,20 @@ export default function SolicitarProductoClient() {
         ) : (
           <div className="max-w-3xl mx-auto">
             {/* Form Section */}
-            <div className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 rounded-3xl shadow-2xl p-6 lg:p-8 relative overflow-hidden border border-white/10">
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl"></div>
+            <div className="rounded-2xl border border-line bg-white shadow-sm p-6 lg:p-8 relative">
+
 
               <div className="relative">
-                <h2 className="text-xl font-bold text-white mb-1 text-center">
+                <h2 className="text-xl font-bold text-ink mb-1 text-center">
                   Completa tu Solicitud
                 </h2>
-                <p className="text-blue-200/70 mb-6 text-[11px] text-center">
+                <p className="text-muted mb-6 text-xs text-center">
                   Mientras más detalles nos des, mejor podremos ayudarte
                 </p>
 
                 {error && (
-                  <div className="mb-6 p-3 bg-red-500/10 border border-red-500/30 rounded-xl animate-shake">
-                    <div className="flex items-center gap-2 text-red-400">
+                  <div className="mb-6 p-3 bg-deal-bg border border-deal/30 rounded-xl animate-shake">
+                    <div className="flex items-center gap-2 text-deal">
                       <FiAlertCircle className="w-4 h-4" />
                       <span className="text-xs font-semibold">{error}</span>
                     </div>
@@ -301,18 +297,18 @@ export default function SolicitarProductoClient() {
                 )}
 
                 {!session && (
-                  <div className="mb-4 p-3 bg-white/10 border border-white/20 rounded-xl text-xs text-white">
+                  <div className="mb-4 p-3 bg-brand-50 border border-brand-200 rounded-xl text-xs text-brand-700">
                     <span>Para solicitar un producto necesitas una cuenta. </span>
                     <Link
                       href="/login?callbackUrl=%2Fsolicitar-producto"
-                      className="font-bold text-white underline hover:text-white/80 transition-colors"
+                      className="font-bold text-brand-600 underline hover:text-brand-700 transition-colors"
                     >
                       Iniciar sesión
                     </Link>
                     <span> o </span>
                     <Link
                       href="/registro"
-                      className="font-bold text-white underline hover:text-white/80 transition-colors"
+                      className="font-bold text-brand-600 underline hover:text-brand-700 transition-colors"
                     >
                       Crear cuenta
                     </Link>
@@ -323,16 +319,16 @@ export default function SolicitarProductoClient() {
                 <form onSubmit={handleSubmit} className="space-y-3">
                   {/* Contact Info Header */}
                   <div className="flex items-center justify-center gap-2 mb-1">
-                    <div className="h-px w-6 bg-white/10"></div>
-                    <span className="text-[11px] font-bold text-cyan-300 uppercase tracking-widest px-1">Contacto</span>
-                    <div className="h-px w-6 bg-white/10"></div>
+                    <div className="h-px w-6 bg-line"></div>
+                    <span className="text-[11px] font-bold text-brand-600 uppercase tracking-widest px-1">Contacto</span>
+                    <div className="h-px w-6 bg-line"></div>
                   </div>
 
                   {/* Name & Email Grid - Side by side on mobile */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <div className="relative group">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
                           <FiUser className="w-3 h-3" />
                         </div>
                         <input
@@ -343,18 +339,18 @@ export default function SolicitarProductoClient() {
                           value={formData.customerName}
                           onChange={handleChange}
                           onBlur={() => handleBlur('customerName')}
-                          className={`w-full pl-8 pr-2 py-2 bg-white/10 border ${touchedFields.customerName && validationErrors.customerName ? 'border-red-500/50' : 'border-white/20'} rounded-lg text-white text-[11px] placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:border-white/40 transition-all`}
+                          className={`w-full pl-8 pr-2 py-2 bg-white border rounded-lg text-ink text-xs placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all ${touchedFields.customerName && validationErrors.customerName ? 'border-deal' : 'border-line focus:border-brand-500'}`}
                           placeholder="Nombre"
                         />
                       </div>
                       {touchedFields.customerName && validationErrors.customerName && (
-                        <p className="text-[11px] text-red-400 text-center">{validationErrors.customerName}</p>
+                        <p className="text-[11px] text-deal text-center">{validationErrors.customerName}</p>
                       )}
                     </div>
 
                     <div className="space-y-1">
                       <div className="relative group">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
                           <FiMail className="w-3 h-3" />
                         </div>
                         <input
@@ -364,12 +360,12 @@ export default function SolicitarProductoClient() {
                           value={formData.customerEmail}
                           onChange={handleChange}
                           onBlur={() => handleBlur('customerEmail')}
-                          className={`w-full pl-8 pr-2 py-2 bg-white/10 border ${touchedFields.customerEmail && validationErrors.customerEmail ? 'border-red-500/50' : 'border-white/20'} rounded-lg text-white text-[11px] placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:border-white/40 transition-all`}
+                          className={`w-full pl-8 pr-2 py-2 bg-white border rounded-lg text-ink text-xs placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all ${touchedFields.customerEmail && validationErrors.customerEmail ? 'border-deal' : 'border-line focus:border-brand-500'}`}
                           placeholder="Email"
                         />
                       </div>
                       {touchedFields.customerEmail && validationErrors.customerEmail && (
-                        <p className="text-[11px] text-red-400 text-center">{validationErrors.customerEmail}</p>
+                        <p className="text-[11px] text-deal text-center">{validationErrors.customerEmail}</p>
                       )}
                     </div>
                   </div>
@@ -377,7 +373,7 @@ export default function SolicitarProductoClient() {
                   {/* Phone Field - Full width */}
                   <div className="space-y-1">
                     <div className="relative group">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
                         <FiPhone className="w-3 h-3" />
                       </div>
                       <input
@@ -390,27 +386,27 @@ export default function SolicitarProductoClient() {
                         value={formData.customerPhone}
                         onChange={handleChange}
                         onBlur={() => handleBlur('customerPhone')}
-                        className={`w-full pl-8 pr-2 py-2 bg-white/10 border ${touchedFields.customerPhone && validationErrors.customerPhone ? 'border-red-500/50' : 'border-white/20'} rounded-lg text-white text-[11px] placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:border-white/40 transition-all`}
+                        className={`w-full pl-8 pr-2 py-2 bg-white border rounded-lg text-ink text-xs placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all ${touchedFields.customerPhone && validationErrors.customerPhone ? 'border-deal' : 'border-line focus:border-brand-500'}`}
                         placeholder="Teléfono (04XX-XXXXXXX)"
                       />
                     </div>
                     {touchedFields.customerPhone && validationErrors.customerPhone && (
-                      <p className="text-[11px] text-red-400 text-center">{validationErrors.customerPhone}</p>
+                      <p className="text-[11px] text-deal text-center">{validationErrors.customerPhone}</p>
                     )}
                   </div>
 
                   {/* Product Info Header */}
                   <div className="flex items-center justify-center gap-2 mt-4">
-                    <div className="h-px w-8 bg-white/10"></div>
-                    <span className="text-xs font-bold text-cyan-300 uppercase tracking-widest px-2">Producto</span>
-                    <div className="h-px w-8 bg-white/10"></div>
+                    <div className="h-px w-8 bg-line"></div>
+                    <span className="text-xs font-bold text-brand-600 uppercase tracking-widest px-2">Producto</span>
+                    <div className="h-px w-8 bg-line"></div>
                   </div>
 
                   {/* Product Name & Category */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="relative group">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
                           <FiPackage className="w-4 h-4" />
                         </div>
                         <input
@@ -420,12 +416,12 @@ export default function SolicitarProductoClient() {
                           value={formData.productName}
                           onChange={handleChange}
                           onBlur={() => handleBlur('productName')}
-                          className={`w-full pl-12 pr-4 py-2.5 bg-white/10 border ${touchedFields.productName && validationErrors.productName ? 'border-red-500/50' : 'border-white/20'} rounded-xl text-white text-xs placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:border-white/40 transition-all text-center`}
+                          className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg text-ink text-xs placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all ${touchedFields.productName && validationErrors.productName ? 'border-deal' : 'border-line focus:border-brand-500'}`}
                           placeholder="Nombre del Producto"
                         />
                       </div>
                       {touchedFields.productName && validationErrors.productName && (
-                        <p className="text-xs text-red-400 text-center">{validationErrors.productName}</p>
+                        <p className="text-xs text-deal text-center">{validationErrors.productName}</p>
                       )}
                     </div>
 
@@ -436,16 +432,15 @@ export default function SolicitarProductoClient() {
                         value={formData.category}
                         onChange={handleChange}
                         onBlur={() => handleBlur('category')}
-                        className={`w-full px-4 py-2.5 bg-white/10 border ${touchedFields.category && validationErrors.category ? 'border-red-500/50' : 'border-white/20'} rounded-xl text-white text-xs focus:outline-none focus:bg-white/20 focus:border-white/40 transition-all appearance-none cursor-pointer text-center`}
-                        style={{ colorScheme: 'dark' }}
+                        className={`w-full px-4 py-2.5 bg-white border rounded-lg text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all appearance-none cursor-pointer ${touchedFields.category && validationErrors.category ? 'border-deal' : 'border-line focus:border-brand-500'}`}
                       >
-                        <option value="" className="bg-gray-800">Selecciona categoría</option>
+                        <option value="">Selecciona categoría</option>
                         {categories.map((cat) => (
-                          <option key={cat} value={cat} className="bg-gray-800">{cat}</option>
+                          <option key={cat} value={cat}>{cat}</option>
                         ))}
                       </select>
                       {touchedFields.category && validationErrors.category && (
-                        <p className="text-xs text-red-400 text-center">{validationErrors.category}</p>
+                        <p className="text-xs text-deal text-center">{validationErrors.category}</p>
                       )}
                     </div>
                   </div>
@@ -459,11 +454,11 @@ export default function SolicitarProductoClient() {
                       onChange={handleChange}
                       onBlur={() => handleBlur('productDescription')}
                       rows={2}
-                      className={`w-full px-4 py-2.5 bg-white/10 border ${touchedFields.productDescription && validationErrors.productDescription ? 'border-red-500/50' : 'border-white/20'} rounded-xl text-white text-xs placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:border-white/40 transition-all resize-none text-center`}
+                      className={`w-full px-4 py-2.5 bg-white border rounded-lg text-ink text-xs placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none ${touchedFields.productDescription && validationErrors.productDescription ? 'border-deal' : 'border-line focus:border-brand-500'}`}
                       placeholder="Descripción Detallada (modelo, marca...)"
                     />
                     {touchedFields.productDescription && validationErrors.productDescription && (
-                      <p className="text-xs text-red-400 text-center">{validationErrors.productDescription}</p>
+                      <p className="text-xs text-deal text-center">{validationErrors.productDescription}</p>
                     )}
                   </div>
 
@@ -471,7 +466,7 @@ export default function SolicitarProductoClient() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="relative group">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
                           <FiDollarSign className="w-4 h-4" />
                         </div>
                         <input
@@ -480,7 +475,7 @@ export default function SolicitarProductoClient() {
                           name="estimatedBudget"
                           value={formData.estimatedBudget}
                           onChange={handleChange}
-                          className="w-full pl-12 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-xs placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:border-white/40 transition-all text-center"
+                          className="w-full pl-10 pr-4 py-2.5 bg-white border border-line rounded-lg text-ink text-xs placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
                           placeholder="Presupuesto (Opcional)"
                         />
                       </div>
@@ -488,7 +483,7 @@ export default function SolicitarProductoClient() {
 
                     <div className="space-y-1">
                       <div className="relative group">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
                           <FiClock className="w-4 h-4" />
                         </div>
                         <select
@@ -496,12 +491,11 @@ export default function SolicitarProductoClient() {
                           name="urgency"
                           value={formData.urgency}
                           onChange={handleChange}
-                          className="w-full pl-12 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-xs focus:outline-none focus:bg-white/20 focus:border-white/40 transition-all appearance-none cursor-pointer text-center"
-                          style={{ colorScheme: 'dark' }}
+                          className="w-full pl-10 pr-4 py-2.5 bg-white border border-line rounded-lg text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all appearance-none cursor-pointer"
                         >
-                          <option value="low" className="bg-gray-800">Urgencia: Baja</option>
-                          <option value="normal" className="bg-gray-800">Urgencia: Normal</option>
-                          <option value="high" className="bg-gray-800">Urgencia: Alta</option>
+                          <option value="low">Urgencia: Baja</option>
+                          <option value="normal">Urgencia: Normal</option>
+                          <option value="high">Urgencia: Alta</option>
                         </select>
                       </div>
                     </div>
@@ -514,7 +508,7 @@ export default function SolicitarProductoClient() {
                       onVerify={handleCaptchaVerify}
                       onExpire={handleCaptchaExpire}
                       ref={captchaRef}
-                      theme="dark"
+                      theme="light"
                       size="normal"
                     />
                   </div>
@@ -523,20 +517,18 @@ export default function SolicitarProductoClient() {
                   <button
                     type="submit"
                     disabled={loading || !captchaToken || !session}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white text-brand-500 text-sm font-bold rounded-xl hover:bg-white/90 hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
+                    className={`${adminPrimaryButton} w-full`}
                   >
                     {loading ? (
                       <>
-                        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        Enviando...
+                        <span>Enviando...</span>
                       </>
                     ) : (
-                      <>
-                        Solicitar Ahora
-                      </>
+                      <span>Solicitar Ahora</span>
                     )}
                   </button>
                 </form>
@@ -551,11 +543,11 @@ export default function SolicitarProductoClient() {
                 { step: '3', title: 'Cotizamos', icon: FiPackage },
                 { step: '4', title: 'Recibes', icon: FiTruck },
               ].map((item) => (
-                <div key={item.step} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white flex items-center justify-center mb-2 shadow-lg">
+                <div key={item.step} className="bg-white p-4 rounded-2xl border border-line shadow-xs flex flex-col items-center text-center">
+                  <div className="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mb-2">
                     <item.icon className="w-5 h-5" />
                   </div>
-                  <p className="text-xs font-bold text-gray-800">{item.title}</p>
+                  <p className="text-xs font-bold text-ink">{item.title}</p>
                 </div>
               ))}
             </div>

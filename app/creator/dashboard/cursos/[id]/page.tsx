@@ -2,13 +2,14 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
+import { adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import ImageUploadField from '@/components/ui/ImageUploadField';
 import { FiX } from 'react-icons/fi';
 
 const CATEGORIES = ['Redes', 'CCTV', 'Electrónica', 'Gaming', 'Programación', 'Hardware', 'Software', 'Otro'];
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
 const LEVEL_LABELS: Record<string, string> = { BEGINNER: 'Principiante', INTERMEDIATE: 'Intermedio', ADVANCED: 'Avanzado' };
-const INPUT = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-brand-500 text-sm transition-colors';
+const INPUT = 'w-full px-4 py-2.5 bg-white border border-line rounded-xl text-ink placeholder-muted focus:outline-none focus:border-brand-500 text-sm transition-colors';
 
 type Lesson = { id?: string; title: string; description: string; videoUrl: string; duration: string; isFree: boolean; order: number };
 type Module = { id?: string; title: string; order: number; lessons: Lesson[] };
@@ -123,8 +124,8 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
   if (!course) {
     return (
       <div className="max-w-md mx-auto mt-16 text-center">
-        <p className="text-white/80">Curso no encontrado.</p>
-        <Link href="/creator/dashboard/cursos" className="text-[#60a5fa] text-sm hover:underline mt-3 block">
+        <p className="text-muted">Curso no encontrado.</p>
+        <Link href="/creator/dashboard/cursos" className="text-brand-600 text-sm hover:underline mt-3 block">
           ← Volver
         </Link>
       </div>
@@ -136,33 +137,33 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Link href="/creator/dashboard/cursos" className="text-white/80 hover:text-white/70 text-sm transition-colors flex items-center gap-1 mb-2">
+          <Link href="/creator/dashboard/cursos" className="text-muted hover:text-ink text-sm transition-colors flex items-center gap-1 mb-2">
             ← Mis Cursos
           </Link>
-          <h1 className="text-xl font-bold text-white line-clamp-1">{course.title}</h1>
+          <h1 className={`${adminPageTitle} line-clamp-1`}>{course.title}</h1>
           <div className="flex items-center gap-2 mt-1">
             <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-              course.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-yellow-500/20 text-yellow-400'
+              course.isActive ? 'bg-success/15 text-success-strong' : 'bg-warning/15 text-warning-strong'
             }`}>
               {course.isActive ? 'Activo' : 'En revisión por admin'}
             </span>
           </div>
         </div>
         {msg && (
-          <div className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 text-sm font-semibold">
+          <div className="px-4 py-2 bg-success/15 border border-success/30 rounded-xl text-success-strong text-sm font-semibold">
             {msg}
           </div>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-white/5 border border-white/10 rounded-xl w-fit">
+      <div className="flex gap-1 p-1 bg-surface border border-line rounded-xl w-fit">
         {(['info', 'curriculum'] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all ${
-              tab === t ? 'bg-brand-500 text-white' : 'text-white/80 hover:text-white'
+              tab === t ? 'bg-brand-600 text-white' : 'text-ink-soft hover:text-ink'
             }`}
           >
             {t === 'info' ? 'Información' : 'Currículum'}
@@ -172,7 +173,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
 
       {/* Info Tab */}
       {tab === 'info' && (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-5">
+        <div className="bg-white border border-line rounded-2xl p-6 space-y-5">
           <Field label="Título *">
             <input value={form.title} onChange={(e) => upd('title', e.target.value)} className={INPUT} />
           </Field>
@@ -211,7 +212,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
             <button
               onClick={saveInfo}
               disabled={saving}
-              className="px-6 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+              className={`${adminPrimaryButton} px-6 py-2.5 text-sm font-bold rounded-xl disabled:opacity-50`}
             >
               {saving ? 'Guardando...' : 'Guardar Información'}
             </button>
@@ -222,45 +223,45 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
       {/* Curriculum Tab */}
       {tab === 'curriculum' && (
         <div className="space-y-4">
-          <p className="text-white/80 text-xs">
+          <p className="text-muted text-xs">
             Sube tus videos a YouTube (sin listar) o Vimeo, luego pega la URL de la lección aquí.
           </p>
 
           {modules.map((mod, mIdx) => (
-            <div key={mIdx} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+            <div key={mIdx} className="bg-white border border-line rounded-2xl overflow-hidden">
               {/* Module header */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-white/5">
-                <span className="text-white/80 text-xs font-bold w-6">{mIdx + 1}</span>
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-line bg-surface">
+                <span className="text-muted text-xs font-bold w-6">{mIdx + 1}</span>
                 <input
                   value={mod.title}
                   onChange={(e) => updModule(mIdx, e.target.value)}
-                  className="flex-1 bg-transparent text-white text-sm font-bold focus:outline-none placeholder-white/30"
+                  className="flex-1 bg-transparent text-ink text-sm font-bold focus:outline-none placeholder-muted"
                   placeholder="Título del módulo"
                 />
                 <button
                   onClick={() => removeModule(mIdx)}
-                  className="text-red-400/50 hover:text-red-400 text-xs transition-colors"
+                  className="text-deal hover:underline text-xs transition-colors"
                 >
                   Eliminar
                 </button>
               </div>
 
               {/* Lessons */}
-              <div className="divide-y divide-white/5">
+              <div className="divide-y divide-line">
                 {mod.lessons.map((lesson, lIdx) => (
                   <div key={lIdx} className="px-4 py-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-white/20 text-xs w-5">{lIdx + 1}.</span>
+                      <span className="text-muted text-xs w-5">{lIdx + 1}.</span>
                       <input
                         value={lesson.title}
                         onChange={(e) => updLesson(mIdx, lIdx, 'title', e.target.value)}
-                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs font-semibold focus:outline-none focus:border-brand-500"
+                        className="flex-1 bg-white border border-line rounded-lg px-3 py-1.5 text-ink text-xs font-semibold focus:outline-none focus:border-brand-500"
                         placeholder="Título de la lección"
                       />
                       <button
                         type="button"
                         onClick={() => removeLesson(mIdx, lIdx)}
-                        className="text-red-400/40 hover:text-red-400 text-xs transition-colors flex-shrink-0"
+                        className="text-deal hover:underline text-xs transition-colors flex-shrink-0"
                         aria-label="Quitar"
                       >
                         <FiX className="h-4 w-4" aria-hidden="true" />
@@ -270,20 +271,20 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                       <input
                         value={lesson.videoUrl}
                         onChange={(e) => updLesson(mIdx, lIdx, 'videoUrl', e.target.value)}
-                        className="col-span-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white/80 text-xs focus:outline-none focus:border-brand-500"
+                        className="col-span-2 bg-white border border-line rounded-lg px-3 py-1.5 text-ink text-xs focus:outline-none focus:border-brand-500"
                         placeholder="URL del video (YouTube/Vimeo)"
                       />
                       <input
                         value={lesson.description}
                         onChange={(e) => updLesson(mIdx, lIdx, 'description', e.target.value)}
-                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white/80 text-xs focus:outline-none focus:border-brand-500"
+                        className="bg-white border border-line rounded-lg px-3 py-1.5 text-ink text-xs focus:outline-none focus:border-brand-500"
                         placeholder="Descripción breve"
                       />
                       <input
                         type="number"
                         value={lesson.duration}
                         onChange={(e) => updLesson(mIdx, lIdx, 'duration', e.target.value)}
-                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white/80 text-xs focus:outline-none focus:border-brand-500"
+                        className="bg-white border border-line rounded-lg px-3 py-1.5 text-ink text-xs focus:outline-none focus:border-brand-500"
                         placeholder="Duración (minutos)"
                       />
                       <label className="flex items-center gap-2 col-span-2 cursor-pointer group pl-1">
@@ -293,7 +294,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                           onChange={(e) => updLesson(mIdx, lIdx, 'isFree', e.target.checked)}
                           className="w-4 h-4 accent-brand-500"
                         />
-                        <span className="text-white/80 text-xs group-hover:text-white/70 transition-colors">
+                        <span className="text-ink-soft text-xs transition-colors">
                           Lección gratuita (visible sin inscripción)
                         </span>
                       </label>
@@ -302,10 +303,10 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                 ))}
               </div>
 
-              <div className="px-4 py-2 border-t border-white/5">
+              <div className="px-4 py-2 border-t border-line bg-surface">
                 <button
                   onClick={() => addLesson(mIdx)}
-                  className="text-[#60a5fa] text-xs font-semibold hover:text-cyan-400 transition-colors"
+                  className="text-brand-600 text-xs font-semibold hover:text-brand-700 transition-colors"
                 >
                   + Agregar Lección
                 </button>
@@ -315,7 +316,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
 
           <button
             onClick={addModule}
-            className="w-full py-3 border-2 border-dashed border-white/20 text-white/80 rounded-2xl text-sm hover:border-white/40 hover:text-white/80 transition-all"
+            className="w-full py-3 border-2 border-dashed border-line text-muted rounded-2xl text-sm hover:border-brand-300 hover:text-brand-600 transition-colors"
           >
             + Agregar Módulo
           </button>
@@ -324,7 +325,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
             <button
               onClick={saveCurriculum}
               disabled={savingCurr}
-              className="px-6 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+              className={`${adminPrimaryButton} px-6 py-2.5 text-sm font-bold rounded-xl disabled:opacity-50`}
             >
               {savingCurr ? 'Guardando...' : 'Guardar Currículum'}
             </button>
@@ -338,7 +339,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-white/80 text-xs font-semibold mb-1.5">{label}</label>
+      <label className="block text-ink-soft text-xs font-semibold uppercase tracking-wider mb-1.5">{label}</label>
       {children}
     </div>
   );

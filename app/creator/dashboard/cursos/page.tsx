@@ -4,6 +4,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { adminPageHeader, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import { useRouter } from 'next/navigation';
 
 type Course = {
@@ -20,6 +21,13 @@ type Course = {
   _count: { enrollments: number; reviews: number; modules: number };
 };
 
+// La API manda los Decimal de Prisma como texto ("4.5"): sin convertirlos, `rating.toFixed()`
+// rompía la página entera ("Algo salió mal") en cuanto un curso tenía calificación o precio.
+function aNumero(valor: unknown): number {
+  const n = Number(valor);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export default function CreatorCoursesPage() {
   const { confirm } = useConfirm();
   const router = useRouter();
@@ -30,7 +38,13 @@ export default function CreatorCoursesPage() {
   useEffect(() => {
     fetch('/api/creator/courses')
       .then((r) => r.json())
-      .then((data) => setCourses(Array.isArray(data) ? data : []))
+      .then((data: Course[]) =>
+        setCourses(
+          Array.isArray(data)
+            ? data.map((c) => ({ ...c, priceUSD: aNumero(c.priceUSD), rating: c.rating === null ? null : aNumero(c.rating) }))
+            : []
+        )
+      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -48,14 +62,14 @@ export default function CreatorCoursesPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className={adminPageHeader}>
         <div>
-          <h1 className="text-2xl font-bold text-white">Mis Cursos</h1>
-          <p className="text-white/80 text-sm mt-1">{courses.length} curso{courses.length !== 1 ? 's' : ''} en total</p>
+          <h1 className={adminPageTitle}>Mis Cursos</h1>
+          <p className="text-muted text-sm mt-1">{courses.length} curso{courses.length !== 1 ? 's' : ''} en total</p>
         </div>
         <Link
           href="/creator/dashboard/cursos/nuevo"
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
+          className={`${adminPrimaryButton} flex items-center gap-2 text-sm`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -69,12 +83,12 @@ export default function CreatorCoursesPage() {
           <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : courses.length === 0 ? (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-16 text-center">
-          <h2 className="text-white font-bold text-lg mb-2">Sin cursos aún</h2>
-          <p className="text-white/80 text-sm mb-6">Crea tu primer curso y comparte tu conocimiento.</p>
+        <div className="bg-white border border-line rounded-2xl p-16 text-center">
+          <h2 className="text-ink font-bold text-lg mb-2">Sin cursos aún</h2>
+          <p className="text-muted text-sm mb-6">Crea tu primer curso y comparte tu conocimiento.</p>
           <Link
             href="/creator/dashboard/cursos/nuevo"
-            className="inline-block px-6 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
+            className={`${adminPrimaryButton} inline-block text-sm`}
           >
             Crear primer curso
           </Link>
@@ -84,32 +98,32 @@ export default function CreatorCoursesPage() {
           {courses.map((course) => (
             <div
               key={course.id}
-              className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-colors"
+              className="bg-white border border-line rounded-2xl p-5 hover:border-brand-300 transition-colors"
             >
               <div className="flex items-start gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-2">
-                    <h3 className="text-white font-bold">{course.title}</h3>
+                    <h3 className="text-ink font-bold">{course.title}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
                       course.isActive
-                        ? 'bg-emerald-500/20 text-emerald-400'
-                        : 'bg-yellow-500/20 text-yellow-400'
+                        ? 'bg-success/15 text-success-strong'
+                        : 'bg-warning/15 text-warning-strong'
                     }`}>
                       {course.isActive ? 'Activo' : 'En revisión'}
                     </span>
                     {course.category && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/80">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-surface text-ink-soft border border-line">
                         {course.category}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-5 text-xs text-white/80 flex-wrap">
+                  <div className="flex items-center gap-5 text-xs text-muted flex-wrap">
                     <span>{course._count.enrollments} estudiantes</span>
                     <span>{course.rating?.toFixed(1) ?? '—'} ({course._count.reviews} reseñas)</span>
                     <span>{course.totalLessons} lecciones</span>
                     <span>{course._count.modules} módulos</span>
-                    <span className="text-white/80 font-bold">{formatUSD(course.priceUSD)}</span>
+                    <span className="text-ink font-bold">{formatUSD(course.priceUSD)}</span>
                   </div>
                 </div>
 
@@ -118,7 +132,7 @@ export default function CreatorCoursesPage() {
                     <Link
                       href={`/cursos/${course.slug}`}
                       target="_blank"
-                      className="px-3 py-1.5 bg-white/5 text-white/80 text-xs font-semibold rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+                      className="px-3 py-1.5 bg-surface border border-line text-ink-soft text-xs font-semibold rounded-lg hover:bg-line/50 hover:text-ink transition-colors"
                       title="Ver en catálogo"
                     >
                       Ver ↗
@@ -126,14 +140,14 @@ export default function CreatorCoursesPage() {
                   )}
                   <Link
                     href={`/creator/dashboard/cursos/${course.id}`}
-                    className="px-4 py-1.5 bg-brand-500/30 text-[#60a5fa] text-xs font-semibold rounded-lg hover:bg-brand-500/50 transition-colors"
+                    className="px-4 py-1.5 bg-brand-500/30 text-brand-600 text-xs font-semibold rounded-lg hover:bg-brand-500/50 transition-colors"
                   >
                     Editar
                   </Link>
                   <button
                     onClick={() => handleDelete(course.id, course.title)}
                     disabled={deleting === course.id}
-                    className="px-3 py-1.5 bg-red-500/10 text-red-400 text-xs font-semibold rounded-lg hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                    className="px-3 py-1.5 text-deal hover:bg-deal-bg text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
                   >
                     {deleting === course.id ? '...' : 'Eliminar'}
                   </button>

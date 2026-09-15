@@ -942,6 +942,14 @@ Carga: ~52 colores, 13 degradados.
 
 QA: `/creator/dashboard` y "Nuevo curso" a 390 px.
 
+### Lo que salió mal en G-35…G-37 (revisado por Claude en C-77, obligatorio antes de G-38)
+- **`tsc` no se corrió**: dos archivos usaban `adminPrimaryButton`, `useBodyScrollLock` y `adminModalOverlay` **sin importarlos** y el build estaba roto, con los estados diciendo "0 errores". Cada receta o hook que uses va en el import de ese archivo, y la salida real de `npx tsc --noEmit` va pegada en el estado.
+- **Texto blanco sobre fondo claro otra vez** (era la lección de R9): al quitar un fondo oscuro, revisa **todo** el archivo, incluidos los estados de carga y error (`Curso no encontrado`) y los botones pequeños (`bg-white/5 text-white/80`).
+- **Rojos:** `text-deal` / `bg-deal-bg`, no `danger` (ver `GEMINI.md` §4).
+- **Errores copiados y pegados:** en `registro` el campo Correo mostraba el error del campo Nombre. Cuando dupliques un bloque de input, cambia también el nombre del campo en la condición.
+- **Al mezclar una receta con clases sueltas** (`adminPrimaryButton` + `py-4 rounded-xl`) sale un botón con dos alturas y dos radios. Si necesitas otro alto, usa `h-12` y nada más.
+- **Bueno saberlo:** Claude arregló en `main` un bug de `app/globals.css` por el que **cualquier modal `fixed` de la tienda** aparecía al final de la página en vez de sobre la pantalla. Si un modal te sale descolocado, ya no es eso: revisa tus clases.
+
 ### G-38 · Panel del cliente A · Depende: C-55 en `main` y G-37
 Archivos:
 - `app/customer/(dashboard)/page.tsx`

@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import ImageUploadField from '@/components/ui/ImageUploadField';
+import { adminPageHeader, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 
-const INPUT = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-brand-500 text-sm transition-colors';
+const INPUT = 'w-full px-4 py-2.5 bg-white border border-line rounded-xl text-ink placeholder-muted focus:outline-none focus:border-brand-500 text-sm transition-colors';
 
 export default function CreatorProfilePage() {
   const [form, setForm] = useState({ displayName: '', bio: '', expertise: '', avatar: '' });
@@ -56,22 +57,22 @@ export default function CreatorProfilePage() {
 
   return (
     <div className="max-w-xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className={adminPageHeader}>
         <div>
-          <h1 className="text-2xl font-bold text-white">Mi Perfil de Creador</h1>
-          <p className="text-white/80 text-sm mt-1">Esta información es visible para tus estudiantes.</p>
+          <h1 className={adminPageTitle}>Mi Perfil de Creador</h1>
+          <p className="text-muted text-sm mt-1">Esta información es visible para tus estudiantes.</p>
         </div>
         {msg && (
-          <div className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 text-sm font-semibold">
+          <div className="px-4 py-2 bg-success/15 border border-success/30 rounded-xl text-success-strong text-sm font-semibold">
             {msg}
           </div>
         )}
       </div>
 
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-5">
+      <div className="bg-white border border-line rounded-2xl p-6 space-y-5">
         {/* Avatar preview */}
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-500 to-cyan-500 flex items-center justify-center text-white text-xl font-bold overflow-hidden flex-shrink-0">
+          <div className="w-16 h-16 rounded-full bg-brand-600 flex items-center justify-center text-white text-xl font-bold overflow-hidden flex-shrink-0">
             {form.avatar ? (
               <Image src={form.avatar} alt="avatar" width={64} height={64} className="w-full h-full object-cover" />
             ) : (
@@ -91,7 +92,7 @@ export default function CreatorProfilePage() {
         </div>
 
         <div>
-          <label className="block text-white/80 text-xs font-semibold mb-1.5">Nombre de Creador *</label>
+          <label className="block text-ink-soft text-xs font-semibold uppercase tracking-wider mb-1.5">Nombre de Creador *</label>
           <input
             value={form.displayName}
             onChange={(e) => setForm((p) => ({ ...p, displayName: e.target.value }))}
@@ -101,7 +102,7 @@ export default function CreatorProfilePage() {
         </div>
 
         <div>
-          <label className="block text-white/80 text-xs font-semibold mb-1.5">Área de Expertise</label>
+          <label className="block text-ink-soft text-xs font-semibold uppercase tracking-wider mb-1.5">Área de Expertise</label>
           <input
             value={form.expertise}
             onChange={(e) => setForm((p) => ({ ...p, expertise: e.target.value }))}
@@ -111,7 +112,7 @@ export default function CreatorProfilePage() {
         </div>
 
         <div>
-          <label className="block text-white/80 text-xs font-semibold mb-1.5">Bio</label>
+          <label className="block text-ink-soft text-xs font-semibold uppercase tracking-wider mb-1.5">Bio</label>
           <textarea
             value={form.bio}
             onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
@@ -125,7 +126,7 @@ export default function CreatorProfilePage() {
           <button
             onClick={handleSave}
             disabled={saving || !form.displayName}
-            className="px-6 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+            className={`${adminPrimaryButton} px-6 py-2.5 text-sm font-bold rounded-xl disabled:opacity-50`}
           >
             {saving ? 'Guardando...' : 'Guardar Perfil'}
           </button>

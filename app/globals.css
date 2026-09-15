@@ -432,27 +432,23 @@ body {
   background-size: 20px 20px;
 }
 
-/* Page Transition Animations - Premium */
+/* Entrada de página.
+   Solo opacidad: con `transform` (aunque termine en `none`), el modo `forwards` deja un valor
+   calculado de transform en el wrapper, y eso convierte al wrapper en el bloque contenedor de
+   todo `position: fixed` de la página. Los modales de la tienda aparecían al final del documento
+   en vez de sobre la pantalla cuando la página estaba desplazada. */
 @keyframes pageFadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform: none;
   }
 }
 
 .page-transition-wrapper {
   animation: pageFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.page-transition-wrapper.transitioning {
-  opacity: 0.7;
-  transform: scale(0.98);
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
 }
 
 /* Smooth page transitions */

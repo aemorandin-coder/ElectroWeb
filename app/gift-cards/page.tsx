@@ -14,6 +14,8 @@ import GiftCard3D from '@/components/gift-card/GiftCard3D';
 import PageHeader from '@/components/ui/PageHeader';
 import { GIFT_CARD_DESIGNS, getGiftCardDesign, type GiftCardDesignSlug } from '@/lib/gift-card-designs';
 import Footer from '@/components/Footer';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 
 import { FiGift, FiCheck, FiAlertCircle, FiMail, FiArrowRight, FiClock, FiShoppingCart, FiCreditCard, FiLock, FiCalendar, FiEye, FiUser, FiStar } from 'react-icons/fi';
 import { AiOutlineDeliveredProcedure } from 'react-icons/ai';
@@ -62,6 +64,7 @@ export default function GiftCardsPage() {
     const [isCheckingEmail, setIsCheckingEmail] = useState(false);
     const [recipientExists, setRecipientExists] = useState<boolean | null>(null);
     const [showInviteModal, setShowInviteModal] = useState(false);
+    useBodyScrollLock(showInviteModal || showEmailPreview);
     const [isSendingInvite, setIsSendingInvite] = useState(false);
 
     // Purchase state
@@ -356,41 +359,39 @@ export default function GiftCardsPage() {
                     </div>
 
                     {/* Right: Configuration Form */}
-                    <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-5 shadow-xl border border-gray-100">
+                    <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-5 shadow-xl border border-line">
                         {/* Step 1: Amount */}
                         <div className="mb-3 lg:mb-5">
-                            <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                <span className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-bold shadow-lg">1</span>
+                            <h3 className="text-base font-bold text-ink mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center text-xs font-bold">1</span>
                                 Selecciona el monto
                             </h3>
-                            <div className="grid grid-cols-5 gap-2 mb-2">
+                            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 mb-2">
                                 {PRESET_AMOUNTS.map((amount) => (
                                     <div key={amount} className="relative">
                                         {amount === 50 && (
-                                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[11px] font-bold rounded-full shadow-lg z-20 whitespace-nowrap inline-flex items-center gap-1">
+                                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-brand-500 text-white text-xs font-bold rounded-full z-20 whitespace-nowrap inline-flex items-center gap-1">
                                                 <FiStar className="h-3 w-3 fill-current shrink-0" aria-hidden="true" />Popular
                                             </span>
                                         )}
                                         <button
                                             onClick={() => { setSelectedAmount(amount); setCustomAmount(''); }}
-                                            className={`w-full group relative py-3 rounded-xl font-bold text-base transition-all duration-300 overflow-hidden ${selectedAmount === amount
-                                                ? 'text-white shadow-lg scale-105 ring-2 ring-blue-400/30'
-                                                : 'bg-white text-gray-700 hover:scale-105 hover:shadow-md border border-gray-200 hover:border-blue-300'
+                                            className={`w-full group relative py-3 rounded-xl font-bold text-base transition-colors ${selectedAmount === amount
+                                                ? 'bg-brand-600 text-white'
+                                                : 'bg-white text-ink border border-line hover:border-brand-300'
                                                 }`}
                                         >
-                                            {selectedAmount === amount && (
-                                                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 animate-gradient-x" />
-                                            )}
+                                            
                                             <span className="relative z-10 flex items-center justify-center gap-0.5">
-                                                <span className={`text-xs ${selectedAmount === amount ? 'text-blue-200' : 'text-gray-400'}`}>$</span>
+                                                <span className={`text-xs ${selectedAmount === amount ? 'text-brand-100' : 'text-muted'}`}>$</span>
                                                 <span>{amount}</span>
                                             </span>
                                         </button>
                                     </div>
                                 ))}
                                 {/* Custom Amount Input - in the same row */}
-                                <div className="relative group">
-                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-xs">$</span>
+                                <div className="relative group col-span-2 sm:col-span-1">
+                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted font-semibold text-xs">$</span>
                                     <input
                                         type="text"
                                         inputMode="numeric"
@@ -422,38 +423,38 @@ export default function GiftCardsPage() {
 
                                             setCustomAmount(rounded.toString());
                                         }}
-                                        className={`w-full pl-5 pr-8 py-3 rounded-xl border text-center font-bold text-base transition-all duration-300 outline-none ${customAmount
-                                            ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
-                                            : 'border-gray-200 text-gray-700 hover:border-blue-300'
+                                        className={`w-full pl-5 pr-8 py-3 rounded-xl border text-center font-bold text-base transition-colors outline-none ${customAmount
+                                            ? 'border-brand-500 bg-brand-50 text-brand-700'
+                                            : 'border-line text-ink hover:border-brand-300'
                                             }`}
                                     />
                                     {/* Tooltip icon */}
                                     <div className="absolute right-2 top-1/2 -translate-y-1/2 cursor-help">
-                                        <svg className="w-4 h-4 text-gray-400 hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-4 h-4 text-muted hover:text-brand-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                         {/* Tooltip popup */}
-                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-lg">
+                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-ink text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[var(--z-dropdown)] shadow-lg">
                                             <div className="font-semibold mb-1">Monto personalizado</div>
-                                            <ul className="space-y-0.5 text-gray-300">
+                                            <ul className="space-y-0.5 text-subtle">
                                                 <li>• Mínimo: $5</li>
                                                 <li>• Máximo: $1,000</li>
                                                 <li>• Solo múltiplos de $5</li>
                                             </ul>
-                                            <div className="text-gray-400 mt-1 text-xs">Se redondea automáticamente</div>
-                                            <div className="absolute -bottom-1 right-3 w-2 h-2 bg-gray-900 rotate-45"></div>
+                                            <div className="text-subtle mt-1 text-xs">Se redondea automáticamente</div>
+                                            <div className="absolute -bottom-1 right-3 w-2 h-2 bg-ink rotate-45"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             {/* Min/Max indicator */}
-                            <p className="text-xs text-gray-400 text-center">Mínimo $5 — Máximo $1,000 (múltiplos de $5)</p>
+                            <p className="text-xs text-muted text-center">Mínimo $5 — Máximo $1,000 (múltiplos de $5)</p>
                         </div>
 
                         {/* Step 2: Recipient Info */}
                         <div className="mb-3">
-                            <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                <span className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-bold">2</span>
+                            <h3 className="text-sm font-bold text-ink mb-2 flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-brand-500 text-white flex items-center justify-center text-xs font-bold">2</span>
                                 Destinatario
                             </h3>
 
@@ -464,8 +465,8 @@ export default function GiftCardsPage() {
                                     type="button"
                                     onClick={() => setIsForMyself(false)}
                                     className={`flex items-center justify-center gap-1.5 p-2 rounded-lg font-semibold text-xs transition-all ${!isForMyself
-                                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        ? 'bg-brand-600 text-white'
+                                        : 'bg-surface text-ink-soft hover:bg-line/50 border border-line'
                                         }`}
                                 >
                                     <FiGift className="w-3.5 h-3.5" />
@@ -478,8 +479,8 @@ export default function GiftCardsPage() {
                                         type="button"
                                         onClick={() => setIsForMyself(true)}
                                         className={`flex items-center justify-center gap-1.5 p-2 rounded-lg font-semibold text-xs transition-all ${isForMyself
-                                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
-                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                            ? 'bg-brand-600 text-white'
+                                            : 'bg-surface text-ink-soft hover:bg-line/50 border border-line'
                                             }`}
                                     >
                                         <FiUser className="w-3.5 h-3.5" />
@@ -499,16 +500,16 @@ export default function GiftCardsPage() {
                                         value={recipientName}
                                         readOnly={isForMyself}
                                         onChange={(e) => { if (!isForMyself) { setRecipientName(e.target.value); setErrors(prev => ({ ...prev, name: undefined })); } }}
-                                        className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors text-xs ${isForMyself ? 'bg-blue-50 border-blue-200 text-blue-700 cursor-default' : errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-500'
+                                        className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors text-xs ${isForMyself ? 'bg-brand-50 border-brand-200 text-brand-700 cursor-default' : errors.name ? 'border-deal bg-deal-bg' : 'border-line focus:border-brand-500'
                                             }`}
                                     />
                                     {isForMyself && (
                                         <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                            <FiUser className="w-3 h-3 text-blue-500" />
+                                            <FiUser className="w-3 h-3 text-brand-500" />
                                         </div>
                                     )}
                                     {errors.name && (
-                                        <div className="absolute -bottom-4 left-0 text-xs text-red-500 flex items-center gap-1">
+                                        <div className="absolute -bottom-4 left-0 text-xs text-deal flex items-center gap-1">
                                             <FiAlertCircle className="w-2.5 h-2.5" />
                                             {errors.name}
                                         </div>
@@ -524,21 +525,21 @@ export default function GiftCardsPage() {
                                         value={recipientEmail}
                                         readOnly={isForMyself}
                                         onChange={(e) => { if (!isForMyself) { setRecipientEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); } }}
-                                        className={`w-full px-3 py-2 pr-8 rounded-lg border outline-none transition-colors text-xs ${isForMyself ? 'bg-blue-50 border-blue-200 text-blue-700 cursor-default' :
-                                            errors.email ? 'border-red-400 bg-red-50' :
-                                                recipientExists === false ? 'border-amber-400' :
-                                                    recipientExists === true ? 'border-green-500' :
-                                                        'border-gray-200 focus:border-blue-500'
+                                        className={`w-full px-3 py-2 pr-8 rounded-lg border outline-none transition-colors text-xs ${isForMyself ? 'bg-brand-50 border-brand-200 text-brand-700 cursor-default' :
+                                            errors.email ? 'border-deal bg-deal-bg' :
+                                                recipientExists === false ? 'border-warning' :
+                                                    recipientExists === true ? 'border-success' :
+                                                        'border-line focus:border-brand-500'
                                             }`}
                                     />
                                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                        {isForMyself && <FiLock className="w-3 h-3 text-blue-500" />}
-                                        {!isForMyself && isCheckingEmail && <span className="text-gray-400 text-xs">...</span>}
-                                        {!isForMyself && !isCheckingEmail && recipientExists === true && <FiCheck className="w-3.5 h-3.5 text-green-500" />}
-                                        {!isForMyself && !isCheckingEmail && recipientExists === false && <FiAlertCircle className="w-3.5 h-3.5 text-amber-500" />}
+                                        {isForMyself && <FiLock className="w-3 h-3 text-brand-500" />}
+                                        {!isForMyself && isCheckingEmail && <span className="text-muted text-xs">...</span>}
+                                        {!isForMyself && !isCheckingEmail && recipientExists === true && <FiCheck className="w-3.5 h-3.5 text-success" />}
+                                        {!isForMyself && !isCheckingEmail && recipientExists === false && <FiAlertCircle className="w-3.5 h-3.5 text-warning" />}
                                     </div>
                                     {errors.email && (
-                                        <div className="absolute -bottom-4 left-0 text-xs text-red-500 flex items-center gap-1">
+                                        <div className="absolute -bottom-4 left-0 text-xs text-deal flex items-center gap-1">
                                             <FiAlertCircle className="w-2.5 h-2.5" />
                                             {errors.email}
                                         </div>
@@ -546,14 +547,14 @@ export default function GiftCardsPage() {
                                 </div>
                             </div>
                             {isForMyself && (
-                                <p className="text-xs text-blue-500 mt-1.5 flex items-center gap-1">
+                                <p className="text-xs text-brand-500 mt-1.5 flex items-center gap-1">
                                     <FiLock className="w-2.5 h-2.5" />
                                     Se usarán tus datos de cuenta automáticamente
                                 </p>
                             )}
 
                             {recipientExists === false && !errors.email && (
-                                <p className="text-xs text-amber-600 mt-1">
+                                <p className="text-xs text-warning-strong mt-1">
                                     Usuario no registrado. Se enviará invitación.
                                 </p>
                             )}
@@ -561,35 +562,35 @@ export default function GiftCardsPage() {
 
                         {/* Step 3: Personal Message */}
                         <div className="mb-3">
-                            <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                <span className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-bold">3</span>
+                            <h3 className="text-sm font-bold text-ink mb-2 flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-brand-500 text-white flex items-center justify-center text-xs font-bold">3</span>
                                 Mensaje personal (opcional)
                             </h3>
                             <textarea
                                 placeholder="Escribe un mensaje especial..."
                                 value={personalMessage}
                                 onChange={(e) => setPersonalMessage(e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-0 outline-none resize-none text-xs"
+                                className="w-full px-3 py-2 rounded-lg border border-line focus:border-brand-500 focus:ring-0 text-ink placeholder-muted outline-none resize-none text-xs"
                                 rows={2}
                                 maxLength={200}
                             />
-                            <p className="text-xs text-gray-400 text-right">{personalMessage.length}/200</p>
+                            <p className="text-xs text-muted text-right">{personalMessage.length}/200</p>
                         </div>
 
                         {/* Step 4: Scheduled Delivery (optional) - Collapsible */}
                         {!isForMyself && (
-                            <div className="mb-3 border border-gray-200 rounded-lg overflow-hidden">
+                            <div className="mb-3 border border-line rounded-lg overflow-hidden">
                                 <button
                                     type="button"
                                     onClick={() => setShowScheduledSection(!showScheduledSection)}
-                                    className="w-full px-3 py-2 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                                    className="w-full px-3 py-2 bg-surface flex items-center justify-between hover:bg-line/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <FiCalendar className="w-3.5 h-3.5 text-blue-600" />
-                                        <span className="text-xs font-medium text-gray-700">Programar envío (opcional)</span>
+                                        <FiCalendar className="w-3.5 h-3.5 text-brand-600" />
+                                        <span className="text-xs font-medium text-ink">Programar envío (opcional)</span>
                                     </div>
                                     <svg
-                                        className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-300 ${showScheduledSection ? 'rotate-180' : ''}`}
+                                        className={`w-3.5 h-3.5 text-muted transition-transform duration-300 ${showScheduledSection ? 'rotate-180' : ''}`}
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -599,15 +600,15 @@ export default function GiftCardsPage() {
                                 </button>
 
                                 <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showScheduledSection ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-                                    <div className="p-2 bg-white border-t border-gray-100">
+                                    <div className="p-2 bg-white border-t border-line">
                                         <input
                                             type="date"
                                             value={scheduledDate}
                                             onChange={(e) => setScheduledDate(e.target.value)}
                                             min={new Date().toISOString().split('T')[0]}
-                                            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-0 outline-none text-xs"
+                                            className="w-full px-3 py-1.5 rounded-lg border border-line focus:border-brand-500 focus:ring-0 text-ink placeholder-muted outline-none text-xs"
                                         />
-                                        <p className="text-xs text-gray-400 mt-1">
+                                        <p className="text-xs text-muted mt-1">
                                             {scheduledDate ? `Se enviará el ${new Date(scheduledDate + 'T12:00:00').toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' })}` : 'Dejar vacío para envío inmediato'}
                                         </p>
                                     </div>
@@ -620,7 +621,7 @@ export default function GiftCardsPage() {
                             <button
                                 type="button"
                                 onClick={() => setShowEmailPreview(true)}
-                                className="w-full mb-4 py-2 rounded-lg border border-blue-200 text-blue-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors"
+                                className="w-full mb-4 py-2 rounded-lg border border-brand-200 text-brand-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-brand-50 transition-colors"
                             >
                                 <FiEye className="w-4 h-4" />
                                 Ver cómo lucirá el email
@@ -628,20 +629,20 @@ export default function GiftCardsPage() {
                         )}
 
                         {/* Summary */}
-                        <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                        <div className="bg-surface rounded-lg p-3 mb-3 border border-line">
                             <div className="flex justify-between mb-1">
-                                <span className="text-gray-600 text-sm">Gift Card</span>
+                                <span className="text-muted text-sm">Gift Card</span>
                                 <div className="text-right">
-                                    <span className="font-bold text-gray-900">{formatUSD(finalAmount)}</span>
+                                    <span className="font-bold text-ink">{formatUSD(finalAmount)}</span>
                                     {finalAmountBs && (
-                                        <p className="text-xs text-gray-500">≈ Bs. {finalAmountBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                        <p className="text-xs text-muted">≈ Bs. {finalAmountBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                     )}
                                 </div>
                             </div>
                             {session && (
-                                <div className="flex justify-between pt-2 border-t border-gray-200">
-                                    <span className="text-gray-600 text-sm">Tu saldo</span>
-                                    <span className={`font-bold text-sm ${canPayWithBalance ? 'text-green-600' : 'text-amber-600'}`}>
+                                <div className="flex justify-between pt-2 border-t border-line">
+                                    <span className="text-muted text-sm">Tu saldo</span>
+                                    <span className={`font-bold text-sm ${canPayWithBalance ? 'text-success-strong' : 'text-warning-strong'}`}>
                                         {formatUSD(typeof userBalance === 'number' ? userBalance : 0)}
                                     </span>
                                 </div>
@@ -649,7 +650,7 @@ export default function GiftCardsPage() {
                         </div>
 
                         {/* Security Badge */}
-                        <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mb-3">
+                        <div className="flex items-center justify-center gap-2 text-xs text-muted mb-3">
                             <FiLock className="w-3 h-3" />
                             <span>Pago 100% seguro — Entrega garantizada</span>
                         </div>
@@ -658,9 +659,9 @@ export default function GiftCardsPage() {
                         <button
                             onClick={handlePurchase}
                             disabled={isLoading || finalAmount < 5}
-                            className={`w-full py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all ${finalAmount >= 5
-                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl hover:scale-[1.02]'
-                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            className={`w-full py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors ${finalAmount >= 5
+                                ? 'bg-brand-600 hover:bg-brand-700 text-white cursor-pointer'
+                                : 'bg-line text-muted cursor-not-allowed'
                                 }`}
                         >
                             {isLoading ? '...' : canPayWithBalance ? (
@@ -674,7 +675,7 @@ export default function GiftCardsPage() {
 
                 {/* Features Section - Compact */}
                 <section className="mt-12 mb-8">
-                    <h2 className="text-xl font-bold text-center text-gray-900 mb-6">
+                    <h2 className="text-xl font-bold text-center text-ink mb-6">
                         ¿Por qué elegir nuestras Gift Cards?
                     </h2>
                     <div className="grid md:grid-cols-4 gap-4">
@@ -700,12 +701,12 @@ export default function GiftCardsPage() {
                                 description: 'Transacciones protegidas y garantizadas.',
                             },
                         ].map((feature, i) => (
-                            <div key={i} className="bg-white rounded-xl p-4 shadow-md border border-gray-100 text-center hover:shadow-lg transition-shadow">
-                                <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center text-white">
+                            <div key={i} className="bg-white rounded-xl p-4 shadow-md border border-line text-center">
+                                <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600">
                                     {feature.icon}
                                 </div>
-                                <h3 className="text-sm font-bold text-gray-900 mb-1">{feature.title}</h3>
-                                <p className="text-xs text-gray-500">{feature.description}</p>
+                                <h3 className="text-sm font-bold text-ink mb-1">{feature.title}</h3>
+                                <p className="text-xs text-muted">{feature.description}</p>
                             </div>
                         ))}
                     </div>
@@ -713,13 +714,7 @@ export default function GiftCardsPage() {
             </main>
 
             {/* CTA Section - Like Homepage */}
-            <section className="py-12 bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 relative overflow-hidden">
-                {/* Background Effects */}
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-5 left-10 w-48 h-48 bg-white rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-5 right-10 w-64 h-64 bg-cyan-300 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-                </div>
-
+            <section className="py-12 bg-brand-600 text-white relative">
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                         <div className="text-white text-center md:text-left">
@@ -730,7 +725,7 @@ export default function GiftCardsPage() {
                         </div>
                         <Link
                             href="/canjear-gift-card"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand-500 text-sm font-bold rounded-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl hover:scale-105 whitespace-nowrap"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand-500 text-sm font-bold rounded-xl hover:bg-surface transition-colors whitespace-nowrap"
                         >
                             <FiGift className="w-4 h-4" />
                             Canjear Gift Card
@@ -745,15 +740,15 @@ export default function GiftCardsPage() {
 
             {/* Invite Modal */}
             {showInviteModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center">
-                        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
-                            <FiMail className="w-8 h-8 text-white" />
+                <div className={adminModalOverlay}>
+                    <div className={`${adminModalPanel} max-w-md w-full p-8 text-center`}>
+                        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-warning/15 text-warning-strong flex items-center justify-center">
+                            <FiMail className="w-8 h-8" />
                         </div>
 
-                        <h3 className="text-2xl font-bold text-gray-900 mb-3">Usuario no registrado</h3>
+                        <h3 className="text-2xl font-bold text-ink mb-3">Usuario no registrado</h3>
 
-                        <p className="text-gray-600 mb-6">
+                        <p className="text-ink-soft mb-6">
                             El email <strong>{recipientEmail}</strong> no está registrado en Electro Shop.
                             <br /><br />
                             ¿Quieres enviarle una invitación para que cree su cuenta y pueda recibir tu regalo de <strong>{formatUSD(finalAmount)}</strong>?
@@ -763,20 +758,20 @@ export default function GiftCardsPage() {
                             <button
                                 onClick={sendInvitation}
                                 disabled={isSendingInvite}
-                                className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="w-full py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
                             >
                                 {isSendingInvite ? 'Enviando...' : <><FiMail /> Sí, enviar invitación</>}
                             </button>
 
                             <button
                                 onClick={() => setShowInviteModal(false)}
-                                className="w-full py-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200"
+                                className="w-full py-4 bg-surface border border-line text-ink-soft font-bold rounded-xl hover:bg-line/50 transition-colors"
                             >
                                 Cancelar
                             </button>
                         </div>
 
-                        <p className="mt-4 text-xs text-gray-400">
+                        <p className="mt-4 text-xs text-muted">
                             La invitación incluirá un enlace para registrarse y recibir el regalo automáticamente.
                         </p>
                     </div>
@@ -785,10 +780,10 @@ export default function GiftCardsPage() {
 
             {/* Email Preview Modal */}
             {showEmailPreview && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl">
+                <div className={adminModalOverlay}>
+                    <div className={`${adminModalPanel} max-w-lg w-full overflow-hidden`}>
                         {/* Email Header */}
-                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 text-white">
+                        <div className="bg-brand-600 px-6 py-4 text-white">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                                     <FiGift className="w-5 h-5" />
@@ -802,10 +797,10 @@ export default function GiftCardsPage() {
 
                         {/* Email Body */}
                         <div className="p-6 text-center">
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            <h3 className="text-xl font-bold text-ink mb-2">
                                 ¡Hola {recipientName}!
                             </h3>
-                            <p className="text-gray-600 mb-4">
+                            <p className="text-ink-soft mb-4">
                                 {session?.user?.name || 'Alguien especial'} te ha enviado una Gift Card de Electro Shop por:
                             </p>
 
@@ -820,14 +815,14 @@ export default function GiftCardsPage() {
                             </div>
 
                             {personalMessage && (
-                                <div className="bg-gray-50 rounded-lg p-3 mb-4 text-sm italic text-gray-600">
+                                <div className="bg-surface rounded-lg p-3 mb-4 text-sm italic text-ink-soft border border-line">
                                     "{personalMessage}"
                                 </div>
                             )}
 
-                            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                                <p className="text-xs text-gray-500 mb-2">Tu código único:</p>
-                                <p className="font-mono font-bold text-blue-600 text-lg tracking-wider">XXXX-XXXX-XXXX-XXXX</p>
+                            <div className="bg-brand-50 rounded-lg p-4 border border-brand-200">
+                                <p className="text-xs text-muted mb-2">Tu código único:</p>
+                                <p className="font-mono font-bold text-brand-600 text-lg tracking-wider">XXXX-XXXX-XXXX-XXXX</p>
                             </div>
                         </div>
 
@@ -835,7 +830,7 @@ export default function GiftCardsPage() {
                         <div className="px-6 pb-6">
                             <button
                                 onClick={() => setShowEmailPreview(false)}
-                                className="w-full py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+                                className="w-full py-3 bg-surface border border-line text-ink font-bold rounded-xl hover:bg-line/50 transition-colors"
                             >
                                 Cerrar vista previa
                             </button>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { FiLock, FiArrowLeft, FiCheck, FiEye, FiEyeOff } from 'react-icons/fi';
+import { adminPrimaryButton, adminLabel } from '@/lib/admin-ui';
 
 export default function ResetPasswordPage() {
     const router = useRouter();
@@ -59,60 +60,56 @@ export default function ResetPasswordPage() {
     };
 
     return (
-        <div className="min-h-dvh bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center px-4 relative overflow-hidden">
-            {/* Animated Background */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-cyan-300/10 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-            </div>
+        <div className="min-h-dvh bg-surface flex items-center justify-center px-4 py-8 relative">
+
 
             <div className="relative z-10 w-full max-w-md">
                 {success ? (
                     /* Success State */
-                    <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 shadow-2xl text-center">
-                        <div className="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
-                            <FiCheck className="w-10 h-10 text-green-600" />
+                    <div className="rounded-2xl border border-line bg-white p-8 shadow-sm text-center">
+                        <div className="w-16 h-16 mx-auto mb-6 bg-success-strong/10 rounded-full flex items-center justify-center">
+                            <FiCheck className="w-8 h-8 text-success-strong" />
                         </div>
-                        <h2 className="text-2xl font-bold text-white mb-3">
+                        <h2 className="text-2xl font-bold text-ink mb-3">
                             ¡Contraseña Restablecida!
                         </h2>
-                        <p className="text-white/90 mb-6">
+                        <p className="text-muted mb-6 text-sm">
                             Tu contraseña ha sido actualizada exitosamente. Serás redirigido al login en unos segundos...
                         </p>
                         <Link
                             href="/login"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand-500 font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg"
+                            className={adminPrimaryButton}
                         >
                             Ir al Login
                         </Link>
                     </div>
                 ) : (
                     /* Form State */
-                    <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 shadow-2xl">
+                    <div className="rounded-2xl border border-line bg-white p-8 shadow-sm">
                         {/* Icon */}
-                        <div className="w-20 h-20 mx-auto mb-6 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30">
-                            <FiLock className="w-10 h-10 text-white" />
+                        <div className="w-16 h-16 mx-auto mb-6 bg-brand-50 rounded-full flex items-center justify-center border border-brand-200">
+                            <FiLock className="w-8 h-8 text-brand-600" />
                         </div>
 
                         {/* Title */}
-                        <h2 className="text-3xl font-bold text-white text-center mb-3">
+                        <h2 className="text-2xl font-bold text-ink text-center mb-2">
                             Nueva Contraseña
                         </h2>
-                        <p className="text-white/80 text-center mb-8">
+                        <p className="text-muted text-center text-sm mb-6">
                             Ingresa tu nueva contraseña
                         </p>
 
                         {/* Error Message */}
                         {error && (
-                            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl">
-                                <p className="text-white text-sm text-center">{error}</p>
+                            <div className="mb-6 p-4 bg-deal-bg border border-deal/30 rounded-xl">
+                                <p className="text-deal text-sm text-center font-medium">{error}</p>
                             </div>
                         )}
 
                         {/* Form */}
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-5">
                             <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-white/90 mb-2">
+                                <label htmlFor="password" className={adminLabel}>
                                     Nueva Contraseña
                                 </label>
                                 <div className="relative">
@@ -122,13 +119,13 @@ export default function ResetPasswordPage() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
-                                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent backdrop-blur-md pr-12"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-line rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 text-sm pr-12 transition-all"
                                         placeholder="Mínimo 6 caracteres"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors"
                                     >
                                         {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                                     </button>
@@ -136,7 +133,7 @@ export default function ResetPasswordPage() {
                             </div>
 
                             <div>
-                                <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/90 mb-2">
+                                <label htmlFor="confirmPassword" className={adminLabel}>
                                     Confirmar Contraseña
                                 </label>
                                 <div className="relative">
@@ -146,13 +143,13 @@ export default function ResetPasswordPage() {
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         required
-                                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent backdrop-blur-md pr-12"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-line rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 text-sm pr-12 transition-all"
                                         placeholder="Repite tu contraseña"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors"
                                     >
                                         {showConfirmPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                                     </button>
@@ -162,17 +159,17 @@ export default function ResetPasswordPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full px-6 py-4 bg-white text-brand-500 font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`${adminPrimaryButton} w-full`}
                             >
                                 {loading ? 'Restableciendo...' : 'Restablecer Contraseña'}
                             </button>
                         </form>
 
                         {/* Back to Login */}
-                        <div className="mt-6 text-center">
+                        <div className="mt-6 text-center pt-4 border-t border-line">
                             <Link
                                 href="/login"
-                                className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium"
+                                className="inline-flex items-center gap-2 text-muted hover:text-brand-600 transition-colors text-sm font-medium"
                             >
                                 <FiArrowLeft className="w-4 h-4" />
                                 Volver al Login

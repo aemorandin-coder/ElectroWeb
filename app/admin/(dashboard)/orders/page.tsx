@@ -326,47 +326,47 @@ export default function OrdersPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className={adminStatCard}>
-          <span className={adminIconChip('brand')}>
+          <span className={`${adminIconChip('brand')} max-sm:hidden`}>
             <FiDollarSign className="w-5 h-5" />
           </span>
           <div>
             <span className={adminStatLabel}>Ingresos</span>
-            <p className={adminStatValue}>{formatUSD(stats.totalRevenue)}</p>
+            <p className={`${adminStatValue} max-sm:text-xl`}>{formatUSD(stats.totalRevenue)}</p>
           </div>
         </div>
         <div className={adminStatCard}>
-          <span className={adminIconChip('warning')}>
+          <span className={`${adminIconChip('warning')} max-sm:hidden`}>
             <FiClock className="w-5 h-5" />
           </span>
           <div>
             <span className={adminStatLabel}>Pendientes</span>
-            <p className={adminStatValue}>{stats.pendingCount}</p>
+            <p className={`${adminStatValue} max-sm:text-xl`}>{stats.pendingCount}</p>
           </div>
         </div>
         <div className={adminStatCard}>
-          <span className={adminIconChip('brand')}>
+          <span className={`${adminIconChip('brand')} max-sm:hidden`}>
             <FiPackage className="w-5 h-5" />
           </span>
           <div>
             <span className={adminStatLabel}>En proceso</span>
-            <p className={adminStatValue}>{stats.processingCount}</p>
+            <p className={`${adminStatValue} max-sm:text-xl`}>{stats.processingCount}</p>
           </div>
         </div>
         <div className={adminStatCard}>
-          <span className={adminIconChip('success')}>
+          <span className={`${adminIconChip('success')} max-sm:hidden`}>
             <FiCheck className="w-5 h-5" />
           </span>
           <div>
             <span className={adminStatLabel}>Completadas</span>
-            <p className={adminStatValue}>{stats.completedCount}</p>
+            <p className={`${adminStatValue} max-sm:text-xl`}>{stats.completedCount}</p>
           </div>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="relative flex-1 max-w-xs">
+        <div className="flex w-full items-center gap-3 flex-1 sm:w-auto">
+          <div className="relative min-w-0 flex-1 sm:max-w-xs">
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
             <input
               type="text"
@@ -379,7 +379,8 @@ export default function OrdersPage() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className={`${adminInput()} w-auto`}
+            aria-label="Estado"
+            className={`${adminInput()} max-w-36 shrink-0 sm:max-w-none sm:w-44`}
           >
             <option value="all">Todas</option>
             <option value="PENDING">Pendientes</option>

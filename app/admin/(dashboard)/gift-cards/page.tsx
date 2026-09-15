@@ -281,10 +281,10 @@ export default function GiftCardsAdminPage() {
           { label: 'Canjeado', value: formatUSD(stats.redeemed), icon: FiGift, tone: 'brand' as AdminTone },
         ].map(({ label, value, icon: Icon, tone }) => (
           <div key={label} className={adminStatCard}>
-            <span className={adminIconChip(tone)}><Icon className="h-5 w-5" aria-hidden="true" /></span>
+            <span className={`${adminIconChip(tone)} max-sm:hidden`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
             <div className="min-w-0">
               <p className={adminStatLabel}>{label}</p>
-              <p className={`${adminStatValue} truncate`}>{value}</p>
+              <p className={`${adminStatValue} max-sm:text-xl`}>{value}</p>
             </div>
           </div>
         ))}

@@ -4,7 +4,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { adminPageHeader, adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminPageHeader, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import { useRouter } from 'next/navigation';
 
 type Course = {
@@ -21,6 +21,13 @@ type Course = {
   _count: { enrollments: number; reviews: number; modules: number };
 };
 
+// La API manda los Decimal de Prisma como texto ("4.5"): sin convertirlos, `rating.toFixed()`
+// rompía la página entera ("Algo salió mal") en cuanto un curso tenía calificación o precio.
+function aNumero(valor: unknown): number {
+  const n = Number(valor);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export default function CreatorCoursesPage() {
   const { confirm } = useConfirm();
   const router = useRouter();
@@ -31,7 +38,13 @@ export default function CreatorCoursesPage() {
   useEffect(() => {
     fetch('/api/creator/courses')
       .then((r) => r.json())
-      .then((data) => setCourses(Array.isArray(data) ? data : []))
+      .then((data: Course[]) =>
+        setCourses(
+          Array.isArray(data)
+            ? data.map((c) => ({ ...c, priceUSD: aNumero(c.priceUSD), rating: c.rating === null ? null : aNumero(c.rating) }))
+            : []
+        )
+      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -119,7 +132,7 @@ export default function CreatorCoursesPage() {
                     <Link
                       href={`/cursos/${course.slug}`}
                       target="_blank"
-                      className="px-3 py-1.5 bg-white/5 text-white/80 text-xs font-semibold rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+                      className="px-3 py-1.5 bg-surface border border-line text-ink-soft text-xs font-semibold rounded-lg hover:bg-line/50 hover:text-ink transition-colors"
                       title="Ver en catálogo"
                     >
                       Ver ↗
@@ -134,7 +147,7 @@ export default function CreatorCoursesPage() {
                   <button
                     onClick={() => handleDelete(course.id, course.title)}
                     disabled={deleting === course.id}
-                    className="px-3 py-1.5 text-danger hover:bg-danger/10 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
+                    className="px-3 py-1.5 text-deal hover:bg-deal-bg text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
                   >
                     {deleting === course.id ? '...' : 'Eliminar'}
                   </button>

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import PublicHeader from '@/components/public/PublicHeader';
 import PageHeader from '@/components/ui/PageHeader';
 import Footer from '@/components/Footer';
+import { adminPrimaryButton } from '@/lib/admin-ui';
 import { FiAward, FiTrendingUp, FiDollarSign, FiCheckCircle, FiClock, FiAlertCircle, FiBookOpen, FiUploadCloud, FiArrowRight, FiSend, FiCheck } from 'react-icons/fi';
 
 type CreatorProfile = {
@@ -80,7 +81,6 @@ export default function CreatorLandingPage() {
             const Icon = stat.icon;
             return (
               <div key={idx} className="relative group overflow-hidden bg-white rounded-2xl p-6 border border-line hover:border-brand-500/30 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg">
-                
                 <div className="w-10 h-10 rounded-xl bg-brand-500/5 flex items-center justify-center border border-brand-500/10 mb-4 group-hover:bg-brand-500/10 group-hover:border-brand-500/20 transition-all duration-300">
                   <Icon className="w-5 h-5 text-brand-500" />
                 </div>
@@ -130,7 +130,7 @@ export default function CreatorLandingPage() {
             <div className="bg-white rounded-3xl border border-line p-8 md:p-10 shadow-xl relative overflow-hidden">
               {creator.status === 'APPROVED' ? (
                 <div className="text-center space-y-6">
-                  <div className="w-16 h-16 bg-success/10 border border-success/20 rounded-2xl flex items-center justify-center mx-auto ">
+                  <div className="w-16 h-16 bg-success/10 border border-success/20 rounded-2xl flex items-center justify-center mx-auto">
                     <FiCheckCircle className="w-8 h-8 text-success" />
                   </div>
                   <div className="space-y-2">
@@ -141,7 +141,7 @@ export default function CreatorLandingPage() {
                   </div>
                   <Link
                     href="/creator/dashboard"
-                    className={`${adminPrimaryButton} inline-flex items-center gap-2 px-8 py-4 font-bold rounded-xl`}
+                    className={`${adminPrimaryButton} h-12 px-8`}
                   >
                     Ir a mi Panel de Creador
                     <FiArrowRight className="w-5 h-5" />
@@ -149,7 +149,7 @@ export default function CreatorLandingPage() {
                 </div>
               ) : creator.status === 'PENDING' ? (
                 <div className="text-center space-y-6">
-                  <div className="w-16 h-16 bg-warning/10 border border-warning/20 rounded-2xl flex items-center justify-center mx-auto ">
+                  <div className="w-16 h-16 bg-warning/10 border border-warning/20 rounded-2xl flex items-center justify-center mx-auto">
                     <FiClock className="w-8 h-8 text-warning" />
                   </div>
                   <div className="space-y-2">
@@ -161,8 +161,8 @@ export default function CreatorLandingPage() {
                 </div>
               ) : (
                 <div className="text-center space-y-6">
-                  <div className="w-16 h-16 bg-danger/10 border border-danger/20 rounded-2xl flex items-center justify-center mx-auto ">
-                    <FiAlertCircle className="w-8 h-8 text-danger" />
+                  <div className="w-16 h-16 bg-deal-bg border border-deal/30 rounded-2xl flex items-center justify-center mx-auto">
+                    <FiAlertCircle className="w-8 h-8 text-deal" />
                   </div>
                   <div className="space-y-2">
                     <h2 className="text-2xl md:text-3xl font-bold text-ink">Solicitud No Aprobada</h2>
@@ -194,7 +194,7 @@ export default function CreatorLandingPage() {
               ) : (
                 <div className="space-y-5">
                   {error && (
-                    <div className="p-4 bg-danger/10 border border-danger/20 text-danger rounded-xl text-xs flex items-center gap-2">
+                    <div className="p-4 bg-deal-bg border border-deal/30 text-deal rounded-xl text-xs flex items-center gap-2">
                       <FiAlertCircle className="w-4 h-4 shrink-0" />
                       <span>{error}</span>
                     </div>
@@ -243,7 +243,7 @@ export default function CreatorLandingPage() {
                   <button
                     onClick={handleApply}
                     disabled={submitting}
-                    className={`${adminPrimaryButton} w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold disabled:opacity-50 cursor-pointer`}
+                    className={`${adminPrimaryButton} h-12 w-full`}
                   >
                     {submitting ? (
                       <>

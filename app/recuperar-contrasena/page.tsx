@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { FiMail, FiArrowLeft, FiCheck, FiShield } from 'react-icons/fi';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import { useSettings } from '@/contexts/SettingsContext';
-import { adminPrimaryButton, adminInput, adminLabel } from '@/lib/admin-ui';
+import { adminPrimaryButton, adminLabel } from '@/lib/admin-ui';
 
 export default function RecuperarContrasenaPage() {
     const [email, setEmail] = useState('');

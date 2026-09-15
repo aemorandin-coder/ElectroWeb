@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { FiLock, FiArrowLeft, FiCheck, FiEye, FiEyeOff } from 'react-icons/fi';
-import { adminPrimaryButton, adminInput, adminLabel } from '@/lib/admin-ui';
+import { adminPrimaryButton, adminLabel } from '@/lib/admin-ui';
 
 export default function ResetPasswordPage() {
     const router = useRouter();

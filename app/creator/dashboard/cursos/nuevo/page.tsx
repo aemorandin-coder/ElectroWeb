@@ -73,7 +73,7 @@ export default function NuevoCursoPage() {
 
       <div className="bg-white border border-line rounded-2xl p-6 space-y-5">
         {error && (
-          <div className="p-3 bg-danger/10 border border-danger/20 rounded-lg text-danger text-sm">
+          <div className="p-3 bg-deal-bg border border-deal/30 rounded-lg text-deal text-sm">
             {error}
           </div>
         )}

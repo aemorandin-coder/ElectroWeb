@@ -28,6 +28,13 @@ type CreatorProfile = {
   _count: { courses: number };
 };
 
+// La API manda los Decimal de Prisma como texto ("4.5"): sin convertirlos, `rating.toFixed()`
+// rompía la página entera ("Algo salió mal") en cuanto un curso tenía calificación o precio.
+function aNumero(valor: unknown): number {
+  const n = Number(valor);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export default function CreatorDashboardPage() {
   const [creator, setCreator] = useState<CreatorProfile | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -38,14 +45,20 @@ export default function CreatorDashboardPage() {
       .then((r) => r.json())
       .then((c) => {
         if (c?.id) {
-          setCreator(c);
+          setCreator({ ...c, commissionRate: aNumero(c.commissionRate), totalRevenue: aNumero(c.totalRevenue) });
           if (c.status === 'APPROVED') {
             return fetch('/api/creator/courses').then((r) => r.json());
           }
         }
         return [];
       })
-      .then((cs) => setCourses(Array.isArray(cs) ? cs : []))
+      .then((cs: Course[]) =>
+        setCourses(
+          Array.isArray(cs)
+            ? cs.map((c) => ({ ...c, priceUSD: aNumero(c.priceUSD), rating: c.rating === null ? null : aNumero(c.rating) }))
+            : []
+        )
+      )
       .finally(() => setLoading(false));
   }, []);
 

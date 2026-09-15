@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import { FiUser, FiMail, FiPhone, FiPackage, FiDollarSign, FiClock, FiCheck, FiShield, FiTruck, FiSearch } from 'react-icons/fi';
 import { IoMdPricetags } from 'react-icons/io';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
-import { adminPrimaryButton, adminInput, adminLabel } from '@/lib/admin-ui';
+import { adminPrimaryButton } from '@/lib/admin-ui';
 import PageHeader, { PageHeaderChip } from '@/components/ui/PageHeader';
 
 const categories = [
@@ -254,7 +254,7 @@ export default function SolicitarProductoClient() {
               <p className="text-muted text-base mb-3 max-w-md mx-auto">
                 Hemos recibido tu solicitud y nuestro equipo ya está buscando las mejores opciones para ti.
               </p>
-              <p className="text-subtle text-xs mb-8">
+              <p className="text-muted text-xs mb-8">
                 Te contactaremos en las próximas 24-48 horas • Serás redirigido al inicio...
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

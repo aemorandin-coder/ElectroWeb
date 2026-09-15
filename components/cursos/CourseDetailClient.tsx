@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiCheck } from 'react-icons/fi';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 type Lesson = {
   id: string;
@@ -392,7 +393,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
 
       {/* Lesson video modal */}
       {activeLesson && (
-        <div className={adminModalOverlay} onClick={() => setActiveLesson(null)}>
+        <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-ink/90 p-4" onClick={() => setActiveLesson(null)}>
           <div className="w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-white font-semibold">{activeLesson.title}</h3>
@@ -511,11 +512,11 @@ function EnrollCard({
         <div className="space-y-3">
           {!isFree && userBalance !== null && (
             <p className="text-xs text-muted text-center">
-              Tu saldo: <span className={`font-bold ${hasBalance ? 'text-success-strong' : 'text-danger'}`}>{formatUSD(userBalance)}</span>
+              Tu saldo: <span className={`font-bold ${hasBalance ? 'text-success-strong' : 'text-deal'}`}>{formatUSD(userBalance)}</span>
               {!hasBalance && ' — insuficiente'}
             </p>
           )}
-          {enrollError && <p className="text-xs text-danger text-center">{enrollError}</p>}
+          {enrollError && <p className="text-xs text-deal text-center">{enrollError}</p>}
           {enrollSuccess && <p className="text-xs text-success-strong text-center font-semibold">¡Inscripción exitosa! Redirigiendo...</p>}
           <button
             onClick={onEnroll}

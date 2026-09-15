@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
-import { adminPrimaryButton, adminInput, adminLabel } from '@/lib/admin-ui';
+import { adminPrimaryButton, adminLabel } from '@/lib/admin-ui';
 
 interface ValidationErrors {
     name?: string;

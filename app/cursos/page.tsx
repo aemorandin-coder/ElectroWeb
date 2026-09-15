@@ -67,7 +67,7 @@ const LEVEL_LABELS: Record<string, string> = {
 const LEVEL_COLORS: Record<string, string> = {
   PRINCIPIANTE: 'bg-success/15 text-success-strong',
   INTERMEDIO: 'bg-warning/15 text-warning-strong',
-  AVANZADO: 'bg-danger/15 text-danger',
+  AVANZADO: 'bg-deal-bg text-deal',
 };
 
 function StarRating({ rating }: { rating: number }) {

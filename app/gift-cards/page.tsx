@@ -441,7 +441,7 @@ export default function GiftCardsPage() {
                                                 <li>• Máximo: $1,000</li>
                                                 <li>• Solo múltiplos de $5</li>
                                             </ul>
-                                            <div className="text-muted mt-1 text-xs">Se redondea automáticamente</div>
+                                            <div className="text-subtle mt-1 text-xs">Se redondea automáticamente</div>
                                             <div className="absolute -bottom-1 right-3 w-2 h-2 bg-ink rotate-45"></div>
                                         </div>
                                     </div>
@@ -500,7 +500,7 @@ export default function GiftCardsPage() {
                                         value={recipientName}
                                         readOnly={isForMyself}
                                         onChange={(e) => { if (!isForMyself) { setRecipientName(e.target.value); setErrors(prev => ({ ...prev, name: undefined })); } }}
-                                        className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors text-xs ${isForMyself ? 'bg-brand-50 border-brand-200 text-brand-700 cursor-default' : errors.name ? 'border-danger bg-danger/10' : 'border-line focus:border-brand-500'
+                                        className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors text-xs ${isForMyself ? 'bg-brand-50 border-brand-200 text-brand-700 cursor-default' : errors.name ? 'border-deal bg-deal-bg' : 'border-line focus:border-brand-500'
                                             }`}
                                     />
                                     {isForMyself && (
@@ -509,7 +509,7 @@ export default function GiftCardsPage() {
                                         </div>
                                     )}
                                     {errors.name && (
-                                        <div className="absolute -bottom-4 left-0 text-xs text-danger flex items-center gap-1">
+                                        <div className="absolute -bottom-4 left-0 text-xs text-deal flex items-center gap-1">
                                             <FiAlertCircle className="w-2.5 h-2.5" />
                                             {errors.name}
                                         </div>
@@ -526,7 +526,7 @@ export default function GiftCardsPage() {
                                         readOnly={isForMyself}
                                         onChange={(e) => { if (!isForMyself) { setRecipientEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); } }}
                                         className={`w-full px-3 py-2 pr-8 rounded-lg border outline-none transition-colors text-xs ${isForMyself ? 'bg-brand-50 border-brand-200 text-brand-700 cursor-default' :
-                                            errors.email ? 'border-danger bg-danger/10' :
+                                            errors.email ? 'border-deal bg-deal-bg' :
                                                 recipientExists === false ? 'border-warning' :
                                                     recipientExists === true ? 'border-success' :
                                                         'border-line focus:border-brand-500'
@@ -539,7 +539,7 @@ export default function GiftCardsPage() {
                                         {!isForMyself && !isCheckingEmail && recipientExists === false && <FiAlertCircle className="w-3.5 h-3.5 text-warning" />}
                                     </div>
                                     {errors.email && (
-                                        <div className="absolute -bottom-4 left-0 text-xs text-danger flex items-center gap-1">
+                                        <div className="absolute -bottom-4 left-0 text-xs text-deal flex items-center gap-1">
                                             <FiAlertCircle className="w-2.5 h-2.5" />
                                             {errors.email}
                                         </div>

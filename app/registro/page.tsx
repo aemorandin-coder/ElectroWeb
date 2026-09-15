@@ -8,7 +8,7 @@ import Image from 'next/image';
 import EpicTooltip from '@/components/EpicTooltip';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import { useSettings } from '@/contexts/SettingsContext';
-import { adminPrimaryButton, adminInput, adminLabel } from '@/lib/admin-ui';
+import { adminPrimaryButton, adminLabel } from '@/lib/admin-ui';
 
 const COUNTRY_CODES = [
   { code: '+58', country: 'Venezuela', iso: 've' },
@@ -306,7 +306,7 @@ export default function RegisterPage() {
   const selectedCountry = COUNTRY_CODES.find(c => c.code === countryCode) || COUNTRY_CODES[0];
 
   return (
-    <div className="min-h-dvh bg-surface flex items-center justify-center px-4 py-8 relative">
+    <div className="min-h-dvh bg-surface flex items-center justify-center px-4 pb-8 pt-20 lg:pt-8 relative">
       {/* Back to Login Button */}
       <Link
         href="/login"
@@ -473,7 +473,7 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       onBlur={() => handleBlur('email')}
                       autoComplete="email"
-                      className={`w-full pl-11 pr-4 py-2.5 bg-white border rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all text-sm ${touchedFields.name && validationErrors.name ? "border-deal" : "border-line focus:border-brand-500"}`}
+                      className={`w-full pl-11 pr-4 py-2.5 bg-white border rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all text-sm ${touchedFields.email && validationErrors.email ? "border-deal" : "border-line focus:border-brand-500"}`}
                       placeholder="correo@ejemplo.com"
                       disabled={isLoading}
                     />

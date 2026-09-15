@@ -244,7 +244,7 @@ export default async function ServiciosPage() {
             <div className="relative bg-surface rounded-2xl border-2 border-dashed border-line p-12 text-center overflow-hidden max-w-3xl mx-auto shadow-xs">
               <div className="absolute -top-10 -left-10 w-24 h-24 bg-brand-500/5 rounded-full blur-xl pointer-events-none"></div>
               <div className="w-16 h-16 bg-brand-50 border border-brand-200 rounded-2xl flex items-center justify-center text-brand-500 mx-auto mb-4 shadow-sm">
-                <FiVideo className="w-8 h-8 opacity-80 animate-pulse" />
+                <FiVideo className="w-8 h-8 opacity-80" />
               </div>
               <h3 className="text-xl font-bold text-ink mb-2">Construyendo nuestro portafolio digital</h3>
               <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
@@ -423,10 +423,6 @@ export default async function ServiciosPage() {
 
         {/* CTA Final Desktop (GitHub Version) */}
         <div className="relative bg-brand-600 text-white rounded-2xl p-8 text-center overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            
-            
-          </div>
           <div className="relative">
             <FiMail className="w-16 h-16 text-white/80 mx-auto mb-4" />
             <h2 className="text-3xl font-bold mb-4">¿Necesitas alguno de nuestros servicios?</h2>

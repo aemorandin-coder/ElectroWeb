@@ -10,6 +10,14 @@ import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import { useSettings } from '@/contexts/SettingsContext';
 import { adminPrimaryButton, adminInput, adminLabel } from '@/lib/admin-ui';
 
+// Solo rutas internas: "//otrositio.com" o "/\\otrositio.com" saldrían de la tienda.
+function rutaInternaSegura(valor: string | null): string | null {
+  if (!valor || !valor.startsWith('/')) return null;
+  if (valor.startsWith('//') || valor.startsWith('/\\')) return null;
+  if (valor.startsWith('/admin')) return null;
+  return valor;
+}
+
 // Constants for failed attempts
 const FAILED_ATTEMPTS_KEY = 'login_failed_attempts';
 const FAILED_ATTEMPTS_EXPIRY_KEY = 'login_failed_attempts_expiry';
@@ -131,11 +139,14 @@ function LoginPageContent() {
       if (userType === 'admin') {
         router.push('/admin');
       } else {
-        router.push('/');
+        const destino =
+          rutaInternaSegura(searchParams.get('callbackUrl')) ??
+          rutaInternaSegura(searchParams.get('redirect'));
+        router.push(destino ?? '/');
       }
       router.refresh();
     }
-  }, [status, session, router]);
+  }, [status, session, router, searchParams]);
 
   const validateField = (fieldName: string, value: string): string => {
     switch (fieldName) {
@@ -217,17 +228,11 @@ function LoginPageContent() {
         if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userTypeFromSession === 'admin') {
           window.location.href = '/admin';
         } else {
-          // Redirect based on callback URL or home
-          const callbackUrl = searchParams.get('callbackUrl');
-          const action = searchParams.get('action');
-
-          if (callbackUrl && callbackUrl.startsWith('/') && !callbackUrl.includes('/admin')) {
-            // If action was 'buy', go to the product then they can checkout
-            // For regular flows, just go to the callback URL
-            window.location.href = callbackUrl;
-          } else {
-            window.location.href = '/';
-          }
+          // Vuelve a donde venía el cliente: unas páginas mandan ?callbackUrl= y otras ?redirect=
+          const destino =
+            rutaInternaSegura(searchParams.get('callbackUrl')) ??
+            rutaInternaSegura(searchParams.get('redirect'));
+          window.location.href = destino ?? '/';
         }
       }
     } catch (err) {

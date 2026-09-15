@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import ImageUploadField from '@/components/ui/ImageUploadField';
 import { FiX } from 'react-icons/fi';
 
@@ -124,7 +124,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
   if (!course) {
     return (
       <div className="max-w-md mx-auto mt-16 text-center">
-        <p className="text-white/80">Curso no encontrado.</p>
+        <p className="text-muted">Curso no encontrado.</p>
         <Link href="/creator/dashboard/cursos" className="text-brand-600 text-sm hover:underline mt-3 block">
           ← Volver
         </Link>
@@ -240,7 +240,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                 />
                 <button
                   onClick={() => removeModule(mIdx)}
-                  className="text-danger hover:underline text-xs transition-colors"
+                  className="text-deal hover:underline text-xs transition-colors"
                 >
                   Eliminar
                 </button>
@@ -261,7 +261,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                       <button
                         type="button"
                         onClick={() => removeLesson(mIdx, lIdx)}
-                        className="text-danger hover:underline text-xs transition-colors flex-shrink-0"
+                        className="text-deal hover:underline text-xs transition-colors flex-shrink-0"
                         aria-label="Quitar"
                       >
                         <FiX className="h-4 w-4" aria-hidden="true" />

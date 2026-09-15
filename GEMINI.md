@@ -14,8 +14,8 @@ Contexto: `docs/plan/PLAN.md` (diseño) y `docs/plan/AUDITORIA.md` (problemas). 
 2. **Solo edita archivos de TU carril** (sección 2). Si el archivo no está en tu carril, NO lo toques, aunque veas un error.
 3. **No borres, renombres ni muevas archivos**, salvo la lista exacta de la tarea G-02.
 4. **No toques:** `app/api/**`, `prisma/**`, `lib/**`, `contexts/**`, `proxy.ts`, `next.config.js`, `package.json`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `components/ui/**`, `components/public/**`, `CLAUDE.md`, `GEMINI.md`, `docs/plan/PLAN.md`, `docs/plan/PLAN_CLAUDE.md`, `docs/plan/PLAN_GEMINI.md`, `docs/plan/AUDITORIA.md`, `docs/plan/estado/C-*.md`.
-5. **No instales dependencias.** No ejecutes `npm install`, `prisma migrate`, `prisma db push`, `git push --force`, `git reset --hard`, `git rebase`, `rm -rf` ni `git merge` a `main`.
-6. **Cambios mínimos.** No reformatees archivos, no cambies comillas, indentación ni orden de imports, y no reescribas componentes enteros. Si el diff tiene líneas que la tarea no pide, deshazlas.
+5. **No instales dependencias.** No ejecutes `npm install`, `prisma migrate`, `prisma db push`, `git push` (a ninguna rama), `git reset --hard`, `git rebase`, `rm -rf` ni `git merge` a `main`. Terminar una ronda = commits en tu rama y avisar a Andrés; **Claude revisa, mergea y sube**. (En R9 se mergeó y subió a `main` sin revisión: no se repite.)
+6. **Cambios mínimos.** No reformatees archivos, no cambies comillas, indentación ni orden de imports, y no reescribas componentes enteros. Si el diff tiene líneas que la tarea no pide, deshazlas. Antes de cada commit: `git diff --stat` y `git diff -w --stat` deben dar números parecidos; si el primero es mucho mayor, cambiaste la sangría (en G-33 quedaron 8 archivos con 1 espacio de sangría). `'use client'` siempre es la primera línea del archivo.
 7. **No cambies textos visibles** (copys, mensajes) salvo que la tarea lo diga.
 8. **Colores:** solo los tokens de la sección 4. Nunca escribas un hex nuevo en un className.
 9. **Tipografía:** nunca `text-[7px]`, `text-[8px]`, `text-[9px]`, `text-[9.5px]`, `text-[10px]`, `font-black` ni `font-extrabold`.

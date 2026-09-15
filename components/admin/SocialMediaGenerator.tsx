@@ -324,7 +324,7 @@ Responde SOLO con JSON (sin markdown):
                         <div className="flex items-center gap-1.5 mb-1.5">
                             <FiCpu className="w-3.5 h-3.5 text-brand-500" />
                             <span className="text-xs font-bold text-ink">Gemini AI</span>
-                            {aiConfigured && <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>}
+                            {aiConfigured && <span className="w-1.5 h-1.5 bg-success rounded-full"></span>}
                         </div>
                         <div className="flex gap-1">
                             <div className="flex-1 relative">
@@ -508,7 +508,7 @@ Responde SOLO con JSON (sin markdown):
                                 <button
                                     key={t.id}
                                     onClick={() => setSelectedTemplate(t)}
-                                    className={`aspect-[9/16] rounded border-2 transition-all hover:scale-110 bg-gradient-to-br ${t.gradientClass} ${selectedTemplate.id === t.id ? 'border-ink scale-90' : 'border-transparent'}`}
+                                    className={`aspect-[9/16] rounded border-2 transition-all bg-gradient-to-br ${t.gradientClass} ${selectedTemplate.id === t.id ? 'border-ink ring-2 ring-ink/20' : 'border-transparent'}`}
                                     title={t.name}
                                 />
                             ))}

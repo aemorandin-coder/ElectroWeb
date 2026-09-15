@@ -1,4 +1,7 @@
 'use client';
+
+import { formatUSD } from '@/lib/currency';
+
 import { toast } from 'react-hot-toast';
 
 import { useSession } from 'next-auth/react';
@@ -108,7 +111,7 @@ export default function AdminDashboard() {
   const dashboardStats = [
     {
       name: 'Ventas Totales',
-      value: isLoading ? '...' : `$${(stats?.sales?.total || 0).toFixed(2)}`,
+      value: isLoading ? '...' : formatUSD(stats?.sales?.total || 0),
       change: '+0%',
       changeType: 'neutral' as const,
       icon: (
@@ -233,9 +236,9 @@ export default function AdminDashboard() {
       description: `${stats?.orders?.pending || 0} por procesar`,
       icon: <FiClock className="w-4 h-4" />,
       href: '/admin/orders',
-      bgColor: 'bg-white border-line text-gray-800 hover:bg-surface',
-      iconBg: 'bg-amber-500 text-white',
-      hoverColor: 'hover:border-amber-300',
+      bgColor: 'bg-white border-line text-ink hover:bg-surface',
+      iconBg: 'bg-warning text-white',
+      hoverColor: 'hover:border-warning',
       pulse: true,
     },
     {
@@ -245,9 +248,9 @@ export default function AdminDashboard() {
       description: `${stats?.products?.outOfStock || 0} sin stock`,
       icon: <FiAlertTriangle className="w-4 h-4" />,
       href: '/admin/products',
-      bgColor: 'bg-white border-line text-gray-800 hover:bg-surface',
-      iconBg: 'bg-rose-600 text-white',
-      hoverColor: 'hover:border-rose-300',
+      bgColor: 'bg-white border-line text-ink hover:bg-surface',
+      iconBg: 'bg-deal text-white',
+      hoverColor: 'hover:border-deal',
       pulse: true,
     },
     {
@@ -257,9 +260,9 @@ export default function AdminDashboard() {
       description: `${pendingActions.creators || 0} solicitudes`,
       icon: <FiUsers className="w-4 h-4" />,
       href: '/admin/creators',
-      bgColor: 'bg-white border-line text-gray-800 hover:bg-surface',
+      bgColor: 'bg-white border-line text-ink hover:bg-surface',
       iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-blue-300',
+      hoverColor: 'hover:border-brand-500',
       pulse: false,
     },
     {
@@ -269,9 +272,9 @@ export default function AdminDashboard() {
       description: `${pendingActions.discounts || 0} por aprobar`,
       icon: <FiPercent className="w-4 h-4" />,
       href: '/admin/discount-requests',
-      bgColor: 'bg-white border-line text-gray-800 hover:bg-surface',
+      bgColor: 'bg-white border-line text-ink hover:bg-surface',
       iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-blue-300',
+      hoverColor: 'hover:border-brand-500',
       pulse: false,
     },
     {
@@ -281,9 +284,9 @@ export default function AdminDashboard() {
       description: `${pendingActions.productRequests || 0} solicitudes`,
       icon: <FiLayers className="w-4 h-4" />,
       href: '/admin/product-requests',
-      bgColor: 'bg-white border-line text-gray-800 hover:bg-surface',
+      bgColor: 'bg-white border-line text-ink hover:bg-surface',
       iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-blue-300',
+      hoverColor: 'hover:border-brand-500',
       pulse: false,
     },
     {
@@ -293,9 +296,9 @@ export default function AdminDashboard() {
       description: `${pendingActions.contactMessages || 0} mensajes`,
       icon: <FiMail className="w-4 h-4" />,
       href: '/admin/inquiries',
-      bgColor: 'bg-white border-line text-gray-800 hover:bg-surface',
+      bgColor: 'bg-white border-line text-ink hover:bg-surface',
       iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-blue-300',
+      hoverColor: 'hover:border-brand-500',
       pulse: false,
     },
     {
@@ -305,9 +308,9 @@ export default function AdminDashboard() {
       description: `${pendingActions.referrals || 0} por aprobar`,
       icon: <FiShare2 className="w-4 h-4" />,
       href: '/admin/marketing',
-      bgColor: 'bg-white border-line text-gray-800 hover:bg-surface',
+      bgColor: 'bg-white border-line text-ink hover:bg-surface',
       iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-blue-300',
+      hoverColor: 'hover:border-brand-500',
       pulse: false,
     },
     {
@@ -317,9 +320,9 @@ export default function AdminDashboard() {
       description: `${pendingActions.reviews || 0} por moderar`,
       icon: <FiStar className="w-4 h-4" />,
       href: '/admin/reviews',
-      bgColor: 'bg-white border-line text-gray-800 hover:bg-surface',
+      bgColor: 'bg-white border-line text-ink hover:bg-surface',
       iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-blue-300',
+      hoverColor: 'hover:border-brand-500',
       pulse: false,
     },
     {
@@ -329,9 +332,9 @@ export default function AdminDashboard() {
       description: `${pendingActions.businessVerifications || 0} pendientes`,
       icon: <FiShield className="w-4 h-4" />,
       href: '/admin/verifications',
-      bgColor: 'bg-white border-line text-gray-800 hover:bg-surface',
+      bgColor: 'bg-white border-line text-ink hover:bg-surface',
       iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-blue-300',
+      hoverColor: 'hover:border-brand-500',
       pulse: false,
     },
   ];
@@ -340,30 +343,16 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-4">
-      {/* Welcome Section - Compact with Integrated System Status */}
-      <div className="bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg p-3.5 shadow-md animate-fadeIn">
+      {/* Welcome Section */}
+      <div className="bg-brand-600 rounded-lg p-3.5 shadow-md">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
             <h1 className="text-2xl font-bold text-white mb-0.5">
               Bienvenido, {session?.user?.name}
             </h1>
-            <p className="text-base text-blue-100">
+            <p className="text-base text-white/80">
               Panel de administración de Electro Shop Morandin
             </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1 px-2 py-0.5 bg-white/10 backdrop-blur-sm rounded border border-white/15">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-base font-semibold text-white">BD: Conectado</span>
-            </div>
-            <div className="flex items-center gap-1 px-2 py-0.5 bg-white/10 backdrop-blur-sm rounded border border-white/15">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-base font-semibold text-white">Auth: Activo</span>
-            </div>
-            <div className="flex items-center gap-1 px-2 py-0.5 bg-white/10 backdrop-blur-sm rounded border border-white/15">
-              <div className="w-1.5 h-1.5 rounded-full bg-sky-300" />
-              <span className="text-base font-semibold text-white">Modo: Desarrollo</span>
-            </div>
           </div>
         </div>
       </div>
@@ -373,13 +362,13 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold text-ink flex items-center gap-2">
-              <FiBell className={`w-4.5 h-4.5 text-brand-500 ${totalPendingActions > 0 ? 'animate-bounce' : ''}`} />
+              <FiBell className={`w-4.5 h-4.5 text-brand-500 `} />
               Centro de Alertas y Aprobaciones
             </h2>
             <p className="text-base text-muted">Control y gestión de tareas que requieren tu atención inmediata</p>
           </div>
           {totalPendingActions > 0 && (
-            <span className="flex h-5.5 px-2.5 items-center justify-center text-base font-bold bg-rose-100 text-rose-700 rounded-full animate-pulse border border-rose-200">
+            <span className="flex h-5.5 px-2.5 items-center justify-center text-base font-bold bg-deal/10 text-deal rounded-full border border-deal/30">
               {totalPendingActions} {totalPendingActions === 1 ? 'Alerta' : 'Alertas'}
             </span>
           )}
@@ -392,12 +381,12 @@ export default function AdminDashboard() {
             ))}
           </div>
         ) : totalPendingActions === 0 ? (
-          <div className="flex flex-col items-center justify-center py-5 bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200 rounded-lg text-gray-800 transition-all duration-500 hover:shadow">
-            <div className="flex items-center justify-center w-9 h-9 bg-gray-600 text-white rounded-full shadow mb-2">
+          <div className="flex flex-col items-center justify-center py-5 bg-surface border border-line rounded-lg text-ink">
+            <div className="flex items-center justify-center w-9 h-9 bg-brand-500 text-white rounded-full shadow mb-2">
               <FiCheckCircle className="w-5 h-5" />
             </div>
             <h3 className="text-lg font-bold mb-0.5">¡Todo al día!</h3>
-            <p className="text-base text-gray-500">No hay tareas pendientes ni aprobaciones que requieran tu atención.</p>
+            <p className="text-base text-muted">No hay tareas pendientes ni aprobaciones que requieran tu atención.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -405,26 +394,25 @@ export default function AdminDashboard() {
               <Link
                 key={alert.id}
                 href={alert.href}
-                className="group relative flex items-center justify-between p-2.5 rounded-lg border border-line bg-white text-gray-800 hover:bg-surface hover:border-blue-200 transition-all duration-300 hover:scale-[1.01] hover:-translate-y-0.5 shadow-sm hover:shadow"
+                className="group relative flex items-center justify-between p-2.5 rounded-lg border border-line bg-white text-ink hover:bg-surface hover:border-brand-300 transition-all duration-300  shadow-sm hover:shadow"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-brand-500 border border-blue-100 shadow-sm transition-transform duration-300 group-hover:scale-105">
+                  <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-brand-50 text-brand-500 border border-brand-200 shadow-sm transition-transform duration-300 ">
                     {alert.pulse && (
                       <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-deal"></span>
                       </span>
                     )}
                     {alert.icon}
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 leading-tight group-hover:text-brand-500 transition-colors duration-300">
+                    <h3 className="text-lg font-bold text-ink leading-tight group-hover:text-brand-500 transition-colors duration-300">
                       {alert.title}
                     </h3>
-                    <p className="text-base text-gray-500 mt-0.5">{alert.description}</p>
+                    <p className="text-base text-muted mt-0.5">{alert.description}</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-white/60 group-hover:bg-brand-500 group-hover:text-white transition-all duration-300 border border-black/5">
+                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-white/60 group-hover:bg-brand-500 group-hover:text-white transition-all duration-300 border border-line">
                   <FiChevronRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </div>
               </Link>
@@ -439,14 +427,11 @@ export default function AdminDashboard() {
           <div
             key={stat.name}
             style={{ animationDelay: `${index * 40}ms` }}
-            className="group relative bg-white rounded-lg border border-line p-3 shadow-sm hover:shadow-md transition-all duration-500 hover:scale-[1.01] hover:-translate-y-0.5 animate-fadeIn overflow-hidden"
+            className="group relative bg-white rounded-lg border border-line p-3 shadow-sm hover:shadow-md transition-all duration-500  animate-fadeIn overflow-hidden"
           >
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-
             <div className="relative flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="flex items-center justify-center w-9 h-9 bg-blue-50 text-brand-500 border border-blue-100 rounded-full shadow-sm group-hover:bg-brand-500 group-hover:text-white group-hover:border-brand-500 transition-all duration-300">
+                <div className="flex items-center justify-center w-9 h-9 bg-brand-50 text-brand-500 border border-brand-200 rounded-full shadow-sm group-hover:bg-brand-500 group-hover:text-white group-hover:border-brand-500 transition-all duration-300">
                   {stat.icon}
                 </div>
                 <div>
@@ -456,7 +441,7 @@ export default function AdminDashboard() {
               </div>
               <span
                 className={`text-base font-semibold px-1.5 py-0.5 rounded-full transition-all duration-500 ${stat.changeType === 'positive'
-                  ? 'bg-green-50 text-green-600'
+                  ? 'bg-success/10 text-success-strong'
                   : 'bg-surface text-muted'
                   }`}
               >
@@ -478,7 +463,7 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold text-brand-500">
-                Total: ${stats?.sales?.total.toFixed(2) || '0.00'}
+                Total: {formatUSD(stats?.sales?.total || 0)}
               </span>
             </div>
           </div>
@@ -519,7 +504,7 @@ export default function AdminDashboard() {
                       boxShadow: '0 2px 4px -1px rgb(0 0 0 / 0.05)',
                       fontSize: '14px'
                     }}
-                    formatter={(value: any) => [`$${value.toFixed(2)}`, 'Ventas']}
+                    formatter={(value: any) => [formatUSD(Number(value) || 0), 'Ventas']}
                   />
                   <Area
                     type="monotone"
@@ -552,9 +537,9 @@ export default function AdminDashboard() {
                   key={action.title}
                   href={action.href}
                   style={{ animationDelay: `${index * 60}ms` }}
-                  className="group relative flex flex-col items-center justify-center gap-1 p-2 bg-surface rounded-lg border border-line shadow-sm hover:shadow hover:border-blue-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 overflow-hidden"
+                  className="group relative flex flex-col items-center justify-center gap-1 p-2 bg-surface rounded-lg border border-line shadow-sm hover:shadow hover:border-brand-200 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 overflow-hidden"
                 >
-                  <div className="relative flex items-center justify-center w-8 h-8 bg-blue-50 text-brand-500 border border-blue-100 rounded-full shadow-sm group-hover:bg-brand-500 group-hover:text-white transition-all duration-300">
+                  <div className="relative flex items-center justify-center w-8 h-8 bg-brand-50 text-brand-500 border border-brand-200 rounded-full shadow-sm group-hover:bg-brand-500 group-hover:text-white transition-all duration-300">
                     {action.icon}
                   </div>
                   <div className="relative text-center">

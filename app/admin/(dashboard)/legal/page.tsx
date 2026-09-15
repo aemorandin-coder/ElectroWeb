@@ -1,4 +1,8 @@
 'use client';
+
+import { adminModalOverlay, adminModalPanel, adminTableWrap, adminTable, adminTh, adminRowHover } from '@/lib/admin-ui';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
@@ -43,6 +47,7 @@ export default function LegalDocumentsPage() {
 
     // Document viewer modal
     const [viewingDocument, setViewingDocument] = useState<TermsAcceptance | null>(null);
+    useBodyScrollLock(Boolean(viewingDocument));
 
     const fetchAcceptances = async (page = 1) => {
         try {
@@ -329,7 +334,7 @@ export default function LegalDocumentsPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-xl p-4">
+                <div className="bg-brand-500 text-white rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                             <FiFileText className="w-5 h-5" />
@@ -340,7 +345,7 @@ export default function LegalDocumentsPage() {
                         </div>
                     </div>
                 </div>
-                <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-4">
+                <div className="bg-success text-white rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                             <FiCheck className="w-5 h-5" />
@@ -351,7 +356,7 @@ export default function LegalDocumentsPage() {
                         </div>
                     </div>
                 </div>
-                <div className="bg-gradient-to-br from-purple-500 to-violet-600 text-white rounded-xl p-4">
+                <div className="bg-brand-700 text-white rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                             <FiShield className="w-5 h-5" />
@@ -380,24 +385,24 @@ export default function LegalDocumentsPage() {
                         <p className="text-sm">Los clientes aún no han aceptado términos</p>
                     </div>
                 ) : (
-                    <div className="overflow-auto flex-1">
-                        <table className="w-full">
+                    <div className={`${adminTableWrap} flex-1`}>
+                        <table className={adminTable}>
                             <thead className="bg-surface border-b border-line sticky top-0 z-10">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Usuario</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Cédula</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Contacto</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Versión</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Fecha Aceptación</th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-muted uppercase tracking-wider">Acciones</th>
+                                    <th className={adminTh}>Usuario</th>
+                                    <th className={adminTh}>Cédula</th>
+                                    <th className={adminTh}>Contacto</th>
+                                    <th className={adminTh}>Versión</th>
+                                    <th className={adminTh}>Fecha Aceptación</th>
+                                    <th className={`${adminTh} text-right`}>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-line">
                                 {acceptances.map((acceptance) => (
-                                    <tr key={acceptance.id} className="hover:bg-surface transition-colors">
+                                    <tr key={acceptance.id} className={adminRowHover}>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-full flex items-center justify-center text-white font-bold">
+                                                <div className="w-10 h-10 bg-brand-500 rounded-full flex items-center justify-center text-white font-bold">
                                                     {acceptance.userName.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
@@ -428,7 +433,7 @@ export default function LegalDocumentsPage() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded">
+                                            <span className="px-2 py-1 bg-brand-50 text-brand-700 text-xs font-medium rounded">
                                                 v{acceptance.termsVersion}
                                             </span>
                                         </td>
@@ -446,7 +451,7 @@ export default function LegalDocumentsPage() {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => setViewingDocument(acceptance)}
-                                                    className="p-2 bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-lg hover:shadow-lg hover:scale-110 active:scale-95 transition-all"
+                                                    className="p-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all"
                                                     title="Ver Documento"
                                                 >
                                                     <FiEye className="w-4 h-4" />
@@ -472,7 +477,7 @@ export default function LegalDocumentsPage() {
                                                             }
                                                         }
                                                     }}
-                                                    className="p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg hover:shadow-lg hover:scale-110 active:scale-95 transition-all"
+                                                    className="p-2 bg-warning text-white rounded-lg hover:bg-warning-strong transition-all"
                                                     title="Solicitar Reaceptación"
                                                 >
                                                     <FiRefreshCw className="w-4 h-4" />
@@ -514,10 +519,10 @@ export default function LegalDocumentsPage() {
 
             {/* Document Viewer Modal - Using Portal */}
             {viewingDocument && typeof document !== 'undefined' && createPortal(
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm print:bg-white print:p-0">
+                <div className={adminModalOverlay} onClick={() => setViewingDocument(null)}>
                     <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden flex flex-col print:max-w-none print:max-h-none print:rounded-none print:shadow-none">
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white px-6 py-4 flex items-center justify-between print:hidden">
+                        <div className="bg-brand-600 text-white px-6 py-4 flex items-center justify-between print:hidden">
                             <div className="flex items-center gap-3">
                                 <FiFileText className="w-6 h-6" />
                                 <div>
@@ -610,12 +615,12 @@ export default function LegalDocumentsPage() {
                             </div>
 
                             {/* Terms Summary */}
-                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                <h3 className="text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
+                            <div className="bg-brand-50 border border-brand-200 rounded-xl p-4">
+                                <h3 className="text-sm font-bold text-brand-700 mb-2 flex items-center gap-2">
                                     <FiShield className="w-4 h-4" />
                                     Términos Aceptados
                                 </h3>
-                                <ul className="text-xs text-blue-800 space-y-1">
+                                <ul className="text-xs text-brand-700 space-y-1">
                                     <li>• Fondos de origen lícito y legal</li>
                                     <li>• Política de no reembolso aceptada</li>
                                     <li>• Compromiso de información veraz</li>
@@ -645,7 +650,7 @@ export default function LegalDocumentsPage() {
                             </div>
 
                             {/* Legal Notice */}
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-xs text-yellow-800">
+                            <div className="bg-warning/10 border border-warning/20 rounded-xl p-4 text-xs text-warning-strong">
                                 <strong>AVISO LEGAL:</strong> Este documento constituye prueba de la aceptación voluntaria
                                 de los términos y condiciones por parte del usuario. La firma digital tiene validez legal
                                 según la legislación vigente. Este documento puede ser utilizado como evidencia en

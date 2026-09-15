@@ -194,11 +194,11 @@ export default function EmailSettingsPanel() {
         <div className="space-y-4">
             {/* Header Status Card - Compact */}
             <div className={`relative overflow-hidden rounded-xl p-4 ${settings?.isConfigured
-                ? 'bg-gradient-to-r from-emerald-500 to-emerald-600'
-                : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                ? 'bg-success'
+                : 'bg-warning'
                 }`}>
                 <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                    <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         {settings?.isConfigured ? (
                             <FiCheckCircle className="w-5 h-5 text-white" />
                         ) : (
@@ -265,7 +265,7 @@ export default function EmailSettingsPanel() {
 
                     {/* Provider tip */}
                     {formData.provider === 'godaddy' && (
-                        <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-2.5 flex items-start gap-2">
+                        <div className="mt-3 bg-brand-50 border border-brand-200 rounded-lg p-2.5 flex items-start gap-2">
                             <FiInfo className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
                             <p className="text-xs text-brand-500">
                                 <strong>GoDaddy:</strong> Usa tu correo profesional. Puerto 465 (SSL) o 587 (TLS).
@@ -430,17 +430,17 @@ export default function EmailSettingsPanel() {
                                 key={item.key}
                                 onClick={() => handleInputChange(item.key as keyof EmailSettingsData, !isEnabled)}
                                 className={`relative p-3 rounded-lg border-2 transition-all text-left ${isEnabled
-                                    ? 'border-emerald-500 bg-emerald-50'
+                                    ? 'border-success bg-success/5'
                                     : 'border-line hover:border-line'
                                     }`}
                             >
                                 {isEnabled && (
-                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
+                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-success rounded-full flex items-center justify-center">
                                         <FiCheck className="w-2.5 h-2.5 text-white" />
                                     </div>
                                 )}
                                 <div className="flex items-center gap-2">
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isEnabled ? 'bg-emerald-500 text-white' : 'bg-surface text-brand-500'
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isEnabled ? 'bg-success text-white' : 'bg-surface text-brand-500'
                                         }`}>
                                         <Icon className="w-4 h-4" />
                                     </div>
@@ -484,15 +484,15 @@ export default function EmailSettingsPanel() {
                 {/* Test Result */}
                 {settings?.lastTestStatus && (
                     <div className={`mt-2 p-2 rounded-lg flex items-center gap-2 ${settings.lastTestStatus === 'success'
-                        ? 'bg-emerald-100'
-                        : 'bg-red-100'
+                        ? 'bg-success/10'
+                        : 'bg-deal/10'
                         }`}>
                         {settings.lastTestStatus === 'success' ? (
-                            <FiCheckCircle className="w-4 h-4 text-emerald-600" />
+                            <FiCheckCircle className="w-4 h-4 text-success-strong" />
                         ) : (
-                            <FiX className="w-4 h-4 text-red-600" />
+                            <FiX className="w-4 h-4 text-deal" />
                         )}
-                        <p className={`text-xs font-medium ${settings.lastTestStatus === 'success' ? 'text-emerald-800' : 'text-red-800'
+                        <p className={`text-xs font-medium ${settings.lastTestStatus === 'success' ? 'text-success-strong' : 'text-deal'
                             }`}>
                             {settings.lastTestStatus === 'success' ? 'Conexión exitosa' : settings.lastTestError || 'Error'}
                         </p>
@@ -503,14 +503,14 @@ export default function EmailSettingsPanel() {
             {/* Save Button - Compact */}
             <div className="flex items-center justify-end gap-3">
                 {hasChanges && (
-                    <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
+                    <span className="text-xs text-warning-strong bg-warning/10 px-2 py-1 rounded-full">
                         Sin guardar
                     </span>
                 )}
                 <button
                     onClick={handleSave}
                     disabled={!hasChanges || saving}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-bold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-brand-500 text-white text-sm font-bold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {saving ? (
                         <FiRefreshCw className="w-4 h-4 animate-spin" />

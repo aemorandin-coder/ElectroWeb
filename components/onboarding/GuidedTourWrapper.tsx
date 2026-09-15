@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { usePathname } from 'next/navigation';
 
 /**
  * Wrapper cliente para GuidedTour.
@@ -13,5 +14,7 @@ const GuidedTour = dynamic(
 );
 
 export function GuidedTourWrapper() {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/admin')) return null;
   return <GuidedTour />;
 }

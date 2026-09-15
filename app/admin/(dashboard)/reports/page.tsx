@@ -9,6 +9,8 @@ import {
     FiGlobe, FiClock, FiRefreshCw, FiActivity, FiList,
     FiGift, FiDollarSign, FiCheckCircle, FiAward, FiDownload
 } from 'react-icons/fi';
+import { adminTab, adminTableWrap, adminTable, adminTh, adminTd, adminRowHover } from '@/lib/admin-ui';
+import { formatUSD } from '@/lib/currency';
 import {
     ResponsiveContainer, AreaChart, Area, BarChart, Bar,
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -156,58 +158,57 @@ export default function ReportsPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
+        <div className="min-h-screen bg-surface p-4">
             {/* Header - Compact */}
             <div className="mb-4 animate-fadeIn">
                 <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-9 h-9 bg-brand-500 rounded-lg flex items-center justify-center shadow-md">
                         <FiBarChart2 className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-gray-800">Reportes y Analíticas</h1>
-                        <p className="text-xs text-gray-500">Métricas en tiempo real</p>
+                        <h1 className="text-xl font-bold text-ink">Reportes y Analíticas</h1>
+                        <p className="text-xs text-muted">Métricas en tiempo real</p>
                     </div>
                 </div>
             </div>
 
             {/* Live Users Counter - Compact */}
             <div className="mb-4 animate-slideInRight">
-                <div className="bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl p-3 shadow-lg">
+                <div className="bg-brand-500 rounded-xl p-3 shadow-lg">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                                     <FiActivity className="w-5 h-5 text-white" />
                                 </div>
-                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
-                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full" />
+                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full" />
                             </div>
                             <div>
-                                <p className="text-blue-100 text-xs font-medium uppercase tracking-wide">En vivo ahora</p>
+                                <p className="text-white/70 text-xs font-medium uppercase tracking-wide">En vivo ahora</p>
                                 <div className="flex items-baseline gap-1.5">
                                     <span className="text-2xl font-bold text-white">
                                         {liveUsers?.liveCount ?? '...'}
                                     </span>
-                                    <span className="text-emerald-200 text-xs">activos</span>
+                                    <span className="text-white/70 text-xs">activos</span>
                                 </div>
                             </div>
                         </div>
                         <div className="hidden md:flex items-center gap-4">
                             <div className="text-center px-3 border-l border-white/20">
                                 <p className="text-lg font-bold text-white">{liveUsers?.authenticatedCount ?? 0}</p>
-                                <p className="text-xs text-blue-200">Logueados</p>
+                                <p className="text-xs text-white/60">Logueados</p>
                             </div>
                             <div className="flex items-center gap-2 px-3 border-l border-white/20">
                                 <div className="text-center">
-                                    <FiMonitor className="w-3.5 h-3.5 text-blue-200 mx-auto" />
+                                    <FiMonitor className="w-3.5 h-3.5 text-white/60 mx-auto" />
                                     <p className="text-xs font-bold text-white">{liveUsers?.devices?.desktop ?? 0}</p>
                                 </div>
                                 <div className="text-center">
-                                    <FiSmartphone className="w-3.5 h-3.5 text-blue-200 mx-auto" />
+                                    <FiSmartphone className="w-3.5 h-3.5 text-white/60 mx-auto" />
                                     <p className="text-xs font-bold text-white">{liveUsers?.devices?.mobile ?? 0}</p>
                                 </div>
                                 <div className="text-center">
-                                    <FiTablet className="w-3.5 h-3.5 text-blue-200 mx-auto" />
+                                    <FiTablet className="w-3.5 h-3.5 text-white/60 mx-auto" />
                                     <p className="text-xs font-bold text-white">{liveUsers?.devices?.tablet ?? 0}</p>
                                 </div>
                             </div>
@@ -218,7 +219,7 @@ export default function ReportsPage() {
                             <div className="flex flex-wrap gap-1.5">
                                 {liveUsers.topPages.slice(0, 4).map((page, i) => (
                                     <span key={i} className="px-2 py-0.5 bg-white/15 rounded text-xs text-white font-mono">
-                                        {page.page} <span className="text-emerald-300">({page.count})</span>
+                                        {page.page} <span className="text-white/60">({page.count})</span>
                                     </span>
                                 ))}
                             </div>
@@ -229,17 +230,14 @@ export default function ReportsPage() {
 
             {/* Controls - Compact */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
-                <div className="flex gap-0.5 bg-white rounded-lg p-1 shadow-sm border border-gray-200 overflow-x-auto max-w-full">
+                <div className="flex gap-2 overflow-x-auto pb-1">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
                         return (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all flex-shrink-0 ${activeTab === tab.id
-                                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md'
-                                    : 'text-gray-600 hover:bg-gray-100'
-                                    }`}
+                                className={adminTab(activeTab === tab.id)}
                             >
                                 <Icon className="w-3.5 h-3.5" />
                                 {tab.label}
@@ -249,11 +247,11 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2 bg-white rounded-lg px-2.5 py-1.5 shadow-sm border border-gray-200">
+                    <div className="flex items-center gap-2 bg-white rounded-lg px-2.5 py-1.5 shadow-sm border border-line">
                         <select
                             value={period}
                             onChange={(e) => setPeriod(e.target.value)}
-                            className="text-xs bg-transparent border-0 focus:ring-0 text-gray-600 pr-6"
+                            className="text-xs bg-transparent border-0 focus:ring-0 text-muted pr-6"
                         >
                             {periodOptions.map((option) => (
                                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -261,7 +259,7 @@ export default function ReportsPage() {
                         </select>
                         <button
                             onClick={fetchData}
-                            className="p-1 text-gray-400 hover:text-brand-500 rounded transition-colors"
+                            className="p-1 text-subtle hover:text-brand-500 rounded transition-colors"
                             title="Actualizar datos"
                         >
                             <FiRefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -270,7 +268,7 @@ export default function ReportsPage() {
 
                     <button
                         onClick={exportToCSV}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-line-strong rounded-lg hover:bg-surface transition-all hover:scale-105 active:scale-95 text-xs text-gray-600 font-medium"
+                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-line-strong rounded-lg hover:bg-surface transition-all hover:scale-105 active:scale-95 text-xs text-muted font-medium"
                         title="Exportar a CSV"
                     >
                         <FiDownload className="w-4 h-4" />
@@ -282,7 +280,7 @@ export default function ReportsPage() {
             {/* Content */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                    <div className="w-10 h-10 rounded-full border-3 border-gray-200 border-t-brand-500 animate-spin" />
+                    <div className="w-10 h-10 rounded-full border-3 border-line border-t-brand-500 animate-spin" />
                 </div>
             ) : (
                 <>
@@ -291,12 +289,12 @@ export default function ReportsPage() {
                         <div className="space-y-4 animate-fadeIn">
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                                 {/* Users */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
+                                <div className="group bg-white rounded-xl shadow-sm border border-line p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs text-gray-400 font-medium uppercase">Clientes</p>
-                                            <p className="text-2xl font-bold text-gray-800">{overview.users.total}</p>
-                                            <p className="text-xs text-emerald-600 flex items-center gap-0.5">
+                                            <p className="text-xs text-subtle font-medium uppercase">Clientes</p>
+                                            <p className="text-2xl font-bold text-ink">{overview.users.total}</p>
+                                            <p className="text-xs text-success-strong flex items-center gap-0.5">
                                                 <FiTrendingUp className="w-3 h-3" />+{overview.users.new} nuevos
                                             </p>
                                         </div>
@@ -307,12 +305,12 @@ export default function ReportsPage() {
                                 </div>
 
                                 {/* Orders */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
+                                <div className="group bg-white rounded-xl shadow-sm border border-line p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs text-gray-400 font-medium uppercase">Pedidos</p>
-                                            <p className="text-2xl font-bold text-gray-800">{overview.orders.total}</p>
-                                            <p className="text-xs text-emerald-600 flex items-center gap-0.5">
+                                            <p className="text-xs text-subtle font-medium uppercase">Pedidos</p>
+                                            <p className="text-2xl font-bold text-ink">{overview.orders.total}</p>
+                                            <p className="text-xs text-success-strong flex items-center gap-0.5">
                                                 <FiTrendingUp className="w-3 h-3" />+{overview.orders.recent} recientes
                                             </p>
                                         </div>
@@ -323,14 +321,14 @@ export default function ReportsPage() {
                                 </div>
 
                                 {/* Revenue */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
+                                <div className="group bg-white rounded-xl shadow-sm border border-line p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs text-gray-400 font-medium uppercase">Ingresos</p>
-                                            <p className="text-xl font-bold text-gray-800">
+                                            <p className="text-xs text-subtle font-medium uppercase">Ingresos</p>
+                                            <p className="text-xl font-bold text-ink">
                                                 ${Number(overview.revenue.total).toLocaleString('es-VE', { minimumFractionDigits: 2 })}
                                             </p>
-                                            <p className="text-xs text-gray-400">En el período</p>
+                                            <p className="text-xs text-subtle">En el período</p>
                                         </div>
                                         <div className="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                                             <FiTrendingUp className="w-5 h-5 text-brand-500" />
@@ -339,12 +337,12 @@ export default function ReportsPage() {
                                 </div>
 
                                 {/* Products */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
+                                <div className="group bg-white rounded-xl shadow-sm border border-line p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs text-gray-400 font-medium uppercase">Productos</p>
-                                            <p className="text-2xl font-bold text-gray-800">{overview.products.total}</p>
-                                            <p className="text-xs text-amber-600">{overview.productRequests.pending} solicitudes</p>
+                                            <p className="text-xs text-subtle font-medium uppercase">Productos</p>
+                                            <p className="text-2xl font-bold text-ink">{overview.products.total}</p>
+                                            <p className="text-xs text-warning-strong">{overview.productRequests.pending} solicitudes</p>
                                         </div>
                                         <div className="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                                             <FiPackage className="w-5 h-5 text-brand-500" />
@@ -355,19 +353,19 @@ export default function ReportsPage() {
 
                             {/* Visualizations Card */}
                             {mounted && overview.dailyData && overview.dailyData.length > 0 && (
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-6">
+                                <div className="bg-white rounded-xl shadow-sm border border-line p-5 space-y-6">
                                     <div>
-                                        <h3 className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                                        <h3 className="text-sm font-semibold text-ink-soft mb-1 flex items-center gap-2">
                                             <FiTrendingUp className="w-4 h-4 text-brand-500" />
                                             Tendencias del Período
                                         </h3>
-                                        <p className="text-xs text-gray-500">Visualización de ingresos, pedidos y nuevos registros de clientes</p>
+                                        <p className="text-xs text-muted">Visualización de ingresos, pedidos y nuevos registros de clientes</p>
                                     </div>
                                     
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                         {/* Sales Area Chart */}
                                         <div className="space-y-2">
-                                            <p className="text-xs font-semibold text-gray-600">Ventas e Ingresos (USD)</p>
+                                            <p className="text-xs font-semibold text-muted">Ventas e Ingresos (USD)</p>
                                             <div className="h-64 w-full">
                                                 <ResponsiveContainer width="100%" height="100%">
                                                     <AreaChart data={overview.dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -382,7 +380,7 @@ export default function ReportsPage() {
                                                         <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} />
                                                         <Tooltip 
                                                             contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
-                                                            formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Ventas']}
+                                                            formatter={(value) => [`${formatUSD(Number(value))}`, 'Ventas']}
                                                         />
                                                         <Area type="monotone" dataKey="sales" stroke="#2a63cd" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
                                                     </AreaChart>
@@ -392,7 +390,7 @@ export default function ReportsPage() {
 
                                         {/* Orders and Users Line Chart */}
                                         <div className="space-y-2">
-                                            <p className="text-xs font-semibold text-gray-600">Pedidos y Nuevos Clientes</p>
+                                            <p className="text-xs font-semibold text-muted">Pedidos y Nuevos Clientes</p>
                                             <div className="h-64 w-full">
                                                 <ResponsiveContainer width="100%" height="100%">
                                                     <LineChart data={overview.dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -403,8 +401,8 @@ export default function ReportsPage() {
                                                             contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
                                                         />
                                                         <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
-                                                        <Line type="monotone" dataKey="orders" name="Pedidos" stroke="#eab308" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                                                        <Line type="monotone" dataKey="users" name="Nuevos Clientes" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                                                        <Line type="monotone" dataKey="orders" name="Pedidos" stroke="#b45309" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                                                        <Line type="monotone" dataKey="users" name="Nuevos Clientes" stroke="#047857" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                                                     </LineChart>
                                                 </ResponsiveContainer>
                                             </div>
@@ -415,45 +413,45 @@ export default function ReportsPage() {
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                                 {/* Interactions */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                    <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
                                         <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
                                             <FiMousePointer className="w-3 h-3 text-brand-500" />
                                         </div>
                                         Interacciones
                                     </h3>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-gray-50 rounded-lg p-3 text-center group hover:bg-brand-500/5 transition-colors">
+                                        <div className="bg-surface rounded-lg p-3 text-center group hover:bg-brand-500/5 transition-colors">
                                             <FiEye className="w-5 h-5 text-brand-500 mx-auto mb-1" />
-                                            <p className="text-xl font-bold text-gray-800">{overview.interactions.pageViews}</p>
-                                            <p className="text-xs text-gray-500">Vistas</p>
+                                            <p className="text-xl font-bold text-ink">{overview.interactions.pageViews}</p>
+                                            <p className="text-xs text-muted">Vistas</p>
                                         </div>
-                                        <div className="bg-gray-50 rounded-lg p-3 text-center group hover:bg-brand-500/5 transition-colors">
+                                        <div className="bg-surface rounded-lg p-3 text-center group hover:bg-brand-500/5 transition-colors">
                                             <FiMousePointer className="w-5 h-5 text-brand-500 mx-auto mb-1" />
-                                            <p className="text-xl font-bold text-gray-800">{overview.interactions.clicks}</p>
-                                            <p className="text-xs text-gray-500">Clics</p>
+                                            <p className="text-xl font-bold text-ink">{overview.interactions.clicks}</p>
+                                            <p className="text-xs text-muted">Clics</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Security */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                    <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
                                         <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
                                             <FiShield className="w-3 h-3 text-brand-500" />
                                         </div>
                                         Seguridad
                                     </h3>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-gray-50 rounded-lg p-3 text-center">
-                                            <FiAlertTriangle className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-                                            <p className="text-xl font-bold text-gray-800">{overview.security.total}</p>
-                                            <p className="text-xs text-gray-500">Alertas</p>
+                                        <div className="bg-surface rounded-lg p-3 text-center">
+                                            <FiAlertTriangle className="w-5 h-5 text-warning mx-auto mb-1" />
+                                            <p className="text-xl font-bold text-ink">{overview.security.total}</p>
+                                            <p className="text-xs text-muted">Alertas</p>
                                         </div>
-                                        <div className={`rounded-lg p-3 text-center ${overview.security.critical > 0 ? 'bg-red-50' : 'bg-emerald-50'}`}>
-                                            <FiShield className={`w-5 h-5 mx-auto mb-1 ${overview.security.critical > 0 ? 'text-red-500' : 'text-emerald-500'}`} />
-                                            <p className="text-xl font-bold text-gray-800">{overview.security.critical}</p>
-                                            <p className="text-xs text-gray-500">Críticas</p>
+                                        <div className={`rounded-lg p-3 text-center ${overview.security.critical > 0 ? 'bg-deal/5' : 'bg-success/5'}`}>
+                                            <FiShield className={`w-5 h-5 mx-auto mb-1 ${overview.security.critical > 0 ? 'text-deal' : 'text-success'}`} />
+                                            <p className="text-xl font-bold text-ink">{overview.security.critical}</p>
+                                            <p className="text-xs text-muted">Críticas</p>
                                         </div>
                                     </div>
                                 </div>
@@ -466,10 +464,10 @@ export default function ReportsPage() {
                         <div className="space-y-4 animate-fadeIn">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 {/* Top Selling Products Chart */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                        <div className="w-6 h-6 bg-emerald-100 rounded flex items-center justify-center">
-                                            <FiTrendingUp className="w-3 h-3 text-emerald-600" />
+                                <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                    <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
+                                        <div className="w-6 h-6 bg-success/10 rounded flex items-center justify-center">
+                                            <FiTrendingUp className="w-3 h-3 text-success-strong" />
                                         </div>
                                         Top Productos Vendidos
                                     </h3>
@@ -490,18 +488,18 @@ export default function ReportsPage() {
                                                     <Tooltip 
                                                         contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
                                                     />
-                                                    <Bar dataKey="ventas" fill="#10b981" radius={[0, 4, 4, 0]} barSize={12} />
+                                                    <Bar dataKey="ventas" fill="#047857" radius={[0, 4, 4, 0]} barSize={12} />
                                                 </BarChart>
                                             </ResponsiveContainer>
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-gray-400 text-center py-12">Sin datos de ventas</p>
+                                        <p className="text-xs text-subtle text-center py-12">Sin datos de ventas</p>
                                     )}
                                 </div>
 
                                 {/* Request Status Pie Chart */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                    <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
                                         <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
                                             <FiPackage className="w-3 h-3 text-brand-500" />
                                         </div>
@@ -546,59 +544,59 @@ export default function ReportsPage() {
                                                         REJECTED: 'Rechazadas'
                                                     };
                                                     const colors = {
-                                                        PENDING: 'bg-yellow-500',
-                                                        APPROVED: 'bg-emerald-500',
-                                                        REJECTED: 'bg-red-500'
+                                                        PENDING: 'bg-warning',
+                                                        APPROVED: 'bg-success',
+                                                        REJECTED: 'bg-deal'
                                                     };
                                                     const label = labels[entry.status as keyof typeof labels] || entry.status;
-                                                    const colorCls = colors[entry.status as keyof typeof colors] || 'bg-gray-500';
+                                                    const colorCls = colors[entry.status as keyof typeof colors] || 'bg-muted';
                                                     return (
                                                         <div key={entry.status} className="flex items-center gap-2 text-xs">
                                                             <span className={`w-3 h-3 rounded-full ${colorCls}`} />
-                                                            <span className="font-medium text-gray-600">{label}:</span>
-                                                            <span className="font-bold text-gray-800">{entry._count}</span>
+                                                            <span className="font-medium text-muted">{label}:</span>
+                                                            <span className="font-bold text-ink">{entry._count}</span>
                                                         </div>
                                                     );
                                                 })}
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-gray-400 text-center py-12">Sin solicitudes</p>
+                                        <p className="text-xs text-subtle text-center py-12">Sin solicitudes</p>
                                     )}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Detalle de Ventas</h3>
+                                <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                    <h3 className="text-sm font-semibold text-ink-soft mb-3">Detalle de Ventas</h3>
                                     {products.topSelling.length > 0 ? (
                                         <div className="space-y-2">
                                             {products.topSelling.slice(0, 5).map((product, index) => (
-                                                <div key={product.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-brand-500/5 transition-colors">
+                                                <div key={product.id} className="flex items-center justify-between p-2 bg-surface rounded-lg hover:bg-brand-500/5 transition-colors">
                                                     <div className="flex items-center gap-2">
                                                         <span className="w-5 h-5 bg-brand-500 text-white rounded text-xs font-bold flex items-center justify-center">
                                                             {index + 1}
                                                         </span>
-                                                        <span className="text-xs font-medium text-gray-700 truncate max-w-[180px]">{product.name}</span>
+                                                        <span className="text-xs font-medium text-ink-soft truncate max-w-[180px]">{product.name}</span>
                                                     </div>
-                                                    <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-semibold">
+                                                    <span className="bg-success/10 text-success-strong px-2 py-0.5 rounded text-xs font-semibold">
                                                         {product._count.orderItems} vendidos
                                                     </span>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-gray-400 text-center py-4">Sin datos</p>
+                                        <p className="text-xs text-subtle text-center py-4">Sin datos</p>
                                     )}
                                 </div>
 
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Solicitudes por Estado</h3>
+                                <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                    <h3 className="text-sm font-semibold text-ink-soft mb-3">Solicitudes por Estado</h3>
                                     {products.requests.length > 0 ? (
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                             {products.requests.map((req) => (
-                                                <div key={req.status} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-brand-500/5 transition-colors">
-                                                    <p className="text-lg font-bold text-gray-800">{req._count}</p>
+                                                <div key={req.status} className="bg-surface rounded-lg p-3 text-center hover:bg-brand-500/5 transition-colors">
+                                                    <p className="text-lg font-bold text-ink">{req._count}</p>
                                                     {(() => {
     const statusLabels: Record<string, string> = {
         PENDING: 'Pendiente',
@@ -606,13 +604,13 @@ export default function ReportsPage() {
         FULFILLED: 'Cumplida',
         REJECTED: 'Rechazada',
     };
-    return <p className="text-xs text-gray-500">{statusLabels[req.status] || req.status}</p>;
+    return <p className="text-xs text-muted">{statusLabels[req.status] || req.status}</p>;
 })()}
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-gray-400 text-center py-4">Sin solicitudes</p>
+                                        <p className="text-xs text-subtle text-center py-4">Sin solicitudes</p>
                                     )}
                                 </div>
                             </div>
@@ -623,16 +621,16 @@ export default function ReportsPage() {
                     {activeTab === 'interactions' && (
                         <div className="space-y-4 animate-fadeIn">
                             {!interactions || (interactions.byDevice.length === 0 && interactions.byType.length === 0 && interactions.topPages.length === 0) ? (
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
-                                    <FiMousePointer className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                                    <p className="text-xs text-gray-400">No hay datos de interacciones aún</p>
+                                <div className="bg-white rounded-xl shadow-sm border border-line p-6 text-center">
+                                    <FiMousePointer className="w-8 h-8 text-subtle mx-auto mb-2" />
+                                    <p className="text-xs text-subtle">No hay datos de interacciones aún</p>
                                 </div>
                             ) : (
                                 <>
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                         {/* Daily Interactions Trend Chart */}
-                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                            <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
                                                 <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
                                                     <FiActivity className="w-3 h-3 text-brand-500" />
                                                 </div>
@@ -659,13 +657,13 @@ export default function ReportsPage() {
                                                     </ResponsiveContainer>
                                                 </div>
                                             ) : (
-                                                <p className="text-xs text-gray-400 text-center py-12">Sin datos diarios</p>
+                                                <p className="text-xs text-subtle text-center py-12">Sin datos diarios</p>
                                             )}
                                         </div>
 
                                         {/* Device Distribution Pie Chart */}
-                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                            <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
                                                 <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
                                                     <FiMonitor className="w-3 h-3 text-brand-500" />
                                                 </div>
@@ -699,7 +697,7 @@ export default function ReportsPage() {
                                                     </div>
                                                     <div className="space-y-2">
                                                         {interactions.byDevice.map((entry, index) => {
-                                                            const colors = ['bg-brand-500', 'bg-success', 'bg-warning', 'bg-[#ec4899]'];
+                                                            const colors = ['bg-brand-500', 'bg-success', 'bg-warning', 'bg-info'];
                                                             const labels: Record<string, string> = {
                                                                 desktop: 'Computadora',
                                                                 mobile: 'Móvil',
@@ -708,22 +706,22 @@ export default function ReportsPage() {
                                                             return (
                                                                 <div key={entry.deviceType} className="flex items-center gap-2 text-xs">
                                                                     <span className={`w-3 h-3 rounded-full ${colors[index % colors.length]}`} />
-                                                                    <span className="font-medium text-gray-600 capitalize">{labels[entry.deviceType] || entry.deviceType || 'Otro'}:</span>
-                                                                    <span className="font-bold text-gray-800">{entry._count}</span>
+                                                                    <span className="font-medium text-muted capitalize">{labels[entry.deviceType] || entry.deviceType || 'Otro'}:</span>
+                                                                    <span className="font-bold text-ink">{entry._count}</span>
                                                                 </div>
                                                             );
                                                         })}
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <p className="text-xs text-gray-400 text-center py-12">Sin datos de dispositivos</p>
+                                                <p className="text-xs text-subtle text-center py-12">Sin datos de dispositivos</p>
                                             )}
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                            <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
                                                 <FiMonitor className="w-3 h-3 text-brand-500" />
                                                 Dispositivos (Detalle)
                                             </h3>
@@ -732,34 +730,34 @@ export default function ReportsPage() {
                                                     const Icon = device.deviceType === 'mobile' ? FiSmartphone :
                                                         device.deviceType === 'tablet' ? FiTablet : FiMonitor;
                                                     return (
-                                                        <div key={device.deviceType} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-brand-500/5 transition-colors">
+                                                        <div key={device.deviceType} className="bg-surface rounded-lg p-3 text-center hover:bg-brand-500/5 transition-colors">
                                                             <Icon className="w-5 h-5 text-brand-500 mx-auto mb-1" />
-                                                            <p className="text-lg font-bold text-gray-800">{device._count}</p>
-                                                            <p className="text-xs text-gray-500 capitalize">{device.deviceType || 'Otro'}</p>
+                                                            <p className="text-lg font-bold text-ink">{device._count}</p>
+                                                            <p className="text-xs text-muted capitalize">{device.deviceType || 'Otro'}</p>
                                                         </div>
                                                     );
-                                                }) : <p className="text-xs text-gray-400 text-center col-span-3">Sin datos</p>}
+                                                }) : <p className="text-xs text-subtle text-center col-span-3">Sin datos</p>}
                                             </div>
                                         </div>
 
-                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                            <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
                                                 <FiList className="w-3 h-3 text-brand-500" />
                                                 Eventos
                                             </h3>
                                             <div className="grid grid-cols-3 gap-2">
                                                 {interactions.byType.length > 0 ? interactions.byType.slice(0, 6).map((event) => (
-                                                    <div key={event.eventType} className="bg-gray-50 rounded-lg p-2 text-center hover:bg-brand-500/5 transition-colors">
-                                                        <p className="text-lg font-bold text-gray-800">{event._count}</p>
-                                                        <p className="text-xs text-gray-500 capitalize truncate">{event.eventType.replace(/_/g, ' ')}</p>
+                                                    <div key={event.eventType} className="bg-surface rounded-lg p-2 text-center hover:bg-brand-500/5 transition-colors">
+                                                        <p className="text-lg font-bold text-ink">{event._count}</p>
+                                                        <p className="text-xs text-muted capitalize truncate">{event.eventType.replace(/_/g, ' ')}</p>
                                                     </div>
-                                                )) : <p className="text-xs text-gray-400 text-center col-span-3">Sin datos</p>}
+                                                )) : <p className="text-xs text-subtle text-center col-span-3">Sin datos</p>}
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                    <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                        <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
                                             <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
                                                 <FiGlobe className="w-3 h-3 text-brand-500" />
                                             </div>
@@ -768,19 +766,19 @@ export default function ReportsPage() {
                                         {interactions.topPages.length > 0 ? (
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                                                 {interactions.topPages.map((page, index) => (
-                                                    <div key={page.page} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-brand-500/5 transition-colors">
+                                                    <div key={page.page} className="flex items-center justify-between p-2 bg-surface rounded-lg hover:bg-brand-500/5 transition-colors">
                                                         <div className="flex items-center gap-2">
                                                             <span className="w-5 h-5 bg-brand-500 text-white rounded text-xs font-bold flex items-center justify-center">
                                                                 {index + 1}
                                                             </span>
-                                                            <span className="font-mono text-xs text-gray-600 truncate max-w-[120px]">{page.page}</span>
+                                                            <span className="font-mono text-xs text-muted truncate max-w-[120px]">{page.page}</span>
                                                         </div>
                                                         <span className="text-xs font-bold text-brand-500">{page._count}</span>
                                                     </div>
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-gray-400 text-center py-4">Sin datos</p>
+                                            <p className="text-xs text-subtle text-center py-4">Sin datos</p>
                                         )}
                                     </div>
                                 </>
@@ -795,34 +793,34 @@ export default function ReportsPage() {
                             <div className="grid grid-cols-3 gap-3">
                                 {[
                                     { label: 'Influencers Totales', value: referrals.totalInfluencers, Icon: FiUsers, color: 'text-brand-500', bg: 'bg-brand-500/10' },
-                                    { label: 'Activos', value: referrals.activeInfluencers, Icon: FiCheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                                    { label: 'Pausados', value: referrals.pausedInfluencers, Icon: FiActivity, color: 'text-amber-600', bg: 'bg-amber-50' },
+                                    { label: 'Activos', value: referrals.activeInfluencers, Icon: FiCheckCircle, color: 'text-success-strong', bg: 'bg-success/5' },
+                                    { label: 'Pausados', value: referrals.pausedInfluencers, Icon: FiActivity, color: 'text-warning-strong', bg: 'bg-warning/10' },
                                 ].map((card) => (
-                                    <div key={card.label} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                                    <div key={card.label} className="bg-white rounded-xl shadow-sm border border-line p-4">
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <div className={`w-7 h-7 rounded-lg ${card.bg} flex items-center justify-center`}>
                                                 <card.Icon className={`w-3.5 h-3.5 ${card.color}`} />
                                             </div>
-                                            <span className="text-xs text-gray-400 uppercase font-medium">{card.label}</span>
+                                            <span className="text-xs text-subtle uppercase font-medium">{card.label}</span>
                                         </div>
-                                        <p className="text-2xl font-bold text-gray-800">{card.value}</p>
+                                        <p className="text-2xl font-bold text-ink">{card.value}</p>
                                     </div>
                                 ))}
                             </div>
 
                             {/* Revenue cards */}
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-xl p-4">
+                                <div className="bg-success/5 border border-success/20 rounded-xl p-4">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <FiShoppingCart className="w-4 h-4 text-emerald-600" />
-                                        <span className="text-xs text-emerald-700 uppercase font-semibold">Ventas por referidos</span>
+                                        <FiShoppingCart className="w-4 h-4 text-success-strong" />
+                                        <span className="text-xs text-success-strong uppercase font-semibold">Ventas por referidos</span>
                                     </div>
-                                    <p className="text-xl font-bold text-emerald-800">
+                                    <p className="text-xl font-bold text-success-strong">
                                         ${referrals.approvedRevenue.gross.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
                                     </p>
-                                    <p className="text-xs text-emerald-600 mt-0.5">Monto bruto · período seleccionado</p>
+                                    <p className="text-xs text-success-strong mt-0.5">Monto bruto · período seleccionado</p>
                                 </div>
-                                <div className="bg-gradient-to-br from-brand-500/5 to-brand-500/10 border border-brand-500/20 rounded-xl p-4">
+                                <div className="bg-brand-500/5 border border-brand-500/20 rounded-xl p-4">
                                     <div className="flex items-center gap-2 mb-1">
                                         <FiDollarSign className="w-4 h-4 text-brand-500" />
                                         <span className="text-xs text-brand-500 uppercase font-semibold">Comisiones pagadas</span>
@@ -837,10 +835,10 @@ export default function ReportsPage() {
                             {/* Visualizations Row */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 {/* Influencer Commission Comparison Chart */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                        <div className="w-6 h-6 bg-yellow-100 rounded flex items-center justify-center">
-                                            <FiAward className="w-3 h-3 text-yellow-600" />
+                                <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                    <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
+                                        <div className="w-6 h-6 bg-warning/15 rounded flex items-center justify-center">
+                                            <FiAward className="w-3 h-3 text-warning-strong" />
                                         </div>
                                         Comisiones de Influencers (USD)
                                     </h3>
@@ -859,20 +857,20 @@ export default function ReportsPage() {
                                                     <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} />
                                                     <Tooltip 
                                                         contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
-                                                        formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Comisión']}
+                                                        formatter={(value) => [`${formatUSD(Number(value))}`, 'Comisión']}
                                                     />
                                                     <Bar dataKey="comision" fill="#2a63cd" radius={[4, 4, 0, 0]} barSize={15} />
                                                 </BarChart>
                                             </ResponsiveContainer>
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-gray-400 text-center py-12">Sin conversiones aprobadas</p>
+                                        <p className="text-xs text-subtle text-center py-12">Sin conversiones aprobadas</p>
                                     )}
                                 </div>
 
                                 {/* Conversions Pie Chart */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                    <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
                                         <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
                                             <FiList className="w-3 h-3 text-brand-500" />
                                         </div>
@@ -918,23 +916,23 @@ export default function ReportsPage() {
                                                     return (
                                                         <div key={status} className="flex items-center gap-2 text-xs">
                                                             <span className={`w-3 h-3 rounded-full ${colors[status as keyof typeof colors]}`} />
-                                                            <span className="font-medium text-gray-600">{labels[status as keyof typeof labels]}:</span>
-                                                            <span className="font-bold text-gray-800">{count}</span>
+                                                            <span className="font-medium text-muted">{labels[status as keyof typeof labels]}:</span>
+                                                            <span className="font-bold text-ink">{count}</span>
                                                         </div>
                                                     );
                                                 })}
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-gray-400 text-center py-12">Sin conversiones</p>
+                                        <p className="text-xs text-subtle text-center py-12">Sin conversiones</p>
                                     )}
                                 </div>
                             </div>
 
                             {/* Conversions by status */}
                             {referrals.conversionsByStatus.length > 0 && (
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                    <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
                                         <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
                                             <FiList className="w-3 h-3 text-brand-500" />
                                         </div>
@@ -944,9 +942,9 @@ export default function ReportsPage() {
                                         {['PENDING', 'APPROVED', 'REJECTED'].map((status) => {
                                             const entry = referrals.conversionsByStatus.find(c => c.status === status);
                                             const styles: Record<string, string> = {
-                                                PENDING: 'bg-yellow-50 border-yellow-200 text-yellow-700',
-                                                APPROVED: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-                                                REJECTED: 'bg-red-50 border-red-200 text-red-700',
+                                                PENDING: 'bg-warning/10 border-warning/30 text-warning-strong',
+                                                APPROVED: 'bg-success/5 border-success/20 text-success-strong',
+                                                REJECTED: 'bg-deal/5 border-deal/30 text-deal',
                                             };
                                             const labels: Record<string, string> = { PENDING: 'Pendientes', APPROVED: 'Aprobadas', REJECTED: 'Rechazadas' };
                                             return (
@@ -955,7 +953,7 @@ export default function ReportsPage() {
                                                     <p className="text-xs font-medium mt-0.5">{labels[status]}</p>
                                                     {entry && (
                                                         <p className="text-[11px] opacity-70 mt-0.5">
-                                                            ${Number(entry._sum.commission || 0).toFixed(2)} comisión
+                                                            {formatUSD(Number(entry._sum.commission || 0))} comisión
                                                         </p>
                                                     )}
                                                 </div>
@@ -966,34 +964,34 @@ export default function ReportsPage() {
                             )}
 
                             {/* Top influencers */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                    <div className="w-6 h-6 bg-yellow-100 rounded flex items-center justify-center">
-                                        <FiAward className="w-3 h-3 text-yellow-600" />
+                            <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
+                                    <div className="w-6 h-6 bg-warning/15 rounded flex items-center justify-center">
+                                        <FiAward className="w-3 h-3 text-warning-strong" />
                                     </div>
                                     Top Influencers (comisión acumulada)
                                 </h3>
                                 {referrals.topInfluencers.length === 0 ? (
-                                    <p className="text-xs text-gray-400 text-center py-4">Sin conversiones aprobadas aún</p>
+                                    <p className="text-xs text-subtle text-center py-4">Sin conversiones aprobadas aún</p>
                                 ) : (
                                     <div className="space-y-2">
                                         {referrals.topInfluencers.map((inf, idx) => (
-                                            <div key={inf.id} className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg hover:bg-brand-500/5 transition-colors">
+                                            <div key={inf.id} className="flex items-center gap-3 p-2.5 bg-surface rounded-lg hover:bg-brand-500/5 transition-colors">
                                                 <span className="w-6 h-6 bg-brand-500 text-white rounded text-xs font-bold flex items-center justify-center flex-shrink-0">
                                                     {idx + 1}
                                                 </span>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-1.5">
-                                                        <span className="text-xs font-semibold text-gray-800 truncate">{inf.name}</span>
-                                                        <span className="text-[11px] font-mono text-gray-400 bg-gray-200 px-1 rounded">{inf.code}</span>
+                                                        <span className="text-xs font-semibold text-ink truncate">{inf.name}</span>
+                                                        <span className="text-[11px] font-mono text-subtle bg-line px-1 rounded">{inf.code}</span>
                                                         {inf.status === 'PAUSED' && (
-                                                            <span className="text-[11px] bg-yellow-100 text-yellow-700 px-1 rounded">Pausado</span>
+                                                            <span className="text-[11px] bg-warning/15 text-warning-strong px-1 rounded">Pausado</span>
                                                         )}
                                                     </div>
-                                                    <p className="text-xs text-gray-500">{inf.conversionsCount} conversiones · ${inf.totalGross.toFixed(2)} bruto</p>
+                                                    <p className="text-xs text-muted">{inf.conversionsCount} conversiones · {formatUSD(inf.totalGross)} bruto</p>
                                                 </div>
                                                 <span className="text-sm font-bold text-brand-500 flex-shrink-0">
-                                                    ${inf.totalCommission.toFixed(2)}
+                                                    {formatUSD(inf.totalCommission)}
                                                 </span>
                                             </div>
                                         ))}
@@ -1008,14 +1006,14 @@ export default function ReportsPage() {
                         <div className="space-y-4 animate-fadeIn">
                             {/* Banner de Alertas Críticas */}
                             {(security.bySeverity.find(s => s.severity === 'CRITICAL')?._count ?? 0) > 0 && (
-                                <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-4 shadow-lg">
+                                <div className="bg-deal rounded-xl p-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                                             <FiAlertTriangle className="w-5 h-5 text-white" />
                                         </div>
                                         <div>
                                             <h3 className="text-white font-bold text-sm inline-flex items-center gap-1.5"><FiAlertTriangle className="inline h-4 w-4 shrink-0" aria-hidden="true" />Alertas Críticas de Seguridad</h3>
-                                            <p className="text-red-100 text-xs">
+                                            <p className="text-white/70 text-xs">
                                                 {security.bySeverity.find(s => s.severity === 'CRITICAL')?._count || 0} eventos críticos detectados -
                                                 Incluye intentos de fraude, referencias duplicadas e intentos IDOR
                                             </p>
@@ -1024,7 +1022,7 @@ export default function ReportsPage() {
                                     {/* Eventos críticos recientes */}
                                     {security.recentLogs.filter(log => log.severity === 'critical').length > 0 && (
                                         <div className="mt-3 pt-3 border-t border-white/20">
-                                            <p className="text-red-100 text-xs uppercase tracking-wider mb-2">Últimos eventos críticos:</p>
+                                            <p className="text-white/70 text-xs uppercase tracking-wider mb-2">Últimos eventos críticos:</p>
                                             <div className="space-y-1">
                                                 {security.recentLogs
                                                     .filter(log => log.severity === 'critical')
@@ -1034,7 +1032,7 @@ export default function ReportsPage() {
                                                             <span className="text-white text-xs font-mono truncate max-w-[200px]">
                                                                 {log.eventType.replace(/_/g, ' ')}
                                                             </span>
-                                                            <span className="text-red-100 text-xs">
+                                                            <span className="text-white/70 text-xs">
                                                                 {new Date(log.createdAt).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' })}
                                                             </span>
                                                         </div>
@@ -1049,98 +1047,98 @@ export default function ReportsPage() {
                                 {['INFO', 'WARNING', 'CRITICAL'].map((sev) => {
                                     const count = security.bySeverity.find(s => s.severity === sev)?._count || 0;
                                     const config = {
-                                        INFO: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-brand-500', label: 'Info' },
-                                        WARNING: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', label: 'Advertencias' },
-                                        CRITICAL: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-600', label: 'Críticos' },
+                                        INFO: { bg: 'bg-brand-50', border: 'border-brand-200', text: 'text-brand-500', label: 'Info' },
+                                        WARNING: { bg: 'bg-warning/10', border: 'border-warning/30', text: 'text-warning-strong', label: 'Advertencias' },
+                                        CRITICAL: { bg: 'bg-deal/5', border: 'border-deal/30', text: 'text-deal', label: 'Críticos' },
                                     };
                                     const c = config[sev as keyof typeof config];
                                     return (
                                         <div key={sev} className={`${c.bg} rounded-xl p-4 border ${c.border} hover:scale-105 transition-transform`}>
                                             <p className={`text-2xl font-bold ${c.text}`}>{count}</p>
-                                            <p className="text-xs text-gray-600">{c.label}</p>
+                                            <p className="text-xs text-muted">{c.label}</p>
                                         </div>
                                     );
                                 })}
                             </div>
 
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                    <div className="w-6 h-6 bg-amber-100 rounded flex items-center justify-center">
-                                        <FiAlertTriangle className="w-3 h-3 text-amber-600" />
+                            <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
+                                    <div className="w-6 h-6 bg-warning/15 rounded flex items-center justify-center">
+                                        <FiAlertTriangle className="w-3 h-3 text-warning-strong" />
                                     </div>
                                     Eventos por Tipo
                                 </h3>
                                 {security.byType.length > 0 ? (
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                         {security.byType.map((type) => (
-                                            <div key={type.eventType} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-brand-500/5 transition-colors">
-                                                <p className="text-lg font-bold text-gray-800">{type._count}</p>
-                                                <p className="text-xs text-gray-500 capitalize truncate">{type.eventType.replace(/_/g, ' ')}</p>
+                                            <div key={type.eventType} className="bg-surface rounded-lg p-3 text-center hover:bg-brand-500/5 transition-colors">
+                                                <p className="text-lg font-bold text-ink">{type._count}</p>
+                                                <p className="text-xs text-muted capitalize truncate">{type.eventType.replace(/_/g, ' ')}</p>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-gray-400 text-center py-4">Sin eventos</p>
+                                    <p className="text-xs text-subtle text-center py-4">Sin eventos</p>
                                 )}
                             </div>
 
                             {security.suspiciousIPs.length > 0 && (
-                                <div className="bg-white rounded-xl shadow-sm border border-red-200 p-4">
-                                    <h3 className="text-sm font-semibold text-red-700 mb-3 flex items-center gap-2">
-                                        <div className="w-6 h-6 bg-red-100 rounded flex items-center justify-center">
-                                            <FiShield className="w-3 h-3 text-red-600" />
+                                <div className="bg-white rounded-xl shadow-sm border border-deal/30 p-4">
+                                    <h3 className="text-sm font-semibold text-deal mb-3 flex items-center gap-2">
+                                        <div className="w-6 h-6 bg-deal/10 rounded flex items-center justify-center">
+                                            <FiShield className="w-3 h-3 text-deal" />
                                         </div>
                                         IPs Sospechosas
                                     </h3>
                                     <div className="space-y-1.5">
                                         {security.suspiciousIPs.slice(0, 5).map((ip) => (
-                                            <div key={ip.ipAddress} className="flex items-center justify-between p-2 bg-red-50 rounded-lg">
-                                                <span className="font-mono text-xs text-gray-700">{ip.ipAddress || 'Desconocida'}</span>
-                                                <span className="text-xs font-bold text-red-600">{ip._count} intentos</span>
+                                            <div key={ip.ipAddress} className="flex items-center justify-between p-2 bg-deal/5 rounded-lg">
+                                                <span className="font-mono text-xs text-ink-soft">{ip.ipAddress || 'Desconocida'}</span>
+                                                <span className="text-xs font-bold text-deal">{ip._count} intentos</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
 
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <div className="bg-white rounded-xl shadow-sm border border-line p-4">
+                                <h3 className="text-sm font-semibold text-ink-soft mb-3 flex items-center gap-2">
                                     <div className="w-6 h-6 bg-brand-500/10 rounded flex items-center justify-center">
                                         <FiClock className="w-3 h-3 text-brand-500" />
                                     </div>
                                     Registros Recientes
                                 </h3>
                                 {security.recentLogs.length > 0 ? (
-                                    <div className="overflow-x-auto max-h-64">
-                                        <table className="w-full text-xs">
+                                    <div className={`${adminTableWrap} max-h-64`}>
+                                        <table className={adminTable}>
                                             <thead>
-                                                <tr className="text-left text-gray-500 border-b border-gray-200">
-                                                    <th className="pb-2 font-medium">Fecha</th>
-                                                    <th className="pb-2 font-medium">Tipo</th>
-                                                    <th className="pb-2 font-medium">Nivel</th>
-                                                    <th className="pb-2 font-medium">IP</th>
+                                                <tr>
+                                                    <th className={adminTh}>Fecha</th>
+                                                    <th className={adminTh}>Tipo</th>
+                                                    <th className={adminTh}>Nivel</th>
+                                                    <th className={adminTh}>IP</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {security.recentLogs.slice(0, 10).map((log) => (
-                                                    <tr key={log.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                                        <td className="py-2 text-gray-600">
+                                                    <tr key={log.id} className={adminRowHover}>
+                                                        <td className={`${adminTd} text-muted`}>
                                                             {new Date(log.createdAt).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' })}
                                                         </td>
-                                                        <td className="py-2 font-mono">{log.eventType.replace(/_/g, ' ')}</td>
-                                                        <td className="py-2">
-                                                            <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium ${log.severity === 'critical' ? 'bg-red-100 text-red-700' :
-                                                                log.severity === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-brand-500'
+                                                        <td className={`${adminTd} font-mono`}>{log.eventType.replace(/_/g, ' ')}</td>
+                                                        <td className={adminTd}>
+                                                            <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium ${log.severity === 'critical' ? 'bg-deal/10 text-deal' :
+                                                                log.severity === 'warning' ? 'bg-warning/15 text-warning-strong' : 'bg-brand-100 text-brand-500'
                                                                 }`}>{log.severity}</span>
                                                         </td>
-                                                        <td className="py-2 font-mono text-gray-500">{log.ipAddress || '-'}</td>
+                                                        <td className={`${adminTd} font-mono text-muted`}>{log.ipAddress || '-'}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-gray-400 text-center py-4">Sin registros</p>
+                                    <p className="text-xs text-subtle text-center py-4">Sin registros</p>
                                 )}
                             </div>
                         </div>

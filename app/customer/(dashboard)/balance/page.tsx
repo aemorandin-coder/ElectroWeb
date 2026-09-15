@@ -1,3 +1,4 @@
+import { isCreditTransaction } from '@/lib/format-helpers';
 'use client';
 import { formatUSD } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
@@ -115,11 +116,11 @@ export default function BalancePage() {
   };
 
   const getTransactionIcon = (type: string) => {
-    return type === 'RECHARGE' ? <FiTrendingUp className="w-4 h-4 lg:w-5 lg:h-5" /> : <FiTrendingDown className="w-4 h-4 lg:w-5 lg:h-5" />;
+    return isCreditTransaction(type) ? <FiTrendingUp className="w-4 h-4 lg:w-5 lg:h-5" /> : <FiTrendingDown className="w-4 h-4 lg:w-5 lg:h-5" />;
   };
 
   const getTransactionColor = (type: string) => {
-    return type === 'RECHARGE' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
+    return isCreditTransaction(type) ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
   };
 
   const filteredTransactions = filterType === 'ALL'
@@ -260,11 +261,11 @@ export default function BalancePage() {
                 >
                   <div className="flex items-center gap-2">
                     {/* Icon */}
-                    <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${transaction.type === 'RECHARGE'
+                    <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${isCreditTransaction(transaction.type)
                       ? 'bg-emerald-500'
                       : 'bg-rose-500'
                       }`}>
-                      {transaction.type === 'RECHARGE'
+                      {isCreditTransaction(transaction.type)
                         ? <FiArrowDownLeft className="w-3 h-3 text-white" />
                         : <FiArrowUpRight className="w-3 h-3 text-white" />
                       }
@@ -284,9 +285,9 @@ export default function BalancePage() {
                     </div>
 
                     {/* Amount */}
-                    <span className={`text-xs font-bold flex-shrink-0 ${transaction.type === 'RECHARGE' ? 'text-emerald-600' : 'text-gray-900'
+                    <span className={`text-xs font-bold flex-shrink-0 ${isCreditTransaction(transaction.type) ? 'text-emerald-600' : 'text-gray-900'
                       }`}>
-                      {transaction.type === 'RECHARGE' ? '+' : '-'}${transaction.amount.toFixed(0)}
+                      {isCreditTransaction(transaction.type) ? '+' : '-'}${transaction.amount.toFixed(0)}
                     </span>
                   </div>
                 </div>
@@ -445,8 +446,8 @@ export default function BalancePage() {
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className={`text-sm lg:text-lg font-bold ${transaction.type === 'RECHARGE' ? 'text-green-600' : 'text-red-600'}`}>
-                        {transaction.type === 'RECHARGE' ? '+' : '-'}{formatUSD(transaction.amount)}
+                      <p className={`text-sm lg:text-lg font-bold ${isCreditTransaction(transaction.type) ? 'text-green-600' : 'text-red-600'}`}>
+                        {isCreditTransaction(transaction.type) ? '+' : '-'}{formatUSD(transaction.amount)}
                       </p>
                       <span className={`inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full text-[11px] lg:text-xs font-semibold ${transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
                         transaction.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :

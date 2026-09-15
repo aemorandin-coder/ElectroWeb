@@ -15,6 +15,9 @@ import {
     FiActivity, FiUpload, FiRadio, FiTv, FiSave,
     FiChevronDown, FiChevronUp, FiBookOpen, FiInfo, FiClock,
 } from 'react-icons/fi';
+import { adminTab } from '@/lib/admin-ui';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { formatUSD } from '@/lib/currency';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -67,9 +70,9 @@ function copyToClipboard(text: string) {
 }
 
 function typeLabel(type: string) {
-    if (type === 'REGISTRATION') return { label: 'Registro', color: 'bg-blue-50 text-blue-700' };
-    if (type === 'PURCHASE') return { label: 'Compra', color: 'bg-green-50 text-green-700' };
-    return { label: 'Recarga', color: 'bg-purple-50 text-purple-700' };
+    if (type === 'REGISTRATION') return { label: 'Registro', color: 'bg-brand-50 text-brand-700' };
+    if (type === 'PURCHASE') return { label: 'Compra', color: 'bg-success/5 text-success-strong' };
+    return { label: 'Recarga', color: 'bg-brand-50 text-brand-700' };
 }
 
 // ─── Influencer Tab ───────────────────────────────────────────────────────────
@@ -92,6 +95,7 @@ function InfluencersTab() {
     const [userSearch, setUserSearch] = useState('');
     const [userResults, setUserResults] = useState<User[]>([]);
     const [creating, setCreating] = useState(false);
+    useBodyScrollLock(!!selectedInfluencer || showCreate);
 
     useEffect(() => { setMounted(true); fetchInfluencers(); }, []);
 
@@ -199,7 +203,7 @@ function InfluencersTab() {
             <div className="bg-white rounded-xl border border-line overflow-hidden shadow-sm">
                 <button
                     onClick={() => setShowGuide(!showGuide)}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50/70 hover:bg-gray-50 transition-colors text-left"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-surface hover:bg-surface transition-colors text-left"
                 >
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-500">
@@ -221,7 +225,7 @@ function InfluencersTab() {
                     <div className="p-5 border-t border-line bg-white">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
                             {/* Connecting Line for desktop */}
-                            <div className="hidden md:block absolute top-[28px] left-[10%] right-[10%] h-[2px] border-t-2 border-dashed border-gray-200 z-0" />
+                            <div className="hidden md:block absolute top-[28px] left-[10%] right-[10%] h-[2px] border-t-2 border-dashed border-line z-0" />
                             
                             {[
                                 {
@@ -229,28 +233,28 @@ function InfluencersTab() {
                                     title: 'Crear Código',
                                     desc: 'Registra al influencer con su email y código único (ej: DTO10). El sistema genera el enlace de referido.',
                                     icon: FiPlus,
-                                    color: 'bg-blue-50 text-blue-600 border-blue-100',
+                                    color: 'bg-brand-50 text-brand-600 border-brand-100',
                                 },
                                 {
                                     step: '2',
                                     title: 'Asociar Clientes',
                                     desc: 'La cookie de referido dura 30 días en el navegador. Si el usuario se registra en ese lapso, queda asociado permanentemente.',
                                     icon: FiLink,
-                                    color: 'bg-purple-50 text-purple-600 border-purple-100',
+                                    color: 'bg-brand-50 text-brand-600 border-brand-100',
                                 },
                                 {
                                     step: '3',
                                     title: 'Comisión Pendiente',
                                     desc: 'Al comprar o recargar saldo el cliente, se registra una comisión en estado "Pendiente" según el porcentaje configurado.',
                                     icon: FiClock,
-                                    color: 'bg-amber-50 text-amber-600 border-amber-100',
+                                    color: 'bg-warning/10 text-warning-strong border-warning/20',
                                 },
                                 {
                                     step: '4',
                                     title: 'Aprobar y Acreditar',
                                     desc: 'Al hacer clic en "Aprobar", las comisiones se aprueban y se transfieren automáticamente como saldo a la billetera virtual del influencer.',
                                     icon: FiCheckCircle,
-                                    color: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                                    color: 'bg-success/5 text-success-strong border-success/10',
                                 },
                             ].map((item, idx) => {
                                 const Icon = item.icon;
@@ -274,7 +278,7 @@ function InfluencersTab() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl p-4 text-white">
+                <div className="bg-brand-500 rounded-xl p-4 text-white">
                     <div className="flex items-center justify-between mb-2">
                         <FiUserCheck className="w-5 h-5 opacity-80" />
                         <span className="text-xs opacity-70">Influencers</span>
@@ -284,17 +288,17 @@ function InfluencersTab() {
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-line">
                     <div className="flex items-center justify-between mb-2">
-                        <FiTrendingUp className="w-5 h-5 text-emerald-500" />
+                        <FiTrendingUp className="w-5 h-5 text-success" />
                         <span className="text-xs text-muted">Conversiones</span>
                     </div>
                     <p className="text-2xl font-bold text-ink">{totalConversions}</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-line">
                     <div className="flex items-center justify-between mb-2">
-                        <FiDollarSign className="w-5 h-5 text-amber-500" />
+                        <FiDollarSign className="w-5 h-5 text-warning" />
                         <span className="text-xs text-muted">Comisiones Pendientes</span>
                     </div>
-                    <p className="text-2xl font-bold text-ink">${pendingCommissionTotal.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-ink">{formatUSD(pendingCommissionTotal)}</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-line">
                     <div className="flex items-center justify-between mb-2">
@@ -302,7 +306,7 @@ function InfluencersTab() {
                         <span className="text-xs text-muted">Total Generado</span>
                     </div>
                     <p className="text-2xl font-bold text-ink">
-                        ${influencers.reduce((s, i) => s + i.stats.totalGross, 0).toFixed(2)}
+                        {formatUSD(influencers.reduce((s, i) => s + i.stats.totalGross, 0))}
                     </p>
                 </div>
             </div>
@@ -343,7 +347,7 @@ function InfluencersTab() {
                             <div key={inf.id} className="p-4 hover:bg-surface transition-colors">
                                 <div className="flex items-center gap-4">
                                     {/* Avatar */}
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                    <div className="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                                         {inf.name.charAt(0).toUpperCase()}
                                     </div>
 
@@ -354,7 +358,7 @@ function InfluencersTab() {
                                             <span className="font-mono text-xs bg-surface border border-line px-2 py-0.5 rounded-md text-brand-500 font-semibold">
                                                 {inf.code}
                                             </span>
-                                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${inf.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${inf.status === 'ACTIVE' ? 'bg-success/10 text-success-strong' : 'bg-surface text-muted'}`}>
                                                 {inf.status === 'ACTIVE' ? 'Activo' : 'Pausado'}
                                             </span>
                                         </div>
@@ -373,8 +377,8 @@ function InfluencersTab() {
                                         </div>
                                         <div>
                                             <p className="text-xs text-muted">Pendiente</p>
-                                            <p className={`font-bold text-sm ${inf.stats.pendingCommission > 0 ? 'text-amber-600' : 'text-ink'}`}>
-                                                ${inf.stats.pendingCommission.toFixed(2)}
+                                            <p className={`font-bold text-sm ${inf.stats.pendingCommission > 0 ? 'text-warning-strong' : 'text-ink'}`}>
+                                                {formatUSD(inf.stats.pendingCommission)}
                                             </p>
                                         </div>
                                     </div>
@@ -383,28 +387,28 @@ function InfluencersTab() {
                                     <div className="flex items-center gap-1 flex-shrink-0">
                                         <button
                                             onClick={() => copyToClipboard(`${BASE_URL}/registro?ref=${inf.code}`)}
-                                            className="p-1.5 text-muted hover:text-brand-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                            className="p-1.5 text-muted hover:text-brand-500 hover:bg-brand-50 rounded-lg transition-colors"
                                             title="Copiar link de referido"
                                         >
                                             <FiLink className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => fetchConversions(inf)}
-                                            className="p-1.5 text-muted hover:text-brand-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                            className="p-1.5 text-muted hover:text-brand-500 hover:bg-brand-50 rounded-lg transition-colors"
                                             title="Ver conversiones"
                                         >
                                             <FiEye className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => handleToggleStatus(inf)}
-                                            className="p-1.5 text-muted hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                            className="p-1.5 text-muted hover:text-warning-strong hover:bg-warning/10 rounded-lg transition-colors"
                                             title={inf.status === 'ACTIVE' ? 'Pausar' : 'Activar'}
                                         >
                                             <FiToggleRight className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(inf)}
-                                            className="p-1.5 text-muted hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            className="p-1.5 text-muted hover:text-deal hover:bg-deal/5 rounded-lg transition-colors"
                                             title="Eliminar"
                                         >
                                             <FiTrash2 className="w-4 h-4" />
@@ -434,12 +438,12 @@ function InfluencersTab() {
             {/* Conversions Panel */}
             {selectedInfluencer && mounted && createPortal(
                 <div
-                    className="fixed inset-0 z-[9999] flex items-center justify-end bg-black/40 backdrop-blur-sm"
+                    className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-end bg-ink/40 "
                     onClick={(e) => { if (e.target === e.currentTarget) setSelectedInfluencer(null); }}
                 >
                     <div className="w-full max-w-xl h-full bg-white shadow-2xl flex flex-col overflow-hidden">
                         {/* Header */}
-                        <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-gradient-to-r from-brand-500 to-brand-600 text-white">
+                        <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-brand-500 text-white">
                             <div>
                                 <h3 className="font-bold">Conversiones — {selectedInfluencer.name}</h3>
                                 <p className="text-xs opacity-70 font-mono">{selectedInfluencer.code} · {selectedInfluencer.commissionRate}% comisión</p>
@@ -451,14 +455,14 @@ function InfluencersTab() {
 
                         {/* Approve bar */}
                         {selectedConversions.length > 0 && (
-                            <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 flex items-center justify-between gap-3">
-                                <p className="text-xs font-semibold text-amber-800">
+                            <div className="px-4 py-2 bg-warning/10 border-b border-warning/20 flex items-center justify-between gap-3">
+                                <p className="text-xs font-semibold text-warning-strong">
                                     {selectedConversions.length} seleccionada(s) — se acreditará saldo en tienda al influencer
                                 </p>
                                 <button
                                     onClick={handleApproveSelected}
                                     disabled={approving}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-60"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-success-strong text-white text-xs font-bold rounded-lg hover:bg-success-strong/90 disabled:opacity-60"
                                 >
                                     {approving ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiCheck className="w-3 h-3" />}
                                     Aprobar y Acreditar Saldo
@@ -482,7 +486,7 @@ function InfluencersTab() {
                                     const { label, color } = typeLabel(conv.type);
                                     const isPending = conv.status === 'PENDING';
                                     return (
-                                        <div key={conv.id} className={`flex items-center gap-3 px-4 py-3 border-b border-[#f0f0f0] transition-colors ${isPending ? 'hover:bg-amber-50/50' : ''}`}>
+                                        <div key={conv.id} className={`flex items-center gap-3 px-4 py-3 border-b border-line transition-colors ${isPending ? 'hover:bg-warning/10' : ''}`}>
                                             {isPending && (
                                                 <input
                                                     type="checkbox"
@@ -490,29 +494,29 @@ function InfluencersTab() {
                                                     onChange={(e) => setSelectedConversions(prev =>
                                                         e.target.checked ? [...prev, conv.id] : prev.filter(id => id !== conv.id)
                                                     )}
-                                                    className="rounded border-gray-300 text-brand-500"
+                                                    className="rounded border-line text-brand-500"
                                                 />
                                             )}
                                             {!isPending && <div className="w-4 flex-shrink-0" />}
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${color}`}>{label}</span>
-                                                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${conv.status === 'APPROVED' ? 'bg-green-100 text-green-700' : conv.status === 'REJECTED' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'}`}>
+                                                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${conv.status === 'APPROVED' ? 'bg-success/10 text-success-strong' : conv.status === 'REJECTED' ? 'bg-deal/10 text-deal' : 'bg-warning/15 text-warning-strong'}`}>
                                                         {conv.status === 'APPROVED' ? 'Aprobado' : conv.status === 'REJECTED' ? 'Rechazado' : 'Pendiente'}
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-muted mt-0.5 truncate">
                                                     {conv.referredUser.name || conv.referredUser.email}
                                                 </p>
-                                                <p className="text-xs text-[#aaa] mt-0.5">
+                                                <p className="text-xs text-subtle mt-0.5">
                                                     {new Date(conv.createdAt).toLocaleDateString('es-VE')}
                                                 </p>
                                             </div>
                                             <div className="text-right flex-shrink-0">
                                                 {conv.grossAmount > 0 && (
-                                                    <p className="text-xs text-muted">${Number(conv.grossAmount).toFixed(2)}</p>
+                                                    <p className="text-xs text-muted">{formatUSD(Number(conv.grossAmount))}</p>
                                                 )}
-                                                <p className="text-sm font-bold text-emerald-600">+${Number(conv.commission).toFixed(2)}</p>
+                                                <p className="text-sm font-bold text-success-strong">+{formatUSD(Number(conv.commission))}</p>
                                             </div>
                                         </div>
                                     );
@@ -527,11 +531,11 @@ function InfluencersTab() {
             {/* Create Modal */}
             {showCreate && mounted && createPortal(
                 <div
-                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                    className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-ink/50  p-4"
                     onClick={(e) => { if (e.target === e.currentTarget) setShowCreate(false); }}
                 >
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                        <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-6 py-4 flex items-center justify-between">
+                        <div className="bg-brand-500 px-6 py-4 flex items-center justify-between">
                             <h2 className="font-bold text-white">Nuevo Influencer</h2>
                             <button onClick={() => setShowCreate(false)} className="p-2 hover:bg-white/20 rounded-xl">
                                 <FiX className="w-5 h-5 text-white" />
@@ -558,7 +562,7 @@ function InfluencersTab() {
                                                     setUserSearch(u.email || u.name || '');
                                                     setUserResults([]);
                                                 }}
-                                                className="w-full text-left px-3 py-2 text-sm hover:bg-surface border-b border-[#f0f0f0] last:border-0"
+                                                className="w-full text-left px-3 py-2 text-sm hover:bg-surface border-b border-line last:border-0"
                                             >
                                                 <p className="font-medium text-ink">{u.name}</p>
                                                 <p className="text-xs text-muted">{u.email}</p>
@@ -691,7 +695,7 @@ function EmailTab() {
                         <h2 className="font-bold text-sm text-ink">Estado del Servicio</h2>
                     </div>
                     {emailConfig && (
-                        <span className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full ${emailConfig.host === 'Configurado' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                        <span className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full ${emailConfig.host === 'Configurado' ? 'bg-success/5 text-success-strong' : 'bg-deal/5 text-deal'}`}>
                             {emailConfig.host === 'Configurado' ? <FiCheckCircle className="w-3 h-3" /> : <FiAlertCircle className="w-3 h-3" />}
                             {emailConfig.host === 'Configurado' ? 'Activo' : 'Inactivo'}
                         </span>
@@ -786,9 +790,9 @@ function PreviewTab() {
             <div className="lg:col-span-3 bg-white rounded-xl border border-line overflow-hidden">
                 <div className="bg-surface p-3 border-b border-line flex items-center justify-between">
                     <div className="flex gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-red-400" />
-                        <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                        <div className="w-3 h-3 rounded-full bg-green-400" />
+                        <div className="w-3 h-3 rounded-full bg-deal" />
+                        <div className="w-3 h-3 rounded-full bg-warning" />
+                        <div className="w-3 h-3 rounded-full bg-success" />
                     </div>
                     <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-line">
                         {(['desktop', 'mobile'] as const).map((m) => (
@@ -798,7 +802,7 @@ function PreviewTab() {
                         ))}
                     </div>
                 </div>
-                <div className="bg-[#f4f4f7] p-4 flex justify-center min-h-[600px] overflow-auto">
+                <div className="bg-surface p-4 flex justify-center min-h-[600px] overflow-auto">
                     {loading ? (
                         <div className="flex items-center justify-center w-full">
                             <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
@@ -839,7 +843,7 @@ function HotAdToggle({ checked, onChange }: { checked: boolean; onChange: (v: bo
     return (
         <label className="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="sr-only peer" />
-            <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-orange-500 peer-checked:to-red-500" />
+            <div className="w-11 h-6 bg-line rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-line after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500" />
         </label>
     );
 }
@@ -916,38 +920,38 @@ function HotAdTab() {
         finally { setSaving(false); }
     };
 
-    if (loading) return <div className="animate-pulse h-64 bg-gray-100 rounded-xl" />;
+    if (loading) return <div className="animate-pulse h-64 bg-surface rounded-xl" />;
 
     return (
         <div className="space-y-5 max-w-2xl">
             {/* Header card */}
-            <div className={`rounded-xl border overflow-hidden transition-all duration-300 ${ad.hotAdEnabled ? 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-300' : 'bg-white border-gray-200'}`}>
-                <div className={`flex items-center justify-between px-5 py-4 border-b ${ad.hotAdEnabled ? 'border-orange-200 bg-gradient-to-r from-orange-100 to-red-100' : 'border-gray-100 bg-gray-50'}`}>
+            <div className={`rounded-xl border overflow-hidden transition-all duration-300 ${ad.hotAdEnabled ? 'bg-brand-50 border-brand-200' : 'bg-white border-line'}`}>
+                <div className={`flex items-center justify-between px-5 py-4 border-b ${ad.hotAdEnabled ? 'border-brand-200 bg-brand-50' : 'border-line bg-surface'}`}>
                     <div className="flex items-center gap-3">
-                        <FiRadio className={`w-5 h-5 ${ad.hotAdEnabled ? 'text-orange-500 animate-pulse' : 'text-gray-400'}`} />
+                        <FiRadio className={`w-5 h-5 ${ad.hotAdEnabled ? 'text-warning animate-pulse' : 'text-subtle'}`} />
                         <div>
-                            <h3 className="font-semibold text-gray-900">Publicidad Caliente</h3>
-                            <p className="text-xs text-gray-500">Popup de imagen en la pantalla principal</p>
+                            <h3 className="font-semibold text-ink">Publicidad Caliente</h3>
+                            <p className="text-xs text-muted">Popup de imagen en la pantalla principal</p>
                         </div>
                         {ad.hotAdEnabled && (
-                            <span className="px-2 py-0.5 text-xs bg-red-500 text-white rounded-full font-bold animate-pulse">ACTIVO</span>
+                            <span className="px-2 py-0.5 text-xs bg-deal text-white rounded-full font-bold animate-pulse">ACTIVO</span>
                         )}
                     </div>
                     <HotAdToggle checked={ad.hotAdEnabled} onChange={v => set('hotAdEnabled', v)} />
                 </div>
 
                 <div className="p-5 space-y-5">
-                    <p className="text-xs text-gray-600 flex items-start gap-2">
-                        <FiActivity className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-muted flex items-start gap-2">
+                        <FiActivity className="w-4 h-4 text-subtle flex-shrink-0 mt-0.5" />
                         Muestra una imagen promocional sobre la página principal cuando los visitantes llegan. Ideal para lanzamientos, ofertas especiales o eventos importantes.
                     </p>
 
                     {/* Image upload */}
                     <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-2">Imagen Promocional</p>
+                        <p className="text-xs font-semibold text-ink-soft mb-2">Imagen Promocional</p>
                         <div className="flex items-start gap-4">
                             <div
-                                className={`w-36 h-24 rounded-xl border-2 border-dashed flex items-center justify-center bg-gray-50 overflow-hidden relative group cursor-pointer transition-colors ${ad.hotAdImage ? 'border-green-300' : 'border-gray-300 hover:border-orange-400'}`}
+                                className={`w-36 h-24 rounded-xl border-2 border-dashed flex items-center justify-center bg-surface overflow-hidden relative group cursor-pointer transition-colors ${ad.hotAdImage ? 'border-success' : 'border-line hover:border-warning'}`}
                                 onClick={() => inputRef.current?.click()}
                             >
                                 {ad.hotAdImage ? (
@@ -956,13 +960,13 @@ function HotAdTab() {
                                         <img src={ad.hotAdImage} alt="Hot Ad" className="w-full h-full object-contain p-1" />
                                         <button
                                             onClick={e => { e.stopPropagation(); set('hotAdImage', null); }}
-                                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="absolute top-1 right-1 p-1 bg-deal text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
                                             <FiX className="w-3 h-3" />
                                         </button>
                                     </>
                                 ) : (
-                                    <div className="text-center text-gray-400">
+                                    <div className="text-center text-subtle">
                                         <FiUpload className="w-6 h-6 mx-auto mb-1" />
                                         <span className="text-xs">Subir imagen</span>
                                     </div>
@@ -978,73 +982,73 @@ function HotAdTab() {
                                 />
                                 <button
                                     onClick={() => inputRef.current?.click()}
-                                    className="text-xs border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md transition-colors shadow-sm block"
+                                    className="text-xs border border-line hover:bg-surface text-ink-soft px-4 py-2 rounded-md transition-colors shadow-sm block"
                                 >
                                     {ad.hotAdImage ? 'Cambiar imagen' : 'Seleccionar imagen'}
                                 </button>
-                                <span className="text-xs text-gray-400 block">PNG o JPG — máx 5MB</span>
+                                <span className="text-xs text-subtle block">PNG o JPG — máx 5MB</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Link */}
                     <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Link al hacer clic <span className="font-normal text-gray-400">(opcional)</span></p>
+                        <p className="text-xs font-semibold text-ink-soft mb-1">Link al hacer clic <span className="font-normal text-subtle">(opcional)</span></p>
                         <input
                             type="url"
                             value={ad.hotAdLink}
                             onChange={e => set('hotAdLink', e.target.value)}
                             placeholder="https://tu-tienda.com/oferta"
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
+                            className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-warning transition-colors"
                         />
                     </div>
                 </div>
             </div>
 
             {/* Visual options */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-gray-50/60">
-                    <FiImage className="text-gray-500 w-4 h-4" />
-                    <h3 className="font-semibold text-sm text-gray-800">Opciones Visuales</h3>
+            <div className="bg-white rounded-xl border border-line shadow-sm overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-line bg-surface">
+                    <FiImage className="text-muted w-4 h-4" />
+                    <h3 className="font-semibold text-sm text-ink">Opciones Visuales</h3>
                 </div>
                 <div className="p-5 space-y-4">
                     {[
                         { key: 'hotAdTransparentBg' as const, label: 'Fondo Transparente', desc: 'Sin borde redondeado alrededor de la imagen' },
                         { key: 'hotAdShadowEnabled' as const, label: 'Sombra de imagen', desc: 'Agrega profundidad y destaca la imagen' },
                     ].map(({ key, label, desc }) => (
-                        <div key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <div key={key} className="flex items-center justify-between p-3 bg-surface rounded-lg border border-line">
                             <div>
-                                <p className="text-sm font-medium text-gray-700">{label}</p>
-                                <p className="text-xs text-gray-500">{desc}</p>
+                                <p className="text-sm font-medium text-ink-soft">{label}</p>
+                                <p className="text-xs text-muted">{desc}</p>
                             </div>
                             <HotAdToggle checked={ad[key] as boolean} onChange={v => set(key, v)} />
                         </div>
                     ))}
 
                     {ad.hotAdShadowEnabled && (
-                        <div className="grid grid-cols-2 gap-4 p-3 bg-orange-50 rounded-lg border border-orange-100">
+                        <div className="grid grid-cols-2 gap-4 p-3 bg-warning/10 rounded-lg border border-warning/20">
                             <div>
-                                <p className="text-xs font-semibold text-gray-700 mb-2">Grosor sombra: {ad.hotAdShadowBlur}px</p>
-                                <input type="range" min="5" max="100" value={ad.hotAdShadowBlur} onChange={e => set('hotAdShadowBlur', Number(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500" />
+                                <p className="text-xs font-semibold text-ink-soft mb-2">Grosor sombra: {ad.hotAdShadowBlur}px</p>
+                                <input type="range" min="5" max="100" value={ad.hotAdShadowBlur} onChange={e => set('hotAdShadowBlur', Number(e.target.value))} className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-brand-500" />
                             </div>
                             <div>
-                                <p className="text-xs font-semibold text-gray-700 mb-2">Opacidad sombra: {ad.hotAdShadowOpacity}%</p>
-                                <input type="range" min="10" max="100" value={ad.hotAdShadowOpacity} onChange={e => set('hotAdShadowOpacity', Number(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500" />
+                                <p className="text-xs font-semibold text-ink-soft mb-2">Opacidad sombra: {ad.hotAdShadowOpacity}%</p>
+                                <input type="range" min="10" max="100" value={ad.hotAdShadowOpacity} onChange={e => set('hotAdShadowOpacity', Number(e.target.value))} className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-brand-500" />
                             </div>
                         </div>
                     )}
 
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                        <p className="text-xs font-semibold text-gray-700 mb-2">Opacidad del fondo: {ad.hotAdBackdropOpacity}%</p>
-                        <input type="range" min="30" max="95" value={ad.hotAdBackdropOpacity} onChange={e => set('hotAdBackdropOpacity', Number(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-700" />
+                    <div className="p-3 bg-surface rounded-lg border border-line">
+                        <p className="text-xs font-semibold text-ink-soft mb-2">Opacidad del fondo: {ad.hotAdBackdropOpacity}%</p>
+                        <input type="range" min="30" max="95" value={ad.hotAdBackdropOpacity} onChange={e => set('hotAdBackdropOpacity', Number(e.target.value))} className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-ink" />
                     </div>
 
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                        <p className="text-xs font-semibold text-gray-700 mb-2">Color del fondo</p>
+                    <div className="p-3 bg-surface rounded-lg border border-line">
+                        <p className="text-xs font-semibold text-ink-soft mb-2">Color del fondo</p>
                         <div className="flex items-center gap-3">
-                            <input type="color" value={ad.hotAdBackdropColor} onChange={e => set('hotAdBackdropColor', e.target.value)} className="h-10 w-14 rounded-lg cursor-pointer border-2 border-gray-300 p-0" />
-                            <span className="text-sm font-mono text-gray-600">{ad.hotAdBackdropColor}</span>
-                            <div className="w-16 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-[11px] text-white font-bold flex-shrink-0" style={{ backgroundColor: ad.hotAdBackdropColor, opacity: ad.hotAdBackdropOpacity / 100 }}>
+                            <input type="color" value={ad.hotAdBackdropColor} onChange={e => set('hotAdBackdropColor', e.target.value)} className="h-10 w-14 rounded-lg cursor-pointer border-2 border-line p-0" />
+                            <span className="text-sm font-mono text-muted">{ad.hotAdBackdropColor}</span>
+                            <div className="w-16 h-10 rounded-lg border border-line flex items-center justify-center text-[11px] text-white font-bold flex-shrink-0" style={{ backgroundColor: ad.hotAdBackdropColor, opacity: ad.hotAdBackdropOpacity / 100 }}>
                                 PREVIEW
                             </div>
                         </div>
@@ -1057,7 +1061,7 @@ function HotAdTab() {
                 <button
                     onClick={handleSave}
                     disabled={saving || !hasChanges}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${hasChanges ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} disabled:opacity-60`}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${hasChanges ? 'bg-warning text-white hover:bg-warning-strong shadow-md' : 'bg-surface text-subtle cursor-not-allowed'} disabled:opacity-60`}
                 >
                     {saving ? <><FiRefreshCw className="w-4 h-4 animate-spin" /> Guardando...</>
                      : saved ? <><FiCheck className="w-4 h-4" /> Guardado</>
@@ -1087,15 +1091,12 @@ export default function MarketingPage() {
     return (
         <div className="space-y-5">
             {/* Tabs */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1">
                 {TABS.map(({ id, label, icon: Icon, badge }) => (
                     <button
                         key={id}
                         onClick={() => setActiveTab(id)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === id
-                            ? 'bg-brand-500 text-white shadow-sm'
-                            : 'bg-white border border-line text-muted hover:border-brand-500/30 hover:text-brand-500'
-                            }`}
+                        className={adminTab(activeTab === id)}
                     >
                         <Icon className="w-4 h-4" />
                         {label}

@@ -8,6 +8,7 @@ import Image from 'next/image';
 import EpicTooltip from '@/components/EpicTooltip';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import { useSettings } from '@/contexts/SettingsContext';
+import { adminPrimaryButton, adminInput, adminLabel } from '@/lib/admin-ui';
 
 const COUNTRY_CODES = [
   { code: '+58', country: 'Venezuela', iso: 've' },
@@ -305,45 +306,38 @@ export default function RegisterPage() {
   const selectedCountry = COUNTRY_CODES.find(c => c.code === countryCode) || COUNTRY_CODES[0];
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center px-4 py-6 relative overflow-hidden">
+    <div className="min-h-dvh bg-surface flex items-center justify-center px-4 py-8 relative">
       {/* Back to Login Button */}
       <Link
         href="/login"
-        className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/20 rounded-full text-white text-sm font-medium transition-all duration-300 hover:scale-105 shadow-lg group"
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2 bg-white hover:bg-surface border border-line rounded-full text-ink text-sm font-medium transition-colors shadow-sm group"
       >
-        <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform text-muted group-hover:text-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Volver atrás
       </Link>
 
-      {/* Animated Background Elements - Matching Homepage Hero */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-cyan-300/10 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-purple-300/10 rounded-full blur-3xl" style={{ animationDelay: '2s' }}></div>
-      </div>
 
-      {/* Grid Pattern Overlay - Using CSS class instead of missing SVG */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
 
-      <div className="w-full max-w-[700px] relative z-10">
+      <div className="w-full max-w-2xl relative z-10">
 
         {/* Logo Section */}
         <div className="text-center mb-4 animate-fadeIn">
           {companySettings?.logo ? (
-            <div className="relative w-28 h-28 mx-auto animate-scaleIn drop-shadow-2xl filter brightness-110">
+            <div className="relative w-28 h-28 mx-auto">
               <Image
                 src={companySettings.logo}
                 alt={companyName}
                 fill
+                sizes="112px"
                 className="object-contain"
                 priority
               />
             </div>
           ) : (
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-md shadow-2xl border border-white/30 animate-scaleIn">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-brand-50 border border-brand-200">
+              <svg className="w-10 h-10 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
@@ -351,11 +345,11 @@ export default function RegisterPage() {
         </div>
 
         {/* Register Card - Premium Glass Effect matching Homepage Hero Cards */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-slideInUp">
+        <div className="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
           <div className="p-8">
             <div className="mb-6 text-center">
-              <h1 className="text-2xl font-bold text-white mb-1">Crear Cuenta</h1>
-              <p className="text-blue-100 text-sm">Completa tus datos para comenzar</p>
+              <h1 className="text-2xl font-bold text-ink mb-1">Crear Cuenta</h1>
+              <p className="text-muted text-sm">Completa tus datos para comenzar</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -364,26 +358,26 @@ export default function RegisterPage() {
                 {/* Name Field */}
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <label htmlFor="name" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                    <label htmlFor="name" className={adminLabel}>
                       Nombre Completo
                     </label>
                     {/* Info Tooltip for Name Format */}
                     <div className="relative group/info">
-                      <button type="button" className="w-4 h-4 rounded-full bg-cyan-500/30 text-cyan-200 flex items-center justify-center text-xs font-bold hover:bg-cyan-500/50 transition-colors">
+                      <button type="button" className="w-4 h-4 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center text-xs font-bold hover:bg-brand-100 transition-colors">
                         ?
                       </button>
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-[#1e293b] border border-cyan-500/30 rounded-xl shadow-2xl opacity-0 group-hover/info:opacity-100 transition-opacity duration-300 pointer-events-none z-50 backdrop-blur-xl">
-                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1e293b] border-b border-r border-cyan-500/30 transform rotate-45"></div>
-                        <p className="text-xs text-blue-100 leading-relaxed">
-                          <span className="font-bold text-cyan-300">Formato:</span> Nombre Apellido<br />
-                          <span className="text-white/70">Puedes usar una coma para separar apellidos.</span><br />
-                          <span className="text-cyan-200">Ej: Juan Pérez, García</span>
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-white border border-line rounded-xl shadow-lg opacity-0 group-hover/info:opacity-100 transition-opacity duration-200 pointer-events-none z-[var(--z-dropdown)]">
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white border-b border-r border-line transform rotate-45"></div>
+                        <p className="text-xs text-ink leading-relaxed">
+                          <span className="font-bold text-brand-600">Formato:</span> Nombre Apellido<br />
+                          <span className="text-muted">Puedes usar una coma para separar apellidos.</span><br />
+                          <span className="text-ink font-medium">Ej: Juan Pérez, García</span>
                         </p>
                       </div>
                     </div>
                   </div>
                   <div className="relative group">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200 group-focus-within:text-white transition-colors duration-200">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
@@ -396,7 +390,7 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       onBlur={() => handleBlur('name')}
                       autoFocus
-                      className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200 text-sm"
+                      className={`w-full pl-11 pr-4 py-2.5 bg-white border rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all text-sm ${touchedFields.name && validationErrors.name ? "border-deal" : "border-line focus:border-brand-500"}`}
                       placeholder="Juan Pérez"
                       disabled={isLoading}
                     />
@@ -413,25 +407,25 @@ export default function RegisterPage() {
                 {/* Cédula Field */}
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <label htmlFor="idNumber" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                    <label htmlFor="idNumber" className={adminLabel}>
                       Cédula
                     </label>
                     {/* Info Tooltip */}
                     <div className="relative group/info">
-                      <button type="button" className="w-4 h-4 rounded-full bg-cyan-500/30 text-cyan-200 flex items-center justify-center text-xs font-bold hover:bg-cyan-500/50 transition-colors">
+                      <button type="button" className="w-4 h-4 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center text-xs font-bold hover:bg-brand-100 transition-colors">
                         ?
                       </button>
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-[#1e293b] border border-cyan-500/30 rounded-xl shadow-2xl opacity-0 group-hover/info:opacity-100 transition-opacity duration-300 pointer-events-none z-50 backdrop-blur-xl">
-                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1e293b] border-b border-r border-cyan-500/30 transform rotate-45"></div>
-                        <p className="text-xs text-blue-100 leading-relaxed">
-                          <span className="font-bold text-cyan-300">Formato:</span> V-12345678<br />
-                          <span className="text-white/70">Prefijos válidos: V (venezolano), E (extranjero), J (jurídico), P (pasaporte)</span>
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-white border border-line rounded-xl shadow-lg opacity-0 group-hover/info:opacity-100 transition-opacity duration-200 pointer-events-none z-[var(--z-dropdown)]">
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white border-b border-r border-line transform rotate-45"></div>
+                        <p className="text-xs text-ink leading-relaxed">
+                          <span className="font-bold text-brand-600">Formato:</span> V-12345678<br />
+                          <span className="text-muted">Prefijos válidos: V (venezolano), E (extranjero), J (jurídico), P (pasaporte)</span>
                         </p>
                       </div>
                     </div>
                   </div>
                   <div className="relative group">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200 group-focus-within:text-white transition-colors duration-200">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
                       </svg>
@@ -443,7 +437,7 @@ export default function RegisterPage() {
                       value={formData.idNumber}
                       onChange={handleChange}
                       onBlur={() => handleBlur('idNumber')}
-                      className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200 text-sm uppercase"
+                      className={`w-full pl-11 pr-4 py-2.5 bg-white border rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all text-sm uppercase ${touchedFields.idNumber && validationErrors.idNumber ? "border-deal" : "border-line focus:border-brand-500"}`}
                       placeholder="V-12345678"
                       disabled={isLoading}
                     />
@@ -462,11 +456,11 @@ export default function RegisterPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Email Field */}
                 <div className="space-y-1.5">
-                  <label htmlFor="email" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                  <label htmlFor="email" className={adminLabel}>
                     Correo Electrónico
                   </label>
                   <div className="relative group">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200 group-focus-within:text-white transition-colors duration-200">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                       </svg>
@@ -479,7 +473,7 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       onBlur={() => handleBlur('email')}
                       autoComplete="email"
-                      className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200 text-sm"
+                      className={`w-full pl-11 pr-4 py-2.5 bg-white border rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all text-sm ${touchedFields.name && validationErrors.name ? "border-deal" : "border-line focus:border-brand-500"}`}
                       placeholder="correo@ejemplo.com"
                       disabled={isLoading}
                     />
@@ -496,11 +490,11 @@ export default function RegisterPage() {
                 {/* Phone Field with Country Picker */}
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <label htmlFor="phone" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                    <label htmlFor="phone" className={adminLabel}>
                       Teléfono WhatsApp
                     </label>
                     {/* WhatsApp indicator */}
-                    <svg className="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="w-4 h-4 text-success-strong" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                     </svg>
                   </div>
@@ -510,24 +504,25 @@ export default function RegisterPage() {
                       <button
                         type="button"
                         onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                        className="h-full px-2 bg-white/10 border border-white/20 rounded-xl text-white flex items-center gap-1.5 hover:bg-white/20 transition-all min-w-[80px]"
+                        className="h-11 px-2.5 bg-white border border-line rounded-lg text-ink flex items-center gap-1.5 hover:bg-surface transition-colors min-w-[80px]"
                       >
                         <div className="relative w-5 h-3.5 shadow-sm rounded-sm overflow-hidden">
                           <Image
                             src={`https://flagcdn.com/w40/${selectedCountry.iso}.png`}
                             alt={selectedCountry.country}
                             fill
+                            sizes="20px"
                             className="object-cover"
                           />
                         </div>
-                        <span className="text-xs font-medium">{selectedCountry.code}</span>
-                        <svg className={`w-2.5 h-2.5 transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span className="text-xs font-medium text-ink">{selectedCountry.code}</span>
+                        <svg className={`w-2.5 h-2.5 text-muted transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
 
                       {showCountryDropdown && (
-                        <div className="absolute top-full left-0 mt-1 w-56 max-h-60 overflow-y-auto bg-[#1e293b] border border-white/10 rounded-xl shadow-xl z-50 backdrop-blur-xl custom-scrollbar">
+                        <div className="absolute top-full left-0 mt-1 w-56 max-h-60 overflow-y-auto bg-white border border-line rounded-xl shadow-lg z-[var(--z-dropdown)] custom-scrollbar">
                           {COUNTRY_CODES.map((country) => (
                             <button
                               key={country.code}
@@ -536,18 +531,19 @@ export default function RegisterPage() {
                                 setCountryCode(country.code);
                                 setShowCountryDropdown(false);
                               }}
-                              className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-white/10 transition-colors border-b border-white/5 last:border-0"
+                              className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-surface transition-colors border-b border-line last:border-0"
                             >
                               <div className="relative w-6 h-4 shadow-sm rounded-sm overflow-hidden flex-shrink-0">
                                 <Image
                                   src={`https://flagcdn.com/w40/${country.iso}.png`}
                                   alt={country.country}
                                   fill
+                                  sizes="24px"
                                   className="object-cover"
                                 />
                               </div>
-                              <span className="text-sm text-white flex-1 truncate">{country.country}</span>
-                              <span className="text-xs text-blue-200 font-mono">{country.code}</span>
+                              <span className="text-sm text-ink flex-1 truncate">{country.country}</span>
+                              <span className="text-xs text-muted font-mono">{country.code}</span>
                             </button>
                           ))}
                         </div>
@@ -567,7 +563,7 @@ export default function RegisterPage() {
                         onChange={handleChange}
                         onBlur={() => handleBlur('phone')}
                         autoComplete="tel"
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200 text-sm"
+                        className={`w-full px-4 py-2.5 bg-white border rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all text-sm ${touchedFields.phone && validationErrors.phone ? "border-deal" : "border-line focus:border-brand-500"}`}
                         placeholder="4121234567"
                         disabled={isLoading}
                       />
@@ -587,11 +583,11 @@ export default function RegisterPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Password Field */}
                 <div className="space-y-1.5">
-                  <label htmlFor="password" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                  <label htmlFor="password" className={adminLabel}>
                     Contraseña
                   </label>
                   <div className="relative group">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200 group-focus-within:text-white transition-colors duration-200">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
@@ -604,14 +600,14 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       onBlur={() => handleBlur('password')}
                       autoComplete="new-password"
-                      className="w-full pl-11 pr-10 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200 text-sm"
+                      className={`w-full pl-11 pr-10 py-2.5 bg-white border rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all text-sm ${touchedFields.password && validationErrors.password ? "border-deal" : "border-line focus:border-brand-500"}`}
                       placeholder="••••••••"
                       disabled={isLoading}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-200 hover:text-white transition-colors duration-200"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors duration-200"
                     >
                       {showPassword ? (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -636,11 +632,11 @@ export default function RegisterPage() {
 
                 {/* Confirm Password Field */}
                 <div className="space-y-1.5">
-                  <label htmlFor="confirmPassword" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                  <label htmlFor="confirmPassword" className={adminLabel}>
                     Confirmar Contraseña
                   </label>
                   <div className="relative group">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200 group-focus-within:text-white transition-colors duration-200">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -653,17 +649,17 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       onBlur={() => handleBlur('confirmPassword')}
                       autoComplete="new-password"
-                      className={`w-full pl-11 pr-10 py-3 bg-white/10 border rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:ring-1 transition-all duration-200 text-sm ${formData.confirmPassword && formData.password !== formData.confirmPassword
-                        ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
-                        : 'border-white/20 focus:border-white/40 focus:ring-white/40'
-                        }`}
+                      className={`w-full pl-11 pr-10 py-2.5 bg-white border rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all text-sm ${formData.confirmPassword && formData.password !== formData.confirmPassword
+                        ? 'border-deal'
+                        : 'border-line focus:border-brand-500'
+                      }`}
                       placeholder="••••••••"
                       disabled={isLoading}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-200 hover:text-white transition-colors duration-200"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors duration-200"
                     >
                       {showConfirmPassword ? (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -691,17 +687,17 @@ export default function RegisterPage() {
               {formData.password && (
                 <div className="mt-1">
                   <div className="flex justify-between mb-1">
-                    <span className="text-xs font-medium text-blue-200">Seguridad de contraseña</span>
-                    <span className={`text-xs font-medium ${passwordStrength < 40 ? 'text-red-300' :
-                      passwordStrength < 80 ? 'text-yellow-300' : 'text-green-300'
+                    <span className="text-xs font-medium text-muted">Seguridad de contraseña</span>
+                    <span className={`text-xs font-medium ${passwordStrength < 40 ? 'text-deal' :
+                      passwordStrength < 80 ? 'text-warning-strong' : 'text-success-strong'
                       }`}>
                       {passwordStrength < 40 ? 'Débil' : passwordStrength < 80 ? 'Media' : 'Fuerte'}
                     </span>
                   </div>
-                  <div className="w-full bg-white/10 rounded-full h-1.5">
+                  <div className="w-full bg-line rounded-full h-1.5">
                     <div
-                      className={`h-1.5 rounded-full transition-all duration-300 ${passwordStrength < 40 ? 'bg-red-400' :
-                        passwordStrength < 80 ? 'bg-yellow-400' : 'bg-green-400'
+                      className={`h-1.5 rounded-full transition-all duration-300 ${passwordStrength < 40 ? 'bg-deal' :
+                        passwordStrength < 80 ? 'bg-warning-strong' : 'bg-success-strong'
                         }`}
                       style={{ width: `${passwordStrength}%` }}
                     ></div>
@@ -719,9 +715,9 @@ export default function RegisterPage() {
                       checked={formData.acceptTerms}
                       onChange={handleChange}
                       onBlur={() => handleBlur('acceptTerms')}
-                      className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-white/30 bg-white/10 checked:border-white checked:bg-white transition-all"
+                      className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-line-strong bg-white checked:border-brand-500 checked:bg-brand-500 transition-all"
                     />
-                    <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-500 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
                     <EpicTooltip
@@ -732,32 +728,32 @@ export default function RegisterPage() {
                       onHide={() => handleTooltipHide('acceptTerms')}
                     />
                   </div>
-                  <span className="text-sm text-blue-100 group-hover:text-white transition-colors">
-                    Acepto los <Link href="/terminos" className="text-white font-semibold hover:underline">Términos y Condiciones</Link> y la Política de Privacidad.
+                  <span className="text-sm text-ink-soft">
+                    Acepto los <Link href="/terminos" className="text-brand-600 font-semibold hover:text-brand-700 hover:underline">Términos y Condiciones</Link> y la Política de Privacidad.
                   </span>
                 </label>
               </div>
 
               {/* hCaptcha */}
               <div className="flex justify-center pt-2">
-                <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                <div className="bg-surface p-3 rounded-xl border border-line">
                   <HCaptchaWrapper
                     sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
                     onVerify={handleCaptchaVerify}
                     onExpire={handleCaptchaExpire}
                     ref={captchaRef}
-                    theme="dark"
+                    theme="light"
                   />
                 </div>
               </div>
 
               {/* Error Message */}
               {error && (
-                <div className="flex items-start gap-3 p-4 bg-red-500/20 border border-red-500/30 rounded-xl animate-shake backdrop-blur-sm">
-                  <svg className="w-5 h-5 text-red-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start gap-3 p-4 bg-deal-bg border border-deal/30 rounded-xl">
+                  <svg className="w-5 h-5 text-deal flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-sm text-red-100 font-medium">
+                  <p className="text-sm text-deal font-medium">
                     {error}
                   </p>
                 </div>
@@ -767,33 +763,31 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isLoading || !captchaToken}
-                className="group relative w-full bg-white text-brand-500 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none overflow-hidden"
+                className={`${adminPrimaryButton} w-full`}
               >
-                <span className="relative z-10 flex items-center justify-center gap-2 text-base">
-                  {isLoading ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5 text-brand-500" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span>Creando tu cuenta...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Comenzar Ahora</span>
-                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </>
-                  )}
-                </span>
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Creando tu cuenta...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Comenzar Ahora</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </>
+                )}
               </button>
 
               {/* Login Link */}
-              <div className="text-center pt-2 border-t border-white/10 mt-6">
-                <p className="text-sm text-blue-100">
+              <div className="text-center pt-4 border-t border-line mt-6">
+                <p className="text-sm text-muted">
                   ¿Ya tienes una cuenta?{' '}
-                  <Link href="/login" className="text-white font-bold hover:text-cyan-200 transition-colors hover:underline">
+                  <Link href="/login" className="text-brand-600 font-bold hover:text-brand-700 transition-colors hover:underline">
                     Inicia sesión aquí
                   </Link>
                 </p>
@@ -804,7 +798,7 @@ export default function RegisterPage() {
 
         {/* Footer Info */}
         <div className="mt-6 text-center">
-          <p className="text-xs text-blue-200/80">
+          <p className="text-xs text-muted">
             &copy; {new Date().getFullYear()} {companyName}. Todos los derechos reservados.
           </p>
         </div>

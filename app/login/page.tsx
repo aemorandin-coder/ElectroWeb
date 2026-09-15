@@ -8,6 +8,7 @@ import Image from 'next/image';
 import EpicTooltip from '@/components/EpicTooltip';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import { useSettings } from '@/contexts/SettingsContext';
+import { adminPrimaryButton, adminInput, adminLabel } from '@/lib/admin-ui';
 
 // Constants for failed attempts
 const FAILED_ATTEMPTS_KEY = 'login_failed_attempts';
@@ -240,15 +241,15 @@ function LoginPageContent() {
   // Mostrar spinner solo si la sesión está cargando Y no ha pasado el timeout
   if (status === 'loading' && !forceShowForm) {
     return (
-      <div className="min-h-dvh bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center">
+      <div className="min-h-dvh bg-surface flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 mb-4 shadow-2xl animate-pulse">
-            <svg className="animate-spin h-8 w-8 text-white" fill="none" viewBox="0 0 24 24">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-line mb-4 shadow-sm">
+            <svg className="animate-spin h-8 w-8 text-brand-600" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </div>
-          <p className="text-white/80 text-sm font-medium">Verificando sesión...</p>
+          <p className="text-muted text-sm font-medium">Verificando sesión...</p>
         </div>
       </div>
     );
@@ -265,50 +266,43 @@ function LoginPageContent() {
   const restName = companyNameParts.slice(1).join(' ') || 'Morandin';
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center px-4 py-4 relative overflow-hidden">
+    <div className="min-h-dvh bg-surface flex items-center justify-center px-4 py-8 relative">
       {/* Back to Home Button */}
       <Link
         href="/"
-        className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/20 rounded-full text-white text-sm font-medium transition-all duration-300 hover:scale-105 shadow-lg group"
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2 bg-white hover:bg-surface border border-line rounded-full text-ink text-sm font-medium transition-colors shadow-sm group"
       >
-        <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform text-muted group-hover:text-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Volver al inicio
       </Link>
 
-      {/* Animated Background Elements - Matching Registration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-cyan-300/10 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-purple-300/10 rounded-full blur-3xl" style={{ animationDelay: '2s' }}></div>
-      </div>
 
-      {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
 
-      <div className="w-full max-w-[450px] relative z-10 -mt-[10%]">
+      <div className="w-full max-w-md relative z-10">
         {/* Logo Section - Only Logo, no text */}
         <div className="text-center mb-4 animate-fadeIn">
           {!settingsLoaded ? (
             /* Loading skeleton while settings load */
             <div className="relative w-36 h-36 mx-auto animate-pulse">
-              <div className="w-full h-full bg-white/20 rounded-2xl" />
+              <div className="w-full h-full bg-surface rounded-2xl border border-line" />
             </div>
           ) : companySettings?.logo ? (
-            <div className="relative w-36 h-36 mx-auto animate-scaleIn drop-shadow-2xl filter brightness-110">
+            <div className="relative w-36 h-36 mx-auto">
               <Image
                 src={companySettings.logo}
                 alt={companyName}
                 fill
+                sizes="144px"
                 className="object-contain"
                 priority
               />
             </div>
           ) : (
             /* Fallback: shopping bag icon instead of lightning bolt */
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md shadow-2xl border border-white/30 animate-scaleIn">
-              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-brand-50 border border-brand-200">
+              <svg className="w-10 h-10 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
             </div>
@@ -316,21 +310,21 @@ function LoginPageContent() {
         </div>
 
         {/* Login Card - Premium Glass Effect */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-slideInUp">
+        <div className="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
           <div className="p-8">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white mb-1">Iniciar Sesión</h2>
-              <p className="text-blue-100 text-sm">Ingresa tus credenciales para continuar</p>
+              <h2 className="text-2xl font-bold text-ink mb-1">Iniciar Sesión</h2>
+              <p className="text-muted text-sm">Ingresa tus credenciales para continuar</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email Field */}
               <div className="space-y-1.5">
-                <label htmlFor="email" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                <label htmlFor="email" className={adminLabel}>
                   Correo Electrónico
                 </label>
                 <div className="form-field group">
-                  <svg className="field-icon text-blue-200 group-focus-within:text-white transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="field-icon text-muted group-focus-within:text-brand-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                   </svg>
                   <input
@@ -340,7 +334,7 @@ function LoginPageContent() {
                     onChange={(e) => handleEmailChange(e.target.value)}
                     onBlur={() => handleBlur('email', email)}
                     autoComplete="email"
-                    className="w-full pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200"
+                    className={adminInput(Boolean(touchedFields.email && validationErrors.email))}
                     placeholder={userType === 'admin' ? 'admin@electroshop.com' : 'cliente@ejemplo.com'}
                     disabled={isLoading}
                   />
@@ -355,18 +349,18 @@ function LoginPageContent() {
               {/* Password Field */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <label htmlFor="password" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                  <label htmlFor="password" className={adminLabel}>
                     Contraseña
                   </label>
                   <Link
                     href="/recuperar-contrasena"
-                    className="text-xs text-blue-200 hover:text-white transition-colors"
+                    className="text-xs text-brand-600 hover:text-brand-700 transition-colors"
                   >
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
                 <div className="form-field group">
-                  <svg className="field-icon text-blue-200 group-focus-within:text-white transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="field-icon text-muted group-focus-within:text-brand-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   <input
@@ -376,14 +370,14 @@ function LoginPageContent() {
                     onChange={(e) => handlePasswordChange(e.target.value)}
                     onBlur={() => handleBlur('password', password)}
                     autoComplete={userType === 'admin' ? 'current-password' : 'password'}
-                    className="w-full has-right-icon pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all duration-200"
+                    className={`${adminInput(Boolean(touchedFields.password && validationErrors.password))} has-right-icon`}
                     placeholder="••••••••"
                     disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="field-icon-right text-blue-200 hover:text-white transition-colors duration-200"
+                    className="field-icon-right text-muted hover:text-ink transition-colors duration-200"
                   >
                     {showPassword ? (
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -407,27 +401,27 @@ function LoginPageContent() {
               {/* Captcha - Shows after 2 failed attempts */}
               <div className={`space-y-2 transition-all duration-300 ${requiresCaptcha ? 'opacity-100 max-h-[200px]' : 'opacity-0 max-h-0 overflow-hidden'}`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20">
-                    <svg className="w-3 h-3 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-warning/15">
+                    <svg className="w-3 h-3 text-warning-strong" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                   </div>
-                  <p className="text-xs text-amber-200">
+                  <p className="text-xs text-warning-strong font-medium">
                     Verificación de seguridad requerida
                   </p>
                 </div>
-                <div className="flex justify-center rounded-xl overflow-hidden bg-white/5 p-2">
+                <div className="flex justify-center rounded-xl overflow-hidden bg-surface p-2 border border-line">
                   <HCaptchaWrapper
                     sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
                     onVerify={handleCaptchaVerify}
                     onExpire={handleCaptchaExpire}
                     ref={captchaRef}
-                    theme="dark"
+                    theme="light"
                     size={requiresCaptcha ? 'normal' : 'invisible'}
                   />
                 </div>
                 {captchaToken && (
-                  <div className="flex items-center gap-1.5 text-xs text-green-300">
+                  <div className="flex items-center gap-1.5 text-xs text-success-strong font-medium">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
@@ -438,11 +432,11 @@ function LoginPageContent() {
 
               {/* Error Message */}
               {error && (
-                <div className="flex items-start gap-3 p-4 bg-red-500/20 border border-red-500/30 rounded-xl animate-shake backdrop-blur-sm">
-                  <svg className="w-5 h-5 text-red-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start gap-3 p-4 bg-deal-bg border border-deal/30 rounded-xl">
+                  <svg className="w-5 h-5 text-deal flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-sm text-red-100 font-medium">
+                  <p className="text-sm text-deal font-medium">
                     {error}
                   </p>
                 </div>
@@ -452,33 +446,31 @@ function LoginPageContent() {
               <button
                 type="submit"
                 disabled={isLoading || (requiresCaptcha && !captchaToken)}
-                className="group relative w-full bg-white text-brand-500 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none overflow-hidden"
+                className={`${adminPrimaryButton} w-full`}
               >
-                <span className="relative z-10 flex items-center justify-center gap-2 text-base">
-                  {isLoading ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5 text-brand-500" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span>Verificando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Iniciar Sesión</span>
-                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </>
-                  )}
-                </span>
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Verificando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Iniciar Sesión</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </>
+                )}
               </button>
 
               {/* Register Link */}
-              <div className="text-center pt-2 border-t border-white/10 mt-6">
-                <p className="text-sm text-blue-100">
+              <div className="text-center pt-4 border-t border-line mt-6">
+                <p className="text-sm text-muted">
                   ¿No tienes cuenta?{' '}
-                  <Link href="/registro" className="text-white font-bold hover:text-cyan-200 transition-colors hover:underline">
+                  <Link href="/registro" className="text-brand-600 font-bold hover:text-brand-700 transition-colors hover:underline">
                     Regístrate aquí
                   </Link>
                 </p>
@@ -494,15 +486,15 @@ function LoginPageContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-dvh bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center">
+      <div className="min-h-dvh bg-surface flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 mb-4 shadow-2xl animate-pulse">
-            <svg className="animate-spin h-8 w-8 text-white" fill="none" viewBox="0 0 24 24">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-line mb-4 shadow-sm">
+            <svg className="animate-spin h-8 w-8 text-brand-600" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </div>
-          <p className="text-white/80 text-sm font-medium">Cargando...</p>
+          <p className="text-muted text-sm font-medium">Cargando...</p>
         </div>
       </div>
     }>

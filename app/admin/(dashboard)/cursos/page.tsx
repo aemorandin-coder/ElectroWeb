@@ -1,4 +1,9 @@
 'use client';
+
+import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { formatUSD } from '@/lib/currency';
+
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
@@ -22,12 +27,12 @@ const LEVELS = [
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  DESARROLLO: 'bg-blue-100 text-blue-700',
-  REDES: 'bg-green-100 text-green-700',
-  ELECTRONICA: 'bg-yellow-100 text-yellow-700',
-  GAMING: 'bg-purple-100 text-purple-700',
-  SEGURIDAD: 'bg-red-100 text-red-700',
-  NEGOCIOS: 'bg-orange-100 text-orange-700',
+  DESARROLLO: 'bg-brand-100 text-brand-700',
+  REDES: 'bg-success/10 text-success-strong',
+  ELECTRONICA: 'bg-warning/10 text-warning-strong',
+  GAMING: 'bg-brand-100 text-brand-700',
+  SEGURIDAD: 'bg-deal/10 text-deal',
+  NEGOCIOS: 'bg-warning/10 text-warning-strong',
 };
 
 type Lesson = {
@@ -92,6 +97,7 @@ export default function AdminCursosPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  useBodyScrollLock(showModal);
   const [activeTab, setActiveTab] = useState<'info' | 'curriculum'>('info');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -308,7 +314,7 @@ export default function AdminCursosPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((course) => (
             <div key={course.id} className="bg-white border border-line rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-              <div className="relative h-40 bg-gradient-to-br from-brand-500/10 to-brand-500/5">
+              <div className="relative h-40 bg-brand-50">
                 {course.thumbnail ? (
                   <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
                 ) : (
@@ -320,16 +326,16 @@ export default function AdminCursosPage() {
                 )}
                 <div className="absolute top-2 left-2 flex gap-1">
                   {course.category && (
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${CATEGORY_COLORS[course.category] || 'bg-gray-100 text-gray-600'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${CATEGORY_COLORS[course.category] || 'bg-surface text-muted'}`}>
                       {CATEGORIES.find((c) => c.value === course.category)?.label}
                     </span>
                   )}
                   {course.isFeatured && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 inline-flex items-center gap-1"><FiStar className="h-3 w-3 fill-current shrink-0" aria-hidden="true" />Destacado</span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-warning/10 text-warning-strong inline-flex items-center gap-1"><FiStar className="h-3 w-3 fill-current shrink-0" aria-hidden="true" />Destacado</span>
                   )}
                 </div>
                 <div className="absolute top-2 right-2">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${course.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${course.isActive ? 'bg-success/10 text-success-strong' : 'bg-surface text-muted'}`}>
                     {course.isActive ? 'Activo' : 'Inactivo'}
                   </span>
                 </div>
@@ -338,7 +344,7 @@ export default function AdminCursosPage() {
                 <h3 className="font-semibold text-ink text-sm line-clamp-2 mb-1">{course.title}</h3>
                 {course.shortDesc && <p className="text-xs text-muted line-clamp-2 mb-2">{course.shortDesc}</p>}
                 <div className="flex items-center gap-3 text-xs text-muted mb-3">
-                  <span>${Number(course.priceUSD).toFixed(2)}</span>
+                  <span>{formatUSD(Number(course.priceUSD))}</span>
                   <span>{course._count?.enrollments ?? course.enrollmentCount} inscritos</span>
                   <span>{course._count?.modules ?? 0} módulos</span>
                   {course.rating && <span className="inline-flex items-center gap-1"><FaStar className="h-3 w-3 text-warning shrink-0" aria-hidden="true" />{Number(course.rating).toFixed(1)}</span>}
@@ -347,11 +353,11 @@ export default function AdminCursosPage() {
                   <button onClick={() => openEdit(course)} className="flex-1 py-1.5 text-xs font-semibold text-brand-500 border border-brand-500 rounded-lg hover:bg-brand-500 hover:text-white transition-colors">Editar</button>
                   <button
                     onClick={() => handleToggle(course)}
-                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${course.isActive ? 'border-orange-300 text-orange-600 hover:bg-orange-50' : 'border-green-300 text-green-600 hover:bg-green-50'}`}
+                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${course.isActive ? 'border-warning/30 text-warning-strong hover:bg-warning/10' : 'border-success/30 text-success-strong hover:bg-success/10'}`}
                   >
                     {course.isActive ? 'Desactivar' : 'Activar'}
                   </button>
-                  <button onClick={() => handleDelete(course.id)} disabled={deletingId === course.id} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                  <button onClick={() => handleDelete(course.id)} disabled={deletingId === course.id} className="p-1.5 text-deal hover:text-deal hover:bg-deal/10 rounded-lg transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -365,7 +371,7 @@ export default function AdminCursosPage() {
 
       {/* Create / Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className={adminModalOverlay} onClick={() => setShowModal(false)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-line">
@@ -471,7 +477,7 @@ export default function AdminCursosPage() {
                         <span className="text-xs font-bold text-muted">{mIdx + 1}.</span>
                         <input value={mod.title} onChange={(e) => updateModule(mIdx, 'title', e.target.value)} className="flex-1 px-2 py-1 border border-line-strong rounded text-sm focus:outline-none focus:border-brand-500 bg-white" placeholder="Nombre del módulo" />
                         <button onClick={() => addLesson(mIdx)} className="text-xs text-brand-500 font-semibold hover:underline whitespace-nowrap">+ Lección</button>
-                        <button onClick={() => removeModule(mIdx)} className="text-red-400 hover:text-red-600">
+                        <button onClick={() => removeModule(mIdx)} className="text-deal hover:text-deal">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                       </div>
@@ -488,7 +494,7 @@ export default function AdminCursosPage() {
                                 Lección gratuita (preview)
                               </label>
                             </div>
-                            <button onClick={() => removeLesson(mIdx, lIdx)} className="text-red-400 hover:text-red-600 pt-1 shrink-0">
+                            <button onClick={() => removeLesson(mIdx, lIdx)} className="text-deal hover:text-deal pt-1 shrink-0">
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                           </div>

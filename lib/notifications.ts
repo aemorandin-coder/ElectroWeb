@@ -49,8 +49,9 @@ export async function createNotification(params: CreateNotificationParams) {
 
     return notification;
   } catch (error) {
+    // Sin relanzar (C-73): una notificación fallida no puede convertir en error una venta o recarga ya guardada
     console.error('Error creating notification:', error);
-    throw error;
+    return null;
   }
 }
 

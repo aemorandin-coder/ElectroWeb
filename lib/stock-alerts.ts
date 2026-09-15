@@ -1,10 +1,15 @@
 // Avisos de stock (C-50b): "Avisar stock bajo" y "Avisar producto agotado" en Configuración → Tienda.
-// Se avisa solo cuando una venta cruza el umbral (no en cada venta posterior), por correo a la lista
-// de alertas y como notificación a los administradores. Solo servidor; nunca rompe la venta.
+// Se avisa solo cuando una venta cruza el umbral (no en cada venta posterior). Los canales (panel, correo,
+// Telegram) salen de Notificaciones → Qué avisar (C-73). Solo servidor; nunca rompe la venta.
 
 import { prisma } from '@/lib/prisma';
-import { sendStockAlert, type StockAlertProduct } from '@/lib/admin-alerts';
-import { createNotification } from '@/lib/notifications';
+import { emitAdminEvent } from '@/lib/admin-events';
+
+export interface StockAlertProduct {
+  name: string;
+  sku: string | null;
+  stock: number;
+}
 
 export interface StockChange {
   productId: string;
@@ -64,18 +69,23 @@ export async function notifyStockCrossings(changes: StockChange[]): Promise<Stoc
   const crossings = detectStockCrossings(products, changes, options);
   if (crossings.outOfStock.length === 0 && crossings.lowStock.length === 0) return crossings;
 
-  const admins = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } }, select: { id: true } });
-  const messages = [
-    ...crossings.outOfStock.map((product) => ({ title: 'Producto agotado', message: `${product.name} se quedó sin stock.` })),
-    ...crossings.lowStock.map((product) => ({ title: 'Stock bajo', message: `${product.name}: quedan ${product.stock} unidades.` })),
-  ];
-  await Promise.all(
-    admins.flatMap((admin) =>
-      messages.map(({ title, message }) =>
-        createNotification({ userId: admin.id, type: 'STOCK_ALERT', title, message, link: '/admin/products', icon: 'package' })
-      )
-    )
-  );
-  await sendStockAlert({ ...crossings, threshold: options.threshold, baseUrl: process.env.NEXTAUTH_URL });
+  for (const product of crossings.outOfStock) {
+    emitAdminEvent({
+      type: 'STOCK_OUT',
+      title: `Agotado · ${product.name}`.slice(0, 150),
+      summary: 'Una venta dejó este producto sin stock',
+      fields: [['SKU', product.sku], ['Stock', '0 unidades']],
+      link: '/admin/products',
+    });
+  }
+  for (const product of crossings.lowStock) {
+    emitAdminEvent({
+      type: 'STOCK_LOW',
+      title: `Stock bajo · ${product.name}`.slice(0, 150),
+      summary: `Quedan ${product.stock} ${product.stock === 1 ? 'unidad' : 'unidades'}`,
+      fields: [['SKU', product.sku], ['Aviso desde', `${options.threshold} unidades`]],
+      link: '/admin/products',
+    });
+  }
   return crossings;
 }

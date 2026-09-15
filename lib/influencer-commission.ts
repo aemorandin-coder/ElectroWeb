@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/prisma';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatUSD } from '@/lib/currency';
 
 export const REF_COOKIE = 'electroshop_ref';
 
@@ -28,7 +30,7 @@ export async function recordConversion({
 
   const influencer = await prisma.influencer.findUnique({
     where: { code: user.referredByCode, status: 'ACTIVE' },
-    select: { id: true, userId: true, commissionRate: true },
+    select: { id: true, userId: true, commissionRate: true, name: true, code: true },
   });
 
   if (!influencer) return null;
@@ -38,7 +40,7 @@ export async function recordConversion({
 
   const commission = (grossAmount * Number(influencer.commissionRate)) / 100;
 
-  return prisma.referralConversion.create({
+  const conversion = await prisma.referralConversion.create({
     data: {
       influencerId: influencer.id,
       referredUserId,
@@ -50,6 +52,20 @@ export async function recordConversion({
       status: 'PENDING',
     },
   });
+
+  const what = { PURCHASE: 'una compra', RECHARGE: 'una recarga', REGISTRATION: 'un registro' }[type];
+  emitAdminEvent({
+    type: 'REFERRAL_CONVERSION',
+    title: `Promotor ${influencer.name} · ${what}`.slice(0, 150),
+    summary: `Un cliente referido con el código ${influencer.code} generó ${what}`,
+    fields: [
+      ['Monto', grossAmount > 0 ? formatUSD(grossAmount) : null],
+      ['Comisión por aprobar', commission > 0 ? formatUSD(commission) : null],
+    ],
+    link: '/admin/marketing',
+  });
+
+  return conversion;
 }
 
 /**

@@ -7,6 +7,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { detectFileType } from '@/lib/file-signature';
 import { PRIVATE_DOCUMENTS_DIR } from '@/lib/private-uploads';
+import { emitAdminEvent } from '@/lib/admin-events';
 
 export async function POST(request: NextRequest) {
     try {
@@ -87,6 +88,14 @@ export async function POST(request: NextRequest) {
                 isBusinessAccount: true, // Intent to be business
                 businessVerified: false,
             },
+        });
+
+        emitAdminEvent({
+            type: 'BUSINESS_VERIFICATION',
+            title: `Verificación de empresa · ${companyName}`.slice(0, 150),
+            summary: `${session.user.name || session.user.email || 'Un cliente'} subió acta constitutiva y RIF`,
+            fields: [['Empresa', companyName], ['RIF', taxId], ['Correo', session.user.email]],
+            link: '/admin/verifications',
         });
 
         return NextResponse.json({

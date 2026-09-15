@@ -887,7 +887,47 @@ model Notification {
 
   @@index([userId])
   @@index([read])
+  // Bandeja: las de un usuario, más nuevas primero (C-73)
+  @@index([userId, createdAt])
   @@map("notifications")
+}
+
+// Avisos al equipo (C-73): por qué canal llega cada evento y el bot de Telegram. Una sola fila, id "default".
+model AdminNotificationSettings {
+  id                        String    @id @default("default")
+  // { "ORDER_CREATED": { "panel": true, "email": true, "telegram": true }, ... } — lo que falte usa el valor por defecto del catálogo
+  channels                  String?
+  // Token del bot cifrado con AES-256-GCM (clave derivada de NEXTAUTH_SECRET). Nunca sale del servidor.
+  telegramBotToken          String?
+  telegramBotId             String?
+  telegramBotUsername       String?
+  telegramBotName           String?
+  telegramWebhookActive     Boolean   @default(false)
+  // Último update_id procesado por getUpdates (cuando no hay webhook)
+  telegramUpdateOffset      Int       @default(0)
+  // Código para conectar un chat: solo el hash, vence en 15 minutos
+  telegramLinkCodeHash      String?
+  telegramLinkCodeExpiresAt DateTime?
+  telegramLinkCreatedById   String?
+  updatedAt                 DateTime  @updatedAt
+
+  @@map("admin_notification_settings")
+}
+
+// Chats de Telegram que reciben los avisos: personas o grupos conectados con un código del panel (C-73)
+model TelegramChat {
+  id          String    @id @default(cuid())
+  chatId      String    @unique
+  title       String
+  type        String    // private | group | supergroup | channel
+  isActive    Boolean   @default(true)
+  linkedById  String?
+  lastSentAt  DateTime?
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("telegram_chats")
 }
 
 model NotificationPreference {

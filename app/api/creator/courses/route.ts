@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { creatorCourseSchema } from '@/lib/validations/creator-course';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatUSD } from '@/lib/currency';
 
 function toSlug(title: string): string {
   return title
@@ -76,6 +78,14 @@ export async function POST(request: NextRequest) {
         instructor: creator.displayName,
         isActive: false, // pending admin review
       },
+    });
+
+    emitAdminEvent({
+      type: 'COURSE_SUBMITTED',
+      title: `Curso por revisar · ${course.title}`.slice(0, 150),
+      summary: `${creator.displayName} subió un curso nuevo`,
+      fields: [['Precio', formatUSD(Number(course.priceUSD))], ['Categoría', course.category], ['Nivel', course.level]],
+      link: '/admin/cursos',
     });
 
     return NextResponse.json(course, { status: 201 });

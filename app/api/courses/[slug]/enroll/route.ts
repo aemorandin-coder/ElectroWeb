@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { sendCourseEnrollmentEmail } from '@/lib/email-templates/CourseCertificate';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatUSD } from '@/lib/currency';
 
 class InsufficientBalanceError extends Error {}
 
@@ -77,6 +79,14 @@ export async function POST(
         courseSlug: course.slug,
       }).catch((err) => console.error('[Enrollment email error]', err));
 
+      emitAdminEvent({
+        type: 'COURSE_ENROLLED',
+        title: `Inscripción · ${course.title}`.slice(0, 150),
+        summary: `${userName} se inscribió gratis`,
+        fields: [['Curso', course.title], ['Instructor', instructorName], ['Correo', userEmail]],
+        link: '/admin/cursos',
+      });
+
       return NextResponse.json({ enrollment, message: 'Inscripción exitosa' }, { status: 201 });
     }
 
@@ -144,6 +154,14 @@ export async function POST(
       }
       throw error;
     }
+
+    emitAdminEvent({
+      type: 'COURSE_ENROLLED',
+      title: `Inscripción · ${course.title}`.slice(0, 150),
+      summary: `${userName} compró el curso con saldo`,
+      fields: [['Precio', formatUSD(price)], ['Para el creador', creatorCut > 0 ? formatUSD(creatorCut) : null], ['Instructor', instructorName], ['Correo', userEmail]],
+      link: '/admin/cursos',
+    });
 
     // Send enrollment confirmation email (fire-and-forget)
     sendCourseEnrollmentEmail(userEmail, {

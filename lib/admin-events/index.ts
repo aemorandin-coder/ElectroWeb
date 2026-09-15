@@ -33,6 +33,18 @@ export interface DeliveryReport {
 }
 
 const recent = new Map<string, number>();
+const CLEANUP_EVERY_MS = 24 * 60 * 60_000;
+let lastCleanup = 0;
+
+/** Las leídas de más de 60 días se borran (una vez al día por proceso): antes la tabla crecía sin límite. */
+function cleanupOldNotifications() {
+  const now = Date.now();
+  if (now - lastCleanup < CLEANUP_EVERY_MS) return;
+  lastCleanup = now;
+  prisma.notification
+    .deleteMany({ where: { read: true, createdAt: { lt: new Date(now - 60 * 24 * 60 * 60_000) } } })
+    .catch((error) => console.error('[ADMIN-EVENTS] limpieza:', error));
+}
 const dateFormat = new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', dateStyle: 'medium', timeStyle: 'short' });
 
 function cleanFields(fields: AdminEventInput['fields']): [string, string][] {
@@ -69,6 +81,7 @@ export async function notifyAdmins(input: AdminEventInput): Promise<DeliveryRepo
     if (recent.size > 500) recent.clear();
   }
 
+  cleanupOldNotifications();
   const definition: AdminEventDefinition = ADMIN_EVENTS[input.type];
   const { channels } = await getNotificationSettings();
   const channel = channels[input.type];

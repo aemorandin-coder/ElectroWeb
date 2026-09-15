@@ -9,6 +9,8 @@ import {
 } from '@/lib/pago-movil/bancos-venezuela';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatUSD } from '@/lib/currency';
 
 /**
  * POST /api/pago-movil/verificar
@@ -175,8 +177,19 @@ export async function POST(req: NextRequest) {
                 severity: 'CRITICAL',
             });
 
-            // Nota: La alerta de seguridad ya está registrada en el AuditLog
-            // Los administradores pueden ver estos eventos críticos en el dashboard de logs
+            emitAdminEvent({
+                type: 'PAYMENT_REFERENCE_DUPLICATE',
+                title: `Referencia de pago repetida · ${String(referencia).slice(0, 30)}`,
+                summary: `${session.user.name || session.user.email || 'Un cliente'} intentó usar una referencia de Pago Móvil que ya se usó`,
+                fields: [
+                    ['Monto declarado', `Bs. ${montoNumerico.toFixed(2)}`],
+                    ['Banco', String(bancoOrigen).slice(0, 40)],
+                    ['Para', contexto === 'ORDER' ? 'una orden' : contexto === 'RECHARGE' ? 'una recarga' : String(contexto)],
+                    ['IP', requestMetadata.ipAddress],
+                ],
+                link: '/admin/transactions',
+                throttleKey: `${userId}:${referencia}`,
+            });
 
 
             return NextResponse.json({
@@ -382,6 +395,14 @@ export async function POST(req: NextRequest) {
                         console.error('[API] Error enviando email de confirmación de recarga:', emailErr);
                         // No bloquear la respuesta si el email falla
                     }
+
+                    emitAdminEvent({
+                        type: 'RECHARGE_AUTO_APPROVED',
+                        title: `Recarga aprobada por Pago Móvil · ${formatUSD(montoUsd)}`,
+                        summary: `El banco confirmó el pago de ${session.user.name || session.user.email || 'un cliente'} y el saldo se acreditó solo`,
+                        fields: [['Pagado', `Bs. ${montoVerificadoBs.toFixed(2)}`], ['Tasa aplicada', `Bs. ${tasa.toFixed(2)}`], ['Referencia', String(referencia).slice(0, 30)]],
+                        link: '/admin/transactions',
+                    });
 
                     // AUDIT: Registrar auto-aprobación exitosa
                     const requestMetadata = getRequestMetadata(req);

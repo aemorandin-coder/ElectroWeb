@@ -6,7 +6,6 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import {
   createNotification,
   notifyOrderConfirmed,
-  notifyOrderShipped,
   notifyOrderDelivered,
 } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
@@ -782,7 +781,7 @@ export async function PATCH(request: NextRequest) {
         case 'SHIPPED':
           const carrierInfo = body.shippingCarrier ? ` vía ${body.shippingCarrier}` : '';
           const trackingInfo = body.trackingNumber ? ` - Guía: ${body.trackingNumber}` : '';
-          await notifyOrderShipped(oldOrder.userId, oldOrder.orderNumber, order.id);
+          // Una sola notificación (antes salían dos: la genérica y esta con guía y transportista)
           await createNotification({
             userId: oldOrder.userId,
             type: 'ORDER_SHIPPED',

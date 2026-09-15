@@ -1,172 +1,79 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { FiBell } from 'react-icons/fi';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useNotifications } from './NotificationProvider';
 import NotificationCenter from './NotificationCenter';
 
+/**
+ * Campana del header de la tienda y del panel (C-73).
+ * Antes: estilos en línea con colores sueltos, <style jsx>, animaciones de rebote y un desplegable móvil con
+ * transform + backdrop-filter. Ahora: panel fijo en móvil (hoja bajo el header), desplegable en escritorio,
+ * Esc y clic afuera para cerrar, capas con las variables --z-*.
+ */
 export default function NotificationBell() {
   const { unreadCount } = useNotifications();
-  const [isOpen, setIsOpen] = useState(false);
-  const [shouldShake, setShouldShake] = useState(false);
-  const [prevCount, setPrevCount] = useState(0);
+  const [openedAt, setOpenedAt] = useState<string | null>(null);
+  // En móvil el panel ocupa la pantalla y el fondo no debe desplazarse; en escritorio es un desplegable
+  const [lockScroll, setLockScroll] = useState(false);
   const pathname = usePathname();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  // Se cierra sola al navegar: el estado recuerda en qué ruta se abrió
+  const open = openedAt === pathname;
+  const close = () => setOpenedAt(null);
 
-  // Close dropdown on navigation
+  useBodyScrollLock(open && lockScroll);
+
   useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenedAt(null);
+        buttonRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
 
-  // Shake animation when new notification arrives
-  useEffect(() => {
-    if (unreadCount > prevCount && prevCount > 0) {
-      setShouldShake(true);
-      setTimeout(() => setShouldShake(false), 1000);
-    }
-    setPrevCount(unreadCount);
-  }, [unreadCount, prevCount]);
-
-  // Badge styles as a complete inline style object - immune to CSS overrides
-  const badgeStyles: React.CSSProperties = {
-    position: 'absolute',
-    top: '0px',
-    right: '0px',
-    width: '16px',
-    height: '16px',
-    minWidth: '16px',
-    maxWidth: '16px',
-    minHeight: '16px',
-    maxHeight: '16px',
-    borderRadius: '50%',
-    backgroundColor: '#ef4444',
-    color: 'white',
-    fontSize: '9px',
-    fontWeight: 700,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    lineHeight: 1,
-    padding: 0,
-    margin: 0,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-    zIndex: 10,
-    pointerEvents: 'none' as const,
-  };
+  const label = unreadCount > 0 ? `Notificaciones, ${unreadCount} sin leer` : 'Notificaciones';
 
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`relative p-2 rounded-lg transition-all duration-300 hover:bg-brand-50 ${shouldShake ? 'animate-shake' : ''} ${isOpen ? 'bg-brand-50' : ''}`}
-        aria-label="Notificaciones"
-        style={{ overflow: 'visible' }}
+        ref={buttonRef}
+        type="button"
+        onClick={() => {
+          setLockScroll(window.matchMedia('(max-width: 1023px)').matches);
+          setOpenedAt(open ? null : pathname);
+        }}
+        aria-label={label}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        className={`relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-surface hover:text-ink ${open ? 'bg-surface text-ink' : ''}`}
       >
-        <FiBell
-          className="transition-transform"
-          style={{
-            width: '20px',
-            height: '20px',
-            transform: isOpen ? 'rotate(12deg)' : 'none'
-          }}
-        />
-
-        {/* Badge Counter - Pure inline styles */}
+        <FiBell className="h-5 w-5" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span style={badgeStyles}>
-            {unreadCount > 9 ? '9+' : unreadCount}
+          <span className="absolute right-1 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-deal px-1 text-[11px] font-bold leading-none text-white" aria-hidden="true">
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
 
-      {/* Notification Center Dropdown */}
-      {isOpen && (
+      {open && (
         <>
-          {/* Backdrop */}
+          <div className="fixed inset-0 z-[var(--z-dropdown)] bg-ink/30 lg:bg-transparent" onClick={close} aria-hidden="true" />
           <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-
-          {/* Desktop Dropdown - unchanged */}
-          <div
-            className="hidden sm:block notification-dropdown z-50 animate-scaleIn"
-            style={{
-              position: 'absolute',
-              right: '0',
-              top: '100%',
-              marginTop: '8px',
-              width: '360px',
-              maxWidth: 'calc(100vw - 24px)',
-            }}
+            role="dialog"
+            aria-label="Notificaciones"
+            className="fixed inset-x-3 top-16 z-[var(--z-dropdown)] overflow-hidden rounded-2xl border border-line bg-white shadow-lg lg:absolute lg:inset-x-auto lg:right-0 lg:top-full lg:mt-2 lg:w-[380px]"
           >
-            <NotificationCenter onClose={() => setIsOpen(false)} isMobile={false} />
-          </div>
-
-          {/* Mobile Dropdown - Glassmorphism Floating 2025 */}
-          <div
-            className="sm:hidden notification-dropdown-mobile z-50 animate-mobileDropdownIn"
-            style={{
-              position: 'fixed',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              top: '70px',
-              width: '85vw',
-              maxWidth: '290px',
-              background: 'rgba(255, 255, 255, 0.92)',
-              backdropFilter: 'blur(24px) saturate(200%)',
-              WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-              borderRadius: '20px',
-              border: '1px solid rgba(255, 255, 255, 0.4)',
-              boxShadow: '0 20px 60px -15px rgba(42, 99, 205, 0.35), 0 8px 25px -8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
-              overflow: 'hidden',
-            }}
-          >
-            <NotificationCenter onClose={() => setIsOpen(false)} isMobile={true} />
+            <NotificationCenter onClose={close} />
           </div>
         </>
       )}
-
-      <style jsx>{`
-        @keyframes shake {
-          0%, 100% { transform: rotate(0deg); }
-          10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
-          20%, 40%, 60%, 80% { transform: rotate(10deg); }
-        }
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-        @keyframes scaleIn {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-        .animate-scaleIn {
-          animation: scaleIn 0.2s ease-out;
-        }
-        @keyframes mobileDropdownIn {
-          0% {
-            opacity: 0;
-            transform: translateX(-50%) scale(0.9) translateY(-20px);
-          }
-          60% {
-            opacity: 1;
-            transform: translateX(-50%) scale(1.02) translateY(2px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateX(-50%) scale(1) translateY(0);
-          }
-        }
-        .animate-mobileDropdownIn {
-          animation: mobileDropdownIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-      `}</style>
     </div>
   );
 }

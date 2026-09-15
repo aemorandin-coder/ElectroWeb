@@ -55,6 +55,7 @@ Excepciones puntuales (solo cuando la tarea lo dice):
   - **Fuera de límites hasta nuevo aviso:** `app/admin/(dashboard)/settings/**` y `app/admin/(dashboard)/products/**`. Los rehace Claude en C-50 y C-51.
     Únicas excepciones: los 6 archivos de **G-29** (solo `className`). En **R9 (G-31…G-34)** se rehace el resto del admin con `lib/admin-ui.ts`, pero `layout.tsx`, `settings/**` y `products/**` siguen fuera.
   - **`components/modals/RechargeModalV2.tsx` (G-38):** la tasa se lee de `/api/settings/public` (`exchangeRateVES`) desde C-72. No volver a `/api/exchange-rates`: el servidor aprueba la recarga con la tasa de la tienda.
+  - **`components/notifications/**`, `lib/admin-events/**`, `lib/telegram/**` y `app/admin/(dashboard)/notifications/**` son carril Claude (C-73).** Para íconos de notificaciones usa `notificationMeta` y `timeAgo` de `@/components/notifications/notification-meta`.
   - **R10:** las páginas de acceso, el contenido de las páginas públicas, el panel de creadores y el panel del cliente usan también `lib/admin-ui.ts` (ver tarjetas G-35…G-39). `app/customer/(dashboard)/layout.tsx` lo hace Claude (C-55).
 - `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → solo G-04b, G-05g y G-06g, **y solo cuando en `main` existan `docs/plan/estado/C-01.md` y `docs/plan/estado/C-05.md` con `Estado: HECHO`**.
 - Borrado de la lista cerrada de G-02.

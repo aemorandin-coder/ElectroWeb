@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useRouter, usePathname } from 'next/navigation';
@@ -18,10 +18,26 @@ import {
   FiShield,
   FiGift,
   FiBook,
+  FiExternalLink,
 } from 'react-icons/fi';
 import { FaMoneyCheckAlt } from 'react-icons/fa';
 import { PiListHeartBold } from 'react-icons/pi';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import CustomerMobileNavBar from '@/components/customer/CustomerMobileNavBar';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+
+const MENU = [
+  { href: '/customer', icon: FiHome, label: 'Inicio' },
+  { href: '/customer/balance', icon: FaMoneyCheckAlt, label: 'Saldo y Pagos' },
+  { href: '/customer/orders', icon: FiShoppingBag, label: 'Mis Pedidos' },
+  { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Lista de Deseos' },
+  { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },
+  { href: '/customer/warranty', icon: FiShield, label: 'Garantía' },
+  { href: '/customer/mis-cursos', icon: FiBook, label: 'Mis Cursos' },
+  { href: '/customer/referrals', icon: FiGift, label: 'Programa de Referidos' },
+  { href: '/customer/profile', icon: FiUser, label: 'Mi Perfil' },
+  { href: '/customer/settings', icon: FiSettings, label: 'Configuración' },
+];
 
 export default function CustomerDashboardLayout({
   children,
@@ -31,77 +47,45 @@ export default function CustomerDashboardLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [prevPathname, setPrevPathname] = useState(pathname);
   const { settings: companySettings } = useSettings();
   const [userImage, setUserImage] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
 
-  // Detect mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-      if (window.innerWidth >= 1024) {
-        setIsSidebarOpen(true);
-      }
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  // Escritorio: menú fijo que se puede ocultar. Móvil: cajón cerrado que se cierra al navegar
+  // (se guarda la ruta en la que se abrió, así no hace falta un efecto para cerrarlo). Igual que el admin (C-52).
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [drawerPath, setDrawerPath] = useState<string | null>(null);
+  const isDrawerOpen = drawerPath === pathname;
+  useBodyScrollLock(isDrawerOpen);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/login');
+      router.push('/login?callbackUrl=/customer');
     }
   }, [status, router]);
 
-
-
-  // Fetch user profile image
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const response = await fetch('/api/user/profile');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.profile?.image) {
-            setUserImage(data.profile.image);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      }
-    };
+    if (!isDrawerOpen) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setDrawerPath(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isDrawerOpen]);
 
-    if (session?.user) {
-      fetchUserProfile();
-    }
+  useEffect(() => {
+    if (!session?.user) return;
+    let cancelado = false;
+    fetch('/api/user/profile')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelado && data?.profile?.image) setUserImage(data.profile.image);
+      })
+      .catch(() => { /* la foto es opcional */ });
+    return () => { cancelado = true; };
   }, [session]);
-
-  // Handle page transitions
-  useEffect(() => {
-    if (pathname !== prevPathname) {
-      setIsTransitioning(true);
-      if (isMobile) {
-        setIsSidebarOpen(false);
-      }
-
-      const timer = setTimeout(() => {
-        setIsTransitioning(false);
-        setPrevPathname(pathname);
-      }, 400);
-
-      return () => clearTimeout(timer);
-    }
-  }, [pathname, prevPathname, isMobile]);
 
   if (status === 'loading') {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-surface">
-        <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-brand-500"></div>
+      <div className="min-h-dvh bg-surface flex items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
       </div>
     );
   }
@@ -111,27 +95,11 @@ export default function CustomerDashboardLayout({
   }
 
   const userName = session.user?.name || 'Usuario';
-  const userInitials = userName.split(' ').map(n => n.charAt(0).toUpperCase()).slice(0, 2).join('');
-
-  const menuItems = [
-    { href: '/customer', icon: FiHome, label: 'Inicio' },
-    { href: '/customer/balance', icon: FaMoneyCheckAlt, label: 'Saldo y Pagos' },
-    { href: '/customer/orders', icon: FiShoppingBag, label: 'Mis Pedidos' },
-    { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Lista de Deseos' },
-    { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },
-    { href: '/customer/warranty', icon: FiShield, label: 'Garantía' },
-    { href: '/customer/mis-cursos', icon: FiBook, label: 'Mis Cursos' },
-    { href: '/customer/referrals', icon: FiGift, label: 'Programa de Referidos' },
-    { href: '/customer/profile', icon: FiUser, label: 'Mi Perfil' },
-    { href: '/customer/settings', icon: FiSettings, label: 'Configuración' },
-  ];
+  const userInitials = userName.split(' ').map((n) => n.charAt(0).toUpperCase()).slice(0, 2).join('');
 
   const handleSignOut = async () => {
     try {
-      await signOut({
-        callbackUrl: '/login',
-        redirect: true
-      });
+      await signOut({ callbackUrl: '/login', redirect: true });
       router.refresh();
     } catch (error) {
       console.error('Error signing out:', error);
@@ -140,254 +108,147 @@ export default function CustomerDashboardLayout({
     }
   };
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  const avatar = (size: string) => (
+    <span className={`relative flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-surface text-sm font-semibold text-brand-600`}>
+      {userImage ? (
+        <Image src={userImage} alt={userName} fill sizes="48px" className="object-cover" />
+      ) : (
+        userInitials
+      )}
+    </span>
+  );
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-brand-700 via-[#2563eb] to-brand-500 relative">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300/10 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/3 rounded-full blur-3xl" style={{ animationDelay: '2s' }}></div>
-      </div>
+    <div className="min-h-dvh bg-surface">
+      {isDrawerOpen && (
+        <div
+          className="fixed inset-0 z-[var(--z-drawer)] bg-ink/50 lg:hidden"
+          onClick={() => setDrawerPath(null)}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Grid Pattern Overlay */}
-      <div className="fixed inset-0 bg-grid-pattern opacity-5 pointer-events-none"></div>
-
-      <div className="relative z-10">
-        {/* Mobile Overlay Backdrop - ONLY for sidebar */}
-        {isMobile && isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
-
-        {/* Sidebar - DESKTOP ONLY */}
-        <aside
-          className={`hidden lg:block fixed top-0 left-0 z-50 h-dvh transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-            } bg-white/95 backdrop-blur-xl border-r border-white/30 w-64 shadow-2xl overflow-hidden`}
-        >
-          <div className="h-full flex flex-col">
-            {/* Logo */}
-            <div className="flex items-center gap-3 px-6 py-5 border-b border-line">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-500 shadow-md shadow-brand-500/20">
-                {companySettings?.logo ? (
-                  <div className="relative w-full h-full">
-                    <Image src={companySettings.logo} alt={companySettings.companyName} fill className="object-contain p-1" />
-                  </div>
-                ) : (
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                )}
-              </div>
-              <div>
-                <h2 className="text-sm font-semibold text-ink">
-                  {companySettings?.companyName || 'Electro Shop'}
-                </h2>
-                <p className="text-xs text-muted">Mi Panel</p>
-              </div>
-            </div>
-
-            {/* Navigation */}
-            <nav className="flex-1 px-3 py-4 overflow-y-auto">
-              <ul className="space-y-1">
-                {menuItems.map((item, index) => {
-                  const isActive = pathname === item.href ||
-                    (item.href !== '/customer' && pathname.startsWith(item.href));
-
-                  return (
-                    <li key={item.label} style={{ animationDelay: `${index * 50}ms` }} className="animate-fadeIn">
-                      <Link
-                        href={item.href}
-                        className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${isActive
-                          ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/30 scale-[1.02]'
-                          : 'text-muted hover:bg-surface hover:text-ink hover:scale-[1.01]'
-                          }`}
-                      >
-                        <span className={`relative z-10 transition-transform duration-300 ${isActive ? 'text-white scale-110' : 'text-muted group-hover:scale-110'}`}>
-                          <item.icon className="w-5 h-5" />
-                        </span>
-                        <span className="relative z-10">{item.label}</span>
-                        {isActive && (
-                          <span className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-lg shadow-lg"></span>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
-
-            {/* User Info & Logout - Desktop */}
-            <div className="border-t border-line p-4">
-              <div className="flex items-center gap-3 mb-3 px-2">
-                <div className="relative w-9 h-9 rounded-full bg-surface border border-line-strong overflow-hidden flex items-center justify-center flex-shrink-0">
-                  {userImage ? (
-                    <Image
-                      src={userImage}
-                      alt={session.user?.name || 'Usuario'}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <span className="text-sm font-semibold text-brand-500">
-                      {userInitials}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-ink truncate">
-                    {session.user?.name}
-                  </p>
-                  <p className="text-xs text-muted truncate">
-                    {session.user?.email}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="group relative w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-surface hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 text-muted hover:text-red-600 text-sm font-medium rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] overflow-hidden"
-              >
-                <FiLogOut className="w-4 h-4 relative z-10" />
-                <span className="relative z-10">Cerrar Sesión</span>
-              </button>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <div className={`transition-all duration-300 ${isSidebarOpen && !isMobile ? 'lg:ml-64' : 'ml-0'}`}>
-          {/* ========================================
-              MOBILE HEADER - REORGANIZED
-              Avatar + Mi Panel | Verificado (animated) | Home
-              ======================================== */}
-          <header className="lg:hidden customer-panel-header sticky top-0 z-30"
-            style={{
-              background: 'rgba(255, 255, 255, 0.85)',
-              borderBottom: '1px solid rgba(42, 99, 205, 0.15)',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-              height: '48px',
-              minHeight: '48px',
-            }}
+      {/* Menú lateral: cajón en móvil, fijo en escritorio */}
+      <aside
+        id="customer-sidebar"
+        aria-label="Menú de mi panel"
+        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-72 flex-col border-r border-line bg-white transition-transform duration-200 lg:z-[var(--z-sticky)] lg:w-64 ${
+          isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
+        } ${isCollapsed ? 'lg:-translate-x-full' : 'lg:translate-x-0'}`}
+      >
+        <div className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-5">
+          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-brand-500 text-white">
+            {companySettings?.logo ? (
+              <span className="relative h-full w-full">
+                <Image src={companySettings.logo} alt={companySettings.companyName || 'Electro Shop'} fill sizes="36px" className="object-contain p-1" />
+              </span>
+            ) : (
+              <FiUser className="h-5 w-5" aria-hidden="true" />
+            )}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-bold text-ink">{companySettings?.companyName || 'Electro Shop'}</span>
+            <span className="block text-xs text-muted">Mi panel</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setDrawerPath(null)}
+            aria-label="Cerrar menú"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink lg:hidden"
           >
-            <div className="h-full px-3 flex items-center justify-between">
-              {/* LEFT: Avatar only */}
-              <Link
-                href="/customer/profile"
-                className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border-2 flex-shrink-0 transition-all active:scale-95"
-                style={{
-                  background: userImage ? 'transparent' : 'linear-gradient(135deg, #2a63cd 0%, #1e4ba3 100%)',
-                  borderColor: 'rgba(42, 99, 205, 0.6)',
-                }}
-              >
-                {userImage ? (
-                  <Image
-                    src={userImage}
-                    alt={userName}
-                    width={36}
-                    height={36}
-                    className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <span className="text-xs font-bold text-white">{userInitials}</span>
-                )}
-              </Link>
-
-              {/* CENTER: Title */}
-              <div className="flex-1 flex justify-center px-2">
-                <span className="text-gray-900 text-sm font-bold tracking-wide">Mi Panel</span>
-              </div>
-
-              {/* RIGHT: Home Button */}
-              <Link
-                href="/"
-                className="flex items-center justify-center w-9 h-9 rounded-lg transition-all flex-shrink-0 active:scale-95 shadow-sm"
-                style={{
-                  background: 'linear-gradient(135deg, #2a63cd 0%, #1e4ba3 100%)',
-                  border: '1px solid rgba(42, 99, 205, 0.2)',
-                }}
-              >
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-              </Link>
-            </div>
-          </header>
-
-          {/* DESKTOP HEADER */}
-          <header className="hidden lg:block bg-white border-b border-line sticky top-0 z-30 shadow-sm">
-            <div className="px-6 py-4 flex items-center justify-between">
-              {/* Menu Toggle */}
-              <button
-                onClick={toggleSidebar}
-                className="relative p-2 hover:bg-surface rounded-lg transition-all duration-300 group"
-              >
-                {isSidebarOpen ? (
-                  <FiX className="w-5 h-5 text-muted group-hover:text-brand-500 transition-colors" />
-                ) : (
-                  <FiMenu className="w-5 h-5 text-muted group-hover:text-brand-500 transition-colors" />
-                )}
-              </button>
-
-              {/* Center Spacer */}
-              <div className="flex-1"></div>
-
-              {/* Home Button */}
-              <Link
-                href="/"
-                className="flex items-center px-4 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-lg hover:shadow-lg transition-all"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span className="ml-2 text-sm font-semibold">Tienda</span>
-              </Link>
-            </div>
-          </header>
-
-          {/* Page Content */}
-          <main className="p-2 lg:p-6 overflow-hidden relative pb-20 lg:pb-6">
-            {/* Shimmer Effect on Transition */}
-            <div
-              className="absolute inset-2 lg:inset-6 rounded-xl pointer-events-none z-10 overflow-hidden"
-              style={{
-                opacity: isTransitioning ? 1 : 0,
-                transition: 'opacity 0.3s ease-out'
-              }}
-            >
-              <div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-500/5 to-transparent"
-                style={{
-                  transform: isTransitioning ? 'translateX(100%)' : 'translateX(-100%)',
-                  transition: 'transform 0.5s ease-out'
-                }}
-              />
-            </div>
-
-            {/* Content Container - OPTIMIZED FOR MOBILE & ELIMINATED DOUBLE SCROLLBAR */}
-            <div
-              className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/40 min-h-[calc(100vh-8rem)] p-3.5 lg:p-6"
-              style={{
-                opacity: isTransitioning ? 0 : 1,
-                transform: isTransitioning ? 'translateY(8px) scale(0.99)' : 'translateY(0) scale(1)',
-                transition: 'opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            >
-              {children}
-            </div>
-          </main>
+            <FiX className="h-5 w-5" aria-hidden="true" />
+          </button>
         </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <ul className="space-y-0.5">
+            {MENU.map((item) => {
+              const isActive = pathname === item.href || (item.href !== '/customer' && pathname.startsWith(item.href));
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`relative flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
+                      isActive ? 'bg-brand-50 font-semibold text-brand-700' : 'text-ink-soft hover:bg-surface hover:text-ink'
+                    }`}
+                  >
+                    {isActive && <span className="absolute inset-y-2 left-0 w-1 rounded-r bg-brand-500" aria-hidden="true" />}
+                    <item.icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-brand-600' : 'text-muted'}`} aria-hidden="true" />
+                    <span className="flex-1 truncate">{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        <div className="shrink-0 border-t border-line p-4">
+          <div className="mb-3 flex items-center gap-3">
+            {avatar('h-9 w-9')}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-ink">{userName}</span>
+              <span className="block truncate text-xs text-muted">{session.user?.email}</span>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-line text-sm font-medium text-ink-soft transition-colors hover:border-deal/30 hover:bg-deal-bg hover:text-deal"
+          >
+            <FiLogOut className="h-4 w-4" aria-hidden="true" />
+            Cerrar sesión
+          </button>
+        </div>
+      </aside>
+
+      <div className={`transition-[padding] duration-200 ${isCollapsed ? '' : 'lg:pl-64'}`}>
+        <header className="sticky top-0 z-[var(--z-sticky)] flex h-16 items-center gap-2 border-b border-line bg-white px-4 lg:px-6">
+          <button
+            type="button"
+            onClick={() => setDrawerPath(pathname)}
+            aria-label="Abrir menú"
+            aria-controls="customer-sidebar"
+            aria-expanded={isDrawerOpen}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-ink-soft hover:bg-surface hover:text-ink lg:hidden"
+          >
+            <FiMenu className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsCollapsed((value) => !value)}
+            aria-label={isCollapsed ? 'Mostrar menú' : 'Ocultar menú'}
+            aria-controls="customer-sidebar"
+            aria-expanded={!isCollapsed}
+            className="hidden h-10 w-10 items-center justify-center rounded-lg text-ink-soft hover:bg-surface hover:text-ink lg:inline-flex"
+          >
+            <FiMenu className="h-5 w-5" aria-hidden="true" />
+          </button>
+
+          <span className="truncate text-sm font-bold text-ink lg:hidden">Mi panel</span>
+
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <Link href="/" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface">
+              <FiExternalLink className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Ir a la tienda</span>
+            </Link>
+            <NotificationBell />
+            <Link href="/customer/profile" aria-label="Mi perfil" className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500">
+              {avatar('h-10 w-10')}
+            </Link>
+          </div>
+        </header>
+
+        {/* Sin transform ni backdrop-filter en los contenedores: si no, los modales `fixed` de las páginas quedan encerrados aquí */}
+        <main className="p-3 pb-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom))] sm:p-4 lg:p-6">
+          <div className="mx-auto max-w-[1600px] rounded-2xl border border-line bg-white p-4 md:p-6">
+            {children}
+          </div>
+        </main>
       </div>
 
-      {/* MOBILE ONLY: Customer Navigation Bar */}
-      {isMobile && <CustomerMobileNavBar />}
+      {/* Barra inferior del cliente: se pinta en un portal y ya se oculta sola desde lg */}
+      <CustomerMobileNavBar />
     </div>
   );
 }
-

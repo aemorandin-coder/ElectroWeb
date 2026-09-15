@@ -146,6 +146,7 @@ export default function TelegramPanel() {
       return;
     }
     setLink(data);
+    setNow(Date.now());
     stopPolling();
     // Revisa cada 4 s durante el tiempo del código; con webhook el chat queda conectado al instante
     pollRef.current = window.setInterval(() => {

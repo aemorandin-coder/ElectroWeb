@@ -10,7 +10,7 @@ import {
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 import { emitAdminEvent } from '@/lib/admin-events';
-import { formatUSD } from '@/lib/currency';
+import { formatUSD, formatVES } from '@/lib/currency';
 
 /**
  * POST /api/pago-movil/verificar
@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
                 title: `Referencia de pago repetida · ${String(referencia).slice(0, 30)}`,
                 summary: `${session.user.name || session.user.email || 'Un cliente'} intentó usar una referencia de Pago Móvil que ya se usó`,
                 fields: [
-                    ['Monto declarado', `Bs. ${montoNumerico.toFixed(2)}`],
+                    ['Monto declarado', formatVES(montoNumerico)],
                     ['Banco', String(bancoOrigen).slice(0, 40)],
                     ['Para', contexto === 'ORDER' ? 'una orden' : contexto === 'RECHARGE' ? 'una recarga' : String(contexto)],
                     ['IP', requestMetadata.ipAddress],
@@ -400,7 +400,7 @@ export async function POST(req: NextRequest) {
                         type: 'RECHARGE_AUTO_APPROVED',
                         title: `Recarga aprobada por Pago Móvil · ${formatUSD(montoUsd)}`,
                         summary: `El banco confirmó el pago de ${session.user.name || session.user.email || 'un cliente'} y el saldo se acreditó solo`,
-                        fields: [['Pagado', `Bs. ${montoVerificadoBs.toFixed(2)}`], ['Tasa aplicada', `Bs. ${tasa.toFixed(2)}`], ['Referencia', String(referencia).slice(0, 30)]],
+                        fields: [['Pagado', formatVES(montoVerificadoBs)], ['Tasa aplicada', formatVES(tasa)], ['Referencia', String(referencia).slice(0, 30)]],
                         link: '/admin/transactions',
                     });
 

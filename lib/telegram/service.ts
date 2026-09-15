@@ -36,6 +36,16 @@ export async function sendTelegramMessage(token: string, chatId: string, html: s
   }
 }
 
+/** Errores de Telegram en palabras del panel (llegan en inglés). */
+export function describeTelegramError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : '';
+  if (/blocked by the user/i.test(raw)) return 'La persona bloqueó al bot. Pídele que lo desbloquee y reanuda el chat.';
+  if (/kicked|not a member|bot was removed/i.test(raw)) return 'Sacaron al bot del grupo. Agrégalo otra vez y reanuda el chat.';
+  if (/chat not found/i.test(raw)) return 'Telegram no encuentra este chat. Quítalo y conéctalo de nuevo.';
+  if (/Too Many Requests/i.test(raw)) return 'Telegram pidió esperar por exceso de mensajes. Se reintenta con el próximo aviso.';
+  return (raw || 'Error desconocido').slice(0, 300);
+}
+
 export interface ChatDelivery {
   chatId: string;
   title: string;
@@ -62,7 +72,7 @@ export async function sendToTelegramChats(html: string, options: SendOptions = {
         await prisma.telegramChat.update({ where: { id: chat.id }, data: { lastSentAt: new Date(), lastError: null } });
         return { chatId: chat.chatId, title: chat.title, ok: true };
       } catch (error) {
-        const message = error instanceof Error ? error.message.slice(0, 300) : 'Error desconocido';
+        const message = describeTelegramError(error);
         const blocked = error instanceof TelegramApiError && error.status === 403;
         await prisma.telegramChat
           .update({ where: { id: chat.id }, data: { lastError: message, ...(blocked ? { isActive: false } : {}) } })

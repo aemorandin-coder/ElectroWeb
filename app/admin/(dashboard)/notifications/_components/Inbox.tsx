@@ -106,9 +106,9 @@ export default function Inbox() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3">
         <div className="-mx-1 overflow-x-auto px-1 pb-1">
-          <div className="flex w-max gap-1" role="tablist" aria-label="Categoría">
+          <div className="flex w-max gap-1 lg:w-auto lg:flex-wrap" role="tablist" aria-label="Categoría">
             {([['all', 'Todas'], ...CATEGORIES] as [AdminEventCategory | 'all', string][]).map(([value, label]) => (
               <button
                 key={value}
@@ -123,7 +123,7 @@ export default function Inbox() {
             ))}
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm font-semibold text-ink-soft">
             <input type="checkbox" checked={unreadOnly} onChange={(event) => changeFilter(() => setUnreadOnly(event.target.checked))} className="h-4 w-4 accent-brand-500" />
             Solo sin leer

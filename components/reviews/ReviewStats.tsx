@@ -1,6 +1,7 @@
 'use client';
 
 import StarRating from './StarRating';
+import { FaStar } from 'react-icons/fa';
 
 interface ReviewStatsProps {
     averageRating: number;
@@ -46,8 +47,8 @@ export default function ReviewStats({
                 <div className="flex-1 space-y-2">
                     {[5, 4, 3, 2, 1].map((star) => (
                         <div key={star} className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-gray-700 w-8">
-                                {star} ★
+                            <span className="text-sm font-medium text-gray-700 w-8 inline-flex items-center gap-0.5">
+                                {star} <FaStar className="inline h-3 w-3 text-warning" aria-hidden="true" />
                             </span>
                             <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                                 <div

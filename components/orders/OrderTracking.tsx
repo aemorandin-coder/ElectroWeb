@@ -1,6 +1,6 @@
 'use client';
 
-import { FiFileText, FiCheckCircle, FiCreditCard, FiPackage, FiTruck, FiGift, FiShoppingBag, FiClock, FiExternalLink } from 'react-icons/fi';
+import { FiFileText, FiCheckCircle, FiCreditCard, FiPackage, FiTruck, FiGift, FiShoppingBag, FiClock, FiExternalLink, FiMapPin, FiCalendar } from 'react-icons/fi';
 
 interface OrderTrackingProps {
     status: string;
@@ -221,13 +221,13 @@ export default function OrderTracking({
                         )}
                     </div>
                     {shippingNotes && (
-                        <p className="mt-2 text-xs text-indigo-700 bg-indigo-100/50 px-2 py-1 rounded">
-                            📍 {shippingNotes}
+                        <p className="mt-2 text-xs text-indigo-700 bg-indigo-100/50 px-2 py-1 rounded inline-flex items-center gap-1">
+                            <FiMapPin className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />{shippingNotes}
                         </p>
                     )}
                     {estimatedDelivery && status === 'SHIPPED' && (
-                        <p className="mt-1.5 text-xs text-indigo-600">
-                            📅 Entrega estimada: <span className="font-semibold">{new Date(estimatedDelivery).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                        <p className="mt-1.5 text-xs text-indigo-600 inline-flex items-center gap-1">
+                            <FiCalendar className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />Entrega estimada: <span className="font-semibold">{new Date(estimatedDelivery).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                         </p>
                     )}
                 </div>

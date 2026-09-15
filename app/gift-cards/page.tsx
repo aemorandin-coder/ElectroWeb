@@ -820,8 +820,8 @@ export default function GiftCardsPage() {
                                 {PRESET_AMOUNTS.map((amount) => (
                                     <div key={amount} className="relative">
                                         {amount === 50 && (
-                                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[11px] font-bold rounded-full shadow-lg z-20 whitespace-nowrap">
-                                                ⭐ Popular
+                                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[11px] font-bold rounded-full shadow-lg z-20 whitespace-nowrap inline-flex items-center gap-1">
+                                                <FiStar className="h-3 w-3 fill-current shrink-0" aria-hidden="true" />Popular
                                             </span>
                                         )}
                                         <button
@@ -1256,7 +1256,7 @@ export default function GiftCardsPage() {
                         {/* Email Body */}
                         <div className="p-6 text-center">
                             <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                ¡Hola {recipientName}! 🎉
+                                ¡Hola {recipientName}!
                             </h3>
                             <p className="text-gray-600 mb-4">
                                 {session?.user?.name || 'Alguien especial'} te ha enviado una Gift Card de Electro Shop por:

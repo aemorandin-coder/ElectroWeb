@@ -214,7 +214,7 @@ export default function OrdersPage() {
   return (
     <>
       {/* ============================================
-          🚀 MOBILE VIEW - PREMIUM ANIMATED DESIGN
+          MOBILE VIEW - PREMIUM ANIMATED DESIGN
           Epic animations for Android Full HD+ / QHD+
           ============================================ */}
       <div className="lg:hidden overflow-y-auto h-full space-y-4">
@@ -407,7 +407,7 @@ export default function OrdersPage() {
       </div>
 
       {/* ============================================
-          💻 DESKTOP VIEW - COMPLETELY UNCHANGED
+          DESKTOP VIEW - COMPLETELY UNCHANGED
           Only shows on screens >= 1024px
           ============================================ */}
       < div className="hidden lg:block space-y-2" >

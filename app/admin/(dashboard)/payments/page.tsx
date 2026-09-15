@@ -243,10 +243,10 @@ export default function PaymentsPage() {
             const data = await response.json();
 
             if (data.seeded) {
-                toast.success(`✨ ${data.count} métodos de pago creados exitosamente`);
+                toast.success(`${data.count} métodos de pago creados exitosamente`);
                 fetchMethods();
             } else if (data.count > 0) {
-                toast('Ya existen métodos de pago configurados', { icon: 'ℹ️' });
+                toast('Ya existen métodos de pago configurados', { icon: <FiInfo className="h-5 w-5 text-brand-600" /> });
             } else {
                 toast.error(data.error || 'Error al crear métodos');
             }

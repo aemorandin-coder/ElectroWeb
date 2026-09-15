@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import ImageUploadField from '@/components/ui/ImageUploadField';
+import { FiX } from 'react-icons/fi';
 
 const CATEGORIES = ['Redes', 'CCTV', 'Electrónica', 'Gaming', 'Programación', 'Hardware', 'Software', 'Otro'];
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
@@ -69,7 +70,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, priceUSD: parseFloat(form.priceUSD) || 0 }),
       });
-      if (res.ok) flash('✓ Información guardada');
+      if (res.ok) flash('Información guardada');
     } finally { setSaving(false); }
   }
 
@@ -81,7 +82,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ curriculum: modules }),
       });
-      if (res.ok) flash('✓ Currículum guardado');
+      if (res.ok) flash('Currículum guardado');
     } finally { setSavingCurr(false); }
   }
 
@@ -257,10 +258,12 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                         placeholder="Título de la lección"
                       />
                       <button
+                        type="button"
                         onClick={() => removeLesson(mIdx, lIdx)}
                         className="text-red-400/40 hover:text-red-400 text-xs transition-colors flex-shrink-0"
+                        aria-label="Quitar"
                       >
-                        ✕
+                        <FiX className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
                     <div className="grid grid-cols-2 gap-2 pl-7">

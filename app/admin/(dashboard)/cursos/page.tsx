@@ -2,6 +2,8 @@
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
+import { FiBookOpen, FiStar } from 'react-icons/fi';
+import { FaStar } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
 const CATEGORIES = [
@@ -299,7 +301,7 @@ export default function AdminCursosPage() {
         <div className="text-center py-16 text-muted">Cargando cursos...</div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-5xl mb-3">📚</div>
+          <FiBookOpen className="mx-auto mb-3 h-12 w-12 text-muted" aria-hidden="true" />
           <p className="text-muted">No hay cursos aún. ¡Crea el primero!</p>
         </div>
       ) : (
@@ -323,7 +325,7 @@ export default function AdminCursosPage() {
                     </span>
                   )}
                   {course.isFeatured && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">⭐ Destacado</span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 inline-flex items-center gap-1"><FiStar className="h-3 w-3 fill-current shrink-0" aria-hidden="true" />Destacado</span>
                   )}
                 </div>
                 <div className="absolute top-2 right-2">
@@ -339,7 +341,7 @@ export default function AdminCursosPage() {
                   <span>${Number(course.priceUSD).toFixed(2)}</span>
                   <span>{course._count?.enrollments ?? course.enrollmentCount} inscritos</span>
                   <span>{course._count?.modules ?? 0} módulos</span>
-                  {course.rating && <span>★ {Number(course.rating).toFixed(1)}</span>}
+                  {course.rating && <span className="inline-flex items-center gap-1"><FaStar className="h-3 w-3 text-warning shrink-0" aria-hidden="true" />{Number(course.rating).toFixed(1)}</span>}
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => openEdit(course)} className="flex-1 py-1.5 text-xs font-semibold text-brand-500 border border-brand-500 rounded-lg hover:bg-brand-500 hover:text-white transition-colors">Editar</button>

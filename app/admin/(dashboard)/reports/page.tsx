@@ -1014,7 +1014,7 @@ export default function ReportsPage() {
                                             <FiAlertTriangle className="w-5 h-5 text-white" />
                                         </div>
                                         <div>
-                                            <h3 className="text-white font-bold text-sm">⚠️ Alertas Críticas de Seguridad</h3>
+                                            <h3 className="text-white font-bold text-sm inline-flex items-center gap-1.5"><FiAlertTriangle className="inline h-4 w-4 shrink-0" aria-hidden="true" />Alertas Críticas de Seguridad</h3>
                                             <p className="text-red-100 text-xs">
                                                 {security.bySeverity.find(s => s.severity === 'CRITICAL')?._count || 0} eventos críticos detectados -
                                                 Incluye intentos de fraude, referencias duplicadas e intentos IDOR

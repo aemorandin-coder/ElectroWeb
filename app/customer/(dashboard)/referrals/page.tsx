@@ -16,6 +16,7 @@ import {
     FiShoppingCart,
     FiChevronRight,
 } from 'react-icons/fi';
+import { FaMedal } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -71,28 +72,28 @@ const TIERS: Record<Tier, {
     color: string;
     bg: string;
     border: string;
-    icon: string;
+    icon: React.ReactNode;
 }> = {
     bronze: {
         label: 'Bronce',
         color: 'text-amber-700',
         bg: 'bg-amber-50',
         border: 'border-amber-200',
-        icon: '🥉',
+        icon: <FaMedal className="h-5 w-5 text-warning-strong" aria-hidden="true" />,
     },
     silver: {
         label: 'Plata',
         color: 'text-gray-500',
         bg: 'bg-gray-50',
         border: 'border-gray-200',
-        icon: '🥈',
+        icon: <FaMedal className="h-5 w-5 text-muted" aria-hidden="true" />,
     },
     gold: {
         label: 'Oro',
         color: 'text-yellow-600',
         bg: 'bg-yellow-50',
         border: 'border-yellow-200',
-        icon: '🥇',
+        icon: <FaMedal className="h-5 w-5 text-warning" aria-hidden="true" />,
     },
 };
 
@@ -716,7 +717,7 @@ export default function ReferralsPage() {
                                         }`}
                                     >
                                         {entry.rank <= 3
-                                            ? ['🥇', '🥈', '🥉'][entry.rank - 1]
+                                            ? <FaMedal className={`h-5 w-5 ${['text-warning', 'text-muted', 'text-warning-strong'][entry.rank - 1]}`} aria-hidden="true" />
                                             : `#${entry.rank}`}
                                     </div>
                                     <div className="flex-1 min-w-0">

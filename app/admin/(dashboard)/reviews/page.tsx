@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import { FiCheck } from 'react-icons/fi';
 
 interface Review {
     id: string;
@@ -256,7 +257,7 @@ export default function AdminReviewsPage() {
                                             <div className="ml-4">
                                                 <div className="text-sm font-medium text-gray-900">{review.user?.name || review.userName || 'Usuario'}</div>
                                                 {review.isVerifiedPurchase && (
-                                                    <div className="text-xs text-green-600">✓ Compra verificada</div>
+                                                    <div className="text-xs text-green-600 inline-flex items-center gap-1"><FiCheck className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />Compra verificada</div>
                                                 )}
                                             </div>
                                         </div>

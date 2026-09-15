@@ -38,7 +38,7 @@ export default function CreatorProfilePage() {
         body: JSON.stringify(form),
       });
       if (res.ok) {
-        setMsg('✓ Perfil actualizado');
+        setMsg('Perfil actualizado');
         setTimeout(() => setMsg(''), 3000);
       }
     } finally {

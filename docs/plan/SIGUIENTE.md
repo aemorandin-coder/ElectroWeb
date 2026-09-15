@@ -75,6 +75,6 @@ pm2 restart electroshop-web --update-env
 - **Pruebas E2E:**
   - Esquema aislado `cNN_demo` (reemplazar `schema=public` en `DATABASE_URL`), `prisma db push`, datos de prueba, `npm run build` y `next start -p 3100` con `SMTP_HOST= EMAIL_PROVIDER= RESEND_API_KEY=`.
   - Al final: `DROP SCHEMA … CASCADE`.
-- **Servicios externos simulados** (Telegram, BDV, hCaptcha, DolarAPI) sin tocar el código: `NODE_OPTIONS="--require <scratchpad>/fetch-mock.cjs"`, un archivo que reemplaza `globalThis.fetch` (ver `docs/plan/estado/C-73.md`).
+- **Servicios externos simulados** (Telegram, BDV, hCaptcha, DolarAPI) sin tocar el código: `NODE_OPTIONS="--require ./scripts/e2e/fetch-mock.cjs"` (reemplaza `globalThis.fetch`; su estado vive en `scripts/e2e/mock/`: `telegram-calls.jsonl`, `telegram-updates.json`, `bdv-next.json`, `rate.json`).
 - **Lint:** comparar contra `main` (`git show main:f | npx eslint --stdin --stdin-filename f`); el repo tiene errores viejos.
 - **Commits de Claude:** `git -c user.name="Claude" -c user.email="claude@electroshop.local" commit …`.

@@ -872,3 +872,106 @@ QA extra:
 - En `/admin` ya no hay indicadores de "Modo".
 - En `/customer/balance`, un canje de gift card sale en verde.
 - Con sesión nueva, el tour no aparece en `/admin` y sí en `/`.
+
+---
+
+## Ronda R10 (pesada) · Acceso, páginas públicas, creadores y panel del cliente · G-35 → G-36 → G-37 → G-38 → G-39
+Rama: `gemini/R10`, creada **desde `main` local actualizado**. Comprueba que existan `docs/plan/estado/C-33.md` y `docs/plan/estado/C-54.md`.
+Un commit por tarjeta con su `docs/plan/estado/G-XX.md`. Carga total: ~1.575 colores sueltos, 189 degradados, 17 modales y ~17.000 líneas en 43 archivos.
+
+### Lo que aprendimos en R9 (obligatorio)
+- **No hagas merge ni `git push`** a ninguna rama. Terminar = commits en `gemini/R10` + avisar a Andrés. Claude revisa, mergea y sube.
+- **Sangría:** antes de cada commit corre `git diff --stat main` y `git diff -w --stat main`. Si el primero es mucho mayor que el segundo, cambiaste la sangría: deshazlo. En G-33 quedaron 8 archivos con 1 espacio de sangría.
+- **`'use client'`** es siempre la primera línea del archivo; los imports nuevos van debajo.
+- **Arreglo marcado como hecho = verificado a 390 px** con `npm run dev`. En G-33 se marcaron hechos 3 arreglos móviles que no funcionaban.
+- **Si quitas un fondo de color**, revisa que el texto que estaba encima (`text-white`, `text-white/80`) pase a `text-ink` / `text-muted`. En G-33 quedó texto blanco sobre `bg-surface`.
+
+### Reglas de R10
+- **Reglas comunes de R9 (R1-R8)** para todos los archivos, con las recetas de `@/lib/admin-ui`. Sirven para cualquier panel, tarjeta o formulario, también en la tienda.
+- **Imágenes:** toda `<Image ... fill>` lleva `sizes`. Avatares: `sizes="48px"`. Miniaturas de producto: `sizes="96px"`. Imagen principal de una tarjeta: `sizes="(min-width: 1024px) 25vw, 50vw"`.
+- **Encabezados:** las páginas públicas ya tienen `PageHeader` (C-32/C-54). No agregues otro hero; lo que va debajo es contenido normal sobre `bg-surface` o `bg-white`.
+- **Fuera de límites:**
+  - `app/customer/(dashboard)/layout.tsx` (lo rehace Claude en C-55).
+  - `app/checkout/**`, `app/carrito/**`, `components/ui/**`, `components/gift-card/**`, `app/canjear-gift-card/**`, `lib/**`, `app/api/**`.
+- **Verificación común:** la de R9 con `F="<archivos de la tarjeta>"`, más `grep -n "fill" $F | grep -v "sizes="` → 0 líneas con `<Image` sin `sizes`.
+
+### G-35 · Páginas de acceso · Depende: —
+Archivos:
+- `app/login/page.tsx`
+- `app/registro/page.tsx`
+- `app/recuperar-contrasena/page.tsx`
+- `app/recuperar-contrasena/[token]/page.tsx`
+- `app/verificar-email/[token]/page.tsx`
+
+Carga: ~101 colores, 8 degradados.
+
+**Arreglos permitidos:**
+1. **Fondo:** si la página tiene fondo de degradado azul o manchas `blur`, el contenedor raíz pasa a `min-h-dvh bg-surface` y el formulario a `adminCard` (`max-w-md` centrado). Los textos que eran blancos sobre el azul pasan a `text-ink` / `text-muted`.
+2. **Botones de enviar:** `adminPrimaryButton` a todo el ancho (`w-full`).
+3. **No toques** `signIn`, `fetch`, hCaptcha, validaciones ni redirecciones.
+
+QA: `/login` y `/registro` a 390 y 1440 px: formulario legible, sin texto blanco sobre fondo claro, captcha visible.
+
+### G-36 · Contenido de las páginas públicas · Depende: G-35
+Archivos:
+- `app/servicios/page.tsx`, `components/servicios/ServiciosPortfolio.tsx`
+- `app/cursos/page.tsx`, `components/cursos/CourseDetailClient.tsx`, `components/cursos/CoursePlayer.tsx`
+- `app/contacto/page.tsx`, `components/contact/ContactForm.tsx`, `components/contact/BusinessHours.tsx`
+- `app/creator/page.tsx`
+- `app/solicitar-producto/SolicitarProductoClient.tsx`
+- `app/gift-cards/page.tsx` (**solo** desde el formulario "Selecciona el monto" hacia abajo y la sección "¿Por qué elegir nuestras Gift Cards?"; no toques `GiftCard3D`, el selector de diseños ni `handlePurchase`)
+
+Carga: ~511 colores, 78 degradados, 7 modales.
+
+**Arreglos permitidos:**
+1. **Formularios de color:** los formularios dentro de una tarjeta azul (Contacto "Envíanos un Mensaje", "Completa tu Solicitud") pasan a `adminCard` blanca con `adminInput`, `adminLabel` y `adminPrimaryButton`. Los textos blancos pasan a `text-ink` / `text-muted`.
+2. **Bloques de CTA azules** ("¿Eres un experto…?", "Únete como Creador"): se permite **un** bloque sólido `bg-brand-600 text-white` por página, sin degradado ni manchas (igual al "¿No encuentras lo que buscas?" de `/productos`).
+3. **Números decorativos** (`01 / 02 / 03`), badges con sombra y `hover:scale`: R4.
+4. **Gift Cards:** los 5 botones de monto ("$25 · $50 · $100 · $200 · Otro") a 390 px se cortan (rejilla de 5). Usa `grid grid-cols-3 gap-2 sm:grid-cols-5`.
+
+QA: las 6 páginas a 390 y 1440 px, sin texto blanco sobre fondo claro; formularios de Contacto y Solicitar producto legibles; en Gift Cards los montos no se cortan.
+
+### G-37 · Panel de creadores · Depende: G-36
+Archivos: `app/creator/dashboard/layout.tsx`, `app/creator/dashboard/page.tsx`, `app/creator/dashboard/cursos/page.tsx`, `app/creator/dashboard/cursos/nuevo/page.tsx`, `app/creator/dashboard/cursos/[id]/page.tsx`, `app/creator/dashboard/perfil/page.tsx`.
+
+Carga: ~52 colores, 13 degradados.
+
+**Arreglos permitidos:**
+1. **Encabezados de color:** los encabezados blancos sobre degradado (`<h1 className="text-2xl font-bold text-white">`) pasan a `adminPageHeader` con `adminPageTitle` (texto oscuro sobre fondo claro).
+2. **Layout:** en `layout.tsx`, si hay `transform`, `backdrop-blur` o `blur-3xl` en contenedores que envuelven `{children}`, bórralos (encierran a los modales). No cambies la navegación ni la protección de sesión.
+
+QA: `/creator/dashboard` y "Nuevo curso" a 390 px.
+
+### G-38 · Panel del cliente A · Depende: C-55 en `main` y G-37
+Archivos:
+- `app/customer/(dashboard)/page.tsx`
+- `app/customer/(dashboard)/orders/page.tsx`
+- `app/customer/(dashboard)/orders/[id]/digital/page.tsx`
+- `app/customer/(dashboard)/balance/page.tsx`
+- `components/modals/RechargeModalV2.tsx`
+- `components/orders/OrderTracking.tsx`
+
+Carga: ~340 colores, 47 degradados, 6 modales.
+
+**Arreglos permitidos:**
+1. **Vista duplicada en `balance` y `orders`:** tienen dos bloques completos, "MOBILE VIEW" (`lg:hidden`) y "DESKTOP VIEW" (`hidden lg:block`). **No los fusiones**; aplica las reglas a los dos.
+2. **Tarjeta de saldo:** la tarjeta principal de saldo puede quedar `bg-brand-600 text-white` (bloque sólido); el resto, tarjetas blancas.
+3. **`RechargeModalV2`:** solo clases y `useBodyScrollLock` si falta. No toques montos, métodos, verificación de Pago Móvil ni `fetch`.
+
+QA: `/customer`, `/customer/orders`, `/customer/balance` a 390 y 1440 px; abrir "Recargar saldo": el modal cubre la pantalla y el fondo no hace scroll.
+
+### G-39 · Panel del cliente B · Depende: G-38
+Archivos:
+- `app/customer/(dashboard)/addresses/page.tsx`, `mis-cursos/page.tsx`, `notifications/page.tsx`, `profile/page.tsx`, `referrals/page.tsx`, `reviews/page.tsx`, `settings/page.tsx`, `warranty/page.tsx`, `wishlist/page.tsx`
+- `components/customer/*.tsx`
+
+Carga: ~571 colores, 43 degradados, 4 modales.
+
+**Arreglos permitidos:**
+1. **`profile`:** tiene modales propios con `style={{ animation }}` ya limpiados en G-25; aplica R5 (capa + panel + `useBodyScrollLock`).
+2. **`referrals`:** las medallas `FaMedal` de G-30 se quedan.
+3. **Pestañas y filtros** de `wishlist`, `reviews` y `notifications`: `adminTab` en contenedor deslizable.
+
+QA: las 9 páginas a 390 px; en `/customer/profile` los modales cubren la pantalla.
+
+**Prompt de arranque para Gemini (Andrés):** "Haz la Ronda R10 de `docs/plan/PLAN_GEMINI.md` en orden (G-35 a G-39) en la rama `gemini/R10` desde `main`. Lee primero 'Lo que aprendimos en R9'. G-38 y G-39 esperan a que exista `docs/plan/estado/C-55.md` en `main`; si no está cuando llegues, haz commit de G-35 a G-37 y avisa. Un commit por tarjeta con su estado y la salida de la verificación. No hagas merge ni push."

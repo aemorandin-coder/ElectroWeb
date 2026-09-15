@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { FiChevronRight, FiSearch, FiX } from 'react-icons/fi';
+import { FiSearch, FiX } from 'react-icons/fi';
 import CatalogFilters from '@/components/catalog/CatalogFilters';
 import CatalogPagination from '@/components/catalog/CatalogPagination';
 import FiltersDrawer from '@/components/catalog/FiltersDrawer';
@@ -9,6 +9,7 @@ import SortSelect from '@/components/catalog/SortSelect';
 import Footer from '@/components/Footer';
 import PublicHeader from '@/components/public/PublicHeader';
 import Container from '@/components/ui/Container';
+import PageHeader from '@/components/ui/PageHeader';
 import ProductCard from '@/components/ui/ProductCard';
 import { formatUSD } from '@/lib/currency';
 import { prisma } from '@/lib/prisma';
@@ -103,39 +104,25 @@ export default async function ProductosPage({ searchParams }: PageProps) {
       <PublicHeader />
 
       <main>
-        <Container className="pb-10 pt-4 lg:pt-6">
-          <nav aria-label="Ruta de navegación" className="mb-2">
-            <ol className="flex flex-wrap items-center gap-1 text-xs text-muted">
-              <li><Link href="/" className="hover:text-brand-600 hover:underline">Inicio</Link></li>
-              <li aria-hidden="true"><FiChevronRight className="h-3 w-3" /></li>
-              <li>
-                {currentCategory || params.search ? (
-                  <Link href="/productos" className="hover:text-brand-600 hover:underline">Productos</Link>
-                ) : (
-                  <span aria-current="page" className="text-ink-soft">Productos</span>
-                )}
-              </li>
-              {currentCategory && (
-                <>
-                  <li aria-hidden="true"><FiChevronRight className="h-3 w-3" /></li>
-                  <li><span aria-current="page" className="text-ink-soft">{currentCategory.name}</span></li>
-                </>
-              )}
-            </ol>
-          </nav>
-
-          <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-            <div className="min-w-0">
-              <h1 className="truncate text-2xl font-bold text-ink lg:text-3xl">{heading}</h1>
-              <p className="mt-0.5 text-sm text-muted" aria-live="polite">
-                {total === 0 ? 'Sin resultados' : totalPages > 1 ? `${rangeStart}–${rangeEnd} de ${total} productos` : `${total} ${total === 1 ? 'producto' : 'productos'}`}
-              </p>
-            </div>
+        <PageHeader
+          compact
+          breadcrumbs={[
+            { label: 'Productos', href: currentCategory || params.search ? '/productos' : undefined },
+            ...(currentCategory ? [{ label: currentCategory.name }] : []),
+          ]}
+          title={heading}
+          meta={
+            <p className="text-sm text-muted" aria-live="polite">
+              {total === 0 ? 'Sin resultados' : totalPages > 1 ? `${rangeStart}–${rangeEnd} de ${total} productos` : `${total} ${total === 1 ? 'producto' : 'productos'}`}
+            </p>
+          }
+          actions={
             <div className="hidden lg:block">
               <SortSelect id="sort-desktop" value={params.sort} options={sortOptions} />
             </div>
-          </div>
-
+          }
+        />
+        <Container className="pb-10 pt-3 lg:pt-6">
           {/* Móvil: filtros y orden en una fila, categorías deslizables debajo */}
           <div className="mt-3 flex gap-2 lg:hidden">
             <FiltersDrawer activeCount={filterCount}>

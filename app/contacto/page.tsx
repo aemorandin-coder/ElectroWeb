@@ -1,6 +1,7 @@
 import { getPublicSettings } from '@/lib/site-settings';
 import PublicHeader from '@/components/public/PublicHeader';
-import AnimatedWave from '@/components/AnimatedWave';
+import PageHeader from '@/components/ui/PageHeader';
+import { FiMessageCircle } from 'react-icons/fi';
 import ContactForm from '@/components/contact/ContactForm';
 import BusinessHours from '@/components/contact/BusinessHours';
 import Footer from '@/components/Footer';
@@ -14,33 +15,16 @@ export default async function ContactoPage() {
     <div className="min-h-dvh bg-white">
       <PublicHeader />
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
-
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 text-center">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-            <div className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <span className="text-xs font-semibold text-white">Estamos para ayudarte</span>
-            </div>
-            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-          </div>
-          <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 tracking-tight">Contáctanos</h1>
-          <p className="text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
-            Comunícate con nosotros por cualquiera de nuestros canales
-          </p>
-        </div>
-
-        <AnimatedWave />
-      </section>
+      <PageHeader
+        breadcrumbs={[{ label: 'Contacto' }]}
+        icon={<FiMessageCircle />}
+        eyebrow="Estamos para ayudarte"
+        title="Contáctanos"
+        description="Escríbenos por el canal que prefieras y te respondemos lo antes posible."
+      />
 
       {/* Main Content */}
-      <main className="bg-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-16 md:-mt-10">
+      <main className="bg-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
 
           {/* 1. VISTA MÓVIL: Solo Formulario */}

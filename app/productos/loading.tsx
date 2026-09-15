@@ -1,16 +1,20 @@
 import PublicHeader from '@/components/public/PublicHeader';
 import Container from '@/components/ui/Container';
 
-// Esqueleto con la misma estructura que el catálogo (C-30): título, barra de filtros y grilla
+// Esqueleto con la misma estructura que el catálogo (C-30, encabezado de C-32): título, barra de filtros y grilla
 export default function ProductosLoading() {
   return (
     <div className="min-h-dvh bg-surface" aria-busy="true" aria-label="Cargando productos">
       <PublicHeader />
-      <Container className="pb-10 pt-4 lg:pt-6">
-        <div className="mb-3 h-3 w-32 rounded bg-line" />
-        <div className="h-8 w-48 rounded bg-line" />
-        <div className="mt-2 h-4 w-24 rounded bg-line" />
-        <div className="mt-3 flex gap-2 lg:hidden">
+      <div className="border-b border-brand-100 bg-brand-50">
+        <Container className="py-4 lg:py-6">
+          <div className="mb-3 h-3 w-32 rounded bg-brand-100" />
+          <div className="h-8 w-48 rounded bg-brand-100" />
+          <div className="mt-3 h-4 w-24 rounded bg-brand-100" />
+        </Container>
+      </div>
+      <Container className="pb-10 pt-3 lg:pt-6">
+        <div className="flex gap-2 lg:hidden">
           <div className="h-11 flex-1 rounded-lg bg-line" />
           <div className="h-11 flex-1 rounded-lg bg-line" />
         </div>

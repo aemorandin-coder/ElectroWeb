@@ -3,14 +3,10 @@ import Link from 'next/link';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
+import PageHeader from '@/components/ui/PageHeader';
 import { getPublicSettings } from '@/lib/site-settings';
-import AnimatedWave from '@/components/AnimatedWave';
 import ServiciosPortfolio from '@/components/servicios/ServiciosPortfolio';
-import {
-  FiMonitor, FiShield, FiCreditCard,
-  FiAward, FiUsers, FiCheckCircle,
-  FiMail, FiClock, FiVideo
-} from 'react-icons/fi';
+import { FiMonitor, FiShield, FiCreditCard, FiAward, FiUsers, FiCheckCircle, FiMail, FiClock, FiVideo, FiTool } from 'react-icons/fi';
 import { PiSecurityCameraDuotone } from 'react-icons/pi';
 import { FaEthernet } from 'react-icons/fa';
 import { SiPcgamingwiki } from 'react-icons/si';
@@ -85,36 +81,13 @@ export default async function ServiciosPage() {
     <div className="min-h-dvh bg-white">
       <PublicHeader />
 
-      {/* Hero Section - Keep current version as requested */}
-      <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
-        {/* Animated Background Particles */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-purple-300 rounded-full blur-3xl" style={{ animationDelay: '2s' }}></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-0 lg:py-10 text-center">
-          {/* Premium Badge */}
-          <div className="inline-flex items-center gap-2 mb-2 lg:mb-4">
-            <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-            <div className="px-2 lg:px-3 py-0.5 lg:py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <span className="text-xs font-semibold text-white">Servicios Profesionales</span>
-            </div>
-            <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-          </div>
-
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2 lg:mb-3 tracking-tight">
-            Servicios <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Tecnológicos</span>
-          </h1>
-          <p className="text-xs lg:text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
-            Soluciones integrales garantizadas para tu negocio.
-          </p>
-        </div>
-
-        {/* Animated Wave Divider */}
-        <AnimatedWave />
-      </section>
+      <PageHeader
+        breadcrumbs={[{ label: 'Servicios' }]}
+        icon={<FiTool />}
+        eyebrow="Servicios profesionales"
+        title="Servicios tecnológicos"
+        description="Instalación de CCTV, redes, puntos de venta y servicio técnico. Soluciones garantizadas para tu negocio."
+      />
 
       {/* 1. MODO MOBILE (lg:hidden) - Current Optimized Layout */}
       <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 py-4 relative z-10">

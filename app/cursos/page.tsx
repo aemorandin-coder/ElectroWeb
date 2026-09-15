@@ -4,10 +4,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
-import AnimatedWave from '@/components/AnimatedWave';
+import PageHeader from '@/components/ui/PageHeader';
 import Footer from '@/components/Footer';
 import ShareEarnButton from '@/components/social/ShareEarnButton';
-import { FiStar } from 'react-icons/fi';
+import { FiStar, FiBookOpen } from 'react-icons/fi';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await prisma.companySettings.findFirst({
@@ -218,36 +218,13 @@ export default async function CursosPage({
     <div className="min-h-dvh bg-white">
       <PublicHeader />
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
-        {/* Animated Background Particles */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-purple-300 rounded-full blur-3xl" style={{ animationDelay: '2s' }}></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-0 lg:py-10 text-center">
-          {/* Premium Badge */}
-          <div className="inline-flex items-center gap-2 mb-2 lg:mb-4">
-            <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-            <div className="px-2 lg:px-3 py-0.5 lg:py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <span className="text-xs font-semibold text-white">Aprende con Expertos</span>
-            </div>
-            <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-          </div>
-
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 lg:mb-3 tracking-tight">
-            Cursos <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Online</span>
-          </h1>
-          <p className="text-xs md:text-sm lg:text-base text-white/90 max-w-3xl mx-auto leading-relaxed">
-            Aprende reparación de equipos con cursos prácticos.
-          </p>
-        </div>
-
-        {/* Animated Wave Divider */}
-        <AnimatedWave />
-      </section>
+      <PageHeader
+        breadcrumbs={[{ label: 'Cursos' }]}
+        icon={<FiBookOpen />}
+        eyebrow="Aprende con expertos"
+        title="Cursos online"
+        description="Aprende reparación de equipos, redes, CCTV y electrónica con cursos prácticos."
+      />
 
       {/* Course Catalog */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 relative z-10">

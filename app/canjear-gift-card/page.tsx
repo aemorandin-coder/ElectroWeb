@@ -8,6 +8,7 @@ import { FiAlertCircle, FiArrowRight, FiCheck, FiCreditCard, FiGift, FiLock, FiS
 import PublicHeader from '@/components/public/PublicHeader';
 import Footer from '@/components/Footer';
 import Container from '@/components/ui/Container';
+import PageHeader from '@/components/ui/PageHeader';
 import GiftCard3D, { type GiftCardFace } from '@/components/gift-card/GiftCard3D';
 import { formatUSD } from '@/lib/currency';
 import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
@@ -126,15 +127,14 @@ export default function RedeemGiftCardPage() {
       <PublicHeader />
 
       <main>
-        <Container className="py-8 lg:py-12">
-          <header className="mb-8 max-w-2xl">
-            <p className="text-sm font-semibold text-brand-600">Gift Cards</p>
-            <h1 className="mt-1 text-2xl font-bold text-ink lg:text-4xl">Canjear gift card</h1>
-            <p className="mt-2 text-base text-ink-soft">
-              Escribe el código de tu tarjeta. El saldo pasa a tu cuenta y lo usas en cualquier compra de la tienda.
-            </p>
-          </header>
-
+        <PageHeader
+          breadcrumbs={[{ label: 'Gift Cards', href: '/gift-cards' }, { label: 'Canjear' }]}
+          icon={<FiGift />}
+          eyebrow="Gift Cards"
+          title="Canjear gift card"
+          description="Escribe el código de tu tarjeta. El saldo pasa a tu cuenta y lo usas en cualquier compra de la tienda."
+        />
+        <Container className="py-6 lg:py-10">
           <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:gap-12">
             <section aria-label="Tu gift card" className="flex min-w-0 flex-col items-center gap-4 lg:sticky lg:top-24">
               <GiftCard3D

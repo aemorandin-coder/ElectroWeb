@@ -1,31 +1,31 @@
 import PublicHeader from '@/components/public/PublicHeader';
-import { CategoryCardSkeleton } from '@/components/ui/Skeleton';
+import Container from '@/components/ui/Container';
 
+/** Esqueleto con la misma forma que el encabezado y la rejilla (C-32). */
 export default function CategoriasLoading() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header real: el esqueleto de 80px no coincidía con el header nuevo y causaba un salto */}
+    <div className="min-h-dvh bg-surface">
       <PublicHeader />
-
-      {/* Hero Skeleton */}
-      <section className="relative bg-gradient-to-br from-[#2a63cd] via-[#1e4ba3] to-[#1a3b7e] overflow-hidden">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-0 sm:pt-10 sm:pb-2 text-center">
-          <div className="w-40 h-5 bg-white/20 rounded-full mx-auto mb-3 sm:mb-4 animate-pulse" />
-          <div className="w-72 h-8 sm:h-10 bg-white/20 rounded-lg mx-auto mb-2 sm:mb-3 animate-pulse" />
-          <div className="w-1/2 h-4 bg-white/10 rounded mx-auto mb-4 animate-pulse" />
-        </div>
-        {/* Wave placeholder matching AnimatedWave height */}
-        <div className="h-16 sm:h-20 bg-gradient-to-t from-gray-50 to-transparent" />
-      </section>
-
-      {/* Categories Grid Skeleton */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <CategoryCardSkeleton key={i} />
+      <div className="border-b border-brand-100 bg-brand-50">
+        <Container className="py-6 lg:py-10">
+          <div className="mb-3 h-3 w-32 rounded bg-brand-100" />
+          <div className="flex items-start gap-3 lg:gap-4">
+            <div className="h-11 w-11 rounded-2xl bg-brand-100 lg:h-14 lg:w-14" />
+            <div className="flex-1">
+              <div className="h-3 w-20 rounded bg-brand-100" />
+              <div className="mt-2 h-8 w-56 rounded-lg bg-brand-100 lg:h-10" />
+              <div className="mt-2 h-4 w-72 max-w-full rounded bg-brand-100" />
+            </div>
+          </div>
+        </Container>
+      </div>
+      <Container className="py-6 lg:py-10">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-40 rounded-2xl border border-line bg-white" />
           ))}
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

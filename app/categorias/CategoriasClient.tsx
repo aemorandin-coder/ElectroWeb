@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FiSearch, FiArrowRight, FiGrid } from 'react-icons/fi';
-import { getCategoryColor, getAutoIcon, getAutoColor } from '@/lib/category-icons';
+import { FiArrowRight, FiGrid, FiSearch } from 'react-icons/fi';
 import CategoryIconRenderer from '@/components/CategoryIconRenderer';
+import { getAutoIcon } from '@/lib/category-icons';
 
 interface Category {
   id: string;
@@ -12,103 +12,63 @@ interface Category {
   slug: string;
   description: string | null;
   icon: string | null;
-  color: string | null;
   _count: { products: number };
 }
 
+/** Rejilla de categorías (C-32): tarjetas blancas con ícono de la marca, como el carril del home. */
 export default function CategoriasClient({ categories }: { categories: Category[] }) {
   const [search, setSearch] = useState('');
-
-  const filtered = search.trim()
-    ? categories.filter(c => c.name.toLowerCase().includes(search.toLowerCase().trim()))
-    : categories;
+  const term = search.trim().toLowerCase();
+  const filtered = term ? categories.filter((c) => c.name.toLowerCase().includes(term)) : categories;
 
   return (
     <>
-      {/* Search bar */}
-      <div className="mb-6 sm:mb-8">
-        <div className="relative max-w-sm mx-auto">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <div className="mb-6 max-w-sm">
+        <label htmlFor="category-search" className="sr-only">Buscar categoría</label>
+        <div className="relative">
+          <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
           <input
-            type="text"
+            id="category-search"
+            type="search"
             value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar categoría..."
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm transition-all"
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar categoría"
+            className="h-11 w-full rounded-lg border border-line bg-white pl-9 pr-3 text-sm text-ink placeholder:text-subtle focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           />
         </div>
       </div>
 
-      {/* Empty state */}
-      {filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-          <FiGrid className="w-10 h-10 mb-3 opacity-40" />
-          <p className="text-sm font-medium">No se encontraron categorías</p>
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-white px-6 py-12 text-center">
+          <FiGrid className="mb-3 h-10 w-10 text-subtle" aria-hidden="true" />
+          <p className="font-semibold text-ink">No hay categorías con ese nombre</p>
         </div>
-      )}
-
-      {/* Grid */}
-      {filtered.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
-          {filtered.map((category, index) => {
-            const resolvedIconName = category.icon || getAutoIcon(category.name);
-            const cv = getCategoryColor(category.color || getAutoColor(index), index);
+      ) : (
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-4">
+          {filtered.map((category) => {
             const count = category._count.products;
-
             return (
-              <Link
-                key={category.id}
-                href={`/categorias/${category.slug}`}
-                className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
-              >
-                {/* Colored icon section */}
-                <div
-                  className="h-24 sm:h-28 lg:h-32 flex items-center justify-center relative overflow-hidden"
-                  style={{ background: `linear-gradient(135deg, ${cv.from}, ${cv.to})` }}
+              <li key={category.id}>
+                <Link
+                  href={`/categorias/${category.slug}`}
+                  className="group flex h-full flex-col gap-3 rounded-2xl border border-line bg-white p-4 hover:border-brand-200 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500 lg:p-5"
                 >
-                  {/* Gloss overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/25 to-transparent pointer-events-none" />
-                  {/* Product count badge */}
-                  {count > 0 && (
-                    <span className="absolute top-2.5 right-2.5 bg-black/20 backdrop-blur-sm text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full leading-tight z-10">
-                      {count}
-                    </span>
-                  )}
-                  <CategoryIconRenderer
-                    iconName={resolvedIconName}
-                    className="w-10 h-10 sm:w-12 sm:h-12 text-white drop-shadow-md group-hover:scale-110 transition-transform duration-300 relative z-10"
-                  />
-                </div>
-
-                {/* Text content */}
-                <div className="p-3 sm:p-4">
-                  <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight truncate">
-                    {category.name}
-                  </h3>
-
-                  {/* Mobile: show count below name */}
-                  {count > 0 && (
-                    <p className="text-xs text-gray-400 mt-0.5 sm:hidden">
-                      {count} producto{count !== 1 ? 's' : ''}
-                    </p>
-                  )}
-
-                  {/* Desktop: description */}
-                  {category.description && (
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2 hidden sm:block leading-relaxed">
-                      {category.description}
-                    </p>
-                  )}
-
-                  <div className="flex items-center gap-1 mt-2 sm:mt-3 text-xs font-semibold text-blue-600">
-                    <span>Ver productos</span>
-                    <FiArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                  </div>
-                </div>
-              </Link>
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 group-hover:bg-white">
+                    <CategoryIconRenderer iconName={category.icon || getAutoIcon(category.name)} className="h-6 w-6" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-ink lg:text-base">{category.name}</span>
+                    <span className="mt-0.5 block text-xs text-muted">{count} {count === 1 ? 'producto' : 'productos'}</span>
+                    {category.description && <span className="mt-2 hidden text-xs leading-relaxed text-ink-soft line-clamp-2 sm:block">{category.description}</span>}
+                  </span>
+                  <span className="mt-auto flex items-center gap-1 text-xs font-semibold text-brand-600">
+                    Ver productos <FiArrowRight className="h-3 w-3" aria-hidden="true" />
+                  </span>
+                </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </>
   );

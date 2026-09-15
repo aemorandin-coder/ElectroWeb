@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type DigitalVariantInput } from '@/lib/digital-variants';
 import { createNotification } from '@/lib/notifications';
+import { generateShortCode } from '@/lib/short-code';
 
 export async function GET(request: NextRequest) {
   try {
@@ -136,23 +137,8 @@ export async function POST(request: NextRequest) {
       finalSlug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
     }
 
-    // Generate unique short code (6 chars: 2 from name + 4 random)
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    const namePrefix = body.name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .replace(/[^a-z0-9]/g, '')
-      .substring(0, 2);
-    let shortCode: string;
-    let attempts = 0;
-    do {
-      const suffix = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-      shortCode = namePrefix + suffix;
-      const existing = await prisma.product.findUnique({ where: { shortCode } });
-      if (!existing) break;
-      attempts++;
-    } while (attempts < 10);
+    // Código del enlace corto /p/<código> (C-27)
+    const shortCode = await generateShortCode(prisma);
 
     // Verify category exists
     const category = await prisma.category.findUnique({

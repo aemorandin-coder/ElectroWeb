@@ -11,6 +11,7 @@ import PublicHeader from '@/components/public/PublicHeader';
 import { useSettings } from '@/contexts/SettingsContext';
 import ProcessingOverlay, { GIFT_CARD_STEPS } from '@/components/ProcessingOverlay';
 import GiftCard3D from '@/components/gift-card/GiftCard3D';
+import PageHeader from '@/components/ui/PageHeader';
 import { GIFT_CARD_DESIGNS, getGiftCardDesign, type GiftCardDesignSlug } from '@/lib/gift-card-designs';
 import Footer from '@/components/Footer';
 
@@ -292,34 +293,22 @@ export default function GiftCardsPage() {
     };
 
     return (
-        <div className="min-h-dvh bg-gradient-to-br from-surface via-white to-surface">
+        <div className="min-h-dvh bg-surface">
 
             <PublicHeader />
 
-            {/* Hero Section */}
-            <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-10 left-10 w-64 h-64 bg-white rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-300 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-                </div>
-
-                <div className="relative max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-2 pb-0 lg:py-10 text-center">
-                    <div className="hidden lg:inline-flex items-center gap-2 mb-2 lg:mb-4">
-                        <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full">
-                            <FiGift className="w-4 h-4 text-white" />
-                            <span className="text-white text-xs font-semibold">El regalo perfecto</span>
-                        </div>
-                        <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-                    </div>
-                    <h1 className="text-lg md:text-3xl lg:text-4xl font-bold text-white mb-0.5 lg:mb-3 tracking-tight">
-                        Regala <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">Tecnología</span>
-                    </h1>
-                    <p className="text-[11px] md:text-sm lg:text-base text-white/90 max-w-3xl mx-auto">
-                        Gift Cards instantáneas para cualquier ocasión
-                    </p>
-                </div>
-            </section>
+            <PageHeader
+                breadcrumbs={[{ label: 'Gift Cards' }]}
+                icon={<FiGift />}
+                eyebrow="Gift Cards"
+                title="Regala tecnología"
+                description="Elige el diseño y el monto. La tarjeta llega al correo de quien la recibe y la canjea como saldo en la tienda."
+                actions={
+                    <Link href="/canjear-gift-card" className="inline-flex h-11 items-center gap-2 rounded-lg border border-brand-200 bg-white px-4 text-sm font-semibold text-brand-700 hover:bg-brand-100">
+                        Canjear una gift card
+                    </Link>
+                }
+            />
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 lg:py-12 relative z-10">

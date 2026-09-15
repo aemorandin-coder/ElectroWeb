@@ -1,46 +1,31 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiShield, FiCreditCard, FiTruck, FiPackage, FiDollarSign, FiAlertCircle, FiFileText, FiEdit3 } from 'react-icons/fi';
+import Link from 'next/link';
+import { FiShield, FiCreditCard, FiTruck, FiPackage, FiDollarSign, FiAlertCircle, FiFileText, FiEdit3 } from 'react-icons/fi';
 import PublicHeader from '@/components/public/PublicHeader';
 import Footer from '@/components/Footer';
+import Container from '@/components/ui/Container';
+import PageHeader from '@/components/ui/PageHeader';
 
 export default function TermsPage() {
-  const router = useRouter();
   return (
     <>
       <PublicHeader />
-      <div className="min-h-dvh bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-cyan-300/10 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-      </div>
+      <main className="min-h-dvh bg-surface">
+        <PageHeader
+          breadcrumbs={[{ label: 'Términos y condiciones' }]}
+          icon={<FiFileText />}
+          eyebrow="Legal"
+          title="Términos y condiciones"
+          description="Última actualización: diciembre 2024 · Versión 2.0"
+        />
+        <Container className="py-6 lg:py-10">
+          <article className="mx-auto max-w-3xl space-y-8 rounded-2xl border border-line bg-white p-5 leading-relaxed text-ink-soft sm:p-8 lg:p-10">
 
-      {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
-
-      <div className="w-full max-w-4xl relative z-10">
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-slideInUp max-h-[85vh] flex flex-col">
-          {/* Header */}
-          <div className="p-8 border-b border-white/10 bg-white/5">
-            <div className="flex items-center gap-3 mb-2">
-              <FiFileText className="w-8 h-8 text-cyan-200" />
-              <h1 className="text-3xl font-bold text-white tracking-tight font-[family-name:var(--font-tektur)]">
-                Términos y <span className="text-cyan-200">Condiciones</span>
-              </h1>
-            </div>
-            <p className="text-blue-100 mt-2">Última actualización: Diciembre 2024 | Versión 2.0</p>
-          </div>
-
-          {/* Content - Scrollable */}
-          <div className="p-8 overflow-y-auto custom-scrollbar text-white/90 space-y-8 leading-relaxed flex-1">
 
             {/* Acceptance */}
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <FiShield className="w-5 h-5 text-cyan-300" />
-                <h2 className="text-xl font-bold text-white">1. Aceptación de los Términos</h2>
+                <FiShield className="w-5 h-5 text-brand-600" />
+                <h2 className="text-xl font-bold text-ink">1. Aceptación de los Términos</h2>
               </div>
               <p>
                 Al acceder y utilizar los servicios de <strong>Electro Shop Morandin C.A.</strong> (en adelante "la Empresa"),
@@ -53,14 +38,14 @@ export default function TermsPage() {
             {/* Account */}
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <FiShield className="w-5 h-5 text-cyan-300" />
-                <h2 className="text-xl font-bold text-white">2. Registro y Seguridad de la Cuenta</h2>
+                <FiShield className="w-5 h-5 text-brand-600" />
+                <h2 className="text-xl font-bold text-ink">2. Registro y Seguridad de la Cuenta</h2>
               </div>
               <p className="mb-3">
                 Para acceder a ciertas funciones, deberá registrarse y crear una cuenta proporcionando información veraz y actualizada.
                 Usted es responsable de:
               </p>
-              <ul className="list-disc pl-6 space-y-2 text-white/80">
+              <ul className="list-disc pl-6 space-y-2 text-ink-soft">
                 <li>Mantener la confidencialidad de su contraseña y credenciales de acceso</li>
                 <li>Todas las actividades que ocurran bajo su cuenta</li>
                 <li>Notificar inmediatamente cualquier uso no autorizado de su cuenta</li>
@@ -73,10 +58,10 @@ export default function TermsPage() {
             </section>
 
             {/* Balance System */}
-            <section className="bg-white/5 rounded-xl p-6 border border-white/10">
+            <section className="bg-surface rounded-xl p-6 border border-line">
               <div className="flex items-center gap-2 mb-3">
-                <FiDollarSign className="w-5 h-5 text-yellow-300" />
-                <h2 className="text-xl font-bold text-white">3. Sistema de Saldo y Recargas</h2>
+                <FiDollarSign className="w-5 h-5 text-warning-strong" />
+                <h2 className="text-xl font-bold text-ink">3. Sistema de Saldo y Recargas</h2>
               </div>
               <p className="mb-3">
                 Electro Shop ofrece un sistema de saldo interno que permite a los usuarios recargar fondos para realizar compras.
@@ -84,22 +69,22 @@ export default function TermsPage() {
               </p>
 
               <div className="space-y-4 mt-4">
-                <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-4">
-                  <h3 className="font-bold text-red-200 mb-2">3.1 Política de No Reembolso</h3>
-                  <p className="text-white/80">
-                    <strong className="text-red-300">EL SALDO RECARGADO NO ES REEMBOLSABLE BAJO NINGUNA CIRCUNSTANCIA.</strong> Una vez
+                <div className="bg-deal-bg border border-deal/30 rounded-lg p-4">
+                  <h3 className="font-bold text-deal mb-2">3.1 Política de No Reembolso</h3>
+                  <p className="text-ink-soft">
+                    <strong className="text-deal">EL SALDO RECARGADO NO ES REEMBOLSABLE BAJO NINGUNA CIRCUNSTANCIA.</strong> Una vez
                     acreditado, el saldo no podrá ser retirado, transferido a terceros, ni convertido en dinero en efectivo.
                     El saldo únicamente puede utilizarse para compras dentro de la plataforma.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-white mb-2">3.2 Origen Lícito de Fondos</h3>
-                  <p className="text-white/80">
+                  <h3 className="font-bold text-ink mb-2">3.2 Origen Lícito de Fondos</h3>
+                  <p className="text-ink-soft">
                     El usuario declara bajo juramento que todos los fondos utilizados para recargar saldo provienen de
                     actividades lícitas y legales. Queda estrictamente prohibido el uso de fondos provenientes de:
                   </p>
-                  <ul className="list-disc pl-6 mt-2 space-y-1 text-white/70">
+                  <ul className="list-disc pl-6 mt-2 space-y-1 text-ink-soft">
                     <li>Lavado de dinero o financiamiento del terrorismo</li>
                     <li>Narcotráfico o actividades ilícitas</li>
                     <li>Fraude, estafa o cualquier actividad criminal</li>
@@ -108,12 +93,12 @@ export default function TermsPage() {
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-white mb-2">3.3 Verificación de Transacciones</h3>
-                  <p className="text-white/80">
+                  <h3 className="font-bold text-ink mb-2">3.3 Verificación de Transacciones</h3>
+                  <p className="text-ink-soft">
                     Las solicitudes de recarga están sujetas a verificación por parte del equipo de administración.
                     Las transacciones pueden ser rechazadas por:
                   </p>
-                  <ul className="list-disc pl-6 mt-2 space-y-1 text-white/70">
+                  <ul className="list-disc pl-6 mt-2 space-y-1 text-ink-soft">
                     <li>Número de referencia inválido o incorrecto</li>
                     <li>Monto transferido diferente al declarado</li>
                     <li>Datos inconsistentes o sospechosos</li>
@@ -121,18 +106,18 @@ export default function TermsPage() {
                     <li>Sospecha de actividad fraudulenta</li>
                     <li>Comprobante de pago vencido o ilegible</li>
                   </ul>
-                  <p className="text-white/70 mt-2">
+                  <p className="text-ink-soft mt-2">
                     El usuario será notificado con el motivo específico del rechazo para su transparencia.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-white mb-2">3.4 Aceptación de Términos de Recarga</h3>
-                  <p className="text-white/80">
+                  <h3 className="font-bold text-ink mb-2">3.4 Aceptación de Términos de Recarga</h3>
+                  <p className="text-ink-soft">
                     Antes de realizar su primera recarga, el usuario debe aceptar los términos específicos del sistema
                     de saldo mediante firma digital. Esta aceptación incluye:
                   </p>
-                  <ul className="list-disc pl-6 mt-2 space-y-1 text-white/70">
+                  <ul className="list-disc pl-6 mt-2 space-y-1 text-ink-soft">
                     <li>Lectura completa de los términos y condiciones de recarga</li>
                     <li>Provisión de número de cédula de identidad</li>
                     <li>Firma digital como constancia de aceptación</li>
@@ -145,13 +130,13 @@ export default function TermsPage() {
             {/* Payments */}
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <FiCreditCard className="w-5 h-5 text-cyan-300" />
-                <h2 className="text-xl font-bold text-white">4. Métodos de Pago y Facturación</h2>
+                <FiCreditCard className="w-5 h-5 text-brand-600" />
+                <h2 className="text-xl font-bold text-ink">4. Métodos de Pago y Facturación</h2>
               </div>
               <p className="mb-3">
                 Aceptamos diversos métodos de pago, incluyendo:
               </p>
-              <ul className="list-disc pl-6 space-y-1 text-white/80 mb-3">
+              <ul className="list-disc pl-6 space-y-1 text-ink-soft mb-3">
                 <li>Transferencias bancarias nacionales (Banesco, Mercantil, Provincial, Venezuela, etc.)</li>
                 <li>Pago Móvil</li>
                 <li>Zelle (pagos internacionales)</li>
@@ -169,13 +154,13 @@ export default function TermsPage() {
             {/* Shipping */}
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <FiTruck className="w-5 h-5 text-cyan-300" />
-                <h2 className="text-xl font-bold text-white">5. Envíos y Entregas</h2>
+                <FiTruck className="w-5 h-5 text-brand-600" />
+                <h2 className="text-xl font-bold text-ink">5. Envíos y Entregas</h2>
               </div>
               <p className="mb-3">
                 Realizamos envíos dentro de la <strong>República Bolivariana de Venezuela</strong>. Condiciones:
               </p>
-              <ul className="list-disc pl-6 space-y-2 text-white/80">
+              <ul className="list-disc pl-6 space-y-2 text-ink-soft">
                 <li>Los pedidos se procesan dentro de las 24-48 horas hábiles posteriores a la confirmación del pago</li>
                 <li>Los tiempos de entrega varían según la ubicación (2-7 días hábiles)</li>
                 <li>El cliente puede optar por retiro en tienda sin costo adicional</li>
@@ -187,20 +172,20 @@ export default function TermsPage() {
             {/* Warranty */}
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <FiPackage className="w-5 h-5 text-cyan-300" />
-                <h2 className="text-xl font-bold text-white">6. Garantía y Devoluciones</h2>
+                <FiPackage className="w-5 h-5 text-brand-600" />
+                <h2 className="text-xl font-bold text-ink">6. Garantía y Devoluciones</h2>
               </div>
               <p className="mb-3">
                 Todos nuestros productos cuentan con garantía por defectos de fábrica según las especificaciones del fabricante.
                 Para procesar una garantía:
               </p>
-              <ul className="list-disc pl-6 space-y-2 text-white/80">
+              <ul className="list-disc pl-6 space-y-2 text-ink-soft">
                 <li>Es indispensable presentar la factura de compra original</li>
                 <li>El producto debe estar en su empaque original con todos sus accesorios</li>
                 <li>No aplica para daños por mal uso, accidentes o modificaciones no autorizadas</li>
                 <li>El tiempo de respuesta para evaluación de garantía es de 5-10 días hábiles</li>
               </ul>
-              <p className="mt-3 text-yellow-200">
+              <p className="mt-3 text-warning-strong">
                 <strong>Nota:</strong> Las compras realizadas con saldo de cuenta siguen las mismas políticas de garantía,
                 pero no se realiza devolución del saldo en caso de reembolso.
               </p>
@@ -209,14 +194,14 @@ export default function TermsPage() {
             {/* Legal Responsibility */}
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <FiAlertCircle className="w-5 h-5 text-cyan-300" />
-                <h2 className="text-xl font-bold text-white">7. Responsabilidad Legal</h2>
+                <FiAlertCircle className="w-5 h-5 text-brand-600" />
+                <h2 className="text-xl font-bold text-ink">7. Responsabilidad Legal</h2>
               </div>
               <p className="mb-3">
                 El usuario acepta total responsabilidad legal por cualquier violación de estos términos y exime a la Empresa
                 de cualquier responsabilidad derivada del uso indebido de la plataforma. La Empresa se reserva el derecho de:
               </p>
-              <ul className="list-disc pl-6 space-y-2 text-white/80">
+              <ul className="list-disc pl-6 space-y-2 text-ink-soft">
                 <li>Verificar la identidad del usuario en cualquier momento</li>
                 <li>Solicitar documentación adicional para validar transacciones</li>
                 <li>Reportar actividades sospechosas a las autoridades competentes</li>
@@ -232,8 +217,8 @@ export default function TermsPage() {
             {/* Digital Signature */}
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <FiEdit3 className="w-5 h-5 text-cyan-300" />
-                <h2 className="text-xl font-bold text-white">8. Firma Digital y Documentos Electrónicos</h2>
+                <FiEdit3 className="w-5 h-5 text-brand-600" />
+                <h2 className="text-xl font-bold text-ink">8. Firma Digital y Documentos Electrónicos</h2>
               </div>
               <p>
                 La firma digital proporcionada por el usuario mediante nuestro sistema de canvas electrónico tiene plena
@@ -245,7 +230,7 @@ export default function TermsPage() {
 
             {/* Intellectual Property */}
             <section>
-              <h2 className="text-xl font-bold text-white mb-3">9. Propiedad Intelectual</h2>
+              <h2 className="text-xl font-bold text-ink mb-3">9. Propiedad Intelectual</h2>
               <p>
                 Todo el contenido incluido en este sitio, como texto, gráficos, logotipos, iconos, imágenes, clips de
                 audio, descargas digitales, compilaciones de datos y software, es propiedad de Electro Shop Morandin C.A.
@@ -255,33 +240,25 @@ export default function TermsPage() {
             </section>
 
             {/* Contact */}
-            <section className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h2 className="text-xl font-bold text-white mb-3">10. Contacto</h2>
+            <section className="bg-surface rounded-xl p-6 border border-line">
+              <h2 className="text-xl font-bold text-ink mb-3">10. Contacto</h2>
               <p>
                 Para consultas sobre estos términos y condiciones, puede contactarnos a través de:
               </p>
-              <ul className="mt-3 space-y-2 text-white/80">
+              <ul className="mt-3 space-y-2 text-ink-soft">
                 <li><strong>Email:</strong> electroshopgre@gmail.com</li>
                 <li><strong>WhatsApp:</strong> +58 257-251-1282</li>
                 <li><strong>Horario de atención:</strong> Lunes a Viernes 9:00 AM - 6:00 PM</li>
               </ul>
             </section>
-
+          </article>
+          <div className="mx-auto mt-6 flex max-w-3xl justify-end">
+            <Link href="/" className="inline-flex h-11 items-center rounded-lg border border-line bg-white px-5 text-sm font-semibold text-ink hover:bg-surface">
+              Volver al inicio
+            </Link>
           </div>
-
-          {/* Footer */}
-          <div className="p-6 border-t border-white/10 bg-white/5 flex justify-end">
-            <button
-              onClick={() => router.back()}
-              className="group flex items-center gap-2 px-6 py-3 bg-white text-brand-500 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-            >
-              <FiArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-              Volver
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+        </Container>
+      </main>
       <Footer />
     </>
   );

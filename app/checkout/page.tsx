@@ -9,6 +9,8 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
+import CheckoutSteps from '@/components/ui/CheckoutSteps';
+import PageHeader from '@/components/ui/PageHeader';
 import RechargeModal from '@/components/modals/RechargeModalV2';
 import CheckoutPagoMovilForm from '@/components/checkout/CheckoutPagoMovilForm';
 import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverlay';
@@ -770,24 +772,17 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-gradient-to-br from-surface via-white to-surface">
       <PublicHeader />
 
-      {/* Premium Hero Section - Compact */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-500 via-brand-600 to-brand-500 py-8">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 -left-4 w-72 h-72 bg-white rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-          <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 animate-fadeInUp">
-            Finalizar Compra
-          </h1>
-          <p className="text-base text-blue-100 animate-fadeInUp animation-delay-200">
-            Completa tus datos para procesar tu pedido
-          </p>
-        </div>
-      </section>
+      <PageHeader
+        compact
+        breadcrumbs={[{ label: 'Carrito', href: '/carrito' }, { label: 'Finalizar compra' }]}
+        icon={<FiLock />}
+        title="Finalizar compra"
+        description="Completa tus datos para procesar tu pedido."
+        meta={<CheckoutSteps current={1} />}
+      />
 
       {/* Main Content - Wider for Desktop */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-6">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Checkout Form */}

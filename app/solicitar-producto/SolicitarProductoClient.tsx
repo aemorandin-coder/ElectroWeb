@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { FiUser, FiMail, FiPhone, FiPackage, FiDollarSign, FiClock, FiCheck, FiShield, FiTruck } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiPackage, FiDollarSign, FiClock, FiCheck, FiShield, FiTruck, FiSearch } from 'react-icons/fi';
 import { IoMdPricetags } from 'react-icons/io';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
-import AnimatedWave from '@/components/AnimatedWave';
+import PageHeader, { PageHeaderChip } from '@/components/ui/PageHeader';
 
 const categories = [
   'Gaming',
@@ -225,59 +225,23 @@ export default function SolicitarProductoClient() {
 
   return (
     <>
-      {/* Epic Hero Section */}
-      <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
-
-        {/* Animated Background Particles */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-purple-300 rounded-full blur-3xl" style={{ animationDelay: '2s' }}></div>
-        </div>
-
-        {/* Grid Pattern */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 text-center">
-          {/* Premium Badge */}
-          <div className="inline-flex items-center gap-3 mb-4 animate-fadeIn">
-            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-            <div className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <span className="text-xs font-semibold text-white">Servicio Personalizado</span>
-            </div>
-            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-          </div>
-
-          <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 tracking-tight animate-slideInUp">
-            Solicitar <span className="text-cyan-200">Producto</span>
-          </h1>
-          <p className="text-sm md:text-lg text-white/90 max-w-4xl mx-auto mb-6 animate-slideInUp text-center" style={{ animationDelay: '0.1s' }}>
-            ¿No encuentras lo que buscas? Cuéntanos qué necesitas y te lo conseguimos al mejor precio.
-          </p>
-
-          {/* Feature Pills */}
-          <div className="flex flex-wrap justify-center gap-2 animate-slideInUp" style={{ animationDelay: '0.2s' }}>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 hover:bg-white/20 transition-all">
-              <FiShield className="w-3 h-3 text-cyan-300" />
-              <span className="text-xs text-white font-medium">100% Seguro</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 hover:bg-white/20 transition-all">
-              <FiTruck className="w-3 h-3 text-cyan-300" />
-              <span className="text-xs text-white font-medium">Envío Nacional</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 hover:bg-white/20 transition-all">
-              <IoMdPricetags className="w-3 h-3 text-cyan-300" />
-              <span className="text-xs text-white font-medium">Mejores Precios</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Animated Wave Divider */}
-        <AnimatedWave />
-      </section>
+      <PageHeader
+        breadcrumbs={[{ label: 'Productos', href: '/productos' }, { label: 'Solicitar producto' }]}
+        icon={<FiSearch />}
+        eyebrow="Servicio personalizado"
+        title="Solicitar producto"
+        description="¿No encuentras lo que buscas? Cuéntanos qué necesitas y te lo conseguimos al mejor precio."
+        meta={
+          <>
+            <PageHeaderChip><FiShield className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" /> 100% seguro</PageHeaderChip>
+            <PageHeaderChip><FiTruck className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" /> Envío nacional</PageHeaderChip>
+            <PageHeaderChip><IoMdPricetags className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" /> Mejores precios</PageHeaderChip>
+          </>
+        }
+      />
 
       {/* Main Content */}
-      <main className="bg-white max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8 lg:-mt-10">
+      <main className="bg-white max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {success ? (
           /* Success State - Epic Design */
           <div className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 rounded-3xl shadow-2xl p-10 text-center relative overflow-hidden animate-scaleIn">

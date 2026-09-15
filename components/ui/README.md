@@ -45,7 +45,6 @@ import ProductCard from '@/components/ui/ProductCard';
 
 <ProductCard product={toPublicProduct(p)} exchangeRateVES={settings.exchangeRateVES} priority />
 ```
-> `LegacyProductCard` es la tarjeta anterior. La siguen usando `/productos`, categorías y el carrusel del home hasta C-22/C-30/C-32; después se borra.
 
 ## ProductShelf
 Fila horizontal con `scroll-snap` (CSS). En móvil se desliza (se asoma la siguiente tarjeta); las flechas solo existen desde `lg`.
@@ -89,3 +88,15 @@ import { formatUSD, formatVES } from '@/lib/currency';
 formatUSD(1099);      // "$1.099,00"
 formatVES(40113.5);   // "Bs. 40.113,50"
 ```
+
+## PageHeader
+Encabezado único de las páginas de la tienda (C-32). Reemplaza los heroes de degradado, manchas y ondas.
+```tsx
+<PageHeader breadcrumbs={[{ label: 'Servicios' }]} icon={<FiTool />} eyebrow="Servicios profesionales" title="Servicios tecnológicos" description="…" />
+```
+- `compact` para páginas donde el contenido empieza enseguida (catálogo, carrito, checkout).
+- `meta` para conteos o chips (`PageHeaderChip`); `actions` para botones a la derecha.
+- Es el único `h1` de la página. No agregar otro hero encima ni debajo.
+
+## CheckoutSteps
+Pasos de la compra (`current`: 0 carrito, 1 pago, 2 listo). Va en el `meta` del `PageHeader` del carrito y del checkout.

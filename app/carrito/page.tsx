@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import PublicHeader from '@/components/public/PublicHeader';
+import CheckoutSteps from '@/components/ui/CheckoutSteps';
+import PageHeader from '@/components/ui/PageHeader';
+import { FiShoppingCart } from 'react-icons/fi';
 import Footer from '@/components/Footer';
 import { toast } from 'react-hot-toast';
 import { HiShieldCheck, HiBadgeCheck, HiTrash } from 'react-icons/hi';
@@ -128,98 +131,14 @@ export default function CarritoPage() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <PublicHeader />
 
-      {/* Hero Section - Premium Compact */}
-      <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0">
-          <div className="absolute top-5 left-5 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-5 right-10 w-56 h-56 bg-blue-300/10 rounded-full blur-3xl animate-float-delayed" />
-          <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl animate-pulse" />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 mb-4 animate-fadeIn">
-            <Link
-              href="/"
-              className="group flex items-center gap-1.5 px-3 py-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105 shadow-lg"
-            >
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              <span className="text-sm font-semibold text-white">Inicio</span>
-            </Link>
-
-            <svg className="w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md rounded-xl border border-white/30 shadow-xl">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <span className="text-sm font-bold text-white">Carrito de Compras</span>
-              {items.length > 0 && (
-                <span className="px-2.5 py-1 bg-white text-brand-500 rounded-full text-xs font-bold animate-bounce-subtle">
-                  {items.length}
-                </span>
-              )}
-            </div>
-          </nav>
-
-          {/* Title */}
-          <div className="animate-slideUp">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-              Tu Carrito
-            </h1>
-            <p className="text-blue-100 text-sm">
-              {items.length === 0 ? 'Está vacío' : `${items.length} producto${items.length > 1 ? 's' : ''} listo${items.length > 1 ? 's' : ''} para checkout`}
-            </p>
-          </div>
-
-          {/* Visual Stepper - Premium Gaming Aesthetics */}
-          {items.length > 0 && (
-            <div className="mt-8 max-w-xl mx-auto bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-xl animate-fadeIn">
-              <div className="relative flex justify-between items-center">
-                {/* Stepper Progress Line */}
-                <div className="absolute left-6 right-6 top-1/2 h-0.5 bg-white/10 -translate-y-1/2 z-0">
-                  <div className="w-1/3 h-full bg-gradient-to-r from-cyan-400 to-brand-500 rounded-full"></div>
-                </div>
-
-                {/* Step 1: Carrito (Active) */}
-                <div className="relative flex flex-col items-center gap-1.5 z-10">
-                  <div className="w-9 h-9 bg-gradient-to-br from-cyan-400 to-brand-500 border-2 border-cyan-300 rounded-full flex items-center justify-center font-bold text-white text-xs shadow-[0_0_15px_rgba(34,211,238,0.5)]">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-bold text-cyan-200 uppercase tracking-wide">1. Carrito</span>
-                </div>
-
-                {/* Step 2: Checkout (Inactive) */}
-                <div className="relative flex flex-col items-center gap-1.5 z-10">
-                  <div className="w-9 h-9 bg-[#111a36] border-2 border-white/10 rounded-full flex items-center justify-center font-bold text-white/40 text-xs hover:border-brand-500/50 transition-all">
-                    <svg className="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-bold text-white/50 uppercase tracking-wide">2. Pago</span>
-                </div>
-
-                {/* Step 3: Confirmación (Inactive) */}
-                <div className="relative flex flex-col items-center gap-1.5 z-10">
-                  <div className="w-9 h-9 bg-[#111a36] border-2 border-white/10 rounded-full flex items-center justify-center font-bold text-white/40 text-xs">
-                    <svg className="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-bold text-white/50 uppercase tracking-wide">3. ¡Listo!</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+      <PageHeader
+        compact
+        breadcrumbs={[{ label: 'Carrito' }]}
+        icon={<FiShoppingCart />}
+        title="Tu carrito"
+        description={items.length === 0 ? 'Todavía no agregaste productos.' : `${items.length} ${items.length === 1 ? 'producto listo' : 'productos listos'} para pagar.`}
+        meta={items.length > 0 ? <CheckoutSteps current={0} /> : undefined}
+      />
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">

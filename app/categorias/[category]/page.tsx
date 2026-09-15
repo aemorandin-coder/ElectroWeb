@@ -1,96 +1,32 @@
-import Image from 'next/image';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import ProductosPage, { generateMetadata as productosMetadata } from '@/app/productos/page';
 import { prisma } from '@/lib/prisma';
-import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
-import PublicHeader from '@/components/public/PublicHeader';
-import AnimatedWave from '@/components/AnimatedWave';
-import CategoryClient from '@/components/public/CategoryClient';
-import { getCategoryColor, getAutoIcon } from '@/lib/category-icons';
-import CategoryIconRenderer from '@/components/CategoryIconRenderer';
 
-export const revalidate = 0;
+type PageProps = {
+  params: Promise<{ category: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export default async function CategoryDetailPage({ params }: { params: Promise<{ category: string }> }) {
-  const { category: categorySlug } = await params;
+/** Los filtros de la URL, con la categoría de la ruta fija. */
+async function withCategory({ params, searchParams }: PageProps) {
+  const [{ category }, raw] = await Promise.all([params, searchParams]);
+  return { ...raw, category };
+}
 
-  const category = await prisma.category.findUnique({ where: { slug: categorySlug } });
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  return productosMetadata({ searchParams: withCategory(props) });
+}
 
-  if (!category) notFound();
-
-  const products = await prisma.product.findMany({
-    where: { categoryId: category.id, status: 'PUBLISHED' },
-    include: publicProductInclude,
-    orderBy: { createdAt: 'desc' },
-  });
-
-  // SEGURIDAD: al componente cliente solo llegan campos públicos
-  const formattedProducts = products.map(toPublicProduct);
-
-  const resolvedIconName = category.icon || getAutoIcon(category.name);
-  const cv = getCategoryColor(category.color, category.name.length);
-
-  return (
-    <div className="min-h-screen bg-[#f8f9fa]">
-      <PublicHeader />
-
-      {/* Hero Section */}
-      <section
-        className="relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${cv.from}, ${cv.to})` }}
-      >
-        {/* Animated Particles */}
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-            {/* Category Icon / Image */}
-            <div className="relative group flex-shrink-0">
-              <div className="absolute inset-0 bg-white/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500" />
-              <div className="relative w-32 h-32 md:w-40 md:h-40 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                {category.image ? (
-                  <Image
-                    src={category.image}
-                    alt={category.name}
-                    width={120}
-                    height={120}
-                    className="w-full h-full object-contain p-3"
-                  />
-                ) : (
-                  <CategoryIconRenderer iconName={resolvedIconName} className="w-16 h-16 md:w-20 md:h-20 text-white drop-shadow-lg" />
-                )}
-                {/* Shine */}
-                <div
-                  className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/30 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-                  style={{ transform: 'skewX(-20deg)' }}
-                />
-              </div>
-            </div>
-
-            {/* Text */}
-            <div className="text-center md:text-left text-white flex-1 min-w-0">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-sm font-medium mb-4">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                {products.length} productos disponibles
-              </div>
-              <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight drop-shadow-lg break-words">
-                {category.name}
-              </h1>
-              <p className="text-lg md:text-xl text-white/90 w-full max-w-4xl leading-relaxed font-light break-words">
-                {category.description || `Explora nuestra colección exclusiva de ${category.name}.`}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <AnimatedWave />
-      </section>
-
-      {/* Products (Client Component) */}
-      <CategoryClient category={category} initialProducts={formattedProducts} />
-
-    </div>
-  );
+/**
+ * Categoría (C-32): el mismo catálogo de /productos filtrado por la categoría (búsqueda, filtros, orden y paginación en el servidor).
+ * Antes era un hero con el color de cada categoría y todos los productos cargados en el navegador.
+ * La URL /categorias/<slug> se mantiene para el menú del header; el canonical apunta a /productos?category=<slug>.
+ */
+export default async function CategoryDetailPage(props: PageProps) {
+  const { category } = await props.params;
+  if (!/^[a-z0-9-]{1,80}$/.test(category)) notFound();
+  const exists = await prisma.category.findUnique({ where: { slug: category }, select: { id: true } });
+  if (!exists) notFound();
+  return ProductosPage({ searchParams: withCategory(props) });
 }

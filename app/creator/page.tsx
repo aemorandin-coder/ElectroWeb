@@ -4,21 +4,9 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import PublicHeader from '@/components/public/PublicHeader';
+import PageHeader from '@/components/ui/PageHeader';
 import Footer from '@/components/Footer';
-import AnimatedWave from '@/components/AnimatedWave';
-import { 
-  FiAward, 
-  FiTrendingUp, 
-  FiDollarSign, 
-  FiCheckCircle, 
-  FiClock, 
-  FiAlertCircle, 
-  FiBookOpen, 
-  FiUploadCloud, 
-  FiArrowRight, 
-  FiSend, 
-  FiCheck
-} from 'react-icons/fi';
+import { FiAward, FiTrendingUp, FiDollarSign, FiCheckCircle, FiClock, FiAlertCircle, FiBookOpen, FiUploadCloud, FiArrowRight, FiSend, FiCheck } from 'react-icons/fi';
 
 type CreatorProfile = {
   id: string;
@@ -71,41 +59,13 @@ export default function CreatorLandingPage() {
     <div className="min-h-dvh bg-white text-ink flex flex-col justify-between overflow-x-hidden">
       <PublicHeader />
       
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden text-center text-white">
-        {/* Animated Background Particles */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-300 rounded-full blur-3xl" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-purple-300 rounded-full blur-3xl" style={{ animationDelay: '2s' }}></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-0 lg:py-10 text-center space-y-4 lg:space-y-6">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 mb-2 lg:mb-4">
-            <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-            <div className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <span className="text-xs font-semibold text-white uppercase tracking-wider">
-                Programa de Creadores de Cursos
-              </span>
-            </div>
-            <div className="h-0.5 w-8 lg:w-12 bg-gradient-to-r from-transparent via-white to-transparent rounded-full"></div>
-          </div>
-
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-none text-white max-w-4xl mx-auto">
-            Monetiza tu Experiencia. <br />
-            <span className="bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">
-              Quédate con el 90%.
-            </span>
-          </h1>
-          <p className="text-white/80 text-xs md:text-sm lg:text-base max-w-2xl mx-auto leading-relaxed">
-            Crea cursos premium de reparación, redes, CCTV, gaming o electrónica. Nosotros nos encargamos del procesamiento y el marketing; tú te llevas la gran parte.
-          </p>
-        </div>
-
-        {/* Animated Wave Divider */}
-        <AnimatedWave />
-      </section>
+      <PageHeader
+        breadcrumbs={[{ label: 'Cursos', href: '/cursos' }, { label: 'Enseña aquí' }]}
+        icon={<FiTrendingUp />}
+        eyebrow="Programa de creadores de cursos"
+        title="Monetiza tu experiencia y quédate con el 90%"
+        description="Crea cursos de reparación, redes, CCTV, gaming o electrónica. Nosotros nos encargamos del cobro y el marketing; tú te llevas la mayor parte."
+      />
       
       {/* Content wrapper under wave */}
       <div className="max-w-5xl w-full mx-auto px-4 md:px-8 py-10 lg:py-16 relative z-10 space-y-16 flex-grow">

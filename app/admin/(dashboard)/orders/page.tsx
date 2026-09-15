@@ -29,6 +29,9 @@ import {
   adminRowHover,
   adminInput,
   adminLabel,
+  adminHint,
+  adminNotice,
+  adminDangerButton,
 } from '@/lib/admin-ui';
 
 
@@ -104,6 +107,8 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showShippingModal, setShowShippingModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
@@ -120,6 +125,7 @@ export default function OrdersPage() {
 
   useBodyScrollLock(showDetailsModal);
   useBodyScrollLock(showShippingModal);
+  useBodyScrollLock(showCancelModal);
 
   useEffect(() => {
     setMounted(true);
@@ -175,24 +181,41 @@ export default function OrdersPage() {
         body: JSON.stringify({ status: newStatus, ...additionalData }),
       });
 
+      const datos = await response.json().catch(() => null);
+
       if (response.ok) {
-        const updatedOrder = await response.json();
         toast.success(`Estado actualizado a: ${getStatusText(newStatus)}`);
         fetchOrders();
         if (selectedOrder?.id === orderId) {
-          setSelectedOrder({ ...selectedOrder, ...updatedOrder, status: newStatus });
+          setSelectedOrder({ ...selectedOrder, ...datos, status: newStatus });
         }
         setShowShippingModal(false);
+        setShowCancelModal(false);
+        setCancelReason('');
         window.dispatchEvent(new Event('refresh-sidebar-counts'));
-      } else {
-        toast.error('Error al actualizar el estado');
+        return true;
       }
+
+      toast.error(datos?.error || 'Error al actualizar el estado');
+      return false;
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Error al actualizar el estado');
+      return false;
     } finally {
       setUpdatingStatus(false);
     }
+  };
+
+  // El servidor exige un motivo de al menos 10 caracteres para cancelar: antes el botón
+  // no lo mandaba y la cancelación fallaba siempre.
+  const handleCancelOrder = () => {
+    if (!selectedOrder) return;
+    if (cancelReason.trim().length < 10) {
+      toast.error('Escribe el motivo de la cancelación (mínimo 10 caracteres).');
+      return;
+    }
+    handleStatusUpdate(selectedOrder.id, 'CANCELLED', { notes: cancelReason.trim() });
   };
 
   const handleShipOrder = () => {
@@ -637,8 +660,8 @@ export default function OrdersPage() {
                     <FiCheck className="inline h-4 w-4 shrink-0" aria-hidden="true" />Marcar Entregado
                   </button>
                 )}
-                {!['CANCELLED', 'DELIVERED', 'REFUNDED'].includes(selectedOrder.status) && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'CANCELLED')} disabled={updatingStatus} className="px-4 py-2 bg-deal-bg text-deal text-sm font-medium rounded-lg hover:bg-deal/15 disabled:opacity-50 flex items-center gap-2">
+                {!['CANCELLED', 'DELIVERED', 'REFUNDED', 'SHIPPED'].includes(selectedOrder.status) && (
+                  <button onClick={() => { setCancelReason(''); setShowCancelModal(true); }} disabled={updatingStatus} className="px-4 py-2 bg-deal-bg text-deal text-sm font-medium rounded-lg hover:bg-deal/15 disabled:opacity-50 flex items-center gap-2">
                     <FiX className="w-4 h-4" /> Cancelar Orden
                   </button>
                 )}
@@ -872,6 +895,75 @@ export default function OrdersPage() {
                   <>
                     <FiTruck className="w-4 h-4" />
                     Marcar como Enviado
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+      {/* Cancelar orden: el motivo va al cliente por correo y por notificación */}
+      {mounted && showCancelModal && selectedOrder && createPortal(
+        <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setShowCancelModal(false); }}>
+          <div className={`${adminModalPanel} sm:max-w-md`}>
+            <div className="px-6 py-4 border-b border-line">
+              <h3 className="text-lg font-bold text-ink flex items-center gap-2">
+                <FiX className="w-5 h-5 text-deal" />
+                Cancelar orden
+              </h3>
+              <p className="text-sm text-muted mt-1">Orden #{selectedOrder.orderNumber}</p>
+            </div>
+
+            <div className="p-6 flex flex-col gap-4 overflow-y-auto">
+              <div className={adminNotice('warning')}>
+                {selectedOrder.paymentStatus === 'PAID' ? (
+                  selectedOrder.paymentMethod === 'WALLET' ? (
+                    <>Se devolverá <strong>{formatUSD(Number(selectedOrder.totalUSD) || 0)}</strong> al saldo del cliente para comprar en la tienda, y el stock volverá al inventario.</>
+                  ) : (
+                    <>El stock volverá al inventario. Este pago no fue con saldo: si hay que devolver algo, se gestiona aparte.</>
+                  )
+                ) : (
+                  <>La orden no está pagada: no se devuelve stock ni saldo, solo se libera la reserva.</>
+                )}
+              </div>
+
+              <div>
+                <label className={adminLabel} htmlFor="motivo-cancelacion">
+                  Motivo de la cancelación *
+                </label>
+                <textarea
+                  id="motivo-cancelacion"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  rows={3}
+                  placeholder="Ej: El cliente pidió cancelar porque ya consiguió el equipo."
+                  className={`${adminInput(cancelReason.length > 0 && cancelReason.trim().length < 10)} h-auto py-2.5 resize-none`}
+                />
+                <p className={adminHint}>
+                  Mínimo 10 caracteres. El cliente lo recibe por correo y en sus notificaciones.
+                </p>
+              </div>
+            </div>
+
+            <div className={adminModalFooter}>
+              <button onClick={() => setShowCancelModal(false)} className={adminSecondaryButton}>
+                Volver
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                disabled={updatingStatus || cancelReason.trim().length < 10}
+                className={adminDangerButton}
+              >
+                {updatingStatus ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Cancelando...
+                  </>
+                ) : (
+                  <>
+                    <FiX className="w-4 h-4" />
+                    Cancelar orden
                   </>
                 )}
               </button>

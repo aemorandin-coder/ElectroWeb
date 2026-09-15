@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user) {
+        if (!isAuthorized(session, 'VIEW_DASHBOARD')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 

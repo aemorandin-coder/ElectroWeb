@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
+    // SEGURIDAD (C-70): ventas y conteos del negocio, solo admin
+    if (!isAuthorized(session, 'VIEW_DASHBOARD')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 

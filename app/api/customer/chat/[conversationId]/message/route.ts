@@ -16,11 +16,23 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { message, senderId, senderName, senderType } = await req.json();
+    const { message } = await req.json();
 
-    if (!message || !senderId || !senderName || !senderType) {
+    if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    // SEGURIDAD (C-70): solo el dueño o un admin escriben, y el remitente sale de la sesión
+    // (antes llegaba del cuerpo: cualquiera escribía en chats ajenos haciéndose pasar por el admin)
+    const role = session.user.role;
+    const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+    const conversation = await prisma.chatConversation.findUnique({ where: { id: conversationId }, select: { userId: true } });
+    if (!conversation || (!isAdmin && conversation.userId !== session.user.id)) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+    }
+    const senderId = session.user.id;
+    const senderName = session.user.name || session.user.email || (isAdmin ? 'Electro Shop' : 'Cliente');
+    const senderType = isAdmin ? 'admin' : 'customer';
 
     // Create message
     const newMessage = await prisma.chatMessage.create({

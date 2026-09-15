@@ -11,6 +11,10 @@ import {
     hashPin
 } from '@/lib/gift-card-crypto';
 
+/** Tiempo para crear la gift card después de descontar el saldo (la página tarda ~6 s entre ambos pasos). */
+const PAYMENT_WINDOW_MS = 15 * 60 * 1000;
+
+class PaymentAlreadyUsedError extends Error {}
 
 // GET - Get gift cards (admin) or user's gift cards
 export async function GET(request: Request) {
@@ -29,7 +33,9 @@ export async function GET(request: Request) {
                 return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
             }
 
+            // SEGURIDAD (C-70): sin `pin` ni `codeHash`; el PIN tiene 4 dígitos y su hash se descifra al instante
             const giftCards = await prisma.giftCard.findMany({
+                omit: { pin: true, codeHash: true },
                 include: {
                     design: true,
                     transactions: {
@@ -57,7 +63,26 @@ export async function GET(request: Request) {
             orderBy: { createdAt: 'desc' }
         });
 
-        return NextResponse.json(giftCards);
+        // SEGURIDAD (C-70): lista blanca. El código completo solo lo ve quien la recibió;
+        // quien la compró para otra persona ve los últimos 4 (antes veía código y hash del PIN y podía canjearla)
+        return NextResponse.json(giftCards.map((card) => {
+            const isRecipient = !card.recipientEmail || card.recipientEmail === session.user.email;
+            return {
+                id: card.id,
+                code: isRecipient ? card.code : null,
+                codeLast4: card.codeLast4 ?? card.code.slice(-4),
+                amountUSD: card.amountUSD,
+                balanceUSD: card.balanceUSD,
+                status: card.status,
+                design: card.design,
+                purchasedAt: card.purchasedAt,
+                recipientName: card.recipientName,
+                recipientEmail: card.recipientEmail,
+                senderName: card.senderName,
+                personalMessage: card.personalMessage,
+                createdAt: card.createdAt,
+            };
+        }));
 
     } catch (error) {
         console.error('Error fetching gift cards:', error);
@@ -69,10 +94,14 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Debes iniciar sesión' }, { status: 401 });
+        }
+        const isAdmin = session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN';
         const body = await request.json();
 
         // Support both field naming conventions for backwards compatibility
-        const amountUSD = body.amountUSD || body.amount;
+        const amountUSD = Math.round(Number(body.amountUSD || body.amount) * 100) / 100;
         const designId = body.designId || body.design;
         const personalMessage = body.personalMessage || body.message;
         const {
@@ -86,12 +115,38 @@ export async function POST(request: Request) {
             quantity = 1      // Number of cards to generate
         } = body;
 
-        // Auto-detect if it's a gift when recipient email is provided
-        const isGiftCard = isGift ?? !!recipientEmail;
+        // Auto-detect if it's a gift when recipient email is provided (la compra de un cliente siempre es para un destinatario)
+        const isGiftCard = !isAdmin || (isGift ?? !!recipientEmail);
 
         // Validate amount
-        if (!amountUSD || amountUSD < 5 || amountUSD > 500) {
+        if (!Number.isFinite(amountUSD) || amountUSD < 5 || amountUSD > 500) {
             return NextResponse.json({ error: 'Monto inválido (min $5, max $500)' }, { status: 400 });
+        }
+
+        // SEGURIDAD (C-70): un cliente solo recibe una gift card si ya pagó su monto con saldo.
+        // La página de Gift Cards descuenta el saldo (/api/customer/balance/deduct) y luego llama aquí:
+        // se busca ese pago reciente, sin usar, y se marca como usado en la misma transacción que crea la tarjeta.
+        let payment: { id: string } | null = null;
+        if (!isAdmin) {
+            if (!recipientEmail || typeof recipientEmail !== 'string') {
+                return NextResponse.json({ error: 'Indica el correo de quien recibe la gift card' }, { status: 400 });
+            }
+            payment = await prisma.transaction.findFirst({
+                where: {
+                    balance: { userId: session.user.id },
+                    type: 'PURCHASE',
+                    status: 'COMPLETED',
+                    amount: amountUSD,
+                    metadata: null,
+                    description: { startsWith: 'Gift Card' },
+                    createdAt: { gte: new Date(Date.now() - PAYMENT_WINDOW_MS) },
+                },
+                orderBy: { createdAt: 'desc' },
+                select: { id: true },
+            });
+            if (!payment) {
+                return NextResponse.json({ error: 'No encontramos el pago con saldo de esta gift card' }, { status: 402 });
+            }
         }
 
         // Generate unique code with high entropy
@@ -128,29 +183,42 @@ export async function POST(request: Request) {
         }
 
         // Create gift card with security enhancements
-        const giftCard = await prisma.giftCard.create({
-            data: {
-                code,
-                codeHash,
-                codeLast4: getCodeLastFour(code),
-                pin: hashedPin, // Store hashed PIN
-                amountUSD,
-                balanceUSD: amountUSD,
-                status: 'ACTIVE',
-                designId: validDesignId,
-                purchasedBy: session?.user?.id || null,
-                purchasedAt: new Date(),
-                orderId,
-                recipientName: isGiftCard ? recipientName : null,
-                recipientEmail: isGiftCard ? recipientEmail : null,
-                senderName: isGiftCard ? senderName : null,
-                personalMessage: isGiftCard ? personalMessage : null,
-                activatedAt: new Date(),
-                // No expiration for Electro Shop gift cards
-            },
-            include: {
-                design: true
+        const giftCard = await prisma.$transaction(async (tx) => {
+            const created = await tx.giftCard.create({
+                data: {
+                    code,
+                    codeHash,
+                    codeLast4: getCodeLastFour(code),
+                    pin: hashedPin, // Store hashed PIN
+                    amountUSD,
+                    balanceUSD: amountUSD,
+                    status: 'ACTIVE',
+                    designId: validDesignId,
+                    purchasedBy: session.user.id,
+                    purchasedAt: new Date(),
+                    orderId: isAdmin ? orderId : null,
+                    recipientName: isGiftCard ? recipientName : null,
+                    recipientEmail: isGiftCard ? recipientEmail : null,
+                    senderName: isGiftCard ? senderName : null,
+                    personalMessage: isGiftCard ? personalMessage : null,
+                    activatedAt: new Date(),
+                    // No expiration for Electro Shop gift cards
+                },
+                include: {
+                    design: true
+                }
+            });
+
+            if (payment) {
+                // Marca el pago como usado: si otra petición ya lo usó, no se crea nada
+                const claimed = await tx.transaction.updateMany({
+                    where: { id: payment.id, metadata: null },
+                    data: { metadata: JSON.stringify({ giftCardId: created.id }) },
+                });
+                if (claimed.count !== 1) throw new PaymentAlreadyUsedError();
             }
+
+            return created;
         });
 
         // Create initial transaction
@@ -167,8 +235,8 @@ export async function POST(request: Request) {
             }
         });
 
-        // Send email to recipient if it's a gift
-        if (isGift && recipientEmail) {
+        // Send email to recipient if it's a gift (antes exigía isGift, que la página no envía: el PIN nunca llegaba)
+        if (isGiftCard && recipientEmail) {
             try {
                 await sendGiftCardEmail(recipientEmail, {
                     code: giftCard.code,
@@ -189,7 +257,8 @@ export async function POST(request: Request) {
             success: true,
             giftCard: {
                 id: giftCard.id,
-                code: giftCard.code,
+                // El cliente no necesita el código: le llega a quien la recibe, junto con el PIN
+                code: isAdmin ? giftCard.code : null,
                 amountUSD: giftCard.amountUSD,
                 status: giftCard.status,
                 design: giftCard.design
@@ -197,6 +266,9 @@ export async function POST(request: Request) {
         });
 
     } catch (error) {
+        if (error instanceof PaymentAlreadyUsedError) {
+            return NextResponse.json({ error: 'Ese pago ya se usó para otra gift card' }, { status: 409 });
+        }
         console.error('Error creating gift card:', error);
         return NextResponse.json({ error: 'Error al crear gift card' }, { status: 500 });
     }

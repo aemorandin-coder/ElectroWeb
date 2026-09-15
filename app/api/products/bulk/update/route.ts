@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 // POST /api/products/bulk/update - Bulk update products
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession();
-        if (!session) {
+        // SEGURIDAD (C-70): antes bastaba cualquier sesión (un cliente podía cambiar precios y stock)
+        const session = await getServerSession(authOptions);
+        if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { isAuthorized } from '@/lib/auth-helpers';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { verifyCaptcha } from '@/lib/captcha';
 
@@ -72,8 +74,9 @@ export async function POST(request: NextRequest) {
 // GET /api/contact - Get all messages (Admin only)
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession();
-    if (!session) {
+    // SEGURIDAD (C-70): antes bastaba cualquier sesión (un cliente leía y borraba los mensajes)
+    const session = await getServerSession(authOptions);
+    if (!isAuthorized(session, 'MANAGE_CONTENT')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
@@ -94,8 +97,9 @@ export async function GET(request: NextRequest) {
 // PATCH /api/contact - Update message status (Admin only)
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession();
-    if (!session) {
+    // SEGURIDAD (C-70): antes bastaba cualquier sesión (un cliente leía y borraba los mensajes)
+    const session = await getServerSession(authOptions);
+    if (!isAuthorized(session, 'MANAGE_CONTENT')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
@@ -127,8 +131,9 @@ export async function PATCH(request: NextRequest) {
 // DELETE /api/contact - Delete message (Admin only)
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession();
-    if (!session) {
+    // SEGURIDAD (C-70): antes bastaba cualquier sesión (un cliente leía y borraba los mensajes)
+    const session = await getServerSession(authOptions);
+    if (!isAuthorized(session, 'MANAGE_CONTENT')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 

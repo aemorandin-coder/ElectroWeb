@@ -2,22 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiArrowRight, FiCheck } from 'react-icons/fi';
+import { FiAlertTriangle, FiArrowLeft, FiArrowRight, FiCheck } from 'react-icons/fi';
 
 import {
   WizardData,
   Category,
   DEFAULT_WIZARD_DATA,
-  DEFAULT_DIGITAL_PRICING,
   PHYSICAL_STEPS,
   DIGITAL_STEPS,
+  newVariantRow,
   validatePhysicalStep1,
   validatePhysicalStep2,
   validatePhysicalStep3,
   validateDigitalStep1,
   validateDigitalStep2,
+  validateDigitalStep3,
   validatePublish,
+  type VariantRow,
 } from './wizard/types';
+import { formatFaceValue, guessLegacyUnit, isDigitalUnit, type DigitalProvider } from '@/lib/digital-catalog';
 
 import { parseProductImages, parseProductTags } from '@/lib/product-utils';
 import WizardProgress from './wizard/WizardProgress';
@@ -27,7 +30,42 @@ import PhysicalStep1BasicInfo from './wizard/physical/Step1BasicInfo';
 import PhysicalStep2Prices from './wizard/physical/Step2Prices';
 import PhysicalStep3Specs from './wizard/physical/Step3Specs';
 import DigitalStep1Platform from './wizard/digital/Step1Platform';
-import DigitalStep2Denominations from './wizard/digital/Step2Denominations';
+import DigitalStep2Variants from './wizard/digital/Step2Variants';
+import { wizardPrimaryButton, wizardSecondaryButton } from './wizard/ui';
+
+interface ApiVariant {
+  id: string;
+  faceValue: number;
+  unit: string;
+  label: string;
+  costUSD: number;
+  priceUSD: number;
+  provider: string | null;
+  isActive: boolean;
+}
+interface LegacyPricing { amount: number; cost?: number; salePrice: number; enabled?: boolean }
+
+/** Filas del paso "Montos" desde la API (C-60) o, en productos sin migrar, desde specs.digitalPricing. */
+function toVariantRows(apiVariants: ApiVariant[] | undefined, legacy: LegacyPricing[] | null, platform: string): VariantRow[] {
+  if (apiVariants && apiVariants.length > 0) {
+    return apiVariants.map((v) => ({
+      key: v.id,
+      id: v.id,
+      faceValue: String(v.faceValue),
+      unit: isDigitalUnit(v.unit) ? v.unit : 'USD',
+      label: v.label,
+      labelEdited: isDigitalUnit(v.unit) ? v.label !== formatFaceValue(v.faceValue, v.unit) : true,
+      costUSD: v.costUSD ? String(v.costUSD) : '',
+      priceUSD: String(v.priceUSD),
+      provider: (v.provider as DigitalProvider | null) ?? '',
+      isActive: v.isActive,
+    }));
+  }
+  return (legacy ?? []).map((p) => {
+    const unit = guessLegacyUnit(platform, Number(p.amount));
+    return { ...newVariantRow(unit, Number(p.amount)), costUSD: p.cost ? String(p.cost) : '', priceUSD: String(p.salePrice), isActive: p.enabled !== false };
+  });
+}
 import DigitalStep3Delivery from './wizard/digital/Step3Delivery';
 import StepSEO from './wizard/StepSEO';
 import StepPublish from './wizard/StepPublish';
@@ -83,7 +121,7 @@ export default function ProductWizard({ productId }: Props) {
         const parsedTags = parseProductTags(product.tags);
 
         let parsedSpecs: Record<string, string> = {};
-        let savedDigitalPricing: any = null;
+        let savedDigitalPricing: LegacyPricing[] | null = null;
         try {
           const raw = product.specs || product.specifications;
           const parsed = typeof raw === 'string' ? JSON.parse(raw) : (raw ?? {});
@@ -92,12 +130,6 @@ export default function ProductWizard({ productId }: Props) {
           parsedSpecs = cleanSpecs;
         } catch { parsedSpecs = {}; }
 
-        const mergedDigitalPricing = Array.isArray(savedDigitalPricing)
-          ? DEFAULT_DIGITAL_PRICING.map((def) => {
-              const saved = savedDigitalPricing.find((p: any) => p.amount === def.amount);
-              return saved ? { ...saved, enabled: true } : def;
-            })
-          : DEFAULT_DIGITAL_PRICING;
 
         let dimLength = '', dimWidth = '', dimHeight = '';
         if (product.dimensions) {
@@ -137,9 +169,11 @@ export default function ProductWizard({ productId }: Props) {
           specifications: parsedSpecs,
           digitalPlatform: product.digitalPlatform || '',
           digitalRegion: product.digitalRegion || 'GLOBAL',
-          deliveryMethod: product.deliveryMethod || 'MANUAL',
-          digitalPricing: mergedDigitalPricing,
-          digitalMarginPercent: 10,
+          deliveryMethod: product.deliveryMethod === 'MANUAL' ? 'MANUAL' : 'INSTANT',
+          digitalVariants: toVariantRows(product.digitalVariants, Array.isArray(savedDigitalPricing) ? savedDigitalPricing : null, product.digitalPlatform || ''),
+          marginPercent: 12,
+          accountFieldLabel: product.accountFieldLabel || '',
+          accountFieldHint: product.accountFieldHint || '',
           redemptionInstructions: product.redemptionInstructions || '',
         });
 
@@ -164,6 +198,7 @@ export default function ProductWizard({ productId }: Props) {
     } else {
       if (s === 0) errs = validateDigitalStep1(data);
       else if (s === 1) errs = validateDigitalStep2(data);
+      else if (s === 2) errs = validateDigitalStep3(data);
     }
 
     if (s === PUBLISH_STEP) errs = { ...errs, ...validatePublish(data) };
@@ -187,13 +222,15 @@ export default function ProductWizard({ productId }: Props) {
 
   // ─── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async (publishStatus: 'PUBLISHED' | 'DRAFT') => {
+    // Al editar se puede saltar pasos desde la barra: si alguno quedó incompleto, se vuelve a él
+    for (let s = 0; s < PUBLISH_STEP; s++) {
+      if (!validate(s)) { setStep(s as any); return; }
+    }
     if (!validate(PUBLISH_STEP)) return;
     setIsLoading(true);
     setErrors({});
 
     try {
-      const enabledPricing = data.digitalPricing.filter((p) => p.enabled);
-
       const payload: any = {
         name: data.name.trim(),
         sku: data.sku.trim(),
@@ -227,13 +264,24 @@ export default function ProductWizard({ productId }: Props) {
           });
         }
       } else {
-        payload.priceUSD = enabledPricing.length > 0 ? Math.min(...enabledPricing.map((p) => p.salePrice)) : 0;
-        payload.stock = parseInt(data.stock) || 999;
+        // El precio "desde" y la validación final los hace el servidor (C-60)
+        payload.stock = 999;
         payload.digitalPlatform = data.digitalPlatform;
         payload.digitalRegion = data.digitalRegion;
         payload.deliveryMethod = data.deliveryMethod;
         payload.redemptionInstructions = data.redemptionInstructions || null;
-        payload.digitalPricing = enabledPricing;
+        payload.accountFieldLabel = data.deliveryMethod === 'MANUAL' ? data.accountFieldLabel.trim() || null : null;
+        payload.accountFieldHint = data.deliveryMethod === 'MANUAL' ? data.accountFieldHint.trim() || null : null;
+        payload.digitalVariants = data.digitalVariants.map((v) => ({
+          id: v.id,
+          faceValue: Number.parseFloat(v.faceValue.replace(',', '.')),
+          unit: v.unit,
+          label: v.label.trim(),
+          costUSD: Number.parseFloat(v.costUSD.replace(',', '.')) || 0,
+          priceUSD: Number.parseFloat(v.priceUSD.replace(',', '.')) || 0,
+          provider: v.provider || null,
+          isActive: v.isActive,
+        }));
       }
 
       const url = isEditing ? `/api/products/${productId}` : '/api/products';
@@ -283,7 +331,7 @@ export default function ProductWizard({ productId }: Props) {
       if (step === 3) return <StepSEO {...props} />;
     } else {
       if (step === 0) return <DigitalStep1Platform {...props} />;
-      if (step === 1) return <DigitalStep2Denominations {...props} />;
+      if (step === 1) return <DigitalStep2Variants {...props} />;
       if (step === 2) return <DigitalStep3Delivery {...props} />;
       if (step === 3) return <StepSEO {...props} />;
     }
@@ -307,40 +355,40 @@ export default function ProductWizard({ productId }: Props) {
   // ─── Skeleton ─────────────────────────────────────────────────────────────
   if (isFetching) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#f1f2f4]">
+      <div className="flex h-dvh items-center justify-center bg-surface">
         <div className="flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-gray-500 font-medium">Cargando producto...</p>
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+          <p className="font-medium text-muted">Cargando producto…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f2f4] pb-24">
+    <div className="min-h-dvh bg-surface pb-24">
 
       {/* ── Success Modal ──────────────────────────────────────────────────── */}
       {showSuccess && (
-        <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-12 shadow-2xl text-center max-w-sm w-full mx-4 border border-gray-100">
-            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-              <FiCheck className="w-10 h-10 text-green-500" />
+        <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-ink/40" role="status">
+          <div className="mx-4 w-full max-w-sm rounded-2xl border border-line bg-white p-12 text-center shadow-lg">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success-strong/10">
+              <FiCheck className="h-10 w-10 text-success-strong" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+            <h3 className="mb-3 text-2xl font-bold text-ink">
               {isEditing ? '¡Producto Actualizado!' : '¡Producto Publicado!'}
             </h3>
-            <p className="text-gray-500 mb-6">
+            <p className="mb-6 text-muted">
               {isEditing ? 'Los cambios han sido guardados.' : 'Tu producto ya está disponible en la tienda.'}
             </p>
-            <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-green-400 to-emerald-600 w-full transition-all duration-[2500ms] ease-out" />
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-line">
+              <div className="h-full w-full bg-success-strong" />
             </div>
           </div>
         </div>
       )}
 
       {/* ── Top bar ────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-200">
+      <div className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-white">
         <div className="max-w-[1300px] mx-auto px-4 md:px-8 py-3">
           <div className="flex items-center justify-between">
             {/* Left: back + title */}
@@ -348,17 +396,18 @@ export default function ProductWizard({ productId }: Props) {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
+                aria-label="Volver"
+                className="rounded-lg p-2 text-muted hover:bg-surface hover:text-ink"
               >
                 <FiArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-base font-bold text-gray-900 leading-tight">
+                <h1 className="text-base font-bold leading-tight text-ink">
                   {isEditing ? 'Editar producto' : 'Nuevo producto'}
                 </h1>
                 {data.productType && step >= 0 && (
-                  <p className="text-xs text-gray-400">
-                    {data.productType === 'PHYSICAL' ? '📦 Producto Físico' : '⚡ Producto Digital'}
+                  <p className="text-xs text-muted">
+                    {data.productType === 'PHYSICAL' ? 'Producto físico' : 'Producto digital'}
                   </p>
                 )}
               </div>
@@ -371,6 +420,7 @@ export default function ProductWizard({ productId }: Props) {
                   steps={steps}
                   current={step}
                   onStepClick={(i) => { setErrors({}); setStep(i as any); }}
+                  freeNavigation={isEditing}
                 />
               </div>
             )}
@@ -379,7 +429,7 @@ export default function ProductWizard({ productId }: Props) {
             <button
               type="button"
               onClick={() => router.back()}
-              className="text-sm text-gray-500 hover:text-gray-900 font-medium px-3 py-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted hover:bg-surface hover:text-ink"
             >
               Descartar
             </button>
@@ -392,6 +442,7 @@ export default function ProductWizard({ productId }: Props) {
                 steps={steps}
                 current={step}
                 onStepClick={(i) => { setErrors({}); setStep(i as any); }}
+                freeNavigation={isEditing}
               />
             </div>
           )}
@@ -399,11 +450,11 @@ export default function ProductWizard({ productId }: Props) {
       </div>
 
       {/* ── Body ───────────────────────────────────────────────────────────── */}
-      <div className="max-w-[1300px] mx-auto px-4 md:px-8 py-8">
+      <div className="max-w-[1300px] mx-auto px-2 sm:px-4 md:px-8 py-6 sm:py-8">
 
         {errors.general && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium flex items-center gap-3">
-            <span className="w-5 h-5 flex-shrink-0">⚠</span>
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-deal/30 bg-deal-bg p-4 text-sm font-semibold text-deal" role="alert">
+            <FiAlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />
             {errors.general}
           </div>
         )}
@@ -411,16 +462,16 @@ export default function ProductWizard({ productId }: Props) {
         <div className={showSidebar ? 'grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start' : ''}>
 
           {/* Step content */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
+          <div className="min-w-0 rounded-2xl border border-line bg-white p-4 sm:p-6 md:p-8">
             {renderStep()}
 
             {/* Navigation — not on publish step (it has its own buttons) */}
             {step >= 0 && step < PUBLISH_STEP && (
-              <div className="flex justify-between items-center mt-10 pt-6 border-t border-gray-100">
+              <div className="mt-10 flex items-center justify-between border-t border-line pt-6">
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex items-center gap-2 px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all"
+                  className={wizardSecondaryButton}
                 >
                   <FiArrowLeft className="w-4 h-4" />
                   {step === 0 ? 'Cambiar tipo' : 'Anterior'}
@@ -429,7 +480,7 @@ export default function ProductWizard({ productId }: Props) {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-ink text-white font-semibold rounded-xl hover:bg-[#333] transition-all shadow-sm shadow-black/10"
+                  className={wizardPrimaryButton}
                 >
                   {step === steps.length - 2 ? 'Revisar y publicar' : 'Continuar'}
                   <FiArrowRight className="w-4 h-4" />
@@ -443,7 +494,7 @@ export default function ProductWizard({ productId }: Props) {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 font-medium transition-colors"
+                  className="flex items-center gap-2 text-sm font-medium text-muted hover:text-ink"
                 >
                   <FiArrowLeft className="w-4 h-4" />
                   Volver a SEO

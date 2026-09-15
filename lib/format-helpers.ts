@@ -17,41 +17,12 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
     OTHER: 'Otro',
 };
 
-export const PAYMENT_METHOD_ICONS: Record<string, string> = {
-    MOBILE_PAYMENT: '📱',
-    BANK_TRANSFER: '🏦',
-    ZELLE: '💸',
-    ZINLI: '💚',
-    PAYPAL: '🅿️',
-    CRYPTO: '₿',
-    CASH: '💵',
-    CREDIT_CARD: '💳',
-    BALANCE: '👛',
-    MERCANTIL_PANAMA: '🇵🇦',
-    OTHER: '💰',
-};
-
 /**
  * Formatea un método de pago a un nombre legible
  */
 export function formatPaymentMethod(method: string | null | undefined): string {
     if (!method) return 'No especificado';
     return PAYMENT_METHOD_LABELS[method] || method.replace(/_/g, ' ');
-}
-
-/**
- * Obtiene el icono para un método de pago
- */
-export function getPaymentMethodIcon(method: string | null | undefined): string {
-    if (!method) return '💰';
-    return PAYMENT_METHOD_ICONS[method] || '💰';
-}
-
-/**
- * Formatea método de pago con icono
- */
-export function formatPaymentMethodWithIcon(method: string | null | undefined): string {
-    return `${getPaymentMethodIcon(method)} ${formatPaymentMethod(method)}`;
 }
 
 /**

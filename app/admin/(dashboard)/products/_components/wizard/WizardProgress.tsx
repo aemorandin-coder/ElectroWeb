@@ -6,42 +6,44 @@ interface Props {
   steps: string[];
   current: number;
   onStepClick: (index: number) => void;
+  /** Al editar un producto existente se puede ir a cualquier paso. */
+  freeNavigation?: boolean;
 }
 
-export default function WizardProgress({ steps, current, onStepClick }: Props) {
+/** Pasos del asistente. Se puede volver a los ya completados (o ir a cualquiera al editar). */
+export default function WizardProgress({ steps, current, onStepClick, freeNavigation = false }: Props) {
   return (
-    <div className="flex items-center justify-center gap-0 overflow-x-auto py-1">
+    <ol className="flex items-center overflow-x-auto py-1 sm:justify-center" aria-label="Pasos">
       {steps.map((label, i) => {
         const done = i < current;
         const active = i === current;
+        const reachable = !active && (done || freeNavigation);
         return (
-          <div key={i} className="flex items-center">
+          <li key={label} className="flex items-center">
             <button
               type="button"
-              onClick={() => { if (done) onStepClick(i); }}
-              disabled={!done}
+              onClick={() => { if (reachable) onStepClick(i); }}
+              disabled={!reachable}
+              aria-current={active ? 'step' : undefined}
               className={[
-                'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap',
-                active ? 'text-blue-600' : done ? 'text-green-600 hover:bg-green-50 cursor-pointer' : 'text-gray-400 cursor-default',
+                'flex items-center gap-2 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-brand-500',
+                active ? 'text-brand-700' : reachable ? 'cursor-pointer text-ink hover:bg-surface' : 'cursor-default text-muted',
               ].join(' ')}
             >
-              <div
+              <span
                 className={[
-                  'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all',
-                  done ? 'bg-green-500 text-white' : active ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-gray-200 text-gray-500',
+                  'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                  done ? 'bg-success-strong text-white' : active ? 'bg-brand-500 text-white ring-4 ring-brand-100' : 'bg-line text-ink-soft',
                 ].join(' ')}
               >
-                {done ? <FiCheck className="w-3 h-3" /> : <span>{i + 1}</span>}
-              </div>
+                {done ? <FiCheck className="h-3 w-3" aria-hidden="true" /> : i + 1}
+              </span>
               <span className="hidden sm:block">{label}</span>
             </button>
-
-            {i < steps.length - 1 && (
-              <div className={['h-px w-6 mx-1 flex-shrink-0 transition-all', done ? 'bg-green-400' : 'bg-gray-200'].join(' ')} />
-            )}
-          </div>
+            {i < steps.length - 1 && <span className={`mx-1 h-px w-5 shrink-0 ${done ? 'bg-success-strong' : 'bg-line'}`} aria-hidden="true" />}
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 }

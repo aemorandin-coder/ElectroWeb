@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { MdOutlineLocalShipping } from 'react-icons/md';
-import { FiMonitor, FiSearch } from 'react-icons/fi';
-import { WizardData } from './types';
+import { FiCheck, FiMonitor, FiSearch, FiTruck } from 'react-icons/fi';
 import SadesSearchModal from './SadesSearchModal';
+import type { WizardData } from './types';
+import { wizardChoice } from './ui';
 
 interface Props {
   selected: WizardData['productType'];
@@ -13,11 +13,29 @@ interface Props {
   isEditing: boolean;
 }
 
+const TYPES = [
+  {
+    value: 'PHYSICAL' as const,
+    Icon: FiTruck,
+    title: 'Producto físico',
+    text: 'Se envía o se retira en tienda. Pide precio, stock, peso y medidas.',
+    examples: 'Periféricos, componentes, consolas',
+  },
+  {
+    value: 'DIGITAL' as const,
+    Icon: FiMonitor,
+    title: 'Producto digital',
+    text: 'Gift cards y saldo. Eliges los montos (en dólares, Robux…) y cómo se entrega.',
+    examples: 'PlayStation, Xbox, Roblox, Steam',
+  },
+];
+
+/** Primer paso del asistente (C-60): elegir tipo. En edición solo muestra el tipo actual. */
 export default function StepTypeSelector({ selected, onSelect, onSadesImport, isEditing }: Props) {
   const [showSades, setShowSades] = useState(false);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[420px] py-8">
+    <div className="mx-auto flex max-w-3xl flex-col items-center py-6">
       {showSades && (
         <SadesSearchModal
           onImport={(updates) => { onSadesImport(updates); setShowSades(false); }}
@@ -25,103 +43,63 @@ export default function StepTypeSelector({ selected, onSelect, onSadesImport, is
         />
       )}
 
-      <div className="text-center mb-10">
-        <h2 className="text-2xl font-bold text-gray-900">
-          {isEditing ? 'Tipo de producto' : '¿Qué tipo de producto vas a crear?'}
-        </h2>
-        <p className="text-gray-500 mt-2 text-sm">
-          {isEditing ? 'El tipo de producto no se puede cambiar después de creado.' : 'Esto determina el flujo del formulario.'}
+      <div className="mb-8 text-center">
+        <h2 className="text-2xl font-bold text-ink">{isEditing ? 'Tipo de producto' : '¿Qué vas a vender?'}</h2>
+        <p className="mt-2 text-sm text-muted">
+          {isEditing ? 'El tipo no se puede cambiar después de crear el producto.' : 'Elige el tipo: el formulario se adapta a lo que necesita cada uno.'}
         </p>
       </div>
 
-      <div className="flex gap-6 mb-10 w-full max-w-lg">
-        {/* Physical */}
-        <button
-          type="button"
-          onClick={() => !isEditing && onSelect('PHYSICAL')}
-          disabled={isEditing && selected !== 'PHYSICAL'}
-          className={[
-            'flex-1 p-8 rounded-2xl border-2 transition-all text-center',
-            selected === 'PHYSICAL'
-              ? 'border-blue-500 bg-blue-50 shadow-lg shadow-blue-100'
-              : isEditing
-              ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
-              : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 cursor-pointer',
-          ].join(' ')}
-        >
-          <div className={[
-            'w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4',
-            selected === 'PHYSICAL' ? 'bg-blue-100' : 'bg-gray-100',
-          ].join(' ')}>
-            <MdOutlineLocalShipping className={`w-8 h-8 ${selected === 'PHYSICAL' ? 'text-blue-600' : 'text-gray-400'}`} />
-          </div>
-          <h3 className={`text-lg font-bold mb-2 ${selected === 'PHYSICAL' ? 'text-blue-700' : 'text-gray-700'}`}>
-            Producto Físico
-          </h3>
-          <p className="text-sm text-gray-500 leading-relaxed">
-            Electrodomésticos, periféricos, hardware. Requiere peso, dimensiones y envío.
-          </p>
-          {selected === 'PHYSICAL' && (
-            <div className="mt-4 inline-flex items-center gap-1.5 bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full">
-              Seleccionado
-            </div>
-          )}
-        </button>
-
-        {/* Digital */}
-        <button
-          type="button"
-          onClick={() => !isEditing && onSelect('DIGITAL')}
-          disabled={isEditing && selected !== 'DIGITAL'}
-          className={[
-            'flex-1 p-8 rounded-2xl border-2 transition-all text-center',
-            selected === 'DIGITAL'
-              ? 'border-purple-500 bg-purple-50 shadow-lg shadow-purple-100'
-              : isEditing
-              ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
-              : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/30 cursor-pointer',
-          ].join(' ')}
-        >
-          <div className={[
-            'w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4',
-            selected === 'DIGITAL' ? 'bg-purple-100' : 'bg-gray-100',
-          ].join(' ')}>
-            <FiMonitor className={`w-8 h-8 ${selected === 'DIGITAL' ? 'text-purple-600' : 'text-gray-400'}`} />
-          </div>
-          <h3 className={`text-lg font-bold mb-2 ${selected === 'DIGITAL' ? 'text-purple-700' : 'text-gray-700'}`}>
-            Producto Digital
-          </h3>
-          <p className="text-sm text-gray-500 leading-relaxed">
-            Gift cards, recargas, licencias. Entrega por código o recarga directa.
-          </p>
-          {selected === 'DIGITAL' && (
-            <div className="mt-4 inline-flex items-center gap-1.5 bg-purple-600 text-white text-xs font-bold px-3 py-1.5 rounded-full">
-              Seleccionado
-            </div>
-          )}
-        </button>
+      <div className="grid w-full gap-4 sm:grid-cols-2">
+        {TYPES.map(({ value, Icon, title, text, examples }) => {
+          const isSelected = selected === value;
+          const locked = isEditing && !isSelected;
+          return (
+            <button
+              key={value}
+              type="button"
+              onClick={() => !isEditing && onSelect(value)}
+              disabled={locked}
+              aria-pressed={isSelected}
+              className={`${wizardChoice(isSelected)} relative flex flex-col gap-4 p-6 disabled:cursor-not-allowed disabled:opacity-50`}
+            >
+              <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${isSelected ? 'bg-brand-500 text-white' : 'bg-brand-50 text-brand-600'}`}>
+                <Icon className="h-7 w-7" aria-hidden="true" />
+              </span>
+              <span>
+                <span className="block text-lg font-bold text-ink">{title}</span>
+                <span className="mt-1 block text-sm leading-relaxed text-ink-soft">{text}</span>
+                <span className="mt-3 block text-xs font-medium text-muted">Ej.: {examples}</span>
+              </span>
+              {isSelected && (
+                <span className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-brand-500 text-white">
+                  <FiCheck className="h-4 w-4" aria-hidden="true" />
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* SADES import — only when creating */}
       {!isEditing && (
-        <div className="w-full max-w-lg">
-          <div className="relative flex items-center gap-3 mb-4">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 font-medium">o importa desde el catálogo</span>
-            <div className="flex-1 h-px bg-gray-200" />
+        <div className="mt-8 w-full">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="h-px flex-1 bg-line" />
+            <span className="text-xs font-medium text-muted">o importa un producto físico del catálogo</span>
+            <span className="h-px flex-1 bg-line" />
           </div>
           <button
             type="button"
             onClick={() => setShowSades(true)}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 border-2 border-dashed border-gray-300 rounded-2xl hover:border-blue-500 hover:bg-blue-50/50 transition-all text-gray-600 hover:text-blue-600 group"
+            className="flex w-full items-center gap-4 rounded-2xl border-2 border-dashed border-line bg-white px-5 py-4 text-left hover:border-brand-200 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500"
           >
-            <div className="w-9 h-9 bg-gray-100 group-hover:bg-blue-100 rounded-xl flex items-center justify-center transition-colors">
-              <FiSearch className="w-5 h-5" />
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-semibold">Importar desde SADES</p>
-              <p className="text-xs text-gray-400 group-hover:text-blue-400 transition-colors">Pre-llena nombre, SKU, precio y specs del catálogo ElectroCaja</p>
-            </div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-ink-soft">
+              <FiSearch className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span>
+              <span className="block text-sm font-semibold text-ink">Importar desde SADES</span>
+              <span className="block text-xs text-muted">Llena nombre, SKU, precio y especificaciones desde el catálogo ElectroCaja</span>
+            </span>
           </button>
         </div>
       )}

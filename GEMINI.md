@@ -19,7 +19,7 @@ Contexto: `docs/plan/PLAN.md` (diseño) y `docs/plan/AUDITORIA.md` (problemas). 
 7. **No cambies textos visibles** (copys, mensajes) salvo que la tarea lo diga.
 8. **Colores:** solo los tokens de la sección 4. Nunca escribas un hex nuevo en un className.
 9. **Tipografía:** nunca `text-[7px]`, `text-[8px]`, `text-[9px]`, `text-[9.5px]`, `text-[10px]`, `font-black` ni `font-extrabold`.
-10. **Nada de** `any` nuevo, `console.log`, `alert()`, `<style jsx>` ni `style={{ color/background }}` nuevos.
+10. **Nada de** `any` nuevo, `console.log`, `alert()`, `<style jsx>`, `style={{ color/background }}` ni **emojis** nuevos (en textos, toasts o comentarios: usa íconos de `react-icons/fi`).
 11. **Verifica antes de decir "listo"**: corre los comandos de "Verificación" de la tarea y pega la salida en `docs/plan/estado/G-XX.md` (un archivo por tarea, con el ID de la tarea).
 12. **Si algo no cuadra** (la línea no existe, el grep da un resultado distinto al esperado, un error que no entiendes): PARA, escribe `BLOQUEADO: <motivo>` en `docs/plan/estado/G-XX.md` y pasa a la siguiente tarea. **No improvises.**
 
@@ -53,6 +53,7 @@ Excepciones puntuales (solo cuando la tarea lo dice):
     - Tocar cálculos de precios, costos, saldos o stock, o agregar o quitar campos de formularios.
     - Mover lógica entre archivos o crear componentes nuevos.
   - **Fuera de límites hasta nuevo aviso:** `app/admin/(dashboard)/settings/**` y `app/admin/(dashboard)/products/**`. Los rehace Claude en C-50 y C-51.
+    Única excepción: los 6 archivos de la tarjeta **G-29** (solo `className`).
 - `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → solo G-04b, G-05g y G-06g, **y solo cuando en `main` existan `docs/plan/estado/C-01.md` y `docs/plan/estado/C-05.md` con `Estado: HECHO`**.
 - Borrado de la lista cerrada de G-02.
 

@@ -1,9 +1,11 @@
 'use client';
 
 import Image from 'next/image';
-import { FiCheck, FiAlertCircle, FiTag, FiPackage, FiMonitor } from 'react-icons/fi';
-import { MdOutlineLocalShipping } from 'react-icons/md';
-import { WizardData } from './types';
+import { FiAlertCircle, FiCheck, FiMonitor, FiTruck, FiZap } from 'react-icons/fi';
+import { formatUSD } from '@/lib/currency';
+import { DELIVERY_MODES, getPlatform } from '@/lib/digital-catalog';
+import type { WizardData } from './types';
+import { wizardCard, wizardPrimaryButton, wizardSecondaryButton, wizardSectionHelp, wizardSectionTitle } from './ui';
 
 interface Props {
   data: WizardData;
@@ -14,220 +16,140 @@ interface Props {
   onDraft: () => void;
 }
 
-function CheckRow({ ok, label }: { ok: boolean; label: string }) {
-  return (
-    <div className={`flex items-center gap-2 text-sm ${ok ? 'text-green-700' : 'text-amber-700'}`}>
-      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${ok ? 'bg-green-100' : 'bg-amber-100'}`}>
-        {ok ? <FiCheck className="w-3 h-3" /> : <FiAlertCircle className="w-3 h-3" />}
-      </div>
-      {label}
-    </div>
-  );
-}
+const num = (value: string) => Number.parseFloat((value || '').replace(',', '.'));
 
+/** Último paso: vista previa como tarjeta de la tienda, lista de verificación y publicar o guardar borrador. */
 export default function StepPublish({ data, errors, isLoading, isEditing, onPublish, onDraft }: Props) {
   const mainImage = data.images[0] ?? null;
-
   const isPhysical = data.productType === 'PHYSICAL';
-  const isDigital = data.productType === 'DIGITAL';
+  const activeVariants = data.digitalVariants.filter((v) => v.isActive && num(v.priceUSD) > 0);
+  const displayPrice = isPhysical ? num(data.priceUSD) || 0 : activeVariants.length > 0 ? Math.min(...activeVariants.map((v) => num(v.priceUSD))) : 0;
+  const comparePrice = num(data.compareAtPriceUSD);
+  const hasDeal = isPhysical && comparePrice > displayPrice && displayPrice > 0;
+  const platform = getPlatform(data.digitalPlatform);
 
-  const enabledDenominations = data.digitalPricing.filter(p => p.enabled);
-  const displayPrice = isDigital && enabledDenominations.length > 0
-    ? Math.min(...enabledDenominations.map(p => p.salePrice))
-    : parseFloat(data.priceUSD || '0');
-
-  const comparePrice = parseFloat(data.compareAtPriceUSD || '0');
-  const hasDiscount = comparePrice > 0 && comparePrice > displayPrice;
-
-  // Readiness checklist
-  const checks = isPhysical ? [
-    { ok: !!data.name.trim(), label: 'Nombre del producto' },
-    { ok: !!data.sku.trim(), label: 'SKU' },
-    { ok: !!data.categoryId, label: 'Categoría asignada' },
-    { ok: data.images.length > 0, label: 'Al menos una imagen' },
-    { ok: displayPrice > 0, label: 'Precio de venta' },
-    { ok: !!data.weightKg && parseFloat(data.weightKg) > 0, label: 'Peso (requerido para envío)' },
-    { ok: Object.keys(data.specifications).length >= 3, label: 'Mínimo 3 especificaciones técnicas' },
-  ] : [
-    { ok: !!data.name.trim(), label: 'Nombre del producto' },
-    { ok: !!data.sku.trim(), label: 'SKU' },
-    { ok: !!data.digitalPlatform, label: 'Plataforma seleccionada' },
-    { ok: !!data.categoryId, label: 'Categoría asignada' },
-    { ok: data.images.length > 0, label: 'Al menos una imagen' },
-    { ok: enabledDenominations.length >= 2, label: 'Mínimo 2 denominaciones activas' },
-  ];
-
-  const allGood = checks.every(c => c.ok);
-  const warningCount = checks.filter(c => !c.ok).length;
+  const checks = isPhysical
+    ? [
+        { ok: Boolean(data.name.trim()), label: 'Nombre del producto' },
+        { ok: Boolean(data.sku.trim()), label: 'SKU' },
+        { ok: Boolean(data.categoryId), label: 'Categoría' },
+        { ok: data.images.length > 0, label: 'Al menos una imagen' },
+        { ok: displayPrice > 0, label: 'Precio de venta' },
+        { ok: num(data.weightKg) > 0, label: 'Peso (para calcular el envío)' },
+        { ok: Object.keys(data.specifications).length >= 3, label: 'Al menos 3 especificaciones' },
+      ]
+    : [
+        { ok: Boolean(data.name.trim()), label: 'Nombre del producto' },
+        { ok: Boolean(data.sku.trim()), label: 'SKU' },
+        { ok: Boolean(data.digitalPlatform), label: 'Plataforma' },
+        { ok: Boolean(data.categoryId), label: 'Categoría' },
+        { ok: data.images.length > 0, label: 'Al menos una imagen' },
+        { ok: activeVariants.length > 0, label: 'Al menos un monto activo con precio' },
+        { ok: data.deliveryMethod !== 'MANUAL' || Boolean(data.accountFieldLabel.trim()), label: 'Dato de cuenta para la recarga directa' },
+      ];
+  const missing = checks.filter((c) => !c.ok).length;
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Vista previa y publicación</h2>
-        <p className="text-sm text-gray-500 mt-1">Así verá el cliente tu producto en la tienda.</p>
+        <h2 className={wizardSectionTitle}>Revisar y publicar</h2>
+        <p className={wizardSectionHelp}>Así se verá la tarjeta en la tienda.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Product card preview */}
+      <div className="grid gap-8 md:grid-cols-2">
         <div>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Vista de tarjeta</p>
-          <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm max-w-xs">
-            {/* Image */}
-            <div className="aspect-square bg-gray-100 relative overflow-hidden">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Tarjeta en la tienda</p>
+          <article className="max-w-xs overflow-hidden rounded-xl border border-line bg-white">
+            <div className="relative aspect-square bg-white">
               {mainImage ? (
-                <Image src={mainImage} alt={data.name} fill className="object-cover" sizes="300px" />
+                <Image src={mainImage} alt={data.name || 'Producto'} fill sizes="320px" className="object-contain p-3" />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
-                  {isPhysical ? <MdOutlineLocalShipping className="w-12 h-12 mb-2" /> : <FiMonitor className="w-12 h-12 mb-2" />}
+                <div className="flex h-full flex-col items-center justify-center text-muted">
+                  {isPhysical ? <FiTruck className="mb-2 h-10 w-10" aria-hidden="true" /> : <FiMonitor className="mb-2 h-10 w-10" aria-hidden="true" />}
                   <p className="text-xs font-medium">Sin imagen</p>
                 </div>
               )}
-              {hasDiscount && (
-                <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                  -{Math.round((1 - displayPrice / comparePrice) * 100)}%
-                </div>
-              )}
-              {data.isFeatured && (
-                <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full">
-                  Destacado
-                </div>
-              )}
-              {isDigital && (
-                <div className="absolute bottom-3 left-3 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                  <FiMonitor className="w-3 h-3" /> Digital
-                </div>
-              )}
-            </div>
-
-            {/* Info */}
-            <div className="p-4">
-              <p className="text-xs text-gray-400 mb-1">{data.categoryId ? '(categoría)' : 'Sin categoría'}</p>
-              <h3 className="font-bold text-gray-900 text-sm leading-tight line-clamp-2 mb-3">
-                {data.name || 'Nombre del producto'}
-              </h3>
-
-              {isDigital && enabledDenominations.length > 0 ? (
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {enabledDenominations.slice(0, 4).map(d => (
-                    <span key={d.amount} className="text-xs bg-purple-100 text-purple-700 font-semibold px-2 py-0.5 rounded-full">
-                      ${d.amount}
-                    </span>
-                  ))}
-                  {enabledDenominations.length > 4 && (
-                    <span className="text-xs text-gray-400 font-medium">+{enabledDenominations.length - 4}</span>
-                  )}
-                </div>
-              ) : null}
-
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-gray-900">
-                  {displayPrice > 0 ? `$${displayPrice.toFixed(2)}` : '—'}
-                </span>
-                {hasDiscount && (
-                  <span className="text-sm text-gray-400 line-through">${comparePrice.toFixed(2)}</span>
-                )}
-              </div>
-
-              <div className="mt-3 flex items-center gap-1.5 text-xs">
-                {isPhysical ? (
-                  parseInt(data.stock || '0') > 0
-                    ? <span className="text-green-600 font-medium">✓ En stock ({data.stock} unidades)</span>
-                    : <span className="text-red-500 font-medium">✗ Sin stock</span>
-                ) : (
-                  <span className="text-purple-600 font-medium flex items-center gap-1">
-                    <FiMonitor className="w-3 h-3" />
-                    {data.deliveryMethod === 'INSTANT' ? 'Entrega instantánea' : 'Recarga directa'}
-                  </span>
-                )}
+              <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+                {hasDeal && <span className="rounded bg-deal px-1.5 py-0.5 text-[11px] font-semibold text-white">-{Math.round((1 - displayPrice / comparePrice) * 100)}%</span>}
+                {!isPhysical && <span className="inline-flex items-center gap-0.5 rounded bg-brand-600 px-1.5 py-0.5 text-[11px] font-semibold text-white"><FiZap className="h-3 w-3" aria-hidden="true" />DIGITAL</span>}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Checklist */}
-        <div className="space-y-4">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Lista de verificación</p>
-
-          <div className={[
-            'p-4 rounded-2xl border-2',
-            allGood ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200',
-          ].join(' ')}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center ${allGood ? 'bg-green-500' : 'bg-amber-500'}`}>
-                {allGood ? <FiCheck className="w-4 h-4 text-white" /> : <FiAlertCircle className="w-4 h-4 text-white" />}
-              </div>
-              <p className={`text-sm font-bold ${allGood ? 'text-green-800' : 'text-amber-800'}`}>
-                {allGood ? '¡Listo para publicar!' : `${warningCount} campo${warningCount !== 1 ? 's' : ''} pendiente${warningCount !== 1 ? 's' : ''}`}
+            <div className="space-y-2 p-3">
+              <p className="text-xs font-medium text-muted">{platform?.label ?? (isPhysical ? 'Producto físico' : 'Producto digital')}</p>
+              <h3 className="line-clamp-2 min-h-10 text-sm font-medium text-ink">{data.name || 'Nombre del producto'}</h3>
+              <p className="text-xl font-bold text-ink">
+                {!isPhysical && activeVariants.length > 1 && <span className="mr-1 text-xs font-medium text-muted">Desde</span>}
+                {displayPrice > 0 ? formatUSD(displayPrice) : '—'}
               </p>
+              {hasDeal && <p className="text-xs text-muted line-through">{formatUSD(comparePrice)}</p>}
+              <p className={`flex items-center gap-1.5 text-xs font-medium ${isPhysical && !(Number(data.stock) > 0) ? 'text-deal' : 'text-success-strong'}`}>
+                <span className="h-2 w-2 shrink-0 rounded-full bg-current" aria-hidden="true" />
+                {isPhysical ? (Number(data.stock) > 0 ? `En stock (${data.stock})` : 'Agotado') : DELIVERY_MODES[data.deliveryMethod].store}
+              </p>
+              <div className="flex h-10 items-center justify-center rounded-lg bg-brand-500 text-sm font-semibold text-white">
+                {isPhysical ? 'Agregar al carrito' : 'Elegir monto'}
+              </div>
             </div>
-            <div className="space-y-2">
-              {checks.map((c, i) => <CheckRow key={i} ok={c.ok} label={c.label} />)}
-            </div>
-          </div>
-
-          {errors.images && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">
-              {errors.images}
+          </article>
+          {!isPhysical && activeVariants.length > 0 && (
+            <div className="mt-3 flex max-w-xs flex-wrap gap-1.5">
+              {activeVariants.map((v) => (
+                <span key={v.key} className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
+                  {v.label} · {formatUSD(num(v.priceUSD))}
+                </span>
+              ))}
             </div>
           )}
+        </div>
 
-          {/* Summary */}
+        <div className="space-y-4">
+          <div className={`rounded-2xl border-2 p-4 ${missing === 0 ? 'border-success-strong/30 bg-success-strong/5' : 'border-warning-strong/30 bg-warning/10'}`}>
+            <p className={`mb-3 flex items-center gap-2 text-sm font-bold ${missing === 0 ? 'text-success-strong' : 'text-warning-strong'}`}>
+              {missing === 0 ? <FiCheck className="h-5 w-5" aria-hidden="true" /> : <FiAlertCircle className="h-5 w-5" aria-hidden="true" />}
+              {missing === 0 ? 'Listo para publicar' : `Falta${missing === 1 ? '' : 'n'} ${missing} dato${missing === 1 ? '' : 's'}`}
+            </p>
+            <ul className="space-y-2">
+              {checks.map((c) => (
+                <li key={c.label} className={`flex items-center gap-2 text-sm ${c.ok ? 'text-ink' : 'text-warning-strong'}`}>
+                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.ok ? 'bg-success-strong text-white' : 'bg-warning/30'}`}>
+                    {c.ok ? <FiCheck className="h-3 w-3" aria-hidden="true" /> : <FiAlertCircle className="h-3 w-3" aria-hidden="true" />}
+                  </span>
+                  {c.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {errors.images && <p className="rounded-xl border border-deal/30 bg-deal-bg p-3 text-sm font-semibold text-deal">{errors.images}</p>}
+
           {data.name && (
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Tipo</span>
-                <span className="font-semibold text-gray-900 flex items-center gap-1.5">
-                  {isPhysical ? <><MdOutlineLocalShipping className="w-4 h-4 text-blue-500" /> Físico</> : <><FiMonitor className="w-4 h-4 text-purple-500" /> Digital</>}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">SKU</span>
-                <span className="font-mono text-gray-900 text-xs">{data.sku || '—'}</span>
-              </div>
-              {isPhysical && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Precio</span>
-                  <span className="font-bold text-gray-900">{displayPrice > 0 ? `$${displayPrice.toFixed(2)}` : '—'}</span>
-                </div>
+            <dl className={`${wizardCard} space-y-2 text-sm`}>
+              <div className="flex justify-between gap-3"><dt className="text-muted">Tipo</dt><dd className="font-semibold text-ink">{isPhysical ? 'Físico' : `Digital · ${platform?.label ?? '—'}`}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted">SKU</dt><dd className="font-mono text-xs text-ink">{data.sku || '—'}</dd></div>
+              {isPhysical ? (
+                <div className="flex justify-between gap-3"><dt className="text-muted">Precio</dt><dd className="font-semibold text-ink">{displayPrice > 0 ? formatUSD(displayPrice) : '—'}</dd></div>
+              ) : (
+                <>
+                  <div className="flex justify-between gap-3"><dt className="text-muted">Montos activos</dt><dd className="font-semibold text-ink">{activeVariants.length} de {data.digitalVariants.length}</dd></div>
+                  <div className="flex justify-between gap-3"><dt className="text-muted">Entrega</dt><dd className="font-semibold text-ink">{DELIVERY_MODES[data.deliveryMethod].admin}</dd></div>
+                </>
               )}
-              {isDigital && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Denominaciones</span>
-                  <span className="font-bold text-purple-700">{enabledDenominations.length} activas</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-gray-500">Imágenes</span>
-                <span className={`font-semibold ${data.images.length > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {data.images.length} / 8
-                </span>
-              </div>
-            </div>
+              <div className="flex justify-between gap-3"><dt className="text-muted">Imágenes</dt><dd className={`font-semibold ${data.images.length > 0 ? 'text-success-strong' : 'text-deal'}`}>{data.images.length} / 8</dd></div>
+            </dl>
           )}
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex gap-4 pt-4 border-t border-gray-200">
-        <button
-          type="button"
-          onClick={onDraft}
-          disabled={isLoading}
-          className="flex-1 px-6 py-3.5 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all disabled:opacity-50"
-        >
-          Guardar como Borrador
+      <div className="flex flex-col gap-3 border-t border-line pt-6 sm:flex-row">
+        <button type="button" onClick={onDraft} disabled={isLoading} className={`${wizardSecondaryButton} h-12 flex-1`}>
+          Guardar como borrador
         </button>
-        <button
-          type="button"
-          onClick={onPublish}
-          disabled={isLoading || !allGood}
-          className="flex-1 px-6 py-3.5 bg-ink text-white font-bold rounded-xl hover:bg-[#333] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-black/10"
-        >
+        <button type="button" onClick={onPublish} disabled={isLoading || missing > 0} className={`${wizardPrimaryButton} h-12 flex-1`}>
           {isLoading ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" aria-label="Guardando" />
           ) : (
             <>
-              <FiCheck className="w-5 h-5" />
+              <FiCheck className="h-5 w-5" aria-hidden="true" />
               {isEditing ? 'Guardar cambios' : 'Publicar producto'}
             </>
           )}

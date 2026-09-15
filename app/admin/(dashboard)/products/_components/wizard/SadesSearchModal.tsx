@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { FiX, FiSearch, FiDownload } from 'react-icons/fi';
+import { FiX, FiSearch, FiDownload, FiPackage } from 'react-icons/fi';
 import { WizardData } from './types';
 
 interface SadesResult {
@@ -150,7 +150,7 @@ export default function SadesSearchModal({ onImport, onClose }: Props) {
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 ) : (
-                  <span className="text-lg">📦</span>
+                  <FiPackage className="h-5 w-5 text-muted" aria-hidden="true" />
                 )}
               </div>
 

@@ -1,8 +1,52 @@
-export interface DigitalAmountPricing {
-  amount: number;
-  cost: number;
-  salePrice: number;
-  enabled: boolean;
+import { formatFaceValue, getPlatform, type DigitalProvider, type DigitalUnit } from '@/lib/digital-catalog';
+
+/** Fila editable de un monto digital (C-60). Los números van como texto mientras se escriben. */
+export interface VariantRow {
+  /** Clave local para React (las filas nuevas aún no tienen id) */
+  key: string;
+  id?: string;
+  faceValue: string;
+  unit: DigitalUnit;
+  label: string;
+  /** Si el admin cambió la etiqueta a mano, ya no se regenera al cambiar el monto */
+  labelEdited: boolean;
+  costUSD: string;
+  priceUSD: string;
+  provider: DigitalProvider | '';
+  isActive: boolean;
+}
+
+let rowCounter = 0;
+export function newVariantRow(unit: DigitalUnit, faceValue?: number, provider: DigitalProvider | '' = ''): VariantRow {
+  rowCounter += 1;
+  return {
+    key: `nuevo-${Date.now()}-${rowCounter}`,
+    faceValue: faceValue ? String(faceValue) : '',
+    unit,
+    label: faceValue ? formatFaceValue(faceValue, unit) : '',
+    labelEdited: false,
+    costUSD: '',
+    priceUSD: '',
+    provider,
+    isActive: true,
+  };
+}
+
+/** Montos típicos de la plataforma, sin precios (los pone el admin). */
+export function rowsFromPlatform(platformValue: string): VariantRow[] {
+  const platform = getPlatform(platformValue);
+  if (!platform) return [];
+  return platform.presetValues.map((value) => newVariantRow(platform.unit, value));
+}
+
+const num = (value: string) => Number.parseFloat(value.replace(',', '.'));
+
+/** Margen sobre el costo, en %. null si no hay costo. */
+export function rowMargin(row: VariantRow): number | null {
+  const cost = num(row.costUSD);
+  const price = num(row.priceUSD);
+  if (!(cost > 0) || !(price > 0)) return null;
+  return ((price - cost) / cost) * 100;
 }
 
 export interface Category {
@@ -36,12 +80,14 @@ export interface WizardData {
   isConsolidable: boolean;
   shippingCost: string;
   specifications: Record<string, string>;
-  // Digital
+  // Digital (C-60)
   digitalPlatform: string;
   digitalRegion: string;
   deliveryMethod: 'INSTANT' | 'MANUAL';
-  digitalPricing: DigitalAmountPricing[];
-  digitalMarginPercent: number;
+  digitalVariants: VariantRow[];
+  marginPercent: number;
+  accountFieldLabel: string;
+  accountFieldHint: string;
   redemptionInstructions: string;
 }
 
@@ -51,18 +97,6 @@ export interface StepProps {
   errors: Record<string, string>;
   categories: Category[];
 }
-
-export const DEFAULT_DIGITAL_PRICING: DigitalAmountPricing[] = [
-  { amount: 10,  cost: 9.50,   salePrice: 11,    enabled: false },
-  { amount: 20,  cost: 19.00,  salePrice: 22,    enabled: false },
-  { amount: 25,  cost: 23.75,  salePrice: 27.50, enabled: false },
-  { amount: 30,  cost: 28.50,  salePrice: 33,    enabled: false },
-  { amount: 50,  cost: 47.50,  salePrice: 55,    enabled: false },
-  { amount: 75,  cost: 71.25,  salePrice: 82.50, enabled: false },
-  { amount: 100, cost: 95.00,  salePrice: 110,   enabled: false },
-  { amount: 150, cost: 142.50, salePrice: 165,   enabled: false },
-  { amount: 200, cost: 190.00, salePrice: 220,   enabled: false },
-];
 
 export const DEFAULT_WIZARD_DATA: WizardData = {
   productType: null,
@@ -90,9 +124,11 @@ export const DEFAULT_WIZARD_DATA: WizardData = {
   specifications: {},
   digitalPlatform: '',
   digitalRegion: 'GLOBAL',
-  deliveryMethod: 'MANUAL',
-  digitalPricing: DEFAULT_DIGITAL_PRICING,
-  digitalMarginPercent: 10,
+  deliveryMethod: 'INSTANT',
+  digitalVariants: [],
+  marginPercent: 12,
+  accountFieldLabel: '',
+  accountFieldHint: '',
   redemptionInstructions: '',
 };
 
@@ -136,11 +172,26 @@ export function validateDigitalStep1(data: WizardData): Record<string, string> {
 
 export function validateDigitalStep2(data: WizardData): Record<string, string> {
   const e: Record<string, string> = {};
-  const enabled = data.digitalPricing.filter(p => p.enabled);
-  if (enabled.length < 2) {
-    e.digitalPricing = 'Habilita al menos 2 denominaciones';
-  } else if (enabled.some(p => p.cost <= 0 || p.salePrice <= 0 || p.salePrice < p.cost)) {
-    e.digitalPricing = 'El precio de venta debe ser mayor al costo en todas las denominaciones';
+  const active = data.digitalVariants.filter((v) => v.isActive);
+  if (active.length === 0) {
+    e.digitalVariants = 'Activa al menos un monto';
+    return e;
+  }
+  const seen = new Set<string>();
+  for (const v of data.digitalVariants) {
+    if (!(num(v.faceValue) > 0)) { e.digitalVariants = 'Todos los montos deben ser mayores a 0'; break; }
+    if (v.isActive && !(num(v.priceUSD) > 0)) { e.digitalVariants = `Pon el precio de venta de ${v.label || 'cada monto activo'}`; break; }
+    const k = `${num(v.faceValue)}-${v.unit}`;
+    if (seen.has(k)) { e.digitalVariants = `El monto ${v.label} está repetido`; break; }
+    seen.add(k);
+  }
+  return e;
+}
+
+export function validateDigitalStep3(data: WizardData): Record<string, string> {
+  const e: Record<string, string> = {};
+  if (data.deliveryMethod === 'MANUAL' && !data.accountFieldLabel.trim()) {
+    e.accountFieldLabel = 'Escribe qué dato de la cuenta le pedimos al cliente';
   }
   return e;
 }
@@ -161,7 +212,7 @@ export const PHYSICAL_STEPS = [
 
 export const DIGITAL_STEPS = [
   'Plataforma',
-  'Denominaciones',
+  'Montos y precios',
   'Entrega',
   'SEO',
   'Publicar',

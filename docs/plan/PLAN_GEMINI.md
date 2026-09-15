@@ -551,3 +551,123 @@ git diff main | grep -E "^\+" | grep -E "body|JSON.stringify|clipboard" | grep -
 npx tsc --noEmit
 ```
 QA: `/customer/balance` y `/customer/orders` muestran montos como "$28,00" y "Bs. 22.050,55".
+
+---
+
+## Ronda R8 · G-29 → G-30
+Rama: `gemini/R8`, creada **desde `main` con C-60 mergeado** (debe existir `app/admin/(dashboard)/products/_components/wizard/ui.ts`). Un commit por tarea con su `docs/plan/estado/G-XX.md`.
+
+### G-29 · Pasos del producto físico con la paleta de la tienda · Depende: C-60 en `main`
+**Excepción explícita** a "fuera de límites": en `app/admin/(dashboard)/products/**` solo puedes tocar **estos 6 archivos**, y **solo `className`**:
+- `_components/wizard/physical/Step1BasicInfo.tsx`
+- `_components/wizard/physical/Step2Prices.tsx`
+- `_components/wizard/physical/Step3Specs.tsx`
+- `_components/wizard/StepSEO.tsx`
+- `_components/wizard/ImagePanel.tsx`
+- `_components/wizard/SadesSearchModal.tsx`
+
+Modelo a imitar: los pasos digitales ya rediseñados (`wizard/digital/Step1Platform.tsx`, `Step3Delivery.tsx`).
+
+**Reglas (sin excepciones):**
+1. **Inputs, selects y textareas:** reemplaza todo su `className` por `{wizardInput(Boolean(errors.<campo>))}` si ya tenían estilo de error, o `{wizardInput()}` si no. Textarea: `` {`${wizardInput()} h-auto resize-none py-2.5`} ``. Si el input tenía clases de posición o tamaño propias (`pl-8`, `pr-10`, `font-mono`, `w-24`), agrégalas al final igual que el textarea.
+2. **Etiquetas `<label>`** con estilo de etiqueta → `className={wizardLabel}`. **Ayudas** bajo un campo → `wizardHint`. **Mensajes de error** → `wizardError`. **Título del paso** (`<h2>`) → `wizardSectionTitle` y su párrafo → `wizardSectionHelp`.
+3. **Botones:** principal → `wizardPrimaryButton`; secundario (borde) → `wizardSecondaryButton`. Conserva `disabled`, `onClick` y el contenido.
+4. **Import:** `import { wizardInput, wizardLabel, ... } from '../ui';` (desde `physical/`) o `'./ui'` (desde `wizard/`), solo lo que uses.
+5. **El resto de clases de color** con esta tabla:
+
+| Antes | Después |
+|---|---|
+| `text-gray-900`, `text-gray-800` | `text-ink` |
+| `text-gray-700`, `text-gray-600` | `text-ink-soft` |
+| `text-gray-500`, `text-gray-400`, `text-gray-300` | `text-muted` |
+| `border-gray-300`, `border-gray-200`, `border-gray-100` | `border-line` |
+| `bg-gray-50`, `bg-gray-100`, `hover:bg-gray-50` | `bg-surface`, `hover:bg-surface` |
+| `bg-blue-600`, `bg-black` · `hover:bg-blue-700`, `hover:bg-black` | `bg-brand-500` · `hover:bg-brand-600` |
+| `text-blue-500`, `text-blue-600` · `text-blue-700` · `hover:text-blue-600` | `text-brand-600` · `text-brand-700` · `hover:text-brand-600` |
+| `bg-blue-50`, `hover:bg-blue-50`, `hover:bg-blue-50/50` | `bg-brand-50`, `hover:bg-brand-50` |
+| `border-blue-600`, `hover:border-blue-500`, `focus:border-blue-500` | `border-brand-500`, `hover:border-brand-500`, `focus:border-brand-500` |
+| `focus:ring-blue-500/20` | `focus:ring-brand-500/20` |
+| `text-red-500`, `text-red-600`, `text-red-700`, `hover:text-red-600` | `text-deal`, `hover:text-deal` |
+| `border-red-300` · `border-red-200` | `border-deal` · `border-deal/30` |
+| `bg-red-50`, `bg-red-50/30` | `bg-deal-bg` |
+| `text-green-600`, `text-green-700` · `bg-green-50` · `border-green-500` | `text-success-strong` · `bg-success-strong/10` · `border-success-strong` |
+| `text-amber-600`, `text-amber-700` · `bg-amber-50` · `border-amber-500` | `text-warning-strong` · `bg-warning/10` · `border-warning-strong` |
+| `text-yellow-400` | `text-warning` |
+| `rounded-xl` en inputs | (lo pone `wizardInput`) |
+| `z-50` o `z-[...]` en el modal de SADES | `z-[var(--z-modal)]` |
+| `font-black` | `font-bold` |
+
+6. **No toques** `text-[#1a0dab]` ni `text-[#4d5156]` de `StepSEO.tsx`: imitan el resultado de Google a propósito.
+7. **Prohibido:** cambiar textos, props, estados, `fetch`, validaciones, cálculos (márgenes, precios), el orden de los campos o agregar/quitar elementos. Si una clase no está en la tabla, déjala y anótala en el estado.
+
+**En tu estado:** por archivo, cuántas clases cambiaste y la lista de clases que dejaste por no estar en la tabla.
+
+Verificación:
+```bash
+git diff --stat main    # solo los 6 archivos + docs/plan/estado/G-29.md
+W="app/admin/(dashboard)/products/_components/wizard"
+grep -nE "(gray|blue|red|green|amber|yellow)-[0-9]|bg-black|font-black|z-50" $W/physical/*.tsx $W/StepSEO.tsx $W/ImagePanel.tsx $W/SadesSearchModal.tsx   # 0
+grep -n "\[#" $W/physical/*.tsx $W/StepSEO.tsx $W/ImagePanel.tsx $W/SadesSearchModal.tsx   # solo las 2 de StepSEO
+git diff main -- "$W" | grep -E "^[-+]" | grep -vE "className|^\+\+\+|^---|import .* from '\.\.?/ui'" | wc -l   # 0: solo cambian className e imports
+npx tsc --noEmit
+```
+QA: `/admin/products/new` → Producto físico. Recorre los 5 pasos: los campos se ven como los del producto digital (borde gris claro, foco azul de la marca), sin textos cortados a 390 px.
+
+### G-30 · Emojis → íconos · Depende: R7 en `main` ✅
+Regla del proyecto (reafirmada por Andrés): **no hay emojis en la web**. Estos 46 usos de tu carril se cambian por íconos de `react-icons/fi` (o `react-icons/fa` donde se indica). Las líneas son aproximadas (R7 movió algunas): ubícalas por el texto.
+
+**Patrón del ícono en línea con texto:** `<FiCheck className="inline h-4 w-4 shrink-0" aria-hidden="true" />` y el texto sin el emoji. Si el padre no es `flex`, agrega `inline-flex items-center gap-1` al `className` del padre.
+**Patrón del ícono grande de estado vacío** (`text-5xl` / `text-6xl`): reemplaza el `<div>` entero por `<FiBookOpen className="mx-auto mb-3 h-12 w-12 text-muted" aria-hidden="true" />` (o el ícono de la tabla), conservando el `mb-*` que tenía.
+**Import:** agrega al import de `react-icons/fi` que ya exista (o crea `import { ... } from 'react-icons/fi';`). No reordenes los demás.
+
+| Archivo | Texto actual | Cambio |
+|---|---|---|
+| `app/customer/(dashboard)/balance/page.tsx` | comentarios `🚀 MOBILE VIEW…` y `💻 DESKTOP VIEW…` | borra solo el emoji y el espacio que sigue |
+| `app/customer/(dashboard)/orders/page.tsx` | los mismos 2 comentarios | igual |
+| `app/customer/(dashboard)/mis-cursos/page.tsx` | `<div className="text-5xl mb-4">📚</div>` | `FiBookOpen` grande |
+| `app/customer/(dashboard)/mis-cursos/page.tsx` | `🏆 Certificado disponible` | `FiAward` en línea |
+| `app/customer/(dashboard)/referrals/page.tsx` | `icon: '🥉'`, `'🥈'`, `'🥇'` (niveles) | `icon: <FaMedal className="h-5 w-5 text-warning-strong" aria-hidden="true" />` (bronce), `text-muted` (plata), `text-warning` (oro), de `react-icons/fa`. Si el tipo del campo es `string`, cámbialo a `React.ReactNode` en esa misma interfaz |
+| `app/customer/(dashboard)/referrals/page.tsx` | `['🥇', '🥈', '🥉'][entry.rank - 1]` | `<FaMedal className={`h-5 w-5 ${['text-warning', 'text-muted', 'text-warning-strong'][entry.rank - 1]}`} aria-hidden="true" />` |
+| `app/creator/dashboard/cursos/[id]/page.tsx` | `flash('✓ Información guardada')`, `flash('✓ Currículum guardado')` | quita `✓ ` del texto |
+| `app/creator/dashboard/cursos/[id]/page.tsx` | botón con `✕` | `<FiX className="h-4 w-4" aria-hidden="true" />` y agrega `aria-label="Quitar"` al botón si no tiene |
+| `app/creator/dashboard/perfil/page.tsx` | `setMsg('✓ Perfil actualizado')` | quita `✓ ` |
+| `app/cursos/page.tsx` | `<span …>⭐</span>` | `<FiStar className="h-3 w-3 fill-current" aria-hidden="true" />` dentro del mismo span, con `aria-label="Destacado"` en el span |
+| `app/cursos/page.tsx` | `⭐ Cursos Destacados` | `FiStar` en línea (`fill-current text-warning`) |
+| `components/cursos/CoursePlayer.tsx` | `👁 Vista previa de creador…` | `FiEye` en línea |
+| `components/cursos/CoursePlayer.tsx` | `🏆 Certificado` | `FiAward` en línea |
+| `components/cursos/CoursePlayer.tsx` | `<div className="text-6xl mb-4">🏆</div>` | `FiAward` grande (`h-16 w-16 text-warning`) |
+| `components/cursos/CourseDetailClient.tsx` | `✓ Verificado` | `FiCheck` en línea |
+| `app/gift-cards/page.tsx` | `⭐ Popular` | `FiStar` en línea (`fill-current`) |
+| `app/gift-cards/page.tsx` | `¡Hola {recipientName}! 🎉` | quita ` 🎉` |
+| `components/modals/RechargeModalV2.tsx` | `icon: '🎉'` (toast) | `icon: <FiCheckCircle className="h-5 w-5 text-success-strong" />` |
+| `components/reviews/ReviewForm.tsx` | `icon: '🔒'` (toast) | `icon: <FiLock className="h-5 w-5 text-brand-600" />` |
+| `components/reviews/ReviewStats.tsx` | `{star} ★` | `{star} <FaStar className="inline h-3 w-3 text-warning" aria-hidden="true" />` (`react-icons/fa`) |
+| `components/orders/OrderTracking.tsx` | `📍 {shippingNotes}` | `FiMapPin` en línea |
+| `components/orders/OrderTracking.tsx` | `📅 Entrega estimada:` | `FiCalendar` en línea |
+| `components/social/ShareEarnModal.tsx` | 4 textos para compartir que empiezan con `🔥 ` o `🎓 ` | quita el emoji y el espacio (el resto del texto igual) |
+| `app/admin/(dashboard)/cursos/page.tsx` | `<div className="text-5xl mb-3">📚</div>` | `FiBookOpen` grande |
+| `app/admin/(dashboard)/cursos/page.tsx` | `⭐ Destacado` | `FiStar` en línea (`fill-current`) |
+| `app/admin/(dashboard)/cursos/page.tsx` | `★ {Number(course.rating).toFixed(1)}` | `FaStar` en línea (`text-warning`) + el número |
+| `app/admin/(dashboard)/marketing/page.tsx` | `'✓ Activo'` / `'✗ Inactivo'` (2 filas) | `'Activo'` / `'Inactivo'` |
+| `app/admin/(dashboard)/orders/page.tsx` | `✓ Marcar Entregado` | `FiCheck` en línea |
+| `app/admin/(dashboard)/orders/[id]/digital/page.tsx` | `'✓ Pagado'` / `'⏳ Pendiente de pago'` | `{isPaid ? <><FiCheck … />Pagado</> : <><FiClock … />Pendiente de pago</>}` |
+| `app/admin/(dashboard)/orders/[id]/digital/page.tsx` | `✓ Entregado` | `FiCheck` en línea |
+| `app/admin/(dashboard)/payments/page.tsx` | `` toast.success(`✨ ${data.count} …`) `` | quita `✨ ` |
+| `app/admin/(dashboard)/payments/page.tsx` | `{ icon: 'ℹ️' }` | `{ icon: <FiInfo className="h-5 w-5 text-brand-600" /> }` |
+| `app/admin/(dashboard)/reports/page.tsx` | `⚠️ Alertas Críticas de Seguridad` | `FiAlertTriangle` en línea |
+| `app/admin/(dashboard)/reviews/page.tsx` | `✓ Compra verificada` | `FiCheck` en línea |
+| `components/admin/SocialMediaGenerator.tsx` | 3 × `<span style={{ color: … }}>✓</span>` | `<FiCheck style={{ color: selectedTemplate.accent || '#ffffff' }} className="inline h-4 w-4" aria-hidden="true" />` (es la plantilla de la imagen: aquí sí se conserva ese `style`) |
+
+- **Si un archivo usa `toast` con `icon:` JSX**, debe ser `.tsx` (todos lo son).
+- **No toques** el carril Claude: correos (`lib/email-service.ts`, `lib/email-templates/**`), `app/api/**` y `lib/**` tienen emojis que resuelve Claude aparte.
+
+**En tu estado:** la tabla con una columna más, "hecho / BLOQUEADO + motivo".
+
+Verificación:
+```bash
+F='app/customer app/creator app/cursos components/cursos app/gift-cards components/modals components/reviews components/orders components/social components/admin app/admin/(dashboard)/cursos app/admin/(dashboard)/marketing app/admin/(dashboard)/orders app/admin/(dashboard)/payments app/admin/(dashboard)/reports app/admin/(dashboard)/reviews'
+LC_ALL=C.UTF-8 grep -rnP "[\x{1F000}-\x{1FAFF}\x{2600}-\x{27BF}\x{2B00}-\x{2BFF}\x{2300}-\x{23FF}\x{FE0F}]" $F   # 0
+git diff --stat main    # solo los archivos de la tabla + docs/plan/estado/G-30.md
+npx tsc --noEmit
+```
+QA: `/customer/referrals` muestra las medallas como íconos; `/cursos` y `/admin/cursos` muestran la estrella de destacado; un pedido digital en admin dice "Pagado" con ícono.

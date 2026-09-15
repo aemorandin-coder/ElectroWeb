@@ -49,7 +49,7 @@ export default function UiDemoPage() {
             <div className="flex flex-wrap gap-2">
               <ProductBadge variant="deal">-15%</ProductBadge>
               <ProductBadge variant="new">NUEVO</ProductBadge>
-              <ProductBadge variant="digital">⚡ DIGITAL</ProductBadge>
+              <ProductBadge variant="digital">DIGITAL</ProductBadge>
               <ProductBadge variant="soldout">AGOTADO</ProductBadge>
               <ProductBadge variant="tag">OFERTA DEL DÍA</ProductBadge>
             </div>

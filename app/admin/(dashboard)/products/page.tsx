@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSpinner';
 import { formatPrice } from '@/lib/currency';
-import { FiRefreshCw, FiCheckCircle, FiAlertCircle, FiDatabase, FiBox, FiX, FiExternalLink } from 'react-icons/fi';
+import { FiRefreshCw, FiCheckCircle, FiAlertCircle, FiDatabase, FiBox, FiX, FiExternalLink, FiStar, FiZap, FiPackage } from 'react-icons/fi';
 import { parseProductImages } from '@/lib/product-utils';
 
 interface Product {
@@ -607,7 +607,7 @@ export default function ProductsPage() {
           status: 'processing'
         });
 
-        addSyncLog(`✅ Lote procesado: ${data.processed} items (${data.created} nuevos, ${data.updated} actualizados)`);
+        addSyncLog(`Lote procesado: ${data.processed} items (${data.created} nuevos, ${data.updated} actualizados)`);
 
         cursor = data.nextCursor;
         hasMore = data.hasMore;
@@ -615,14 +615,14 @@ export default function ProductsPage() {
         await new Promise(r => setTimeout(r, 1000));
       }
 
-      addSyncLog('🎉 Sincronización completada con éxito.');
+      addSyncLog('Sincronización completada con éxito.');
       setSyncProgress(prev => ({ ...prev, status: 'completed' }));
 
       fetchData();
 
     } catch (error: any) {
       console.error('Sync error:', error);
-      addSyncLog(`❌ Error crítico: ${error.message}`);
+      addSyncLog(`Error crítico: ${error.message}`);
       setSyncProgress(prev => ({ ...prev, status: 'error' }));
     } finally {
       setIsSyncing(false);
@@ -1015,7 +1015,7 @@ export default function ProductsPage() {
             <Button variant="ghost" size="sm" onClick={handleBulkDelete} className="text-red-200 hover:bg-red-500/30 border border-red-300/50">
               Eliminar
             </Button>
-            <button onClick={() => setSelectedProducts([])} className="ml-2 text-white/60 hover:text-white text-xs">✕ Limpiar</button>
+            <button onClick={() => setSelectedProducts([])} className="ml-2 inline-flex items-center gap-1 text-white/60 hover:text-white text-xs"><FiX className="h-3.5 w-3.5" aria-hidden="true" />Limpiar</button>
           </div>
         </div>
       )}
@@ -1387,7 +1387,7 @@ export default function ProductsPage() {
                     </div>
                     <p className="text-xs text-gray-400 font-mono mt-1">SKU: {quickViewProduct.sku}</p>
                     {quickViewProduct.isFeatured && (
-                      <span className="inline-block mt-1 text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">⭐ Destacado</span>
+                      <span className="mt-1 inline-flex items-center gap-1 text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold"><FiStar className="h-3 w-3 fill-current" aria-hidden="true" />Destacado</span>
                     )}
                   </div>
 
@@ -1408,8 +1408,8 @@ export default function ProductsPage() {
                     </div>
                     <div className="bg-surface rounded-xl p-3">
                       <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Tipo</p>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {(quickViewProduct as any).productType === 'DIGITAL' ? '⚡ Digital' : '📦 Físico'}
+                      <p className="flex items-center gap-1 text-sm font-semibold text-gray-900">
+                        {(quickViewProduct as any).productType === 'DIGITAL' ? <><FiZap className="h-3.5 w-3.5" aria-hidden="true" />Digital</> : <><FiPackage className="h-3.5 w-3.5" aria-hidden="true" />Físico</>}
                       </p>
                     </div>
                   </div>

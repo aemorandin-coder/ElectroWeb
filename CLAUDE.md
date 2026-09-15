@@ -28,6 +28,7 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 - Nada que solo funcione con hover. Nada de `<button>` dentro de `<Link>` (usa *stretched link*).
 - Precios con `lib/currency.ts` (`formatUSD`, `formatVES`).
 - Sin `<style jsx>`, `console.log` ni `any` nuevos. Sin animaciones infinitas en la tienda.
+- **Sin emojis** en la web ni en el código (textos, toasts, badges, comentarios): usa íconos de `react-icons` (`Fi*`). Regla vieja del proyecto que Andrés reafirmó el 2026-09-14.
 - Cambios mínimos y del estilo del código que los rodea. No reformatees archivos enteros.
 
 ## Verificación

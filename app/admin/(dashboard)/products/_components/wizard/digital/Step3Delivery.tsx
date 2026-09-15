@@ -1,125 +1,96 @@
 'use client';
 
-import { FiSend, FiLayers } from 'react-icons/fi';
-import { StepProps } from '../types';
+import { FiKey, FiUserCheck } from 'react-icons/fi';
+import { DELIVERY_MODES, getPlatform, type DeliveryMode } from '@/lib/digital-catalog';
+import type { StepProps } from '../types';
+import { wizardCard, wizardChoice, wizardError, wizardHint, wizardInput, wizardLabel, wizardSecondaryButton, wizardSectionHelp, wizardSectionTitle } from '../ui';
 
-export default function DigitalStep3Delivery({ data, onChange }: StepProps) {
+const MODE_ICONS: Record<DeliveryMode, typeof FiKey> = { INSTANT: FiKey, MANUAL: FiUserCheck };
+
+/**
+ * Paso 3 del producto digital (C-60): cómo se entrega.
+ * Los códigos se compran al proveedor cuando se confirma el pago: "Código digital" no promete entrega automática.
+ */
+export default function DigitalStep3Delivery({ data, onChange, errors }: StepProps) {
+  const platform = getPlatform(data.digitalPlatform);
+  const isManual = data.deliveryMethod === 'MANUAL';
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Método de entrega</h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Define cómo recibirá el cliente su producto después del pago.
-        </p>
+        <h2 className={wizardSectionTitle}>Entrega</h2>
+        <p className={wizardSectionHelp}>Qué recibe el cliente después de pagar. Esto se muestra tal cual en la ficha del producto.</p>
       </div>
 
-      {/* Delivery method */}
-      <div className="grid grid-cols-2 gap-4">
-        {[
-          {
-            val: 'INSTANT' as const,
-            icon: <FiSend className="w-6 h-6" />,
-            title: 'Envío Instantáneo',
-            desc: 'El sistema entrega el código automáticamente al completar el pago.',
-            badge: 'Automático',
-            color: 'blue',
-          },
-          {
-            val: 'MANUAL' as const,
-            icon: <FiLayers className="w-6 h-6" />,
-            title: 'Recarga Directa',
-            desc: 'El admin recarga manualmente en la plataforma del cliente. Se solicita username al comprar.',
-            badge: 'Manual',
-            color: 'purple',
-          },
-        ].map(({ val, icon, title, desc, badge, color }) => (
-          <button
-            key={val}
-            type="button"
-            onClick={() => onChange({ deliveryMethod: val })}
-            className={[
-              'p-6 rounded-2xl border-2 text-left transition-all',
-              data.deliveryMethod === val
-                ? color === 'blue' ? 'border-blue-500 bg-blue-50 shadow-sm shadow-blue-100' : 'border-purple-500 bg-purple-50 shadow-sm shadow-purple-100'
-                : 'border-gray-200 hover:border-gray-300',
-            ].join(' ')}
-          >
-            <div className={[
-              'w-12 h-12 rounded-xl flex items-center justify-center mb-4',
-              data.deliveryMethod === val
-                ? color === 'blue' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'
-                : 'bg-gray-100 text-gray-400',
-            ].join(' ')}>
-              {icon}
-            </div>
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className={`text-sm font-bold ${data.deliveryMethod === val ? color === 'blue' ? 'text-blue-800' : 'text-purple-800' : 'text-gray-800'}`}>
-                {title}
-              </h3>
-              <span className={[
-                'text-xs px-2 py-0.5 rounded-full font-medium',
-                data.deliveryMethod === val
-                  ? color === 'blue' ? 'bg-blue-200 text-blue-700' : 'bg-purple-200 text-purple-700'
-                  : 'bg-gray-100 text-gray-500',
-              ].join(' ')}>
-                {badge}
+      <fieldset className="grid gap-3 md:grid-cols-2">
+        <legend className="sr-only">Modo de entrega</legend>
+        {(Object.keys(DELIVERY_MODES) as DeliveryMode[]).map((mode) => {
+          const info = DELIVERY_MODES[mode];
+          const Icon = MODE_ICONS[mode];
+          const selected = data.deliveryMethod === mode;
+          return (
+            <button key={mode} type="button" onClick={() => onChange({ deliveryMethod: mode })} aria-pressed={selected} className={`${wizardChoice(selected)} flex gap-4 p-4`}>
+              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${selected ? 'bg-brand-500 text-white' : 'bg-surface text-ink'}`}>
+                <Icon className="h-5 w-5" aria-hidden="true" />
               </span>
-            </div>
-            <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
-          </button>
-        ))}
-      </div>
+              <span>
+                <span className="block text-sm font-bold text-ink">{info.admin}</span>
+                <span className="mt-1 block text-sm text-muted">{info.adminHelp}</span>
+                <span className="mt-2 block text-xs text-ink-soft">
+                  En la tienda: <strong>{info.store}</strong> · {info.storeHelp}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </fieldset>
 
-      {/* MANUAL note */}
-      {data.deliveryMethod === 'MANUAL' && (
-        <div className="p-4 bg-purple-50 border border-purple-200 rounded-2xl">
-          <p className="text-sm font-semibold text-purple-800 mb-1">Nota sobre Recarga Directa</p>
-          <p className="text-sm text-purple-700">
-            Al seleccionar este método, el cliente deberá ingresar su <strong>usuario o ID de cuenta</strong> en la plataforma antes de agregar al carrito. Recibirás esta información en el pedido.
-          </p>
+      {isManual && (
+        <div className={`${wizardCard} space-y-4`}>
+          <div>
+            <p className="text-sm font-bold text-ink">Dato de la cuenta que le pedimos al cliente</p>
+            <p className={wizardHint}>Aparece como campo obligatorio antes de agregar al carrito y llega en el pedido.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label htmlFor="account-label" className={wizardLabel}>Nombre del campo <span className="text-deal" aria-hidden="true">*</span></label>
+              <input id="account-label" value={data.accountFieldLabel} maxLength={80} onChange={(e) => onChange({ accountFieldLabel: e.target.value })} placeholder={platform?.accountFieldLabel || 'Ej: ID de jugador'} className={wizardInput(Boolean(errors.accountFieldLabel))} />
+              {errors.accountFieldLabel && <p className={wizardError}>{errors.accountFieldLabel}</p>}
+            </div>
+            <div>
+              <label htmlFor="account-hint" className={wizardLabel}>Ayuda debajo del campo</label>
+              <input id="account-hint" value={data.accountFieldHint} maxLength={160} onChange={(e) => onChange({ accountFieldHint: e.target.value })} placeholder={platform?.accountFieldHint || 'Ej: Lo ves en tu perfil dentro del juego'} className={wizardInput()} />
+            </div>
+          </div>
+          <div className="rounded-xl bg-surface p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Vista previa</p>
+            <p className="mb-1.5 text-sm font-semibold text-ink">{data.accountFieldLabel || 'Nombre del campo'} <span className="text-deal">*</span></p>
+            <div className="flex h-11 items-center rounded-lg border border-line bg-white px-3 text-sm text-muted">{data.accountFieldLabel || 'Nombre del campo'}</div>
+            <p className="mt-1 text-xs text-muted">{data.accountFieldHint || 'Recargamos el saldo directo a esta cuenta. Revisa que esté bien escrita.'}</p>
+          </div>
         </div>
       )}
 
-      {/* Stock */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-5">
-        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Stock disponible</label>
-        <div className="flex items-center gap-4">
-          <input
-            type="number"
-            min="0"
-            value={data.stock}
-            onChange={(e) => onChange({ stock: e.target.value })}
-            className="w-36 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
-          />
-          <div>
-            <button
-              type="button"
-              onClick={() => onChange({ stock: '999' })}
-              className="text-xs text-purple-600 hover:underline font-medium"
-            >
-              Establecer en 999 (ilimitado)
-            </button>
-            <p className="text-xs text-gray-400 mt-0.5">Para productos digitales se recomienda un stock alto.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Redemption instructions */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-          Instrucciones de canje{' '}
-          <span className="text-gray-400 font-normal text-xs">(opcional)</span>
-        </label>
+        <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+          <label htmlFor="instructions" className="text-sm font-semibold text-ink">
+            Instrucciones de canje <span className="text-xs font-normal text-muted">(opcional)</span>
+          </label>
+          {platform?.instructions && data.redemptionInstructions !== platform.instructions && (
+            <button type="button" onClick={() => onChange({ redemptionInstructions: platform.instructions })} className={`${wizardSecondaryButton} h-9 px-3 text-xs`}>
+              Usar las de {platform.label}
+            </button>
+          )}
+        </div>
         <textarea
+          id="instructions"
           value={data.redemptionInstructions}
           onChange={(e) => onChange({ redemptionInstructions: e.target.value })}
-          rows={5}
-          placeholder={`1. Abre la tienda de ${data.digitalPlatform || 'la plataforma'}\n2. Ve a "Canjear código"\n3. Ingresa el código recibido\n4. ¡Listo! Disfruta tu recarga`}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-y text-sm"
+          rows={6}
+          placeholder={'1. Abre la tienda de la plataforma\n2. Ve a "Canjear código"\n3. Escribe el código'}
+          className={`${wizardInput()} h-auto resize-y py-2.5`}
         />
-        <p className="text-xs text-gray-400 mt-1">
-          Estas instrucciones se muestran al cliente en la confirmación del pedido.
-        </p>
+        <p className={wizardHint}>Se muestran en la ficha del producto, en “¿Cómo se canjea?”.</p>
       </div>
     </div>
   );

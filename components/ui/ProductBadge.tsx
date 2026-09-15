@@ -1,3 +1,5 @@
+import { FiZap } from 'react-icons/fi';
+
 export type ProductBadgeVariant = 'deal' | 'new' | 'digital' | 'soldout' | 'tag';
 
 const VARIANT_CLASSES: Record<ProductBadgeVariant, string> = {
@@ -16,7 +18,8 @@ interface ProductBadgeProps {
 
 export default function ProductBadge({ variant, children }: ProductBadgeProps) {
   return (
-    <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold tracking-wide ${VARIANT_CLASSES[variant]}`}>
+    <span className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-semibold tracking-wide ${VARIANT_CLASSES[variant]}`}>
+      {variant === 'digital' && <FiZap className="h-3 w-3" aria-hidden="true" />}
       {children}
     </span>
   );
@@ -48,7 +51,7 @@ export function getProductBadges(
       badges.push({ variant: 'new', label: 'NUEVO' });
     }
   }
-  if (isDigital) badges.push({ variant: 'digital', label: '⚡ DIGITAL' });
+  if (isDigital) badges.push({ variant: 'digital', label: 'DIGITAL' });
   if (!isDigital && product.stock <= 0) badges.push({ variant: 'soldout', label: 'AGOTADO' });
 
   return badges;

@@ -1970,7 +1970,7 @@ export default function CheckoutPage() {
                           <div className="group relative">
                             <FiInfo className="w-3.5 h-3.5 text-gray-400 cursor-help" />
                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-72 z-50">
-                              <div className="font-semibold mb-1">📦 Sobre el envío</div>
+                              <div className="font-semibold mb-1 flex items-center gap-1"><FiPackage className="h-3.5 w-3.5" aria-hidden="true" />Sobre el envío</div>
                               <p className="text-gray-300 leading-relaxed">
                                 Los costos de envío son manejados por las empresas de encomienda (ZOOM, MRW, TEALCA). Solo cobramos <strong className="text-white">${shippingBreakdown.packagingFee.toFixed(2)}</strong> por embalaje.
                               </p>

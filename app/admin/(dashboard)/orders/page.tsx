@@ -7,6 +7,30 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { FiPrinter, FiBriefcase, FiUser, FiFileText, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiMapPin, FiExternalLink, FiArrowRight, FiCheckCircle, FiLoader, FiMonitor, FiSend } from 'react-icons/fi';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { formatUSD } from '@/lib/currency';
+import {
+  adminPageHeader,
+  adminPageTitle,
+  adminPageSubtitle,
+  adminStatCard,
+  adminStatLabel,
+  adminStatValue,
+  adminIconChip,
+  adminPrimaryButton,
+  adminSecondaryButton,
+  adminIconButton,
+  adminModalOverlay,
+  adminModalPanel,
+  adminModalFooter,
+  adminTableWrap,
+  adminTh,
+  adminTd,
+  adminRowHover,
+  adminInput,
+  adminLabel,
+} from '@/lib/admin-ui';
+
 
 interface Order {
   id: string;
@@ -93,6 +117,9 @@ export default function OrdersPage() {
     shippingNotes: '',
     estimatedDelivery: '',
   });
+
+  useBodyScrollLock(showDetailsModal);
+  useBodyScrollLock(showShippingModal);
 
   useEffect(() => {
     setMounted(true);
@@ -213,14 +240,14 @@ export default function OrdersPage() {
 
   const getStatusConfig = (status: string) => {
     const configs: Record<string, { bg: string; text: string; icon: React.ReactNode; animation?: string }> = {
-      PENDING: { bg: 'bg-amber-50', text: 'text-amber-700', icon: <FiClock className="w-3.5 h-3.5" />, animation: 'animate-pulse' },
-      CONFIRMED: { bg: 'bg-blue-50', text: 'text-blue-700', icon: <FiCheck className="w-3.5 h-3.5" /> },
-      PAID: { bg: 'bg-green-50', text: 'text-green-700', icon: <FiDollarSign className="w-3.5 h-3.5" /> },
-      PROCESSING: { bg: 'bg-brand-500/10', text: 'text-brand-500', icon: <FiPackage className="w-3.5 h-3.5" /> },
-      READY_FOR_PICKUP: { bg: 'bg-purple-50', text: 'text-purple-700', icon: <FiMapPin className="w-3.5 h-3.5" /> },
-      SHIPPED: { bg: 'bg-indigo-50', text: 'text-indigo-700', icon: <FiTruck className="w-3.5 h-3.5" /> },
-      DELIVERED: { bg: 'bg-emerald-50', text: 'text-emerald-700', icon: <FiCheck className="w-3.5 h-3.5" /> },
-      CANCELLED: { bg: 'bg-red-50', text: 'text-red-600', icon: <FiX className="w-3.5 h-3.5" /> },
+      PENDING: { bg: 'bg-warning/15', text: 'text-warning-strong', icon: <FiClock className="w-3.5 h-3.5" /> },
+      CONFIRMED: { bg: 'bg-brand-50', text: 'text-brand-700', icon: <FiCheck className="w-3.5 h-3.5" /> },
+      PAID: { bg: 'bg-success-strong/10', text: 'text-success-strong', icon: <FiDollarSign className="w-3.5 h-3.5" /> },
+      PROCESSING: { bg: 'bg-brand-50', text: 'text-brand-700', icon: <FiPackage className="w-3.5 h-3.5" /> },
+      READY_FOR_PICKUP: { bg: 'bg-brand-50', text: 'text-brand-700', icon: <FiMapPin className="w-3.5 h-3.5" /> },
+      SHIPPED: { bg: 'bg-brand-50', text: 'text-brand-700', icon: <FiTruck className="w-3.5 h-3.5" /> },
+      DELIVERED: { bg: 'bg-success-strong/10', text: 'text-success-strong', icon: <FiCheck className="w-3.5 h-3.5" /> },
+      CANCELLED: { bg: 'bg-deal-bg', text: 'text-deal', icon: <FiX className="w-3.5 h-3.5" /> },
     };
     return configs[status] || configs.PENDING;
   };
@@ -251,11 +278,11 @@ export default function OrdersPage() {
 
   const getNextStatusAction = (status: string): { label: string; color: string } | null => {
     const actions: Record<string, { label: string; color: string }> = {
-      PENDING: { label: 'Confirmar Pedido', color: 'bg-blue-600 hover:bg-blue-700' },
-      CONFIRMED: { label: 'Marcar Pagado', color: 'bg-green-600 hover:bg-green-700' },
+      PENDING: { label: 'Confirmar Pedido', color: 'bg-brand-500 hover:bg-brand-600' },
+      CONFIRMED: { label: 'Marcar Pagado', color: 'bg-success-strong hover:bg-success-strong/90' },
       PAID: { label: 'Comenzar Preparación', color: 'bg-brand-500 hover:bg-brand-600' },
-      PROCESSING: { label: 'Marcar Enviado', color: 'bg-indigo-600 hover:bg-indigo-700' },
-      SHIPPED: { label: 'Marcar Entregado', color: 'bg-emerald-600 hover:bg-emerald-700' },
+      PROCESSING: { label: 'Marcar Enviado', color: 'bg-brand-500 hover:bg-brand-600' },
+      SHIPPED: { label: 'Marcar Entregado', color: 'bg-success-strong hover:bg-success-strong/90' },
     };
     return actions[status] || null;
   };
@@ -289,35 +316,50 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-5">
+      <div className={adminPageHeader}>
+        <div>
+          <h1 className={adminPageTitle}>Órdenes</h1>
+          <p className={adminPageSubtitle}>Pedidos de la tienda</p>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl p-4 text-white">
-          <div className="flex items-center justify-between mb-2">
-            <FiDollarSign className="w-5 h-5 opacity-80" />
-            <span className="text-xs opacity-70">Ingresos</span>
+        <div className={adminStatCard}>
+          <span className={adminIconChip('brand')}>
+            <FiDollarSign className="w-5 h-5" />
+          </span>
+          <div>
+            <span className={adminStatLabel}>Ingresos</span>
+            <p className={adminStatValue}>{formatUSD(stats.totalRevenue)}</p>
           </div>
-          <p className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-line">
-          <div className="flex items-center justify-between mb-2">
-            <FiClock className="w-5 h-5 text-amber-500" />
-            <span className="text-xs text-muted">Pendientes</span>
+        <div className={adminStatCard}>
+          <span className={adminIconChip('warning')}>
+            <FiClock className="w-5 h-5" />
+          </span>
+          <div>
+            <span className={adminStatLabel}>Pendientes</span>
+            <p className={adminStatValue}>{stats.pendingCount}</p>
           </div>
-          <p className="text-2xl font-bold text-ink">{stats.pendingCount}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-line">
-          <div className="flex items-center justify-between mb-2">
-            <FiPackage className="w-5 h-5 text-brand-500" />
-            <span className="text-xs text-muted">En proceso</span>
+        <div className={adminStatCard}>
+          <span className={adminIconChip('brand')}>
+            <FiPackage className="w-5 h-5" />
+          </span>
+          <div>
+            <span className={adminStatLabel}>En proceso</span>
+            <p className={adminStatValue}>{stats.processingCount}</p>
           </div>
-          <p className="text-2xl font-bold text-ink">{stats.processingCount}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-line">
-          <div className="flex items-center justify-between mb-2">
-            <FiCheck className="w-5 h-5 text-emerald-500" />
-            <span className="text-xs text-muted">Completadas</span>
+        <div className={adminStatCard}>
+          <span className={adminIconChip('success')}>
+            <FiCheck className="w-5 h-5" />
+          </span>
+          <div>
+            <span className={adminStatLabel}>Completadas</span>
+            <p className={adminStatValue}>{stats.completedCount}</p>
           </div>
-          <p className="text-2xl font-bold text-ink">{stats.completedCount}</p>
         </div>
       </div>
 
@@ -331,13 +373,13 @@ export default function OrdersPage() {
               placeholder="Buscar orden o cliente..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+              className={`${adminInput()} pl-9`}
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 bg-white"
+            className={`${adminInput()} w-auto`}
           >
             <option value="all">Todas</option>
             <option value="PENDING">Pendientes</option>
@@ -351,7 +393,7 @@ export default function OrdersPage() {
         <button
           onClick={fetchOrders}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50"
+          className={adminPrimaryButton}
         >
           <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Actualizar
@@ -379,50 +421,52 @@ export default function OrdersPage() {
             const statusConfig = getStatusConfig(order.status);
             const nextAction = getNextStatusAction(order.status);
             return (
-              <div key={order.id} className="group bg-white rounded-xl border border-line p-4 hover:shadow-md hover:border-brand-500/20 transition-all duration-300">
-                <div className="flex items-center gap-4">
-                  {/* Order Icon */}
-                  <div className="relative flex-shrink-0">
-                    <div className="w-12 h-12 bg-gradient-to-br from-brand-500/10 to-brand-500/5 rounded-xl flex items-center justify-center">
-                      <FiPackage className="w-5 h-5 text-brand-500" />
+              <div key={order.id} className="group bg-white rounded-xl border border-line p-4 transition-all duration-300">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {/* Order Icon */}
+                    <div className="relative flex-shrink-0">
+                      <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center">
+                        <FiPackage className="w-5 h-5 text-brand-600" />
+                      </div>
+                      <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ${statusConfig.bg} border flex items-center justify-center`}>
+                        <span>{statusConfig.icon}</span>
+                      </div>
                     </div>
-                    <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ${statusConfig.bg} border flex items-center justify-center`}>
-                      <span className={statusConfig.animation}>{statusConfig.icon}</span>
-                    </div>
-                  </div>
 
-                  {/* Order Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="font-bold text-ink text-sm">#{order.orderNumber}</h3>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
-                        {getStatusText(order.status)}
-                      </span>
-                      {order.hasDigital && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 flex items-center gap-1">
-                          <FiMonitor className="w-2.5 h-2.5" />
-                          Digital
+                    {/* Order Info */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <h3 className="font-bold text-ink text-sm">#{order.orderNumber}</h3>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
+                          {getStatusText(order.status)}
                         </span>
-                      )}
-                      {order.trackingNumber && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700">
-                          {order.shippingCarrier}: {order.trackingNumber}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted">
-                      <span className="font-medium text-ink">{order.user?.name || 'Invitado'}</span>
-                      <span>•</span>
-                      <span>{getTimeSince(order.createdAt)}</span>
-                      <span>•</span>
-                      <span>{order.items?.length || 0} productos</span>
+                        {order.hasDigital && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 flex items-center gap-1">
+                            <FiMonitor className="w-2.5 h-2.5" />
+                            Digital
+                          </span>
+                        )}
+                        {order.trackingNumber && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700">
+                            {order.shippingCarrier}: {order.trackingNumber}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted">
+                        <span className="font-medium text-ink">{order.user?.name || 'Invitado'}</span>
+                        <span>•</span>
+                        <span>{getTimeSince(order.createdAt)}</span>
+                        <span>•</span>
+                        <span>{order.items?.length || 0} productos</span>
+                      </div>
                     </div>
                   </div>
 
                   {/* Price & Quick Actions */}
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-ink">${(Number(order.totalUSD) || 0).toFixed(2)}</p>
+                  <div className="flex items-center justify-between gap-3 sm:justify-end">
+                    <div className="text-left sm:text-right">
+                      <p className="text-lg font-bold text-ink">{formatUSD(Number(order.totalUSD) || 0)}</p>
                       <p className="text-xs text-muted uppercase">USD</p>
                     </div>
 
@@ -445,7 +489,7 @@ export default function OrdersPage() {
                           }
                         }}
                         disabled={updatingStatus}
-                        className={`hidden sm:flex items-center gap-1 px-3 py-1.5 text-white text-xs font-medium rounded-lg ${order.isOnlyDigital && order.status === 'PROCESSING' ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700' : nextAction.color} disabled:opacity-50`}
+                        className={`hidden sm:flex items-center gap-1 px-3 py-1.5 text-white text-xs font-medium rounded-lg ${order.isOnlyDigital && order.status === 'PROCESSING' ? 'bg-brand-500 hover:bg-brand-600' : nextAction.color} disabled:opacity-50`}
                       >
                         {order.isOnlyDigital && order.status === 'PROCESSING' ? (
                           <>
@@ -466,7 +510,7 @@ export default function OrdersPage() {
                       <a
                         href={`/admin/orders/${order.id}/digital`}
                         onClick={(e) => e.stopPropagation()}
-                        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/25"
+                        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-brand-500 text-white text-xs font-medium rounded-lg hover:bg-brand-600"
                         title="Enviar códigos digitales"
                       >
                         <FiMonitor className="w-3.5 h-3.5" />
@@ -480,7 +524,8 @@ export default function OrdersPage() {
                         setAdminNotes(order.adminNotes || '');
                         setShowDetailsModal(true);
                       }}
-                      className="p-2.5 bg-surface hover:bg-brand-500 text-muted hover:text-white rounded-lg transition-all"
+                      className={adminIconButton}
+                      aria-label="Ver detalles"
                       title="Ver detalles"
                     >
                       <FiEye className="w-4 h-4" />
@@ -495,21 +540,20 @@ export default function OrdersPage() {
 
       {/* Order Details Modal */}
       {mounted && showDetailsModal && selectedOrder && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={closeModal} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
+          <div className={`${adminModalPanel} sm:max-w-4xl max-h-[90vh]`}>
             {/* Header */}
-            <div className="px-6 py-4 border-b border-line bg-gradient-to-r from-brand-500 to-brand-600 text-white">
+            <div className="px-6 py-4 border-b border-line bg-brand-600 text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-bold">#{selectedOrder.orderNumber}</h3>
-                  <p className="text-sm opacity-70">{format(new Date(selectedOrder.createdAt), "d 'de' MMMM, yyyy", { locale: es })}</p>
+                  <p className="text-sm opacity-80">{format(new Date(selectedOrder.createdAt), "d 'de' MMMM, yyyy", { locale: es })}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => toast('Próximamente')} className="flex items-center gap-2 px-3 py-1.5 bg-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/30">
                     <FiPrinter className="w-4 h-4" /> Imprimir
                   </button>
-                  <button onClick={closeModal} className="p-2 hover:bg-white/20 rounded-lg">
+                  <button onClick={closeModal} aria-label="Cerrar" className="p-2 hover:bg-white/20 rounded-lg">
                     <FiX className="w-5 h-5" />
                   </button>
                 </div>
@@ -519,11 +563,11 @@ export default function OrdersPage() {
             {/* Content */}
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
               {/* Order Flow Progress */}
-              <div className={`mb-6 p-4 rounded-xl ${selectedOrder.isOnlyDigital ? 'bg-gradient-to-r from-purple-50 to-blue-50' : 'bg-surface'}`}>
+              <div className={`mb-6 p-4 rounded-xl ${selectedOrder.isOnlyDigital ? 'bg-brand-50' : 'bg-surface'}`}>
                 <div className="flex items-center gap-2 mb-3">
                   <h4 className="text-xs font-bold text-muted uppercase">Progreso del Pedido</h4>
                   {selectedOrder.isOnlyDigital && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-500 to-blue-500 text-white flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-500 text-white flex items-center gap-1">
                       <FiMonitor className="w-2.5 h-2.5" /> Solo Digital
                     </span>
                   )}
@@ -533,7 +577,7 @@ export default function OrdersPage() {
                   <div className="absolute top-4 left-0 right-0 h-1 bg-line mx-8" />
                   {/* Progress bar fill */}
                   <div
-                    className={`absolute top-4 left-0 h-1 mx-8 transition-all duration-500 ${selectedOrder.isOnlyDigital ? 'bg-gradient-to-r from-purple-500 to-blue-500' : 'bg-brand-500'}`}
+                    className="absolute top-4 left-0 h-1 mx-8 transition-all duration-500 bg-brand-500"
                     style={{
                       width: `${(getCurrentFlowIndex(selectedOrder.status, selectedOrder.isOnlyDigital) / (getOrderFlow(selectedOrder.isOnlyDigital).length - 1)) * 100}%`
                     }}
@@ -546,12 +590,12 @@ export default function OrdersPage() {
                     return (
                       <div key={step.status} className="relative z-10 flex flex-col items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isCompleted
-                          ? selectedOrder.isOnlyDigital ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white' : 'bg-brand-500 text-white'
+                          ? 'bg-brand-500 text-white'
                           : 'bg-white border-2 border-line text-muted'
-                          } ${isCurrent ? selectedOrder.isOnlyDigital ? 'ring-4 ring-purple-500/20' : 'ring-4 ring-brand-500/20' : ''}`}>
+                          } ${isCurrent ? 'ring-4 ring-brand-500/20' : ''}`}>
                           <IconComponent className="w-4 h-4" />
                         </div>
-                        <span className={`mt-2 text-xs font-medium ${isCompleted ? selectedOrder.isOnlyDigital ? 'text-purple-600' : 'text-brand-500' : 'text-muted'}`}>
+                        <span className={`mt-2 text-xs font-medium ${isCompleted ? 'text-brand-600' : 'text-muted'}`}>
                           {step.label}
                         </span>
                       </div>
@@ -563,12 +607,12 @@ export default function OrdersPage() {
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-2 mb-6">
                 {selectedOrder.status === 'PENDING' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'CONFIRMED')} disabled={updatingStatus} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'CONFIRMED')} disabled={updatingStatus} className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50 flex items-center gap-2">
                     <FiCheck className="w-4 h-4" /> Confirmar Pedido
                   </button>
                 )}
                 {selectedOrder.status === 'CONFIRMED' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'PAID')} disabled={updatingStatus} className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'PAID')} disabled={updatingStatus} className="px-4 py-2 bg-success-strong text-white text-sm font-medium rounded-lg hover:bg-success-strong/90 disabled:opacity-50 flex items-center gap-2">
                     <FiDollarSign className="w-4 h-4" /> Marcar Pagado
                   </button>
                 )}
@@ -578,22 +622,22 @@ export default function OrdersPage() {
                   </button>
                 )}
                 {selectedOrder.status === 'PROCESSING' && !selectedOrder.isOnlyDigital && (
-                  <button onClick={openShippingModal} disabled={updatingStatus} className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
+                  <button onClick={openShippingModal} disabled={updatingStatus} className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50 flex items-center gap-2">
                     <FiTruck className="w-4 h-4" /> Marcar Enviado
                   </button>
                 )}
                 {selectedOrder.status === 'PROCESSING' && selectedOrder.isOnlyDigital && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'DELIVERED')} disabled={updatingStatus} className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 flex items-center gap-2">
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'DELIVERED')} disabled={updatingStatus} className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50 flex items-center gap-2">
                     <FiCheckCircle className="w-4 h-4" /> Marcar Completado (Digital)
                   </button>
                 )}
                 {selectedOrder.status === 'SHIPPED' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'DELIVERED')} disabled={updatingStatus} className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center gap-1.5">
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'DELIVERED')} disabled={updatingStatus} className="px-4 py-2 bg-success-strong text-white text-sm font-medium rounded-lg hover:bg-success-strong/90 disabled:opacity-50 inline-flex items-center gap-1.5">
                     <FiCheck className="inline h-4 w-4 shrink-0" aria-hidden="true" />Marcar Entregado
                   </button>
                 )}
                 {!['CANCELLED', 'DELIVERED', 'REFUNDED'].includes(selectedOrder.status) && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'CANCELLED')} disabled={updatingStatus} className="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 disabled:opacity-50 flex items-center gap-2">
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'CANCELLED')} disabled={updatingStatus} className="px-4 py-2 bg-deal-bg text-deal text-sm font-medium rounded-lg hover:bg-deal/15 disabled:opacity-50 flex items-center gap-2">
                     <FiX className="w-4 h-4" /> Cancelar Orden
                   </button>
                 )}
@@ -601,7 +645,7 @@ export default function OrdersPage() {
                 {selectedOrder.hasDigital && selectedOrder.paymentStatus === 'PAID' && (
                   <a
                     href={`/admin/orders/${selectedOrder.id}/digital`}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 flex items-center gap-2 shadow-lg shadow-purple-500/25"
+                    className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 flex items-center gap-2"
                   >
                     <FiSend className="w-4 h-4" /> Enviar Códigos Digitales
                   </a>
@@ -610,18 +654,18 @@ export default function OrdersPage() {
 
               {/* Shipping Info (if shipped) */}
               {selectedOrder.trackingNumber && (
-                <div className="mb-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                  <h4 className="text-xs font-bold text-indigo-900 uppercase mb-3 flex items-center gap-2">
+                <div className="mb-6 p-4 bg-brand-50 rounded-xl border border-brand-200">
+                  <h4 className="text-xs font-bold text-brand-700 uppercase mb-3 flex items-center gap-2">
                     <FiTruck className="w-4 h-4" /> Información de Envío
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-indigo-600">Carrier:</span>
-                      <span className="ml-2 font-semibold text-indigo-900">{selectedOrder.shippingCarrier}</span>
+                      <span className="text-muted">Carrier:</span>
+                      <span className="ml-2 font-semibold text-ink">{selectedOrder.shippingCarrier}</span>
                     </div>
                     <div>
-                      <span className="text-indigo-600">Guía:</span>
-                      <span className="ml-2 font-semibold text-indigo-900">{selectedOrder.trackingNumber}</span>
+                      <span className="text-muted">Guía:</span>
+                      <span className="ml-2 font-semibold text-ink">{selectedOrder.trackingNumber}</span>
                     </div>
                     {selectedOrder.trackingUrl && (
                       <div className="col-span-2">
@@ -629,7 +673,7 @@ export default function OrdersPage() {
                           href={selectedOrder.trackingUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium"
+                          className="inline-flex items-center gap-2 text-brand-600 hover:text-brand-700 font-medium"
                         >
                           <FiExternalLink className="w-4 h-4" />
                           Ver seguimiento en {selectedOrder.shippingCarrier}
@@ -638,8 +682,8 @@ export default function OrdersPage() {
                     )}
                     {selectedOrder.shippingNotes && (
                       <div className="col-span-2">
-                        <span className="text-indigo-600">Notas:</span>
-                        <p className="mt-1 text-indigo-900">{selectedOrder.shippingNotes}</p>
+                        <span className="text-muted">Notas:</span>
+                        <p className="mt-1 text-ink">{selectedOrder.shippingNotes}</p>
                       </div>
                     )}
                   </div>
@@ -665,10 +709,10 @@ export default function OrdersPage() {
                 {/* Admin Notes */}
                 <div>
                   <h4 className="text-xs font-bold text-ink uppercase mb-3">Notas Admin</h4>
-                  <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
-                    <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 text-sm text-amber-800 placeholder-amber-600/50 resize-none" rows={3} placeholder="Agregar notas..." />
+                  <div className="bg-warning/15 p-4 rounded-xl border border-warning/30">
+                    <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 text-sm text-ink placeholder:text-muted resize-none" rows={3} placeholder="Agregar notas..." />
                     <div className="flex justify-end">
-                      <button onClick={handleSaveNotes} disabled={savingNotes} className="text-xs font-bold text-amber-700 hover:underline disabled:opacity-50">
+                      <button onClick={handleSaveNotes} disabled={savingNotes} className="text-xs font-bold text-warning-strong hover:underline disabled:opacity-50">
                         {savingNotes ? 'Guardando...' : 'Guardar'}
                       </button>
                     </div>
@@ -679,32 +723,32 @@ export default function OrdersPage() {
               {/* Products */}
               <div>
                 <h4 className="text-xs font-bold text-ink uppercase mb-3">Productos</h4>
-                <div className="border border-line rounded-xl overflow-hidden">
+                <div className={adminTableWrap}>
                   <table className="w-full text-sm">
-                    <thead className="bg-surface">
+                    <thead>
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-muted">Producto</th>
-                        <th className="px-4 py-2 text-center text-xs font-semibold text-muted">Cant.</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-muted">Precio</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-muted">Total</th>
+                        <th className={adminTh}>Producto</th>
+                        <th className={`${adminTh} text-center`}>Cant.</th>
+                        <th className={`${adminTh} text-right`}>Precio</th>
+                        <th className={`${adminTh} text-right`}>Total</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-line">
+                    <tbody>
                       {selectedOrder.items?.map((item: any) => (
-                        <tr key={item.id}>
-                          <td className="px-4 py-3">
+                        <tr key={item.id} className={adminRowHover}>
+                          <td className={adminTd}>
                             <div className="font-medium text-ink">{item.productName || item.product?.name}</div>
                           </td>
-                          <td className="px-4 py-3 text-center">{item.quantity}</td>
-                          <td className="px-4 py-3 text-right">${(Number(item.priceUSD || item.pricePerUnit) || 0).toFixed(2)}</td>
-                          <td className="px-4 py-3 text-right font-medium">${(Number(item.totalUSD || item.subtotal) || 0).toFixed(2)}</td>
+                          <td className={`${adminTd} text-center`}>{item.quantity}</td>
+                          <td className={`${adminTd} text-right`}>{formatUSD(Number(item.priceUSD || item.pricePerUnit) || 0)}</td>
+                          <td className={`${adminTd} text-right font-medium`}>{formatUSD(Number(item.totalUSD || item.subtotal) || 0)}</td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot className="bg-surface">
                       <tr>
-                        <td colSpan={3} className="px-4 py-3 text-right font-bold">Total</td>
-                        <td className="px-4 py-3 text-right text-xl font-bold text-brand-500">${(Number(selectedOrder.totalUSD) || 0).toFixed(2)}</td>
+                        <td colSpan={3} className="px-4 py-3 text-right font-bold text-ink">Total</td>
+                        <td className="px-4 py-3 text-right text-xl font-bold text-brand-600">{formatUSD(Number(selectedOrder.totalUSD) || 0)}</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -713,90 +757,37 @@ export default function OrdersPage() {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-line bg-surface flex justify-end">
-              <button onClick={closeModal} className="px-6 py-2 bg-white border border-line-strong text-ink rounded-lg hover:bg-surface font-medium">Cerrar</button>
+            <div className={adminModalFooter}>
+              <button onClick={closeModal} className={adminSecondaryButton}>Cerrar</button>
             </div>
           </div>
         </div>,
         document.body
       )}
 
-      {/* Shipping Modal - With explicit inline styles */}
+      {/* Shipping Modal */}
       {mounted && showShippingModal && selectedOrder && createPortal(
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 99999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-        >
-          {/* Backdrop */}
-          <div
-            onClick={() => setShowShippingModal(false)}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0,0,0,0.6)',
-              backdropFilter: 'blur(4px)',
-            }}
-          />
-
-          {/* Modal Content */}
-          <div
-            style={{
-              position: 'relative',
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              width: '100%',
-              maxWidth: '420px',
-              overflow: 'hidden',
-            }}
-          >
+        <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setShowShippingModal(false); }}>
+          <div className={`${adminModalPanel} sm:max-w-md`}>
             {/* Header */}
-            <div
-              style={{
-                padding: '16px 24px',
-                borderBottom: '1px solid #e9ecef',
-                background: 'linear-gradient(90deg, #4f46e5, #6366f1)',
-                color: 'white',
-              }}
-            >
-              <h3 style={{ fontSize: '18px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <FiTruck style={{ width: '20px', height: '20px' }} />
+            <div className="px-6 py-4 border-b border-line bg-brand-600 text-white">
+              <h3 className="text-lg font-bold flex items-center gap-2 mb-1">
+                <FiTruck className="w-5 h-5" />
                 Información de Envío
               </h3>
-              <p style={{ fontSize: '14px', opacity: 0.7 }}>Orden #{selectedOrder.orderNumber}</p>
+              <p className="text-sm opacity-80">Orden #{selectedOrder.orderNumber}</p>
             </div>
 
             {/* Content */}
-            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="p-6 flex flex-col gap-4 overflow-y-auto">
               <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#212529', marginBottom: '6px' }}>
+                <label className={adminLabel}>
                   Empresa de Envío *
                 </label>
                 <select
                   value={shippingForm.carrier}
                   onChange={(e) => setShippingForm({ ...shippingForm, carrier: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    fontSize: '14px',
-                    border: '1px solid #e9ecef',
-                    borderRadius: '8px',
-                    outline: 'none',
-                    backgroundColor: 'white',
-                  }}
+                  className={adminInput()}
                 >
                   <option value="">Seleccionar...</option>
                   {SHIPPING_CARRIERS.map(carrier => (
@@ -806,7 +797,7 @@ export default function OrdersPage() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#212529', marginBottom: '6px' }}>
+                <label className={adminLabel}>
                   Número de Guía *
                 </label>
                 <input
@@ -814,19 +805,12 @@ export default function OrdersPage() {
                   value={shippingForm.trackingNumber}
                   onChange={(e) => setShippingForm({ ...shippingForm, trackingNumber: e.target.value })}
                   placeholder="Ej: 123456789"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    fontSize: '14px',
-                    border: '1px solid #e9ecef',
-                    borderRadius: '8px',
-                    outline: 'none',
-                  }}
+                  className={adminInput()}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#212529', marginBottom: '6px' }}>
+                <label className={adminLabel}>
                   URL de Seguimiento (opcional)
                 </label>
                 <input
@@ -834,20 +818,13 @@ export default function OrdersPage() {
                   value={shippingForm.trackingUrl}
                   onChange={(e) => setShippingForm({ ...shippingForm, trackingUrl: e.target.value })}
                   placeholder="Se genera automáticamente"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    fontSize: '14px',
-                    border: '1px solid #e9ecef',
-                    borderRadius: '8px',
-                    outline: 'none',
-                  }}
+                  className={adminInput()}
                 />
-                <p style={{ fontSize: '12px', color: '#6a6c6b', marginTop: '4px' }}>Se genera automáticamente según el carrier</p>
+                <p className="text-xs text-muted mt-1">Se genera automáticamente según el carrier</p>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#212529', marginBottom: '6px' }}>
+                <label className={adminLabel}>
                   Notas de Envío (opcional)
                 </label>
                 <textarea
@@ -855,90 +832,44 @@ export default function OrdersPage() {
                   onChange={(e) => setShippingForm({ ...shippingForm, shippingNotes: e.target.value })}
                   placeholder="Ej: Oficina Central, Agencia Chacao"
                   rows={2}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    fontSize: '14px',
-                    border: '1px solid #e9ecef',
-                    borderRadius: '8px',
-                    outline: 'none',
-                    resize: 'none',
-                  }}
+                  className={`${adminInput()} h-auto py-2.5 resize-none`}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#212529', marginBottom: '6px' }}>
+                <label className={adminLabel}>
                   Fecha Estimada de Entrega (opcional)
                 </label>
                 <input
                   type="date"
                   value={shippingForm.estimatedDelivery}
                   onChange={(e) => setShippingForm({ ...shippingForm, estimatedDelivery: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    fontSize: '14px',
-                    border: '1px solid #e9ecef',
-                    borderRadius: '8px',
-                    outline: 'none',
-                  }}
+                  className={adminInput()}
                 />
               </div>
             </div>
 
             {/* Footer */}
-            <div
-              style={{
-                padding: '16px 24px',
-                borderTop: '1px solid #e9ecef',
-                backgroundColor: '#f8f9fa',
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '12px',
-              }}
-            >
+            <div className={adminModalFooter}>
               <button
                 onClick={() => setShowShippingModal(false)}
-                style={{
-                  padding: '10px 16px',
-                  backgroundColor: 'white',
-                  border: '1px solid #dee2e6',
-                  color: '#212529',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
+                className={adminSecondaryButton}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleShipOrder}
                 disabled={updatingStatus}
-                style={{
-                  padding: '10px 16px',
-                  backgroundColor: '#4f46e5',
-                  border: 'none',
-                  color: 'white',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: updatingStatus ? 'not-allowed' : 'pointer',
-                  opacity: updatingStatus ? 0.5 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
+                className={adminPrimaryButton}
               >
                 {updatingStatus ? (
                   <>
-                    <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Procesando...
                   </>
                 ) : (
                   <>
-                    <FiTruck style={{ width: '16px', height: '16px' }} />
+                    <FiTruck className="w-4 h-4" />
                     Marcar como Enviado
                   </>
                 )}

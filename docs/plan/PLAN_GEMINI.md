@@ -671,3 +671,204 @@ git diff --stat main    # solo los archivos de la tabla + docs/plan/estado/G-30.
 npx tsc --noEmit
 ```
 QA: `/customer/referrals` muestra las medallas como íconos; `/cursos` y `/admin/cursos` muestran la estrella de destacado; un pedido digital en admin dice "Pagado" con ícono.
+
+---
+
+## Ronda R9 (pesada) · Panel admin con la paleta de la tienda · G-31 → G-32 → G-33 → G-34
+Rama: `gemini/R9`, creada **desde `main` con R8 y C-52 mergeados**. Antes de empezar comprueba que existen `lib/admin-ui.ts` y `docs/plan/estado/C-52.md`.
+Un commit por tarea con su `docs/plan/estado/G-XX.md`. Informe de origen: `docs/plan/AUDITORIA_ADMIN.md`.
+
+**Qué ya hizo Claude (no lo toques):**
+- **C-52:** nuevo marco del admin (`app/admin/(dashboard)/layout.tsx`). Sin fondo animado, menú como cajón en móvil y contenedor sin `transform` ni `backdrop-blur`. Los modales `fixed` ya cubren toda la pantalla y no necesitan portal.
+- **`lib/admin-ui.ts`:** recetas de clases para todo el admin.
+- **`lib/format-helpers.ts`:** `isCreditTransaction` y la etiqueta `DEPOSIT: 'Abono'`.
+
+**Fuera de límites en R9:**
+- `app/admin/(dashboard)/layout.tsx`, `app/admin/(dashboard)/settings/**` y `app/admin/(dashboard)/products/**`.
+- `lib/**`, `app/api/**` y cualquier archivo que la tarjeta no nombre.
+
+### Reglas comunes de R9 (valen para G-31, G-32, G-33 y G-34)
+**R1 · Recetas.** Importa de `@/lib/admin-ui` solo lo que uses y reemplaza el `className` completo del elemento:
+
+| Elemento | Receta |
+|---|---|
+| Fila de título de la página (h1 + subtítulo + botones) | contenedor `adminPageHeader`, h1 `adminPageTitle`, párrafo `adminPageSubtitle` |
+| Título de bloque (h2/h3 dentro de la página) | `adminSectionTitle` |
+| Tarjeta o bloque blanco con borde | `adminCard` (con padding) o `adminCardFlush` (sin padding: listas y tablas) |
+| Tarjeta de estadística (número grande + etiqueta + ícono) | contenedor `adminStatCard`, ícono en `<span className={adminIconChip('brand')}>`, etiqueta `adminStatLabel`, número `adminStatValue` |
+| Input, select y textarea | `adminInput()` o `adminInput(Boolean(error))` si el campo ya mostraba error. Textarea: `` `${adminInput()} h-auto py-2.5` `` |
+| Label de campo | `adminLabel` · ayuda `adminHint` · error `adminError` |
+| Botón principal (azul, crear, guardar) | `adminPrimaryButton` |
+| Botón con borde o gris (cancelar, actualizar, exportar) | `adminSecondaryButton` |
+| Botón de borrar, rechazar o desactivar definitivo | `adminDangerButton` |
+| Botón de aprobar o marcar pagado/entregado | `adminSuccessButton` |
+| Botón de solo ícono (ver, editar, borrar, cerrar) | `adminIconButton` + `aria-label` en español si no lo tiene |
+| Badge de estado | `adminBadge(tono)` (tabla R3) |
+| Aviso o caja informativa | `adminNotice(tono)` |
+| Pestañas o filtros tipo botón | cada botón `adminTab(activo)`; el contenedor de la fila `flex gap-2 overflow-x-auto pb-1` |
+| Estado vacío | contenedor `adminEmpty` |
+| Spinner de carga | `adminSpinner` |
+
+**R2 · Botones sm.** Si un botón tenía `px-2 py-1`, `text-xs` o `h-8` (acciones dentro de filas), usa la receta y agrega `h-9 px-3 text-xs` al final.
+
+**R3 · Colores sueltos.** Lo que no cubren las recetas se traduce por familia. Primero decide el **tono** por el significado: éxito o aprobado → `success`; pendiente o advertencia → `warning`; error, rechazo o borrar → `danger`; información, marca o acento → `brand`; neutro → `neutral`.
+
+| Antes | Después |
+|---|---|
+| `text-gray-900`, `text-gray-800` | `text-ink` |
+| `text-gray-700`, `text-gray-600` | `text-ink-soft` |
+| `text-gray-500`, `text-gray-400` | `text-muted` |
+| `text-gray-300` (íconos, placeholder) | `text-subtle` |
+| `bg-gray-50`, `bg-gray-100`, `bg-gray-50/30`, `hover:bg-gray-50`, `hover:bg-gray-100` | `bg-surface`, `hover:bg-surface` |
+| `bg-gray-200`, `bg-gray-300` | `bg-line` |
+| `border-gray-100`, `border-gray-200`, `divide-gray-100`, `divide-gray-200` | `border-line`, `divide-line` |
+| `border-gray-300` | `border-line-strong` |
+| `bg-black/50`, `bg-black/60`, `bg-black/40` (capa de modal) | `bg-ink/50` |
+| **Azules y morados** (`blue`, `indigo`, `sky`, `cyan`, `violet`, `purple`, `fuchsia`, `pink`): `text-*-500/600` | `text-brand-600` |
+| …`text-*-700/800/900` | `text-brand-700` |
+| …`bg-*-50` · `bg-*-100` | `bg-brand-50` · `bg-brand-100` |
+| …`bg-*-500/600` · `bg-*-700` · `hover:bg-*-700` | `bg-brand-500` · `bg-brand-600` · `hover:bg-brand-600` |
+| …`border-*-100/200` · `border-*-300/500/600` | `border-brand-200` · `border-brand-500` |
+| …`ring-*-500/NN` · `focus:border-*-500` | `ring-brand-500/NN` · `focus:border-brand-500` |
+| …`text-*-100/200` (sobre fondo azul) | `text-white/80` |
+| **Verdes** (`green`, `emerald`, `teal`, `lime`): `text-*-400…800` | `text-success-strong` |
+| …`bg-*-50/100` | `bg-success-strong/10` |
+| …`bg-*-400…700` · `hover:bg-*-600/700` | `bg-success-strong` · `hover:bg-success-strong/90` |
+| …`border-*-100…300` · `border-*-500` | `border-success-strong/20` · `border-success-strong` |
+| **Ámbar** (`amber`, `yellow`, `orange`): `text-*-400…800` | `text-warning-strong` |
+| …`bg-*-50/100` | `bg-warning/15` |
+| …`bg-*-400…600` (fondo con texto blanco) | `bg-warning-strong` |
+| …`border-*-100…300` · `border-*-500` · `ring-*-500` | `border-warning/30` · `border-warning-strong` · `ring-warning` |
+| **Rojos** (`red`, `rose`): `text-*-400…800`, `hover:text-*-600` | `text-deal`, `hover:text-deal` |
+| …`bg-*-50/100` | `bg-deal-bg` |
+| …`bg-*-500…700` · `hover:bg-*-600/700` | `bg-deal` · `hover:bg-deal/90` |
+| …`border-*-100…300` | `border-deal/30` |
+| `text-white`, `bg-white`, `border-white`, `bg-white/10`, `text-white/80` | se quedan |
+
+**R4 · Degradados y efectos.**
+- Borra `bg-gradient-to-*` con sus `from-*`, `via-*` y `to-*`, y pon **un** fondo sólido:
+  - Degradado oscuro de color (`from-*-500/600` hacia otro color) → el fondo sólido de su familia en R3. Una tarjeta de estadística de color pasa a `adminStatCard` blanca con `adminIconChip(tono)`.
+  - Degradado claro (`from-*-50 to-white`) → `bg-surface`, o `bg-brand-50` si era azul.
+- Borra `backdrop-blur-*`, `blur-*`, `hover:scale-*`, `scale-[...]`, `animate-pulse` (salvo en esqueletos de carga), `animate-bounce` y `animate-ping`.
+- `shadow-xl` y `shadow-2xl` → `shadow-lg` solo en paneles de modal; en tarjetas bórralos (el borde basta).
+- Borra los elementos que solo existen para un efecto decorativo (un `<div>` vacío con `blur` o degradado `absolute inset-0`).
+
+**R5 · Capas y modales.**
+- **Capa del modal** (`fixed inset-0` que oscurece el fondo): `className={adminModalOverlay}`.
+- **Panel blanco:** `` className={`${adminModalPanel} sm:max-w-lg`} `` (usa `sm:max-w-md`, `lg`, `2xl` o `4xl` según el ancho que tenía). Encabezado, cuerpo y pie con `adminModalHeader`, `adminModalTitle`, `adminModalBody` y `adminModalFooter` si el modal ya tenía esas zonas.
+- **Scroll de fondo:** por cada modal, agrega `useBodyScrollLock(<estado que lo abre>)` junto a los demás hooks del componente. Import: `import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';`. Si el estado es un objeto o null, `useBodyScrollLock(Boolean(estado))`.
+- **Capas sueltas:** `z-40`, `z-50`, `z-[100]`, `z-[9999]` y `z-[10000]` → `z-[var(--z-modal)]` en modales, `z-[var(--z-dropdown)]` en menús desplegables y `z-[var(--z-sticky)]` en barras fijas.
+- **Portales:** si el modal ya usa `createPortal`, déjalo.
+
+**R6 · Tablas y responsive.**
+- **Tablas:** toda `<table>` va dentro de `<div className={adminTableWrap}>` (si ya está dentro de un `overflow-x-auto`, reemplaza esa clase). `<th>` → `adminTh`, `<td>` → `adminTd`, `<tr>` del cuerpo → `adminRowHover`.
+- **Rejillas:** `grid-cols-4` o `grid-cols-5` sin prefijo → `grid-cols-2 lg:grid-cols-4` (o `lg:grid-cols-5`); `grid-cols-3` sin prefijo → `grid-cols-1 sm:grid-cols-3`.
+- **Filas de cabecera** (título a la izquierda, botones a la derecha) → `adminPageHeader`.
+
+**R7 · Montos y tipografía.**
+- Los `toFixed(2)` que se **muestran** como dinero → `formatUSD` / `formatVES`, con las mismas reglas de G-26 (nada en `body`, `value` de inputs ni portapapeles).
+- `text-[10px]` → `text-xs`. `font-black` y `font-extrabold` → `font-bold`. `text-base` en badges → `text-xs`.
+
+**R8 · Prohibido** (si parece necesario → `BLOQUEADO` con `PEDIDO:`):
+- Cambiar `fetch`, URLs, cuerpos de peticiones, validaciones, permisos, textos visibles, orden de campos o agregar/quitar elementos.
+- Única excepción: lo que la tarjeta liste en **"Arreglos permitidos"**.
+
+**En cada estado:**
+1. Tabla archivo | colores sueltos antes → después | modales con `useBodyScrollLock` | tablas envueltas | `toFixed` cambiados.
+2. Lista de clases que dejaste por no estar en R3.
+3. Salida de la verificación.
+
+**Verificación común** (pon en `F` los archivos de la tarjeta):
+```bash
+F="<archivos de la tarjeta, entre comillas>"
+grep -noE "\b(bg|text|border|from|via|to|ring|divide|placeholder)-(gray|slate|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|black)(-[0-9]{2,3})?(/[0-9]+)?\b" $F | wc -l   # 0 (o solo las anotadas en tu estado)
+grep -nE "\bz-(40|50)\b|z-\[[0-9]{3,}\]|bg-gradient-to|backdrop-blur|animate-(bounce|ping)|font-(black|extrabold)|text-\[10px\]|\[#[0-9a-fA-F]{3,6}\]" $F   # 0
+grep -c "fixed inset-0" $F; grep -c "useBodyScrollLock(" $F   # por archivo, el segundo número ≥ modales del archivo
+grep -n "<table" -B2 $F | grep -c "adminTableWrap"   # igual a la cantidad de tablas
+git diff main --stat   # solo los archivos de la tarjeta + su estado
+npx tsc --noEmit
+npx eslint $F   # no más errores que en main: git stash; npx eslint $F; git stash pop
+```
+**QA común:** `npm run dev`, entra como admin y abre cada página de la tarjeta a 1440 y 390 px.
+- No hay texto encimado ni cortado.
+- Los modales cubren toda la pantalla y el fondo no hace scroll.
+- Las tablas se deslizan de lado en 390.
+
+### G-31 · Órdenes, transacciones, clientes y gift cards · Depende: C-52 y R8 en `main`
+Archivos:
+- `app/admin/(dashboard)/orders/page.tsx`
+- `app/admin/(dashboard)/orders/[id]/digital/page.tsx`
+- `app/admin/(dashboard)/transactions/page.tsx`
+- `app/admin/(dashboard)/customers/page.tsx`
+- `app/admin/(dashboard)/gift-cards/page.tsx`
+
+Carga aproximada: 463 colores sueltos, 23 degradados, 8 modales, 18 `toFixed`.
+
+**Arreglos permitidos:**
+1. **`orders/page.tsx`: título.** Antes de las tarjetas de estadística agrega `<div className={adminPageHeader}><div><h1 className={adminPageTitle}>Órdenes</h1><p className={adminPageSubtitle}>Pedidos de la tienda</p></div></div>`. Hoy la página no tiene título.
+2. **`orders/page.tsx`: filas en móvil.** A 390 px el precio queda encima del nombre y del estado. En el elemento de cada fila de orden (el que contiene `#{order.orderNumber}` y el total), usa `flex flex-col gap-3 sm:flex-row sm:items-center`. Al bloque de total + botón de acción + botón ver, `flex items-center justify-between gap-3 sm:justify-end`. Al bloque de número/cliente, `min-w-0 flex-1`.
+3. **`transactions/page.tsx`: abonos.** Borra la constante local `IS_CREDIT` y usa `isCreditTransaction` de `@/lib/format-helpers` en sus 2 usos. En `TYPE_CONFIG` agrega `DEPOSIT: { label: 'Abono', cls: adminBadge('success'), icon: <FiArrowUpCircle className="w-3 h-3" /> },`. Hoy el canje de una gift card sale como "Recarga" en rojo y con signo menos.
+4. **`transactions/page.tsx`: tonos.** En `TYPE_CONFIG` y `STATUS_CONFIG`, cada `cls` pasa a `adminBadge(tono)`: RECHARGE/DEPOSIT/BONUS `success`, PURCHASE `brand`, REFUND `warning`, WITHDRAWAL `neutral`; PENDING `warning`, COMPLETED `success`, FAILED/CANCELLED `danger`. Cada `dot`, al `bg-*` sólido de su tono (R3).
+5. **`gift-cards/page.tsx`:** el tema naranja (`from-amber-500 to-orange-500` y similares) pasa a `brand`; el botón "Generar Gift Cards" usa `adminPrimaryButton`.
+
+QA extra: `/admin/transactions` con una gift card canjeada muestra "Abono" en verde con "+". `/admin/orders` a 390 px no encima textos.
+
+### G-32 · Métodos de pago, marketing y reportes · Depende: G-31
+Archivos:
+- `app/admin/(dashboard)/payments/page.tsx`
+- `app/admin/(dashboard)/marketing/page.tsx`
+- `app/admin/(dashboard)/reports/page.tsx`
+- `components/admin/EmailSettingsPanel.tsx`
+- `components/admin/SocialMediaGenerator.tsx`
+
+Carga aproximada: 541 colores sueltos, 21 degradados, 4 modales, 10 `toFixed`, 8 hex.
+
+**Arreglos permitidos:**
+1. **`SocialMediaGenerator.tsx`: no toques** los elementos con `style={{...}}` ni lo que esté dentro del contenedor de la vista previa de la plantilla. Es la imagen que se exporta y sus colores son del diseño del post. Solo cambia los controles alrededor (botones, inputs, tarjetas del panel).
+2. **Pestañas** de `marketing/page.tsx` y `reports/page.tsx`: usa `adminTab(activo)` y un contenedor `flex gap-2 overflow-x-auto pb-1`. Hoy se cortan a 390 px.
+3. **Colores de los gráficos** de `reports/page.tsx` (props `stroke`, `fill`, `color` de recharts, hex): `#2a63cd` para la serie principal, `#047857` para la segunda y `#b45309` para la tercera. Solo en props de gráficos; no son className.
+
+QA extra: `/admin/reports` a 390 px muestra todas las pestañas deslizando; los gráficos usan azul, verde y ámbar.
+
+### G-33 · Mensajes, categorías y solicitudes · Depende: G-32
+Archivos:
+- `app/admin/(dashboard)/inquiries/page.tsx`
+- `app/admin/(dashboard)/messages/page.tsx`
+- `app/admin/(dashboard)/categories/page.tsx`
+- `app/admin/(dashboard)/discount-requests/page.tsx`
+- `app/admin/(dashboard)/product-requests/page.tsx`
+- `app/admin/(dashboard)/verifications/page.tsx`
+- `app/admin/(dashboard)/reviews/page.tsx`
+- `app/admin/(dashboard)/creators/page.tsx`
+
+Carga aproximada: 513 colores sueltos, 10 degradados, 7 modales.
+
+**Arreglos permitidos:**
+1. **`categories/page.tsx`: responsive.** A 390 px el panel derecho queda cortado.
+   - Contenedor raíz: `flex flex-row h-[calc(100%+3rem)] -m-6 w-[calc(100%+3rem)]` → `-m-4 flex flex-col md:-m-6 lg:min-h-[calc(100dvh-10rem)] lg:flex-row`.
+   - Panel izquierdo: `w-[300px] flex-shrink-0 border-r ... h-full` → `flex w-full shrink-0 flex-col border-b border-line bg-surface lg:w-[300px] lg:border-b-0 lg:border-r` (sin `h-full`).
+   - Panel derecho: quita `h-full`. Su hijo con scroll pasa de `p-8` a `p-4 lg:p-8`.
+2. **Cabeceras de `reviews`, `verifications` y `discount-requests`:** título + pestañas en una fila que se corta en móvil → contenedor `adminPageHeader` y pestañas con `adminTab` en `flex gap-2 overflow-x-auto pb-1`.
+3. **`inquiries/page.tsx`:** las pestañas "Mensajes / Solicitudes de Productos / Alertas del Sistema" usan `adminTab` en un contenedor deslizable. Hoy "Alertas del Sistema" no se ve a 390 px.
+
+QA extra: `/admin/categories` a 390 px muestra la lista arriba y el detalle abajo. `/admin/reviews` a 390 px muestra las 3 pestañas.
+
+### G-34 · Dashboard, legales, servicios, cursos y dos arreglos de flujo · Depende: G-33
+Archivos:
+- `app/admin/(dashboard)/page.tsx`
+- `app/admin/(dashboard)/legal/page.tsx`
+- `app/admin/(dashboard)/servicios/page.tsx`
+- `app/admin/(dashboard)/cursos/page.tsx`
+- `app/admin/(dashboard)/not-found.tsx`
+- `app/customer/(dashboard)/balance/page.tsx`
+- `components/onboarding/GuidedTourWrapper.tsx`
+
+**Arreglos permitidos:**
+1. **`admin/(dashboard)/page.tsx`:** borra el `<div className="flex flex-wrap items-center gap-2">` completo con los 3 indicadores "BD: Conectado", "Auth: Activo" y "Modo: Desarrollo". Están escritos a mano, no miden nada, y en producción dicen "Desarrollo". El bloque de bienvenida pasa de degradado a `bg-brand-600` (R4). Los 3 montos con `toFixed` pasan a `formatUSD` (también el `formatter` del gráfico).
+2. **`customer/(dashboard)/balance/page.tsx`:** en `getTransactionIcon`, `getTransactionColor` y el ícono de cada fila (líneas ~118-122 y ~263-270), cambia `type === 'RECHARGE'` / `transaction.type === 'RECHARGE'` por `isCreditTransaction(type)` / `isCreditTransaction(transaction.type)`, importado de `@/lib/format-helpers`. Hoy el cliente ve su gift card canjeada como gasto en rojo. En este archivo **no** apliques R1-R7, solo este arreglo.
+3. **`components/onboarding/GuidedTourWrapper.tsx`:** el tour de la tienda aparece encima del panel admin. Agrega `import { usePathname } from 'next/navigation';` y, dentro de `GuidedTourWrapper`, `const pathname = usePathname(); if (pathname?.startsWith('/admin')) return null;` antes del `return <GuidedTour />`.
+
+QA extra:
+- En `/admin` ya no hay indicadores de "Modo".
+- En `/customer/balance`, un canje de gift card sale en verde.
+- Con sesión nueva, el tour no aparece en `/admin` y sí en `/`.

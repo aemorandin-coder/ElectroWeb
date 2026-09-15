@@ -46,11 +46,20 @@ export function formatTransactionStatus(status: string | null | undefined): stri
  */
 export const TRANSACTION_TYPE_LABELS: Record<string, string> = {
     RECHARGE: 'Recarga',
+    // Abonos que no son recargas: canje de gift card y comisiones de influencer (C-52)
+    DEPOSIT: 'Abono',
     PURCHASE: 'Compra',
     REFUND: 'Reembolso',
     TRANSFER: 'Transferencia',
     GIFT_CARD: 'Tarjeta de Regalo',
 };
+
+/** Tipos que suman saldo. DEPOSIT (gift card canjeada, comisión) también suma aunque no sea una recarga. */
+export const CREDIT_TRANSACTION_TYPES = ['RECHARGE', 'DEPOSIT', 'BONUS', 'REFUND'];
+
+export function isCreditTransaction(type: string | null | undefined): boolean {
+    return CREDIT_TRANSACTION_TYPES.includes(type || '');
+}
 
 export function formatTransactionType(type: string | null | undefined): string {
     if (!type) return 'Desconocido';

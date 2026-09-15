@@ -2,15 +2,20 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
+import {
+  FiBarChart2, FiBox, FiClipboard, FiCreditCard, FiDollarSign, FiExternalLink, FiGift, FiGrid, FiLogOut,
+  FiMenu, FiMessageSquare, FiPercent, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUsers, FiX,
+} from 'react-icons/fi';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { MdAdminPanelSettings } from 'react-icons/md';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 interface NavigationItem {
   name: string;
   href: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   permission?: string;
   countKey?: keyof SidebarCounts;
 }
@@ -31,9 +36,12 @@ export default function AdminLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [prevPathname, setPrevPathname] = useState(pathname);
+  // Escritorio: menú fijo que se puede ocultar. Móvil: cajón cerrado por defecto que se cierra al navegar
+  // (se guarda la ruta en la que se abrió, así no hace falta un efecto para cerrarlo).
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [drawerPath, setDrawerPath] = useState<string | null>(null);
+  const isDrawerOpen = drawerPath === pathname;
+  useBodyScrollLock(isDrawerOpen);
   const [sidebarCounts, setSidebarCounts] = useState<SidebarCounts>({
     pendingOrders: 0,
     pendingTransactions: 0,
@@ -53,20 +61,12 @@ export default function AdminLayout({
     }
   }, [status, session, router]);
 
-  // Handle page transitions with epic animations
   useEffect(() => {
-    if (pathname !== prevPathname) {
-      setIsTransitioning(true);
-
-      // Reset transition after animation completes
-      const timer = setTimeout(() => {
-        setIsTransitioning(false);
-        setPrevPathname(pathname);
-      }, 400); // Match this with CSS transition duration
-
-      return () => clearTimeout(timer);
-    }
-  }, [pathname, prevPathname]);
+    if (!isDrawerOpen) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setDrawerPath(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isDrawerOpen]);
 
   // Fetch sidebar badge counts — poll every 30 seconds
   const fetchSidebarCounts = useCallback(async () => {
@@ -129,156 +129,95 @@ export default function AdminLayout({
     {
       name: 'Dashboard',
       href: '/admin',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      ),
+      icon: <FiGrid className="h-5 w-5" aria-hidden="true" />,
     },
     {
       name: 'Productos',
       href: '/admin/products',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-        </svg>
-      ),
+      icon: <FiBox className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_PRODUCTS',
     },
     {
       name: 'Categorías',
       href: '/admin/categories',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-        </svg>
-      ),
+      icon: <FiTag className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_PRODUCTS',
     },
     {
       name: 'Órdenes',
       href: '/admin/orders',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
-      ),
+      icon: <FiClipboard className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_ORDERS',
       countKey: 'pendingOrders',
     },
     {
       name: 'Transacciones',
       href: '/admin/transactions',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
+      icon: <FiDollarSign className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_ORDERS',
       countKey: 'pendingTransactions',
     },
     {
       name: 'Gift Cards',
       href: '/admin/gift-cards',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-        </svg>
-      ),
+      icon: <FiGift className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_ORDERS',
     },
     {
       name: 'Clientes',
       href: '/admin/customers',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ),
+      icon: <FiUsers className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_USERS',
     },
     {
       name: 'Métodos de Pago',
       href: '/admin/payments',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-        </svg>
-      ),
+      icon: <FiCreditCard className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_SETTINGS',
     },
     {
       name: 'Mensajes y Alertas',
       href: '/admin/inquiries',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-      ),
+      icon: <FiMessageSquare className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_CONTENT',
       countKey: 'pendingInquiries',
     },
     {
       name: 'Marketing y Contenido',
       href: '/admin/marketing',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-        </svg>
-      ),
+      icon: <FiTrendingUp className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_CONTENT',
       countKey: 'pendingCreators',
     },
     {
       name: 'Trabajos Realizados',
       href: '/admin/servicios',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-        </svg>
-      ),
+      icon: <FiTool className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_CONTENT',
     },
     {
       name: 'Descuentos',
       href: '/admin/discount-requests',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-        </svg>
-      ),
+      icon: <FiPercent className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_CONTENT',
       countKey: 'pendingDiscounts',
     },
     {
       name: 'Documentos Legales',
       href: '/admin/legal',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-      ),
+      icon: <FiShield className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_CONTENT',
     },
     {
       name: 'Reportes',
       href: '/admin/reports',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ),
+      icon: <FiBarChart2 className="h-5 w-5" aria-hidden="true" />,
       permission: 'VIEW_REPORTS',
     },
     {
       name: 'Configuración',
       href: '/admin/settings',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      ),
+      icon: <FiSettings className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_SETTINGS',
     },
   ];
@@ -314,192 +253,129 @@ export default function AdminLayout({
     }
   };
 
+  const roleLabel = session.user.role === 'SUPER_ADMIN' ? 'Super Admin'
+    : session.user.role === 'ADMIN' ? 'Administrador'
+      : session.user.role === 'SUPPORT' ? 'Soporte' : 'Usuario';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-700 via-[#2563eb] to-brand-500 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-      </div>
+    <div className="min-h-dvh bg-surface">
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-[var(--z-drawer)] bg-ink/50 lg:hidden" onClick={() => setDrawerPath(null)} aria-hidden="true" />
+      )}
 
-      {/* Grid Pattern Overlay */}
-      <div className="fixed inset-0 bg-grid-pattern opacity-5 pointer-events-none"></div>
-
-      <div className="relative z-10">
-        {/* Sidebar */}
-        <aside
-          className={`fixed top-0 left-0 z-40 h-screen transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-            } bg-white/95 backdrop-blur-xl border-r border-white/30 w-64 shadow-2xl`}
-        >
-          <div className="h-full flex flex-col">
-            {/* Logo */}
-            <div className="flex items-center gap-3 px-6 py-5 border-b border-line">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-500 shadow-md shadow-brand-500/20">
-                <MdAdminPanelSettings className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-ink">
-                  Electro Shop
-                </h2>
-                <p className="text-sm text-muted">Admin Panel</p>
-              </div>
-            </div>
-
-            {/* Navigation */}
-            <nav className="flex-1 px-3 py-4 overflow-y-auto">
-              <ul className="space-y-1">
-                {filteredNavigation.map((item, index) => {
-                  const isActive = pathname === item.href ||
-                    (item.href !== '/admin' && pathname.startsWith(item.href));
-                  const badgeCount = item.countKey ? sidebarCounts[item.countKey] : 0;
-
-                  return (
-                    <li key={item.name} style={{ animationDelay: `${index * 50}ms` }} className="animate-fadeIn">
-                      <Link
-                        href={item.href}
-                        className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium transition-all duration-300 ${isActive
-                          ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/30 scale-[1.02]'
-                          : 'text-muted hover:bg-surface hover:text-ink hover:scale-[1.01]'
-                          }`}
-                      >
-                        <span className={`relative z-10 transition-transform duration-300 ${isActive ? 'text-white scale-110' : 'text-muted group-hover:scale-110'}`}>
-                          {item.icon}
-                        </span>
-                        <span className="relative z-10 flex-1">{item.name}</span>
-                        {/* Blue notification badge */}
-                        {badgeCount > 0 && (
-                          <span
-                            className={`relative z-10 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full transition-all duration-300 ${
-                              isActive
-                                ? 'bg-white text-brand-500'
-                                : 'bg-brand-500 text-white'
-                            }`}
-                          >
-                            {badgeCount > 99 ? '99+' : badgeCount}
-                          </span>
-                        )}
-                        {isActive && (
-                          <span className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-lg shadow-lg"></span>
-                        )}
-                        {!isActive && (
-                          <span className="absolute inset-0 bg-gradient-to-r from-brand-500/0 to-brand-500/0 group-hover:from-brand-500/5 group-hover:to-brand-500/0 rounded-lg transition-all duration-300"></span>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
-
-            {/* User Info & Logout */}
-            <div className="border-t border-line p-4">
-              <div className="flex items-center gap-3 mb-3 px-2">
-                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-surface border border-line-strong">
-                  <span className="text-base font-semibold text-brand-500">
-                    {session.user.email?.[0].toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-base font-bold text-ink truncate">
-                    {session.user.name}
-                  </p>
-                  <p className="text-sm text-muted truncate">
-                    {session.user.email}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="group relative w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-surface hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 text-muted hover:text-red-600 text-base font-medium rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] overflow-hidden"
-              >
-                <span className="absolute inset-0 bg-gradient-to-r from-red-500/0 to-red-500/0 group-hover:from-red-500/10 group-hover:to-red-500/0 transition-all duration-300"></span>
-                <svg className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:translate-x-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span className="relative z-10">Cerrar Sesión</span>
-              </button>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <div className={`${isSidebarOpen ? 'ml-64' : 'ml-0'} transition-all duration-300`}>
-          {/* Top Bar */}
-          <header className="bg-white border-b border-line sticky top-0 z-30 shadow-sm backdrop-blur-sm bg-white/95">
-            <div className="px-6 py-4 flex items-center justify-between">
-              <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="relative p-2 hover:bg-surface rounded-lg transition-all duration-300 group hover:scale-110"
-              >
-                <svg className="w-6 h-6 text-muted group-hover:text-brand-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                <span className="absolute inset-0 rounded-lg bg-brand-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></span>
-              </button>
-
-              <div className="flex items-center gap-4">
-                {/* Home Button */}
-                <Link
-                  href="/"
-                  className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-base font-semibold rounded-lg hover:shadow-lg hover:shadow-brand-500/30 transition-all duration-300 hover:scale-105 group overflow-hidden"
-                >
-                  <span className="absolute inset-0 bg-gradient-to-r from-brand-600 to-brand-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                  <svg className="w-4 h-4 relative z-10 group-hover:translate-x-[-2px] transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                  <span className="relative z-10">Ir a Home</span>
-                </Link>
-
-                {/* Notification Bell */}
-                <NotificationBell />
-
-                {/* User Role Badge */}
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-surface to-white rounded-full border border-line shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
-                  <div className={`w-2 h-2 rounded-full animate-pulse ${session.user.role === 'SUPER_ADMIN' ? 'bg-purple-500 shadow-sm shadow-purple-500/50' : session.user.role === 'ADMIN' ? 'bg-brand-500 shadow-sm shadow-brand-500/50' : 'bg-muted'
-                    }`} />
-                  <span className="text-sm font-semibold text-ink">
-                    {session.user.role === 'SUPER_ADMIN' ? 'Super Admin' :
-                      session.user.role === 'ADMIN' ? 'Administrador' :
-                        session.user.role === 'SUPPORT' ? 'Soporte' : 'Usuario'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </header>
-
-          {/* Page Content with Smooth Transition */}
-          <main className="p-4 md:p-5 overflow-hidden relative">
-            {/* Shimmer Effect on Transition */}
-            <div
-              className="absolute inset-4 md:inset-5 rounded-xl pointer-events-none z-10 overflow-hidden"
-              style={{
-                opacity: isTransitioning ? 1 : 0,
-                transition: 'opacity 0.3s ease-out'
-              }}
-            >
-              <div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-500/5 to-transparent"
-                style={{
-                  transform: isTransitioning ? 'translateX(100%)' : 'translateX(-100%)',
-                  transition: 'transform 0.5s ease-out'
-                }}
-              />
-            </div>
-
-            {/* Content Container with Smooth Transitions */}
-            <div
-              className="bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/30 h-[calc(100vh-7.5rem)] overflow-y-auto p-4 md:p-5"
-              style={{
-                opacity: isTransitioning ? 0 : 1,
-                transform: isTransitioning ? 'translateY(8px) scale(0.99)' : 'translateY(0) scale(1)',
-                transition: 'opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            >
-              {children}
-            </div>
-          </main>
+      {/* Menú lateral: cajón en móvil, fijo en escritorio */}
+      <aside
+        id="admin-sidebar"
+        aria-label="Menú del panel"
+        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-72 flex-col border-r border-line bg-white transition-transform duration-200 lg:z-[var(--z-sticky)] lg:w-64 ${
+          isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
+        } ${isCollapsed ? 'lg:-translate-x-full' : 'lg:translate-x-0'}`}
+      >
+        <div className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500 text-white">
+            <MdAdminPanelSettings className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold text-ink">Electro Shop</span>
+            <span className="block text-xs text-muted">Panel de administración</span>
+          </span>
+          <button type="button" onClick={() => setDrawerPath(null)} aria-label="Cerrar menú" className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink lg:hidden">
+            <FiX className="h-5 w-5" aria-hidden="true" />
+          </button>
         </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <ul className="space-y-0.5">
+            {filteredNavigation.map((item) => {
+              const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+              const badgeCount = item.countKey ? sidebarCounts[item.countKey] : 0;
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`relative flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
+                      isActive ? 'bg-brand-50 font-semibold text-brand-700' : 'text-ink-soft hover:bg-surface hover:text-ink'
+                    }`}
+                  >
+                    {isActive && <span className="absolute inset-y-2 left-0 w-1 rounded-r bg-brand-500" aria-hidden="true" />}
+                    <span className={isActive ? 'text-brand-600' : 'text-muted'}>{item.icon}</span>
+                    <span className="flex-1 truncate">{item.name}</span>
+                    {badgeCount > 0 && (
+                      <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-bold text-white">
+                        {badgeCount > 99 ? '99+' : badgeCount}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        <div className="shrink-0 border-t border-line p-4">
+          <div className="mb-3 flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-sm font-semibold text-brand-600">
+              {session.user.email?.[0].toUpperCase()}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-ink">{session.user.name}</span>
+              <span className="block truncate text-xs text-muted">{session.user.email}</span>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-line text-sm font-medium text-ink-soft transition-colors hover:border-deal/30 hover:bg-deal-bg hover:text-deal"
+          >
+            <FiLogOut className="h-4 w-4" aria-hidden="true" />
+            Cerrar sesión
+          </button>
+        </div>
+      </aside>
+
+      <div className={`transition-[padding] duration-200 ${isCollapsed ? '' : 'lg:pl-64'}`}>
+        <header className="sticky top-0 z-[var(--z-sticky)] flex h-16 items-center gap-2 border-b border-line bg-white px-4 lg:px-6">
+          <button
+            type="button"
+            onClick={() => setDrawerPath(pathname)}
+            aria-label="Abrir menú"
+            aria-controls="admin-sidebar"
+            aria-expanded={isDrawerOpen}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-ink-soft hover:bg-surface hover:text-ink lg:hidden"
+          >
+            <FiMenu className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsCollapsed((value) => !value)}
+            aria-label={isCollapsed ? 'Mostrar menú' : 'Ocultar menú'}
+            aria-controls="admin-sidebar"
+            aria-expanded={!isCollapsed}
+            className="hidden h-10 w-10 items-center justify-center rounded-lg text-ink-soft hover:bg-surface hover:text-ink lg:inline-flex"
+          >
+            <FiMenu className="h-5 w-5" aria-hidden="true" />
+          </button>
+
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <Link href="/" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface">
+              <FiExternalLink className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Ver tienda</span>
+            </Link>
+            <NotificationBell />
+            <span className="hidden items-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-ink sm:inline-flex">
+              <span className={`h-2 w-2 rounded-full ${session.user.role === 'SUPER_ADMIN' ? 'bg-brand-700' : session.user.role === 'ADMIN' ? 'bg-brand-500' : 'bg-subtle'}`} aria-hidden="true" />
+              {roleLabel}
+            </span>
+          </div>
+        </header>
+
+        {/* Sin transform ni backdrop-filter en los contenedores: si no, los modales `fixed` de las páginas quedan encerrados aquí */}
+        <main className="p-3 sm:p-4 lg:p-6">
+          <div className="mx-auto max-w-[1600px] rounded-2xl border border-line bg-white p-4 md:p-6">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

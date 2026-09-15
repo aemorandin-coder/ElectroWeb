@@ -53,7 +53,7 @@ Excepciones puntuales (solo cuando la tarea lo dice):
     - Tocar cálculos de precios, costos, saldos o stock, o agregar o quitar campos de formularios.
     - Mover lógica entre archivos o crear componentes nuevos.
   - **Fuera de límites hasta nuevo aviso:** `app/admin/(dashboard)/settings/**` y `app/admin/(dashboard)/products/**`. Los rehace Claude en C-50 y C-51.
-    Única excepción: los 6 archivos de la tarjeta **G-29** (solo `className`).
+    Únicas excepciones: los 6 archivos de **G-29** (solo `className`). En **R9 (G-31…G-34)** se rehace el resto del admin con `lib/admin-ui.ts`, pero `layout.tsx`, `settings/**` y `products/**` siguen fuera.
 - `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → solo G-04b, G-05g y G-06g, **y solo cuando en `main` existan `docs/plan/estado/C-01.md` y `docs/plan/estado/C-05.md` con `Estado: HECHO`**.
 - Borrado de la lista cerrada de G-02.
 

@@ -7,6 +7,27 @@ import {
     FiMail, FiCalendar, FiRefreshCw, FiCopy, FiShield
 } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { formatUSD } from '@/lib/currency';
+import {
+  adminPageTitle,
+  adminPageSubtitle,
+  adminStatCard,
+  adminStatLabel,
+  adminStatValue,
+  adminIconChip,
+  adminPrimaryButton,
+  adminSecondaryButton,
+  adminModalOverlay,
+  adminModalPanel,
+  adminModalTitle,
+  adminTableWrap,
+  adminTh,
+  adminTd,
+  adminRowHover,
+  adminInput,
+  adminBadge,
+} from '@/lib/admin-ui';
 
 interface GiftCard {
     id: string;
@@ -29,14 +50,14 @@ interface GiftCard {
     } | null;
 }
 
-const statusColors: Record<string, { bg: string; text: string; label: string }> = {
-    ACTIVE: { bg: 'bg-green-100', text: 'text-green-800', label: 'Activa' },
-    INACTIVE: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Inactiva' },
-    DEPLETED: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Agotada' },
-    EXPIRED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Expirada' },
-    SUSPENDED: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Suspendida' },
-    CANCELLED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelada' },
-    PARTIALLY_USED: { bg: 'bg-amber-100', text: 'text-amber-800', label: 'Uso Parcial' },
+const statusColors: Record<string, { cls: string; label: string }> = {
+    ACTIVE: { cls: adminBadge('success'), label: 'Activa' },
+    INACTIVE: { cls: adminBadge('neutral'), label: 'Inactiva' },
+    DEPLETED: { cls: adminBadge('brand'), label: 'Agotada' },
+    EXPIRED: { cls: adminBadge('danger'), label: 'Expirada' },
+    SUSPENDED: { cls: adminBadge('warning'), label: 'Suspendida' },
+    CANCELLED: { cls: adminBadge('danger'), label: 'Cancelada' },
+    PARTIALLY_USED: { cls: adminBadge('warning'), label: 'Uso Parcial' },
 };
 
 export default function GiftCardsAdminPage() {
@@ -46,6 +67,8 @@ export default function GiftCardsAdminPage() {
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState<GiftCard | null>(null);
+    useBodyScrollLock(showCreateModal);
+    useBodyScrollLock(Boolean(showDetailsModal));
     const [creating, setCreating] = useState(false);
 
     // Create form state
@@ -249,26 +272,26 @@ export default function GiftCardsAdminPage() {
         <div className="p-6 max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
-                            <FiGift className="w-5 h-5 text-white" />
-                        </div>
-                        Gift Cards
-                    </h1>
-                    <p className="text-gray-500 mt-1">Administra las tarjetas de regalo</p>
+                <div className="flex items-center gap-3">
+                    <div className={adminIconChip('brand')}>
+                        <FiGift className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h1 className={adminPageTitle}>Gift Cards</h1>
+                        <p className={adminPageSubtitle}>Administra las tarjetas de regalo</p>
+                    </div>
                 </div>
                 <div className="flex gap-3">
                     <button
                         onClick={() => fetchGiftCards()}
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+                        className={adminSecondaryButton}
                     >
                         <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                         Actualizar
                     </button>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2"
+                        className={adminPrimaryButton}
                     >
                         <FiPlus className="w-4 h-4" />
                         Generar Gift Cards
@@ -278,80 +301,70 @@ export default function GiftCardsAdminPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <FiHash className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                            <p className="text-sm text-gray-500">Total</p>
-                        </div>
+                <div className={adminStatCard}>
+                    <span className={adminIconChip('brand')}>
+                        <FiHash className="w-5 h-5" />
+                    </span>
+                    <div>
+                        <p className={adminStatValue}>{stats.total}</p>
+                        <p className={adminStatLabel}>Total</p>
                     </div>
                 </div>
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                            <FiCheck className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
-                            <p className="text-sm text-gray-500">Activas</p>
-                        </div>
+                <div className={adminStatCard}>
+                    <span className={adminIconChip('success')}>
+                        <FiCheck className="w-5 h-5" />
+                    </span>
+                    <div>
+                        <p className={adminStatValue}>{stats.active}</p>
+                        <p className={adminStatLabel}>Activas</p>
                     </div>
                 </div>
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <FiGift className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.depleted}</p>
-                            <p className="text-sm text-gray-500">Canjeadas</p>
-                        </div>
+                <div className={adminStatCard}>
+                    <span className={adminIconChip('brand')}>
+                        <FiGift className="w-5 h-5" />
+                    </span>
+                    <div>
+                        <p className={adminStatValue}>{stats.depleted}</p>
+                        <p className={adminStatLabel}>Canjeadas</p>
                     </div>
                 </div>
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                            <FiDollarSign className="w-5 h-5 text-amber-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">${stats.totalBalance.toFixed(2)}</p>
-                            <p className="text-sm text-gray-500">Saldo Activo</p>
-                        </div>
+                <div className={adminStatCard}>
+                    <span className={adminIconChip('brand')}>
+                        <FiDollarSign className="w-5 h-5" />
+                    </span>
+                    <div>
+                        <p className={adminStatValue}>{formatUSD(stats.totalBalance)}</p>
+                        <p className={adminStatLabel}>Saldo Activo</p>
                     </div>
                 </div>
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                            <FiDollarSign className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">${stats.totalRedeemed.toFixed(2)}</p>
-                            <p className="text-sm text-gray-500">Canjeado</p>
-                        </div>
+                <div className={adminStatCard}>
+                    <span className={adminIconChip('success')}>
+                        <FiDollarSign className="w-5 h-5" />
+                    </span>
+                    <div>
+                        <p className={adminStatValue}>{formatUSD(stats.totalRedeemed)}</p>
+                        <p className={adminStatLabel}>Canjeado</p>
                     </div>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200 mb-6">
+            <div className="bg-white rounded-xl p-4 border border-line mb-6">
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 relative">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted w-5 h-5" />
                         <input
                             type="text"
                             placeholder="Buscar por código, email o nombre..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            className={`${adminInput()} pl-10`}
                         />
                     </div>
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        className={adminInput()}
                     >
                         <option value="all">Todos los estados</option>
                         <option value="ACTIVE">Activas</option>
@@ -364,151 +377,158 @@ export default function GiftCardsAdminPage() {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+            <div className={adminTableWrap}>
+                <table className="w-full">
+                    <thead>
+                        <tr>
+                            <th className={adminTh}>
+                                Código
+                            </th>
+                            <th className={adminTh}>
+                                Monto
+                            </th>
+                            <th className={adminTh}>
+                                Saldo
+                            </th>
+                            <th className={adminTh}>
+                                Estado
+                            </th>
+                            <th className={adminTh}>
+                                Destinatario
+                            </th>
+                            <th className={adminTh}>
+                                Fecha
+                            </th>
+                            <th className={`${adminTh} text-right`}>
+                                Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Código
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Monto
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Saldo
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Estado
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Destinatario
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Fecha
-                                </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Acciones
-                                </th>
+                                <td colSpan={7} className="px-6 py-12 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                                        <p className="text-muted text-sm">Cargando...</p>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                                            <p className="text-gray-500">Cargando...</p>
+                        ) : filteredCards.length === 0 ? (
+                            <tr>
+                                <td colSpan={7} className="px-6 py-12 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <FiGift className="w-12 h-12 text-subtle" />
+                                        <p className="text-muted text-sm">No se encontraron gift cards</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : (
+                            filteredCards.map((card) => (
+                                <tr key={card.id} className={adminRowHover}>
+                                    <td className={adminTd}>
+                                        <div className="flex items-center gap-2">
+                                            <code className="text-sm font-mono bg-surface px-2 py-1 rounded text-ink">
+                                                ****{card.codeLast4 || card.code.slice(-4)}
+                                            </code>
+                                            <button
+                                                onClick={() => copyCode(card.code)}
+                                                aria-label="Copiar código"
+                                                className="p-1 text-muted hover:text-brand-600 transition-colors"
+                                                title="Copiar código"
+                                            >
+                                                <FiCopy className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td className={adminTd}>
+                                        <span className="font-semibold text-ink">
+                                            {formatUSD(Number(card.amountUSD))}
+                                        </span>
+                                    </td>
+                                    <td className={adminTd}>
+                                        <span className={`font-semibold ${Number(card.balanceUSD) > 0 ? 'text-success-strong' : 'text-muted'}`}>
+                                            {formatUSD(Number(card.balanceUSD))}
+                                        </span>
+                                    </td>
+                                    <td className={adminTd}>
+                                        <span className={statusColors[card.status]?.cls || adminBadge('neutral')}>
+                                            {statusColors[card.status]?.label || card.status}
+                                        </span>
+                                    </td>
+                                    <td className={adminTd}>
+                                        {card.recipientEmail ? (
+                                            <div className="text-sm">
+                                                <p className="font-medium text-ink">{card.recipientName}</p>
+                                                <p className="text-muted">{card.recipientEmail}</p>
+                                            </div>
+                                        ) : (
+                                            <span className="text-subtle text-sm">-</span>
+                                        )}
+                                    </td>
+                                    <td className={`${adminTd} text-sm text-muted`}>
+                                        {new Date(card.createdAt).toLocaleDateString('es-VE')}
+                                    </td>
+                                    <td className={`${adminTd} text-right`}>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={() => setShowDetailsModal(card)}
+                                                aria-label="Ver detalles"
+                                                className="p-2 text-muted hover:text-brand-600 transition-colors"
+                                                title="Ver detalles"
+                                            >
+                                                <FiEye className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handlePrintCards([card])}
+                                                aria-label="Imprimir"
+                                                className="p-2 text-muted hover:text-brand-600 transition-colors"
+                                                title="Imprimir"
+                                            >
+                                                <FiPrinter className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
-                            ) : filteredCards.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <FiGift className="w-12 h-12 text-gray-300" />
-                                            <p className="text-gray-500">No se encontraron gift cards</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredCards.map((card) => (
-                                    <tr key={card.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
-                                                    ****{card.codeLast4 || card.code.slice(-4)}
-                                                </code>
-                                                <button
-                                                    onClick={() => copyCode(card.code)}
-                                                    className="p-1 text-gray-400 hover:text-amber-500 transition-colors"
-                                                    title="Copiar código"
-                                                >
-                                                    <FiCopy className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="font-semibold text-gray-900">
-                                                ${Number(card.amountUSD).toFixed(2)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`font-semibold ${Number(card.balanceUSD) > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                                                ${Number(card.balanceUSD).toFixed(2)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[card.status]?.bg} ${statusColors[card.status]?.text}`}>
-                                                {statusColors[card.status]?.label || card.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {card.recipientEmail ? (
-                                                <div className="text-sm">
-                                                    <p className="font-medium text-gray-900">{card.recipientName}</p>
-                                                    <p className="text-gray-500">{card.recipientEmail}</p>
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400 text-sm">-</span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {new Date(card.createdAt).toLocaleDateString('es-VE')}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => setShowDetailsModal(card)}
-                                                    className="p-2 text-gray-400 hover:text-amber-500 transition-colors"
-                                                    title="Ver detalles"
-                                                >
-                                                    <FiEye className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handlePrintCards([card])}
-                                                    className="p-2 text-gray-400 hover:text-amber-500 transition-colors"
-                                                    title="Imprimir"
-                                                >
-                                                    <FiPrinter className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
 
             {/* Create Modal */}
             {showCreateModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                <div
+                    className={adminModalOverlay}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) setShowCreateModal(false);
+                    }}
+                >
+                    <div className={`${adminModalPanel} sm:max-w-md`}>
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
-                                <FiGift className="w-6 h-6 text-white" />
+                            <div className={adminIconChip('brand')}>
+                                <FiGift className="w-6 h-6 text-brand-600" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-gray-900">Generar Gift Cards</h2>
-                                <p className="text-sm text-gray-500">Para impresión física</p>
+                                <h2 className={adminModalTitle}>Generar Gift Cards</h2>
+                                <p className="text-sm text-muted">Para impresión física</p>
                             </div>
                         </div>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-ink mb-1">
                                     Monto por tarjeta (USD)
                                 </label>
                                 <div className="grid grid-cols-4 gap-2 mb-2">
                                     {[10, 25, 50, 100].map((amount) => (
                                         <button
                                             key={amount}
+                                            type="button"
                                             onClick={() => setCreateForm(prev => ({ ...prev, amount }))}
                                             className={`py-2 rounded-lg font-semibold transition-colors ${createForm.amount === amount
-                                                    ? 'bg-amber-500 text-white'
-                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                    ? 'bg-brand-500 text-white'
+                                                    : 'bg-surface text-ink hover:bg-line border border-line'
                                                 }`}
                                         >
                                             ${amount}
@@ -521,12 +541,12 @@ export default function GiftCardsAdminPage() {
                                     max={500}
                                     value={createForm.amount}
                                     onChange={(e) => setCreateForm(prev => ({ ...prev, amount: Number(e.target.value) }))}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                    className={adminInput()}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-ink mb-1">
                                     Cantidad a generar
                                 </label>
                                 <input
@@ -535,17 +555,17 @@ export default function GiftCardsAdminPage() {
                                     max={50}
                                     value={createForm.quantity}
                                     onChange={(e) => setCreateForm(prev => ({ ...prev, quantity: Number(e.target.value) }))}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                    className={adminInput()}
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Máximo 50 por lote</p>
+                                <p className="text-xs text-muted mt-1">Máximo 50 por lote</p>
                             </div>
 
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                            <div className="bg-brand-50 border border-brand-200 rounded-lg p-4">
                                 <div className="flex items-start gap-3">
-                                    <FiShield className="w-5 h-5 text-amber-600 mt-0.5" />
+                                    <FiShield className="w-5 h-5 text-brand-600 mt-0.5" />
                                     <div>
-                                        <p className="text-sm font-medium text-amber-800">Seguridad</p>
-                                        <p className="text-xs text-amber-600 mt-1">
+                                        <p className="text-sm font-medium text-brand-700">Seguridad</p>
+                                        <p className="text-xs text-brand-600 mt-1">
                                             Los códigos son generados con alta entropía criptográfica y
                                             almacenados de forma segura (hash SHA-256).
                                         </p>
@@ -553,11 +573,11 @@ export default function GiftCardsAdminPage() {
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 rounded-lg p-4">
+                            <div className="bg-surface rounded-lg p-4">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Total a generar:</span>
-                                    <span className="text-xl font-bold text-amber-600">
-                                        ${(createForm.amount * createForm.quantity).toFixed(2)} ({createForm.quantity} tarjetas)
+                                    <span className="text-ink-soft">Total a generar:</span>
+                                    <span className="text-xl font-bold text-brand-600">
+                                        {formatUSD(createForm.amount * createForm.quantity)} ({createForm.quantity} tarjetas)
                                     </span>
                                 </div>
                             </div>
@@ -565,15 +585,17 @@ export default function GiftCardsAdminPage() {
 
                         <div className="flex gap-3 mt-6">
                             <button
+                                type="button"
                                 onClick={() => setShowCreateModal(false)}
-                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                className={adminSecondaryButton}
                             >
                                 Cancelar
                             </button>
                             <button
+                                type="button"
                                 onClick={handleCreateGiftCards}
                                 disabled={creating}
-                                className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                className={`${adminPrimaryButton} flex-1 justify-center`}
                             >
                                 {creating ? (
                                     <>
@@ -594,13 +616,19 @@ export default function GiftCardsAdminPage() {
 
             {/* Details Modal */}
             {showDetailsModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-gray-900">Detalles de Gift Card</h2>
+                <div
+                    className={adminModalOverlay}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) setShowDetailsModal(null);
+                    }}
+                >
+                    <div className={`${adminModalPanel} sm:max-w-lg max-h-[90vh] overflow-y-auto`}>
+                        <div className="flex items-center justify-between mb-6 pb-3 border-b border-line">
+                            <h2 className={adminModalTitle}>Detalles de Gift Card</h2>
                             <button
                                 onClick={() => setShowDetailsModal(null)}
-                                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                                aria-label="Cerrar"
+                                className="p-2 text-muted hover:text-ink transition-colors"
                             >
                                 <FiX className="w-5 h-5" />
                             </button>
@@ -608,14 +636,15 @@ export default function GiftCardsAdminPage() {
 
                         <div className="space-y-4">
                             {/* Code */}
-                            <div className="bg-gray-900 rounded-xl p-4 text-center">
-                                <p className="text-xs text-gray-400 mb-2">Código</p>
-                                <code className="text-xl font-mono text-amber-400 tracking-wider">
+                            <div className="bg-ink rounded-xl p-4 text-center">
+                                <p className="text-xs text-muted mb-2">Código</p>
+                                <code className="text-xl font-mono text-brand-400 tracking-wider">
                                     {showDetailsModal.code.replace(/(.{4})/g, '$1-').slice(0, -1)}
                                 </code>
                                 <button
                                     onClick={() => copyCode(showDetailsModal.code)}
-                                    className="ml-2 text-gray-400 hover:text-white transition-colors"
+                                    aria-label="Copiar código"
+                                    className="ml-2 text-muted hover:text-white transition-colors"
                                 >
                                     <FiCopy className="w-4 h-4" />
                                 </button>
@@ -623,39 +652,39 @@ export default function GiftCardsAdminPage() {
 
                             {/* Amount & Balance */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <p className="text-sm text-gray-500">Monto Original</p>
-                                    <p className="text-2xl font-bold text-gray-900">
-                                        ${Number(showDetailsModal.amountUSD).toFixed(2)}
+                                <div className="bg-surface rounded-lg p-4">
+                                    <p className="text-sm text-muted">Monto Original</p>
+                                    <p className="text-2xl font-bold text-ink">
+                                        {formatUSD(Number(showDetailsModal.amountUSD))}
                                     </p>
                                 </div>
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <p className="text-sm text-gray-500">Saldo Actual</p>
-                                    <p className={`text-2xl font-bold ${Number(showDetailsModal.balanceUSD) > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                                        ${Number(showDetailsModal.balanceUSD).toFixed(2)}
+                                <div className="bg-surface rounded-lg p-4">
+                                    <p className="text-sm text-muted">Saldo Actual</p>
+                                    <p className={`text-2xl font-bold ${Number(showDetailsModal.balanceUSD) > 0 ? 'text-success-strong' : 'text-muted'}`}>
+                                        {formatUSD(Number(showDetailsModal.balanceUSD))}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Status */}
-                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <span className="text-gray-600">Estado:</span>
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusColors[showDetailsModal.status]?.bg} ${statusColors[showDetailsModal.status]?.text}`}>
+                            <div className="flex items-center justify-between p-4 bg-surface rounded-lg">
+                                <span className="text-ink-soft">Estado:</span>
+                                <span className={statusColors[showDetailsModal.status]?.cls || adminBadge('neutral')}>
                                     {statusColors[showDetailsModal.status]?.label || showDetailsModal.status}
                                 </span>
                             </div>
 
                             {/* Recipient */}
                             {showDetailsModal.recipientEmail && (
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-500 mb-2">Destinatario</p>
+                                <div className="p-4 bg-surface rounded-lg">
+                                    <p className="text-sm text-muted mb-2">Destinatario</p>
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                                            <FiUser className="w-5 h-5 text-amber-600" />
+                                        <div className={adminIconChip('brand')}>
+                                            <FiUser className="w-5 h-5 text-brand-600" />
                                         </div>
                                         <div>
-                                            <p className="font-medium text-gray-900">{showDetailsModal.recipientName}</p>
-                                            <p className="text-sm text-gray-500">{showDetailsModal.recipientEmail}</p>
+                                            <p className="font-medium text-ink">{showDetailsModal.recipientName}</p>
+                                            <p className="text-sm text-muted">{showDetailsModal.recipientEmail}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -663,9 +692,9 @@ export default function GiftCardsAdminPage() {
 
                             {/* Dates */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-500">Creada</p>
-                                    <p className="font-medium text-gray-900">
+                                <div className="p-4 bg-surface rounded-lg">
+                                    <p className="text-sm text-muted">Creada</p>
+                                    <p className="font-medium text-ink">
                                         {new Date(showDetailsModal.createdAt).toLocaleDateString('es-VE', {
                                             day: 'numeric',
                                             month: 'short',
@@ -674,9 +703,9 @@ export default function GiftCardsAdminPage() {
                                     </p>
                                 </div>
                                 {showDetailsModal.redeemedAt && (
-                                    <div className="p-4 bg-gray-50 rounded-lg">
-                                        <p className="text-sm text-gray-500">Canjeada</p>
-                                        <p className="font-medium text-gray-900">
+                                    <div className="p-4 bg-surface rounded-lg">
+                                        <p className="text-sm text-muted">Canjeada</p>
+                                        <p className="font-medium text-ink">
                                             {new Date(showDetailsModal.redeemedAt).toLocaleDateString('es-VE', {
                                                 day: 'numeric',
                                                 month: 'short',
@@ -691,14 +720,14 @@ export default function GiftCardsAdminPage() {
                         <div className="flex gap-3 mt-6">
                             <button
                                 onClick={() => handlePrintCards([showDetailsModal])}
-                                className="flex-1 px-4 py-2 border border-amber-500 text-amber-600 rounded-lg hover:bg-amber-50 transition-colors flex items-center justify-center gap-2"
+                                className={`${adminSecondaryButton} flex-1 justify-center text-brand-600 hover:text-brand-700`}
                             >
                                 <FiPrinter className="w-4 h-4" />
                                 Imprimir
                             </button>
                             <button
                                 onClick={() => setShowDetailsModal(null)}
-                                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                className={`${adminSecondaryButton} flex-1 justify-center`}
                             >
                                 Cerrar
                             </button>

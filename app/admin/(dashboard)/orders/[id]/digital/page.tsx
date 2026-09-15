@@ -14,6 +14,22 @@ import { BsNintendoSwitch } from 'react-icons/bs';
 import { SiSteam, SiPlaystation, SiRoblox } from 'react-icons/si';
 import { FaGamepad } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import {
+    adminPageTitle,
+    adminPageSubtitle,
+    adminSectionTitle,
+    adminStatCard,
+    adminStatLabel,
+    adminStatValue,
+    adminIconChip,
+    adminPrimaryButton,
+    adminInput,
+    adminLabel,
+    adminBadge,
+    adminNotice,
+    adminSpinner,
+} from '@/lib/admin-ui';
+
 
 interface DigitalCode {
     id: string;
@@ -160,8 +176,8 @@ export default function AdminDigitalCodesPage() {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-                    <p className="text-gray-500">Cargando...</p>
+                    <div className={adminSpinner}></div>
+                    <p className="text-muted">Cargando...</p>
                 </div>
             </div>
         );
@@ -170,9 +186,9 @@ export default function AdminDigitalCodesPage() {
     if (!data) {
         return (
             <div className="text-center py-12">
-                <FiAlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-                <h1 className="text-xl font-bold text-gray-800 mb-2">Orden no encontrada</h1>
-                <Link href="/admin/orders" className="text-blue-600 hover:underline">
+                <FiAlertCircle className="w-16 h-16 text-deal mx-auto mb-4" />
+                <h1 className="text-xl font-bold text-ink mb-2">Orden no encontrada</h1>
+                <Link href="/admin/orders" className="text-brand-600 hover:underline">
                     Volver a órdenes
                 </Link>
             </div>
@@ -189,7 +205,7 @@ export default function AdminDigitalCodesPage() {
             <div className="mb-6">
                 <Link
                     href="/admin/orders"
-                    className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4 text-sm"
+                    className="inline-flex items-center gap-2 text-muted hover:text-ink mb-4 text-sm font-medium"
                 >
                     <FiArrowLeft /> Volver a órdenes
                 </Link>
@@ -197,23 +213,20 @@ export default function AdminDigitalCodesPage() {
                 <div className="flex items-start justify-between gap-4">
                     <div>
                         <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl text-white">
-                                <FiMonitor className="w-6 h-6" />
+                            <div className={adminIconChip('brand')}>
+                                <FiMonitor className="w-6 h-6 text-brand-600" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900">
+                                <h1 className={adminPageTitle}>
                                     Códigos Digitales
                                 </h1>
-                                <p className="text-gray-500">Orden #{data.orderNumber}</p>
+                                <p className={adminPageSubtitle}>Orden #{data.orderNumber}</p>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${isPaid
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                            }`}>
+                        <span className={adminBadge(isPaid ? 'success' : 'warning')}>
                             {isPaid ? <><FiCheck className="inline h-4 w-4 shrink-0 mr-1" aria-hidden="true" />Pagado</> : <><FiClock className="inline h-4 w-4 shrink-0 mr-1" aria-hidden="true" />Pendiente de pago</>}
                         </span>
                     </div>
@@ -222,11 +235,11 @@ export default function AdminDigitalCodesPage() {
 
             {/* Warning if not paid */}
             {!isPaid && (
-                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start gap-3">
-                    <FiAlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <div className={`mb-6 flex items-start gap-3 ${adminNotice('warning')}`}>
+                    <FiAlertCircle className="w-5 h-5 text-warning-strong flex-shrink-0 mt-0.5" />
                     <div>
-                        <p className="font-medium text-yellow-800">Orden no pagada</p>
-                        <p className="text-sm text-yellow-700">
+                        <p className="font-medium text-warning-strong">Orden no pagada</p>
+                        <p className="text-sm text-warning-strong">
                             No puedes enviar códigos hasta que el pago sea confirmado.
                         </p>
                     </div>
@@ -234,38 +247,32 @@ export default function AdminDigitalCodesPage() {
             )}
 
             {/* Stats Summary */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <FiPackage className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{data.digitalItems.length}</p>
-                            <p className="text-xs text-gray-500">Productos digitales</p>
-                        </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className={adminStatCard}>
+                    <span className={adminIconChip('brand')}>
+                        <FiPackage className="w-5 h-5" />
+                    </span>
+                    <div>
+                        <p className={adminStatValue}>{data.digitalItems.length}</p>
+                        <p className={adminStatLabel}>Productos digitales</p>
                     </div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-amber-100 rounded-lg">
-                            <FiClock className="w-5 h-5 text-amber-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{pendingItems.length}</p>
-                            <p className="text-xs text-gray-500">Pendientes</p>
-                        </div>
+                <div className={adminStatCard}>
+                    <span className={adminIconChip('warning')}>
+                        <FiClock className="w-5 h-5" />
+                    </span>
+                    <div>
+                        <p className={adminStatValue}>{pendingItems.length}</p>
+                        <p className={adminStatLabel}>Pendientes</p>
                     </div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                            <FiCheck className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{completedItems.length}</p>
-                            <p className="text-xs text-gray-500">Entregados</p>
-                        </div>
+                <div className={adminStatCard}>
+                    <span className={adminIconChip('success')}>
+                        <FiCheck className="w-5 h-5" />
+                    </span>
+                    <div>
+                        <p className={adminStatValue}>{completedItems.length}</p>
+                        <p className={adminStatLabel}>Entregados</p>
                     </div>
                 </div>
             </div>
@@ -273,8 +280,8 @@ export default function AdminDigitalCodesPage() {
             {/* Pending Items - Need to send codes */}
             {pendingItems.length > 0 && (
                 <div className="mb-8">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <FiClock className="text-amber-500" />
+                    <h2 className={`${adminSectionTitle} mb-4 flex items-center gap-2`}>
+                        <FiClock className="text-warning-strong" />
                         Pendientes de Envío ({pendingItems.length})
                     </h2>
 
@@ -282,12 +289,12 @@ export default function AdminDigitalCodesPage() {
                         {pendingItems.map((item) => (
                             <div
                                 key={item.orderItemId}
-                                className="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden"
+                                className="bg-white rounded-xl border border-warning/30 overflow-hidden"
                             >
-                                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
+                                <div className="p-4 bg-warning/10 border-b border-warning/20">
                                     <div className="flex items-center gap-4">
                                         {item.image && (
-                                            <div className="w-14 h-14 rounded-lg overflow-hidden bg-white border border-gray-100 flex-shrink-0">
+                                            <div className="w-14 h-14 rounded-lg overflow-hidden bg-white border border-line flex-shrink-0">
                                                 <Image
                                                     src={item.image}
                                                     alt={item.productName}
@@ -298,18 +305,18 @@ export default function AdminDigitalCodesPage() {
                                             </div>
                                         )}
                                         <div className="flex-1">
-                                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                                            <div className="flex items-center gap-2 text-sm text-ink-soft mb-1">
                                                 {getPlatformIcon(item.platform)}
                                                 <span>{item.platform || 'Digital'}</span>
                                                 {item.region && (
                                                     <>
-                                                        <span className="text-gray-300">•</span>
+                                                        <span className="text-subtle">•</span>
                                                         <span>{item.region}</span>
                                                     </>
                                                 )}
                                             </div>
-                                            <h3 className="font-semibold text-gray-900">{item.productName}</h3>
-                                            <p className="text-sm text-gray-500">
+                                            <h3 className="font-semibold text-ink">{item.productName}</h3>
+                                            <p className="text-sm text-muted">
                                                 {item.codes.length} de {item.quantity} código(s) enviado(s)
                                             </p>
                                         </div>
@@ -320,7 +327,7 @@ export default function AdminDigitalCodesPage() {
                                 <div className="p-4">
                                     <div className="space-y-3">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <label className={adminLabel}>
                                                 Código Digital *
                                             </label>
                                             <input
@@ -331,13 +338,13 @@ export default function AdminDigitalCodesPage() {
                                                     [item.orderItemId]: { ...prev[item.orderItemId], code: e.target.value }
                                                 }))}
                                                 placeholder="Ej: XXXX-XXXX-XXXX-XXXX"
-                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                                className={`${adminInput()} font-mono`}
                                                 disabled={!isPaid || sending === item.orderItemId}
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <label className={adminLabel}>
                                                 Notas internas (opcional)
                                             </label>
                                             <input
@@ -348,7 +355,7 @@ export default function AdminDigitalCodesPage() {
                                                     [item.orderItemId]: { ...prev[item.orderItemId], notes: e.target.value }
                                                 }))}
                                                 placeholder="Ej: Código de Steam, válido hasta..."
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                                className={adminInput()}
                                                 disabled={!isPaid || sending === item.orderItemId}
                                             />
                                         </div>
@@ -356,10 +363,7 @@ export default function AdminDigitalCodesPage() {
                                         <button
                                             onClick={() => sendCode(item.orderItemId)}
                                             disabled={!isPaid || sending === item.orderItemId || !newCodes[item.orderItemId]?.code}
-                                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${isPaid && newCodes[item.orderItemId]?.code
-                                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/25'
-                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                }`}
+                                            className={`${adminPrimaryButton} w-full`}
                                         >
                                             {sending === item.orderItemId ? (
                                                 <>
@@ -384,8 +388,8 @@ export default function AdminDigitalCodesPage() {
             {/* Completed Items - Already sent */}
             {completedItems.length > 0 && (
                 <div>
-                    <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <FiCheck className="text-green-500" />
+                    <h2 className={`${adminSectionTitle} mb-4 flex items-center gap-2`}>
+                        <FiCheck className="text-success-strong" />
                         Códigos Entregados ({completedItems.length})
                     </h2>
 
@@ -393,12 +397,12 @@ export default function AdminDigitalCodesPage() {
                         {completedItems.map((item) => (
                             <div
                                 key={item.orderItemId}
-                                className="bg-white rounded-xl border border-green-200 shadow-sm overflow-hidden"
+                                className="bg-white rounded-xl border border-success-strong/20 overflow-hidden"
                             >
-                                <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+                                <div className="p-4 bg-success-strong/10 border-b border-success-strong/20">
                                     <div className="flex items-center gap-4">
                                         {item.image && (
-                                            <div className="w-14 h-14 rounded-lg overflow-hidden bg-white border border-gray-100 flex-shrink-0">
+                                            <div className="w-14 h-14 rounded-lg overflow-hidden bg-white border border-line flex-shrink-0">
                                                 <Image
                                                     src={item.image}
                                                     alt={item.productName}
@@ -409,13 +413,13 @@ export default function AdminDigitalCodesPage() {
                                             </div>
                                         )}
                                         <div className="flex-1">
-                                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                                            <div className="flex items-center gap-2 text-sm text-ink-soft mb-1">
                                                 {getPlatformIcon(item.platform)}
                                                 <span>{item.platform || 'Digital'}</span>
                                             </div>
-                                            <h3 className="font-semibold text-gray-900">{item.productName}</h3>
+                                            <h3 className="font-semibold text-ink">{item.productName}</h3>
                                         </div>
-                                        <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium inline-flex items-center gap-1">
+                                        <div className={adminBadge('success')}>
                                             <FiCheck className="inline h-4 w-4 shrink-0" aria-hidden="true" />Entregado
                                         </div>
                                     </div>
@@ -423,18 +427,18 @@ export default function AdminDigitalCodesPage() {
 
                                 {/* Show sent codes */}
                                 <div className="p-4 space-y-2">
-                                    {item.codes.map((code, idx) => (
+                                    {item.codes.map((code) => (
                                         <div
                                             key={code.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                                            className="flex items-center justify-between p-3 bg-surface border border-line rounded-lg"
                                         >
                                             <div className="flex-1">
-                                                <p className="font-mono text-sm text-gray-800">{code.code}</p>
+                                                <p className="font-mono text-sm text-ink">{code.code}</p>
                                                 {code.notes && (
-                                                    <p className="text-xs text-gray-500 mt-1">{code.notes}</p>
+                                                    <p className="text-xs text-muted mt-1">{code.notes}</p>
                                                 )}
                                             </div>
-                                            <div className="text-xs text-gray-400">
+                                            <div className="text-xs text-muted">
                                                 {code.deliveredAt && new Date(code.deliveredAt).toLocaleDateString('es-VE')}
                                             </div>
                                         </div>
@@ -448,12 +452,12 @@ export default function AdminDigitalCodesPage() {
 
             {/* All delivered message */}
             {data.isDelivered && (
-                <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 text-center">
-                    <FiCheck className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                    <h3 className="text-lg font-bold text-green-800 mb-1">
+                <div className={`mt-8 p-6 text-center ${adminNotice('success')}`}>
+                    <FiCheck className="w-12 h-12 text-success-strong mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-success-strong mb-1">
                         ¡Todos los códigos han sido entregados!
                     </h3>
-                    <p className="text-sm text-green-600">
+                    <p className="text-sm text-success-strong/80">
                         El cliente ha recibido todos sus códigos digitales.
                     </p>
                 </div>

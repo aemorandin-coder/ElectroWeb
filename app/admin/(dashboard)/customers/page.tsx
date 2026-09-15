@@ -1,5 +1,28 @@
 'use client';
 import { toast } from 'react-hot-toast';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { formatUSD } from '@/lib/currency';
+import {
+  adminPageTitle,
+  adminPageSubtitle,
+  adminStatCard,
+  adminStatLabel,
+  adminStatValue,
+  adminIconChip,
+  adminPrimaryButton,
+  adminSecondaryButton,
+  adminDangerButton,
+  adminModalOverlay,
+  adminModalPanel,
+  adminTableWrap,
+  adminTh,
+  adminTd,
+  adminRowHover,
+  adminInput,
+  adminBadge,
+  adminCardFlush,
+} from '@/lib/admin-ui';
+import { FiCalendar, FiZap } from 'react-icons/fi';
 
 import { useState, useEffect, useRef } from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -57,6 +80,7 @@ export default function CustomersPage() {
   const [error, setError] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetails | null>(null);
   const [showModal, setShowModal] = useState(false);
+  useBodyScrollLock(showModal);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<'PERSONAL' | 'COMPANY' | 'STATS'>('PERSONAL');
@@ -225,13 +249,13 @@ export default function CustomersPage() {
   const getVerificationStatusBadge = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-700 text-xs font-bold rounded-full border border-emerald-500/20 flex items-center gap-1"><FiCheck className="w-3 h-3" /> Verificado</span>;
+        return <span className={adminBadge('success')}><FiCheck className="w-3 h-3" /> Verificado</span>;
       case 'PENDING':
-        return <span className="px-2.5 py-1 bg-amber-500/10 text-amber-700 text-xs font-bold rounded-full border border-amber-500/20 flex items-center gap-1">Pendiente</span>;
+        return <span className={adminBadge('warning')}>Pendiente</span>;
       case 'REJECTED':
-        return <span className="px-2.5 py-1 bg-rose-500/10 text-rose-700 text-xs font-bold rounded-full border border-rose-500/20 flex items-center gap-1"><FiX className="w-3 h-3" /> Rechazado</span>;
+        return <span className={adminBadge('danger')}><FiX className="w-3 h-3" /> Rechazado</span>;
       default:
-        return <span className="px-2.5 py-1 bg-gray-500/10 text-gray-600 text-xs font-bold rounded-full border border-gray-500/20">No verificado</span>;
+        return <span className={adminBadge('neutral')}>No verificado</span>;
     }
   };
 
@@ -241,27 +265,27 @@ export default function CustomersPage() {
       <div className="flex-shrink-0 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/30">
-              <FiUser className="w-6 h-6 text-white" />
+            <div className={adminIconChip('brand')}>
+              <FiUser className="w-6 h-6 text-brand-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-ink">Gestión de Clientes</h1>
-              <p className="text-sm text-muted">Administra y analiza tu base de clientes</p>
+              <h1 className={adminPageTitle}>Gestión de Clientes</h1>
+              <p className={adminPageSubtitle}>Administra y analiza tu base de clientes</p>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-2">
             <Link
               href="/admin/verifications"
               className={`relative flex items-center gap-2 px-3 py-2 border rounded-lg transition-all text-sm font-medium ${pendingVerifications > 0
-                  ? 'bg-gradient-to-r from-orange-500 to-red-500 border-red-400 text-white animate-pulse hover:from-orange-600 hover:to-red-600'
-                  : 'bg-white border-line text-muted hover:bg-surface hover:text-brand-500'
+                  ? 'bg-deal text-white border-deal hover:bg-deal/90'
+                  : 'bg-white border-line text-muted hover:bg-surface hover:text-brand-700'
                 }`}
               title="Verificaciones Empresariales"
             >
               <FiShield className="w-4 h-4" />
               <span>Verificaciones</span>
               {pendingVerifications > 0 && (
-                <span className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1.5 bg-red-600 text-white text-xs font-bold rounded-full shadow-lg animate-bounce">
+                <span className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1.5 bg-deal text-white text-xs font-bold rounded-full shadow-md">
                   {pendingVerifications > 99 ? '99+' : pendingVerifications}
                 </span>
               )}
@@ -279,7 +303,7 @@ export default function CustomersPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+          <div className="bg-deal-bg border border-deal/30 text-deal px-4 py-3 rounded-lg text-sm flex items-center gap-2">
             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -287,50 +311,35 @@ export default function CustomersPage() {
           </div>
         )}
 
-        {/* Epic Stats Cards */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="relative bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl p-4 text-white overflow-hidden group hover:shadow-xl hover:shadow-brand-500/30 transition-all duration-300 hover:scale-[1.02]">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <span className="text-sm font-medium text-white/80">Total Clientes</span>
-              </div>
-              <p className="text-3xl font-bold">{stats.total}</p>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className={adminStatCard}>
+            <span className={adminIconChip('brand')}>
+              <FiUser className="w-5 h-5" />
+            </span>
+            <div>
+              <p className={adminStatValue}>{stats.total}</p>
+              <p className={adminStatLabel}>Total Clientes</p>
             </div>
           </div>
 
-          <div className="relative bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-4 text-white overflow-hidden group hover:shadow-xl hover:shadow-green-500/30 transition-all duration-300 hover:scale-[1.02]">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <span className="text-sm font-medium text-white/80">Nuevos Este Mes</span>
-              </div>
-              <p className="text-3xl font-bold">{stats.thisMonth}</p>
+          <div className={adminStatCard}>
+            <span className={adminIconChip('success')}>
+              <FiCalendar className="w-5 h-5" />
+            </span>
+            <div>
+              <p className={adminStatValue}>{stats.thisMonth}</p>
+              <p className={adminStatLabel}>Nuevos Este Mes</p>
             </div>
           </div>
 
-          <div className="relative bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl p-4 text-white overflow-hidden group hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-300 hover:scale-[1.02]">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <span className="text-sm font-medium text-white/80">Clientes Activos</span>
-              </div>
-              <p className="text-3xl font-bold">{stats.active}</p>
+          <div className={adminStatCard}>
+            <span className={adminIconChip('brand')}>
+              <FiZap className="w-5 h-5" />
+            </span>
+            <div>
+              <p className={adminStatValue}>{stats.active}</p>
+              <p className={adminStatLabel}>Clientes Activos</p>
             </div>
           </div>
         </div>
@@ -338,8 +347,8 @@ export default function CustomersPage() {
 
       {/* Scrollable Table Section */}
       <div className="flex-1 overflow-y-auto pr-2 mt-4">
-        <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/50 shadow-xl overflow-hidden">
-          <div className="p-4 border-b border-white/40 bg-gradient-to-r from-white/30 to-white/10">
+        <div className={adminCardFlush}>
+          <div className="p-4 border-b border-line bg-surface">
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -350,7 +359,7 @@ export default function CustomersPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Buscar clientes por nombre, email..."
-                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-white/70 backdrop-blur-sm border border-white/60 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 shadow-sm transition-all"
+                  className={`${adminInput()} pl-10`}
                 />
               </div>
             </div>
@@ -359,7 +368,7 @@ export default function CustomersPage() {
           {loading ? (
             <div className="p-8 text-center">
               <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface mb-2">
-                <svg className="animate-spin h-5 w-5 text-brand-500" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-5 w-5 text-brand-600" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -388,7 +397,7 @@ export default function CustomersPage() {
                           <Image src={customer.image} alt={customer.name || ''} fill className="object-cover" />
                         </div>
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                           {(customer.name || customer.email).charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -397,11 +406,11 @@ export default function CustomersPage() {
                         <p className="text-xs text-muted truncate">{customer.email}</p>
                       </div>
                       {customer.profile?.customerType === 'COMPANY' ? (
-                        <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 bg-blue-50 text-blue-700 rounded-full">
+                        <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 bg-brand-50 text-brand-700 rounded-full">
                           <FiBriefcase className="w-3.5 h-3.5" />
                         </span>
                       ) : (
-                        <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 bg-gray-50 text-gray-600 rounded-full">
+                        <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 bg-surface text-ink-soft rounded-full">
                           <FiUser className="w-3.5 h-3.5" />
                         </span>
                       )}
@@ -413,14 +422,14 @@ export default function CustomersPage() {
                         <div className="flex items-baseline gap-1">
                           <span className="text-lg font-bold text-ink">{customer.orderCount}</span>
                           {customer.activeOrders > 0 && (
-                            <span className="text-xs text-green-600 font-bold">({customer.activeOrders} activas)</span>
+                            <span className="text-xs text-success-strong font-bold">({customer.activeOrders} activas)</span>
                           )}
                         </div>
                       </div>
                       <div className="bg-surface p-2 rounded-lg">
                         <p className="text-xs text-muted uppercase tracking-wider font-semibold">Total Gastado</p>
-                        <p className="text-lg font-bold text-brand-500">
-                          ${customer.totalSpent.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        <p className="text-lg font-bold text-brand-600">
+                          {formatUSD(customer.totalSpent)}
                         </p>
                       </div>
                     </div>
@@ -431,7 +440,7 @@ export default function CustomersPage() {
                       </span>
                       <button
                         onClick={() => fetchCustomerDetails(customer.id)}
-                        className="text-brand-500 hover:text-brand-600 text-xs font-bold hover:underline"
+                        className="text-brand-600 hover:text-brand-700 text-xs font-bold hover:underline"
                       >
                         Ver Detalles
                       </button>
@@ -441,68 +450,68 @@ export default function CustomersPage() {
               </div>
 
               {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto">
+              <div className={adminTableWrap}>
                 <table className="w-full text-sm">
-                  <thead className="bg-white/40 backdrop-blur-sm border-b border-white/20">
+                  <thead>
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Cliente</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Correo</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Tipo</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Registro</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Órdenes</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted">Total</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-muted">Acciones</th>
+                      <th className={adminTh}>Cliente</th>
+                      <th className={adminTh}>Correo</th>
+                      <th className={adminTh}>Tipo</th>
+                      <th className={adminTh}>Registro</th>
+                      <th className={adminTh}>Órdenes</th>
+                      <th className={adminTh}>Total</th>
+                      <th className={`${adminTh} text-right`}>Acciones</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/20">
+                  <tbody>
                     {customers.map((customer: any) => (
-                      <tr key={customer.id} className="hover:bg-white/50 transition-colors">
-                        <td className="px-4 py-3">
+                      <tr key={customer.id} className={adminRowHover}>
+                        <td className={adminTd}>
                           <div className="flex items-center gap-2">
                             {customer.image ? (
                               <div className="relative w-8 h-8 rounded-full overflow-hidden border border-line-strong">
                                 <Image src={customer.image} alt={customer.name || ''} fill className="object-cover" />
                               </div>
                             ) : (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-xs font-bold">
+                              <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold">
                                 {(customer.name || customer.email).charAt(0).toUpperCase()}
                               </div>
                             )}
                             <span className="font-medium text-ink">{customer.name || 'Sin nombre'}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-muted">{customer.email}</td>
-                        <td className="px-4 py-3">
+                        <td className={`${adminTd} text-muted`}>{customer.email}</td>
+                        <td className={adminTd}>
                           {customer.profile?.customerType === 'COMPANY' ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500/10 text-blue-700 text-xs font-semibold rounded-full border border-blue-500/20">
+                            <span className={adminBadge('brand')}>
                               <FiBriefcase className="w-3 h-3" /> Empresa
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-500/10 text-gray-600 text-xs font-semibold rounded-full border border-gray-500/20">
+                            <span className={adminBadge('neutral')}>
                               <FiUser className="w-3 h-3" /> Persona
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-muted text-xs">{formatDate(customer.createdAt)}</td>
-                        <td className="px-4 py-3">
+                        <td className={`${adminTd} text-muted text-xs`}>{formatDate(customer.createdAt)}</td>
+                        <td className={adminTd}>
                           <span className="inline-flex items-center gap-1">
                             <span className="font-medium text-ink">{customer.orderCount}</span>
                             {customer.activeOrders > 0 && (
-                              <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+                              <span className="px-1.5 py-0.5 bg-success-strong/15 text-success-strong text-xs rounded-full">
                                 {customer.activeOrders} activas
                               </span>
                             )}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
-                          <span className="font-semibold text-ink">
-                            ${customer.totalSpent.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        <td className={adminTd}>
+                          <span className="font-semibold text-brand-600">
+                            {formatUSD(customer.totalSpent)}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className={`${adminTd} text-right`}>
                           <button
                             onClick={() => fetchCustomerDetails(customer.id)}
-                            className="text-brand-500 hover:text-brand-600 text-xs font-medium transition-colors"
+                            className="text-brand-600 hover:text-brand-700 text-xs font-medium transition-colors"
                           >
                             Ver detalles
                           </button>
@@ -519,101 +528,102 @@ export default function CustomersPage() {
 
       {/* Customer Details Modal */}
       {showModal && selectedCustomer && (
-        <div className="fixed inset-0 z-50 overflow-y-auto animate-fadeIn">
-          <div className="flex items-center justify-center min-h-screen px-4 py-8 text-center sm:p-0">
-            <div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-              onClick={() => {
-                setShowModal(false);
-                setIsEditing(false);
-                setIsDeleting(false);
-              }}
-            />
-            <div
-              ref={modalRef}
-              className="relative inline-block align-bottom sm:align-middle bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-3xl my-8 animate-scaleIn"
-            >
-              {/* Header */}
-              <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    {selectedCustomer.image ? (
-                      <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white">
-                        <Image src={selectedCustomer.image} alt={selectedCustomer.name || ''} fill className="object-cover" />
-                      </div>
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-lg font-bold">
-                        {(selectedCustomer.name || selectedCustomer.email).charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="text-xl font-semibold text-white">
-                        {isEditing ? 'Editar Cliente' : 'Detalles del Cliente'}
-                      </h3>
-                      <p className="text-sm text-white/80">{selectedCustomer.email}</p>
+        <div
+          className={adminModalOverlay}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowModal(false);
+              setIsEditing(false);
+              setIsDeleting(false);
+            }
+          }}
+        >
+          <div
+            ref={modalRef}
+            className={`${adminModalPanel} sm:max-w-3xl max-h-[90vh]`}
+          >
+            {/* Header */}
+            <div className="bg-brand-600 px-6 pt-6 pb-4 text-white">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  {selectedCustomer.image ? (
+                    <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white">
+                      <Image src={selectedCustomer.image} alt={selectedCustomer.name || ''} fill className="object-cover" />
                     </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white text-lg font-bold">
+                      {(selectedCustomer.name || selectedCustomer.email).charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">
+                      {isEditing ? 'Editar Cliente' : 'Detalles del Cliente'}
+                    </h3>
+                    <p className="text-sm text-white/80">{selectedCustomer.email}</p>
                   </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setIsEditing(false);
+                    setIsDeleting(false);
+                  }}
+                  aria-label="Cerrar"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <FiX className="w-5 h-5 text-white" />
+                </button>
+              </div>
+
+              {/* Tabs */}
+              {!isEditing && !isDeleting && (
+                <div className="flex gap-1 mt-4">
                   <button
-                    onClick={() => {
-                      setShowModal(false);
-                      setIsEditing(false);
-                      setIsDeleting(false);
-                    }}
-                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                    onClick={() => setActiveTab('PERSONAL')}
+                    className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'PERSONAL'
+                      ? 'bg-white text-brand-600'
+                      : 'text-white/80 hover:bg-white/10'
+                      }`}
                   >
-                    <FiX className="w-5 h-5 text-white" />
+                    <div className="flex items-center gap-2">
+                      <FiUser className="w-4 h-4" />
+                      Personal
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('COMPANY')}
+                    className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'COMPANY'
+                      ? 'bg-white text-brand-600'
+                      : 'text-white/80 hover:bg-white/10'
+                      }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FiBriefcase className="w-4 h-4" />
+                      Empresa
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('STATS')}
+                    className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'STATS'
+                      ? 'bg-white text-brand-600'
+                      : 'text-white/80 hover:bg-white/10'
+                      }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FiBarChart2 className="w-4 h-4" />
+                      Estadísticas
+                    </div>
                   </button>
                 </div>
-
-                {/* Tabs */}
-                {!isEditing && !isDeleting && (
-                  <div className="flex gap-1 mt-4">
-                    <button
-                      onClick={() => setActiveTab('PERSONAL')}
-                      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'PERSONAL'
-                        ? 'bg-white text-brand-500'
-                        : 'text-white/80 hover:bg-white/10'
-                        }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <FiUser className="w-4 h-4" />
-                        Personal
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('COMPANY')}
-                      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'COMPANY'
-                        ? 'bg-white text-brand-500'
-                        : 'text-white/80 hover:bg-white/10'
-                        }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <FiBriefcase className="w-4 h-4" />
-                        Empresa
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('STATS')}
-                      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'STATS'
-                        ? 'bg-white text-brand-500'
-                        : 'text-white/80 hover:bg-white/10'
-                        }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <FiBarChart2 className="w-4 h-4" />
-                        Estadísticas
-                      </div>
-                    </button>
-                  </div>
-                )}
-              </div>
+              )}
+            </div>
 
               {/* Body */}
               <div className="bg-white px-6 py-6 max-h-[85vh] overflow-y-auto">
                 {isDeleting ? (
                   <div className="text-center py-8">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-deal-bg rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-deal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
                     </div>
@@ -624,14 +634,14 @@ export default function CustomersPage() {
                     <div className="flex gap-3 justify-center">
                       <button
                         onClick={() => setIsDeleting(false)}
-                        className="px-4 py-2 bg-surface hover:bg-line text-ink rounded-lg transition-colors"
+                        className={adminSecondaryButton}
                       >
                         Cancelar
                       </button>
                       <button
                         onClick={handleDelete}
                         disabled={deleteLoading}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                        className={adminDangerButton}
                       >
                         {deleteLoading ? 'Eliminando...' : 'Eliminar'}
                       </button>
@@ -646,7 +656,7 @@ export default function CustomersPage() {
                           type="text"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                          className={adminInput()}
                         />
                       </div>
                       <div>
@@ -655,7 +665,7 @@ export default function CustomersPage() {
                           type="email"
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                          className={adminInput()}
                         />
                       </div>
                     </div>
@@ -666,7 +676,7 @@ export default function CustomersPage() {
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                          className={adminInput()}
                         />
                       </div>
                       <div>
@@ -675,7 +685,7 @@ export default function CustomersPage() {
                           type="tel"
                           value={formData.whatsapp}
                           onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                          className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                          className={adminInput()}
                         />
                       </div>
                     </div>
@@ -684,7 +694,7 @@ export default function CustomersPage() {
                       <select
                         value={formData.customerType}
                         onChange={(e) => setFormData({ ...formData, customerType: e.target.value as 'PERSON' | 'COMPANY' })}
-                        className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                        className={adminInput()}
                       >
                         <option value="PERSON">Persona Natural</option>
                         <option value="COMPANY">Empresa</option>
@@ -698,7 +708,7 @@ export default function CustomersPage() {
                             type="text"
                             value={formData.companyName}
                             onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                            className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                            className={adminInput()}
                           />
                         </div>
                         <div>
@@ -707,7 +717,7 @@ export default function CustomersPage() {
                             type="text"
                             value={formData.taxId}
                             onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
-                            className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                            className={adminInput()}
                           />
                         </div>
                         <div className="col-span-2">
@@ -715,7 +725,7 @@ export default function CustomersPage() {
                           <select
                             value={formData.businessVerificationStatus}
                             onChange={(e) => setFormData({ ...formData, businessVerificationStatus: e.target.value })}
-                            className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                            className={adminInput()}
                           >
                             <option value="NONE">No solicitado</option>
                             <option value="PENDING">Pendiente</option>
@@ -728,7 +738,7 @@ export default function CustomersPage() {
                           <textarea
                             value={formData.businessVerificationNotes}
                             onChange={(e) => setFormData({ ...formData, businessVerificationNotes: e.target.value })}
-                            className="w-full px-3 py-2 text-sm bg-surface border border-line-strong rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                            className={adminInput()}
                             rows={3}
                             placeholder="Notas internas sobre la verificación..."
                           />
@@ -775,12 +785,12 @@ export default function CustomersPage() {
                             <div className="flex items-center gap-2">
                               {selectedCustomer.profile?.customerType === 'COMPANY' ? (
                                 <>
-                                  <FiBriefcase className="w-5 h-5 text-brand-500" />
+                                  <FiBriefcase className="w-5 h-5 text-brand-600" />
                                   <span className="font-bold text-ink">Empresa</span>
                                 </>
                               ) : (
                                 <>
-                                  <FiUser className="w-5 h-5 text-gray-500" />
+                                  <FiUser className="w-5 h-5 text-muted" />
                                   <span className="font-bold text-ink">Persona Natural</span>
                                 </>
                               )}
@@ -816,9 +826,9 @@ export default function CustomersPage() {
                                   <div className="flex items-center justify-between mb-2">
                                     <span className="text-xs font-medium text-muted">Acta Constitutiva</span>
                                     {selectedCustomer.profile?.businessConstitutiveAct ? (
-                                      <span className="text-xs text-green-600 font-bold">Subido</span>
+                                      <span className="text-xs text-success-strong font-bold">Subido</span>
                                     ) : (
-                                      <span className="text-xs text-gray-400">No disponible</span>
+                                      <span className="text-xs text-muted">No disponible</span>
                                     )}
                                   </div>
                                   {selectedCustomer.profile?.businessConstitutiveAct && (
@@ -826,7 +836,7 @@ export default function CustomersPage() {
                                       href={selectedCustomer.profile.businessConstitutiveAct}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-brand-500 text-xs font-bold hover:underline flex items-center gap-1"
+                                      className="text-brand-600 text-xs font-bold hover:underline flex items-center gap-1"
                                     >
                                       <FiDownload className="w-3 h-3" /> Descargar
                                     </a>
@@ -836,9 +846,9 @@ export default function CustomersPage() {
                                   <div className="flex items-center justify-between mb-2">
                                     <span className="text-xs font-medium text-muted">RIF Digital</span>
                                     {selectedCustomer.profile?.businessRIFDocument ? (
-                                      <span className="text-xs text-green-600 font-bold">Subido</span>
+                                      <span className="text-xs text-success-strong font-bold">Subido</span>
                                     ) : (
-                                      <span className="text-xs text-gray-400">No disponible</span>
+                                      <span className="text-xs text-muted">No disponible</span>
                                     )}
                                   </div>
                                   {selectedCustomer.profile?.businessRIFDocument && (
@@ -846,7 +856,7 @@ export default function CustomersPage() {
                                       href={selectedCustomer.profile.businessRIFDocument}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-brand-500 text-xs font-bold hover:underline flex items-center gap-1"
+                                      className="text-brand-600 text-xs font-bold hover:underline flex items-center gap-1"
                                     >
                                       <FiDownload className="w-3 h-3" /> Descargar
                                     </a>
@@ -856,9 +866,9 @@ export default function CustomersPage() {
                             </div>
 
                             {selectedCustomer.profile?.businessVerificationNotes && (
-                              <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-100">
-                                <p className="text-xs font-bold text-yellow-800 mb-1">Notas de Verificación</p>
-                                <p className="text-sm text-yellow-700">{selectedCustomer.profile.businessVerificationNotes}</p>
+                              <div className="bg-warning/10 p-3 rounded-lg border border-warning/30">
+                                <p className="text-xs font-bold text-warning-strong mb-1">Notas de Verificación</p>
+                                <p className="text-sm text-warning-strong">{selectedCustomer.profile.businessVerificationNotes}</p>
                               </div>
                             )}
                           </>
@@ -867,7 +877,7 @@ export default function CustomersPage() {
                             <p>Este cliente está registrado como Persona Natural.</p>
                             <button
                               onClick={() => setIsEditing(true)}
-                              className="mt-2 text-brand-500 text-sm font-medium hover:underline"
+                              className="mt-2 text-brand-600 text-sm font-medium hover:underline"
                             >
                               Cambiar a Empresa
                             </button>
@@ -883,7 +893,7 @@ export default function CustomersPage() {
                           <div className="bg-surface rounded-lg p-4 text-center border border-line">
                             <p className="text-xs text-muted mb-1">Total Gastado</p>
                             <p className="text-xl font-bold text-ink">
-                              ${(Number(selectedCustomer.stats?.totalSpent) || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                              {formatUSD(Number(selectedCustomer.stats?.totalSpent) || 0)}
                             </p>
                           </div>
                           <div className="bg-surface rounded-lg p-4 text-center border border-line">
@@ -899,31 +909,31 @@ export default function CustomersPage() {
                         <div>
                           <h4 className="text-sm font-bold text-ink mb-3">Últimas Órdenes</h4>
                           {selectedCustomer.orders && selectedCustomer.orders.length > 0 ? (
-                            <div className="border border-line rounded-lg overflow-hidden">
+                            <div className={adminTableWrap}>
                               <table className="w-full text-sm">
-                                <thead className="bg-surface">
+                                <thead>
                                   <tr>
-                                    <th className="px-4 py-2 text-left text-xs font-semibold text-muted">Orden</th>
-                                    <th className="px-4 py-2 text-left text-xs font-semibold text-muted">Fecha</th>
-                                    <th className="px-4 py-2 text-left text-xs font-semibold text-muted">Estado</th>
-                                    <th className="px-4 py-2 text-right text-xs font-semibold text-muted">Total</th>
+                                    <th className={adminTh}>Orden</th>
+                                    <th className={adminTh}>Fecha</th>
+                                    <th className={adminTh}>Estado</th>
+                                    <th className={`${adminTh} text-right`}>Total</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-line">
+                                <tbody>
                                   {selectedCustomer.orders.map((order: any) => (
-                                    <tr key={order.id} className="hover:bg-surface">
-                                      <td className="px-4 py-2 font-medium text-brand-500">{order.orderNumber}</td>
-                                      <td className="px-4 py-2 text-muted">{formatDate(order.createdAt)}</td>
-                                      <td className="px-4 py-2">
-                                        <span className={`px-2 py-0.5 text-xs rounded-full ${order.status === 'PAID' ? 'bg-green-100 text-green-700' :
-                                          order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                                            'bg-gray-100 text-gray-700'
-                                          }`}>
+                                    <tr key={order.id} className={adminRowHover}>
+                                      <td className={`${adminTd} font-medium text-brand-600`}>{order.orderNumber}</td>
+                                      <td className={`${adminTd} text-muted`}>{formatDate(order.createdAt)}</td>
+                                      <td className={adminTd}>
+                                        <span className={adminBadge(
+                                          order.status === 'PAID' ? 'success' :
+                                          order.status === 'PENDING' ? 'warning' : 'neutral'
+                                        )}>
                                           {order.status}
                                         </span>
                                       </td>
-                                      <td className="px-4 py-2 text-right font-medium text-ink">
-                                        ${Number(order.total).toFixed(2)}
+                                      <td className={`${adminTd} text-right font-medium text-ink`}>
+                                        {formatUSD(Number(order.total) || 0)}
                                       </td>
                                     </tr>
                                   ))}
@@ -946,14 +956,14 @@ export default function CustomersPage() {
                   <>
                     <button
                       onClick={() => setIsEditing(false)}
-                      className="px-4 py-2 bg-line hover:bg-line-strong text-ink rounded-lg transition-colors text-sm font-medium"
+                      className={adminSecondaryButton}
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={saveLoading}
-                      className="px-4 py-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-500 text-white rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 text-sm font-medium"
+                      className={adminPrimaryButton}
                     >
                       {saveLoading ? 'Guardando...' : 'Guardar Cambios'}
                     </button>
@@ -962,13 +972,13 @@ export default function CustomersPage() {
                   <>
                     <button
                       onClick={() => setIsDeleting(true)}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium"
+                      className={adminDangerButton}
                     >
                       Eliminar
                     </button>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="px-4 py-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-500 text-white rounded-lg transition-all shadow-md hover:shadow-lg text-sm font-medium"
+                      className={adminPrimaryButton}
                     >
                       Editar
                     </button>
@@ -977,7 +987,6 @@ export default function CustomersPage() {
               </div>
             </div>
           </div>
-        </div>
       )}
     </div>
   );

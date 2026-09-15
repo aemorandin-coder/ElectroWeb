@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FiPlus, FiTrash2, FiInfo } from 'react-icons/fi';
 import { StepProps } from '../types';
+import { wizardInput, wizardError, wizardSectionTitle, wizardSectionHelp } from '../ui';
 
 const SUGGESTED_SPECS: Record<string, string[]> = {
   Procesador: ['Intel Core i5-12ª Gen', 'AMD Ryzen 5 5600X', 'Intel Core i7-13ª Gen'],
@@ -42,8 +43,8 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Especificaciones técnicas</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <h2 className={wizardSectionTitle}>Especificaciones técnicas</h2>
+        <p className={wizardSectionHelp}>
           Detalla las características técnicas del producto. Mínimo <strong>3 especificaciones</strong>.
         </p>
       </div>
@@ -51,14 +52,14 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
       {/* Progress indicator */}
       <div className={[
         'flex items-center gap-3 p-3 rounded-xl border',
-        count >= 3 ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200',
+        count >= 3 ? 'bg-success-strong/10 border-success-strong/30' : 'bg-warning/10 border-warning-strong/30',
       ].join(' ')}>
-        <div className={`text-2xl font-bold ${count >= 3 ? 'text-green-600' : 'text-amber-600'}`}>{count}</div>
+        <div className={`text-2xl font-bold ${count >= 3 ? 'text-success-strong' : 'text-warning-strong'}`}>{count}</div>
         <div>
-          <p className={`text-sm font-semibold ${count >= 3 ? 'text-green-700' : 'text-amber-700'}`}>
+          <p className={`text-sm font-semibold ${count >= 3 ? 'text-success-strong' : 'text-warning-strong'}`}>
             {count >= 3 ? '¡Mínimo cumplido!' : `Faltan ${needed} especificaciones`}
           </p>
-          <p className={`text-xs ${count >= 3 ? 'text-green-600' : 'text-amber-600'}`}>
+          <p className={`text-xs ${count >= 3 ? 'text-success-strong' : 'text-warning-strong'}`}>
             {count >= 3 ? 'Puedes agregar más para una ficha técnica completa.' : 'Se requieren al menos 3 para publicar.'}
           </p>
         </div>
@@ -66,18 +67,18 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
 
       {/* Current specs table */}
       {count > 0 && (
-        <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="border border-line rounded-xl overflow-hidden">
           <table className="w-full text-sm">
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line">
               {Object.entries(data.specifications).map(([k, v]) => (
-                <tr key={k} className="group hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-semibold text-gray-900 w-2/5">{k}</td>
-                  <td className="px-4 py-3 text-gray-600">{v}</td>
+                <tr key={k} className="group hover:bg-surface transition-colors">
+                  <td className="px-4 py-3 font-semibold text-ink w-2/5">{k}</td>
+                  <td className="px-4 py-3 text-ink-soft">{v}</td>
                   <td className="px-4 py-3 text-right w-10">
                     <button
                       type="button"
                       onClick={() => handleRemove(k)}
-                      className="p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 rounded-lg"
+                      className="p-1.5 text-muted hover:text-deal opacity-0 group-hover:opacity-100 transition-all hover:bg-deal-bg rounded-lg"
                     >
                       <FiTrash2 className="w-4 h-4" />
                     </button>
@@ -90,8 +91,8 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
       )}
 
       {/* Add new spec */}
-      <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Agregar especificación</p>
+      <div className="bg-surface rounded-xl p-4 border border-line">
+        <p className="text-xs font-bold text-muted uppercase tracking-wide mb-3">Agregar especificación</p>
         <div className="flex gap-3">
           <div className="flex-1">
             <input
@@ -99,7 +100,7 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
               value={key}
               onChange={(e) => setKey(e.target.value)}
               placeholder="Nombre (ej: Procesador)"
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+              className={wizardInput()}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
               list="spec-keys"
             />
@@ -113,7 +114,7 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
               value={value}
               onChange={(e) => setValue(e.target.value)}
               placeholder="Valor (ej: Intel Core i5)"
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+              className={wizardInput()}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
             />
           </div>
@@ -121,7 +122,7 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
             type="button"
             onClick={handleAdd}
             disabled={!key.trim() || !value.trim()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
           >
             <FiPlus className="w-4 h-4" />
           </button>
@@ -131,8 +132,8 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
       {/* Suggestions */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <FiInfo className="w-4 h-4 text-blue-500" />
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Sugerencias rápidas</p>
+          <FiInfo className="w-4 h-4 text-brand-600" />
+          <p className="text-xs font-bold text-muted uppercase tracking-wide">Sugerencias rápidas</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {Object.entries(SUGGESTED_SPECS).map(([k, vals]) => (
@@ -141,7 +142,7 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
                 key={k}
                 type="button"
                 onClick={() => handleSuggestion(k, vals[0])}
-                className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                className="px-3 py-1.5 bg-white border border-line rounded-full text-xs text-ink-soft hover:border-brand-500 hover:text-brand-600 hover:bg-brand-50 transition-colors"
               >
                 + {k}
               </button>
@@ -151,8 +152,8 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
       </div>
 
       {errors.specifications && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
-          <p className="text-sm text-red-700 font-medium">{errors.specifications}</p>
+        <div className="p-3 bg-deal-bg border border-deal/30 rounded-xl">
+          <p className={wizardError}>{errors.specifications}</p>
         </div>
       )}
     </div>

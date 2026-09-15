@@ -69,18 +69,18 @@ export default function ImagePanel({ images, onChange, error }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sticky top-[88px]">
+    <div className="bg-white rounded-2xl border border-line shadow-sm p-5 sticky top-[88px]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-bold text-gray-900">Imágenes</h3>
-          <p className="text-xs text-gray-400 mt-0.5">{images.length} / {MAX_IMAGES}</p>
+          <h3 className="text-sm font-bold text-ink">Imágenes</h3>
+          <p className="text-xs text-muted mt-0.5">{images.length} / {MAX_IMAGES}</p>
         </div>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => { setShowUrlInput(!showUrlInput); setUrlError(''); }}
-            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className="p-1.5 text-muted hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
             title="Agregar por URL"
           >
             <FiLink className="w-4 h-4" />
@@ -89,7 +89,7 @@ export default function ImagePanel({ images, onChange, error }: Props) {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={images.length >= MAX_IMAGES || uploading}
-            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="p-1.5 text-muted hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             title="Subir imagen"
           >
             <FiPlus className="w-4 h-4" />
@@ -109,17 +109,17 @@ export default function ImagePanel({ images, onChange, error }: Props) {
               onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddUrl()}
               placeholder="https://..."
-              className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+              className="flex-1 px-3 py-1.5 text-sm border border-line rounded-lg focus:outline-none focus:border-brand-500"
               autoFocus
             />
-            <button onClick={handleAddUrl} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 flex-shrink-0">
+            <button onClick={handleAddUrl} className="px-3 py-1.5 bg-brand-500 text-white text-sm rounded-lg hover:bg-brand-600 flex-shrink-0">
               OK
             </button>
-            <button onClick={() => { setShowUrlInput(false); setUrlError(''); }} className="p-1.5 text-gray-400 hover:text-gray-600">
+            <button onClick={() => { setShowUrlInput(false); setUrlError(''); }} className="p-1.5 text-muted hover:text-ink-soft">
               <FiX className="w-4 h-4" />
             </button>
           </div>
-          {urlError && <p className="text-xs text-red-500 mt-1">{urlError}</p>}
+          {urlError && <p className="text-xs text-deal mt-1">{urlError}</p>}
         </div>
       )}
 
@@ -129,30 +129,30 @@ export default function ImagePanel({ images, onChange, error }: Props) {
           onClick={() => fileInputRef.current?.click()}
           className={[
             'border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors',
-            error ? 'border-red-300 bg-red-50/50' : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50/50',
+            error ? 'border-deal bg-deal-bg' : 'border-line hover:border-brand-500 hover:bg-brand-50',
           ].join(' ')}
         >
           {uploading ? (
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
           ) : (
             <>
-              <FiImage className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-500">Subir imágenes</p>
-              <p className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP</p>
+              <FiImage className="w-8 h-8 text-muted mx-auto mb-2" />
+              <p className="text-sm font-medium text-muted">Subir imágenes</p>
+              <p className="text-xs text-muted mt-1">JPG, PNG, WEBP</p>
             </>
           )}
         </div>
       ) : (
         <div className="space-y-2">
           {/* Main image */}
-          <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-blue-200 group bg-gray-50">
+          <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-brand-500/30 group bg-surface">
             <Image src={images[0]} alt="Principal" fill className="object-cover" sizes="300px" />
-            <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm">Principal</div>
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <div className="absolute top-2 left-2 bg-brand-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm">Principal</div>
+            <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
               <button
                 type="button"
                 onClick={() => handleRemove(0)}
-                className="bg-white p-2 rounded-full shadow-lg text-red-500 hover:text-red-600"
+                className="bg-white p-2 rounded-full shadow-lg text-deal hover:text-deal"
               >
                 <FiTrash2 className="w-4 h-4" />
               </button>
@@ -162,13 +162,13 @@ export default function ImagePanel({ images, onChange, error }: Props) {
           {/* Grid of secondary images */}
           <div className="grid grid-cols-3 gap-2">
             {images.slice(1).map((url, idx) => (
-              <div key={idx + 1} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group bg-gray-50">
+              <div key={idx + 1} className="relative aspect-square rounded-lg overflow-hidden border border-line group bg-surface">
                 <Image src={url} alt="" fill className="object-cover" sizes="100px" />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
                   <button
                     type="button"
                     onClick={() => handleSetMain(idx + 1)}
-                    className="p-1 bg-white rounded-full shadow text-blue-500 hover:text-blue-600"
+                    className="p-1 bg-white rounded-full shadow text-brand-600 hover:text-brand-700"
                     title="Hacer imagen principal"
                   >
                     <FiStar className="w-3 h-3" />
@@ -176,7 +176,7 @@ export default function ImagePanel({ images, onChange, error }: Props) {
                   <button
                     type="button"
                     onClick={() => handleRemove(idx + 1)}
-                    className="p-1 bg-white rounded-full shadow text-red-500 hover:text-red-600"
+                    className="p-1 bg-white rounded-full shadow text-deal hover:text-deal"
                   >
                     <FiTrash2 className="w-3 h-3" />
                   </button>
@@ -188,12 +188,12 @@ export default function ImagePanel({ images, onChange, error }: Props) {
             {images.length < MAX_IMAGES && (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50/50 flex items-center justify-center cursor-pointer transition-colors"
+                className="aspect-square rounded-lg border-2 border-dashed border-line hover:border-brand-500 hover:bg-brand-50 flex items-center justify-center cursor-pointer transition-colors"
               >
                 {uploading ? (
-                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <FiPlus className="w-5 h-5 text-gray-400" />
+                  <FiPlus className="w-5 h-5 text-muted" />
                 )}
               </div>
             )}
@@ -202,12 +202,12 @@ export default function ImagePanel({ images, onChange, error }: Props) {
       )}
 
       {error && (
-        <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-xs text-red-600 font-medium">{error}</p>
+        <div className="mt-3 p-2 bg-deal-bg border border-deal/30 rounded-lg">
+          <p className="text-xs text-deal font-medium">{error}</p>
         </div>
       )}
 
-      <p className="text-xs text-gray-400 mt-3 text-center">
+      <p className="text-xs text-muted mt-3 text-center">
         La primera imagen es la imagen principal
       </p>
     </div>

@@ -40,7 +40,6 @@ function PublicHeader() {
   // En móvil el nombre legal completo empujaba los íconos fuera de la pantalla
   const shortName = companyName.split(/\s+/).slice(0, 2).join(' ');
   const exchangeRate = settings?.exchangeRateVES;
-  const topCategories = categories.slice(0, 2);
 
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
   const navLinkClass = (href: string) =>
@@ -110,14 +109,6 @@ function PublicHeader() {
           <Link href="/gift-cards" className={navLinkClass('/gift-cards')} aria-current={isActive('/gift-cards') ? 'page' : undefined}>
             Gift Cards
           </Link>
-          {topCategories.map((category) => {
-            const href = `/categorias/${category.slug}`;
-            return (
-              <Link key={category.id} href={href} className={navLinkClass(href)} aria-current={isActive(href) ? 'page' : undefined}>
-                <span className="max-w-40 truncate">{category.name}</span>
-              </Link>
-            );
-          })}
           <Link href="/servicios" className={navLinkClass('/servicios')} aria-current={isActive('/servicios') ? 'page' : undefined}>
             Servicios
           </Link>
@@ -142,6 +133,9 @@ function PublicHeader() {
               </ul>
             )}
           </HeaderDropdown>
+          <Link href="/contacto" className={navLinkClass('/contacto')} aria-current={isActive('/contacto') ? 'page' : undefined}>
+            Contáctanos
+          </Link>
 
           {/* Compacto entre lg y xl para que la franja no se desborde */}
           <p className="ml-auto whitespace-nowrap pl-2 text-xs font-medium text-white/80">

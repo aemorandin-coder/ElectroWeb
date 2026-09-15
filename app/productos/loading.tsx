@@ -7,10 +7,17 @@ export default function ProductosLoading() {
     <div className="min-h-dvh bg-surface" aria-busy="true" aria-label="Cargando productos">
       <PublicHeader />
       <div className="border-b border-brand-100 bg-brand-50">
-        <Container className="py-4 lg:py-6">
+        <Container className="py-6 lg:py-10">
           <div className="mb-3 h-3 w-32 rounded bg-brand-100" />
-          <div className="h-8 w-48 rounded bg-brand-100" />
-          <div className="mt-3 h-4 w-24 rounded bg-brand-100" />
+          <div className="flex items-start gap-3 lg:gap-4">
+            <div className="h-11 w-11 shrink-0 rounded-2xl bg-brand-100 lg:h-14 lg:w-14" />
+            <div className="flex-1">
+              <div className="h-3 w-20 rounded bg-brand-100" />
+              <div className="mt-2 h-8 w-48 rounded-lg bg-brand-100 lg:h-10" />
+              <div className="mt-2 h-4 w-80 max-w-full rounded bg-brand-100" />
+              <div className="mt-3 h-4 w-24 rounded bg-brand-100" />
+            </div>
+          </div>
         </Container>
       </div>
       <Container className="pb-10 pt-3 lg:pt-6">

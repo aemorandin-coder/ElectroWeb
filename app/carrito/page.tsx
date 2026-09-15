@@ -132,7 +132,6 @@ export default function CarritoPage() {
       <PublicHeader />
 
       <PageHeader
-        compact
         breadcrumbs={[{ label: 'Carrito' }]}
         icon={<FiShoppingCart />}
         title="Tu carrito"

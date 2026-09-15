@@ -773,7 +773,6 @@ export default function CheckoutPage() {
       <PublicHeader />
 
       <PageHeader
-        compact
         breadcrumbs={[{ label: 'Carrito', href: '/carrito' }, { label: 'Finalizar compra' }]}
         icon={<FiLock />}
         title="Finalizar compra"

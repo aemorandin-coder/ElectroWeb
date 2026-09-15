@@ -4,6 +4,7 @@ import { formatUSD } from '@/lib/currency';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import ImageUploadField from '@/components/ui/ImageUploadField';
 
 const CATEGORIES = ['Redes', 'CCTV', 'Electrónica', 'Gaming', 'Programación', 'Hardware', 'Software', 'Otro'];
@@ -55,7 +56,7 @@ export default function NuevoCursoPage() {
       {/* Back */}
       <Link
         href="/creator/dashboard/cursos"
-        className="flex items-center gap-2 text-white/80 hover:text-white/70 text-sm transition-colors w-fit"
+        className="flex items-center gap-2 text-muted hover:text-ink text-sm transition-colors w-fit"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -64,15 +65,15 @@ export default function NuevoCursoPage() {
       </Link>
 
       <div>
-        <h1 className="text-2xl font-bold text-white">Nuevo Curso</h1>
-        <p className="text-white/80 text-sm mt-1">
+        <h1 className={adminPageTitle}>Nuevo Curso</h1>
+        <p className="text-muted text-sm mt-1">
           Completa la información básica. Podrás agregar el currículum después de crearlo.
         </p>
       </div>
 
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-5">
+      <div className="bg-white border border-line rounded-2xl p-6 space-y-5">
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+          <div className="p-3 bg-danger/10 border border-danger/20 rounded-lg text-danger text-sm">
             {error}
           </div>
         )}
@@ -131,7 +132,7 @@ export default function NuevoCursoPage() {
             className={INPUT}
             placeholder="Ej: 19.99"
           />
-          <p className="text-white/80 text-xs mt-1">Recibirás el 90% de cada venta ({formatUSD(form.priceUSD ? parseFloat(form.priceUSD) * 0.9 : 0)} por venta)</p>
+          <p className="text-muted text-xs mt-1">Recibirás el 90% de cada venta ({formatUSD(form.priceUSD ? parseFloat(form.priceUSD) * 0.9 : 0)} por venta)</p>
         </Field>
 
         <Field label="URL de Trailer (YouTube/Vimeo)">
@@ -153,22 +154,22 @@ export default function NuevoCursoPage() {
         <div className="flex justify-end gap-3 pt-2">
           <Link
             href="/creator/dashboard/cursos"
-            className="px-5 py-2.5 bg-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/20 transition-colors"
+            className={`${adminSecondaryButton} px-5 py-2.5 rounded-xl text-sm font-semibold`}
           >
             Cancelar
           </Link>
           <button
             onClick={handleCreate}
             disabled={saving}
-            className="px-6 py-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
+            className={`${adminPrimaryButton} px-6 py-2.5 text-sm font-bold rounded-xl disabled:opacity-50`}
           >
             {saving ? 'Creando...' : 'Crear Curso →'}
           </button>
         </div>
       </div>
 
-      <div className="p-4 bg-white/5 border border-white/10 rounded-xl text-xs text-white/80 leading-relaxed">
-        <strong className="text-white/80">Nota:</strong> Los nuevos cursos se crean en estado &quot;En revisión&quot; y necesitan aprobación del equipo de ElectroShop para ser visibles en el catálogo. Una vez aprobado podrás seguir editando el contenido.
+      <div className="p-4 bg-brand-50 border border-brand-200 rounded-xl text-xs text-brand-950 leading-relaxed">
+        <strong className="text-brand-700">Nota:</strong> Los nuevos cursos se crean en estado &quot;En revisión&quot; y necesitan aprobación del equipo de ElectroShop para ser visibles en el catálogo. Una vez aprobado podrás seguir editando el contenido.
       </div>
     </div>
   );
@@ -177,10 +178,10 @@ export default function NuevoCursoPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-white/80 text-xs font-semibold mb-1.5">{label}</label>
+      <label className="block text-ink-soft text-xs font-semibold uppercase tracking-wider mb-1.5">{label}</label>
       {children}
     </div>
   );
 }
 
-const INPUT = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-brand-500 text-sm transition-colors';
+const INPUT = 'w-full px-4 py-2.5 bg-white border border-line rounded-xl text-ink placeholder-muted focus:outline-none focus:border-brand-500 text-sm transition-colors';

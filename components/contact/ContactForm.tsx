@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
+import { adminPrimaryButton, adminInput, adminLabel } from '@/lib/admin-ui';
 
 interface ValidationErrors {
     name?: string;
@@ -210,24 +211,20 @@ export default function ContactForm() {
 
     if (success) {
         return (
-            <div className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 rounded-2xl shadow-2xl p-10 text-center animate-fadeIn relative overflow-hidden">
-                {/* Decorative elements */}
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl"></div>
-
+            <div className="rounded-2xl border border-line bg-white shadow-sm p-10 text-center relative overflow-hidden">
                 <div className="relative">
-                    <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/30">
-                        <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-20 h-20 bg-success-strong/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <svg className="w-10 h-10 text-success-strong" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h3 className="text-3xl font-bold text-white mb-3">¡Mensaje Enviado!</h3>
-                    <p className="text-blue-200/80 mb-8 text-lg">
+                    <h3 className="text-2xl font-bold text-ink mb-2">¡Mensaje Enviado!</h3>
+                    <p className="text-muted mb-8 text-base">
                         Hemos recibido tu mensaje y te responderemos pronto.
                     </p>
                     <button
                         onClick={() => setSuccess(false)}
-                        className="px-8 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-2xl hover:shadow-brand-500/30 hover:scale-105 transition-all duration-300"
+                        className={adminPrimaryButton}
                     >
                         Enviar Otro Mensaje
                     </button>
@@ -237,32 +234,30 @@ export default function ContactForm() {
     }
 
     return (
-        <div className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 rounded-2xl shadow-2xl p-4 md:p-8 relative overflow-hidden">
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-300/10 rounded-full blur-2xl"></div>
+        <div className="rounded-2xl border border-line bg-white shadow-sm p-5 md:p-8 relative overflow-hidden">
+
 
             <div className="relative">
-                <h2 className="text-xl md:text-3xl font-bold text-white mb-2">
+                <h2 className="text-xl md:text-2xl font-bold text-ink mb-1">
                     Envíanos un Mensaje
                 </h2>
-                <p className="text-blue-200/70 mb-4 md:mb-6 text-xs md:text-base">
+                <p className="text-muted mb-4 md:mb-6 text-xs md:text-sm">
                     Completa el formulario y nos pondremos en contacto contigo lo antes posible
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-2 md:space-y-5">
                     {/* Banner para datos precargados (desde soporte de pago móvil) */}
                     {hasPrefilledData && (
-                        <div className="p-4 bg-orange-500/20 border border-orange-400/50 rounded-xl animate-fadeIn">
+                        <div className="p-4 bg-warning/15 border border-warning/30 rounded-xl animate-fadeIn">
                             <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <div className="w-8 h-8 bg-warning-strong rounded-full flex items-center justify-center flex-shrink-0">
                                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="text-orange-200 font-semibold text-sm">Solicitud de Soporte</p>
-                                    <p className="text-orange-200/80 text-xs mt-1">
+                                    <p className="text-warning-strong font-semibold text-sm">Solicitud de Soporte</p>
+                                    <p className="text-ink-soft text-xs mt-1">
                                         Los datos de tu pago han sido precargados. Por favor completa tu nombre y email para que podamos ayudarte.
                                     </p>
                                 </div>
@@ -270,8 +265,8 @@ export default function ContactForm() {
                         </div>
                     )}
                     {error && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl animate-shake">
-                            <div className="flex items-center gap-2 text-red-400">
+                        <div className="p-4 bg-deal-bg border border-deal/30 rounded-xl animate-shake">
+                            <div className="flex items-center gap-2 text-deal">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -283,12 +278,12 @@ export default function ContactForm() {
                     {/* Name Field */}
                     <div className="space-y-1 md:space-y-1.5">
                         <div className="flex items-center gap-2">
-                            <label htmlFor="name" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                            <label htmlFor="name" className={adminLabel}>
                                 Nombre Completo
                             </label>
                         </div>
                         <div className="relative group">
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                                 <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
@@ -301,14 +296,14 @@ export default function ContactForm() {
                                 value={formData.name}
                                 onChange={handleChange}
                                 onBlur={() => handleBlur('name', formData.name)}
-                                className={`w-full pl-12 pr-12 md:pl-11 md:pr-11 py-2 md:py-3 bg-white/10 border ${touchedFields.name && validationErrors.name
-                                    ? 'border-red-500/50 focus:border-red-500'
-                                    : 'border-white/20 focus:border-white/40'
-                                    } rounded-xl text-white text-xs md:text-base placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200 text-center`}
+                                className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg text-ink text-sm placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all ${touchedFields.name && validationErrors.name
+                                    ? 'border-deal'
+                                    : 'border-line focus:border-brand-500'
+                                }`}
                                 placeholder="Tu nombre completo"
                             />
                             {touchedFields.name && validationErrors.name && (
-                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.name}</p>
+                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-deal font-medium">{validationErrors.name}</p>
                             )}
                         </div>
                     </div>
@@ -317,11 +312,11 @@ export default function ContactForm() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-5">
                         {/* Email Field */}
                         <div className="space-y-1 md:space-y-1.5">
-                            <label htmlFor="email" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                            <label htmlFor="email" className={adminLabel}>
                                 Email
                             </label>
                             <div className="relative group">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                                     <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                                     </svg>
@@ -333,14 +328,14 @@ export default function ContactForm() {
                                     value={formData.email}
                                     onChange={handleChange}
                                     onBlur={() => handleBlur('email', formData.email)}
-                                    className={`w-full pl-12 pr-12 md:pl-11 md:pr-11 py-2 md:py-3 bg-white/10 border ${touchedFields.email && validationErrors.email
-                                        ? 'border-red-500/50 focus:border-red-500'
-                                        : 'border-white/20 focus:border-white/40'
-                                        } rounded-xl text-white text-xs md:text-base placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200 text-center`}
+                                    className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg text-ink text-sm placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all ${touchedFields.email && validationErrors.email
+                                        ? 'border-deal'
+                                        : 'border-line focus:border-brand-500'
+                                    }`}
                                     placeholder="tu@email.com"
                                 />
                                 {touchedFields.email && validationErrors.email && (
-                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.email}</p>
+                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-deal font-medium">{validationErrors.email}</p>
                                 )}
                             </div>
                         </div>
@@ -348,12 +343,12 @@ export default function ContactForm() {
                         {/* Phone Field */}
                         <div className="space-y-1 md:space-y-1.5">
                             <div className="flex items-center gap-1">
-                                <label htmlFor="phone" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                                <label htmlFor="phone" className={adminLabel}>
                                     Teléfono
                                 </label>
                             </div>
                             <div className="relative group">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                                     <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                     </svg>
@@ -368,14 +363,14 @@ export default function ContactForm() {
                                     value={formData.phone}
                                     onChange={handleChange}
                                     onBlur={() => handleBlur('phone', formData.phone)}
-                                    className={`w-full pl-12 pr-12 md:pl-11 md:pr-11 py-2 md:py-3 bg-white/10 border ${touchedFields.phone && validationErrors.phone
-                                        ? 'border-red-500/50 focus:border-red-500'
-                                        : 'border-white/20 focus:border-white/40'
-                                        } rounded-xl text-white text-xs md:text-base placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200 text-center`}
+                                    className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg text-ink text-sm placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all ${touchedFields.phone && validationErrors.phone
+                                        ? 'border-deal'
+                                        : 'border-line focus:border-brand-500'
+                                    }`}
                                     placeholder="0412..."
                                 />
                                 {touchedFields.phone && validationErrors.phone && (
-                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.phone}</p>
+                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-deal font-medium">{validationErrors.phone}</p>
                                 )}
                             </div>
                         </div>
@@ -383,11 +378,11 @@ export default function ContactForm() {
 
                     {/* Subject Field */}
                     <div className="space-y-1 md:space-y-1.5 pt-1 md:pt-2">
-                        <label htmlFor="subject" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                        <label htmlFor="subject" className={adminLabel}>
                             Asunto
                         </label>
                         <div className="relative group">
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                                 <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                 </svg>
@@ -398,38 +393,37 @@ export default function ContactForm() {
                                 value={formData.subject}
                                 onChange={handleChange}
                                 onBlur={() => handleBlur('subject', formData.subject)}
-                                className={`w-full pl-12 pr-12 md:pl-11 md:pr-11 py-2 md:py-3 bg-white/10 border ${touchedFields.subject && validationErrors.subject
-                                    ? 'border-red-500/50 focus:border-red-500'
-                                    : 'border-white/20 focus:border-white/40'
-                                    } rounded-xl text-white text-xs md:text-base focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 transition-all duration-200 appearance-none cursor-pointer text-center`}
-                                style={{ colorScheme: 'dark' }}
+                                className={`w-full pl-10 pr-10 py-2.5 bg-white border rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all appearance-none cursor-pointer ${touchedFields.subject && validationErrors.subject
+                                    ? 'border-deal'
+                                    : 'border-line focus:border-brand-500'
+                                }`}
                             >
-                                <option value="" className="bg-gray-800 text-white">Selecciona...</option>
-                                <option value="consulta" className="bg-gray-800 text-white">Consulta General</option>
-                                <option value="producto" className="bg-gray-800 text-white">Información de Producto</option>
-                                <option value="orden" className="bg-gray-800 text-white">Estado de Orden</option>
-                                <option value="soporte" className="bg-gray-800 text-white">Soporte Técnico</option>
-                                <option value="otro" className="bg-gray-800 text-white">Otro</option>
+                                <option value="">Selecciona...</option>
+                                <option value="consulta">Consulta General</option>
+                                <option value="producto">Información de Producto</option>
+                                <option value="orden">Estado de Orden</option>
+                                <option value="soporte">Soporte Técnico</option>
+                                <option value="otro">Otro</option>
                             </select>
                             {/* Dropdown arrow */}
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-200/50 pointer-events-none">
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
                                 <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
                             </div>
                             {touchedFields.subject && validationErrors.subject && (
-                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.subject}</p>
+                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-deal font-medium">{validationErrors.subject}</p>
                             )}
                         </div>
                     </div>
 
                     {/* Message Field */}
                     <div className="space-y-1 md:space-y-1.5 pt-1 md:pt-2">
-                        <label htmlFor="message" className="block text-xs font-bold text-blue-100 uppercase tracking-wider">
+                        <label htmlFor="message" className={adminLabel}>
                             Mensaje
                         </label>
                         <div className="relative group">
-                            <div className="absolute left-3 top-3 text-blue-200/50 group-focus-within:text-white transition-colors duration-200">
+                            <div className="absolute left-3 top-3 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                                 <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                                 </svg>
@@ -441,27 +435,27 @@ export default function ContactForm() {
                                 onChange={handleChange}
                                 onBlur={() => handleBlur('message', formData.message)}
                                 rows={3}
-                                className={`w-full pl-12 pr-12 md:pl-11 md:pr-11 py-2 md:py-3 bg-white/10 border ${touchedFields.message && validationErrors.message
-                                    ? 'border-red-500/50 focus:border-red-500'
-                                    : 'border-white/20 focus:border-white/40'
-                                    } rounded-xl text-white text-xs md:text-base placeholder:text-blue-200/30 focus:outline-none focus:bg-white/20 focus:ring-1 focus:ring-white/40 resize-none transition-all duration-200 md:h-auto text-center`}
+                                className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg text-ink text-sm placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-brand-500/20 resize-none transition-all ${touchedFields.message && validationErrors.message
+                                    ? 'border-deal'
+                                    : 'border-line focus:border-brand-500'
+                                }`}
                                 placeholder="Escribe tu mensaje..."
                             />
                             {touchedFields.message && validationErrors.message && (
-                                <p className="absolute -bottom-5 left-0 text-xs text-red-400 font-medium">{validationErrors.message}</p>
+                                <p className="absolute -bottom-5 left-0 text-xs text-deal font-medium">{validationErrors.message}</p>
                             )}
                         </div>
                     </div>
 
                     {/* hCaptcha */}
                     <div className="flex justify-center pt-1 md:pt-2">
-                        <div className="bg-white/5 p-2 md:p-3 rounded-xl border border-white/10 transform scale-90 md:scale-100 origin-center">
+                        <div className="bg-surface p-2 md:p-3 rounded-xl border border-line transform scale-90 md:scale-100 origin-center">
                             <HCaptchaWrapper
                                 sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
                                 onVerify={handleCaptchaVerify}
                                 onExpire={handleCaptchaExpire}
                                 ref={captchaRef}
-                                theme="dark"
+                                theme="light"
                             />
                         </div>
                     </div>
@@ -470,22 +464,22 @@ export default function ContactForm() {
                     <button
                         type="submit"
                         disabled={loading || !captchaToken}
-                        className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white text-brand-500 font-bold rounded-xl hover:bg-white/90 hover:shadow-2xl hover:shadow-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-2"
+                        className={`${adminPrimaryButton} w-full mt-2`}
                     >
                         {loading ? (
                             <>
-                                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                                <svg className="animate-spin w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                 </svg>
-                                Enviando mensaje...
+                                <span>Enviando mensaje...</span>
                             </>
                         ) : (
                             <>
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                                 </svg>
-                                Enviar Mensaje
+                                <span>Enviar Mensaje</span>
                             </>
                         )}
                     </button>

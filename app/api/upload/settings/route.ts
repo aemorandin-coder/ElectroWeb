@@ -51,8 +51,9 @@ export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
 
-        // Only allow users with MANAGE_SETTINGS permission
-        if (!isAuthorized(session, 'MANAGE_SETTINGS')) {
+        // Configuración: MANAGE_SETTINGS. La imagen del popup también la sube Marketing (MANAGE_CONTENT), C-50b
+        const canManageSettings = isAuthorized(session, 'MANAGE_SETTINGS');
+        if (!canManageSettings && !isAuthorized(session, 'MANAGE_CONTENT')) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
@@ -80,6 +81,9 @@ export async function POST(request: NextRequest) {
 
         if (!type || !allowedAssetTypes.includes(type)) {
             return NextResponse.json({ error: 'Tipo de asset no válido' }, { status: 400 });
+        }
+        if (!canManageSettings && type !== 'hotAd') {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
         // Validate file type by MIME

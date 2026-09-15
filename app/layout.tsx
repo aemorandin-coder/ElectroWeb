@@ -48,7 +48,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 
   const icons: Metadata['icons'] = {};
-  const absoluteFavicon = ensureAbsoluteUrl(settings.favicon);
+  // Sin favicon se usa el logo: sin ningún ícono declarado, el navegador pide /favicon.ico y da 404 (F6)
+  const absoluteFavicon = ensureAbsoluteUrl(settings.favicon) || ensureAbsoluteUrl(settings.logo);
 
   if (absoluteFavicon) {
     icons.icon = [
@@ -60,7 +61,6 @@ export async function generateMetadata(): Promise<Metadata> {
     icons.apple = absoluteFavicon;
     icons.shortcut = absoluteFavicon;
   }
-  // Sin favicon en settings no se declara ninguno: /favicon.ico no existe en public/
 
   // Open Graph image: homeMetaImage, logo o favicon (no hay imagen por defecto en public/)
   const ogImage = ensureAbsoluteUrl(settings.homeMetaImage) || ensureAbsoluteUrl(settings.logo) || ensureAbsoluteUrl(settings.favicon);

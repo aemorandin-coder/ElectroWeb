@@ -143,10 +143,10 @@ function PublicHeader() {
               <>
                 <span className="hidden xl:inline">Tasa BCV </span>
                 {formatVES(exchangeRate)}
-                <span className="hidden xl:inline"> · </span>
+                {settings?.deliveryEnabled !== false && <span className="hidden xl:inline"> · </span>}
               </>
             ) : null}
-            <span className="hidden xl:inline">Envíos a toda Venezuela</span>
+            {settings?.deliveryEnabled !== false && <span className="hidden xl:inline">Envíos a toda Venezuela</span>}
           </p>
         </Container>
       </nav>

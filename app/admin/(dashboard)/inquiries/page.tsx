@@ -11,7 +11,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { FiMessageSquare, FiPackage, FiBell, FiMail, FiPhone, FiUser, FiCalendar, FiTrash2, FiCheck, FiClock, FiCheckCircle, FiXCircle, FiDollarSign, FiShoppingBag, FiAlertTriangle, FiBox, FiUserPlus, FiRefreshCw, FiExternalLink } from 'react-icons/fi';
+import { FiMessageSquare, FiPackage, FiMail, FiPhone, FiUser, FiCalendar, FiTrash2, FiCheck, FiDollarSign } from 'react-icons/fi';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { toast } from 'react-hot-toast';
@@ -43,17 +43,7 @@ interface ProductRequest {
     createdAt: string;
 }
 
-type Tab = 'messages' | 'requests' | 'alerts';
-
-interface SystemNotification {
-    id: string;
-    type: string;
-    title: string;
-    message: string;
-    read: boolean;
-    link?: string;
-    createdAt: string;
-}
+type Tab = 'messages' | 'requests';
 
 // ============== MAIN COMPONENT ==============
 
@@ -62,8 +52,12 @@ export default function InquiriesPage() {
     const { data: session } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const initialTab = (searchParams.get('tab') as Tab) || 'messages';
-    const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+    // Las alertas del sistema tienen su propia página desde C-73: los enlaces viejos ?tab=alerts van allá
+    const tabParam = searchParams.get('tab');
+    const [activeTab, setActiveTab] = useState<Tab>(tabParam === 'requests' ? 'requests' : 'messages');
+    useEffect(() => {
+        if (tabParam === 'alerts') router.replace('/admin/notifications');
+    }, [tabParam, router]);
 
     // Messages State
     const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -81,16 +75,10 @@ export default function InquiriesPage() {
     const [adminNotes, setAdminNotes] = useState('');
     const [newStatus, setNewStatus] = useState('');
 
-    // System Alerts State
-    const [alerts, setAlerts] = useState<SystemNotification[]>([]);
-    const [alertsLoading, setAlertsLoading] = useState(false);
-    const [alertFilterRead, setAlertFilterRead] = useState<'all' | 'unread' | 'read'>('all');
-
     // Fetch data on mount
     useEffect(() => {
         fetchMessages();
         fetchRequests();
-        fetchAlerts();
     }, []);
 
     // ============== MESSAGES FUNCTIONS ==============
@@ -274,78 +262,6 @@ export default function InquiriesPage() {
         return <Badge variant={config.variant}>{config.label}</Badge>;
     };
 
-    // ============== ALERTS FUNCTIONS ==============
-
-    const fetchAlerts = async () => {
-        try {
-            setAlertsLoading(true);
-            const res = await fetch('/api/notifications?limit=100');
-            if (res.ok) {
-                const data = await res.json();
-                setAlerts(data.notifications || []);
-            }
-        } catch (error) {
-            console.error('Error fetching alerts:', error);
-            toast.error('No se pudieron cargar las alertas');
-        } finally {
-            setAlertsLoading(false);
-        }
-    };
-
-    const markAlertRead = async (id: string) => {
-        try {
-            await fetch(`/api/notifications/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ read: true }) });
-            setAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
-            window.dispatchEvent(new Event('refresh-sidebar-counts'));
-        } catch (error) {
-            console.error('Error marking alert as read:', error);
-            toast.error('No se pudo marcar la alerta como leída');
-        }
-    };
-
-    const markAllAlertsRead = async () => {
-        try {
-            await fetch('/api/notifications/mark-all-read', { method: 'PATCH' });
-            setAlerts(prev => prev.map(a => ({ ...a, read: true })));
-            toast.success('Todas las alertas marcadas como leídas');
-            window.dispatchEvent(new Event('refresh-sidebar-counts'));
-        } catch (error) {
-            console.error('Error marking all alerts as read:', error);
-            toast.error('No se pudieron marcar todas las alertas como leídas');
-        }
-    };
-
-    const deleteAlert = async (id: string) => {
-        try {
-            await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
-            setAlerts(prev => prev.filter(a => a.id !== id));
-            window.dispatchEvent(new Event('refresh-sidebar-counts'));
-        } catch (error) {
-            console.error('Error deleting alert:', error);
-            toast.error('No se pudo eliminar la alerta');
-        }
-    };
-
-    const getAlertIcon = (type: string) => {
-        switch (type) {
-            case 'NEW_ORDER': return <FiShoppingBag className="w-5 h-5 text-brand-500" />;
-            case 'NEW_RECHARGE_REQUEST': return <FiRefreshCw className="w-5 h-5 text-success-strong" />;
-            case 'NEW_CUSTOMER': return <FiUserPlus className="w-5 h-5 text-brand-600" />;
-            case 'NEW_CREATOR_REQUEST': return <FiUserPlus className="w-5 h-5 text-warning-strong" />;
-            case 'LOW_STOCK': case 'OUT_OF_STOCK': case 'STOCK_CRITICAL': return <FiAlertTriangle className="w-5 h-5 text-warning-strong" />;
-            case 'PRODUCT_REQUEST': return <FiBox className="w-5 h-5 text-brand-600" />;
-            default: return <FiBell className="w-5 h-5 text-muted" />;
-        }
-    };
-
-    const filteredAlerts = alerts.filter(a => {
-        if (alertFilterRead === 'unread') return !a.read;
-        if (alertFilterRead === 'read') return a.read;
-        return true;
-    });
-
-    const unreadAlertsCount = alerts.filter(a => !a.read).length;
-
     // ============== STATS ==============
 
     const messageStats = {
@@ -367,8 +283,8 @@ export default function InquiriesPage() {
             <div className="flex-shrink-0 mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-ink">Mensajes y Alertas</h1>
-                        <p className="text-sm text-muted mt-1">Mensajes, solicitudes de clientes y alertas del sistema</p>
+                        <h1 className="text-2xl font-bold text-ink">Mensajes y Solicitudes</h1>
+                        <p className="text-sm text-muted mt-1">Mensajes de contacto y solicitudes de productos de los clientes</p>
                     </div>
                 </div>
 
@@ -401,21 +317,6 @@ export default function InquiriesPage() {
                         {requestStats.pending > 0 && (
                             <span className="w-5 h-5 bg-brand-500 text-white text-xs rounded-full flex items-center justify-center">
                                 {requestStats.pending}
-                            </span>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('alerts')}
-                        className={`shrink-0 whitespace-nowrap px-4 sm:px-6 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${activeTab === 'alerts'
-                                ? 'bg-white text-brand-500 shadow-sm'
-                                : 'text-muted hover:text-ink'
-                            }`}
-                    >
-                        <FiBell className="w-4 h-4" />
-                        Alertas del Sistema
-                        {unreadAlertsCount > 0 && (
-                            <span className="w-5 h-5 bg-brand-500 text-white text-xs rounded-full flex items-center justify-center">
-                                {unreadAlertsCount > 99 ? '99+' : unreadAlertsCount}
                             </span>
                         )}
                     </button>
@@ -719,155 +620,6 @@ export default function InquiriesPage() {
                     </div>
                 )}
 
-                {/* ============== ALERTS TAB ============== */}
-                {activeTab === 'alerts' && (
-                    <div className="h-full flex flex-col">
-                        {/* Alerts Toolbar */}
-                        <div className="flex-shrink-0 flex items-center justify-between gap-3 mb-4">
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setAlertFilterRead('all')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                        alertFilterRead === 'all' ? 'bg-brand-500 text-white' : 'bg-white border border-line text-muted hover:bg-surface'
-                                    }`}
-                                >
-                                    Todas ({alerts.length})
-                                </button>
-                                <button
-                                    onClick={() => setAlertFilterRead('unread')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                        alertFilterRead === 'unread' ? 'bg-brand-500 text-white' : 'bg-white border border-line text-muted hover:bg-surface'
-                                    }`}
-                                >
-                                    Sin leer ({unreadAlertsCount})
-                                </button>
-                                <button
-                                    onClick={() => setAlertFilterRead('read')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                        alertFilterRead === 'read' ? 'bg-brand-500 text-white' : 'bg-white border border-line text-muted hover:bg-surface'
-                                    }`}
-                                >
-                                    Leídas
-                                </button>
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={fetchAlerts}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white border border-line text-muted hover:bg-surface transition-all"
-                                >
-                                    <FiRefreshCw className="w-4 h-4" /> Actualizar
-                                </button>
-                                {unreadAlertsCount > 0 && (
-                                    <button
-                                        onClick={markAllAlertsRead}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-brand-500/10 text-brand-500 hover:bg-brand-500/20 transition-all"
-                                    >
-                                        <FiCheckCircle className="w-4 h-4" /> Marcar todas como leídas
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Alerts List */}
-                        <div className="flex-1 bg-white rounded-xl border border-line shadow-sm overflow-y-auto">
-                            {alertsLoading ? (
-                                <div className="flex items-center justify-center h-40">
-                                    <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-                                </div>
-                            ) : filteredAlerts.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-40 text-center">
-                                    <FiBell className="w-10 h-10 text-subtle mb-3" />
-                                    <p className="text-sm text-muted font-medium">No hay alertas</p>
-                                    <p className="text-xs text-subtle mt-1">Las nuevas alertas del sistema aparecerán aquí</p>
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-line">
-                                    {filteredAlerts.map((alert) => (
-                                        <div
-                                            key={alert.id}
-                                            onClick={() => {
-                                                if (!alert.read) {
-                                                    markAlertRead(alert.id);
-                                                }
-                                                if (alert.link) {
-                                                    router.push(alert.link);
-                                                }
-                                            }}
-                                            className={`flex items-start gap-4 p-4 hover:bg-surface transition-colors group cursor-pointer ${
-                                                !alert.read ? 'bg-brand-500/5 border-l-4 border-l-brand-500' : ''
-                                            }`}
-                                        >
-                                            <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
-                                                !alert.read ? 'bg-brand-500/10' : 'bg-surface'
-                                            }`}>
-                                                {getAlertIcon(alert.type)}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div>
-                                                        <p className={`text-sm font-semibold ${
-                                                            !alert.read ? 'text-ink' : 'text-ink-soft'
-                                                        }`}>{alert.title}</p>
-                                                        <p className="text-xs text-muted mt-0.5">{alert.message}</p>
-                                                    </div>
-                                                    <div className="flex-shrink-0 flex items-center gap-2">
-                                                        <span className="text-xs text-subtle whitespace-nowrap">
-                                                            {format(new Date(alert.createdAt), "d MMM, HH:mm", { locale: es })}
-                                                        </span>
-                                                        {!alert.read && (
-                                                            <span className="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0" />
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-3 mt-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                    {alert.link && (
-                                                        <a
-                                                            href={alert.link}
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                e.stopPropagation();
-                                                                if (!alert.read) {
-                                                                    markAlertRead(alert.id);
-                                                                }
-                                                                router.push(alert.link!);
-                                                            }}
-                                                            className="flex items-center gap-1 text-xs text-brand-500 hover:underline font-medium"
-                                                        >
-                                                            <FiExternalLink className="w-3 h-3" />
-                                                            Ver detalle
-                                                        </a>
-                                                    )}
-                                                    {!alert.read && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                markAlertRead(alert.id);
-                                                            }}
-                                                            className="flex items-center gap-1 text-xs text-muted hover:text-ink-soft"
-                                                        >
-                                                            <FiCheck className="w-3 h-3" />
-                                                            Marcar leída
-                                                        </button>
-                                                    )}
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            deleteAlert(alert.id);
-                                                        }}
-                                                        className="flex items-center gap-1 text-xs text-deal"
-                                                    >
-                                                        <FiTrash2 className="w-3 h-3" />
-                                                        Eliminar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* Request Modal */}

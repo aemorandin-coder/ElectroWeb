@@ -75,7 +75,7 @@ export default function SystemSection({ form, set, errors }: SectionProps) {
     <>
       <SettingsCard
         title="Correos de alerta"
-        description="Reciben un correo con cada orden nueva, solicitud de recarga, solicitud de creador y aviso de stock."
+        description={<>Reciben los avisos que tengan el canal Correo activo en <a href="/admin/notifications#avisos" className="font-semibold text-brand-600 hover:underline">Notificaciones → Qué avisar</a>.</>}
       >
         {form.adminAlertEmails.length > 0 ? (
           <ul className="mb-4 flex flex-wrap gap-2">

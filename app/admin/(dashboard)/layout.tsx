@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   FiBarChart2, FiBox, FiClipboard, FiCreditCard, FiDollarSign, FiExternalLink, FiGift, FiGrid, FiLogOut,
-  FiMenu, FiMessageSquare, FiPercent, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUsers, FiX,
+  FiBell, FiMenu, FiMessageSquare, FiPercent, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUsers, FiX,
 } from 'react-icons/fi';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { MdAdminPanelSettings } from 'react-icons/md';
@@ -26,6 +26,7 @@ interface SidebarCounts {
   pendingInquiries: number;
   pendingDiscounts: number;
   pendingCreators: number;
+  unreadNotifications: number;
 }
 
 export default function AdminLayout({
@@ -48,6 +49,7 @@ export default function AdminLayout({
     pendingInquiries: 0,
     pendingDiscounts: 0,
     pendingCreators: 0,
+    unreadNotifications: 0,
   });
 
   useEffect(() => {
@@ -176,7 +178,13 @@ export default function AdminLayout({
       permission: 'MANAGE_SETTINGS',
     },
     {
-      name: 'Mensajes y Alertas',
+      name: 'Notificaciones',
+      href: '/admin/notifications',
+      icon: <FiBell className="h-5 w-5" aria-hidden="true" />,
+      countKey: 'unreadNotifications',
+    },
+    {
+      name: 'Mensajes y Solicitudes',
       href: '/admin/inquiries',
       icon: <FiMessageSquare className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_CONTENT',

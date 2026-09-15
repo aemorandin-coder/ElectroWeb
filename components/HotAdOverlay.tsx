@@ -17,7 +17,11 @@ const SHOW_DELAY_MS = 2500;
 function readRecord(): HotAdRecord | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as HotAdRecord) : null;
+    if (!raw) return null;
+    const record = JSON.parse(raw) as HotAdRecord;
+    // C-23b movió la versión de ?v= a la ruta: la misma promoción no vuelve a salir a quien la descartó
+    if (typeof record?.image === 'string') record.image = record.image.replace('/api/public/hot-ad-image?v=', '/api/public/hot-ad-image/');
+    return record;
   } catch {
     return null;
   }

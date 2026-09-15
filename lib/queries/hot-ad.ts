@@ -1,6 +1,6 @@
 // Popup promocional del home (C-25). Solo servidor.
 // La imagen puede estar guardada como archivo (/uploads/...) o, en datos viejos, como base64 dentro de la BD.
-// El base64 nunca se manda en el HTML: se sirve como archivo desde /api/public/hot-ad-image con una versión.
+// El base64 nunca se manda en el HTML: se sirve como archivo desde /api/public/hot-ad-image/<versión>.
 
 import { createHash } from 'crypto';
 import { cache } from 'react';
@@ -33,7 +33,19 @@ export function imageVersion(value: string): string {
   return createHash('sha256').update(value).digest('hex').slice(0, 16);
 }
 
+// La versión va en la ruta y no en ?v=: Next 16 no optimiza imágenes locales con query string (C-23b)
 export const HOT_AD_IMAGE_ROUTE = '/api/public/hot-ad-image';
+
+/** Imagen base64 del popup lista para servir, o null si no hay popup activo con base64. */
+export async function readHotAdImage(): Promise<{ mime: string; bytes: Buffer; version: string } | null> {
+  const row = await prisma.companySettings.findUnique({
+    where: { id: 'default' },
+    select: { hotAdEnabled: true, hotAdImage: true },
+  });
+  const raw = row?.hotAdEnabled ? row.hotAdImage?.trim() : null;
+  const parsed = raw ? parseImageDataUri(raw) : null;
+  return raw && parsed ? { ...parsed, version: imageVersion(raw) } : null;
+}
 
 export const getHotAd = cache(async (): Promise<HotAd | null> => {
   const row = await prisma.companySettings.findUnique({
@@ -48,7 +60,7 @@ export const getHotAd = cache(async (): Promise<HotAd | null> => {
   const raw = row.hotAdImage.trim();
   let image: string | null = null;
   if (raw.startsWith('data:')) {
-    image = parseImageDataUri(raw) ? `${HOT_AD_IMAGE_ROUTE}?v=${imageVersion(raw)}` : null;
+    image = parseImageDataUri(raw) ? `${HOT_AD_IMAGE_ROUTE}/${imageVersion(raw)}` : null;
   } else if ((raw.startsWith('/') && !raw.startsWith('//')) || raw.startsWith('https://')) {
     image = raw;
   }

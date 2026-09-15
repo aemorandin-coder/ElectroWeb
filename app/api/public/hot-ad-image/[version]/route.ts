@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readHotAdImage } from '@/lib/queries/hot-ad';
 
 /**
- * GET /api/public/hot-ad-image?v=<versión> (C-25)
- * Ruta vieja, para HTML en caché de antes de C-23b: la tienda ahora usa /api/public/hot-ad-image/<versión>.
- * Con la versión correcta se cachea un año (una imagen nueva trae otra versión); sin ella, 5 minutos.
+ * GET /api/public/hot-ad-image/<versión> (C-23b)
+ * Imagen del popup guardada como base64 en la BD, servida como archivo. La versión va en la ruta para que
+ * el optimizador de imágenes la acepte. Con la versión correcta se cachea un año; con otra, 5 minutos.
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ version: string }> }) {
+  const { version } = await params;
   const image = await readHotAdImage();
   if (!image) {
     return new NextResponse(null, { status: 404 });
   }
 
-  const matches = request.nextUrl.searchParams.get('v') === image.version;
+  const matches = version === image.version;
   return new NextResponse(new Uint8Array(image.bytes), {
     status: 200,
     headers: {

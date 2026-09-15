@@ -129,6 +129,7 @@ export default function OrdersPage() {
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
+        toast.error('No se pudieron cargar las órdenes');
     } finally {
       setLoading(false);
     }
@@ -204,6 +205,7 @@ export default function OrdersPage() {
       }
     } catch (error) {
       console.error('Error saving notes:', error);
+        toast.error('No se pudieron guardar las notas');
     } finally {
       setSavingNotes(false);
     }

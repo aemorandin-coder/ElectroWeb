@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
@@ -95,6 +96,7 @@ export default function AdminDashboard() {
         }
       } catch (error) {
         console.error('Error fetching stats:', error);
+        toast.error('No se pudieron cargar las estadísticas');
       } finally {
         setIsLoading(false);
       }

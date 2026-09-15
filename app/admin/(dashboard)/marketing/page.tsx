@@ -1,4 +1,5 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -74,6 +75,7 @@ function typeLabel(type: string) {
 // ─── Influencer Tab ───────────────────────────────────────────────────────────
 
 function InfluencersTab() {
+    const { confirm } = useConfirm();
     const [influencers, setInfluencers] = useState<Influencer[]>([]);
     const [loading, setLoading] = useState(true);
     const [showCreate, setShowCreate] = useState(false);
@@ -182,7 +184,8 @@ function InfluencersTab() {
     };
 
     const handleDelete = async (inf: Influencer) => {
-        if (!confirm(`¿Eliminar perfil de influencer de ${inf.name}? El usuario conserva su cuenta.`)) return;
+        const confirmed = await confirm({ title: 'Eliminar influencer', message: `¿Eliminar perfil de influencer de ${inf.name}? El usuario conserva su cuenta.`, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+        if (!confirmed) return;
         const res = await fetch(`/api/influencers/${inf.id}`, { method: 'DELETE' });
         if (res.ok) { toast.success('Eliminado'); fetchInfluencers(); }
     };
@@ -869,7 +872,10 @@ function HotAdTab() {
                 setAd(loaded);
                 setInitial(loaded);
             })
-            .catch(console.error)
+            .catch((err) => {
+                console.error(err);
+                toast.error('No se pudo cargar el anuncio destacado');
+            })
             .finally(() => setLoading(false));
     }, []);
 

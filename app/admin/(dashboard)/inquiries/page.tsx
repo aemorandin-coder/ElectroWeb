@@ -1,4 +1,5 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -52,6 +53,7 @@ interface SystemNotification {
 // ============== MAIN COMPONENT ==============
 
 export default function InquiriesPage() {
+    const { confirm } = useConfirm();
     const { data: session } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -122,11 +124,13 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error updating status:', error);
+            toast.error('No se pudo actualizar el estado del mensaje');
         }
     };
 
     const handleDeleteMessage = async (id: string) => {
-        if (!confirm('¿Estás seguro de eliminar este mensaje?')) return;
+        const confirmed = await confirm({ title: 'Eliminar mensaje', message: '¿Estás seguro de eliminar este mensaje?', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`/api/contact?id=${id}`, {
@@ -143,6 +147,7 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error deleting message:', error);
+            toast.error('No se pudo eliminar el mensaje');
         }
     };
 
@@ -184,6 +189,7 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error fetching requests:', error);
+            toast.error('No se pudieron cargar las solicitudes');
         } finally {
             setRequestsLoading(false);
         }
@@ -219,11 +225,13 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error updating request:', error);
+            toast.error('No se pudo actualizar la solicitud');
         }
     };
 
     const handleDeleteRequest = async (id: string) => {
-        if (!confirm('¿Estás seguro de eliminar esta solicitud?')) return;
+        const confirmed = await confirm({ title: 'Eliminar solicitud', message: '¿Estás seguro de eliminar esta solicitud?', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`/api/product-requests?id=${id}`, {
@@ -237,6 +245,7 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error deleting request:', error);
+            toast.error('No se pudo eliminar la solicitud');
         }
     };
 
@@ -271,6 +280,7 @@ export default function InquiriesPage() {
             }
         } catch (error) {
             console.error('Error fetching alerts:', error);
+            toast.error('No se pudieron cargar las alertas');
         } finally {
             setAlertsLoading(false);
         }
@@ -283,6 +293,7 @@ export default function InquiriesPage() {
             window.dispatchEvent(new Event('refresh-sidebar-counts'));
         } catch (error) {
             console.error('Error marking alert as read:', error);
+            toast.error('No se pudo marcar la alerta como leída');
         }
     };
 
@@ -294,6 +305,7 @@ export default function InquiriesPage() {
             window.dispatchEvent(new Event('refresh-sidebar-counts'));
         } catch (error) {
             console.error('Error marking all alerts as read:', error);
+            toast.error('No se pudieron marcar todas las alertas como leídas');
         }
     };
 
@@ -304,6 +316,7 @@ export default function InquiriesPage() {
             window.dispatchEvent(new Event('refresh-sidebar-counts'));
         } catch (error) {
             console.error('Error deleting alert:', error);
+            toast.error('No se pudo eliminar la alerta');
         }
     };
 

@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
 import { FiShield, FiPackage, FiRefreshCw, FiClock, FiCheck, FiAlertCircle, FiChevronRight, FiFileText, FiHelpCircle, FiMail, FiPhone } from 'react-icons/fi';
@@ -57,6 +58,7 @@ export default function WarrantyPage() {
             }
         } catch (error) {
             console.error('Error:', error);
+            toast.error('No se pudieron cargar las garantías');
         } finally {
             setLoading(false);
         }

@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD, formatVES } from '@/lib/currency';
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -282,7 +283,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
         const confirmed = await confirm({
             title: 'Confirmar Recarga',
-            message: `¿Estas seguro de que deseas recargar $${parseFloat(amount).toFixed(2)} usando ${companyPaymentMethods.find(m => m.type === selectedMethod)?.name}?`,
+            message: `¿Estas seguro de que deseas recargar ${formatUSD(parseFloat(amount))} usando ${companyPaymentMethods.find(m => m.type === selectedMethod)?.name}?`,
             confirmText: 'Si, Recargar',
             cancelText: 'Cancelar',
             variant: 'info'
@@ -600,13 +601,13 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                         </div>
                                         <div className="bg-white rounded-lg p-2 lg:p-3 border border-yellow-200">
                                             <div className="flex items-center justify-between text-xs mb-1">
-                                                <span className="text-muted">USD ${amount ? parseFloat(amount).toFixed(2) : '0.00'}</span>
+                                                <span className="text-muted">{formatUSD(amount ? parseFloat(amount) : 0)}</span>
                                                 <span className="text-muted">x {exchangeRate > 0 ? exchangeRate.toFixed(2) : '...'}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-xs font-semibold text-ink">Total:</span>
                                                 <span className="text-base lg:text-xl font-bold text-orange-600">
-                                                    Bs. {amountInBs ? amountInBs.toFixed(2) : '0.00'}
+                                                    {formatVES(amountInBs || 0)}
                                                 </span>
                                             </div>
                                         </div>

@@ -1,4 +1,6 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -19,6 +21,7 @@ interface ProductRequest {
 }
 
 export default function ProductRequestsPage() {
+  const { confirm } = useConfirm();
   const [requests, setRequests] = useState<ProductRequest[]>([]);
   const [filterStatus, setFilterStatus] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +47,7 @@ export default function ProductRequestsPage() {
       }
     } catch (error) {
       console.error('Error fetching requests:', error);
+        toast.error('No se pudieron cargar las solicitudes');
     } finally {
       setIsLoading(false);
     }
@@ -71,11 +75,13 @@ export default function ProductRequestsPage() {
       }
     } catch (error) {
       console.error('Error updating request:', error);
+        toast.error('No se pudo actualizar la solicitud');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta solicitud?')) return;
+    const confirmed = await confirm({ title: 'Eliminar solicitud', message: '¿Estás seguro de eliminar esta solicitud?', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+    if (!confirmed) return;
 
     try {
       const response = await fetch(`/api/product-requests?id=${id}`, {
@@ -87,6 +93,7 @@ export default function ProductRequestsPage() {
       }
     } catch (error) {
       console.error('Error deleting request:', error);
+        toast.error('No se pudo eliminar la solicitud');
     }
   };
 

@@ -117,6 +117,7 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
+      toast.error('No se pudo cargar la configuración');
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,6 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -106,6 +108,7 @@ export default function BalancePage() {
       }
     } catch (error) {
       console.error('Error fetching balance:', error);
+      toast.error('No se pudo cargar el saldo');
     } finally {
       setLoading(false);
     }
@@ -177,7 +180,7 @@ export default function BalancePage() {
                 className="text-4xl font-bold text-white tracking-tight animate-fadeIn"
                 style={{ textShadow: '0 4px 24px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.2)' }}
               >
-                ${userBalance?.balance.toFixed(2) || '0.00'}
+                {formatUSD(userBalance?.balance || 0)}
               </h1>
               {/* Glow Bar */}
               <div className="absolute -bottom-1 left-0 h-1 w-20 bg-gradient-to-r from-white/60 to-transparent rounded-full animate-pulse" />
@@ -345,7 +348,7 @@ export default function BalancePage() {
             <p className="text-[11px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Saldo</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
               <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap animate-marquee-text">
-                ${userBalance?.balance.toFixed(2) || '0.00'}
+                {formatUSD(userBalance?.balance || 0)}
               </span>
             </div>
             <div className="mt-1 w-6 h-1 bg-green-500 rounded-full opacity-20" />
@@ -443,7 +446,7 @@ export default function BalancePage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className={`text-sm lg:text-lg font-bold ${transaction.type === 'RECHARGE' ? 'text-green-600' : 'text-red-600'}`}>
-                        {transaction.type === 'RECHARGE' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                        {transaction.type === 'RECHARGE' ? '+' : '-'}{formatUSD(transaction.amount)}
                       </p>
                       <span className={`inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full text-[11px] lg:text-xs font-semibold ${transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
                         transaction.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :

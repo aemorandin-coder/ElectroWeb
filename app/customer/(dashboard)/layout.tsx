@@ -318,26 +318,6 @@ export default function CustomerDashboardLayout({
                 </svg>
               </Link>
             </div>
-
-            {/* CSS Animations for Verified badge */}
-            <style jsx>{`
-              @keyframes verifiedPulse {
-                0%, 100% {
-                  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.2);
-                }
-                50% {
-                  box-shadow: 0 0 8px 2px rgba(34, 197, 94, 0.15);
-                }
-              }
-              @keyframes verifiedCheck {
-                0%, 100% {
-                  transform: scale(1);
-                }
-                50% {
-                  transform: scale(1.1);
-                }
-              }
-            `}</style>
           </header>
 
           {/* DESKTOP HEADER */}

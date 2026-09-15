@@ -1,4 +1,6 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
+import { toast } from 'react-hot-toast';
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -41,6 +43,7 @@ export default function CustomerDashboard() {
       }
     } catch (error) {
       console.error('Error fetching dashboard:', error);
+      toast.error('No se pudieron cargar los datos del panel');
     } finally {
       setLoading(false);
     }
@@ -123,7 +126,7 @@ export default function CustomerDashboard() {
             {/* Saldo - Right aligned on mobile */}
             <div className="bg-white/20 backdrop-blur-md rounded-xl px-3 py-1.5 border border-white/20 text-right min-w-[80px]">
               <p className="text-blue-200 text-[11px] uppercase font-bold tracking-tighter">Saldo</p>
-              <p className="text-base lg:text-xl font-bold">${stats?.balance?.toFixed(2) || '0.00'}</p>
+              <p className="text-base lg:text-xl font-bold">{formatUSD(stats?.balance || 0)}</p>
             </div>
           </div>
         </div>
@@ -169,7 +172,7 @@ export default function CustomerDashboard() {
                         <p className="text-xs text-muted">{order.itemCount} productos</p>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="font-bold text-ink text-sm lg:text-base">${order.total.toFixed(2)}</p>
+                        <p className="font-bold text-ink text-sm lg:text-base">{formatUSD(order.total)}</p>
                         <p className="text-[11px] lg:text-xs text-muted">
                           {new Date(order.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                         </p>
@@ -243,7 +246,7 @@ export default function CustomerDashboard() {
                         </div>
                         {activity.amount && (
                           <span className={`text-xs font-bold ${style.color} flex-shrink-0`}>
-                            {activity.type === 'RECHARGE' || activity.type === 'DEPOSIT' ? '+' : activity.type === 'PURCHASE' ? '-' : ''}${activity.amount?.toFixed(2) || ''}
+                            {activity.type === 'RECHARGE' || activity.type === 'DEPOSIT' ? '+' : activity.type === 'PURCHASE' ? '-' : ''}{formatUSD(activity.amount || 0)}
                           </span>
                         )}
                       </div>
@@ -268,15 +271,15 @@ export default function CustomerDashboard() {
             <div className="space-y-1.5 lg:space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted">Total Recargado</span>
-                <span className="font-bold text-green-600 text-xs lg:text-sm">${stats?.totalRecharges?.toFixed(2) || '0.00'}</span>
+                <span className="font-bold text-green-600 text-xs lg:text-sm">{formatUSD(stats?.totalRecharges || 0)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted">Total Gastado</span>
-                <span className="font-bold text-purple-600 text-xs lg:text-sm">${stats?.totalSpent?.toFixed(2) || '0.00'}</span>
+                <span className="font-bold text-purple-600 text-xs lg:text-sm">{formatUSD(stats?.totalSpent || 0)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted">Este Mes</span>
-                <span className="font-bold text-brand-500 text-xs lg:text-sm">${stats?.totalSpentThisMonth?.toFixed(2) || '0.00'}</span>
+                <span className="font-bold text-brand-500 text-xs lg:text-sm">{formatUSD(stats?.totalSpentThisMonth || 0)}</span>
               </div>
             </div>
           </div>

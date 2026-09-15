@@ -1,4 +1,6 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -17,6 +19,7 @@ interface ContactMessage {
 }
 
 export default function MessagesPage() {
+    const { confirm } = useConfirm();
     const { data: session } = useSession();
     const [messages, setMessages] = useState<ContactMessage[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +40,7 @@ export default function MessagesPage() {
             }
         } catch (error) {
             console.error('Error fetching messages:', error);
+            toast.error('No se pudieron cargar los mensajes');
         } finally {
             setIsLoading(false);
         }
@@ -60,11 +64,13 @@ export default function MessagesPage() {
             }
         } catch (error) {
             console.error('Error updating status:', error);
+            toast.error('No se pudo actualizar el estado');
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('¿Estás seguro de eliminar este mensaje?')) return;
+        const confirmed = await confirm({ title: 'Eliminar mensaje', message: '¿Estás seguro de eliminar este mensaje?', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`/api/contact?id=${id}`, {
@@ -80,6 +86,7 @@ export default function MessagesPage() {
             }
         } catch (error) {
             console.error('Error deleting message:', error);
+            toast.error('No se pudo eliminar el mensaje');
         }
     };
 

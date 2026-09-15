@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -83,7 +84,7 @@ export default function CreatorDashboardPage() {
 
   const stats = [
     { label: 'Estudiantes', value: totalStudents.toString(), sub: 'matriculados en total', color: 'from-blue-500/20 to-blue-600/5' },
-    { label: 'Ingresos', value: `$${creator.totalRevenue.toFixed(2)}`, sub: `${creator.commissionRate}% tuyo por venta`, color: 'from-emerald-500/20 to-emerald-600/5' },
+    { label: 'Ingresos', value: formatUSD(creator.totalRevenue), sub: `${creator.commissionRate}% tuyo por venta`, color: 'from-emerald-500/20 to-emerald-600/5' },
     { label: 'Cursos Activos', value: `${activeCourses}/${courses.length}`, sub: 'activos de total', color: 'from-purple-500/20 to-purple-600/5' },
     { label: 'Calificación', value: avgRating ? avgRating.toFixed(1) : '—', sub: `${totalReviews} reseñas`, color: 'from-yellow-500/20 to-yellow-600/5' },
   ];
@@ -159,7 +160,7 @@ export default function CreatorDashboardPage() {
                     <span>{course._count.enrollments} estudiantes</span>
                     <span>{course.rating?.toFixed(1) ?? '—'} rating</span>
                     <span>{course.totalLessons} lecciones</span>
-                    <span className="text-white/80 font-semibold">${course.priceUSD.toFixed(2)}</span>
+                    <span className="text-white/80 font-semibold">{formatUSD(course.priceUSD)}</span>
                   </div>
                 </div>
                 <Link

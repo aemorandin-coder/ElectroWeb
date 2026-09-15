@@ -1,4 +1,5 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -34,6 +35,7 @@ interface Pagination {
 }
 
 export default function LegalDocumentsPage() {
+    const { confirm } = useConfirm();
     const [acceptances, setAcceptances] = useState<TermsAcceptance[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -451,7 +453,8 @@ export default function LegalDocumentsPage() {
                                                 </button>
                                                 <button
                                                     onClick={async () => {
-                                                        if (confirm(`¿Solicitar que ${acceptance.userName} vuelva a aceptar los términos? Esto invalidará el documento actual y enviará un correo al usuario.`)) {
+                                                        const confirmed = await confirm({ title: 'Solicitar nueva aceptación', message: `¿Solicitar que ${acceptance.userName} vuelva a aceptar los términos? Esto invalidará el documento actual y enviará un correo al usuario.`, confirmText: 'Solicitar', cancelText: 'Cancelar', type: 'warning' });
+                                                        if (confirmed) {
                                                             try {
                                                                 const response = await fetch(`/api/admin/legal/resend-terms`, {
                                                                     method: 'POST',

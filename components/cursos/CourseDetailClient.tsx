@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -487,7 +488,7 @@ function EnrollCard({
 
       {/* Price */}
       <div className="text-3xl font-bold text-ink mb-4">
-        {isFree ? 'Gratis' : `$${price.toFixed(2)}`}
+        {isFree ? 'Gratis' : formatUSD(price)}
       </div>
 
       {/* CTA */}
@@ -508,7 +509,7 @@ function EnrollCard({
         <div className="space-y-3">
           {!isFree && userBalance !== null && (
             <p className="text-xs text-muted text-center">
-              Tu saldo: <span className={`font-bold ${hasBalance ? 'text-green-600' : 'text-red-500'}`}>${userBalance.toFixed(2)}</span>
+              Tu saldo: <span className={`font-bold ${hasBalance ? 'text-green-600' : 'text-red-500'}`}>{formatUSD(userBalance)}</span>
               {!hasBalance && ' — insuficiente'}
             </p>
           )}

@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -91,7 +92,7 @@ export default function RedeemGiftCardPage() {
             } else {
                 setRedeemSuccess(true);
                 setRedeemedAmount(data.amountRedeemed);
-                toast.success(`¡$${data.amountRedeemed.toFixed(2)} agregados a tu saldo!`);
+                toast.success(`¡${formatUSD(data.amountRedeemed)} agregados a tu saldo!`);
             }
         } catch (err) {
             setError('Error al canjear la Gift Card');
@@ -115,7 +116,7 @@ export default function RedeemGiftCardPage() {
                         <div style={{ background: 'linear-gradient(135deg, #eff6ff, #eef2ff)', borderRadius: '16px', padding: '24px', marginBottom: '32px' }}>
                             <span style={{ fontSize: '14px', color: '#666' }}>Monto acreditado</span>
                             <div style={{ fontSize: '48px', fontWeight: '900', background: 'linear-gradient(90deg, #2a63cd, #1e4ba3)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                ${redeemedAmount.toFixed(2)}
+                                {formatUSD(redeemedAmount)}
                             </div>
                             <span style={{ fontSize: '14px', color: '#666' }}>USD</span>
                         </div>
@@ -209,7 +210,7 @@ export default function RedeemGiftCardPage() {
                                 <div style={{ textAlign: 'center', padding: '16px 0' }}>
                                     <span style={{ fontSize: '14px', color: '#6b7280' }}>Saldo disponible</span>
                                     <div style={{ fontSize: '48px', fontWeight: '900', background: 'linear-gradient(90deg, #22c55e, #10b981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                        ${Number(cardInfo.balanceUSD).toFixed(2)}
+                                        {formatUSD(Number(cardInfo.balanceUSD))}
                                     </div>
                                     <span style={{ fontSize: '14px', color: '#6b7280' }}>USD</span>
                                 </div>
@@ -255,7 +256,7 @@ export default function RedeemGiftCardPage() {
                             disabled={isLoading || !session}
                             style={{ width: '100%', padding: '16px', background: 'linear-gradient(90deg, #22c55e, #10b981)', color: 'white', fontWeight: '700', fontSize: '16px', borderRadius: '12px', border: 'none', cursor: isLoading || !session ? 'not-allowed' : 'pointer', opacity: isLoading || !session ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                         >
-                            {isLoading ? '...' : <><HiSparkles /> Canjear ${Number(cardInfo.balanceUSD).toFixed(2)}</>}
+                            {isLoading ? '...' : <><HiSparkles /> Canjear {formatUSD(Number(cardInfo.balanceUSD))}</>}
                         </button>
                     )}
 

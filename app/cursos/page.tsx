@@ -1,3 +1,4 @@
+import { formatUSD } from '@/lib/currency';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -172,7 +173,7 @@ function CourseCard({ course }: CourseCardProps) {
         {/* Price */}
         <div className="mt-auto">
           <span className="text-base font-bold text-ink">
-            {price === 0 ? 'Gratis' : `$${price.toFixed(2)}`}
+            {price === 0 ? 'Gratis' : formatUSD(price)}
           </span>
         </div>
       </div>

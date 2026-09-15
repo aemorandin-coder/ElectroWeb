@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD, formatVES } from '@/lib/currency';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -486,11 +487,11 @@ Por favor necesito ayuda para verificar mi pago.
                         <div className="text-right">
                             {montoEnBs ? (
                                 <>
-                                    <span className="text-2xl font-bold text-orange-600">Bs. {montoEnBs.toFixed(2)}</span>
-                                    <p className="text-xs text-muted">(${montoEsperado.toFixed(2)} USD)</p>
+                                    <span className="text-2xl font-bold text-orange-600">{formatVES(montoEnBs)}</span>
+                                    <p className="text-xs text-muted">({formatUSD(montoEsperado)})</p>
                                 </>
                             ) : (
-                                <span className="text-xl font-bold text-brand-500">${montoEsperado.toFixed(2)}</span>
+                                <span className="text-xl font-bold text-brand-500">{formatUSD(montoEsperado)}</span>
                             )}
                         </div>
                     </div>

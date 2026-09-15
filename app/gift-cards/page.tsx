@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
@@ -114,7 +115,6 @@ const CardPattern = ({ pattern, accent, secondAccent }: { pattern: string; accen
                 className="absolute inset-0 opacity-30"
                 style={{
                     background: `linear-gradient(45deg, transparent 30%, ${accent}15 50%, transparent 70%)`,
-                    animation: 'shimmer 3s ease-in-out infinite',
                 }}
             />
 
@@ -220,7 +220,6 @@ const CardPattern = ({ pattern, accent, secondAccent }: { pattern: string; accen
                 style={{
                     backgroundImage: `linear-gradient(105deg, transparent 40%, ${accent}10 45%, ${secondAccent || accent}15 50%, ${accent}10 55%, transparent 60%)`,
                     backgroundSize: '200% 200%',
-                    animation: 'gradient-x 4s ease infinite',
                 }}
             />
 
@@ -552,17 +551,6 @@ export default function GiftCardsPage() {
 
     return (
         <div className="min-h-dvh bg-gradient-to-br from-surface via-white to-surface">
-            {/* CSS for animations */}
-            <style jsx global>{`
-                @keyframes shimmer {
-                    0% { transform: translateX(-100%) skewX(-20deg); }
-                    100% { transform: translateX(200%) skewX(-20deg); }
-                }
-                @keyframes float {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-10px); }
-                }
-            `}</style>
 
             <PublicHeader />
 
@@ -708,7 +696,6 @@ export default function GiftCardsPage() {
                                         style={{
                                             backgroundImage: `linear-gradient(90deg, ${selectedDesign.accent}, ${(selectedDesign as any).secondAccent || selectedDesign.accent}, ${selectedDesign.accent})`,
                                             backgroundSize: '200% 100%',
-                                            animation: 'gradient-x 3s ease infinite',
                                         }}
                                     />
                                 </div>
@@ -1098,7 +1085,7 @@ export default function GiftCardsPage() {
                             <div className="flex justify-between mb-1">
                                 <span className="text-gray-600 text-sm">Gift Card</span>
                                 <div className="text-right">
-                                    <span className="font-bold text-gray-900">${finalAmount.toFixed(2)}</span>
+                                    <span className="font-bold text-gray-900">{formatUSD(finalAmount)}</span>
                                     {finalAmountBs && (
                                         <p className="text-xs text-gray-500">≈ Bs. {finalAmountBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                     )}
@@ -1108,7 +1095,7 @@ export default function GiftCardsPage() {
                                 <div className="flex justify-between pt-2 border-t border-gray-200">
                                     <span className="text-gray-600 text-sm">Tu saldo</span>
                                     <span className={`font-bold text-sm ${canPayWithBalance ? 'text-green-600' : 'text-amber-600'}`}>
-                                        ${(typeof userBalance === 'number' ? userBalance : 0).toFixed(2)}
+                                        {formatUSD(typeof userBalance === 'number' ? userBalance : 0)}
                                     </span>
                                 </div>
                             )}
@@ -1222,7 +1209,7 @@ export default function GiftCardsPage() {
                         <p className="text-gray-600 mb-6">
                             El email <strong>{recipientEmail}</strong> no está registrado en Electro Shop.
                             <br /><br />
-                            ¿Quieres enviarle una invitación para que cree su cuenta y pueda recibir tu regalo de <strong>${finalAmount.toFixed(2)}</strong>?
+                            ¿Quieres enviarle una invitación para que cree su cuenta y pueda recibir tu regalo de <strong>{formatUSD(finalAmount)}</strong>?
                         </p>
 
                         <div className="flex flex-col gap-3">

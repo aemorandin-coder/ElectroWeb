@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -130,7 +131,7 @@ export default function NuevoCursoPage() {
             className={INPUT}
             placeholder="Ej: 19.99"
           />
-          <p className="text-white/80 text-xs mt-1">Recibirás el 90% de cada venta (${form.priceUSD ? (parseFloat(form.priceUSD) * 0.9).toFixed(2) : '0.00'} por venta)</p>
+          <p className="text-white/80 text-xs mt-1">Recibirás el 90% de cada venta ({formatUSD(form.priceUSD ? parseFloat(form.priceUSD) * 0.9 : 0)} por venta)</p>
         </Field>
 
         <Field label="URL de Trailer (YouTube/Vimeo)">

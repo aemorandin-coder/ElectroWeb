@@ -1,4 +1,5 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
@@ -85,6 +86,7 @@ function emptyLesson(order: number): Lesson {
 }
 
 export default function AdminCursosPage() {
+  const { confirm } = useConfirm();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -197,7 +199,8 @@ export default function AdminCursosPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('¿Eliminar este curso? Se perderán todos los módulos e inscripciones.')) return;
+    const confirmed = await confirm({ title: 'Eliminar curso', message: '¿Eliminar este curso? Se perderán todos los módulos e inscripciones.', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+    if (!confirmed) return;
     setDeletingId(id);
     try {
       await fetch('/api/admin/courses/' + id, { method: 'DELETE' });

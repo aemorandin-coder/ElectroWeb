@@ -1,4 +1,5 @@
 'use client';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiVideo, FiToggleLeft, FiToggleRight, FiStar, FiYoutube, FiX, FiSave, FiImage } from 'react-icons/fi';
@@ -72,6 +73,7 @@ function getThumbnailUrl(videoUrl: string, thumbnail: string | null): string | n
 }
 
 export default function AdminServiciosPage() {
+  const { confirm } = useConfirm();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -147,7 +149,8 @@ export default function AdminServiciosPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar este trabajo? Esta acción no se puede deshacer.')) return;
+    const confirmed = await confirm({ title: 'Eliminar trabajo', message: '¿Eliminar este trabajo? Esta acción no se puede deshacer.', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+    if (!confirmed) return;
     setDeletingId(id);
     await fetch(`/api/admin/service-videos/${id}`, { method: 'DELETE' });
     setDeletingId(null);

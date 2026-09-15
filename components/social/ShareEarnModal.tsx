@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -183,7 +184,7 @@ export default function ShareEarnModal() {
                   ¡Tu enlace de afiliado está activo!
                 </p>
                 <p className="text-xs text-green-700 mt-0.5">
-                  Gana <strong className="font-bold text-green-800">{commissionRate}%</strong> de comisión (${estimatedEarnings.toFixed(2)} USD) si alguien compra este artículo a través de tu enlace.
+                  Gana <strong className="font-bold text-green-800">{commissionRate}%</strong> de comisión ({formatUSD(estimatedEarnings)}) si alguien compra este artículo a través de tu enlace.
                 </p>
               </div>
             </div>

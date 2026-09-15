@@ -85,10 +85,6 @@ export default function OrderTracking({
                                 : 'linear-gradient(90deg, #2a63cd, #1e4ba3)'
                     }}
                 >
-                    {/* Epic Shimmer Animation */}
-                    <div className="absolute inset-0 animate-epicShimmer">
-                        <div className="w-full h-full bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-                    </div>
                     {/* Glow Effect */}
                     <div
                         className="absolute inset-0 animate-pulse"
@@ -117,14 +113,14 @@ export default function OrderTracking({
                                     ${isCompleted
                                         ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/40 scale-100'
                                         : isCurrent
-                                            ? `bg-gradient-to-br ${isDelivered ? 'from-emerald-400 to-emerald-600' : 'from-brand-500 to-brand-600'} shadow-lg ${isDelivered ? 'shadow-emerald-500/40' : 'shadow-blue-500/40'} scale-110 animate-epicPulse`
+                                            ? `bg-gradient-to-br ${isDelivered ? 'from-emerald-400 to-emerald-600' : 'from-brand-500 to-brand-600'} shadow-lg ${isDelivered ? 'shadow-emerald-500/40' : 'shadow-blue-500/40'} scale-110`
                                             : 'bg-gray-200 scale-90'
                                     }
                                 `}
                             >
                                 {isCompleted ? (
                                     <svg
-                                        className="w-4 h-4 text-white animate-checkDraw"
+                                        className="w-4 h-4 text-white"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -135,7 +131,7 @@ export default function OrderTracking({
                                 ) : (
                                     <StepIcon
                                         className={`w-3.5 h-3.5 transition-all duration-300 ${isCurrent
-                                            ? 'text-white animate-iconBounce'
+                                            ? 'text-white'
                                             : 'text-gray-400'
                                             }`}
                                     />
@@ -145,7 +141,6 @@ export default function OrderTracking({
                                 {isCurrent && (
                                     <>
                                         <span className={`absolute inset-0 rounded-full animate-ping opacity-30 ${isDelivered ? 'bg-emerald-400' : 'bg-brand-500'}`} />
-                                        <span className={`absolute inset-0 rounded-full animate-epicRing ${isDelivered ? 'border-emerald-400' : 'border-brand-500'}`} />
                                     </>
                                 )}
                             </div>
@@ -178,7 +173,7 @@ export default function OrderTracking({
                 `}
             >
                 {status === 'DELIVERED' && <FiGift className="w-3.5 h-3.5 animate-bounce" />}
-                {status === 'SHIPPED' && <FiTruck className="w-3.5 h-3.5 animate-truck" />}
+                {status === 'SHIPPED' && <FiTruck className="w-3.5 h-3.5" />}
                 {status === 'READY_FOR_PICKUP' && <FiShoppingBag className="w-3.5 h-3.5" />}
                 {status === 'PAID' && <FiCreditCard className="w-3.5 h-3.5" />}
                 {status === 'PROCESSING' && <FiPackage className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '3s' }} />}
@@ -237,67 +232,6 @@ export default function OrderTracking({
                     )}
                 </div>
             )}
-
-            <style jsx>{`
-                @keyframes epicShimmer {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(200%); }
-                }
-                @keyframes epicPulse {
-                    0%, 100% { 
-                        transform: scale(1.1);
-                        box-shadow: 0 0 0 0 rgba(42, 99, 205, 0.4);
-                    }
-                    50% { 
-                        transform: scale(1.15);
-                        box-shadow: 0 0 0 8px rgba(42, 99, 205, 0);
-                    }
-                }
-                @keyframes epicRing {
-                    0% { 
-                        transform: scale(1);
-                        opacity: 1;
-                        border-width: 2px;
-                    }
-                    100% { 
-                        transform: scale(1.8);
-                        opacity: 0;
-                        border-width: 1px;
-                    }
-                }
-                @keyframes iconBounce {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-2px); }
-                }
-                @keyframes checkDraw {
-                    from { stroke-dashoffset: 30; }
-                    to { stroke-dashoffset: 0; }
-                }
-                @keyframes truck {
-                    0%, 100% { transform: translateX(0); }
-                    25% { transform: translateX(2px); }
-                    75% { transform: translateX(-2px); }
-                }
-                .animate-epicShimmer {
-                    animation: epicShimmer 2s ease-in-out infinite;
-                }
-                .animate-epicPulse {
-                    animation: epicPulse 2s ease-in-out infinite;
-                }
-                .animate-epicRing {
-                    animation: epicRing 1.5s ease-out infinite;
-                    border-style: solid;
-                }
-                .animate-iconBounce {
-                    animation: iconBounce 1s ease-in-out infinite;
-                }
-                .animate-checkDraw {
-                    animation: checkDraw 0.5s ease-out forwards;
-                }
-                .animate-truck {
-                    animation: truck 0.5s ease-in-out infinite;
-                }
-            `}</style>
         </div>
     );
 }

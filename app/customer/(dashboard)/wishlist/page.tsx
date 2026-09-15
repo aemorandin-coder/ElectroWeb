@@ -1,4 +1,5 @@
 'use client';
+import { formatUSD } from '@/lib/currency';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -103,6 +104,7 @@ export default function WishlistPage() {
       }
     } catch (error) {
       console.error('Error fetching wishlist:', error);
+      toast.error('No se pudo cargar la lista de favoritos');
     } finally {
       setLoading(false);
     }
@@ -117,6 +119,7 @@ export default function WishlistPage() {
       }
     } catch (error) {
       console.error('Error fetching discount requests:', error);
+      toast.error('No se pudieron cargar las solicitudes de descuento');
     }
   };
 
@@ -442,13 +445,13 @@ export default function WishlistPage() {
                     <div className="flex items-center gap-1.5 mb-2">
                       {hasActiveDiscount ? (
                         <>
-                          <span className="text-xs text-muted line-through">${item.price.toFixed(2)}</span>
+                          <span className="text-xs text-muted line-through">{formatUSD(item.price)}</span>
                           <span className="text-base font-bold text-green-600">
-                            ${(item.price * (1 - (discountStatus?.approvedDiscount || 0) / 100)).toFixed(2)}
+                            {formatUSD(item.price * (1 - (discountStatus?.approvedDiscount || 0) / 100))}
                           </span>
                         </>
                       ) : (
-                        <span className="text-base font-bold text-brand-500">${item.price.toFixed(2)}</span>
+                        <span className="text-base font-bold text-brand-500">{formatUSD(item.price)}</span>
                       )}
                     </div>
 
@@ -511,7 +514,7 @@ export default function WishlistPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-ink truncate">{item.productName}</h3>
-                    <p className="text-xl font-bold text-brand-500">${item.price.toFixed(2)}</p>
+                    <p className="text-xl font-bold text-brand-500">{formatUSD(item.price)}</p>
                     <div className="flex items-center gap-2 mt-1">
                       {discountStatus && getStatusBadge(discountStatus.status, discountStatus.expiresAt)}
                     </div>
@@ -622,7 +625,7 @@ export default function WishlistPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-ink line-clamp-2">{selectedItem.productName}</h3>
-                  <p className="text-2xl font-bold text-brand-500 mt-1">${selectedItem.price.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-brand-500 mt-1">{formatUSD(selectedItem.price)}</p>
                 </div>
               </div>
             </div>
@@ -651,15 +654,15 @@ export default function WishlistPage() {
               <div className="bg-gradient-to-r from-blue-50/50 via-indigo-50/30 to-blue-50/50 rounded-xl border border-blue-100/60 p-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted">Precio original:</span>
-                  <span className="font-semibold text-ink">${selectedItem.price.toFixed(2)}</span>
+                  <span className="font-semibold text-ink">{formatUSD(selectedItem.price)}</span>
                 </div>
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-sm text-muted">Descuento ({discountPercent}%):</span>
-                  <span className="font-semibold text-blue-600">-${(selectedItem.price * discountPercent / 100).toFixed(2)}</span>
+                  <span className="font-semibold text-blue-600">-{formatUSD(selectedItem.price * discountPercent / 100)}</span>
                 </div>
                 <div className="border-t border-line mt-3 pt-3 flex justify-between items-center">
                   <span className="font-bold text-ink">Precio final:</span>
-                  <span className="text-2xl font-bold text-emerald-600">${(selectedItem.price * (1 - discountPercent / 100)).toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-emerald-600">{formatUSD(selectedItem.price * (1 - discountPercent / 100))}</span>
                 </div>
               </div>
 
@@ -704,21 +707,6 @@ export default function WishlistPage() {
         </div>,
         document.body
       )}
-
-      {/* Styles */}
-      <style jsx>{`
-        @keyframes slideInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slideInUp {
-          animation: slideInUp 0.3s ease-out;
-        }
-        .grid > div {
-          animation: slideInUp 0.5s ease-out forwards;
-          opacity: 0;
-        }
-      `}</style>
     </div>
   );
 }

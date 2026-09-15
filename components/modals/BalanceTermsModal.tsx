@@ -453,22 +453,6 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                     </>
                 )}
             </div>
-
-            <style jsx>{`
-                @keyframes scaleIn {
-                    from {
-                        opacity: 0;
-                        transform: scale(0.95);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: scale(1);
-                    }
-                }
-                .animate-scaleIn {
-                    animation: scaleIn 0.2s ease-out;
-                }
-            `}</style>
         </div>,
         document.body
     );

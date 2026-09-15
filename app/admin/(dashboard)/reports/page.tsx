@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
 import {
@@ -80,6 +81,7 @@ export default function ReportsPage() {
             }
         } catch (error) {
             console.error('Error fetching live users:', error);
+            toast.error('No se pudieron cargar los usuarios en vivo');
         }
     };
 
@@ -97,6 +99,7 @@ export default function ReportsPage() {
             }
         } catch (error) {
             console.error('Error fetching reports:', error);
+            toast.error('No se pudieron cargar los reportes');
         } finally {
             setLoading(false);
         }
@@ -1144,19 +1147,6 @@ export default function ReportsPage() {
                     )}
                 </>
             )}
-
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(8px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes slideInRight {
-                    from { opacity: 0; transform: translateX(-15px); }
-                    to { opacity: 1; transform: translateX(0); }
-                }
-                .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
-                .animate-slideInRight { animation: slideInRight 0.4s ease-out forwards; }
-            `}</style>
         </div>
     );
 }

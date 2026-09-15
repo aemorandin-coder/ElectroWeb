@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useState, useEffect, useRef } from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -91,6 +92,7 @@ export default function CustomersPage() {
         }
       } catch (e) {
         console.error('Error fetching pending count:', e);
+        toast.error('No se pudo cargar el conteo de verificaciones');
       }
     };
     fetchPendingCount();

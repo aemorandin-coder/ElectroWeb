@@ -270,12 +270,14 @@ export default function CartIcon() {
                           }
 
                           return imageUrl && !imageUrl.startsWith('gift-card-design:') ? (
-                            <img
+                            <Image
                               src={imageUrl}
                               alt={item.name}
-                              className="w-full h-full object-cover"
+                              fill
+                              sizes="64px"
+                              unoptimized={!imageUrl.startsWith('/')}
+                              className="object-cover"
                               onError={(e) => {
-                                console.error('Error loading cart image:', imageUrl);
                                 e.currentTarget.style.display = 'none';
                               }}
                             />

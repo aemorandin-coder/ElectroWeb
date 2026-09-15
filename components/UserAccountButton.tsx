@@ -109,6 +109,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
               src={userImage}
               alt={userName}
               fill
+              sizes="40px"
               className="object-cover"
               draggable={false}
               unoptimized

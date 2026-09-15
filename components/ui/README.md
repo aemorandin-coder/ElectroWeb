@@ -74,7 +74,7 @@ import ShareButton from '@/components/ui/ShareButton';
 ```
 
 ## useBodyScrollLock (`lib/hooks/useBodyScrollLock.ts`)
-Bloquea el scroll del body mientras `locked` sea `true`. Usa un contador global: con varios modales abiertos, el scroll vuelve solo al cerrar el último. **No toques `document.body.style.overflow` a mano.**
+Bloquea el scroll de la página (en `<html>`, compensando la barra de scroll) mientras `locked` sea `true`. Usa un contador global: con varios modales abiertos, el scroll vuelve solo al cerrar el último. **No toques `document.body.style.overflow` a mano.**
 ```tsx
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 

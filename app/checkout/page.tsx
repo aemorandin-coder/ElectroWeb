@@ -1885,6 +1885,8 @@ export default function CheckoutPage() {
                                 src={item.imageUrl}
                                 alt={item.name}
                                 fill
+                                sizes="56px"
+                                unoptimized={!item.imageUrl.startsWith('/')}
                                 className="object-contain p-1"
                               />
                             ) : (

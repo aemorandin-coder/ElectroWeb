@@ -282,11 +282,14 @@ export default function CarritoPage() {
                           if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) imageUrl = `/${imageUrl}`;
 
                           return imageUrl ? (
-                            <img
+                            <Image
                               src={imageUrl}
                               alt={item.name}
-                              className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-700"
-                              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/no-image.png'; }}
+                              fill
+                              sizes="(min-width: 768px) 128px, 96px"
+                              unoptimized={!imageUrl.startsWith('/')}
+                              className="object-cover group-hover/img:scale-110 transition-transform duration-700"
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">

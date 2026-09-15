@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSettings } from '@/contexts/SettingsContext';
 import { FiBox, FiMapPin, FiPhone, FiMessageCircle, FiMail } from 'react-icons/fi';
 import { FaInstagram, FaTiktok, FaTelegram, FaYoutube } from 'react-icons/fa6';
@@ -29,7 +30,7 @@ export default function Footer() {
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
               {settings?.logo ? (
-                <img src={settings.logo} alt={settings.companyName || 'Logo'} className="w-8 h-8 object-contain rounded-lg" />
+                <Image src={settings.logo} alt={settings.companyName || 'Logo'} width={32} height={32} unoptimized={!settings.logo.startsWith('/')} className="w-8 h-8 object-contain rounded-lg" />
               ) : (
                 <div className="w-8 h-8 rounded-lg bg-[#2a63cd] flex items-center justify-center">
                   <FiBox className="w-5 h-5 text-white" />

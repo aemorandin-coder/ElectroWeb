@@ -6,7 +6,6 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import { NotificationProvider } from "@/components/notifications/NotificationProvider";
 import ShareEarnModal from "@/components/social/ShareEarnModal";
 import NotificationToast from "@/components/notifications/NotificationToast";
-import DynamicFavicon from "@/components/DynamicFavicon";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 import MobileNavBar from "@/components/public/MobileNavBar";
 import { GuidedTourWrapper } from "@/components/onboarding/GuidedTourWrapper";
@@ -150,7 +149,6 @@ export default async function RootLayout({
             <WhatsAppButton />
             <NotificationToast />
             <ShareEarnModal />
-            <DynamicFavicon />
             <AnalyticsTracker />
             {/* Issue #26 — Tour guiado post-registro */}
             <GuidedTourWrapper />

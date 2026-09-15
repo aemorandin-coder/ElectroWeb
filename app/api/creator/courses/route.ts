@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { creatorCourseSchema } from '@/lib/validations/creator-course';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatUSD } from '@/lib/currency';
 
 function toSlug(title: string): string {
   return title
@@ -51,12 +54,11 @@ export async function POST(request: NextRequest) {
     const creator = await getApprovedCreator(userId);
     if (!creator) return NextResponse.json({ error: 'Creador no aprobado' }, { status: 403 });
 
-    const body = await request.json();
-    const { title, shortDesc, description, trailerUrl, category, level, priceUSD, thumbnail } = body;
-
-    if (!title || !description || priceUSD === undefined) {
-      return NextResponse.json({ error: 'Título, descripción y precio son requeridos' }, { status: 400 });
+    const parsed = creatorCourseSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message || 'Título, descripción y precio son requeridos' }, { status: 400 });
     }
+    const { title, shortDesc, description, trailerUrl, category, level, priceUSD, thumbnail } = parsed.data;
 
     let slug = toSlug(title);
     const exists = await prisma.course.findUnique({ where: { slug } });
@@ -65,17 +67,25 @@ export async function POST(request: NextRequest) {
     const course = await prisma.course.create({
       data: {
         title, slug,
-        shortDesc: shortDesc || null,
+        shortDesc,
         description,
-        trailerUrl: trailerUrl || null,
-        category: category || null,
-        level: level || null,
-        priceUSD: parseFloat(priceUSD),
-        thumbnail: thumbnail || null,
+        trailerUrl,
+        category,
+        level,
+        priceUSD,
+        thumbnail,
         creatorId: creator.id,
         instructor: creator.displayName,
         isActive: false, // pending admin review
       },
+    });
+
+    emitAdminEvent({
+      type: 'COURSE_SUBMITTED',
+      title: `Curso por revisar · ${course.title}`.slice(0, 150),
+      summary: `${creator.displayName} subió un curso nuevo`,
+      fields: [['Precio', formatUSD(Number(course.priceUSD))], ['Categoría', course.category], ['Nivel', course.level]],
+      link: '/admin/cursos',
     });
 
     return NextResponse.json(course, { status: 201 });

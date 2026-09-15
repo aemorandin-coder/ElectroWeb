@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { emitAdminEvent } from '@/lib/admin-events';
 import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
 import { headers } from 'next/headers';
@@ -76,6 +77,15 @@ export const authOptions: NextAuthOptions = {
                   lastLoginIp: ip,
                 },
               });
+              if (isAdmin) {
+                emitAdminEvent({
+                  type: 'ADMIN_LOGIN',
+                  title: `Inicio de sesión · ${user.name || user.email}`,
+                  summary: 'Entró al panel de administración',
+                  fields: [['Dispositivo', deviceString], ['IP', ip], ['Rol', user.role === 'SUPER_ADMIN' ? 'Super admin' : 'Admin']],
+                  link: '/admin',
+                });
+              }
             } catch (err) {
               console.error('Failed to update last login info:', err);
             }

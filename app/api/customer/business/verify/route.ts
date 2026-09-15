@@ -3,8 +3,11 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
 import path from 'path';
+import crypto from 'crypto';
+import { detectFileType } from '@/lib/file-signature';
+import { PRIVATE_DOCUMENTS_DIR } from '@/lib/private-uploads';
+import { emitAdminEvent } from '@/lib/admin-events';
 
 export async function POST(request: NextRequest) {
     try {
@@ -23,6 +26,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
         }
 
+        if (typeof companyName !== 'string' || typeof taxId !== 'string' || companyName.length > 150 || taxId.length > 20
+            || !(actaFile instanceof File) || !(rifFile instanceof File)) {
+            return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
+        }
+
         // Validate file types
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
         if (!allowedTypes.includes(actaFile.type) || !allowedTypes.includes(rifFile.type)) {
@@ -39,29 +47,34 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        // Ensure upload directory exists
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'documents');
-        if (!existsSync(uploadDir)) {
-            await mkdir(uploadDir, { recursive: true });
+        // SEGURIDAD (C-72): fuera de public/ (antes cualquiera con el enlace veía el acta y el RIF) y con la
+        // extensión que dicen los bytes del archivo, no el nombre que manda el navegador
+        const readDocument = async (file: File) => {
+            const buffer = Buffer.from(await file.arrayBuffer());
+            const type = detectFileType(buffer);
+            return type === 'pdf' || type === 'png' || type === 'jpg' ? { buffer, type } : null;
+        };
+        const acta = await readDocument(actaFile);
+        const rif = await readDocument(rifFile);
+        if (!acta || !rif) {
+            return NextResponse.json({
+                error: 'Los archivos deben ser PDF, JPG o PNG'
+            }, { status: 400 });
         }
 
-        // Helper function to save file
-        const saveFile = async (file: File, prefix: string) => {
-            const bytes = await file.arrayBuffer();
-            const buffer = Buffer.from(bytes);
-            const timestamp = Date.now();
-            const randomString = Math.random().toString(36).substring(2, 8);
-            const extension = file.name.split('.').pop();
-            const filename = `${prefix}-${session.user.id}-${timestamp}-${randomString}.${extension}`;
-            const filepath = path.join(uploadDir, filename);
-            await writeFile(filepath, buffer);
-            // Use API route to serve files (bypasses Nginx static file issues)
+        await mkdir(PRIVATE_DOCUMENTS_DIR, { recursive: true });
+
+        const saveFile = async (document: { buffer: Buffer; type: string }, prefix: 'acta' | 'rif') => {
+            const randomString = crypto.randomBytes(4).toString('hex');
+            const filename = `${prefix}-${session.user.id}-${Date.now()}-${randomString}.${document.type}`;
+            await writeFile(path.join(PRIVATE_DOCUMENTS_DIR, filename), document.buffer);
+            // Lo sirve /api/uploads/documents solo a administradores y al dueño
             return `/api/uploads/documents/${filename}`;
         };
 
         // Save files
-        const actaUrl = await saveFile(actaFile, 'acta');
-        const rifUrl = await saveFile(rifFile, 'rif');
+        const actaUrl = await saveFile(acta, 'acta');
+        const rifUrl = await saveFile(rif, 'rif');
 
         // Update profile
         const updatedProfile = await prisma.profile.update({
@@ -75,6 +88,14 @@ export async function POST(request: NextRequest) {
                 isBusinessAccount: true, // Intent to be business
                 businessVerified: false,
             },
+        });
+
+        emitAdminEvent({
+            type: 'BUSINESS_VERIFICATION',
+            title: `Verificación de empresa · ${companyName}`.slice(0, 150),
+            summary: `${session.user.name || session.user.email || 'Un cliente'} subió acta constitutiva y RIF`,
+            fields: [['Empresa', companyName], ['RIF', taxId], ['Correo', session.user.email]],
+            link: '/admin/verifications',
         });
 
         return NextResponse.json({

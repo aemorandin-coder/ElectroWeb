@@ -54,8 +54,9 @@ export async function POST(
         }
 
         // Update transaction status to CANCELLED
-        await prisma.transaction.update({
-            where: { id: transactionId },
+        // Condicional (C-72): si se aprobó en el mismo instante, no se marca cancelada una recarga ya acreditada
+        const cancelled = await prisma.transaction.updateMany({
+            where: { id: transactionId, status: 'PENDING' },
             data: {
                 status: 'CANCELLED',
                 metadata: JSON.stringify({
@@ -66,6 +67,13 @@ export async function POST(
                 }),
             },
         });
+
+        if (cancelled.count !== 1) {
+            return NextResponse.json(
+                { error: 'Solo se pueden cancelar transacciones pendientes' },
+                { status: 400 }
+            );
+        }
 
         return NextResponse.json({
             success: true,

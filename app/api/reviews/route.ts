@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email-service';
 import { generateReviewApprovedEmail } from '@/lib/email-templates/ReviewApproved';
 import { notifyReviewApproved } from '@/lib/notifications';
+import { emitAdminEvent } from '@/lib/admin-events';
 import { hasPermission } from '@/lib/auth-helpers';
 import { getPublicReviews, getReviewSummary } from '@/lib/queries/product';
 
@@ -104,6 +105,15 @@ export async function POST(request: NextRequest) {
                 comment,
                 isApproved: false,
             },
+            include: { product: { select: { name: true } } },
+        });
+
+        emitAdminEvent({
+            type: 'REVIEW_SUBMITTED',
+            title: `Reseña por aprobar · ${review.product.name}`.slice(0, 150),
+            summary: `${session.user.name || session.user.email || 'Un cliente'} calificó con ${rating} de 5`,
+            fields: [['Producto', review.product.name], ['Comentario', typeof comment === 'string' ? comment.slice(0, 300) : null]],
+            link: '/admin/reviews',
         });
 
         return NextResponse.json(review, { status: 201 });

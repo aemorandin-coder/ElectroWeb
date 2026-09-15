@@ -151,6 +151,71 @@ Revisar las ramas `gemini/*` pendientes, convertir el reporte G-14 en tarjetas n
 
 ---
 
+## 4b. Ronda R11 (desde 2026-09-15) · orden de trabajo vigente
+
+> Antes de cada tarea, lee `docs/plan/SIGUIENTE.md` (estado de ramas, deploy pendiente y qué espera Gemini).
+> Regla vigente de Andrés: **en todo lo que toques o leas, busca bugs, huecos de seguridad, código mal hecho y diseño inconsistente**; arregla lo del carril Claude y anota el resto en el estado.
+
+| Orden | Tarea | Por qué va aquí |
+|---|---|---|
+| 1 | **Revisar y mergear `gemini/R10` (G-35…G-37)** | Gemini ya terminó esas 3 y espera. Merge local, sin push hasta que Andrés lo pida. |
+| 2 | **C-74 · Flujo de órdenes del admin** | Bugs de dinero y stock en producción. |
+| 3 | **C-55 · Marco del panel del cliente** | Desbloquea G-38 y G-39 de Gemini. |
+| 4 | **C-75 · Auditoría y rediseño de Marketing y Contenido** | Andrés la marcó como sección crítica. |
+| 5 | **C-51 · Lista de productos del admin** | 1.544 líneas; `ProductForm.tsx` (1.057) sin uso; `alert()`. |
+| 6 | **C-60b · Surtido de pedidos digitales** | Campos de proveedor, referencia y costo (F7); aviso de pedido digital por entregar. |
+| 7 | **C-76 · Correos sin emojis y con plantilla única** | 39 emojis en 10 archivos (`lib/email-service.ts`, certificados, reseñas, pago móvil). |
+| 8 | **C-40 · Cierre** | README, checklist de `PLAN.md` §6 con Andrés. |
+
+### C-74 · Flujo de órdenes del admin 💰
+**Archivos:** `app/api/orders/route.ts` (PATCH), `app/admin/(dashboard)/orders/page.tsx`, `app/admin/(dashboard)/orders/[id]/digital/page.tsx`, `app/api/orders/[id]/digital/route.ts`, `lib/stock.ts`.
+Hallazgos confirmados leyendo el código (C-73):
+1. **"Marcar como pagado" no descuenta stock.** El botón manda `status: 'PAID'`, pero el descuento solo corre con `paymentStatus: 'PAID'`. La reserva de 5 minutos vence y el producto se puede vender dos veces. Tampoco se llena `paidAt` ni `paymentStatus`, así que la página de pedido digital (que exige `paymentStatus === 'PAID'`) nunca deja entregar el código.
+2. **Cancelar desde el panel siempre falla:** el servidor exige una nota de 10 caracteres y el botón no la envía. Hace falta un modal con el motivo.
+3. **Cancelar devuelve stock aunque nunca se descontó** (órdenes sin pagar), también a productos digitales, y borra **todas** las reservas del cliente (otras órdenes pendientes pierden la suya). Pasar de CANCELLED a otro estado y cancelar otra vez devuelve stock dos veces.
+4. **`updateData = { ...body }`:** asignación masiva. Quien tenga `MANAGE_ORDERS` puede cambiar `totalUSD`, `userId`, etc. → lista blanca con zod.
+5. **Transiciones de estado sin validar** (se puede ir de DELIVERED a PENDING). Definir la máquina de estados permitida.
+6. **Cancelar una orden pagada con saldo no reintegra el saldo** (TODO en el código). **Decisión de Andrés:** ¿reintegro automático al saldo o manual?
+7. Los correos de cancelación insertan `body.notes` sin escapar.
+- **Verificación:** pruebas HTTP del caso normal y del manipulado (doble clic en pagar, cancelar dos veces, `totalUSD` en el body, transición inválida). Stock y saldo nunca negativos ni duplicados. Eventos `ORDER_PAID`/`ORDER_CANCELLED` siguen saliendo (C-73).
+
+### C-55 · Marco del panel del cliente 🔓 (desbloquea G-38, G-39)
+**Archivos:** `app/customer/(dashboard)/layout.tsx` (393 líneas, copia del admin viejo).
+- Mismo trabajo que C-52 en el admin:
+  - Sin `transform`, `backdrop-blur-xl` ni manchas animadas.
+  - Cajón móvil con capa, Escape y cierre al navegar. `useBodyScrollLock`.
+  - `z-[var(--z-*)]`, `react-icons`, recetas de `lib/admin-ui`.
+- **Campana:** usar `NotificationBell` de `components/notifications` (C-73).
+- **Verificación:** modales de `/customer/profile` y "Recargar saldo" cubren 1440×900 y 390×844. Sin scroll doble. Cajón con teclado.
+- Al terminar: `docs/plan/estado/C-55.md` en `main` (Gemini lo espera para G-38).
+
+### C-75 · Marketing y Contenido (sección crítica) 🔍
+**Archivos:** `app/admin/(dashboard)/marketing/page.tsx` (1.118 líneas, 6 pestañas: Influencers, Publicidad, Email, Plantillas, Redes Sociales, Configuración), `components/admin/SocialMediaGenerator.tsx` (869), `app/api/influencers/**`, `app/api/admin/email/**`, `app/api/admin/social/generate`, `lib/influencer-commission.ts`.
+- **Primero auditar como Configuración (C-50b):** qué hace cada campo en la tienda, qué está muerto, flujos rotos, seguridad y diseño. Presentar el mapa a Andrés antes de rediseñar.
+- **Ya visto:**
+  - `approveConversion` lee el estado fuera de la transacción y acredita sin condición: doble aprobación = doble comisión.
+  - La pestaña "Configuración" de Marketing muestra datos del SMTP.
+  - El popup puede guardar la imagen como base64 en la BD (C-25 lo sirve como archivo; mejor subirla siempre a `/uploads`).
+  - El badge del menú cuenta solicitudes de creador aunque están en `/admin/creators`.
+- **Rediseño:** secciones por tarea, un archivo por sección, recetas de `lib/admin-ui`, validación con zod en las APIs.
+
+### C-51 · Lista de productos del admin
+- **Qué hacer:**
+  - Rediseñar `app/admin/(dashboard)/products/page.tsx` con `lib/admin-ui`: tabla deslizable en móvil, filtros en la URL y acciones masivas con confirmación (sin `alert()` ni `confirm()`).
+  - Borrar `_components/ProductForm.tsx` (sin uso; confirmar con `git grep`).
+- **Pendiente de C-50b:** `primaryCurrency` ya no se edita; la lista debe mostrar USD y Bs.
+
+### C-60b · Surtido de pedidos digitales (F7)
+- Campos de proveedor, referencia y costo que ya existen en la BD (C-60) en `orders/[id]/digital`.
+- Evento nuevo `DIGITAL_ORDER_PENDING` en `lib/admin-events/catalog.ts`: una orden pagada con productos digitales de entrega manual espera código.
+- Revisar que `orderItemId` del body pertenezca a la orden (hoy se usa `order.items[0]`).
+
+### C-76 · Correos
+- Quitar los emojis de `lib/email-service.ts`, `lib/email-templates/*`, `app/api/admin/email/**`, `app/api/pago-movil/verificar` (asunto y cuerpo de la recarga aprobada) y `app/api/product-requests`.
+- Una sola plantilla base con logo y colores de Configuración → Avisos. Valores escapados (hoy varias plantillas insertan nombres y referencias sin escapar).
+
+---
+
 ## 5. Puntos de merge para Andrés
 
 | Cuándo | Qué mergear | Por qué no esperar |

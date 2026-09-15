@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { notifyAdminsNewCustomer } from '@/lib/notifications';
+import { emitAdminEvent } from '@/lib/admin-events';
 import { sendVerificationEmail } from '@/lib/email-service';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { verifyCaptcha } from '@/lib/captcha';
@@ -183,12 +183,14 @@ export async function POST(request: NextRequest) {
       console.error('Error creating welcome notification:', notifError);
     }
 
-    // Notify admins about new customer
-    try {
-      await notifyAdminsNewCustomer(name, email);
-    } catch (notifError) {
-      console.error('Error sending notification:', notifError);
-    }
+    // Aviso al equipo (C-73)
+    emitAdminEvent({
+      type: 'CUSTOMER_REGISTERED',
+      title: `Cliente nuevo · ${name}`,
+      summary: `${name} creó una cuenta en la tienda`,
+      fields: [['Correo', email], ['Llegó por', validatedRefCode ? `promotor ${validatedRefCode}` : null]],
+      link: '/admin/customers',
+    });
 
     return NextResponse.json(
       {

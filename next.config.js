@@ -55,14 +55,15 @@ const nextConfig = {
         ],
       },
       {
-        // Las respuestas de la API no se guardan, salvo los archivos subidos (C-33): antes esta regla les ponía no-store
-        source: '/api/:path((?!uploads/).*)',
+        // Las respuestas de la API no se guardan, salvo los archivos subidos (C-33) y la imagen versionada del popup (C-23b)
+        source: '/api/:path((?!uploads/|public/hot-ad-image).*)',
         headers: [
           { key: 'Cache-Control', value: 'no-store, max-age=0' },
         ],
       },
       {
-        source: '/uploads/:path*',
+        // Menos los documentos de empresa: privados, sin caché compartida (C-72)
+        source: '/uploads/:path((?!documents/).*)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],

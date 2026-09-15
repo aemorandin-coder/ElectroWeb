@@ -1,57 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import type { CompanySettings } from '@prisma/client';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { hasPermission, isAuthorized } from '@/lib/auth-helpers';
-import { validateSettings, normalizeSocialMedia, normalizeExchangeRate } from '@/lib/validations/settings';
-import { SettingsFormData } from '@/types/settings';
-import { Decimal } from '@prisma/client/runtime/library';
+import { hasPermission } from '@/lib/auth-helpers';
+import { crossFieldErrors, fieldErrors, HOT_AD_FIELDS, settingsPatchSchema } from '@/lib/validations/settings';
 import { clearSettingsCache } from '@/lib/site-settings';
+import { refreshExchangeRate } from '@/lib/exchange-rate';
+import { emitAdminEvent } from '@/lib/admin-events';
 import { revalidatePath } from 'next/cache';
-
-// Helper to safely serialize Prisma objects (handle Decimals, Dates, etc.)
-function safeSerialize(obj: any): any {
-  if (obj === null || obj === undefined) {
-    return obj;
-  }
-
-  if (typeof obj === 'number' || typeof obj === 'string' || typeof obj === 'boolean') {
-    return obj;
-  }
-
-  if (obj instanceof Date) {
-    return obj.toISOString();
-  }
-
-  if (typeof obj === 'object') {
-    // Handle Prisma Decimal
-    if (obj instanceof Decimal || (obj.s && obj.e && obj.d)) {
-      return Number(obj.toString());
-    }
-
-    if (Array.isArray(obj)) {
-      return obj.map(safeSerialize);
-    }
-
-    const result: any = {};
-    for (const key in obj) {
-      result[key] = safeSerialize(obj[key]);
-    }
-    return result;
-  }
-
-  return obj;
-}
 
 // Campos que solo ve quien administra la configuración (CLAUDE.md: nunca salen del servidor hacia otros)
 const SETTINGS_ONLY_FIELDS = ['adminAlertEmails', 'maintenanceAllowedIPs'] as const;
 
+function parseJson(value: string | null): unknown {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+/** Correos de alerta guardados como JSON (actual) o separados por coma (viejo). */
+function parseAlertEmails(value: string | null): string[] {
+  const parsed = parseJson(value);
+  if (Array.isArray(parsed)) return parsed.filter((email): email is string => typeof email === 'string' && email.length > 0);
+  return (value || '').split(',').map((email) => email.trim()).filter(Boolean);
+}
+
+/** Fila → JSON para el panel: Decimals a número, fechas a ISO, JSON parseado y sin campos sensibles si no corresponde. */
+function toAdminSettings(row: CompanySettings, canManageSettings: boolean) {
+  const data: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row)) {
+    if (value instanceof Date) data[key] = value.toISOString();
+    else if (value !== null && typeof value === 'object' && 'toNumber' in value) data[key] = Number(value);
+    else data[key] = value;
+  }
+  data.businessHours = parseJson(row.businessHours);
+  data.socialMedia = parseJson(row.socialMedia) ?? [];
+  data.adminAlertEmails = parseAlertEmails(row.adminAlertEmails);
+  if (!canManageSettings) {
+    for (const field of SETTINGS_ONLY_FIELDS) delete data[field];
+  }
+  return data;
+}
+
 /**
  * GET /api/settings — configuración completa para el panel admin (C-50a).
- * Antes era pública (el proxy dejaba pasar todo /api/settings): cualquiera leía los correos de alertas
- * y las IPs que se saltan el mantenimiento. La tienda usa getPublicSettings() o /api/settings/public.
- * Productos y Marketing también la leen (tasas, moneda, popup): con MANAGE_PRODUCTS o MANAGE_CONTENT
- * se entrega sin los campos sensibles.
+ * Productos y Marketing también la leen (tasas, popup): con MANAGE_PRODUCTS o MANAGE_CONTENT
+ * se entrega sin los campos sensibles. La tienda usa getPublicSettings() o /api/settings/public.
  */
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -62,216 +60,110 @@ export async function GET() {
   if (!canManageSettings && !hasPermission(session, 'MANAGE_PRODUCTS') && !hasPermission(session, 'MANAGE_CONTENT')) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
-  const visible = <T extends Record<string, unknown>>(data: T) => {
-    if (canManageSettings) return data;
-    const copy: Record<string, unknown> = { ...data };
-    for (const field of SETTINGS_ONLY_FIELDS) delete copy[field];
-    return copy;
-  };
 
   try {
-    const settings = await prisma.companySettings.findFirst({
-      where: { id: 'default' },
-    });
-
-    if (!settings) {
-      const defaultSettings = await prisma.companySettings.create({
-        data: {
-          id: 'default',
-          companyName: 'Electro Shop Morandin C.A.',
-        },
-      });
-      return NextResponse.json(safeSerialize(visible(defaultSettings)));
-    }
-
-    // Parse JSON fields safely
-    let socialMedia = [];
-    try {
-      socialMedia = settings.socialMedia ? JSON.parse(settings.socialMedia) : [];
-    } catch (e) {
-      console.warn('Error parsing socialMedia JSON:', e);
-      socialMedia = [];
-    }
-
-    let businessHours = undefined;
-    try {
-      businessHours = settings.businessHours ? JSON.parse(settings.businessHours) : undefined;
-    } catch (e) {
-      console.warn('Error parsing businessHours JSON:', e);
-    }
-
-    // Construct response with safe serialization
-    const responseData = {
-      ...settings,
-      socialMedia,
-      businessHours,
-    };
-
-    return NextResponse.json(safeSerialize(visible(responseData)));
+    const settings =
+      (await prisma.companySettings.findUnique({ where: { id: 'default' } })) ??
+      (await prisma.companySettings.create({ data: { id: 'default', companyName: 'Electro Shop Morandin C.A.' } }));
+    return NextResponse.json(toAdminSettings(settings, canManageSettings));
   } catch (error) {
-    console.error('[SETTINGS API] CRITICAL ERROR:', error);
+    console.error('[SETTINGS API] Error:', error);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
 
+/**
+ * PUT /api/settings — guarda solo los campos que llegan (C-50b).
+ * Lista blanca y validación en lib/validations/settings.ts; los campos desconocidos se ignoran.
+ * El popup (hotAd*) lo puede guardar Marketing con MANAGE_CONTENT; el resto exige MANAGE_SETTINGS.
+ */
 export async function PUT(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+  const canManageSettings = hasPermission(session, 'MANAGE_SETTINGS');
+  if (!canManageSettings && !hasPermission(session, 'MANAGE_CONTENT')) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  }
+
+  let body: unknown;
   try {
-    const session = await getServerSession(authOptions);
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Solicitud inválida' }, { status: 400 });
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Solicitud inválida' }, { status: 400 });
+  }
 
-    if (!isAuthorized(session, 'MANAGE_SETTINGS')) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  const parsed = settingsPatchSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Revisa los campos marcados', fields: fieldErrors(parsed.error) }, { status: 400 });
+  }
+  const patch = Object.fromEntries(Object.entries(parsed.data).filter(([, value]) => value !== undefined)) as typeof parsed.data;
+  const fields = Object.keys(patch);
+  if (fields.length === 0) {
+    return NextResponse.json({ error: 'No hay cambios que guardar' }, { status: 400 });
+  }
+  if (!canManageSettings && fields.some((field) => !HOT_AD_FIELDS.includes(field as (typeof HOT_AD_FIELDS)[number]))) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  }
+
+  try {
+    const current = await prisma.companySettings.findUnique({ where: { id: 'default' } });
+    const pick = <K extends keyof typeof patch & keyof CompanySettings>(key: K, fallback: NonNullable<CompanySettings[K]> | null) =>
+      patch[key] !== undefined ? patch[key] : (current?.[key] ?? fallback);
+    const decimal = (value: unknown) => (value === null || value === undefined ? null : Number(value));
+
+    const crossErrors = crossFieldErrors({
+      deliveryEnabled: Boolean(pick('deliveryEnabled', true)),
+      pickupEnabled: Boolean(pick('pickupEnabled', true)),
+      minOrderAmountUSD: decimal(pick('minOrderAmountUSD', null)),
+      maxOrderAmountUSD: decimal(pick('maxOrderAmountUSD', null)),
+      maintenanceStartTime: (pick('maintenanceStartTime', null) as Date | null) ?? null,
+      maintenanceEndTime: (pick('maintenanceEndTime', null) as Date | null) ?? null,
+    });
+    if (Object.keys(crossErrors).length > 0) {
+      return NextResponse.json({ error: 'Revisa los campos marcados', fields: crossErrors }, { status: 400 });
     }
 
-    const body = await request.json() as Partial<SettingsFormData>;
-    const updateData: any = {};
+    const data: Record<string, unknown> = { ...patch };
+    // Tasa escrita a mano: queda registrada la hora del cambio
+    if (patch.exchangeRateVES !== undefined && Number(patch.exchangeRateVES) !== decimal(current?.exchangeRateVES)) {
+      data.lastRateUpdate = new Date();
+    }
 
-    // Get current settings
-    const currentSettings = await prisma.companySettings.findFirst({
+    const saved = await prisma.companySettings.upsert({
       where: { id: 'default' },
+      update: data,
+      create: { id: 'default', companyName: 'Electro Shop Morandin C.A.', ...data },
     });
 
-    // --- MAPPING FIELDS ---
-
-    // Simple String Fields
-    const stringFields = [
-      'companyName', 'tagline', 'rif', 'legalName', 'foundedYear', 'description',
-      'logo', 'favicon', 'primaryColor', 'secondaryColor',
-      'phone', 'whatsapp', 'email', 'address',
-      'instagram', 'facebook', 'twitter', 'youtube', 'telegram', 'tiktok',
-      'pickupAddress', 'pickupInstructions', 'maintenanceMessage', 'maintenanceAllowedIPs',
-      'metaTitle', 'metaDescription', 'metaKeywords', 'homeMetaImage',
-      'productsMetaTitle', 'productsMetaDescription', 'productsMetaKeywords', 'productsMetaImage',
-      'servicesMetaTitle', 'servicesMetaDescription', 'servicesMetaKeywords', 'servicesMetaImage',
-      'coursesMetaTitle', 'coursesMetaDescription', 'coursesMetaKeywords', 'coursesMetaImage',
-      'heroVideoUrl', 'heroVideoTitle', 'heroVideoDescription',
-      'heroTitle', 'heroSubtitle', 'heroButtonText', 'heroButtonLink', 'heroBackgroundImage',
-      'stat1Label', 'stat1Value', 'stat1Icon',
-      'stat2Label', 'stat2Value', 'stat2Icon',
-      'stat3Label', 'stat3Value', 'stat3Icon',
-      'stat4Label', 'stat4Value', 'stat4Icon',
-      'ctaTitle', 'ctaDescription', 'ctaButtonText', 'ctaButtonLink',
-      'coursesDescription', 'servicesDescription',
-      'hotAdImage', 'hotAdLink', 'hotAdBackdropColor', 'adminAlertEmails'
-    ];
-
-    stringFields.forEach(field => {
-      if (body[field as keyof SettingsFormData] !== undefined) {
-        updateData[field] = body[field as keyof SettingsFormData] || null;
-      }
-    });
-
-    // Boolean Fields
-    const booleanFields = [
-      'autoExchangeRates', 'deliveryEnabled', 'pickupEnabled', 'taxEnabled',
-      'maintenanceMode', 'heroVideoEnabled', 'showStats', 'showCategories',
-      'autoHideOutOfStock', 'notifyLowStock', 'notifyOutOfStock', 'ctaEnabled',
-      'hotAdEnabled', 'hotAdTransparentBg', 'hotAdShadowEnabled'
-    ];
-
-    booleanFields.forEach(field => {
-      if (body[field as keyof SettingsFormData] !== undefined) {
-        updateData[field] = body[field as keyof SettingsFormData];
-      }
-    });
-
-    const numberFields = [
-      'deliveryFeeUSD', 'freeDeliveryThresholdUSD', 'taxPercent',
-      'minOrderAmountUSD', 'maxOrderAmountUSD', 'maxFeaturedProducts',
-      'maxCategoriesDisplay', 'lowStockThreshold', 'criticalStockThreshold',
-      'hotAdShadowBlur', 'hotAdShadowOpacity', 'hotAdBackdropOpacity',
-      'shippingCostPerKg', 'minConsolidatedShipping', 'packagingFeeUSD',
-    ];
-
-    numberFields.forEach(field => {
-      if (body[field as keyof SettingsFormData] !== undefined) {
-        const val = body[field as keyof SettingsFormData];
-        updateData[field] = val !== null && val !== '' ? Number(val) : null;
-      }
-    });
-
-    // Enum/Special String Fields
-    if (body.primaryCurrency !== undefined) updateData.primaryCurrency = body.primaryCurrency;
-
-    // Date Fields
-    if (body.maintenanceStartTime !== undefined) updateData.maintenanceStartTime = body.maintenanceStartTime ? new Date(body.maintenanceStartTime) : null;
-    if (body.maintenanceEndTime !== undefined) updateData.maintenanceEndTime = body.maintenanceEndTime ? new Date(body.maintenanceEndTime) : null;
-
-    // JSON Fields (Stringified)
-    if (body.socialMedia !== undefined) {
-      const processed = normalizeSocialMedia(body.socialMedia);
-      if (processed !== undefined) {
-        updateData.socialMedia = JSON.stringify(processed);
+    // Al activar la tasa automática se trae la del BCV en el momento
+    let settings = saved;
+    if (patch.autoExchangeRates === true && !current?.autoExchangeRates) {
+      const result = await refreshExchangeRate({ force: true });
+      if (result.status === 'updated') {
+        settings = (await prisma.companySettings.findUnique({ where: { id: 'default' } })) ?? saved;
       }
     }
 
-    if (body.businessHours !== undefined) {
-      updateData.businessHours = JSON.stringify(body.businessHours);
+    if (patch.maintenanceMode !== undefined && patch.maintenanceMode !== Boolean(current?.maintenanceMode)) {
+      emitAdminEvent({
+        type: 'MAINTENANCE_CHANGED',
+        title: patch.maintenanceMode ? 'Tienda en mantenimiento' : 'Tienda abierta de nuevo',
+        summary: `${session.user.name || session.user.email || 'Un administrador'} ${patch.maintenanceMode ? 'activó' : 'apagó'} el modo mantenimiento`,
+        fields: [['Mensaje', patch.maintenanceMode ? settings.maintenanceMessage : null]],
+        link: '/admin/settings#sistema',
+      });
     }
 
-    // Exchange Rates (Decimal)
-    const vesRate = normalizeExchangeRate(body.exchangeRateVES);
-    if (vesRate !== null) updateData.exchangeRateVES = vesRate;
-
-    const eurRate = normalizeExchangeRate(body.exchangeRateEUR);
-    if (eurRate !== null) updateData.exchangeRateEUR = eurRate;
-
-    if (body.autoExchangeRates === true) {
-      updateData.lastRateUpdate = new Date();
-    }
-
-    // --- VALIDATION ---
-    const validation = validateSettings({
-      companyName: updateData.companyName !== undefined ? updateData.companyName : (body.companyName || currentSettings?.companyName || ''),
-      email: updateData.email !== undefined ? updateData.email : body.email,
-      exchangeRateVES: updateData.exchangeRateVES !== undefined ? updateData.exchangeRateVES : (body.exchangeRateVES !== undefined ? body.exchangeRateVES : undefined),
-    });
-
-    if (!validation.valid) {
-      return NextResponse.json({
-        error: 'Errores de validación',
-        errors: validation.errors,
-      }, { status: 400 });
-    }
-
-    // --- UPSERT ---
-    const settings = await prisma.companySettings.upsert({
-      where: { id: 'default' },
-      update: updateData,
-      create: {
-        id: 'default',
-        companyName: updateData.companyName || 'Electro Shop Morandin C.A.',
-        ...updateData,
-      },
-    });
-
-    // Clear cache so new settings (including favicon) take effect immediately
     await clearSettingsCache();
     // Los settings públicos van en el HTML de todas las páginas (layout): regenerarlas ya
     revalidatePath('/', 'layout');
 
-    // Return parsed settings
-    let socialMedia = [];
-    try {
-      socialMedia = settings.socialMedia ? JSON.parse(settings.socialMedia) : [];
-    } catch (e) {
-      console.warn('Error parsing socialMedia JSON:', e);
-    }
-
-    let businessHours = undefined;
-    try {
-      businessHours = settings.businessHours ? JSON.parse(settings.businessHours) : undefined;
-    } catch (e) {
-      console.warn('Error parsing businessHours JSON:', e);
-    }
-
-    const parsedResponse = {
-      ...settings,
-      socialMedia,
-      businessHours,
-    };
-
-    return NextResponse.json(safeSerialize(parsedResponse));
-
+    return NextResponse.json(toAdminSettings(settings, canManageSettings));
   } catch (error) {
     // Sin error.message en la respuesta: puede traer detalles de la BD
     console.error('[SETTINGS API] Error:', error);

@@ -1,32 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { imageVersion, parseImageDataUri } from '@/lib/queries/hot-ad';
+import { readHotAdImage } from '@/lib/queries/hot-ad';
 
 /**
  * GET /api/public/hot-ad-image?v=<versión> (C-25)
- * Sirve como archivo la imagen del popup cuando está guardada como base64 en la BD.
+ * Ruta vieja, para HTML en caché de antes de C-23b: la tienda ahora usa /api/public/hot-ad-image/<versión>.
  * Con la versión correcta se cachea un año (una imagen nueva trae otra versión); sin ella, 5 minutos.
  */
 export async function GET(request: NextRequest) {
-  const row = await prisma.companySettings.findUnique({
-    where: { id: 'default' },
-    select: { hotAdEnabled: true, hotAdImage: true },
-  });
-  const raw = row?.hotAdEnabled ? row.hotAdImage?.trim() : null;
-  const parsed = raw ? parseImageDataUri(raw) : null;
-  if (!raw || !parsed) {
+  const image = await readHotAdImage();
+  if (!image) {
     return new NextResponse(null, { status: 404 });
   }
 
-  const version = imageVersion(raw);
-  const matches = request.nextUrl.searchParams.get('v') === version;
-  return new NextResponse(new Uint8Array(parsed.bytes), {
+  const matches = request.nextUrl.searchParams.get('v') === image.version;
+  return new NextResponse(new Uint8Array(image.bytes), {
     status: 200,
     headers: {
-      'Content-Type': parsed.mime,
-      'Content-Length': String(parsed.bytes.length),
+      'Content-Type': image.mime,
+      'Content-Length': String(image.bytes.length),
       'Cache-Control': matches ? 'public, max-age=31536000, immutable' : 'public, max-age=300',
-      ETag: `"${version}"`,
+      ETag: `"${image.version}"`,
       'X-Content-Type-Options': 'nosniff',
     },
   });

@@ -1,6 +1,7 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 import { getMaintenanceState, getRequestIP, isMaintenanceExemptPath, maintenanceResponse } from '@/lib/maintenance';
+import { scheduleExchangeRateRefresh } from '@/lib/exchange-rate';
 
 const REF_COOKIE = 'electroshop_ref';
 const REF_TTL_DAYS = 30;
@@ -25,6 +26,9 @@ export default withAuth(
         return maintenanceResponse(maintenance, pathname.startsWith('/api/'));
       }
     }
+
+    // Tasa BCV automática (C-50b): sin await y como mucho una revisión cada 5 minutos por proceso
+    if (!pathname.startsWith('/api/')) scheduleExchangeRateRefresh();
 
     const response = NextResponse.next();
 

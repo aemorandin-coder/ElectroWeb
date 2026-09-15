@@ -956,7 +956,7 @@ Carga: ~340 colores, 47 degradados, 6 modales.
 **Arreglos permitidos:**
 1. **Vista duplicada en `balance` y `orders`:** tienen dos bloques completos, "MOBILE VIEW" (`lg:hidden`) y "DESKTOP VIEW" (`hidden lg:block`). **No los fusiones**; aplica las reglas a los dos.
 2. **Tarjeta de saldo:** la tarjeta principal de saldo puede quedar `bg-brand-600 text-white` (bloque sólido); el resto, tarjetas blancas.
-3. **`RechargeModalV2`:** solo clases y `useBodyScrollLock` si falta. No toques montos, métodos, verificación de Pago Móvil ni `fetch`.
+3. **`RechargeModalV2`:** solo clases y `useBodyScrollLock` si falta. No toques montos, métodos, verificación de Pago Móvil ni `fetch`. **Desde C-72 la tasa se lee de `/api/settings/public` (`exchangeRateVES`): no la cambies a `/api/exchange-rates`**, el servidor aprueba la recarga con la tasa de la tienda.
 
 QA: `/customer`, `/customer/orders`, `/customer/balance` a 390 y 1440 px; abrir "Recargar saldo": el modal cubre la pantalla y el fondo no hace scroll.
 
@@ -971,6 +971,7 @@ Carga: ~571 colores, 43 degradados, 4 modales.
 1. **`profile`:** quita los 4 `style={{ animation: 'fadeInUp …' }}` (R4) y aplica R5 a su modal (`fixed inset-0`): capa + panel + `useBodyScrollLock`.
 2. **`referrals`:** las medallas `FaMedal` de G-30 se quedan.
 3. **Pestañas y filtros** de `wishlist`, `reviews` y `notifications`: `adminTab` en contenedor deslizable.
+4. **`notifications` (cambió en C-73):** borra su `getNotificationIcon` y usa `notificationMeta(type)` (ícono + tono para `adminIconChip`) y `timeAgo(fecha)` de `@/components/notifications/notification-meta`. `useNotifications()` sigue dando `notifications`, `unreadCount`, `isLoading`, `markAsRead`, `markAllAsRead` y `deleteNotification`; `link` puede ser `null`. No toques `components/notifications/**` (carril Claude).
 
 QA: las 9 páginas a 390 px; en `/customer/profile` los modales cubren la pantalla.
 

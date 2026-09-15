@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { verifyCaptcha } from '@/lib/captcha';
+import { emitAdminEvent } from '@/lib/admin-events';
 
 // POST /api/contact - Submit contact form
 export async function POST(request: NextRequest) {
@@ -39,6 +40,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    // Tipos y largos (C-73): antes un mensaje de varios MB o un objeto en lugar de texto llegaba a la base de datos
+    if ([name, email, phone, subject, message].some((value) => typeof value !== 'string')
+      || name.length > 100 || email.length > 150 || phone.length > 30 || subject.length > 150 || message.length > 5000
+      || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: 'Revisa los datos del formulario' }, { status: 400 });
+    }
 
     // Save contact message to database
     const contact = await prisma.contactMessage.create({
@@ -52,8 +59,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // TODO: Send email notification to admin
-    // TODO: Send confirmation email to customer
+    emitAdminEvent({
+      type: 'CONTACT_MESSAGE',
+      title: `Mensaje de contacto · ${subject}`.slice(0, 150),
+      summary: `${name} escribió desde el formulario de Contacto`,
+      fields: [['Asunto', subject], ['Mensaje', message.slice(0, 600)], ['Correo', email], ['Teléfono', phone]],
+      link: '/admin/inquiries',
+    });
 
     return NextResponse.json(
       {

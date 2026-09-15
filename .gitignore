@@ -59,3 +59,7 @@ public/uploads/
 .agents/
 .agent/
 .claude/
+
+# Documentos privados (acta, RIF): nunca en git ni en public/ (C-72)
+private-uploads/
+scripts/e2e/mock/

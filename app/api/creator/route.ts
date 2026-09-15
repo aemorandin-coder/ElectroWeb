@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { notifyAdminsNewCreator } from '@/lib/notifications';
-import { sendNewCreatorAlert } from '@/lib/admin-alerts';
+import { emitAdminEvent } from '@/lib/admin-events';
 
 // GET — get current user's creator profile
 export async function GET() {
@@ -47,13 +46,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Notify admins about new creator application (fire-and-forget)
-    notifyAdminsNewCreator(displayName).catch(() => {});
-    sendNewCreatorAlert({
-      creatorName: displayName,
-      creatorEmail: session.user.email || '',
-      expertise: expertise || undefined,
-      baseUrl: process.env.NEXTAUTH_URL,
-    }).catch(() => {});
+    emitAdminEvent({
+      type: 'CREATOR_APPLIED',
+      title: `Solicitud de creador · ${String(displayName).slice(0, 80)}`,
+      summary: `${String(displayName).slice(0, 80)} quiere publicar cursos`,
+      fields: [['Correo', session.user.email], ['Especialidad', typeof expertise === 'string' ? expertise.slice(0, 200) : null]],
+      link: '/admin/creators',
+    });
 
     return NextResponse.json(creator, { status: 201 });
   } catch (error) {

@@ -112,9 +112,11 @@ export default async function ProductPage({ params }: PageProps) {
   };
 
   const delivery = [
-    isDigital
-      ? { Icon: FiZap, title: deliveryMode.store, text: deliveryMode.storeHelp }
-      : { Icon: FiTruck, title: 'Envíos a toda Venezuela', text: 'El costo se calcula en el checkout según el peso' },
+    ...(isDigital
+      ? [{ Icon: FiZap, title: deliveryMode.store, text: deliveryMode.storeHelp }]
+      : settings.deliveryEnabled
+        ? [{ Icon: FiTruck, title: 'Envíos a toda Venezuela', text: 'El costo se calcula en el checkout según el peso' }]
+        : []),
     ...(!isDigital && settings.pickupEnabled ? [{ Icon: FiMapPin, title: 'Retiro en tienda', text: settings.pickupAddress || 'Coordina el retiro al comprar' }] : []),
     { Icon: FiShield, title: 'Producto 100% original', text: 'Con respaldo de la tienda' },
     ...(paymentKinds.length > 0

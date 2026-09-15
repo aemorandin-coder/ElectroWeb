@@ -11,6 +11,7 @@ import {
   notifyAdminsNewOrder
 } from '@/lib/notifications';
 import { sendNewOrderAlert } from '@/lib/admin-alerts';
+import { notifyStockCrossings } from '@/lib/stock-alerts';
 import { OrderStatus, PaymentStatus, PaymentMethodType, Prisma } from '@prisma/client';
 import {
   sendEmail,
@@ -285,6 +286,11 @@ export async function POST(request: NextRequest) {
 
     if (deliveryMethod === 'PICKUP' && calculation.physical && !settings?.pickupEnabled) {
       return NextResponse.json({ error: 'El retiro en tienda no está disponible' }, { status: 400 });
+    }
+
+    // Envío a domicilio o por courier apagado en Configuración (C-50b): los productos físicos solo se retiran
+    if (deliveryMethod !== 'PICKUP' && calculation.physical && settings?.deliveryEnabled === false) {
+      return NextResponse.json({ error: 'Por ahora no hacemos envíos: elige retiro en tienda' }, { status: 400 });
     }
 
     // Min/max de compra con el total calculado en el servidor
@@ -573,6 +579,12 @@ export async function POST(request: NextRequest) {
       await sendNewOrderNotifications(order, userId, paymentMethod);
     }
 
+    // Stock descontado ya (pago confirmado): aviso si algún producto quedó bajo o agotado
+    if (isPaymentConfirmed) {
+      notifyStockCrossings([...physicalQuantities].map(([productId, quantity]) => ({ productId, quantity })))
+        .catch((error) => console.error('Error enviando avisos de stock:', error));
+    }
+
     return NextResponse.json({ orders, totalUSD: calculation.totalUSD }, { status: 201 });
   } catch (error) {
     if (error instanceof OrderInputError) {
@@ -686,6 +698,7 @@ export async function PATCH(request: NextRequest) {
     if (body.paymentStatus === PaymentStatus.PAID && oldOrder.paymentStatus !== PaymentStatus.PAID) {
       // PAYMENT CONFIRMED: Now deduct stock (for DIRECT payment orders that had reservations)
       // This happens when admin confirms the payment was received
+      const stockChanges: { productId: string; quantity: number }[] = [];
       for (const item of order.items) {
         const product = await prisma.product.findUnique({
           where: { id: item.productId },
@@ -699,8 +712,10 @@ export async function PATCH(request: NextRequest) {
             where: { id: item.productId },
             data: { stock: Math.max(0, newStock) },
           });
+          stockChanges.push({ productId: item.productId, quantity: Math.min(item.quantity, product.stock) });
         }
       }
+      notifyStockCrossings(stockChanges).catch((error) => console.error('Error enviando avisos de stock:', error));
 
       // Release the stock reservation since stock is now actually deducted
       if (oldOrder.userId) {

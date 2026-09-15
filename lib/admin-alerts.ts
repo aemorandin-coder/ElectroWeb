@@ -29,19 +29,20 @@ async function getAdminAlertEmails(): Promise<string[]> {
   }
 }
 
+// Los valores vienen de clientes (nombres, referencias) o del catálogo: se escapan antes de ir al HTML
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 // Plantilla base para emails de alerta
 function buildAlertEmailHtml({
   title,
-  icon,
-  iconColor,
   lines,
   actionUrl,
   actionLabel,
   companyName = 'Electro Shop',
 }: {
   title: string;
-  icon: string;
-  iconColor: string;
   lines: { label: string; value: string }[];
   actionUrl?: string;
   actionLabel?: string;
@@ -51,8 +52,8 @@ function buildAlertEmailHtml({
     .map(
       ({ label, value }) => `
       <tr>
-        <td style="padding:8px 0;color:#6a6c6b;font-size:14px;width:40%;">${label}</td>
-        <td style="padding:8px 0;color:#212529;font-size:14px;font-weight:600;">${value}</td>
+        <td style="padding:8px 0;color:#6a6c6b;font-size:14px;width:40%;">${escapeHtml(label)}</td>
+        <td style="padding:8px 0;color:#212529;font-size:14px;font-weight:600;">${escapeHtml(value)}</td>
       </tr>`
     )
     .join('');
@@ -69,7 +70,6 @@ function buildAlertEmailHtml({
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:540px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(42,99,205,0.10);">
     <div style="background:linear-gradient(135deg,#1e3a8a,#2a63cd);padding:28px 32px;text-align:center;">
-      <div style="font-size:36px;margin-bottom:10px;">${icon}</div>
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">${title}</h1>
       <p style="margin:6px 0 0;color:rgba(255,255,255,0.75);font-size:13px;">${companyName} · Alerta del Sistema</p>
     </div>
@@ -111,8 +111,6 @@ export async function sendNewOrderAlert({
 
   const html = buildAlertEmailHtml({
     title: 'Nueva Orden Recibida',
-    icon: '🛒',
-    iconColor: '#2a63cd',
     lines: [
       { label: 'Número de Orden', value: orderNumber },
       { label: 'Cliente', value: customerName || 'Invitado' },
@@ -155,8 +153,6 @@ export async function sendNewRechargeAlert({
 
   const html = buildAlertEmailHtml({
     title: 'Nueva Solicitud de Recarga',
-    icon: '💳',
-    iconColor: '#16a34a',
     lines: [
       { label: 'Cliente', value: customerName },
       { label: 'Email', value: customerEmail || '—' },
@@ -194,8 +190,6 @@ export async function sendNewCreatorAlert({
 
   const html = buildAlertEmailHtml({
     title: 'Nueva Solicitud de Creador de Cursos',
-    icon: '🎓',
-    iconColor: '#7c3aed',
     lines: [
       { label: 'Nombre', value: creatorName },
       { label: 'Email', value: creatorEmail || '—' },
@@ -211,4 +205,50 @@ export async function sendNewCreatorAlert({
     subject: `Nueva Solicitud de Creador — ${creatorName}`,
     html,
   }).catch((e) => console.error('[ADMIN-ALERTS] Error sending creator alert:', e));
+}
+
+// ─── STOCK BAJO Y AGOTADO (C-50b) ────────────────────────────────────────────
+
+export interface StockAlertProduct {
+  name: string;
+  sku: string | null;
+  stock: number;
+}
+
+export async function sendStockAlert({
+  outOfStock,
+  lowStock,
+  threshold,
+  baseUrl,
+}: {
+  outOfStock: StockAlertProduct[];
+  lowStock: StockAlertProduct[];
+  threshold: number;
+  baseUrl?: string;
+}) {
+  if (outOfStock.length === 0 && lowStock.length === 0) return;
+  const emails = await getAdminAlertEmails();
+  if (emails.length === 0) return;
+
+  const label = (product: StockAlertProduct) => (product.sku ? `${product.name} (${product.sku})` : product.name);
+  const html = buildAlertEmailHtml({
+    title: outOfStock.length > 0 ? 'Productos agotados' : 'Productos con stock bajo',
+    lines: [
+      ...outOfStock.map((product) => ({ label: 'Agotado', value: label(product) })),
+      ...lowStock.map((product) => ({ label: `Quedan ${product.stock}`, value: label(product) })),
+      { label: 'Aviso de stock bajo', value: `${threshold} unidades o menos` },
+      { label: 'Hora', value: new Date().toLocaleString('es-VE') },
+    ],
+    actionUrl: baseUrl ? `${baseUrl}/admin/products` : undefined,
+    actionLabel: 'Ver productos en el panel',
+  });
+
+  const count = outOfStock.length + lowStock.length;
+  await sendEmail({
+    to: emails,
+    subject: outOfStock.length > 0
+      ? `Agotado: ${outOfStock[0].name}${count > 1 ? ` y ${count - 1} más` : ''}`
+      : `Stock bajo: ${lowStock[0].name}${count > 1 ? ` y ${count - 1} más` : ''}`,
+    html,
+  }).catch((e) => console.error('[ADMIN-ALERTS] Error sending stock alert:', e));
 }

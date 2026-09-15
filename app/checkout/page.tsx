@@ -166,7 +166,13 @@ export default function CheckoutPage() {
   useEffect(() => {
     fetch('/api/settings/public')
       .then(res => res.json())
-      .then(data => setCompanySettings(data))
+      .then(data => {
+        setCompanySettings(data);
+        // Sin envíos (C-50b): el retiro en tienda queda elegido de entrada
+        if (data?.deliveryEnabled === false && data?.pickupEnabled) {
+          setFormData(prev => ({ ...prev, deliveryMethod: 'PICKUP', isOfficeDelivery: false, courierOfficeId: '' }));
+        }
+      })
       .catch(err => console.error('Error loading settings:', err));
 
     // Load payment methods from database
@@ -351,6 +357,9 @@ export default function CheckoutPage() {
   const shippingBreakdown = orderCalculation.shipping;
   const shippingCost = orderCalculation.shippingUSD;
   const finalTotal = orderCalculation.totalUSD;
+  const deliveryEnabled = companySettings?.deliveryEnabled !== false;
+  const deliveryOptionCount = (deliveryEnabled ? 2 : 0) + (companySettings?.pickupEnabled ? 1 : 0);
+  const deliveryOptionCols = deliveryOptionCount >= 3 ? 'grid-cols-3' : deliveryOptionCount === 2 ? 'grid-cols-2' : 'grid-cols-1';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -829,8 +838,10 @@ export default function CheckoutPage() {
                   <label className="block text-sm font-semibold text-ink mb-3">
                     Tipo de Entrega *
                   </label>
-                  <div className={`grid gap-3 ${companySettings?.pickupEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                  <div className={`grid gap-3 ${deliveryOptionCols}`}>
 
+                    {/* Envíos: se ocultan si el admin los apagó en Configuración (C-50b) */}
+                    {deliveryEnabled && (<>
                     {/* Dirección personal */}
                     <button
                       type="button"
@@ -866,6 +877,8 @@ export default function CheckoutPage() {
                         <p className="text-xs text-muted">ZOOM o MRW</p>
                       </div>
                     </button>
+
+                    </>)}
 
                     {/* Retiro en tienda — solo si pickupEnabled */}
                     {companySettings?.pickupEnabled && (

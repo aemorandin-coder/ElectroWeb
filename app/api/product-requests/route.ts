@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { createNotification } from '@/lib/notifications';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatUSD } from '@/lib/currency';
 import { verifyCaptcha } from '@/lib/captcha';
 import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
 import { z } from 'zod';
@@ -113,10 +115,23 @@ export async function POST(request: NextRequest) {
     await createNotification({
       userId,
       type: 'SYSTEM_UPDATE',
-      title: '📝 Solicitud de Producto Recibida',
+      title: 'Solicitud de producto recibida',
       message: `Tu solicitud para "${data.productName}" ha sido recibida. Te notificaremos cuando tengamos novedades.`,
       link: `/customer`,
-      icon: '📝',
+    });
+
+    // Antes de C-73 el equipo no se enteraba: la función que avisaba a los admins nunca se llamaba
+    emitAdminEvent({
+      type: 'PRODUCT_REQUESTED',
+      title: `Solicitud de producto · ${data.productName}`.slice(0, 150),
+      summary: `${data.customerName} busca un producto que no está en el catálogo`,
+      fields: [
+        ['Producto', data.productName],
+        ['Detalle', data.description?.slice(0, 300)],
+        ['Presupuesto', data.estimatedBudget ? formatUSD(data.estimatedBudget) : null],
+        ['Contacto', [data.customerEmail, data.customerPhone].filter(Boolean).join(' · ')],
+      ],
+      link: '/admin/inquiries',
     });
 
     return NextResponse.json(productRequest, { status: 201 });

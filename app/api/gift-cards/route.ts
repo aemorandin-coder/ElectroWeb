@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { sendGiftCardEmail } from '@/lib/email-service';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatUSD } from '@/lib/currency';
 import {
     generateGiftCardCode,
     hashGiftCardCode,
@@ -257,6 +259,21 @@ export async function POST(request: Request) {
                 description: 'Purchase of gift card'
             }
         });
+
+        // El admin genera tarjetas impresas desde el panel: eso no es una venta
+        if (!isAdmin) {
+            emitAdminEvent({
+                type: 'GIFT_CARD_PURCHASED',
+                title: `Gift card comprada · ${formatUSD(amountUSD)}`,
+                summary: `${session.user.name || session.user.email || 'Un cliente'} compró una gift card${recipientName ? ` para ${String(recipientName).slice(0, 60)}` : ''}`,
+                fields: [
+                    ['Pago', payWithBalance ? 'Saldo' : payment ? 'Saldo (pago previo)' : null],
+                    ['Diseño', giftCard.design?.name],
+                    ['Para', recipientEmail ? String(recipientEmail).slice(0, 120) : null],
+                ],
+                link: '/admin/gift-cards',
+            });
+        }
 
         // Send email to recipient if it's a gift (antes exigía isGift, que la página no envía: el PIN nunca llegaba)
         if (isGiftCard && recipientEmail) {

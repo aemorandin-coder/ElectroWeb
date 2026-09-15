@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { adminNotice } from '@/lib/admin-ui';
 import type { SectionProps } from './settings-form';
 import { NumberField, SettingsCard, SwitchRow, TextField } from './fields';
@@ -85,12 +86,11 @@ export default function StorefrontSection({ form, set, errors, hasAlertEmails, o
             />
             {(form.notifyLowStock || form.notifyOutOfStock) && (
               <p className={adminNotice(hasAlertEmails ? 'neutral' : 'warning')}>
-                El aviso llega a las notificaciones del panel
-                {hasAlertEmails ? ' y a los correos de alerta.' : '. Para recibirlo también por correo, '}
+                Por dónde llega (panel, correo o Telegram) se elige en{' '}
+                <Link href="/admin/notifications#avisos" className="font-semibold underline">Notificaciones → Qué avisar</Link>.
                 {!hasAlertEmails && (
-                  <button type="button" onClick={onGoToAlerts} className="font-semibold underline">agrega un correo de alertas</button>
+                  <> Para recibirlo por correo, <button type="button" onClick={onGoToAlerts} className="font-semibold underline">agrega un correo de alertas</button>.</>
                 )}
-                {!hasAlertEmails && '.'}
               </p>
             )}
           </div>

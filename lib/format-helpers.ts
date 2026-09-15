@@ -13,6 +13,7 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
     CASH: 'Efectivo',
     CREDIT_CARD: 'Tarjeta de Crédito',
     BALANCE: 'Saldo de Cuenta',
+    WALLET: 'Saldo de Cuenta',
     MERCANTIL_PANAMA: 'Mercantil Panamá',
     OTHER: 'Otro',
 };

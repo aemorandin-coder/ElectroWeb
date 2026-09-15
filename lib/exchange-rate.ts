@@ -2,6 +2,8 @@
 // (promedio oficial) como mucho una vez por hora. Solo servidor.
 
 import { prisma } from '@/lib/prisma';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatVES } from '@/lib/currency';
 
 const SOURCE_URL = 'https://ve.dolarapi.com/v1/dolares';
 /** Antigüedad a partir de la cual se vuelve a consultar la fuente. */
@@ -63,9 +65,13 @@ export async function refreshExchangeRate({ force = false }: { force?: boolean }
   } catch (error) {
     console.error('[EXCHANGE-RATE] La fuente no respondió:', error instanceof Error ? error.message : error);
   }
-  if (!official) return { status: 'unavailable', ...base };
+  if (!official) {
+    reportFailure('La fuente de la tasa (DolarAPI) no respondió', current);
+    return { status: 'unavailable', ...base };
+  }
   if (!isPlausibleRate(official.rate, current)) {
     console.error(`[EXCHANGE-RATE] Tasa descartada: ${official.rate} frente a ${current} guardada`);
+    reportFailure(`La fuente mandó ${formatVES(official.rate)}, más de 50 % de diferencia con la guardada. No se aplicó.`, current);
     return { status: 'rejected', ...base };
   }
 
@@ -76,7 +82,34 @@ export async function refreshExchangeRate({ force = false }: { force?: boolean }
     data: { exchangeRateVES: official.rate, lastRateUpdate: now },
   });
   if (updated.count === 0) return { status: 'disabled', ...base };
+  // Solo se avisa si la tasa cambió de verdad (DolarAPI repite la misma tasa varias horas)
+  if (current === null || Math.abs(official.rate - current) >= 0.005) {
+    const change = current ? ((official.rate - current) / current) * 100 : null;
+    emitAdminEvent({
+      type: 'EXCHANGE_RATE_UPDATED',
+      title: `Tasa BCV · ${formatVES(official.rate)}`,
+      summary: 'La tasa automática cambió. Los precios en bolívares ya usan la nueva.',
+      fields: [
+        ['Antes', current ? formatVES(current) : null],
+        ['Cambio', change !== null ? `${change >= 0 ? '+' : ''}${change.toFixed(2)} %` : null],
+      ],
+      link: '/admin/settings#precios',
+    });
+  }
   return { status: 'updated', rate: official.rate, lastRateUpdate: now };
+}
+
+function reportFailure(reason: string, current: number | null) {
+  emitAdminEvent({
+    type: 'EXCHANGE_RATE_FAILED',
+    title: 'Tasa BCV sin actualizar',
+    summary: reason,
+    fields: [['Tasa en uso', current ? formatVES(current) : 'Sin tasa']],
+    link: '/admin/settings#precios',
+    // Una vez cada 6 horas: la fuente puede pasar caída un buen rato
+    throttleKey: 'source',
+    throttleMs: 6 * 60 * 60_000,
+  });
 }
 
 let lastCheck = 0;

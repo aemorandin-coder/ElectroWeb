@@ -5,6 +5,8 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 import { hashGiftCardCode } from '@/lib/gift-card-crypto';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatUSD } from '@/lib/currency';
 
 const PAYMENT_METHODS: Record<string, string> = {
   CASH: 'Efectivo',
@@ -91,6 +93,14 @@ export async function POST(request: NextRequest) {
     targetId: giftCard.id,
     details: { codeLast4: giftCard.code.slice(-4), amount: Number(giftCard.amountUSD), paymentMethod, reference: reference || undefined },
     ...getRequestMetadata(request),
+  });
+
+  emitAdminEvent({
+    type: 'GIFT_CARD_SOLD_IN_STORE',
+    title: `Gift card vendida en tienda · ${formatUSD(Number(giftCard.amountUSD))}`,
+    summary: `${admin.name || admin.email || 'Un administrador'} activó una tarjeta impresa`,
+    fields: [['Tarjeta', `termina en ${giftCard.code.slice(-4)}`], ['Pago', methodLabel], ['Referencia', reference || null]],
+    link: '/admin/gift-cards',
   });
 
   return NextResponse.json({

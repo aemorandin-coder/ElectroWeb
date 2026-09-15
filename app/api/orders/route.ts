@@ -6,11 +6,11 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import {
   createNotification,
   notifyOrderConfirmed,
-  notifyOrderShipped,
   notifyOrderDelivered,
-  notifyAdminsNewOrder
 } from '@/lib/notifications';
-import { sendNewOrderAlert } from '@/lib/admin-alerts';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatUSD, formatVES } from '@/lib/currency';
+import { formatPaymentMethod } from '@/lib/format-helpers';
 import { notifyStockCrossings } from '@/lib/stock-alerts';
 import { OrderStatus, PaymentStatus, PaymentMethodType, Prisma } from '@prisma/client';
 import {
@@ -153,24 +153,33 @@ function isOrderNumberConflict(error: unknown): boolean {
     && String(error.meta?.target ?? '').includes('orderNumber');
 }
 
+const DELIVERY_LABELS: Record<string, string> = {
+  HOME_DELIVERY: 'Envío a domicilio',
+  SHIPPING: 'Oficina de courier',
+  PICKUP: 'Retiro en tienda',
+  STORE_PICKUP: 'Retiro en tienda',
+  DIGITAL: 'Digital',
+};
+
 async function sendNewOrderNotifications(order: CreatedOrder, userId: string, paymentMethod: string) {
   await notifyOrderConfirmed(userId, order.orderNumber, order.id);
 
-  notifyAdminsNewOrder(
-    order.user?.name || 'Cliente',
-    order.orderNumber,
-    Number(order.totalUSD)
-  ).catch(() => {});
-
-  sendNewOrderAlert({
-    orderNumber: order.orderNumber,
-    customerName: order.user?.name || 'Cliente',
-    customerEmail: order.user?.email || '',
-    total: Number(order.totalUSD),
-    paymentMethod,
-    itemCount: order.items.length,
-    baseUrl: process.env.NEXTAUTH_URL,
-  }).catch(() => {});
+  const units = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  const products = order.items.slice(0, 4).map((item) => `${item.productName || 'Producto'} x${item.quantity}`).join(', ')
+    + (order.items.length > 4 ? ` y ${order.items.length - 4} más` : '');
+  emitAdminEvent({
+    type: 'ORDER_CREATED',
+    title: `Nueva venta · ${order.orderNumber}`,
+    summary: `${order.user?.name || order.user?.email || 'Un cliente'} compró ${units} ${units === 1 ? 'producto' : 'productos'}`,
+    fields: [
+      ['Total', `${formatUSD(Number(order.totalUSD))} (${formatVES(Number(order.totalVES))})`],
+      ['Pago', `${formatPaymentMethod(paymentMethod)} · ${order.paymentStatus === 'PAID' || paymentMethod === 'WALLET' ? 'confirmado' : 'por verificar'}`],
+      ['Entrega', DELIVERY_LABELS[order.deliveryMethod || ''] || order.deliveryMethod],
+      ['Productos', products],
+      ['Cliente', order.user?.email],
+    ],
+    link: '/admin/orders',
+  });
 
   if (paymentMethod === 'WALLET') {
     await createNotification({
@@ -772,7 +781,7 @@ export async function PATCH(request: NextRequest) {
         case 'SHIPPED':
           const carrierInfo = body.shippingCarrier ? ` vía ${body.shippingCarrier}` : '';
           const trackingInfo = body.trackingNumber ? ` - Guía: ${body.trackingNumber}` : '';
-          await notifyOrderShipped(oldOrder.userId, oldOrder.orderNumber, order.id);
+          // Una sola notificación (antes salían dos: la genérica y esta con guía y transportista)
           await createNotification({
             userId: oldOrder.userId,
             type: 'ORDER_SHIPPED',
@@ -939,6 +948,37 @@ export async function PATCH(request: NextRequest) {
           // TODO: Logic to restore discounts if needed
           break;
       }
+    }
+
+    // Avisos al equipo (C-73): quién confirmó el pago o canceló, para que el resto lo sepa
+    const actor = session?.user?.name || session?.user?.email || 'Un administrador';
+    const becamePaid = (body.status === 'PAID' && oldOrder.status !== 'PAID')
+      || (body.paymentStatus === PaymentStatus.PAID && oldOrder.paymentStatus !== PaymentStatus.PAID);
+    if (becamePaid) {
+      emitAdminEvent({
+        type: 'ORDER_PAID',
+        title: `Pago confirmado · ${oldOrder.orderNumber}`,
+        summary: `${actor} marcó la orden como pagada`,
+        fields: [
+          ['Total', formatUSD(Number(oldOrder.totalUSD))],
+          ['Pago', formatPaymentMethod(oldOrder.paymentMethod)],
+          ['Cliente', order.user?.name || order.user?.email],
+        ],
+        link: '/admin/orders',
+      });
+    }
+    if (body.status === 'CANCELLED' && oldOrder.status !== 'CANCELLED') {
+      emitAdminEvent({
+        type: 'ORDER_CANCELLED',
+        title: `Orden cancelada · ${oldOrder.orderNumber}`,
+        summary: `${actor} canceló la orden`,
+        fields: [
+          ['Total', formatUSD(Number(oldOrder.totalUSD))],
+          ['Motivo', typeof body.notes === 'string' ? body.notes.slice(0, 300) : null],
+          ['Cliente', order.user?.name || order.user?.email],
+        ],
+        link: '/admin/orders',
+      });
     }
 
     return NextResponse.json(order);

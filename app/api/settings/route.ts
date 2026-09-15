@@ -7,6 +7,7 @@ import { hasPermission } from '@/lib/auth-helpers';
 import { crossFieldErrors, fieldErrors, HOT_AD_FIELDS, settingsPatchSchema } from '@/lib/validations/settings';
 import { clearSettingsCache } from '@/lib/site-settings';
 import { refreshExchangeRate } from '@/lib/exchange-rate';
+import { emitAdminEvent } from '@/lib/admin-events';
 import { revalidatePath } from 'next/cache';
 
 // Campos que solo ve quien administra la configuración (CLAUDE.md: nunca salen del servidor hacia otros)
@@ -146,6 +147,16 @@ export async function PUT(request: NextRequest) {
       if (result.status === 'updated') {
         settings = (await prisma.companySettings.findUnique({ where: { id: 'default' } })) ?? saved;
       }
+    }
+
+    if (patch.maintenanceMode !== undefined && patch.maintenanceMode !== Boolean(current?.maintenanceMode)) {
+      emitAdminEvent({
+        type: 'MAINTENANCE_CHANGED',
+        title: patch.maintenanceMode ? 'Tienda en mantenimiento' : 'Tienda abierta de nuevo',
+        summary: `${session.user.name || session.user.email || 'Un administrador'} ${patch.maintenanceMode ? 'activó' : 'apagó'} el modo mantenimiento`,
+        fields: [['Mensaje', patch.maintenanceMode ? settings.maintenanceMessage : null]],
+        link: '/admin/settings#sistema',
+      });
     }
 
     await clearSettingsCache();

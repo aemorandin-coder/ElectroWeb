@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatUSD } from '@/lib/currency';
 
 // GET - List discount requests for the current user
 export async function GET(request: NextRequest) {
@@ -52,13 +54,26 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
-        const body = await request.json();
-        const { productId, productName, originalPrice, requestedDiscount, customerMessage } = body;
+        const body = await request.json().catch(() => null);
+        const productId = typeof body?.productId === 'string' ? body.productId : '';
+        const requestedDiscount = Number(body?.requestedDiscount);
+        const customerMessage = typeof body?.customerMessage === 'string' ? body.customerMessage.trim().slice(0, 500) || null : null;
 
         // Validate discount range (1-5%)
-        if (!requestedDiscount || requestedDiscount < 1 || requestedDiscount > 5) {
+        if (!Number.isInteger(requestedDiscount) || requestedDiscount < 1 || requestedDiscount > 5) {
             return NextResponse.json({ error: 'El descuento debe ser entre 1% y 5%' }, { status: 400 });
         }
+
+        // SEGURIDAD (C-73): nombre y precio salen de la base de datos. Antes llegaban del navegador y el
+        // admin veía (y aprobaba) un producto y un precio escritos por el cliente.
+        const product = productId
+            ? await prisma.product.findFirst({ where: { id: productId, status: 'PUBLISHED' }, select: { name: true, priceUSD: true } })
+            : null;
+        if (!product) {
+            return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+        }
+        const productName = product.name;
+        const originalPrice = product.priceUSD;
 
         // Check if there's already a pending request for this product
         const existingRequest = await prisma.discountRequest.findFirst({
@@ -94,24 +109,19 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // Create notification for all admins
-        const admins = await prisma.user.findMany({
-            where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
-            select: { id: true },
-        });
-
-        const userName = session.user.name || session.user.email;
-        const discountAmount = (Number(originalPrice) * requestedDiscount / 100).toFixed(2);
-
-        await prisma.notification.createMany({
-            data: admins.map(admin => ({
-                userId: admin.id,
-                type: 'DISCOUNT_REQUEST',
-                title: 'Nueva Solicitud de Descuento',
-                message: `${userName} solicita ${requestedDiscount}% de descuento ($${discountAmount}) en "${productName}"`,
-                link: '/admin/discount-requests',
-                icon: 'FiPercent',
-            })),
+        const userName = session.user.name || session.user.email || 'Un cliente';
+        const discountAmount = Number(originalPrice) * requestedDiscount / 100;
+        emitAdminEvent({
+            type: 'DISCOUNT_REQUESTED',
+            title: `Solicitud de descuento · ${productName}`.slice(0, 150),
+            summary: `${userName} pide ${requestedDiscount}% de descuento`,
+            fields: [
+                ['Producto', productName],
+                ['Precio', formatUSD(Number(originalPrice))],
+                ['Descuento', `${requestedDiscount}% (${formatUSD(discountAmount)})`],
+                ['Mensaje', customerMessage],
+            ],
+            link: '/admin/discount-requests',
         });
 
         // Create notification for the customer

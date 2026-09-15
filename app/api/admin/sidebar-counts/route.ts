@@ -42,7 +42,7 @@ export async function GET() {
       // Solicitudes de productos pendientes (Centro de Consultas)
       prisma.productRequest.count({ where: { status: 'PENDING' } }),
 
-      // Alertas del sistema sin leer del admin (Centro de Consultas - tab Alertas)
+      // Notificaciones sin leer del admin (menú Notificaciones, C-73)
       prisma.notification.count({ where: { userId, read: false } }),
 
       // Solicitudes de descuento pendientes
@@ -52,8 +52,8 @@ export async function GET() {
       prisma.courseCreator.count({ where: { status: 'PENDING' } }),
     ]);
 
-    // Centro de Consultas = mensajes + solicitudes + alertas sin leer
-    const pendingInquiries = pendingMessages + pendingProductRequests + unreadNotifications;
+    // Mensajes y Solicitudes = mensajes + solicitudes de producto (las notificaciones tienen su propio menú desde C-73)
+    const pendingInquiries = pendingMessages + pendingProductRequests;
 
     return NextResponse.json({
       pendingOrders,
@@ -61,6 +61,7 @@ export async function GET() {
       pendingInquiries,
       pendingDiscounts,
       pendingCreators, // Para Marketing badge
+      unreadNotifications,
     });
   } catch (error) {
     console.error('[SIDEBAR-COUNTS] Error:', error);

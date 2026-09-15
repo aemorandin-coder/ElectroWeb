@@ -11,6 +11,8 @@ import {
     resetFailedAttempts
 } from '@/lib/rate-limit';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
+import { emitAdminEvent } from '@/lib/admin-events';
+import { formatUSD } from '@/lib/currency';
 import {
     hashGiftCardCode,
     verifyPin,
@@ -224,6 +226,15 @@ export async function POST(request: NextRequest) {
                 });
 
                 const remaining = Math.max(0, GIFT_CARD_MAX_PIN_FAILURES - (failures + 1));
+                if (remaining === 0) {
+                    emitAdminEvent({
+                        type: 'GIFT_CARD_PIN_LOCKED',
+                        title: `Gift card bloqueada · termina en ${giftCard.code.slice(-4)}`,
+                        summary: `${GIFT_CARD_MAX_PIN_FAILURES} PIN equivocados en 24 horas. El último intento fue de ${session.user.email || 'una cuenta'}.`,
+                        fields: [['Monto', formatUSD(Number(giftCard.balanceUSD))], ['IP', metadata.ipAddress]],
+                        link: '/admin/gift-cards',
+                    });
+                }
                 return NextResponse.json({
                     error: remaining > 0 ? `PIN incorrecto. Te quedan ${remaining} intentos.` : 'PIN incorrecto. La tarjeta quedó bloqueada.',
                     attemptsRemaining: remaining
@@ -317,6 +328,14 @@ export async function POST(request: NextRequest) {
                 transactionId: result.walletTransaction.id,
             },
             ...metadata,
+        });
+
+        emitAdminEvent({
+            type: 'GIFT_CARD_REDEEMED',
+            title: `Gift card canjeada · ${formatUSD(balance)}`,
+            summary: `${session.user.name || session.user.email || 'Un cliente'} pasó una gift card a su saldo`,
+            fields: [['Tarjeta', `termina en ${giftCard.code.slice(-4)}`], ['Saldo nuevo del cliente', formatUSD(newBalance)]],
+            link: '/admin/gift-cards',
         });
 
         return NextResponse.json({

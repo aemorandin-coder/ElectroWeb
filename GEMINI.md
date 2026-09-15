@@ -54,6 +54,7 @@ Excepciones puntuales (solo cuando la tarea lo dice):
     - Mover lógica entre archivos o crear componentes nuevos.
   - **Fuera de límites hasta nuevo aviso:** `app/admin/(dashboard)/settings/**` y `app/admin/(dashboard)/products/**`. Los rehace Claude en C-50 y C-51.
     Únicas excepciones: los 6 archivos de **G-29** (solo `className`). En **R9 (G-31…G-34)** se rehace el resto del admin con `lib/admin-ui.ts`, pero `layout.tsx`, `settings/**` y `products/**` siguen fuera.
+  - **R10:** las páginas de acceso, el contenido de las páginas públicas, el panel de creadores y el panel del cliente usan también `lib/admin-ui.ts` (ver tarjetas G-35…G-39). `app/customer/(dashboard)/layout.tsx` lo hace Claude (C-55).
 - `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → solo G-04b, G-05g y G-06g, **y solo cuando en `main` existan `docs/plan/estado/C-01.md` y `docs/plan/estado/C-05.md` con `Estado: HECHO`**.
 - Borrado de la lista cerrada de G-02.
 

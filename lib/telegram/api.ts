@@ -1,8 +1,7 @@
 // Cliente mínimo de la API de bots de Telegram (C-73). Solo servidor.
 import crypto from 'crypto';
 
-// TELEGRAM_API_BASE solo existe para las pruebas (un servidor falso); en producción no se define
-const API_BASE = (process.env.TELEGRAM_API_BASE || 'https://api.telegram.org').replace(/\/$/, '');
+const API_BASE = 'https://api.telegram.org';
 const TIMEOUT_MS = 8000;
 
 export const TELEGRAM_TOKEN_PATTERN = /^\d{5,15}:[A-Za-z0-9_-]{30,60}$/;

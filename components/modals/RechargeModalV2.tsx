@@ -62,10 +62,11 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     useEffect(() => {
         const fetchRate = async () => {
             try {
-                const response = await fetch('/api/exchange-rates');
+                // Tasa de la tienda (C-72): es la que usa el servidor para aprobar la recarga, no la del BCV en vivo
+                const response = await fetch('/api/settings/public');
                 if (response.ok) {
                     const data = await response.json();
-                    setExchangeRate(data.VES || 0);
+                    setExchangeRate(Number(data.exchangeRateVES) || 0);
                 }
             } catch (error) {
                 console.error('Error fetching exchange rate:', error);

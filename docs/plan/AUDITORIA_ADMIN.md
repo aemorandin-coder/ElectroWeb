@@ -15,9 +15,9 @@ Leyenda de estado: ✅ resuelto en rama · 🟦 tarjeta asignada · ⬜ pendient
 | S5 | Chat: cualquier sesión leía conversaciones ajenas y escribía haciéndose pasar por el admin. | ✅ C-70 |
 | S6 | `/api/stats` y `/api/admin/verifications/pending-count` visibles para clientes. | ✅ C-70 |
 | S7 | El correo con código y PIN de una gift card comprada nunca salía: el destinatario no podía canjear. | ✅ C-70 |
-| S8 | Gift cards impresas desde el admin: el PIN se guarda como hash y nunca se muestra, así que no se pueden canjear. | ⬜ decisión de Andrés (¿llevan PIN?) |
-| S9 | PIN de 4 dígitos con SHA-256 sin sal. | ⬜ C-60e |
-| S10 | La compra de gift card con saldo son 2 llamadas desde el navegador (`balance/deduct` + crear). C-70 las ata en el servidor, pero lo correcto es 1 sola llamada. | ⬜ Claude + tarjeta Gemini para `app/gift-cards/page.tsx` |
+| S8 | Gift cards impresas desde el admin: el PIN se guarda como hash y nunca se muestra, así que no se pueden canjear. | ✅ C-71 (nacen inactivas con PIN de 6 dígitos que ve solo el admin; se activan al venderlas) |
+| S9 | PIN de 4 dígitos con SHA-256 sin sal. | ✅ C-71 (6 dígitos, HMAC con secreto y bloqueo por tarjeta) |
+| S10 | La compra de gift card con saldo son 2 llamadas desde el navegador (`balance/deduct` + crear). C-70 las ata en el servidor, pero lo correcto es 1 sola llamada. | ✅ C-71 (`payWithBalance`: una sola llamada) |
 
 ## 2. Estructura del panel ("modales padres", z-index, responsive)
 | # | Hallazgo | Estado |
@@ -60,6 +60,6 @@ Leyenda de estado: ✅ resuelto en rama · 🟦 tarjeta asignada · ⬜ pendient
 - **Gemini (R9, pesado):** G-31 → G-34. Unas 1.650 clases de color, 54 degradados, 20 modales, 30 `toFixed` y los arreglos de flujo E5, E7-E9, F1-F4.
 - **Claude (siguiente):**
   - **C-51:** lista de productos del admin; borrar `ProductForm.tsx`, que no se usa.
-  - **C-50b:** configuración, con los 16 campos sin efecto.
   - **C-60b:** surtido de pedidos digitales.
-  - S8-S10 y F5-F6.
+  - F5 (página de notificaciones).
+  - C-50b hecho: configuración, F6 y la parte de F8 que le tocaba.

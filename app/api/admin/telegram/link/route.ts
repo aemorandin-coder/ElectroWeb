@@ -57,13 +57,14 @@ export async function GET() {
     }
   }
 
-  // Ventana del código: 15 minutos antes de su vencimiento (o los últimos 15 si ya se consumió)
+  // Releer después de procesar los mensajes: si el /start llegó, el código ya se consumió
+  const { row: fresh } = await getNotificationSettings();
   const since = new Date(Date.now() - 16 * 60_000);
   const chat = await prisma.telegramChat.findFirst({
     where: { linkedById: auth.session.user.id, updatedAt: { gte: since }, isActive: true },
     orderBy: { updatedAt: 'desc' },
     select: { id: true, title: true, type: true },
   });
-  const pending = Boolean(row?.telegramLinkCodeHash && row.telegramLinkCodeExpiresAt && row.telegramLinkCodeExpiresAt > new Date());
+  const pending = Boolean(fresh?.telegramLinkCodeHash && fresh.telegramLinkCodeExpiresAt && fresh.telegramLinkCodeExpiresAt > new Date());
   return NextResponse.json({ linked: pending ? null : chat, pending });
 }

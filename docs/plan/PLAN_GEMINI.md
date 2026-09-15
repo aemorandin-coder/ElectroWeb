@@ -800,16 +800,16 @@ Archivos:
 - `app/admin/(dashboard)/orders/[id]/digital/page.tsx`
 - `app/admin/(dashboard)/transactions/page.tsx`
 - `app/admin/(dashboard)/customers/page.tsx`
-- `app/admin/(dashboard)/gift-cards/page.tsx`
 
-Carga aproximada: 463 colores sueltos, 23 degradados, 8 modales, 18 `toFixed`.
+`app/admin/(dashboard)/gift-cards/page.tsx` **salió de esta tarjeta**: Claude la rehízo en C-71. No la toques.
+
+Carga aproximada: 315 colores sueltos, 19 degradados, 6 modales, 10 `toFixed`.
 
 **Arreglos permitidos:**
 1. **`orders/page.tsx`: título.** Antes de las tarjetas de estadística agrega `<div className={adminPageHeader}><div><h1 className={adminPageTitle}>Órdenes</h1><p className={adminPageSubtitle}>Pedidos de la tienda</p></div></div>`. Hoy la página no tiene título.
 2. **`orders/page.tsx`: filas en móvil.** A 390 px el precio queda encima del nombre y del estado. En el elemento de cada fila de orden (el que contiene `#{order.orderNumber}` y el total), usa `flex flex-col gap-3 sm:flex-row sm:items-center`. Al bloque de total + botón de acción + botón ver, `flex items-center justify-between gap-3 sm:justify-end`. Al bloque de número/cliente, `min-w-0 flex-1`.
 3. **`transactions/page.tsx`: abonos.** Borra la constante local `IS_CREDIT` y usa `isCreditTransaction` de `@/lib/format-helpers` en sus 2 usos. En `TYPE_CONFIG` agrega `DEPOSIT: { label: 'Abono', cls: adminBadge('success'), icon: <FiArrowUpCircle className="w-3 h-3" /> },`. Hoy el canje de una gift card sale como "Recarga" en rojo y con signo menos.
 4. **`transactions/page.tsx`: tonos.** En `TYPE_CONFIG` y `STATUS_CONFIG`, cada `cls` pasa a `adminBadge(tono)`: RECHARGE/DEPOSIT/BONUS `success`, PURCHASE `brand`, REFUND `warning`, WITHDRAWAL `neutral`; PENDING `warning`, COMPLETED `success`, FAILED/CANCELLED `danger`. Cada `dot`, al `bg-*` sólido de su tono (R3).
-5. **`gift-cards/page.tsx`:** el tema naranja (`from-amber-500 to-orange-500` y similares) pasa a `brand`; el botón "Generar Gift Cards" usa `adminPrimaryButton`.
 
 QA extra: `/admin/transactions` con una gift card canjeada muestra "Abono" en verde con "+". `/admin/orders` a 390 px no encima textos.
 

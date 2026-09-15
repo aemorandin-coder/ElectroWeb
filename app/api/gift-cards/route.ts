@@ -15,6 +15,7 @@ import {
 const PAYMENT_WINDOW_MS = 15 * 60 * 1000;
 
 class PaymentAlreadyUsedError extends Error {}
+class InsufficientBalanceError extends Error {}
 
 // GET - Get gift cards (admin) or user's gift cards
 export async function GET(request: Request) {
@@ -123,9 +124,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Monto inválido (min $5, max $500)' }, { status: 400 });
         }
 
-        // SEGURIDAD (C-70): un cliente solo recibe una gift card si ya pagó su monto con saldo.
-        // La página de Gift Cards descuenta el saldo (/api/customer/balance/deduct) y luego llama aquí:
-        // se busca ese pago reciente, sin usar, y se marca como usado en la misma transacción que crea la tarjeta.
+        // SEGURIDAD (C-70/C-71): un cliente solo recibe una gift card si la paga con saldo.
+        // - payWithBalance (C-71): el servidor descuenta el saldo y crea la tarjeta en la misma transacción.
+        // - Compatibilidad: si la página ya descontó con /api/customer/balance/deduct, se usa ese pago reciente y sin usar.
+        const payWithBalance = !isAdmin && body.payWithBalance === true;
         let payment: { id: string } | null = null;
         if (!isAdmin) {
             if (!recipientEmail || typeof recipientEmail !== 'string') {
@@ -144,10 +146,14 @@ export async function POST(request: Request) {
                 orderBy: { createdAt: 'desc' },
                 select: { id: true },
             });
-            if (!payment) {
+            if (!payment && !payWithBalance) {
                 return NextResponse.json({ error: 'No encontramos el pago con saldo de esta gift card' }, { status: 402 });
             }
         }
+
+        // Tipo de tarjeta (C-71): la impresa nace inactiva y con PIN (se activa al cobrarla en caja);
+        // la digital va por correo al destinatario y no lleva PIN (código y PIN viajarían en el mismo correo).
+        const isPrinted = isAdmin && forPrint === true;
 
         // Generate unique code with high entropy
         let code = generateGiftCardCode();
@@ -167,19 +173,17 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Error generando código único' }, { status: 500 });
         }
 
-        // Generate secure PIN and hash it
-        const plainPin = generateSecurePin();
-        const hashedPin = hashPin(plainPin);
+        const plainPin = isPrinted ? generateSecurePin() : null;
+        const hashedPin = plainPin ? hashPin(plainPin) : null;
 
-        // Validate designId if provided
-        let validDesignId = null;
-        if (designId) {
-            const designExists = await prisma.giftCardDesign.findUnique({
-                where: { id: designId }
+        // Diseño: por id o por slug ("electro", "obsidiana"…, ver lib/gift-card-designs.ts)
+        let validDesignId: string | null = null;
+        if (designId && typeof designId === 'string') {
+            const design = await prisma.giftCardDesign.findFirst({
+                where: { OR: [{ id: designId }, { slug: designId }], isActive: true },
+                select: { id: true }
             });
-            if (designExists) {
-                validDesignId = designId;
-            }
+            validDesignId = design?.id ?? null;
         }
 
         // Create gift card with security enhancements
@@ -189,10 +193,10 @@ export async function POST(request: Request) {
                     code,
                     codeHash,
                     codeLast4: getCodeLastFour(code),
-                    pin: hashedPin, // Store hashed PIN
+                    pin: hashedPin, // HMAC; solo tarjetas impresas
                     amountUSD,
                     balanceUSD: amountUSD,
-                    status: 'ACTIVE',
+                    status: isPrinted ? 'INACTIVE' : 'ACTIVE',
                     designId: validDesignId,
                     purchasedBy: session.user.id,
                     purchasedAt: new Date(),
@@ -201,7 +205,7 @@ export async function POST(request: Request) {
                     recipientEmail: isGiftCard ? recipientEmail : null,
                     senderName: isGiftCard ? senderName : null,
                     personalMessage: isGiftCard ? personalMessage : null,
-                    activatedAt: new Date(),
+                    activatedAt: isPrinted ? null : new Date(),
                     // No expiration for Electro Shop gift cards
                 },
                 include: {
@@ -216,6 +220,25 @@ export async function POST(request: Request) {
                     data: { metadata: JSON.stringify({ giftCardId: created.id }) },
                 });
                 if (claimed.count !== 1) throw new PaymentAlreadyUsedError();
+            } else if (payWithBalance) {
+                // Descuento condicional: solo si alcanza el saldo en este instante (sin lecturas previas que puedan quedar viejas)
+                const charged = await tx.userBalance.updateMany({
+                    where: { userId: session.user.id, balance: { gte: amountUSD } },
+                    data: { balance: { decrement: amountUSD }, totalSpent: { increment: amountUSD } },
+                });
+                if (charged.count !== 1) throw new InsufficientBalanceError();
+                const wallet = await tx.userBalance.findUniqueOrThrow({ where: { userId: session.user.id }, select: { id: true } });
+                await tx.transaction.create({
+                    data: {
+                        balanceId: wallet.id,
+                        type: 'PURCHASE',
+                        status: 'COMPLETED',
+                        amount: amountUSD,
+                        currency: 'USD',
+                        description: `Gift Card para ${String(recipientName || recipientEmail).slice(0, 80)}`,
+                        metadata: JSON.stringify({ giftCardId: created.id }),
+                    },
+                });
             }
 
             return created;
@@ -240,7 +263,7 @@ export async function POST(request: Request) {
             try {
                 await sendGiftCardEmail(recipientEmail, {
                     code: giftCard.code,
-                    pin: plainPin, // Send the plain PIN, not the hash
+                    pin: plainPin ?? undefined, // Digitales: sin PIN
                     amount: amountUSD,
                     senderName: senderName || session?.user?.name || 'Un amigo',
                     recipientName: recipientName || 'Amigo/a',
@@ -257,8 +280,11 @@ export async function POST(request: Request) {
             success: true,
             giftCard: {
                 id: giftCard.id,
-                // El cliente no necesita el código: le llega a quien la recibe, junto con el PIN
+                // El cliente no necesita el código: le llega a quien la recibe por correo
                 code: isAdmin ? giftCard.code : null,
+                codeLast4: giftCard.codeLast4,
+                // PIN en claro SOLO al admin y SOLO en esta respuesta, para imprimirlo bajo el raspadito (C-71)
+                pin: isAdmin ? plainPin : null,
                 amountUSD: giftCard.amountUSD,
                 status: giftCard.status,
                 design: giftCard.design
@@ -266,6 +292,9 @@ export async function POST(request: Request) {
         });
 
     } catch (error) {
+        if (error instanceof InsufficientBalanceError) {
+            return NextResponse.json({ error: 'Saldo insuficiente para esta gift card' }, { status: 402 });
+        }
         if (error instanceof PaymentAlreadyUsedError) {
             return NextResponse.json({ error: 'Ese pago ya se usó para otra gift card' }, { status: 409 });
         }

@@ -102,6 +102,8 @@ export default withAuth(
           pathname.startsWith('/api/auth') ||
           pathname.startsWith('/api/products') ||
           pathname.startsWith('/api/categories') ||
+          // Consultar una gift card antes de iniciar sesión (sin saldo, con límite). El canje (POST) exige sesión en el handler (C-71)
+          pathname === '/api/gift-cards/redeem' ||
           // Solo la versión pública: /api/settings (completa) exige sesión de admin (C-50a)
           pathname === '/api/settings/public' ||
           pathname.startsWith('/api/exchange-rates') ||

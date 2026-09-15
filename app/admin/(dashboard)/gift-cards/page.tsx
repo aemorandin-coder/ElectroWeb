@@ -1,711 +1,526 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-    FiGift, FiPlus, FiSearch, FiFilter, FiDownload, FiEye, FiPrinter,
-    FiCheck, FiX, FiAlertCircle, FiClock, FiDollarSign, FiHash, FiUser,
-    FiMail, FiCalendar, FiRefreshCw, FiCopy, FiShield
-} from 'react-icons/fi';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import { FiAlertTriangle, FiCheck, FiCopy, FiDollarSign, FiEye, FiGift, FiHash, FiPlus, FiPrinter, FiRefreshCw, FiSearch, FiShoppingBag, FiX } from 'react-icons/fi';
+import GiftCard3D from '@/components/gift-card/GiftCard3D';
+import { formatUSD } from '@/lib/currency';
+import { formatGiftCardCode } from '@/lib/gift-card-designs';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import {
+  adminBadge, adminCard, adminEmpty, adminHint, adminIconButton, adminIconChip, adminInput, adminLabel, adminModalBody,
+  adminModalFooter, adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeader,
+  adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminRowHover, adminSecondaryButton, adminSpinner, adminStatCard,
+  adminStatLabel, adminStatValue, adminSuccessButton, adminTable, adminTableWrap, adminTd, adminTh, type AdminTone,
+} from '@/lib/admin-ui';
 
 interface GiftCard {
-    id: string;
-    code: string;
-    codeLast4: string | null;
-    amountUSD: number;
-    balanceUSD: number;
-    status: string;
-    purchasedBy: string | null;
-    purchasedAt: string | null;
-    recipientEmail: string | null;
-    recipientName: string | null;
-    senderName: string | null;
-    redeemedBy: string | null;
-    redeemedAt: string | null;
-    createdAt: string;
-    design: {
-        name: string;
-        category: string;
-    } | null;
+  id: string;
+  code: string;
+  codeLast4: string | null;
+  amountUSD: number | string;
+  balanceUSD: number | string;
+  status: string;
+  recipientEmail: string | null;
+  recipientName: string | null;
+  activatedAt: string | null;
+  redeemedAt: string | null;
+  createdAt: string;
+  design: { slug?: string | null; name: string } | null;
 }
 
-const statusColors: Record<string, { bg: string; text: string; label: string }> = {
-    ACTIVE: { bg: 'bg-green-100', text: 'text-green-800', label: 'Activa' },
-    INACTIVE: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Inactiva' },
-    DEPLETED: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Agotada' },
-    EXPIRED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Expirada' },
-    SUSPENDED: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Suspendida' },
-    CANCELLED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelada' },
-    PARTIALLY_USED: { bg: 'bg-amber-100', text: 'text-amber-800', label: 'Uso Parcial' },
+interface PrintedCard { code: string; pin: string; amountUSD: number }
+
+const STATUS: Record<string, { label: string; tone: AdminTone }> = {
+  INACTIVE: { label: 'Por activar', tone: 'warning' },
+  ACTIVE: { label: 'Activa', tone: 'success' },
+  PARTIALLY_USED: { label: 'Uso parcial', tone: 'success' },
+  DEPLETED: { label: 'Canjeada', tone: 'brand' },
+  EXPIRED: { label: 'Vencida', tone: 'neutral' },
+  SUSPENDED: { label: 'Suspendida', tone: 'danger' },
+  CANCELLED: { label: 'Cancelada', tone: 'danger' },
 };
 
-export default function GiftCardsAdminPage() {
-    const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showDetailsModal, setShowDetailsModal] = useState<GiftCard | null>(null);
-    const [creating, setCreating] = useState(false);
+const PAYMENT_METHODS = [
+  { value: 'CASH', label: 'Efectivo' },
+  { value: 'MOBILE_PAYMENT', label: 'Pago Móvil' },
+  { value: 'CARD', label: 'Punto de venta' },
+  { value: 'ZELLE', label: 'Zelle' },
+  { value: 'CRYPTO', label: 'Binance Pay' },
+  { value: 'OTHER', label: 'Otro' },
+];
 
-    // Create form state
-    const [createForm, setCreateForm] = useState({
-        amount: 25,
-        quantity: 1,
-        forPrint: true,
-    });
+const AMOUNT_PRESETS = [10, 25, 50, 100];
 
-    // Stats
-    const [stats, setStats] = useState({
-        total: 0,
-        active: 0,
-        depleted: 0,
-        totalBalance: 0,
-        totalRedeemed: 0,
-    });
+/** Impresa si no va a un correo (las digitales siempre llevan destinatario). */
+const isPrinted = (card: GiftCard) => !card.recipientEmail;
 
-    useEffect(() => {
-        fetchGiftCards();
-    }, []);
+const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 
-    const fetchGiftCards = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/gift-cards?type=admin');
-            if (!res.ok) throw new Error('Error fetching gift cards');
-            const data = await res.json();
-            setGiftCards(data);
-
-            // Calculate stats
-            const active = data.filter((gc: GiftCard) => gc.status === 'ACTIVE').length;
-            const depleted = data.filter((gc: GiftCard) => gc.status === 'DEPLETED').length;
-            const totalBalance = data.reduce((sum: number, gc: GiftCard) => sum + Number(gc.balanceUSD), 0);
-            const totalRedeemed = data.filter((gc: GiftCard) => gc.status === 'DEPLETED')
-                .reduce((sum: number, gc: GiftCard) => sum + Number(gc.amountUSD), 0);
-
-            setStats({
-                total: data.length,
-                active,
-                depleted,
-                totalBalance,
-                totalRedeemed,
-            });
-        } catch (error) {
-            console.error('Error:', error);
-            toast.error('Error al cargar gift cards');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleCreateGiftCards = async () => {
-        if (createForm.amount < 5 || createForm.amount > 500) {
-            toast.error('El monto debe estar entre $5 y $500');
-            return;
-        }
-        if (createForm.quantity < 1 || createForm.quantity > 50) {
-            toast.error('La cantidad debe estar entre 1 y 50');
-            return;
-        }
-
-        setCreating(true);
-        const createdCards: GiftCard[] = [];
-
-        try {
-            for (let i = 0; i < createForm.quantity; i++) {
-                const res = await fetch('/api/gift-cards', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        amountUSD: createForm.amount,
-                        forPrint: createForm.forPrint,
-                        isGift: false,
-                    }),
-                });
-
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    throw new Error(errorData.error || 'Error creating gift card');
-                }
-
-                const data = await res.json();
-                if (data.giftCard) {
-                    createdCards.push(data.giftCard);
-                }
-            }
-
-            toast.success(`${createdCards.length} Gift Card(s) creadas exitosamente`);
-            setShowCreateModal(false);
-            setCreateForm({ amount: 25, quantity: 1, forPrint: true });
-            fetchGiftCards();
-
-            // Auto-print if forPrint is selected
-            if (createForm.forPrint && createdCards.length > 0) {
-                handlePrintCards(createdCards);
-            }
-        } catch (error: any) {
-            console.error('Error:', error);
-            toast.error(error.message || 'Error al crear gift cards');
-        } finally {
-            setCreating(false);
-        }
-    };
-
-    const handlePrintCards = (cards: GiftCard[]) => {
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-            toast.error('Permite las ventanas emergentes para imprimir');
-            return;
-        }
-
-        const cardsHtml = cards.map(card => `
-            <div style="
-                border: 2px dashed #f59e0b;
-                border-radius: 16px;
-                padding: 24px;
-                margin: 16px;
-                width: 300px;
-                background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-                page-break-inside: avoid;
-            ">
-                <div style="text-align: center; margin-bottom: 16px;">
-                    <img src="/logo.png" alt="Electro Shop" style="height: 40px;" onerror="this.style.display='none'">
-                    <h2 style="margin: 8px 0; color: #92400e; font-size: 18px;">GIFT CARD</h2>
-                </div>
-                <div style="
-                    background: white;
-                    border-radius: 8px;
-                    padding: 16px;
-                    text-align: center;
-                    margin-bottom: 16px;
-                ">
-                    <div style="color: #f59e0b; font-size: 32px; font-weight: bold;">
-                        $${Number(card.amountUSD).toFixed(2)}
-                    </div>
-                    <div style="color: #6b7280; font-size: 12px; margin-top: 4px;">USD</div>
-                </div>
-                <div style="
-                    background: #1f2937;
-                    color: white;
-                    padding: 12px;
-                    border-radius: 8px;
-                    font-family: monospace;
-                    font-size: 14px;
-                    text-align: center;
-                    letter-spacing: 2px;
-                ">
-                    ${card.code.replace(/(.{4})/g, '$1-').slice(0, -1)}
-                </div>
-                <div style="text-align: center; margin-top: 16px; color: #6b7280; font-size: 11px;">
-                    Canjeable en electro-shop.com
-                </div>
-            </div>
-        `).join('');
-
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Gift Cards - Electro Shop</title>
-                <style>
-                    body {
-                        font-family: system-ui, -apple-system, sans-serif;
-                        display: flex;
-                        flex-wrap: wrap;
-                        justify-content: center;
-                        padding: 20px;
-                    }
-                    @media print {
-                        body { padding: 0; }
-                    }
-                </style>
-            </head>
-            <body onload="window.print()">
-                ${cardsHtml}
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
-    };
-
-    const copyCode = (code: string) => {
-        navigator.clipboard.writeText(code);
-        toast.success('Código copiado');
-    };
-
-    const filteredCards = giftCards.filter(card => {
-        const matchesSearch =
-            card.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            card.recipientEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            card.recipientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (card.codeLast4 && card.codeLast4.toLowerCase().includes(searchTerm.toLowerCase()));
-
-        const matchesStatus = statusFilter === 'all' || card.status === statusFilter;
-
-        return matchesSearch && matchesStatus;
-    });
-
-    return (
-        <div className="p-6 max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
-                            <FiGift className="w-5 h-5 text-white" />
-                        </div>
-                        Gift Cards
-                    </h1>
-                    <p className="text-gray-500 mt-1">Administra las tarjetas de regalo</p>
-                </div>
-                <div className="flex gap-3">
-                    <button
-                        onClick={() => fetchGiftCards()}
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-                    >
-                        <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                        Actualizar
-                    </button>
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2"
-                    >
-                        <FiPlus className="w-4 h-4" />
-                        Generar Gift Cards
-                    </button>
-                </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <FiHash className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                            <p className="text-sm text-gray-500">Total</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                            <FiCheck className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
-                            <p className="text-sm text-gray-500">Activas</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <FiGift className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.depleted}</p>
-                            <p className="text-sm text-gray-500">Canjeadas</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                            <FiDollarSign className="w-5 h-5 text-amber-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">${stats.totalBalance.toFixed(2)}</p>
-                            <p className="text-sm text-gray-500">Saldo Activo</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                            <FiDollarSign className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">${stats.totalRedeemed.toFixed(2)}</p>
-                            <p className="text-sm text-gray-500">Canjeado</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200 mb-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 relative">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="text"
-                            placeholder="Buscar por código, email o nombre..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                        />
-                    </div>
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    >
-                        <option value="all">Todos los estados</option>
-                        <option value="ACTIVE">Activas</option>
-                        <option value="DEPLETED">Agotadas</option>
-                        <option value="INACTIVE">Inactivas</option>
-                        <option value="SUSPENDED">Suspendidas</option>
-                        <option value="CANCELLED">Canceladas</option>
-                    </select>
-                </div>
-            </div>
-
-            {/* Table */}
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Código
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Monto
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Saldo
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Estado
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Destinatario
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Fecha
-                                </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Acciones
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                                            <p className="text-gray-500">Cargando...</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : filteredCards.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <FiGift className="w-12 h-12 text-gray-300" />
-                                            <p className="text-gray-500">No se encontraron gift cards</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredCards.map((card) => (
-                                    <tr key={card.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
-                                                    ****{card.codeLast4 || card.code.slice(-4)}
-                                                </code>
-                                                <button
-                                                    onClick={() => copyCode(card.code)}
-                                                    className="p-1 text-gray-400 hover:text-amber-500 transition-colors"
-                                                    title="Copiar código"
-                                                >
-                                                    <FiCopy className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="font-semibold text-gray-900">
-                                                ${Number(card.amountUSD).toFixed(2)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`font-semibold ${Number(card.balanceUSD) > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                                                ${Number(card.balanceUSD).toFixed(2)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[card.status]?.bg} ${statusColors[card.status]?.text}`}>
-                                                {statusColors[card.status]?.label || card.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {card.recipientEmail ? (
-                                                <div className="text-sm">
-                                                    <p className="font-medium text-gray-900">{card.recipientName}</p>
-                                                    <p className="text-gray-500">{card.recipientEmail}</p>
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400 text-sm">-</span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {new Date(card.createdAt).toLocaleDateString('es-VE')}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => setShowDetailsModal(card)}
-                                                    className="p-2 text-gray-400 hover:text-amber-500 transition-colors"
-                                                    title="Ver detalles"
-                                                >
-                                                    <FiEye className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handlePrintCards([card])}
-                                                    className="p-2 text-gray-400 hover:text-amber-500 transition-colors"
-                                                    title="Imprimir"
-                                                >
-                                                    <FiPrinter className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Create Modal */}
-            {showCreateModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
-                                <FiGift className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold text-gray-900">Generar Gift Cards</h2>
-                                <p className="text-sm text-gray-500">Para impresión física</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Monto por tarjeta (USD)
-                                </label>
-                                <div className="grid grid-cols-4 gap-2 mb-2">
-                                    {[10, 25, 50, 100].map((amount) => (
-                                        <button
-                                            key={amount}
-                                            onClick={() => setCreateForm(prev => ({ ...prev, amount }))}
-                                            className={`py-2 rounded-lg font-semibold transition-colors ${createForm.amount === amount
-                                                    ? 'bg-amber-500 text-white'
-                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                }`}
-                                        >
-                                            ${amount}
-                                        </button>
-                                    ))}
-                                </div>
-                                <input
-                                    type="number"
-                                    min={5}
-                                    max={500}
-                                    value={createForm.amount}
-                                    onChange={(e) => setCreateForm(prev => ({ ...prev, amount: Number(e.target.value) }))}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Cantidad a generar
-                                </label>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    max={50}
-                                    value={createForm.quantity}
-                                    onChange={(e) => setCreateForm(prev => ({ ...prev, quantity: Number(e.target.value) }))}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Máximo 50 por lote</p>
-                            </div>
-
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                                <div className="flex items-start gap-3">
-                                    <FiShield className="w-5 h-5 text-amber-600 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm font-medium text-amber-800">Seguridad</p>
-                                        <p className="text-xs text-amber-600 mt-1">
-                                            Los códigos son generados con alta entropía criptográfica y
-                                            almacenados de forma segura (hash SHA-256).
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Total a generar:</span>
-                                    <span className="text-xl font-bold text-amber-600">
-                                        ${(createForm.amount * createForm.quantity).toFixed(2)} ({createForm.quantity} tarjetas)
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 mt-6">
-                            <button
-                                onClick={() => setShowCreateModal(false)}
-                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleCreateGiftCards}
-                                disabled={creating}
-                                className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {creating ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Generando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <FiPrinter className="w-4 h-4" />
-                                        Generar e Imprimir
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Details Modal */}
-            {showDetailsModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-gray-900">Detalles de Gift Card</h2>
-                            <button
-                                onClick={() => setShowDetailsModal(null)}
-                                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                            >
-                                <FiX className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            {/* Code */}
-                            <div className="bg-gray-900 rounded-xl p-4 text-center">
-                                <p className="text-xs text-gray-400 mb-2">Código</p>
-                                <code className="text-xl font-mono text-amber-400 tracking-wider">
-                                    {showDetailsModal.code.replace(/(.{4})/g, '$1-').slice(0, -1)}
-                                </code>
-                                <button
-                                    onClick={() => copyCode(showDetailsModal.code)}
-                                    className="ml-2 text-gray-400 hover:text-white transition-colors"
-                                >
-                                    <FiCopy className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            {/* Amount & Balance */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <p className="text-sm text-gray-500">Monto Original</p>
-                                    <p className="text-2xl font-bold text-gray-900">
-                                        ${Number(showDetailsModal.amountUSD).toFixed(2)}
-                                    </p>
-                                </div>
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <p className="text-sm text-gray-500">Saldo Actual</p>
-                                    <p className={`text-2xl font-bold ${Number(showDetailsModal.balanceUSD) > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                                        ${Number(showDetailsModal.balanceUSD).toFixed(2)}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Status */}
-                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <span className="text-gray-600">Estado:</span>
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusColors[showDetailsModal.status]?.bg} ${statusColors[showDetailsModal.status]?.text}`}>
-                                    {statusColors[showDetailsModal.status]?.label || showDetailsModal.status}
-                                </span>
-                            </div>
-
-                            {/* Recipient */}
-                            {showDetailsModal.recipientEmail && (
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-500 mb-2">Destinatario</p>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                                            <FiUser className="w-5 h-5 text-amber-600" />
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-gray-900">{showDetailsModal.recipientName}</p>
-                                            <p className="text-sm text-gray-500">{showDetailsModal.recipientEmail}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Dates */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-500">Creada</p>
-                                    <p className="font-medium text-gray-900">
-                                        {new Date(showDetailsModal.createdAt).toLocaleDateString('es-VE', {
-                                            day: 'numeric',
-                                            month: 'short',
-                                            year: 'numeric'
-                                        })}
-                                    </p>
-                                </div>
-                                {showDetailsModal.redeemedAt && (
-                                    <div className="p-4 bg-gray-50 rounded-lg">
-                                        <p className="text-sm text-gray-500">Canjeada</p>
-                                        <p className="font-medium text-gray-900">
-                                            {new Date(showDetailsModal.redeemedAt).toLocaleDateString('es-VE', {
-                                                day: 'numeric',
-                                                month: 'short',
-                                                year: 'numeric'
-                                            })}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 mt-6">
-                            <button
-                                onClick={() => handlePrintCards([showDetailsModal])}
-                                className="flex-1 px-4 py-2 border border-amber-500 text-amber-600 rounded-lg hover:bg-amber-50 transition-colors flex items-center justify-center gap-2"
-                            >
-                                <FiPrinter className="w-4 h-4" />
-                                Imprimir
-                            </button>
-                            <button
-                                onClick={() => setShowDetailsModal(null)}
-                                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                            >
-                                Cerrar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+/** Hoja para imprenta: tarjetas de 85,6 × 54 mm con frente y reverso (código + PIN en la zona del raspadito). */
+function printBatch(cards: PrintedCard[]) {
+  const win = window.open('', '_blank');
+  if (!win) {
+    toast.error('Permite las ventanas emergentes para imprimir la hoja');
+    return false;
+  }
+  const rows = cards.map((card) => {
+    const code = escapeHtml(formatGiftCardCode(card.code));
+    const pin = escapeHtml(card.pin.replace(/(\d{3})(?=\d)/g, '$1 '));
+    return `
+      <div class="pair">
+        <div class="card front">
+          <div class="brand">ELECTRO<span>SHOP</span></div>
+          <div class="tag">GIFT CARD</div>
+          <div class="amount">${escapeHtml(formatUSD(card.amountUSD))}<small>USD</small></div>
         </div>
-    );
+        <div class="card back">
+          <div class="label">Código de canje</div>
+          <div class="code">${code}</div>
+          <div class="pinrow"><div class="pin"><em>PIN · colocar raspadito</em>${pin}</div><div class="state">Se activa al pagar en caja</div></div>
+          <div class="foot">Canjea en electroshopve.com/canjear-gift-card · Sin vencimiento</div>
+        </div>
+      </div>`;
+  }).join('');
+  win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Gift Cards impresas · Electro Shop</title>
+    <style>
+      @page { size: A4; margin: 10mm; }
+      * { box-sizing: border-box; }
+      body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; color: #10182b; }
+      .note { font-size: 12px; margin: 0 0 6mm; padding: 3mm 4mm; border: 1px solid #b45309; color: #b45309; border-radius: 2mm; }
+      .pair { display: flex; gap: 6mm; margin-bottom: 6mm; page-break-inside: avoid; }
+      .card { width: 85.6mm; height: 54mm; border-radius: 3.2mm; padding: 4.5mm 5mm; position: relative; overflow: hidden;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .front { background: linear-gradient(135deg, #0f347f, #1e4ba3 40%, #2a63cd 72%, #4f86ea); color: #fff; }
+      .brand { font-weight: 700; letter-spacing: .08em; font-size: 4.2mm; line-height: 1; }
+      .brand span { display: block; font-size: 2.4mm; letter-spacing: .42em; color: #cfe0ff; margin-top: .6mm; }
+      .tag { position: absolute; top: 4.5mm; right: 5mm; font-size: 2.2mm; font-weight: 700; letter-spacing: .24em; border: .25mm solid rgba(255,255,255,.4); border-radius: 9mm; padding: .9mm 2mm; color: #cfe0ff; }
+      .amount { position: absolute; left: 5mm; bottom: 4.5mm; font-size: 10mm; font-weight: 700; line-height: 1; }
+      .amount small { font-size: 3.2mm; margin-left: 1.2mm; color: #cfe0ff; }
+      .back { background: #f3f5fa; border: .25mm solid #cfd6e4; }
+      .label { font-size: 2.2mm; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #5d6677; }
+      .code { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; font-size: 4.4mm; letter-spacing: .08em; margin-top: 1mm; }
+      .pinrow { display: flex; align-items: center; justify-content: space-between; gap: 3mm; margin-top: 4mm; }
+      .pin { width: 40mm; height: 12mm; border-radius: 2mm; border: .3mm dashed #5d6677; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; font-size: 5mm; letter-spacing: .16em; }
+      .pin em { font-family: system-ui, sans-serif; font-style: normal; font-size: 1.8mm; letter-spacing: .06em; font-weight: 600; color: #5d6677; }
+      .state { font-size: 2.2mm; font-weight: 700; color: #b45309; text-align: right; max-width: 28mm; }
+      .foot { position: absolute; left: 5mm; right: 5mm; bottom: 4mm; font-size: 2.1mm; color: #5d6677; }
+      @media print { .note { display: none; } }
+    </style></head><body>
+    <p class="note">Esta hoja es la única vez que se ven los PIN. Imprímela, cubre cada PIN con un raspadito y guarda las tarjetas: están inactivas hasta que se cobren en caja.</p>
+    ${rows}
+    <script>window.onload = () => window.print();</script>
+    </body></html>`);
+  win.document.close();
+  return true;
+}
+
+/**
+ * Gift cards del admin (C-71): tarjetas impresas que nacen inactivas con PIN, venta en caja que las activa,
+ * y detalle con la tarjeta 3D. Los PIN solo existen en claro en la respuesta de creación: se imprimen en ese momento.
+ */
+export default function GiftCardsAdminPage() {
+  const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState({ amount: 25, quantity: 1 });
+  const [creating, setCreating] = useState(false);
+  const [batch, setBatch] = useState<PrintedCard[] | null>(null);
+  const [batchPrinted, setBatchPrinted] = useState(false);
+
+  const [showSell, setShowSell] = useState(false);
+  const [sellForm, setSellForm] = useState({ code: '', paymentMethod: 'CASH', reference: '' });
+  const [selling, setSelling] = useState(false);
+  const [sellError, setSellError] = useState('');
+
+  const [details, setDetails] = useState<GiftCard | null>(null);
+
+  useBodyScrollLock(showCreate);
+  useBodyScrollLock(Boolean(batch));
+  useBodyScrollLock(showSell);
+  useBodyScrollLock(Boolean(details));
+
+  const fetchGiftCards = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/gift-cards?type=admin');
+      if (!res.ok) throw new Error('fetch');
+      setGiftCards(await res.json());
+    } catch {
+      toast.error('No se pudieron cargar las gift cards');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchGiftCards();
+  }, [fetchGiftCards]);
+
+  const stats = {
+    total: giftCards.length,
+    toActivate: giftCards.filter((c) => c.status === 'INACTIVE').length,
+    active: giftCards.filter((c) => c.status === 'ACTIVE' || c.status === 'PARTIALLY_USED').length,
+    activeBalance: giftCards.filter((c) => c.status === 'ACTIVE' || c.status === 'PARTIALLY_USED').reduce((sum, c) => sum + Number(c.balanceUSD), 0),
+    redeemed: giftCards.filter((c) => c.status === 'DEPLETED').reduce((sum, c) => sum + Number(c.amountUSD), 0),
+  };
+
+  const handleCreate = async () => {
+    const { amount, quantity } = createForm;
+    if (!(amount >= 5 && amount <= 500)) { toast.error('El monto debe estar entre $5 y $500'); return; }
+    if (!(quantity >= 1 && quantity <= 50)) { toast.error('La cantidad debe estar entre 1 y 50'); return; }
+    setCreating(true);
+    const created: PrintedCard[] = [];
+    try {
+      for (let i = 0; i < quantity; i++) {
+        const res = await fetch('/api/gift-cards', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amountUSD: amount, forPrint: true, isGift: false }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.giftCard?.code || !data.giftCard?.pin) throw new Error(data.error || 'No se pudo generar la tarjeta');
+        created.push({ code: data.giftCard.code, pin: data.giftCard.pin, amountUSD: Number(data.giftCard.amountUSD) });
+      }
+      toast.success(`${created.length} ${created.length === 1 ? 'tarjeta generada' : 'tarjetas generadas'}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudieron generar las tarjetas');
+    } finally {
+      setCreating(false);
+      if (created.length > 0) {
+        setShowCreate(false);
+        setBatch(created);
+        setBatchPrinted(false);
+        void fetchGiftCards();
+      }
+    }
+  };
+
+  const closeBatch = () => {
+    if (!batchPrinted && !window.confirm('No imprimiste la hoja. Los PIN no se vuelven a mostrar y esas tarjetas no se podrán canjear. ¿Cerrar de todos modos?')) return;
+    setBatch(null);
+  };
+
+  const handleSell = async () => {
+    setSelling(true);
+    setSellError('');
+    try {
+      const res = await fetch('/api/admin/gift-cards/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sellForm),
+      });
+      const data = await res.json();
+      if (!res.ok) { setSellError(data.error || 'No se pudo activar la tarjeta'); return; }
+      toast.success(`Tarjeta ****${data.giftCard.codeLast4} activada por ${formatUSD(data.giftCard.amountUSD)}`);
+      setShowSell(false);
+      setSellForm({ code: '', paymentMethod: 'CASH', reference: '' });
+      void fetchGiftCards();
+    } catch {
+      setSellError('No se pudo activar la tarjeta. Revisa tu conexión.');
+    } finally {
+      setSelling(false);
+    }
+  };
+
+  const openSell = (code = '') => {
+    setSellForm({ code: code ? formatGiftCardCode(code) : '', paymentMethod: 'CASH', reference: '' });
+    setSellError('');
+    setDetails(null);
+    setShowSell(true);
+  };
+
+  const copyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(formatGiftCardCode(code));
+      toast.success('Código copiado');
+    } catch {
+      toast.error('No se pudo copiar el código');
+    }
+  };
+
+  const term = searchTerm.trim().toLowerCase();
+  const filtered = giftCards.filter((card) => {
+    const matches = !term
+      || card.code.toLowerCase().includes(term.replace(/-/g, ''))
+      || card.recipientEmail?.toLowerCase().includes(term)
+      || card.recipientName?.toLowerCase().includes(term);
+    return matches && (statusFilter === 'all' || card.status === statusFilter);
+  });
+
+  return (
+    <div>
+      <div className={adminPageHeader}>
+        <div>
+          <h1 className={adminPageTitle}>Gift Cards</h1>
+          <p className={adminPageSubtitle}>Las digitales se compran en la tienda. Las impresas se generan aquí y se activan al venderlas en caja.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => void fetchGiftCards()} className={adminIconButton} aria-label="Actualizar lista">
+            <FiRefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+          </button>
+          <button type="button" onClick={() => openSell()} className={adminSecondaryButton}>
+            <FiShoppingBag className="h-4 w-4" aria-hidden="true" /> Vender en caja
+          </button>
+          <button type="button" onClick={() => setShowCreate(true)} className={adminPrimaryButton}>
+            <FiPlus className="h-4 w-4" aria-hidden="true" /> Generar impresas
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+        {[
+          { label: 'Total', value: String(stats.total), icon: FiHash, tone: 'neutral' as AdminTone },
+          { label: 'Por activar', value: String(stats.toActivate), icon: FiAlertTriangle, tone: 'warning' as AdminTone },
+          { label: 'Activas', value: String(stats.active), icon: FiCheck, tone: 'success' as AdminTone },
+          { label: 'Saldo activo', value: formatUSD(stats.activeBalance), icon: FiDollarSign, tone: 'brand' as AdminTone },
+          { label: 'Canjeado', value: formatUSD(stats.redeemed), icon: FiGift, tone: 'brand' as AdminTone },
+        ].map(({ label, value, icon: Icon, tone }) => (
+          <div key={label} className={adminStatCard}>
+            <span className={adminIconChip(tone)}><Icon className="h-5 w-5" aria-hidden="true" /></span>
+            <div className="min-w-0">
+              <p className={adminStatLabel}>{label}</p>
+              <p className={`${adminStatValue} truncate`}>{value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className={`${adminCard} mb-4 flex flex-col gap-3 sm:flex-row`}>
+        <div className="relative flex-1">
+          <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
+          <label htmlFor="gc-search" className="sr-only">Buscar gift cards</label>
+          <input id="gc-search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Código, correo o nombre" className={`${adminInput()} pl-9`} />
+        </div>
+        <label htmlFor="gc-status" className="sr-only">Estado</label>
+        <select id="gc-status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={`${adminInput()} sm:w-52`}>
+          <option value="all">Todos los estados</option>
+          {Object.entries(STATUS).map(([value, { label }]) => <option key={value} value={value}>{label}</option>)}
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-16"><span className={adminSpinner} aria-label="Cargando" /></div>
+      ) : filtered.length === 0 ? (
+        <div className={adminEmpty}>
+          <FiGift className="mb-3 h-10 w-10 text-subtle" aria-hidden="true" />
+          <p className="font-semibold text-ink">No hay gift cards con ese filtro</p>
+          <p className={adminHint}>Genera tarjetas impresas o espera las compras de la tienda.</p>
+        </div>
+      ) : (
+        <div className={adminTableWrap}>
+          <table className={`${adminTable} min-w-[760px]`}>
+            <thead>
+              <tr>
+                <th className={adminTh}>Código</th>
+                <th className={adminTh}>Tipo</th>
+                <th className={adminTh}>Monto</th>
+                <th className={adminTh}>Saldo</th>
+                <th className={adminTh}>Estado</th>
+                <th className={adminTh}>Destinatario</th>
+                <th className={adminTh}>Fecha</th>
+                <th className={`${adminTh} text-right`}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((card) => {
+                const status = STATUS[card.status] ?? { label: card.status, tone: 'neutral' as AdminTone };
+                return (
+                  <tr key={card.id} className={adminRowHover}>
+                    <td className={adminTd}>
+                      <div className="flex items-center gap-1">
+                        <code className="rounded bg-surface px-2 py-1 font-mono text-xs">****{card.codeLast4 || card.code.slice(-4)}</code>
+                        <button type="button" onClick={() => void copyCode(card.code)} className={`${adminIconButton} h-8 w-8`} aria-label="Copiar código completo">
+                          <FiCopy className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </td>
+                    <td className={`${adminTd} text-ink-soft`}>{isPrinted(card) ? 'Impresa' : 'Digital'}</td>
+                    <td className={`${adminTd} font-semibold`}>{formatUSD(Number(card.amountUSD))}</td>
+                    <td className={`${adminTd} font-semibold ${Number(card.balanceUSD) > 0 ? 'text-success-strong' : 'text-muted'}`}>{formatUSD(Number(card.balanceUSD))}</td>
+                    <td className={adminTd}><span className={adminBadge(status.tone)}>{status.label}</span></td>
+                    <td className={adminTd}>
+                      {card.recipientEmail ? (
+                        <div className="text-sm"><p className="font-medium">{card.recipientName}</p><p className="text-muted">{card.recipientEmail}</p></div>
+                      ) : <span className="text-muted">—</span>}
+                    </td>
+                    <td className={`${adminTd} text-muted`}>{new Date(card.createdAt).toLocaleDateString('es-VE')}</td>
+                    <td className={adminTd}>
+                      <div className="flex items-center justify-end gap-1">
+                        {card.status === 'INACTIVE' && (
+                          <button type="button" onClick={() => openSell(card.code)} className={`${adminSuccessButton} h-9 px-3 text-xs`}>Activar</button>
+                        )}
+                        <button type="button" onClick={() => setDetails(card)} className={adminIconButton} aria-label={`Ver tarjeta terminada en ${card.codeLast4 || card.code.slice(-4)}`}>
+                          <FiEye className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Generar tarjetas impresas */}
+      {showCreate && (
+        <div className={adminModalOverlay} role="dialog" aria-modal="true" aria-labelledby="create-title">
+          <div className={`${adminModalPanel} sm:max-w-md`}>
+            <div className={adminModalHeader}>
+              <h2 id="create-title" className={adminModalTitle}>Generar tarjetas impresas</h2>
+              <button type="button" onClick={() => setShowCreate(false)} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+            </div>
+            <div className={`${adminModalBody} flex flex-col gap-4`}>
+              <div>
+                <span className={adminLabel}>Monto por tarjeta</span>
+                <div className="mb-2 grid grid-cols-4 gap-2">
+                  {AMOUNT_PRESETS.map((amount) => (
+                    <button key={amount} type="button" onClick={() => setCreateForm((f) => ({ ...f, amount }))} aria-pressed={createForm.amount === amount}
+                      className={`h-10 rounded-lg border text-sm font-semibold ${createForm.amount === amount ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-line text-ink hover:bg-surface'}`}>
+                      ${amount}
+                    </button>
+                  ))}
+                </div>
+                <label htmlFor="create-amount" className="sr-only">Otro monto</label>
+                <input id="create-amount" type="number" min={5} max={500} value={createForm.amount} onChange={(e) => setCreateForm((f) => ({ ...f, amount: Number(e.target.value) }))} className={adminInput()} />
+              </div>
+              <div>
+                <label htmlFor="create-quantity" className={adminLabel}>Cantidad</label>
+                <input id="create-quantity" type="number" min={1} max={50} value={createForm.quantity} onChange={(e) => setCreateForm((f) => ({ ...f, quantity: Number(e.target.value) }))} className={adminInput()} />
+                <p className={adminHint}>Hasta 50 por lote.</p>
+              </div>
+              <div className={adminNotice('warning')}>
+                Se crean <strong>inactivas</strong>, con un PIN de 6 dígitos que se muestra <strong>solo en la hoja de impresión</strong> de este lote. Actívalas desde &quot;Vender en caja&quot; cuando el cliente pague.
+              </div>
+              <p className="text-sm text-ink-soft">Total del lote: <strong className="text-ink">{formatUSD(createForm.amount * createForm.quantity)}</strong> en {createForm.quantity} {createForm.quantity === 1 ? 'tarjeta' : 'tarjetas'}.</p>
+            </div>
+            <div className={adminModalFooter}>
+              <button type="button" onClick={() => setShowCreate(false)} className={adminSecondaryButton}>Cancelar</button>
+              <button type="button" onClick={() => void handleCreate()} disabled={creating} className={adminPrimaryButton}>
+                {creating ? 'Generando…' : 'Generar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lote generado: única vez que se ven los PIN */}
+      {batch && (
+        <div className={adminModalOverlay} role="dialog" aria-modal="true" aria-labelledby="batch-title">
+          <div className={`${adminModalPanel} sm:max-w-2xl`}>
+            <div className={adminModalHeader}>
+              <h2 id="batch-title" className={adminModalTitle}>Lote listo para imprimir</h2>
+              <button type="button" onClick={closeBatch} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+            </div>
+            <div className={`${adminModalBody} flex flex-col gap-4`}>
+              <div className={adminNotice('danger')}>
+                Esta es la <strong>única vez</strong> que se ven los PIN: en la base de datos quedan cifrados. Imprime la hoja ahora y cubre cada PIN con un raspadito.
+              </div>
+              <div className="mx-auto w-full max-w-sm">
+                <GiftCard3D amountUSD={batch[0].amountUSD} kind="print" code={batch[0].code} pin={batch[0].pin} status="INACTIVE" face="back" />
+              </div>
+              <div className={adminTableWrap}>
+                <table className={adminTable}>
+                  <thead><tr><th className={adminTh}>Código</th><th className={adminTh}>PIN</th><th className={adminTh}>Monto</th></tr></thead>
+                  <tbody>
+                    {batch.map((card) => (
+                      <tr key={card.code}>
+                        <td className={`${adminTd} font-mono text-xs`}>{formatGiftCardCode(card.code)}</td>
+                        <td className={`${adminTd} font-mono text-xs`}>{card.pin}</td>
+                        <td className={adminTd}>{formatUSD(card.amountUSD)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className={adminModalFooter}>
+              <button type="button" onClick={closeBatch} className={adminSecondaryButton}>Cerrar</button>
+              <button type="button" onClick={() => { if (printBatch(batch)) setBatchPrinted(true); }} className={adminPrimaryButton}>
+                <FiPrinter className="h-4 w-4" aria-hidden="true" /> Imprimir hoja
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Venta en caja */}
+      {showSell && (
+        <div className={adminModalOverlay} role="dialog" aria-modal="true" aria-labelledby="sell-title">
+          <form className={`${adminModalPanel} sm:max-w-md`} onSubmit={(e) => { e.preventDefault(); void handleSell(); }}>
+            <div className={adminModalHeader}>
+              <h2 id="sell-title" className={adminModalTitle}>Vender en caja</h2>
+              <button type="button" onClick={() => setShowSell(false)} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+            </div>
+            <div className={`${adminModalBody} flex flex-col gap-4`}>
+              <p className="text-sm text-ink-soft">Cobra la tarjeta al cliente y actívala aquí. Hasta entonces no se puede canjear.</p>
+              <div>
+                <label htmlFor="sell-code" className={adminLabel}>Código de la tarjeta</label>
+                <input id="sell-code" value={sellForm.code} autoComplete="off" spellCheck={false} placeholder="ESMC-XXXX-XXXX-XXXX"
+                  onChange={(e) => { setSellForm((f) => ({ ...f, code: formatGiftCardCode(e.target.value).slice(0, 19) })); setSellError(''); }}
+                  className={`${adminInput(Boolean(sellError))} font-mono tracking-widest`} />
+              </div>
+              <div>
+                <label htmlFor="sell-method" className={adminLabel}>Cómo pagó</label>
+                <select id="sell-method" value={sellForm.paymentMethod} onChange={(e) => setSellForm((f) => ({ ...f, paymentMethod: e.target.value }))} className={adminInput()}>
+                  {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="sell-reference" className={adminLabel}>Referencia <span className="font-normal text-muted">(opcional)</span></label>
+                <input id="sell-reference" value={sellForm.reference} maxLength={80} onChange={(e) => setSellForm((f) => ({ ...f, reference: e.target.value }))} placeholder="Nro. de Pago Móvil o factura" className={adminInput()} />
+              </div>
+              {sellError && <p className={adminNotice('danger')} role="alert">{sellError}</p>}
+            </div>
+            <div className={adminModalFooter}>
+              <button type="button" onClick={() => setShowSell(false)} className={adminSecondaryButton}>Cancelar</button>
+              <button type="submit" disabled={selling || sellForm.code.length < 19} className={adminSuccessButton}>
+                <FiCheck className="h-4 w-4" aria-hidden="true" /> {selling ? 'Activando…' : 'Cobrado: activar'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Detalle */}
+      {details && (
+        <div className={adminModalOverlay} role="dialog" aria-modal="true" aria-labelledby="details-title">
+          <div className={`${adminModalPanel} sm:max-w-lg`}>
+            <div className={adminModalHeader}>
+              <h2 id="details-title" className={adminModalTitle}>Tarjeta ****{details.codeLast4 || details.code.slice(-4)}</h2>
+              <button type="button" onClick={() => setDetails(null)} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+            </div>
+            <div className={`${adminModalBody} flex flex-col gap-4`}>
+              <GiftCard3D
+                design={details.design?.slug}
+                amountUSD={Number(details.balanceUSD) > 0 ? Number(details.balanceUSD) : Number(details.amountUSD)}
+                recipientName={details.recipientName}
+                kind={isPrinted(details) ? 'print' : 'digital'}
+                code={details.code}
+                status={details.status === 'INACTIVE' ? 'INACTIVE' : details.status === 'ACTIVE' ? 'ACTIVE' : null}
+              />
+              <dl className="grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Monto</dt><dd className="font-semibold text-ink">{formatUSD(Number(details.amountUSD))}</dd></div>
+                <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Saldo</dt><dd className="font-semibold text-ink">{formatUSD(Number(details.balanceUSD))}</dd></div>
+                <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Estado</dt><dd><span className={adminBadge((STATUS[details.status] ?? STATUS.EXPIRED).tone)}>{STATUS[details.status]?.label ?? details.status}</span></dd></div>
+                <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Creada</dt><dd className="font-semibold text-ink">{new Date(details.createdAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>
+                {details.activatedAt && <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Activada</dt><dd className="font-semibold text-ink">{new Date(details.activatedAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>}
+                {details.redeemedAt && <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Canjeada</dt><dd className="font-semibold text-ink">{new Date(details.redeemedAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>}
+              </dl>
+              {isPrinted(details) && <p className={adminHint}>El PIN no se puede volver a ver: solo aparece en la hoja del lote.</p>}
+            </div>
+            <div className={adminModalFooter}>
+              <button type="button" onClick={() => void copyCode(details.code)} className={adminSecondaryButton}><FiCopy className="h-4 w-4" aria-hidden="true" /> Copiar código</button>
+              {details.status === 'INACTIVE' && <button type="button" onClick={() => openSell(details.code)} className={adminSuccessButton}>Vender en caja</button>}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

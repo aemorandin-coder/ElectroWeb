@@ -30,6 +30,7 @@ export type AuditAction =
     // Gift Cards
     | 'GIFT_CARD_CREATED'
     | 'GIFT_CARD_REDEEMED'
+    | 'GIFT_CARD_ACTIVATED'
     | 'GIFT_CARD_CANCELLED'
     // Settings
     | 'SETTINGS_UPDATED'

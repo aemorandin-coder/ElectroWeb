@@ -16,6 +16,7 @@ import {
     verifyPin,
     generateIdempotencyKey
 } from '@/lib/gift-card-crypto';
+import { countPinFailures, GIFT_CARD_MAX_PIN_FAILURES, GIFT_CARD_PIN_FAILURE_ACTION } from '@/lib/gift-card-lock';
 
 // Rate limit config for gift card operations
 const GIFT_CARD_RATE_LIMIT = {
@@ -106,9 +107,11 @@ export async function POST(request: NextRequest) {
 
         // Check idempotency - prevent duplicate redemptions
         if (idempotencyKey) {
+            // Solo transacciones del mismo usuario (antes cualquier clave coincidía con canjes ajenos)
             const existingTransaction = await prisma.giftCardTransaction.findFirst({
                 where: {
-                    description: { contains: idempotencyKey }
+                    userId,
+                    description: { contains: String(idempotencyKey) }
                 }
             });
 
@@ -178,46 +181,52 @@ export async function POST(request: NextRequest) {
             EXPIRED: 'Esta Gift Card ha expirado',
             SUSPENDED: 'Esta Gift Card está suspendida',
             CANCELLED: 'Esta Gift Card fue cancelada',
-            INACTIVE: 'Esta Gift Card no está activa',
+            INACTIVE: 'Esta Gift Card aún no está activa. Las tarjetas impresas se activan al pagarlas en la tienda.',
         };
 
         if (statusErrors[giftCard.status]) {
             return NextResponse.json({ error: statusErrors[giftCard.status] }, { status: 400 });
         }
 
-        // Check PIN if required - use secure comparison
+        // Check PIN if required (tarjetas impresas). Las digitales desde C-71 no llevan PIN.
         if (giftCard.pin) {
-            if (!pin) {
-                return NextResponse.json({ error: 'PIN requerido para esta Gift Card' }, { status: 400 });
+            // Bloqueo por tarjeta, persistente (C-71): no se esquiva con otra cuenta ni con un reinicio
+            const failures = await countPinFailures(giftCard.id);
+            if (failures >= GIFT_CARD_MAX_PIN_FAILURES) {
+                return NextResponse.json({
+                    error: 'Esta Gift Card está bloqueada por intentos fallidos de PIN. Escríbenos para desbloquearla.',
+                    locked: true
+                }, { status: 423 });
             }
 
-            // Check if PIN is hashed (64 chars = SHA-256 hex)
-            const isHashed = giftCard.pin.length === 64;
-            const pinValid = isHashed
-                ? verifyPin(pin, giftCard.pin)
-                : pin === giftCard.pin; // Backwards compatibility
+            if (!pin) {
+                return NextResponse.json({ error: 'Escribe el PIN que está bajo el raspadito de la tarjeta', requiresPin: true }, { status: 400 });
+            }
 
-            if (!pinValid) {
-                const failedResult = recordFailedAttempt(identifier, 'gift-card:redeem');
+            if (!verifyPin(String(pin), giftCard.pin)) {
+                recordFailedAttempt(identifier, 'gift-card:redeem');
 
                 const metadata = getRequestMetadata(request);
                 await createAuditLog({
-                    action: 'SECURITY_SUSPICIOUS_ACTIVITY',
+                    action: GIFT_CARD_PIN_FAILURE_ACTION,
                     userId,
                     userEmail: session.user.email || undefined,
                     severity: 'WARNING',
+                    targetType: 'GIFT_CARD_PIN',
+                    targetId: giftCard.id,
                     details: {
                         attempt: 'Wrong gift card PIN',
-                        giftCardId: giftCard.id,
-                        totalAttempts: failedResult.attempts,
+                        codeLast4: giftCard.code.slice(-4),
+                        cardFailures: failures + 1,
                         operationId,
                     },
                     ...metadata,
                 });
 
+                const remaining = Math.max(0, GIFT_CARD_MAX_PIN_FAILURES - (failures + 1));
                 return NextResponse.json({
-                    error: 'PIN incorrecto',
-                    attemptsRemaining: Math.max(0, 5 - failedResult.attempts)
+                    error: remaining > 0 ? `PIN incorrecto. Te quedan ${remaining} intentos.` : 'PIN incorrecto. La tarjeta quedó bloqueada.',
+                    attemptsRemaining: remaining
                 }, { status: 400 });
             }
         }
@@ -228,69 +237,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Esta Gift Card no tiene saldo disponible' }, { status: 400 });
         }
 
-        // Get or create user's wallet balance
-        let userBalance = await prisma.userBalance.findUnique({
-            where: { userId }
-        });
-
-        if (!userBalance) {
-            userBalance = await prisma.userBalance.create({
-                data: {
-                    userId,
-                    balance: 0,
-                    currency: 'USD',
-                    totalSpent: 0,
-                    totalRecharges: 0
-                }
-            });
-        }
-
-        const currentBalance = Number(userBalance.balance);
-        const newBalance = currentBalance + balance;
-
-        // Use interactive transaction with isolation for atomicity
-        // This prevents race conditions with row-level locking
+        // ATÓMICO (C-71): la tarjeta se marca canjeada con una actualización condicional, y el saldo se incrementa.
+        // Antes se releía la tarjeta sin bloquearla y se escribía un saldo calculado fuera de la transacción:
+        // dos canjes simultáneos acreditaban dos veces, y una recarga al mismo tiempo se perdía.
         const result = await prisma.$transaction(async (tx) => {
-            // Re-fetch gift card within transaction to ensure data consistency
-            const lockedGiftCard = await tx.giftCard.findUnique({
-                where: { id: giftCard.id }
-            });
-
-            // Double-check status hasn't changed (race condition protection)
-            if (!lockedGiftCard || lockedGiftCard.status === 'DEPLETED') {
-                throw new Error('ALREADY_REDEEMED');
-            }
-
-            if (Number(lockedGiftCard.balanceUSD) <= 0) {
-                throw new Error('NO_BALANCE');
-            }
-
-            // Update user balance
-            const updatedUserBalance = await tx.userBalance.update({
-                where: { userId },
-                data: {
-                    balance: newBalance,
-                    totalRecharges: { increment: balance }
-                }
-            });
-
-            // Create wallet transaction with idempotency key
-            const walletTransaction = await tx.transaction.create({
-                data: {
-                    balanceId: userBalance!.id,
-                    type: 'DEPOSIT',
-                    status: 'COMPLETED',
-                    amount: balance,
-                    currency: 'USD',
-                    description: `Canje de Gift Card ****${giftCard.code.slice(-4)}${idempotencyKey ? ` [${idempotencyKey}]` : ''}`,
-                    reference: giftCard.id,
-                    paymentMethod: 'GIFT_CARD'
-                }
-            });
-
-            // Update gift card
-            await tx.giftCard.update({
-                where: { id: giftCard.id },
+            const claimed = await tx.giftCard.updateMany({
+                where: { id: giftCard.id, status: giftCard.status, balanceUSD: { gt: 0 } },
                 data: {
                     balanceUSD: 0,
                     status: 'DEPLETED',
@@ -298,6 +250,29 @@ export async function POST(request: NextRequest) {
                     redeemedAt: new Date(),
                     lastUsedAt: new Date(),
                     usageCount: { increment: 1 }
+                }
+            });
+            if (claimed.count !== 1) {
+                throw new Error('ALREADY_REDEEMED');
+            }
+
+            const updatedUserBalance = await tx.userBalance.upsert({
+                where: { userId },
+                create: { userId, balance: balance, currency: 'USD', totalSpent: 0, totalRecharges: balance },
+                update: { balance: { increment: balance }, totalRecharges: { increment: balance } }
+            });
+
+            // Create wallet transaction with idempotency key
+            const walletTransaction = await tx.transaction.create({
+                data: {
+                    balanceId: updatedUserBalance.id,
+                    type: 'DEPOSIT',
+                    status: 'COMPLETED',
+                    amount: balance,
+                    currency: 'USD',
+                    description: `Canje de Gift Card ****${giftCard.code.slice(-4)}${idempotencyKey ? ` [${idempotencyKey}]` : ''}`,
+                    reference: giftCard.id,
+                    paymentMethod: 'GIFT_CARD'
                 }
             });
 
@@ -317,6 +292,9 @@ export async function POST(request: NextRequest) {
 
             return { updatedUserBalance, walletTransaction };
         });
+
+        const newBalance = Number(result.updatedUserBalance.balance);
+        const currentBalance = newBalance - balance;
 
         // Reset failed attempts on successful redemption
         resetFailedAttempts(identifier, 'gift-card:redeem');
@@ -410,11 +388,13 @@ export async function GET(request: NextRequest) {
             },
             select: {
                 code: true,
+                pin: true,
                 status: true,
                 balanceUSD: true,
                 expiresAt: true,
                 design: {
                     select: {
+                        slug: true,
                         name: true,
                         category: true
                     }
@@ -436,11 +416,15 @@ export async function GET(request: NextRequest) {
             codeLast4: giftCard.code.slice(-4), // Only last 4 chars
             status: giftCard.status,
             isValid: hasBalance,
+            // Solo si hace falta: nunca el PIN ni su hash (C-71)
+            requiresPin: Boolean(giftCard.pin),
             expiresAt: giftCard.expiresAt,
             design: giftCard.design,
             message: hasBalance
                 ? (session?.user ? 'Gift Card válida. Lista para canjear.' : 'Gift Card válida. Inicia sesión para canjearla.')
-                : 'Esta Gift Card no está disponible para canje.'
+                : giftCard.status === 'INACTIVE'
+                    ? 'Esta Gift Card aún no está activa. Las tarjetas impresas se activan al pagarlas en la tienda.'
+                    : 'Esta Gift Card no está disponible para canje.'
         };
 
         // Only reveal balance to authenticated users

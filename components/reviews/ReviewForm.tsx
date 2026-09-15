@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
+import { FiLock } from 'react-icons/fi';
 import StarRating from './StarRating';
 import { Button } from '@/components/ui/Button';
 
@@ -117,7 +118,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
             <div
                 className="bg-gray-50/50 rounded-xl border border-gray-200 p-4 flex items-center gap-4 cursor-help group transition-all hover:bg-gray-50"
                 onClick={() => toast('Debes haber comprado y recibido el producto para opinar', {
-                    icon: '🔒',
+                    icon: <FiLock className="h-5 w-5 text-brand-600" />,
                     style: {
                         borderRadius: '10px',
                         background: '#333',

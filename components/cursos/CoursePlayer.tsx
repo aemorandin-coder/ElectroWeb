@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
+import { FiEye, FiAward } from 'react-icons/fi';
 
 type Lesson = {
   id: string;
@@ -142,7 +143,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
       {/* Creator preview banner */}
       {isCreatorPreview && (
         <div className="shrink-0 bg-amber-500/20 border-b border-amber-500/30 px-4 py-2 flex items-center justify-center gap-2">
-          <span className="text-amber-400 text-xs font-bold">👁 Vista previa de creador — el progreso no se guarda</span>
+          <span className="text-amber-400 text-xs font-bold inline-flex items-center gap-1.5"><FiEye className="h-4 w-4 shrink-0" aria-hidden="true" />Vista previa de creador — el progreso no se guarda</span>
         </div>
       )}
 
@@ -185,7 +186,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
             onClick={() => setShowCert(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity"
           >
-            🏆 Certificado
+            <FiAward className="inline h-4 w-4 shrink-0" aria-hidden="true" />Certificado
           </button>
         )}
       </header>
@@ -384,7 +385,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
       {showCert && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-            <div className="text-6xl mb-4">🏆</div>
+            <FiAward className="mx-auto mb-4 h-16 w-16 text-warning" aria-hidden="true" />
             <h2 className="text-2xl font-bold text-ink mb-2">¡Felicitaciones!</h2>
             <p className="text-muted mb-2">Completaste el curso</p>
             <p className="text-xl font-bold text-brand-500 mb-6">{course.title}</p>

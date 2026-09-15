@@ -126,20 +126,20 @@ export default function HotAdOverlay({ hotAd }: { hotAd: HotAd }) {
     <img
       src={image}
       alt="Promoción especial"
-      className={`block h-auto max-h-[calc(100dvh-8rem)] w-auto max-w-full object-contain ${hotAd.transparentBg ? '' : 'rounded-2xl'}`}
+      className={`block h-auto max-h-[calc(100dvh-7.5rem)] md:max-h-[min(78vh,620px)] w-auto max-w-full object-contain ${hotAd.transparentBg ? '' : 'rounded-2xl'}`}
       style={{ boxShadow: shadow }}
     />
   );
 
   return (
     <div
-      className="fixed inset-0 z-[var(--z-popup)] flex items-center justify-center overflow-y-auto p-4 motion-safe:animate-fadeIn pb-[calc(1rem+env(safe-area-inset-bottom))]"
+      className="fixed inset-0 z-[var(--z-popup)] flex items-center justify-center overflow-y-auto p-4 md:p-6 motion-safe:animate-fadeIn pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-6"
       style={{ backgroundColor: hexToRgba(hotAd.backdropColor, hotAd.backdropOpacity / 100) }}
       onClick={(event) => {
         if (event.target === event.currentTarget) close();
       }}
     >
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Promoción" className="flex max-w-full flex-col items-center gap-3">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Promoción" className="flex max-w-[calc(100vw-2rem)] md:max-w-[540px] flex-col items-center gap-3 md:gap-3.5 my-auto">
         <div className="relative max-w-full">
           {link?.external ? (
             <a href={link.href} target="_blank" rel="noopener noreferrer" onClick={close} className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
@@ -157,13 +157,13 @@ export default function HotAdOverlay({ hotAd }: { hotAd: HotAd }) {
             type="button"
             onClick={close}
             aria-label="Cerrar promoción"
-            className="absolute -right-2 -top-2 flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink shadow-lg hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="absolute -right-2 -top-2 md:-right-3 md:-top-3 flex h-11 w-11 md:h-9 md:w-9 items-center justify-center rounded-full bg-white text-ink shadow-lg md:shadow-md hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer transition active:scale-95"
           >
-            <FiX className="h-6 w-6" aria-hidden="true" />
+            <FiX className="h-6 w-6 md:h-5 md:w-5" aria-hidden="true" />
           </button>
         </div>
 
-        <label className="flex h-11 cursor-pointer items-center gap-2 rounded-full bg-ink/60 px-4 text-sm font-medium text-white">
+        <label className="flex h-11 md:h-8 cursor-pointer items-center gap-2 rounded-full bg-ink/60 md:bg-ink/75 px-4 md:px-3 text-sm md:text-xs font-medium text-white transition-colors hover:bg-ink/90 select-none">
           <input
             type="checkbox"
             checked={dontShowAgain}
@@ -171,9 +171,9 @@ export default function HotAdOverlay({ hotAd }: { hotAd: HotAd }) {
               dontShowAgainRef.current = event.target.checked;
               setDontShowAgain(event.target.checked);
             }}
-            className="h-4 w-4 accent-brand-500"
+            className="h-4 w-4 md:h-3.5 md:w-3.5 accent-brand-500 cursor-pointer rounded"
           />
-          No volver a mostrar esta promoción
+          <span>No volver a mostrar esta promoción</span>
         </label>
       </div>
     </div>

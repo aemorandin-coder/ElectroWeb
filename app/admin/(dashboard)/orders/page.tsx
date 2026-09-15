@@ -588,8 +588,8 @@ export default function OrdersPage() {
                   </button>
                 )}
                 {selectedOrder.status === 'SHIPPED' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'DELIVERED')} disabled={updatingStatus} className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50">
-                    ✓ Marcar Entregado
+                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'DELIVERED')} disabled={updatingStatus} className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center gap-1.5">
+                    <FiCheck className="inline h-4 w-4 shrink-0" aria-hidden="true" />Marcar Entregado
                   </button>
                 )}
                 {!['CANCELLED', 'DELIVERED', 'REFUNDED'].includes(selectedOrder.status) && (

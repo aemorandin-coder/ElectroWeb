@@ -118,16 +118,16 @@ export default function ShareEarnModal() {
   // Compartir en WhatsApp
   const handleShareWhatsApp = () => {
     const text = item.type === 'product'
-      ? `🔥 ¡Te recomiendo este producto de Electro Shop! ${item.title} por solo $${item.price.toFixed(2)}. Compra desde este enlace: ${finalLink}`
-      : `🎓 ¡Mira este increíble curso de tecnología en Electro Shop! "${item.title}". Aprende hoy aquí: ${finalLink}`;
+      ? `¡Te recomiendo este producto de Electro Shop! ${item.title} por solo $${item.price.toFixed(2)}. Compra desde este enlace: ${finalLink}`
+      : `¡Mira este increíble curso de tecnología en Electro Shop! "${item.title}". Aprende hoy aquí: ${finalLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   // Compartir en Telegram
   const handleShareTelegram = () => {
     const text = item.type === 'product'
-      ? `🔥 ¡Te recomiendo este producto de Electro Shop! ${item.title}`
-      : `🎓 ¡Mira este increíble curso de tecnología en Electro Shop! "${item.title}"`;
+      ? `¡Te recomiendo este producto de Electro Shop! ${item.title}`
+      : `¡Mira este increíble curso de tecnología en Electro Shop! "${item.title}"`;
     window.open(`https://t.me/share/url?url=${encodeURIComponent(finalLink)}&text=${encodeURIComponent(text)}`, '_blank');
   };
 

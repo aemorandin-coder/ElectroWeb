@@ -4,7 +4,7 @@ import { formatUSD, formatVES } from '@/lib/currency';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import {
-    FiX, FiDollarSign, FiCheck, FiPhone, FiCreditCard, FiShield, FiArrowLeft, FiAlertTriangle
+    FiX, FiDollarSign, FiCheck, FiPhone, FiCreditCard, FiShield, FiArrowLeft, FiAlertTriangle, FiCheckCircle
 } from 'react-icons/fi';
 import { SiBinance } from 'react-icons/si';
 import { BsBank2 } from 'react-icons/bs';
@@ -327,7 +327,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         if (data.autoApproved) {
             toast.success('Tu recarga ha sido verificada y aprobada automaticamente. El saldo ya esta disponible.', {
                 duration: 5000,
-                icon: '🎉'
+                icon: <FiCheckCircle className="h-5 w-5 text-success-strong" />
             });
         } else {
             toast.success('Pago verificado. Tu recarga sera procesada en breve.');

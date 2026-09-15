@@ -4,6 +4,7 @@ import { formatUSD } from '@/lib/currency';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { FiCheck } from 'react-icons/fi';
 
 type Lesson = {
   id: string;
@@ -352,7 +353,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-semibold text-ink">{review.user.name || 'Usuario'}</span>
-                        {review.isVerified && <span className="text-xs text-green-600 font-medium">✓ Verificado</span>}
+                        {review.isVerified && <span className="inline-flex items-center gap-1 text-xs text-green-600 font-medium"><FiCheck className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />Verificado</span>}
                       </div>
                       <StarRow rating={review.rating} />
                       {review.comment && <p className="text-sm text-muted mt-1">{review.comment}</p>}

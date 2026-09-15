@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
+import { FiBookOpen, FiAward } from 'react-icons/fi';
 
 type EnrolledCourse = {
   id: string;
@@ -105,7 +106,7 @@ export default function MisCursosPage() {
         <div className="text-center py-16 text-muted">Cargando cursos...</div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">📚</div>
+          <FiBookOpen className="mx-auto mb-4 h-12 w-12 text-muted" aria-hidden="true" />
           <p className="text-muted font-medium mb-2">
             {filter === 'all'
               ? 'No estás inscrito en ningún curso aún'
@@ -190,7 +191,7 @@ export default function MisCursosPage() {
                     </Link>
                     {isCompleted && (
                       <span className="flex items-center gap-1 text-xs text-yellow-600 font-semibold ml-1">
-                        🏆 Certificado disponible
+                        <FiAward className="inline h-4 w-4 shrink-0" aria-hidden="true" /> Certificado disponible
                       </span>
                     )}
                   </div>

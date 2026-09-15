@@ -706,8 +706,8 @@ function EmailTab() {
                         {[
                             { label: 'Proveedor', value: emailConfig.provider },
                             { label: 'SMTP', value: emailConfig.host },
-                            { label: 'Notificaciones', value: emailConfig.notificationsEnabled ? '✓ Activo' : '✗ Inactivo' },
-                            { label: 'Marketing', value: emailConfig.marketingEnabled ? '✓ Activo' : '✗ Inactivo' },
+                            { label: 'Notificaciones', value: emailConfig.notificationsEnabled ? 'Activo' : 'Inactivo' },
+                            { label: 'Marketing', value: emailConfig.marketingEnabled ? 'Activo' : 'Inactivo' },
                         ].map(({ label, value }) => (
                             <div key={label} className="text-center p-3 bg-surface rounded-lg">
                                 <p className="text-xs text-muted uppercase font-semibold mb-0.5">{label}</p>

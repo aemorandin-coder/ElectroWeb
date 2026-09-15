@@ -7,6 +7,7 @@ import PublicHeader from '@/components/public/PublicHeader';
 import AnimatedWave from '@/components/AnimatedWave';
 import Footer from '@/components/Footer';
 import ShareEarnButton from '@/components/social/ShareEarnButton';
+import { FiStar } from 'react-icons/fi';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await prisma.companySettings.findFirst({
@@ -140,7 +141,9 @@ function CourseCard({ course }: CourseCardProps) {
             </span>
           )}
           {course.isFeatured && (
-            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">⭐</span>
+            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700" aria-label="Destacado">
+              <FiStar className="h-3 w-3 fill-current" aria-hidden="true" />
+            </span>
           )}
         </div>
       </div>
@@ -284,7 +287,7 @@ export default async function CursosPage({
             {/* Featured courses */}
             {courses.some((c) => c.isFeatured) && (
               <div className="mb-10">
-                <h2 className="text-xl font-bold text-ink mb-4">⭐ Cursos Destacados</h2>
+                <h2 className="text-xl font-bold text-ink mb-4 inline-flex items-center gap-1.5"><FiStar className="h-5 w-5 fill-current text-warning shrink-0" aria-hidden="true" />Cursos Destacados</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                   {courses.filter((c) => c.isFeatured).map((course) => (
                     <CourseCard key={course.id} course={course} />

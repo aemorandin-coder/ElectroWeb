@@ -214,7 +214,7 @@ export default function AdminDigitalCodesPage() {
                             ? 'bg-green-100 text-green-700'
                             : 'bg-yellow-100 text-yellow-700'
                             }`}>
-                            {isPaid ? '✓ Pagado' : '⏳ Pendiente de pago'}
+                            {isPaid ? <><FiCheck className="inline h-4 w-4 shrink-0 mr-1" aria-hidden="true" />Pagado</> : <><FiClock className="inline h-4 w-4 shrink-0 mr-1" aria-hidden="true" />Pendiente de pago</>}
                         </span>
                     </div>
                 </div>
@@ -415,8 +415,8 @@ export default function AdminDigitalCodesPage() {
                                             </div>
                                             <h3 className="font-semibold text-gray-900">{item.productName}</h3>
                                         </div>
-                                        <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                                            ✓ Entregado
+                                        <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium inline-flex items-center gap-1">
+                                            <FiCheck className="inline h-4 w-4 shrink-0" aria-hidden="true" />Entregado
                                         </div>
                                     </div>
                                 </div>

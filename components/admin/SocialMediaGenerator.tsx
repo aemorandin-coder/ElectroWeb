@@ -781,7 +781,7 @@ Responde SOLO con JSON (sin markdown):
                                                     fontSize: '9px',
                                                     fontWeight: 600
                                                 }}>
-                                                    <span style={{ color: selectedTemplate.accent || '#ffffff' }}>✓</span>
+                                                    <FiCheck style={{ color: selectedTemplate.accent || '#ffffff' }} className="inline h-4 w-4" aria-hidden="true" />
                                                     <span>Gana {recruitmentCommission}% por venta</span>
                                                 </li>
                                                 <li style={{
@@ -792,7 +792,7 @@ Responde SOLO con JSON (sin markdown):
                                                     fontSize: '9px',
                                                     fontWeight: 600
                                                 }}>
-                                                    <span style={{ color: selectedTemplate.accent || '#ffffff' }}>✓</span>
+                                                    <FiCheck style={{ color: selectedTemplate.accent || '#ffffff' }} className="inline h-4 w-4" aria-hidden="true" />
                                                     <span style={{
                                                         overflow: 'hidden',
                                                         textOverflow: 'ellipsis',
@@ -810,7 +810,7 @@ Responde SOLO con JSON (sin markdown):
                                                     fontSize: '9px',
                                                     fontWeight: 600
                                                 }}>
-                                                    <span style={{ color: selectedTemplate.accent || '#ffffff' }}>✓</span>
+                                                    <FiCheck style={{ color: selectedTemplate.accent || '#ffffff' }} className="inline h-4 w-4" aria-hidden="true" />
                                                     <span>Soporte VIP + Material</span>
                                                 </li>
                                             </ul>

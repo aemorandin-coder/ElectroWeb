@@ -146,7 +146,7 @@ export default function BalancePage() {
   return (
     <>
       {/* ============================================
-          🚀 MOBILE VIEW - PREMIUM ANIMATED DESIGN
+          MOBILE VIEW - PREMIUM ANIMATED DESIGN
           Epic animations for Full HD+ / QHD+ devices
           ============================================ */}
       <div className="lg:hidden overflow-y-auto h-full space-y-4">
@@ -315,7 +315,7 @@ export default function BalancePage() {
       </div>
 
       {/* ============================================
-          💻 DESKTOP VIEW - COMPLETELY UNCHANGED
+          DESKTOP VIEW - COMPLETELY UNCHANGED
           Only shows on screens >= 1024px
           ============================================ */}
       <div className="hidden lg:block space-y-2 lg:space-y-3 overflow-y-auto h-full">

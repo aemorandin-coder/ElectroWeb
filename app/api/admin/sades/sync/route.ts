@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { sadesClient } from '@/lib/sades';
+import { generateShortCode } from '@/lib/short-code';
 import { authOptions } from '@/lib/auth';
 
 // Función auxiliar para esperar (Rate Limiting)
@@ -136,6 +137,7 @@ export async function POST(req: NextRequest) {
                 await prisma.product.create({
                     data: {
                         ...productData,
+                        shortCode: await generateShortCode(prisma),
                         slug: `${remoteProd.nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`,
                     }
                 });

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { generateShortCode } from '@/lib/short-code';
 
 interface ProductRow {
   nombre: string;
@@ -104,6 +105,7 @@ export async function POST(request: NextRequest) {
           data: {
             name: row.nombre,
             slug,
+            shortCode: await generateShortCode(prisma),
             sku: row.sku,
             description: row.descripcion || 'Sin descripción',
             priceUSD: parseFloat(row.precioUSD),

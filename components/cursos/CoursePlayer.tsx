@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import Link from 'next/link';
 import { FiEye, FiAward } from 'react-icons/fi';
 
@@ -79,6 +81,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showCert, setShowCert] = useState(enrollment?.completedAt !== null && enrollment?.completedAt !== undefined);
+  useBodyScrollLock(showCert);
 
   const totalLessons = allLessons.length;
   const instructorName = course.creator?.displayName || course.instructor || 'ElectroShop';
@@ -138,17 +141,17 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
   const embedUrl = activeLesson?.videoUrl ? getEmbedUrl(activeLesson.videoUrl) : null;
 
   return (
-    <div className="flex flex-col h-dvh bg-[#1a1a2e] overflow-hidden">
+    <div className="flex flex-col h-dvh bg-brand-950 overflow-hidden">
 
       {/* Creator preview banner */}
       {isCreatorPreview && (
-        <div className="shrink-0 bg-amber-500/20 border-b border-amber-500/30 px-4 py-2 flex items-center justify-center gap-2">
-          <span className="text-amber-400 text-xs font-bold inline-flex items-center gap-1.5"><FiEye className="h-4 w-4 shrink-0" aria-hidden="true" />Vista previa de creador — el progreso no se guarda</span>
+        <div className="shrink-0 bg-warning/20 border-b border-warning/30 px-4 py-2 flex items-center justify-center gap-2">
+          <span className="text-warning text-xs font-bold inline-flex items-center gap-1.5"><FiEye className="h-4 w-4 shrink-0" aria-hidden="true" />Vista previa de creador — el progreso no se guarda</span>
         </div>
       )}
 
       {/* ── Top Bar ── */}
-      <header className="shrink-0 flex items-center gap-4 px-4 py-2.5 bg-[#16213e] border-b border-white/10 z-20">
+      <header className="shrink-0 flex items-center gap-4 px-4 py-2.5 bg-brand-950 border-b border-white/10 z-20">
         <button
           onClick={() => setSidebarOpen((v) => !v)}
           className="text-white/80 hover:text-white transition-colors"
@@ -174,7 +177,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
         <div className="hidden sm:flex items-center gap-3">
           <div className="w-32 bg-white/10 rounded-full h-1.5">
             <div
-              className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-cyan-400 transition-all duration-500"
+              className="h-1.5 rounded-full bg-brand-500 transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -184,7 +187,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
         {progress === 100 && (
           <button
             onClick={() => setShowCert(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-warning text-ink text-xs font-bold rounded-lg hover:opacity-90 transition-opacity"
           >
             <FiAward className="inline h-4 w-4 shrink-0" aria-hidden="true" />Certificado
           </button>
@@ -196,7 +199,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
 
         {/* ── Sidebar (curriculum) ── */}
         <aside
-          className={`shrink-0 flex flex-col bg-[#16213e] border-r border-white/10 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'w-72 lg:w-80' : 'w-0'} overflow-hidden`}
+          className={`shrink-0 flex flex-col bg-brand-950 border-r border-white/10 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'w-72 lg:w-80' : 'w-0'} overflow-hidden`}
         >
           <div className="p-4 border-b border-white/10">
             <p className="text-white/80 text-xs font-semibold uppercase tracking-wider mb-1">Contenido del Curso</p>
@@ -235,7 +238,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                         className={`w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors ${active ? 'bg-brand-500/30 border-l-2 border-brand-500' : 'hover:bg-white/5 border-l-2 border-transparent'}`}
                       >
                         {/* Completion circle */}
-                        <div className={`mt-0.5 w-4 h-4 rounded-full border shrink-0 flex items-center justify-center transition-colors ${done ? 'bg-green-500 border-green-500' : 'border-white/30'}`}>
+                        <div className={`mt-0.5 w-4 h-4 rounded-full border shrink-0 flex items-center justify-center transition-colors ${done ? 'bg-success border-success' : 'border-white/30'}`}>
                           {done && (
                             <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -249,7 +252,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
                             {lesson.isFree && (
-                              <span className="text-xs text-green-400">Preview</span>
+                              <span className="text-xs text-success">Preview</span>
                             )}
                             {lesson.duration && (
                               <span className="text-xs text-white/80">{formatDuration(lesson.duration)}</span>
@@ -269,7 +272,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
         <div className="flex-1 flex flex-col overflow-hidden">
 
           {/* Video area */}
-          <div className="flex-1 bg-black flex items-center justify-center overflow-hidden">
+          <div className="flex-1 bg-brand-950 flex items-center justify-center overflow-hidden">
             {activeLesson ? (
               embedUrl ? (
                 <iframe
@@ -300,7 +303,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
 
           {/* Controls bar */}
           {activeLesson && (
-            <div className="shrink-0 bg-[#16213e] border-t border-white/10 px-4 py-3">
+            <div className="shrink-0 bg-brand-950 border-t border-white/10 px-4 py-3">
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 {/* Lesson title */}
                 <div className="min-w-0">
@@ -328,7 +331,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                       onClick={() => toggleComplete(activeLesson.id)}
                       disabled={saving}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${isCompleted
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
+                        ? 'bg-success/20 text-success border border-success/30 hover:bg-success/30'
                         : 'bg-brand-500 text-white hover:bg-brand-600'
                       }`}
                     >
@@ -370,7 +373,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
               <div className="sm:hidden mt-2 flex items-center gap-2">
                 <div className="flex-1 bg-white/10 rounded-full h-1">
                   <div
-                    className="h-1 rounded-full bg-gradient-to-r from-brand-500 to-cyan-400 transition-all duration-500"
+                    className="h-1 rounded-full bg-brand-500 transition-all duration-500"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -383,8 +386,8 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
 
       {/* ── Certificate modal ── */}
       {showCert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+        <div className={adminModalOverlay}>
+          <div className={`${adminModalPanel} max-w-md w-full p-8 text-center`}>
             <FiAward className="mx-auto mb-4 h-16 w-16 text-warning" aria-hidden="true" />
             <h2 className="text-2xl font-bold text-ink mb-2">¡Felicitaciones!</h2>
             <p className="text-muted mb-2">Completaste el curso</p>
@@ -414,7 +417,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                 <Link
                   href={`/certificado/${certificateId}`}
                   target="_blank"
-                  className="flex-1 py-2.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity text-center"
+                  className="flex-1 py-2.5 bg-warning text-ink text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity text-center"
                 >
                   Ver Certificado →
                 </Link>

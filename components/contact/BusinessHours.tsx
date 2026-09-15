@@ -88,10 +88,8 @@ export default function BusinessHours({ businessHours }: BusinessHoursProps) {
     const hours = parseHours();
 
     return (
-        <div className="relative overflow-hidden bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 rounded-2xl shadow-2xl">
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-cyan-300/10 rounded-full blur-xl pointer-events-none"></div>
+        <div className="relative overflow-hidden bg-white rounded-2xl border border-line shadow-xs">
+
 
             {/* Clickable Header */}
             <button
@@ -99,24 +97,23 @@ export default function BusinessHours({ businessHours }: BusinessHoursProps) {
                 className="relative w-full flex items-center justify-between p-5 cursor-pointer select-none"
             >
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center text-brand-600">
+                        <svg className="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
                     <div className="text-left">
-                        <h3 className="text-base font-bold text-white">Horario de Atención</h3>
-                        <div className="flex items-center gap-2 text-xs text-white/70">
+                        <h3 className="text-base font-bold text-ink">Horario de Atención</h3>
+                        <div className="flex items-center gap-2 text-xs text-muted">
                             <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-success-strong"></span>
                             </span>
                             Click para ver horarios
                         </div>
                     </div>
                 </div>
-                <div className={`w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className={`w-7 h-7 bg-surface rounded-lg flex items-center justify-center transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                    <svg className="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>
@@ -130,18 +127,18 @@ export default function BusinessHours({ businessHours }: BusinessHoursProps) {
                 {hours.map((day) => (
                     <div
                         key={day.abbr}
-                        className={`flex items-center justify-between p-2 rounded-lg ${day.isOpen ? 'bg-white/10' : 'bg-red-500/20'}`}
+                        className={`flex items-center justify-between p-2 rounded-lg ${day.isOpen ? 'bg-surface' : 'bg-deal-bg'}`}
                     >
                         <div className="flex items-center gap-2">
-                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${day.isOpen ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${day.isOpen ? 'bg-success-strong/10 text-success-strong' : 'bg-deal-bg text-deal'}`}>
                                 {day.abbr}
                             </span>
-                            <span className="text-white text-sm font-medium">{day.name}</span>
+                            <span className="text-ink text-sm font-medium">{day.name}</span>
                         </div>
                         {day.isOpen ? (
-                            <span className="text-emerald-300 font-semibold text-xs">{day.time}</span>
+                            <span className="text-ink-soft font-semibold text-xs">{day.time}</span>
                         ) : (
-                            <span className="text-red-300 font-semibold text-xs">CERRADO</span>
+                            <span className="text-deal font-semibold text-xs">CERRADO</span>
                         )}
                     </div>
                 ))}

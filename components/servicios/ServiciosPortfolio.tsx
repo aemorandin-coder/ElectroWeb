@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { FiStar, FiVideo, FiX, FiExternalLink } from 'react-icons/fi';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 
 const CATEGORIES = [
   { value: '', label: 'Todos' },
@@ -16,9 +18,9 @@ const CATEGORIES = [
 ];
 
 const PLATFORM_BADGES: Record<string, { label: string; cls: string }> = {
-  YOUTUBE: { label: 'YouTube', cls: 'bg-red-600 text-white' },
-  TIKTOK: { label: 'TikTok', cls: 'bg-gray-900 text-white' },
-  KICK: { label: 'Kick', cls: 'bg-green-500 text-white' },
+  YOUTUBE: { label: 'YouTube', cls: 'bg-deal text-white' },
+  TIKTOK: { label: 'TikTok', cls: 'bg-ink text-white' },
+  KICK: { label: 'Kick', cls: 'bg-success text-white' },
 };
 
 type Video = {
@@ -75,7 +77,7 @@ function StarDisplay({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'm
         <FiStar
           key={i}
           className={`${s} ${
-            i <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-200 fill-gray-200'
+            i <= Math.round(rating) ? 'text-warning fill-warning' : 'text-line fill-line'
           }`}
         />
       ))}
@@ -97,7 +99,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (n: number) 
         >
           <FiStar
             className={`w-6 h-6 transition-colors ${
-              i <= (hover || value) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'
+              i <= (hover || value) ? 'text-warning fill-warning' : 'text-line'
             }`}
           />
         </button>
@@ -117,6 +119,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
   const [ratingComment, setRatingComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  useBodyScrollLock(Boolean(activeModal));
 
   const filtered = filter ? videos.filter((v) => v.category === filter) : videos;
 
@@ -181,8 +184,8 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
       {/* Grid */}
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <FiVideo className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-          <p className="text-gray-400">No hay trabajos en esta categoría todavía.</p>
+          <FiVideo className="w-12 h-12 text-subtle mx-auto mb-3" />
+          <p className="text-muted">No hay trabajos en esta categoría todavía.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -196,7 +199,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                 className="group bg-white rounded-2xl border border-line shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer"
               >
                 {/* Thumbnail */}
-                <div className="relative aspect-video bg-gradient-to-br from-surface to-line overflow-hidden">
+                <div className="relative aspect-video bg-surface overflow-hidden">
                   {computedThumbnail ? (
                     <Image
                       src={computedThumbnail}
@@ -207,11 +210,11 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <FiVideo className="w-12 h-12 text-gray-300" />
+                      <FiVideo className="w-12 h-12 text-subtle" />
                     </div>
                   )}
                   {/* Play overlay */}
-                  <div className="absolute inset-0 bg-black/40 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-ink/40 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
                       <svg className="w-7 h-7 text-brand-500 ml-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z" />
@@ -235,10 +238,10 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                   {(v.beforeImage || v.afterImage) && (
                     <div className="absolute bottom-3 right-3 flex gap-1">
                       {v.beforeImage && (
-                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500 text-white">ANTES</span>
+                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-warning-strong text-white">ANTES</span>
                       )}
                       {v.afterImage && (
-                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500 text-white">DESPUÉS</span>
+                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-success-strong text-white">DESPUÉS</span>
                       )}
                     </div>
                   )}
@@ -260,7 +263,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                     </div>
                   )}
                   {v.testimonial && (
-                    <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
+                    <div className="mt-3 p-3 bg-brand-50 rounded-xl border border-brand-200">
                       <p className="text-xs italic text-ink line-clamp-2">"{v.testimonial}"</p>
                       {v.customerName && (
                         <p className="text-xs font-bold text-brand-500 mt-1">— {v.customerName}</p>
@@ -277,11 +280,11 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
       {/* Modal */}
       {activeModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          className={adminModalOverlay}
           onClick={closeModal}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+            className={`${adminModalPanel} w-full max-w-3xl max-h-[90vh] overflow-y-auto`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -310,7 +313,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
             </div>
 
             {/* Video Embed */}
-            <div className="bg-black aspect-video">
+            <div className="bg-ink aspect-video">
               {embedUrl ? (
                 <iframe
                   src={embedUrl}
@@ -343,8 +346,8 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                       onClick={() => setBeforeAfterView('before')}
                       className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
                         beforeAfterView === 'before'
-                          ? 'bg-amber-500 text-white'
-                          : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                          ? 'bg-warning-strong text-white'
+                          : 'bg-warning/15 text-warning-strong hover:bg-warning/25'
                       }`}
                     >
                       Antes
@@ -355,8 +358,8 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                       onClick={() => setBeforeAfterView('after')}
                       className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
                         beforeAfterView === 'after'
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                          ? 'bg-success-strong text-white'
+                          : 'bg-success-strong/10 text-success-strong hover:bg-success-strong/20'
                       }`}
                     >
                       Después
@@ -385,7 +388,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                 <p className="text-sm text-muted mb-4 leading-relaxed">{activeModal.description}</p>
               )}
               {activeModal.testimonial && (
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
+                <div className="p-4 bg-brand-50 rounded-xl border border-brand-200">
                   <p className="text-sm italic text-ink">"{activeModal.testimonial}"</p>
                   {activeModal.customerName && (
                     <p className="text-sm font-bold text-brand-500 mt-1.5">— {activeModal.customerName}</p>
@@ -397,7 +400,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
             {/* Reviews */}
             <div className="p-5">
               <h3 className="font-bold text-ink mb-4 flex items-center gap-2">
-                <FiStar className="w-4 h-4 text-amber-400" />
+                <FiStar className="w-4 h-4 text-warning" />
                 Reseñas
                 {reviews.length > 0 && (
                   <span className="text-xs text-muted font-normal">({reviews.length})</span>
@@ -430,8 +433,8 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
               {/* Rating Form */}
               {session?.user ? (
                 submitted ? (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-center">
-                    <p className="text-sm font-semibold text-green-700">¡Gracias por tu reseña!</p>
+                  <div className="p-4 bg-success-strong/10 border border-success-strong/20 rounded-xl text-center">
+                    <p className="text-sm font-semibold text-success-strong">¡Gracias por tu reseña!</p>
                   </div>
                 ) : (
                   <div className="p-4 bg-surface rounded-xl border border-line">
@@ -454,7 +457,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                   </div>
                 )
               ) : (
-                <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 text-center">
+                <div className="p-4 bg-brand-50 rounded-xl border border-brand-200 text-center">
                   <p className="text-sm text-brand-500 font-medium">
                     Inicia sesión para dejar una reseña
                   </p>

@@ -1,13 +1,12 @@
-import { isCreditTransaction } from '@/lib/format-helpers';
 'use client';
-import { formatUSD } from '@/lib/currency';
-import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiPlus, FiDownload, FiArrowUpRight, FiArrowDownLeft } from 'react-icons/fi';
 import RechargeModal from '@/components/modals/RechargeModalV2';
-import { formatPaymentMethod, formatTransactionStatus } from '@/lib/format-helpers';
+import { formatPaymentMethod, formatTransactionStatus, isCreditTransaction } from '@/lib/format-helpers';
+import { formatUSD } from '@/lib/currency';
+import { toast } from 'react-hot-toast';
 
 interface Transaction {
   id: string;

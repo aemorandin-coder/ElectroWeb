@@ -285,19 +285,22 @@ export async function POST(req: NextRequest) {
             if (transaction.status === 'PENDING') {
                 // El monto verificado del BDV está en Bolívares
                 const montoVerificadoBs = parseFloat(resultado.amount || '0');
-                // montoNumerico es el monto en Bs que enviamos para verificar
-                const montoSolicitadoBs = montoNumerico;
                 // El monto en USD de la transacción para actualizar el balance
                 const montoUsd = Number(transaction.amount);
 
-                // Comparar montos en Bs (tolerancia del 0.5% para variaciones de redondeo)
-                const tolerancia = montoSolicitadoBs * 0.005;
-                if (montoVerificadoBs >= (montoSolicitadoBs - tolerancia)) {
-                    // Aprobar la transacción automáticamente
-                    await prisma.$transaction([
-                        // Actualizar transacción a COMPLETED
-                        prisma.transaction.update({
-                            where: { id: transactionId },
+                // SEGURIDAD (C-72): lo que se exige en Bs sale de la recarga guardada y de la tasa del servidor.
+                // Antes se comparaba con el importe que escribe el cliente: una recarga de $500 se aprobaba
+                // con un Pago Móvil real de Bs. 1 enviando importe=1.
+                const settings = await prisma.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } });
+                const tasa = settings?.exchangeRateVES ? Number(settings.exchangeRateVES) : 0;
+                const montoSolicitadoBs = Math.round(montoUsd * tasa * 100) / 100;
+                // 1,5 %: redondeo del banco y un cambio pequeño de la tasa entre la solicitud y el pago
+                const tolerancia = montoSolicitadoBs * 0.015;
+                if (tasa > 0 && montoVerificadoBs >= (montoSolicitadoBs - tolerancia)) {
+                    // Aprobación condicional: dos verificaciones simultáneas de la misma recarga no acreditan dos veces
+                    const aprobada = await prisma.$transaction(async (tx) => {
+                        const claimed = await tx.transaction.updateMany({
+                            where: { id: transactionId, status: 'PENDING' },
                             data: {
                                 status: 'COMPLETED',
                                 metadata: JSON.stringify({
@@ -305,18 +308,33 @@ export async function POST(req: NextRequest) {
                                     verificadoPorAPI: true,
                                     fechaVerificacion: new Date().toISOString(),
                                     codigoBDV: resultado.code,
+                                    referencia,
+                                    tasaAplicada: tasa,
+                                    montoVerificadoBs,
                                 }),
                             },
-                        }),
+                        });
+                        if (claimed.count !== 1) return false;
                         // Actualizar balance del usuario (en USD)
-                        prisma.userBalance.update({
+                        await tx.userBalance.update({
                             where: { id: transaction.balanceId },
                             data: {
                                 balance: { increment: montoUsd },
                                 totalRecharges: { increment: montoUsd },
                             },
-                        }),
-                    ]);
+                        });
+                        return true;
+                    });
+
+                    if (!aprobada) {
+                        return NextResponse.json({
+                            success: true,
+                            verified: true,
+                            autoApproved: false,
+                            message: 'Esta recarga ya fue procesada.',
+                            amount: resultado.amount,
+                        });
+                    }
 
                     // Notificar al usuario (notificación interna)
                     await prisma.notification.create({

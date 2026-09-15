@@ -62,7 +62,8 @@ const nextConfig = {
         ],
       },
       {
-        source: '/uploads/:path*',
+        // Menos los documentos de empresa: privados, sin caché compartida (C-72)
+        source: '/uploads/:path((?!documents/).*)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],

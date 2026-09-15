@@ -4,6 +4,9 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { detectFileType } from '@/lib/file-signature';
+
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,38 +19,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { avatar } = await request.json();
+    // 2 MB en base64 ocupan ~2,7 MB: se corta antes de leer cuerpos enormes
+    if (Number(request.headers.get('content-length') || 0) > 3 * 1024 * 1024) {
+      return NextResponse.json({ error: 'La imagen pesa más de 2 MB' }, { status: 413 });
+    }
+    const body = await request.json().catch(() => null);
+    const avatar = typeof body?.avatar === 'string' ? body.avatar : '';
 
-    if (!avatar || !avatar.startsWith('data:image/')) {
+    // SEGURIDAD (C-72): solo PNG, JPG o WEBP comprobados por sus bytes y hasta 2 MB.
+    // Antes la extensión salía del data URI: "data:image/svg;base64,…" guardaba un SVG con scripts en el dominio.
+    const matches = avatar.match(/^data:image\/(png|jpe?g|webp);base64,([A-Za-z0-9+/=]+)$/);
+    if (!matches) {
       return NextResponse.json(
-        { error: 'Formato de imagen inválido' },
+        { error: 'Formato de imagen inválido. Usa PNG, JPG o WEBP.' },
         { status: 400 }
       );
     }
 
-    // Extract base64 data
-    const matches = avatar.match(/^data:image\/([a-zA-Z]*);base64,(.+)$/);
-    if (!matches || matches.length !== 3) {
-      return NextResponse.json(
-        { error: 'Formato de imagen inválido' },
-        { status: 400 }
-      );
+    const buffer = Buffer.from(matches[2], 'base64');
+    if (buffer.length > MAX_AVATAR_BYTES) {
+      return NextResponse.json({ error: 'La imagen pesa más de 2 MB' }, { status: 400 });
     }
-
-    const ext = matches[1];
-    const base64Data = matches[2];
-    const buffer = Buffer.from(base64Data, 'base64');
+    const detected = detectFileType(buffer);
+    if (detected !== 'png' && detected !== 'jpg' && detected !== 'webp') {
+      return NextResponse.json({ error: 'El archivo no es una imagen PNG, JPG o WEBP' }, { status: 400 });
+    }
 
     // Create uploads directory if it doesn't exist
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
-    try {
-      await mkdir(uploadsDir, { recursive: true });
-    } catch (err) {
-      // Directory might already exist
-    }
+    await mkdir(uploadsDir, { recursive: true });
 
-    // Generate unique filename
-    const fileName = `${session.user.email.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.${ext}`;
+    // Nombre sin el correo del cliente (antes quedaba expuesto en la URL pública)
+    const fileName = `avatar-${session.user.id}-${Date.now()}.${detected}`;
     const filePath = path.join(uploadsDir, fileName);
     // Use API route to serve files (bypasses Nginx static file issues)
     const publicPath = `/api/uploads/avatars/${fileName}`;

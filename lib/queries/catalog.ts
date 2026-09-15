@@ -131,6 +131,12 @@ export interface CatalogCategoryFacet {
   count: number;
 }
 
+/** Categoría elegida: además del conteo, ícono y descripción para el encabezado (C-54). */
+export interface CatalogCurrentCategory extends CatalogCategoryFacet {
+  icon: string | null;
+  description: string | null;
+}
+
 export interface CatalogResult {
   products: PublicProduct[];
   total: number;
@@ -139,7 +145,7 @@ export interface CatalogResult {
   /** Categorías con productos para los filtros actuales (ignorando la categoría elegida) */
   categories: CatalogCategoryFacet[];
   /** Categoría elegida, si existe */
-  currentCategory: CatalogCategoryFacet | null;
+  currentCategory: CatalogCurrentCategory | null;
 }
 
 export async function getCatalog(params: CatalogParams): Promise<CatalogResult> {
@@ -167,7 +173,7 @@ export async function getCatalog(params: CatalogParams): Promise<CatalogResult> 
       where: { id: { in: counts.map((c) => c.categoryId) } },
       select: { id: true, name: true, slug: true },
     }),
-    params.category ? prisma.category.findUnique({ where: { slug: params.category }, select: { id: true, name: true, slug: true } }) : null,
+    params.category ? prisma.category.findUnique({ where: { slug: params.category }, select: { id: true, name: true, slug: true, icon: true, description: true } }) : null,
   ]);
 
   const countById = new Map(counts.map((c) => [c.categoryId, c._count.categoryId]));

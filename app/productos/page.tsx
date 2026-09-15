@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { FiSearch, FiX } from 'react-icons/fi';
+import { FiSearch, FiShoppingBag, FiX } from 'react-icons/fi';
+import CategoryIconRenderer from '@/components/CategoryIconRenderer';
 import CatalogFilters from '@/components/catalog/CatalogFilters';
 import CatalogPagination from '@/components/catalog/CatalogPagination';
 import FiltersDrawer from '@/components/catalog/FiltersDrawer';
@@ -22,6 +23,7 @@ import {
   SORT_OPTIONS,
   type CatalogParams,
 } from '@/lib/queries/catalog';
+import { getAutoIcon } from '@/lib/category-icons';
 import { getHomeSettings } from '@/lib/queries/home';
 import { getPublicSettings } from '@/lib/site-settings';
 
@@ -105,12 +107,21 @@ export default async function ProductosPage({ searchParams }: PageProps) {
 
       <main>
         <PageHeader
-          compact
           breadcrumbs={[
             { label: 'Productos', href: currentCategory || params.search ? '/productos' : undefined },
             ...(currentCategory ? [{ label: currentCategory.name }] : []),
           ]}
+          icon={
+            currentCategory ? <CategoryIconRenderer iconName={currentCategory.icon || getAutoIcon(currentCategory.name)} />
+              : params.search ? <FiSearch /> : <FiShoppingBag />
+          }
+          eyebrow={params.search ? 'Búsqueda' : currentCategory ? 'Categoría' : 'Catálogo'}
           title={heading}
+          description={
+            params.search ? undefined
+              : currentCategory ? currentCategory.description || `Todo lo que tenemos en ${currentCategory.name}, con precios en dólares y bolívares.`
+                : 'Tecnología, gaming y gift cards con envíos a toda Venezuela. Precios en dólares y bolívares.'
+          }
           meta={
             <p className="text-sm text-muted" aria-live="polite">
               {total === 0 ? 'Sin resultados' : totalPages > 1 ? `${rangeStart}–${rangeEnd} de ${total} productos` : `${total} ${total === 1 ? 'producto' : 'productos'}`}

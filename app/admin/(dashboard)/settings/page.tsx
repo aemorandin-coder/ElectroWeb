@@ -245,14 +245,14 @@ export default function SettingsPage() {
                   <strong>Cambios sin guardar</strong>
                   <span className="text-muted"> en {dirtyLabels.join(', ')}</span>
                 </p>
-                <div className="flex gap-2">
-                  <button type="button" onClick={discard} disabled={saving} className={`${adminSecondaryButton} flex-1 whitespace-nowrap px-4 sm:flex-none`}>
-                    <FiRotateCcw className="h-4 w-4" aria-hidden="true" />
+                <div className="grid grid-cols-2 gap-2 sm:flex">
+                  <button type="button" onClick={discard} disabled={saving} className={`${adminSecondaryButton} whitespace-nowrap px-3 sm:px-5`}>
+                    <FiRotateCcw className="hidden h-4 w-4 sm:block" aria-hidden="true" />
                     Descartar
                   </button>
-                  <button type="button" onClick={save} disabled={saving} className={`${adminPrimaryButton} flex-1 whitespace-nowrap px-4 sm:flex-none`}>
-                    {saving ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" /> : <FiSave className="h-4 w-4" aria-hidden="true" />}
-                    {saving ? 'Guardando…' : 'Guardar cambios'}
+                  <button type="button" onClick={save} disabled={saving} className={`${adminPrimaryButton} whitespace-nowrap px-3 sm:px-5`}>
+                    {saving ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" /> : <FiSave className="hidden h-4 w-4 sm:block" aria-hidden="true" />}
+                    {saving ? 'Guardando…' : <>Guardar<span className="hidden sm:inline"> cambios</span></>}
                   </button>
                 </div>
               </div>

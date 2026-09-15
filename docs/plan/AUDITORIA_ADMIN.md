@@ -41,9 +41,9 @@ Leyenda de estado: ✅ resuelto en rama · 🟦 tarjeta asignada · ⬜ pendient
 | F3 | `/admin/orders` no tiene título de página. | 🟦 G-31 |
 | F4 | Montos con formatos mezclados: `$1231.96`, `$1,252.00` y `$341.96` conviven con `$1.514,96`. 54 `toFixed` en el admin. | 🟦 R7 |
 | F5 | `/admin/notifications` redirige a Mensajes y Alertas (no hay página propia). | ⬜ decidir si se quita del menú o se hace página |
-| F6 | `favicon.ico` da 404 en todas las páginas cuando no hay favicon configurado. | ⬜ Claude (fallback estático) |
+| F6 | `favicon.ico` da 404 en todas las páginas cuando no hay favicon configurado. | ✅ C-50b (sin favicon se declara el logo) |
 | F7 | Pedido digital: no hay campos para anotar proveedor, referencia y costo, aunque la BD ya los tiene (C-60). | ⬜ Claude (C-60b) |
-| F8 | `alert()` (10) y `confirm()` nativo (1) en productos y configuración. | ⬜ Claude (C-51, C-50b) |
+| F8 | `alert()` (10) y `confirm()` nativo (1) en productos y configuración. | ✅ configuración en C-50b · ⬜ productos en C-51 |
 
 ## 4. Diseño y tipografía
 | # | Hallazgo | Estado |
@@ -53,7 +53,7 @@ Leyenda de estado: ✅ resuelto en rama · 🟦 tarjeta asignada · ⬜ pendient
 | D3 | Textos de 10 px en reportes; `text-base` en badges del dashboard. | 🟦 R7 |
 | D4 | Emojis en cursos, órdenes digitales, pagos, reportes y reseñas. | 🟦 G-30 (R8) |
 | D5 | Botones de solo ícono sin `aria-label` (hamburguesa, ver, editar). | ✅ layout en C-52 · 🟦 R1 en páginas |
-| D6 | Configuración (1.594 líneas, 16 campos sin efecto) y lista de productos (1.544 líneas, `ProductForm.tsx` de 1.057 líneas sin uso). | ⬜ Claude: C-50b y C-51 |
+| D6 | Configuración (1.594 líneas, 29 campos sin efecto) y lista de productos (1.544 líneas, `ProductForm.tsx` de 1.057 líneas sin uso). | ✅ configuración en C-50b · ⬜ productos en C-51 |
 
 ## 5. Reparto
 - **Claude (hecho):** C-70 (seguridad), C-52 (marco del admin, `lib/admin-ui.ts`, abonos en `format-helpers`).

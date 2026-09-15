@@ -99,15 +99,15 @@ export default function BusinessSection({ form, set, errors }: SectionProps) {
           {WEEK_DAYS.map((day) => {
             const hours = form.businessHours[day];
             return (
-              <li key={day} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-2.5">
-                <div className="w-36 shrink-0">
+              <li key={day} className="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:gap-4">
+                <div className="shrink-0 sm:w-36">
                   <SwitchRow label={DAY_LABELS[day]} checked={hours.enabled} onChange={(enabled) => setDay(day, { enabled })} />
                 </div>
                 {hours.enabled ? (
-                  <div className="flex items-center gap-2">
-                    <input type="time" aria-label={`${DAY_LABELS[day]}: abre`} value={hours.open} onChange={(event) => setDay(day, { open: event.target.value })} className={`${adminInput()} w-32 tabular-nums`} />
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:flex">
+                    <input type="time" aria-label={`${DAY_LABELS[day]}: abre`} value={hours.open} onChange={(event) => setDay(day, { open: event.target.value })} className={`${adminInput()} min-w-0 px-2 tabular-nums sm:w-36`} />
                     <span className="text-sm text-muted">a</span>
-                    <input type="time" aria-label={`${DAY_LABELS[day]}: cierra`} value={hours.close} onChange={(event) => setDay(day, { close: event.target.value })} className={`${adminInput()} w-32 tabular-nums`} />
+                    <input type="time" aria-label={`${DAY_LABELS[day]}: cierra`} value={hours.close} onChange={(event) => setDay(day, { close: event.target.value })} className={`${adminInput()} min-w-0 px-2 tabular-nums sm:w-36`} />
                   </div>
                 ) : (
                   <span className="text-sm text-muted">Cerrado</span>

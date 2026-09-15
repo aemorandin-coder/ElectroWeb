@@ -119,6 +119,12 @@ export default function SettingsPage() {
         setErrors(data.fields);
         const first = sectionOf(Object.keys(data.fields)[0]);
         if (first && first !== active) goTo(first);
+        // Lleva al primer campo marcado (en móvil puede quedar fuera de la pantalla)
+        requestAnimationFrame(() => {
+          const invalid = document.querySelector<HTMLElement>('main [aria-invalid="true"]');
+          invalid?.scrollIntoView({ block: 'center' });
+          invalid?.focus({ preventScroll: true });
+        });
       }
       toast.error(data.error || 'No se pudo guardar');
     } catch {
@@ -162,7 +168,7 @@ export default function SettingsPage() {
           <h1 className={adminPageTitle}>Configuración</h1>
           <p className={adminPageSubtitle}>
             Datos del negocio, precios, envíos y cómo se ve la tienda.
-            {meta.updatedAt && ` Último cambio: ${new Date(meta.updatedAt).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' })}.`}
+            {meta.updatedAt && <span className="block">Último cambio: {new Date(meta.updatedAt).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' })}</span>}
           </p>
         </div>
       </div>
@@ -240,11 +246,11 @@ export default function SettingsPage() {
                   <span className="text-muted"> en {dirtyLabels.join(', ')}</span>
                 </p>
                 <div className="flex gap-2">
-                  <button type="button" onClick={discard} disabled={saving} className={`${adminSecondaryButton} flex-1 sm:flex-none`}>
+                  <button type="button" onClick={discard} disabled={saving} className={`${adminSecondaryButton} flex-1 whitespace-nowrap px-4 sm:flex-none`}>
                     <FiRotateCcw className="h-4 w-4" aria-hidden="true" />
                     Descartar
                   </button>
-                  <button type="button" onClick={save} disabled={saving} className={`${adminPrimaryButton} flex-1 sm:flex-none`}>
+                  <button type="button" onClick={save} disabled={saving} className={`${adminPrimaryButton} flex-1 whitespace-nowrap px-4 sm:flex-none`}>
                     {saving ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" /> : <FiSave className="h-4 w-4" aria-hidden="true" />}
                     {saving ? 'Guardando…' : 'Guardar cambios'}
                   </button>

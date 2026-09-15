@@ -15,12 +15,12 @@ export function SettingsCard({ title, description, action, children }: {
 }) {
   return (
     <section className={adminCard}>
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0">
           <h3 className="text-base font-semibold text-ink">{title}</h3>
           {description && <p className="mt-0.5 text-sm text-muted">{description}</p>}
         </div>
-        {action && <div className="shrink-0">{action}</div>}
+        {action && <div className="sm:shrink-0">{action}</div>}
       </div>
       {children}
     </section>
@@ -212,7 +212,7 @@ export function ImageField({ label, hint, value, onChange, uploadType, aspect = 
   return (
     <div className="min-w-0">
       <p className={adminLabel}>{label}</p>
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <div className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line bg-surface ${aspect === 'wide' ? 'aspect-[1200/630] w-40' : 'h-20 w-20'}`}>
           {uploading ? (
             <span className={adminSpinner} aria-label="Subiendo" />
@@ -235,7 +235,7 @@ export function ImageField({ label, hint, value, onChange, uploadType, aspect = 
               if (file) upload(file);
             }}
           />
-          <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className={`${adminSecondaryButton} h-9 px-3`}>
+          <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className={`${adminSecondaryButton} h-9 whitespace-nowrap px-3`}>
             <FiUpload className="h-4 w-4" aria-hidden="true" />
             {value ? 'Cambiar' : 'Subir imagen'}
           </button>

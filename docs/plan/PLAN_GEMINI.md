@@ -925,11 +925,11 @@ Carga: ~511 colores, 78 degradados, 7 modales.
 
 **Arreglos permitidos:**
 1. **Formularios de color:** los formularios dentro de una tarjeta azul (Contacto "Envíanos un Mensaje", "Completa tu Solicitud") pasan a `adminCard` blanca con `adminInput`, `adminLabel` y `adminPrimaryButton`. Los textos blancos pasan a `text-ink` / `text-muted`.
-2. **Bloques de CTA azules** ("¿Eres un experto…?", "Únete como Creador"): se permite **un** bloque sólido `bg-brand-600 text-white` por página, sin degradado ni manchas (igual al "¿No encuentras lo que buscas?" de `/productos`).
+2. **Bloques de CTA azules** (en `app/cursos/page.tsx`, "¿Eres un experto en tecnología?"): se permite **un** bloque sólido `bg-brand-600 text-white` por página, sin degradado, sin manchas `blur-3xl` y sin texto con `bg-clip-text` (igual al "¿No encuentras lo que buscas?" de `/productos`). Los `text-cyan-200` / `text-purple-200` pasan a `text-white` o `text-brand-100`.
 3. **Números decorativos** (`01 / 02 / 03`), badges con sombra y `hover:scale`: R4.
-4. **Gift Cards:** los 5 botones de monto ("$25 · $50 · $100 · $200 · Otro") a 390 px se cortan (rejilla de 5). Usa `grid grid-cols-3 gap-2 sm:grid-cols-5`.
+4. **Gift Cards:** la rejilla de montos (`grid grid-cols-5`, 4 montos + campo "Otro") queda apretada a 390 px. Usa `grid grid-cols-3 gap-2 sm:grid-cols-5`; el campo "Otro" puede ocupar `col-span-2 sm:col-span-1`. Verifica que el monto elegido siga llegando a la compra.
 
-QA: las 6 páginas a 390 y 1440 px, sin texto blanco sobre fondo claro; formularios de Contacto y Solicitar producto legibles; en Gift Cards los montos no se cortan.
+QA: las 6 páginas a 390 y 1440 px, sin texto blanco sobre fondo claro; formularios de Contacto y Solicitar producto legibles; en Gift Cards los montos caben y "Otro" acepta un valor.
 
 ### G-37 · Panel de creadores · Depende: G-36
 Archivos: `app/creator/dashboard/layout.tsx`, `app/creator/dashboard/page.tsx`, `app/creator/dashboard/cursos/page.tsx`, `app/creator/dashboard/cursos/nuevo/page.tsx`, `app/creator/dashboard/cursos/[id]/page.tsx`, `app/creator/dashboard/perfil/page.tsx`.
@@ -968,7 +968,7 @@ Archivos:
 Carga: ~571 colores, 43 degradados, 4 modales.
 
 **Arreglos permitidos:**
-1. **`profile`:** tiene modales propios con `style={{ animation }}` ya limpiados en G-25; aplica R5 (capa + panel + `useBodyScrollLock`).
+1. **`profile`:** quita los 4 `style={{ animation: 'fadeInUp …' }}` (R4) y aplica R5 a su modal (`fixed inset-0`): capa + panel + `useBodyScrollLock`.
 2. **`referrals`:** las medallas `FaMedal` de G-30 se quedan.
 3. **Pestañas y filtros** de `wishlist`, `reviews` y `notifications`: `adminTab` en contenedor deslizable.
 

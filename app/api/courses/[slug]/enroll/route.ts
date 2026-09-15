@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { sendCourseEnrollmentEmail } from '@/lib/email-templates/CourseCertificate';
+
+class InsufficientBalanceError extends Error {}
 
 export async function POST(
   request: NextRequest,
@@ -92,44 +95,55 @@ export async function POST(
     const creatorCut = course.creator ? Math.round(price * (commissionRate / 100) * 100) / 100 : 0;
 
     // Atomic interactive transaction
-    const enrollment = await prisma.$transaction(async (tx) => {
-      await tx.userBalance.update({
-        where: { userId },
-        data: {
-          balance: { decrement: course.priceUSD },
-          totalSpent: { increment: course.priceUSD },
-        },
-      });
-
-      const newEnrollment = await tx.courseEnrollment.create({
-        data: { courseId: course.id, userId },
-      });
-
-      await tx.transaction.create({
-        data: {
-          balanceId: userBalance.id,
-          type: 'PURCHASE',
-          status: 'COMPLETED',
-          amount: course.priceUSD,
-          currency: 'USD',
-          description: `Inscripción: ${course.title}`,
-        },
-      });
-
-      await tx.course.update({
-        where: { id: course.id },
-        data: { enrollmentCount: { increment: 1 } },
-      });
-
-      if (course.creator && creatorCut > 0) {
-        await tx.courseCreator.update({
-          where: { id: course.creator.id },
-          data: { totalRevenue: { increment: creatorCut } },
+    // SEGURIDAD (C-72): el descuento es condicional. Antes se revisaba el saldo fuera de la transacción y dos
+    // inscripciones simultáneas a cursos distintos dejaban el saldo en negativo.
+    let enrollment;
+    try {
+      enrollment = await prisma.$transaction(async (tx) => {
+        const charged = await tx.userBalance.updateMany({
+          where: { userId, balance: { gte: course.priceUSD } },
+          data: {
+            balance: { decrement: course.priceUSD },
+            totalSpent: { increment: course.priceUSD },
+          },
         });
-      }
+        if (charged.count === 0) throw new InsufficientBalanceError();
 
-      return newEnrollment;
-    });
+        const newEnrollment = await tx.courseEnrollment.create({
+          data: { courseId: course.id, userId },
+        });
+
+        await tx.transaction.create({
+          data: {
+            balanceId: userBalance.id,
+            type: 'PURCHASE',
+            status: 'COMPLETED',
+            amount: course.priceUSD,
+            currency: 'USD',
+            description: `Inscripción: ${course.title}`,
+          },
+        });
+
+        await tx.course.update({
+          where: { id: course.id },
+          data: { enrollmentCount: { increment: 1 } },
+        });
+
+        if (course.creator && creatorCut > 0) {
+          await tx.courseCreator.update({
+            where: { id: course.creator.id },
+            data: { totalRevenue: { increment: creatorCut } },
+          });
+        }
+
+        return newEnrollment;
+      });
+    } catch (error) {
+      if (error instanceof InsufficientBalanceError) {
+        return NextResponse.json({ error: 'Saldo insuficiente. Recarga tu billetera para inscribirte.' }, { status: 402 });
+      }
+      throw error;
+    }
 
     // Send enrollment confirmation email (fire-and-forget)
     sendCourseEnrollmentEmail(userEmail, {
@@ -141,6 +155,10 @@ export async function POST(
 
     return NextResponse.json({ enrollment, message: 'Inscripción exitosa' }, { status: 201 });
   } catch (error) {
+    // Dos inscripciones simultáneas al mismo curso: la segunda choca con el índice único
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return NextResponse.json({ error: 'Ya estás inscrito en este curso' }, { status: 400 });
+    }
     console.error('POST enroll error:', error);
     return NextResponse.json({ error: 'Error al procesar inscripción' }, { status: 500 });
   }

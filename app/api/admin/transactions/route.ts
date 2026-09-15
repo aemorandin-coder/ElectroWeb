@@ -104,8 +104,8 @@ export async function PATCH(request: NextRequest) {
         const body = await request.json();
         const { id, status, rejectionReason } = body;
 
-        if (!id || !status) {
-            return NextResponse.json({ error: 'ID y estado requeridos' }, { status: 400 });
+        if (typeof id !== 'string' || (status !== 'COMPLETED' && status !== 'CANCELLED')) {
+            return NextResponse.json({ error: 'ID y estado (COMPLETED o CANCELLED) requeridos' }, { status: 400 });
         }
 
         const transaction = await prisma.transaction.findUnique({
@@ -130,16 +130,19 @@ export async function PATCH(request: NextRequest) {
         }
 
         // Start transaction
+        // SEGURIDAD (C-72): el cambio de estado es condicional. Antes, dos clics en "Aprobar" (o aprobar mientras
+        // el Pago Móvil la aprobaba solo) acreditaban la recarga dos veces.
         const result = await prisma.$transaction(async (tx) => {
-            // Update transaction status
-            const updateData: any = { status };
-            if (status === 'CANCELLED' && rejectionReason) {
-                updateData.rejectionReason = rejectionReason;
-            }
-            const updatedTransaction = await tx.transaction.update({
-                where: { id },
-                data: updateData,
+            const claimed = await tx.transaction.updateMany({
+                where: { id, status: 'PENDING' },
+                data: {
+                    status,
+                    ...(status === 'CANCELLED' && typeof rejectionReason === 'string' && rejectionReason.trim()
+                        ? { rejectionReason: rejectionReason.trim().slice(0, 500) }
+                        : {}),
+                },
             });
+            if (claimed.count !== 1) return null;
 
             // If approved (COMPLETED) and it's a RECHARGE, update user balance
             if (status === 'COMPLETED' && transaction.type === 'RECHARGE') {
@@ -152,8 +155,12 @@ export async function PATCH(request: NextRequest) {
                 });
             }
 
-            return updatedTransaction;
+            return tx.transaction.findUnique({ where: { id } });
         });
+
+        if (!result) {
+            return NextResponse.json({ error: 'La transacción ya fue procesada' }, { status: 409 });
+        }
 
         // Send notification to customer
         try {

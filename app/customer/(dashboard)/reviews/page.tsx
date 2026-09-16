@@ -1,187 +1,188 @@
 'use client';
-import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
-import { FiStar, FiUser, FiPackage, FiClock, FiCheck, FiX } from 'react-icons/fi';
+import { FiStar, FiPackage, FiClock, FiCheck } from 'react-icons/fi';
 import Link from 'next/link';
+import { toast } from 'react-hot-toast';
+import {
+  adminCard,
+  adminPrimaryButton,
+  adminTab,
+  adminBadge,
+} from '@/lib/admin-ui';
 
 interface Review {
-    id: string;
-    rating: number;
-    comment: string;
-    createdAt: string;
-    isApproved: boolean;
-    isPublished: boolean;
-    userName: string;
-    product: {
-        name: string;
-        slug: string;
-    };
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  isApproved: boolean;
+  isPublished: boolean;
+  userName: string;
+  product: {
+    name: string;
+    slug: string;
+  };
 }
 
 export default function MyReviewsPage() {
-    const [reviews, setReviews] = useState<Review[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<'all' | 'approved' | 'pending'>('all');
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'approved' | 'pending'>('all');
 
-    useEffect(() => {
-        fetchMyReviews();
-    }, []);
+  useEffect(() => {
+    fetchMyReviews();
+  }, []);
 
-    const fetchMyReviews = async () => {
-        try {
-            const response = await fetch('/api/reviews');
-            if (response.ok) {
-                const data = await response.json();
-                setReviews(Array.isArray(data) ? data : []);
-            }
-        } catch (error) {
-            console.error('Error fetching reviews:', error);
-            toast.error('No se pudieron cargar las reseñas');
-        } finally {
-            setLoading(false);
-        }
-    };
+  const fetchMyReviews = async () => {
+    try {
+      const response = await fetch('/api/reviews');
+      if (response.ok) {
+        const data = await response.json();
+        setReviews(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      toast.error('No se pudieron cargar las reseñas');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const filteredReviews = reviews.filter(review => {
-        if (filter === 'approved') return review.isApproved && review.isPublished;
-        if (filter === 'pending') return !review.isApproved;
-        return true;
-    });
+  const filteredReviews = reviews.filter(review => {
+    if (filter === 'approved') return review.isApproved && review.isPublished;
+    if (filter === 'pending') return !review.isApproved;
+    return true;
+  });
 
-    const getStatusBadge = (review: Review) => {
-        if (review.isApproved && review.isPublished) {
-            return (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
-                    <FiCheck className="w-3 h-3" />
-                    Publicada
-                </span>
-            );
-        }
-        return (
-            <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">
-                <FiClock className="w-3 h-3" />
-                Pendiente
-            </span>
-        );
-    };
-
+  const getStatusBadge = (review: Review) => {
+    if (review.isApproved && review.isPublished) {
+      return (
+        <span className={adminBadge('success')}>
+          <FiCheck className="w-3 h-3" />
+          Publicada
+        </span>
+      );
+    }
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-800">Mis Reseñas</h1>
-            </div>
-
-            {/* Filters */}
-            <div className="flex gap-2">
-                <button
-                    onClick={() => setFilter('all')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all'
-                            ? 'bg-brand-500 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                >
-                    Todas
-                </button>
-                <button
-                    onClick={() => setFilter('approved')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'approved'
-                            ? 'bg-brand-500 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                >
-                    Publicadas
-                </button>
-                <button
-                    onClick={() => setFilter('pending')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'pending'
-                            ? 'bg-brand-500 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                >
-                    Pendientes
-                </button>
-            </div>
-
-            {/* Reviews List */}
-            {loading ? (
-                <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
-                </div>
-            ) : filteredReviews.length === 0 ? (
-                <div className="text-center py-16">
-                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <FiStar className="w-10 h-10 text-gray-400" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">No hay reseñas</h3>
-                    <p className="text-gray-600 mb-6">
-                        {filter === 'pending'
-                            ? 'No tienes reseñas pendientes'
-                            : filter === 'approved'
-                                ? 'No tienes reseñas publicadas'
-                                : 'Aún no has dejado ninguna reseña'}
-                    </p>
-                    <Link
-                        href="/productos"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-brand-500 text-white rounded-xl font-semibold hover:bg-brand-600 transition-colors"
-                    >
-                        <FiPackage className="w-5 h-5" />
-                        Ver Productos
-                    </Link>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 gap-4">
-                    {filteredReviews.map((review) => (
-                        <div
-                            key={review.id}
-                            className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow"
-                        >
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex-1">
-                                    <Link
-                                        href={`/productos/${review.product.slug}`}
-                                        className="text-lg font-bold text-gray-900 hover:text-brand-500 transition-colors"
-                                    >
-                                        {review.product.name}
-                                    </Link>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <div className="flex items-center">
-                                            {[...Array(5)].map((_, i) => (
-                                                <FiStar
-                                                    key={i}
-                                                    className={`w-4 h-4 ${i < review.rating
-                                                            ? 'fill-yellow-400 text-yellow-400'
-                                                            : 'text-gray-300'
-                                                        }`}
-                                                />
-                                            ))}
-                                        </div>
-                                        <span className="text-sm text-gray-500">
-                                            {new Date(review.createdAt).toLocaleDateString('es-ES', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                            })}
-                                        </span>
-                                    </div>
-                                </div>
-                                {getStatusBadge(review)}
-                            </div>
-
-                            <p className="text-gray-700 leading-relaxed">{review.comment}</p>
-
-                            {!review.isApproved && (
-                                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                    <p className="text-sm text-amber-800 flex items-center gap-2">
-                                        <FiClock className="w-4 h-4" />
-                                        Tu reseña está siendo revisada por nuestro equipo. Será publicada pronto.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
+      <span className={adminBadge('warning')}>
+        <FiClock className="w-3 h-3" />
+        Pendiente
+      </span>
     );
+  };
+
+  return (
+    <div className="space-y-4 lg:space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl lg:text-2xl font-bold text-ink">Mis Reseñas</h1>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          onClick={() => setFilter('all')}
+          className={adminTab(filter === 'all')}
+        >
+          Todas
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilter('approved')}
+          className={adminTab(filter === 'approved')}
+        >
+          Publicadas
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilter('pending')}
+          className={adminTab(filter === 'pending')}
+        >
+          Pendientes
+        </button>
+      </div>
+
+      {/* Reviews List */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
+        </div>
+      ) : filteredReviews.length === 0 ? (
+        <div className={`${adminCard} text-center py-16`}>
+          <div className="w-16 h-16 bg-surface border border-line rounded-full flex items-center justify-center mx-auto mb-4">
+            <FiStar className="w-8 h-8 text-subtle" />
+          </div>
+          <h3 className="text-lg font-bold text-ink mb-2">No hay reseñas</h3>
+          <p className="text-sm text-muted mb-6">
+            {filter === 'pending'
+              ? 'No tienes reseñas pendientes'
+              : filter === 'approved'
+                ? 'No tienes reseñas publicadas'
+                : 'Aún no has dejado ninguna reseña'}
+          </p>
+          <Link
+            href="/productos"
+            className={`${adminPrimaryButton} inline-flex items-center gap-2`}
+          >
+            <FiPackage className="w-5 h-5" />
+            Ver Productos
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {filteredReviews.map((review) => (
+            <div
+              key={review.id}
+              className={`${adminCard} p-5 lg:p-6 transition-colors hover:border-brand-500/40`}
+            >
+              <div className="flex items-start justify-between mb-4 gap-4">
+                <div className="flex-1">
+                  <Link
+                    href={`/productos/${review.product.slug}`}
+                    className="text-base lg:text-lg font-bold text-ink hover:text-brand-500 transition-colors"
+                  >
+                    {review.product.name}
+                  </Link>
+                  <div className="flex items-center gap-3 mt-2">
+                    <div className="flex items-center gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <FiStar
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < review.rating
+                              ? 'fill-warning-strong text-warning-strong'
+                              : 'text-line-strong'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-muted">
+                      {new Date(review.createdAt).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                </div>
+                {getStatusBadge(review)}
+              </div>
+
+              <p className="text-sm text-ink-soft leading-relaxed">{review.comment}</p>
+
+              {!review.isApproved && (
+                <div className="mt-4 p-3 bg-surface border border-line rounded-xl">
+                  <p className="text-xs text-ink-soft flex items-center gap-2">
+                    <FiClock className="w-4 h-4 text-warning-strong flex-shrink-0" />
+                    Tu reseña está siendo revisada por nuestro equipo. Será publicada pronto.
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }

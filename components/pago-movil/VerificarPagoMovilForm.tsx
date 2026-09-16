@@ -311,7 +311,7 @@ Por favor necesito ayuda para verificar mi pago.
                             onChange={handleChange}
                             max={new Date().toISOString().split('T')[0]}
                             disabled={disabled || verificationState === 'verifying'}
-                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed ${
                                 fieldErrors.fechaPago ? 'border-deal/40 bg-deal-bg' : 'border-line'
                             }`}
                         />
@@ -339,7 +339,7 @@ Por favor necesito ayuda para verificar mi pago.
                             maxLength={8}
                             inputMode="numeric"
                             disabled={disabled || verificationState === 'verifying'}
-                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed ${
                                 fieldErrors.referencia ? 'border-deal/40 bg-deal-bg' : 'border-line'
                             }`}
                         />
@@ -372,7 +372,7 @@ Por favor necesito ayuda para verificar mi pago.
                             maxLength={12}
                             autoCapitalize="characters"
                             disabled={disabled || verificationState === 'verifying'}
-                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed ${
                                 fieldErrors.cedulaPagador ? 'border-deal/40 bg-deal-bg' : 'border-line'
                             }`}
                         />
@@ -402,7 +402,7 @@ Por favor necesito ayuda para verificar mi pago.
                             inputMode="tel"
                             maxLength={11}
                             disabled={disabled || verificationState === 'verifying'}
-                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                            className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed ${
                                 fieldErrors.telefonoPagador ? 'border-deal/40 bg-deal-bg' : 'border-line'
                             }`}
                         />
@@ -430,7 +430,7 @@ Por favor necesito ayuda para verificar mi pago.
                         type="button"
                         onClick={() => !disabled && verificationState !== 'verifying' && setShowBankDropdown(!showBankDropdown)}
                         disabled={disabled || verificationState === 'verifying'}
-                        className="w-full flex items-center justify-between px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-between px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm bg-white disabled:bg-surface disabled:cursor-not-allowed"
                     >
                         <span className={bancoSeleccionado ? 'text-ink' : 'text-muted'}>
                             {bancoSeleccionado ? bancoSeleccionado.nombreCorto : 'Seleccionar banco...'}

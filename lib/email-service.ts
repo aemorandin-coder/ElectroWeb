@@ -3,6 +3,7 @@
  * Servicio centralizado de emails con soporte para SMTP y Resend API
  */
 
+import { AsyncLocalStorage } from 'node:async_hooks';
 import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 
@@ -14,6 +15,8 @@ export interface SendEmailOptions {
   html: string;
   text?: string;
   replyTo?: string;
+  /** Cabeceras extra (por ejemplo List-Unsubscribe en campañas). */
+  headers?: Record<string, string>;
   attachments?: Array<{
     filename: string;
     content: Buffer | string;
@@ -119,10 +122,27 @@ const getTransporterWithSettings = async () => {
   return nodemailer.createTransport(providerConfigs[provider] || providerConfigs.custom);
 };
 
+// Vista previa (C-75): dentro de capturarCorreo, sendEmail no envía y guarda el correo tal cual saldría.
+// Así la vista previa del panel usa las mismas funciones que los envíos reales en vez de una copia.
+const capturaVistaPrevia = new AsyncLocalStorage<{ subject?: string; html?: string }>();
+
+export async function capturarCorreo(enviar: () => Promise<unknown>): Promise<{ subject?: string; html?: string }> {
+  const captura: { subject?: string; html?: string } = {};
+  await capturaVistaPrevia.run(captura, enviar);
+  return captura;
+}
+
 // CORE EMAIL FUNCTION - Now uses database settings
 
 export const sendEmail = async (options: SendEmailOptions): Promise<{ success: boolean; messageId?: string; error?: string }> => {
-  const { to, subject, html, text, replyTo } = options;
+  const { to, subject, html, text, replyTo, headers } = options;
+
+  const captura = capturaVistaPrevia.getStore();
+  if (captura) {
+    captura.subject = subject;
+    captura.html = html;
+    return { success: true, messageId: 'vista-previa' };
+  }
 
   // Get email settings from database first
   const dbSettings = await getEmailSettings();
@@ -159,6 +179,7 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
         subject,
         html,
         text: text || html.replace(/<[^>]*>/g, ''),
+        headers,
       });
 
       if (result.data) {
@@ -193,6 +214,7 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
       html,
       text: text || html.replace(/<[^>]*>/g, ''),
       replyTo: replyToEmail,
+      headers,
     };
 
     const info = await transporter.sendMail(mailOptions);
@@ -231,11 +253,12 @@ const getCompanySettings = async () => {
 
 export const getBaseTemplate = async (content: string, preheader?: string) => {
   const settings = await getCompanySettings();
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const appUrl = (process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/+$/, '');
 
   const companyName = settings?.companyName || 'Electro Shop';
   const tagline = settings?.tagline || 'Tu tienda de tecnologia de confianza';
-  const logo = settings?.logo || '';
+  // Los clientes de correo no resuelven rutas relativas: el logo de Configuración (/api/uploads/…) no cargaba (C-75)
+  const logo = settings?.logo ? (/^https?:\/\//i.test(settings.logo) ? settings.logo : `${appUrl}${settings.logo.startsWith('/') ? '' : '/'}${settings.logo}`) : '';
   const primaryColor = settings?.primaryColor || '#2a63cd';
   const secondaryColor = settings?.secondaryColor || '#1e4ba3';
   const phone = settings?.phone || '';
@@ -264,7 +287,7 @@ export const getBaseTemplate = async (content: string, preheader?: string) => {
           
           <!-- HEADER - Simple text-based (no images that might not load) -->
           <tr>
-            <td style="background:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);padding:25px 40px;border-radius:20px 20px 0 0;text-align:center;">
+            <td bgcolor="${primaryColor}" style="background-color:${primaryColor};background-image:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);padding:25px 40px;border-radius:20px 20px 0 0;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">${companyName.toUpperCase()}</h1>
               <p style="margin:6px 0 0;color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;">${tagline}</p>
             </td>
@@ -284,7 +307,7 @@ export const getBaseTemplate = async (content: string, preheader?: string) => {
               <!-- Company Logo at bottom (optional, won't break if it doesn't load) -->
               ${logo ? `
               <div style="text-align:center;margin-bottom:20px;">
-                <img src="${logo}" alt="${companyName}" style="max-height:50px;max-width:160px;border-radius:8px;" onerror="this.style.display='none'">
+                <img src="${logo}" alt="${companyName}" height="50" style="max-height:50px;max-width:160px;border-radius:8px;border:0;">
               </div>
               ` : ''}
               
@@ -292,7 +315,7 @@ export const getBaseTemplate = async (content: string, preheader?: string) => {
               <div style="text-align:center;margin-bottom:15px;">
                 ${instagram ? `<a href="${instagram}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">IG</a>` : ''}
                 ${facebook ? `<a href="${facebook}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#1877f2;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">FB</a>` : ''}
-                ${whatsapp ? `<a href="https://wa.me/${whatsapp}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#25D366;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">WA</a>` : ''}
+                ${whatsapp ? `<a href="https://wa.me/${whatsapp.replace(/\D/g, '')}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#25D366;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">WA</a>` : ''}
                 ${telegram ? `<a href="${telegram}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#0088cc;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">TG</a>` : ''}
                 ${tiktok ? `<a href="${tiktok}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#000000;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">TK</a>` : ''}
                 ${twitter ? `<a href="${twitter}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#1da1f2;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">X</a>` : ''}
@@ -300,8 +323,8 @@ export const getBaseTemplate = async (content: string, preheader?: string) => {
               
               <!-- Contact Info -->
               <div style="text-align:center;margin-bottom:12px;">
-                ${phone ? `<p style="margin:3px 0;color:#6a6c6b;font-size:12px;">📞 ${phone}</p>` : ''}
-                ${email ? `<p style="margin:3px 0;color:#6a6c6b;font-size:12px;">✉️ ${email}</p>` : ''}
+                ${phone ? `<p style="margin:3px 0;color:#6a6c6b;font-size:12px;">Teléfono: ${phone}</p>` : ''}
+                ${email ? `<p style="margin:3px 0;color:#6a6c6b;font-size:12px;">Correo: ${email}</p>` : ''}
               </div>
               
               <!-- Links -->

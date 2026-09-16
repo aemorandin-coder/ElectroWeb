@@ -8,6 +8,7 @@ export type AdminEventCategory =
   | 'solicitudes'
   | 'cursos'
   | 'promotores'
+  | 'marketing'
   | 'giftcards'
   | 'inventario'
   | 'sistema';
@@ -31,6 +32,7 @@ export const CATEGORY_LABELS: Record<AdminEventCategory, string> = {
   solicitudes: 'Solicitudes',
   cursos: 'Cursos y creadores',
   promotores: 'Promotores',
+  marketing: 'Campañas de correo',
   giftcards: 'Gift cards',
   inventario: 'Inventario',
   sistema: 'Tasa y sistema',
@@ -59,7 +61,9 @@ export const ADMIN_EVENTS = {
   COURSE_SUBMITTED: { category: 'cursos', label: 'Curso por revisar', description: 'Un creador subió un curso nuevo que espera aprobación.', defaults: on(true, false, true) },
   COURSE_ENROLLED: { category: 'cursos', label: 'Inscripción a curso', description: 'Un cliente se inscribió en un curso.', defaults: on(true, false, true), silent: true },
 
-  REFERRAL_CONVERSION: { category: 'promotores', label: 'Venta o registro de un promotor', description: 'Un cliente referido por un promotor se registró, compró o recargó.', defaults: on(true, false, true), silent: true },
+  REFERRAL_CONVERSION: { category: 'promotores', label: 'Venta de un promotor', description: 'Un cliente referido por un promotor pagó una compra y hay una comisión por aprobar.', defaults: on(true, false, true), silent: true },
+
+  EMAIL_CAMPAIGN_STARTED: { category: 'marketing', label: 'Campaña de correo enviándose', description: 'Alguien empezó a enviar una campaña a los clientes que aceptan promociones.', defaults: on(true, false, true), silent: true },
 
   GIFT_CARD_PURCHASED: { category: 'giftcards', label: 'Gift card comprada', description: 'Un cliente compró una gift card digital.', defaults: on(true, false, true) },
   GIFT_CARD_REDEEMED: { category: 'giftcards', label: 'Gift card canjeada', description: 'Una gift card se canjeó a saldo.', defaults: on(true, false, false), silent: true },

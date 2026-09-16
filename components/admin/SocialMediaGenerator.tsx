@@ -8,8 +8,7 @@ import {
     FiSearch, FiCheck, FiDollarSign, FiPercent,
     FiPackage, FiInstagram, FiType,
     FiStar, FiTrendingUp, FiClock, FiAward, FiTag,
-    FiCpu, FiHash, FiMessageCircle, FiKey, FiEye, FiEyeOff,
-    FiLayout, FiSave, FiBox, FiUsers
+    FiLayout, FiBox, FiUsers
 } from 'react-icons/fi';
 
 interface Product {
@@ -90,16 +89,6 @@ export default function SocialMediaGenerator() {
     const [showInstagram, setShowInstagram] = useState(true);
     const [textPosition, setTextPosition] = useState<'top' | 'bottom'>('top');
 
-    // AI state
-    const [aiLoading, setAiLoading] = useState(false);
-    const [aiApiKey, setAiApiKey] = useState('');
-    const [showApiKey, setShowApiKey] = useState(false);
-    const [aiConfigured, setAiConfigured] = useState(false);
-
-    // Caption
-    const [captionText, setCaptionText] = useState('');
-    const [hashtagText, setHashtagText] = useState('');
-
     // Recruitment state
     const [campaignType, setCampaignType] = useState<'product' | 'recruitment'>('product');
     const [recruitmentHeadline, setRecruitmentHeadline] = useState('¡ÚNETE COMO CREADOR!');
@@ -110,12 +99,8 @@ export default function SocialMediaGenerator() {
 
     useEffect(() => {
         fetchData();
-        // Load API key from localStorage
-        const savedKey = localStorage.getItem('gemini_api_key');
-        if (savedKey) {
-            setAiApiKey(savedKey);
-            setAiConfigured(true);
-        }
+        // Sin IA desde C-75: la clave de Gemini se guardaba en el navegador. Se borra la que haya quedado.
+        try { localStorage.removeItem('gemini_api_key'); } catch { /* sin almacenamiento */ }
     }, []);
 
     useEffect(() => {
@@ -157,14 +142,6 @@ export default function SocialMediaGenerator() {
         }
     };
 
-    const saveApiKey = () => {
-        if (aiApiKey.trim()) {
-            localStorage.setItem('gemini_api_key', aiApiKey.trim());
-            setAiConfigured(true);
-            toast.success('API Key guardada');
-        }
-    };
-
     const getProductImage = (product: Product): string => {
         if (product.mainImage) return product.mainImage;
         try {
@@ -186,72 +163,6 @@ export default function SocialMediaGenerator() {
             currency: 'USD',
             minimumFractionDigits: 2
         }).format(price);
-    };
-
-    const generateWithAI = async () => {
-        if (campaignType === 'product' && !selectedProduct) {
-            toast.error('Selecciona un producto');
-            return;
-        }
-        if (!aiApiKey) {
-            toast.error('Configura tu API Key de Gemini');
-            return;
-        }
-
-        setAiLoading(true);
-        try {
-            const prompt = campaignType === 'product'
-                ? `Genera contenido para Instagram Story de este producto:
-Producto: ${selectedProduct!.name}
-Precio: $${selectedProduct!.priceUSD} USD
-Categoria: ${selectedProduct!.category?.name || 'General'}
-
-Responde SOLO con JSON (sin markdown):
-{"headline":"TEXTO CORTO MAX 15 CHARS","caption":"Caption de max 100 chars con emojis","hashtags":["5 hashtags sin #"]}`
-                : `Genera contenido para una campaña de captación de influencers/creadores de contenido para nuestra tienda de tecnología y electrónica Electro Shop:
-Beneficio principal: ${recruitmentBenefit}
-Comisión ofrecida: ${recruitmentCommission}% por venta referida
-
-Responde SOLO con JSON (sin markdown):
-{"headline":"TITULO MAX 15 CHARS","caption":"Caption persuasivo de max 100 chars con emojis invitando a influencers a unirse al equipo","hashtags":["5 hashtags sin #"]}`;
-
-            // Direct Gemini API call using the stored key
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiApiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: prompt }]
-                    }]
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                try {
-                    const jsonMatch = text.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        const parsed = JSON.parse(jsonMatch[0]);
-                        if (campaignType === 'product') {
-                            setCustomText(parsed.headline || 'OFERTA');
-                        } else {
-                            setRecruitmentHeadline(parsed.headline || 'ÚNETE AHORA');
-                            setCustomText(parsed.headline || 'ÚNETE AHORA');
-                        }
-                        setCaptionText(parsed.caption || '');
-                        setHashtagText(parsed.hashtags?.map((h: string) => `#${h}`).join(' ') || '');
-                        toast.success('Contenido generado');
-                    }
-                } catch { toast.error('Error al parsear respuesta'); }
-            } else {
-                toast.error('Error de API - verifica tu key');
-            }
-        } catch (error) {
-            toast.error('Error de conexion');
-        } finally {
-            setAiLoading(false);
-        }
     };
 
     const downloadImage = async () => {
@@ -284,12 +195,6 @@ Responde SOLO con JSON (sin markdown):
         }
     };
 
-    const copyCaption = () => {
-        const fullCaption = `${captionText}\n\n${hashtagText}`;
-        navigator.clipboard.writeText(fullCaption);
-        toast.success('Copiado');
-    };
-
     const canvasSize = selectedFormat.id === 'post' ? { width: 270, height: 270 } : { width: 270, height: 480 };
 
     if (loading) {
@@ -315,44 +220,9 @@ Responde SOLO con JSON (sin markdown):
                 </div>
             </div>
 
-            <div className="grid grid-cols-12 gap-3">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
                 {/* Left Panel - Controls */}
-                <div className="col-span-5 space-y-2">
-
-                    {/* AI Config */}
-                    <div className="bg-white rounded-lg border border-line p-2">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                            <FiCpu className="w-3.5 h-3.5 text-brand-500" />
-                            <span className="text-xs font-bold text-ink">Gemini AI</span>
-                            {aiConfigured && <span className="w-1.5 h-1.5 bg-success rounded-full"></span>}
-                        </div>
-                        <div className="flex gap-1">
-                            <div className="flex-1 relative">
-                                <FiKey className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted" />
-                                <input
-                                    type={showApiKey ? 'text' : 'password'}
-                                    value={aiApiKey}
-                                    onChange={(e) => setAiApiKey(e.target.value)}
-                                    placeholder="API Key..."
-                                    className="w-full pl-7 pr-7 py-1 text-xs border border-line rounded focus:ring-1 focus:ring-brand-500/20"
-                                />
-                                <button onClick={() => setShowApiKey(!showApiKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-brand-500">
-                                    {showApiKey ? <FiEyeOff className="w-3 h-3" /> : <FiEye className="w-3 h-3" />}
-                                </button>
-                            </div>
-                            <button onClick={saveApiKey} className="px-2 py-1 bg-brand-500 text-white rounded text-xs hover:bg-brand-600" title="Guardar">
-                                <FiSave className="w-3 h-3" />
-                            </button>
-                            <button
-                                onClick={generateWithAI}
-                                disabled={(campaignType === 'product' && !selectedProduct) || aiLoading || !aiConfigured}
-                                className="px-2 py-1 bg-brand-500 text-white rounded text-xs hover:bg-brand-600 disabled:opacity-50"
-                                title="Generar con IA"
-                            >
-                                {aiLoading ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FiCpu className="w-3 h-3" />}
-                            </button>
-                        </div>
-                    </div>
+                <div className="space-y-2 lg:col-span-5">
 
                     {/* Campaign Type Toggle */}
                     <div className="bg-white rounded-lg border border-line p-2">
@@ -600,21 +470,6 @@ Responde SOLO con JSON (sin markdown):
                         </div>
                     </div>
 
-                    {/* Caption (AI Generated) */}
-                    {(captionText || hashtagText) && (
-                        <div className="bg-white rounded-lg border border-line p-2">
-                            <div className="flex items-center justify-between mb-1">
-                                <div className="flex items-center gap-1">
-                                    <FiMessageCircle className="w-3 h-3 text-brand-500" />
-                                    <span className="text-[11px] font-bold text-ink">Caption IA</span>
-                                </div>
-                                <button onClick={copyCaption} className="text-[11px] text-brand-500 hover:underline">Copiar</button>
-                            </div>
-                            <p className="text-[11px] text-muted mb-1">{captionText}</p>
-                            <p className="text-[11px] text-brand-500">{hashtagText}</p>
-                        </div>
-                    )}
-
                     {/* Download */}
                     <button
                         onClick={downloadImage}
@@ -627,7 +482,7 @@ Responde SOLO con JSON (sin markdown):
                 </div>
 
                 {/* Right Panel - Preview */}
-                <div className="col-span-7">
+                <div className="lg:col-span-7">
                     <div className="bg-white rounded-lg border border-line overflow-hidden">
                         <div className="px-2 py-1.5 border-b border-line flex items-center justify-between">
                             <div className="flex items-center gap-1">

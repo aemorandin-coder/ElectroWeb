@@ -88,7 +88,7 @@ export async function recordPaidOrder(orderId: string) {
       ['Monto', formatUSD(grossAmount)],
       ['Comisión por aprobar', commission > 0 ? formatUSD(commission) : null],
     ],
-    link: '/admin/marketing',
+    link: '/admin/marketing#promotores',
   });
 
   return conversion;
@@ -108,7 +108,7 @@ export async function rejectOrderConversions(orderId: string, db: Cliente = pris
  * (antes el estado se leía fuera de la transacción).
  */
 export async function approveConversion(conversionId: string, influencerId: string) {
-  return prisma.$transaction(async (tx) => {
+  const resultado = await prisma.$transaction(async (tx) => {
     const conversion = await tx.referralConversion.findFirst({
       where: { id: conversionId, influencerId },
       include: { influencer: { select: { userId: true } } },
@@ -119,8 +119,9 @@ export async function approveConversion(conversionId: string, influencerId: stri
     if (conversion.type === 'PURCHASE' && conversion.orderId) {
       const order = await tx.order.findUnique({ where: { id: conversion.orderId }, select: { paymentStatus: true, status: true } });
       if (!order || order.paymentStatus !== 'PAID' || order.status === 'CANCELLED') {
+        // Se devuelve en vez de lanzar: un throw aquí deshacía el rechazo junto con la transacción
         await tx.referralConversion.updateMany({ where: { id: conversionId, status: 'PENDING' }, data: { status: 'REJECTED' } });
-        throw new Error('La orden de esta comisión ya no está pagada');
+        return { ok: false as const };
       }
     }
 
@@ -152,6 +153,9 @@ export async function approveConversion(conversionId: string, influencerId: stri
       });
     }
 
-    return conversion.id;
+    return { ok: true as const, id: conversion.id };
   });
+
+  if (!resultado.ok) throw new Error('La orden de esta comisión ya no está pagada: se rechazó');
+  return resultado.id;
 }

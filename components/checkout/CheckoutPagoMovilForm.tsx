@@ -7,7 +7,7 @@ import { HiOutlineQrcode } from 'react-icons/hi';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { BANCOS_VENEZUELA, type BancoVenezuela } from '@/lib/pago-movil/bancos-venezuela';
-import { adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminSuccessButton } from '@/lib/admin-ui';
+import { adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody } from '@/lib/admin-ui';
 
 interface CheckoutPagoMovilFormProps {
     /** Monto esperado del pago */

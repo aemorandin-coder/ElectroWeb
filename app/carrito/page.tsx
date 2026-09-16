@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -9,40 +9,19 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import CheckoutSteps from '@/components/ui/CheckoutSteps';
 import PageHeader from '@/components/ui/PageHeader';
-import { FiShoppingCart, FiTruck, FiShield } from 'react-icons/fi';
+import { FiMinus, FiPlus, FiShoppingCart, FiTruck, FiShield } from 'react-icons/fi';
 import Footer from '@/components/Footer';
 import { toast } from 'react-hot-toast';
 import { HiTrash } from 'react-icons/hi';
 import { adminCard, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
+import { getGiftCardDesign } from '@/lib/gift-card-designs';
+import { useSettings } from '@/contexts/SettingsContext';
 
-// Gift Card Designs - Same as gift-cards page
-const GIFT_CARD_DESIGNS: Record<string, { gradient: string; accent: string; name: string }> = {
-  'obsidian-gold': {
-    name: 'Obsidian Gold',
-    gradient: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 30%, #2d2d2d 70%, #1a1a1a 100%)',
-    accent: '#fbbf24',
-  },
-  'aurora-neon': {
-    name: 'Aurora Neon',
-    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 70%, #1a1a2e 100%)',
-    accent: '#00d4ff',
-  },
-  'cosmic-violet': {
-    name: 'Cosmic Violet',
-    gradient: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 30%, #4a1f6e 70%, #2d1b4e 100%)',
-    accent: '#a855f7',
-  },
-  'matrix-green': {
-    name: 'Matrix Green',
-    gradient: 'linear-gradient(135deg, #0a1a0a 0%, #0d2d0d 30%, #1a4a1a 70%, #0d2d0d 100%)',
-    accent: '#22c55e',
-  },
-};
-
-interface CompanySettings {
-  exchangeRateVES: number;
-  companyName: string;
+// Diseño de una gift card del carrito: el id es "gift-card-<diseño>-<fecha>" (app/gift-cards).
+// Antes se leía un campo `design` que el carrito no guarda y todas salían con el mismo diseño (revisión R11).
+function disenoDeGiftCard(itemId: string) {
+  return getGiftCardDesign(itemId.replace(/^gift-card-/, '').replace(/-\d+$/, ''));
 }
 
 export default function CarritoPage() {
@@ -51,21 +30,10 @@ export default function CarritoPage() {
   const { confirm } = useConfirm();
   const [removing, setRemoving] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [settings, setSettings] = useState<CompanySettings | null>(null);
   const [isClearing, setIsClearing] = useState(false);
-
-  // Fetch exchange rate
-  useEffect(() => {
-    fetch('/api/settings/public')
-      .then(res => res.json())
-      .then(data => {
-        setSettings({
-          exchangeRateVES: data.exchangeRateVES || 50,
-          companyName: data.companyName || 'Electro Shop',
-        });
-      })
-      .catch(err => console.error('Error fetching settings:', err));
-  }, []);
+  // La tasa viene de los settings que el layout ya leyó en el servidor. Antes se pedía otra vez a la API
+  // y, si no llegaba, mostraba los bolívares con una tasa inventada de 50.
+  const { settings } = useSettings();
 
   const handleRemoveItem = async (id: string) => {
     setRemoving(id);
@@ -179,13 +147,12 @@ export default function CarritoPage() {
                         const isGiftCard = item.id.startsWith('gift-card-') || item.name.toLowerCase().includes('gift card');
 
                         if (isGiftCard) {
-                          const designKey = (item as any).design || 'obsidian-gold';
-                          const design = GIFT_CARD_DESIGNS[designKey] || GIFT_CARD_DESIGNS['obsidian-gold'];
+                          const design = disenoDeGiftCard(item.id);
 
                           return (
                             <div
-                              className="w-full h-full flex flex-col justify-between p-2.5 text-white"
-                              style={{ background: design.gradient }}
+                              className="w-full h-full flex flex-col justify-between p-2.5"
+                              style={{ background: design.background, color: design.text }}
                             >
                               <div className="flex justify-between items-start">
                                 <span className="text-[11px] font-bold opacity-80 tracking-wider">GIFT CARD</span>
@@ -288,10 +255,10 @@ export default function CarritoPage() {
                                 <button
                                   type="button"
                                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                  className="w-8 h-8 flex items-center justify-center bg-surface border border-line rounded-lg text-ink hover:bg-line transition-colors"
+                                  className="w-10 h-10 flex items-center justify-center bg-surface border border-line rounded-lg text-ink hover:bg-line transition-colors"
                                   aria-label="Disminuir cantidad"
                                 >
-                                  -
+                                  <FiMinus className="w-4 h-4" aria-hidden="true" />
                                 </button>
                                 <span className="w-8 text-center text-sm font-bold text-ink">
                                   {item.quantity}
@@ -300,10 +267,10 @@ export default function CarritoPage() {
                                   type="button"
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                   disabled={item.quantity >= item.stock}
-                                  className="w-8 h-8 flex items-center justify-center bg-surface border border-line rounded-lg text-ink hover:bg-line transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                  className="w-10 h-10 flex items-center justify-center bg-surface border border-line rounded-lg text-ink hover:bg-line transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                   aria-label="Aumentar cantidad"
                                 >
-                                  +
+                                  <FiPlus className="w-4 h-4" aria-hidden="true" />
                                 </button>
                                 {item.quantity >= item.stock && (
                                   <span className="text-xs text-warning-strong font-medium">Máx</span>

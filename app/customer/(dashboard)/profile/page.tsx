@@ -16,7 +16,6 @@ import {
   adminSecondaryButton,
   adminTab,
   adminBadge,
-  adminLabel,
   adminModalOverlay,
   adminModalPanel,
 } from '@/lib/admin-ui';
@@ -170,12 +169,6 @@ export default function ProfilePage() {
   const dismissBusinessTip = () => {
     setShowBusinessTip(false);
     localStorage.setItem('hasSeenBusinessTip', 'true');
-  };
-
-  const goToBusinessAndDismiss = () => {
-    setShowBusinessTip(false);
-    localStorage.setItem('hasSeenBusinessTip', 'true');
-    setActiveTab('business');
   };
 
   const fetchProfile = async () => {

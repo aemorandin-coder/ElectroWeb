@@ -10,13 +10,17 @@ import {
   FiChevronRight,
   FiFileText,
   FiHelpCircle,
+  FiMail,
   FiX,
 } from 'react-icons/fi';
+import { FaWhatsapp } from 'react-icons/fa6';
 import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useSettings } from '@/contexts/SettingsContext';
 import {
   adminCard,
   adminPrimaryButton,
+  adminSecondaryButton,
   adminTab,
   adminBadge,
   adminLabel,
@@ -53,6 +57,8 @@ export default function WarrantyPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'info' | 'requests' | 'new'>('info');
+  const { settings } = useSettings();
+  const whatsappAyuda = settings?.whatsapp?.replace(/\D/g, '') || '';
   const [showFormModal, setShowFormModal] = useState(false);
   const [selectedOrderForWarranty, setSelectedOrderForWarranty] = useState<Order | null>(null);
   const [warrantyReason, setWarrantyReason] = useState('');
@@ -232,6 +238,28 @@ export default function WarrantyPage() {
               ))}
             </div>
           </div>
+
+          {/* Ayuda: R11 quitó el bloque porque tenía un correo y un teléfono inventados; ahora usa los de Configuración */}
+          {(whatsappAyuda || settings?.email) && (
+            <div className={`${adminCard} p-5`}>
+              <h3 className="font-bold text-ink text-sm mb-1">¿Necesitas ayuda?</h3>
+              <p className="text-xs text-muted mb-3">Escríbenos y te respondemos lo antes posible.</p>
+              <div className="flex flex-wrap gap-2">
+                {whatsappAyuda && (
+                  <a href={`https://wa.me/${whatsappAyuda}`} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}>
+                    <FaWhatsapp className="w-4 h-4 text-success-strong" aria-hidden="true" />
+                    WhatsApp
+                  </a>
+                )}
+                {settings?.email && (
+                  <a href={`mailto:${settings.email}`} className={adminSecondaryButton}>
+                    <FiMail className="w-4 h-4" aria-hidden="true" />
+                    {settings.email}
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

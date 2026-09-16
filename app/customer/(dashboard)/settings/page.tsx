@@ -457,18 +457,20 @@ export default function SettingsPage() {
                 <span className="font-medium text-ink flex-1">Personal</span>
               </label>
 
+              {/* Sin verificación de empresa no se puede elegir (R11 lo había dejado activo y el servidor lo rechazaba al guardar) */}
               <label
-                className={`flex items-center gap-2 p-2.5 border rounded-lg cursor-pointer transition-all text-xs lg:text-sm ${
+                className={`flex items-center gap-2 p-2.5 border rounded-lg transition-all text-xs lg:text-sm ${
                   settings.purchaseAsBusinessDefault
                     ? 'border-brand-500 bg-brand-50'
                     : 'border-line hover:border-brand-500/40 bg-white'
-                }`}
+                } ${settings.businessVerified ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
               >
                 <input
                   type="radio"
                   name="purchaseAsBusinessDefault"
                   checked={settings.purchaseAsBusinessDefault}
                   onChange={() => setSettings({ ...settings, purchaseAsBusinessDefault: true })}
+                  disabled={!settings.businessVerified}
                   className="w-3.5 h-3.5 text-brand-500 focus:ring-brand-500"
                 />
                 <span className="font-medium text-ink flex-1">Empresa</span>

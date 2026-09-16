@@ -106,9 +106,9 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
 
     if (checkingEligibility) {
         return (
-            <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
+            <div className="bg-white rounded-xl border border-line p-6 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div>
-                <p className="text-gray-600 mt-4">Verificando elegibilidad...</p>
+                <p className="text-sm text-muted mt-4">Verificando elegibilidad...</p>
             </div>
         );
     }
@@ -116,26 +116,26 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
     if (!canReview) {
         return (
             <div
-                className="bg-gray-50/50 rounded-xl border border-gray-200 p-4 flex items-center gap-4 cursor-help group transition-all hover:bg-gray-50"
+                className="bg-surface rounded-xl border border-line p-4 flex items-center gap-4 cursor-help group transition-colors hover:bg-surface/80"
                 onClick={() => toast('Debes haber comprado y recibido el producto para opinar', {
                     icon: <FiLock className="h-5 w-5 text-brand-600" />,
                     style: {
                         borderRadius: '10px',
-                        background: '#333',
-                        color: '#fff',
+                        background: '#212529',
+                        color: '#ffffff',
                     },
                 })}
             >
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 group-hover:bg-gray-200 transition-colors">
+                <div className="w-10 h-10 bg-white border border-line rounded-full flex items-center justify-center text-muted group-hover:text-ink transition-colors">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                 </div>
                 <div className="flex-1">
-                    <h4 className="text-sm font-bold text-gray-700">Opiniones verificadas</h4>
-                    <p className="text-xs text-gray-500">Solo los usuarios que han comprado este producto pueden dejar una reseña.</p>
+                    <h4 className="text-sm font-bold text-ink">Opiniones verificadas</h4>
+                    <p className="text-xs text-muted">Solo los usuarios que han comprado este producto pueden dejar una reseña.</p>
                 </div>
-                <div className="lg:opacity-0 lg:group-hover:opacity-100 transition-opacity px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 shadow-sm">
+                <div className="lg:opacity-0 lg:group-hover:opacity-100 transition-opacity px-3 py-1 bg-white border border-line rounded-full text-xs font-semibold text-muted shadow-sm">
                     Ver requisitos
                 </div>
             </div>
@@ -144,18 +144,18 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
 
     return (
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-line p-6 space-y-4">
             <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 bg-success/15 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-success-strong" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Escribe una reseña</h3>
+                <h3 className="text-xl font-bold text-ink">Escribe una reseña</h3>
             </div>
 
             {canReview && (
-                <p className="text-sm text-green-600 font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+                <p className="text-xs text-success-strong font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -164,14 +164,14 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
             )}
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-bold text-ink mb-1.5">
                     Calificación *
                 </label>
                 <StarRating rating={rating} onRatingChange={setRating} size="lg" />
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-bold text-ink mb-1.5">
                     Título (opcional)
                 </label>
                 <input
@@ -181,12 +181,12 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
                     placeholder="Resume tu experiencia"
                     maxLength={100}
                     disabled={isSubmitting}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-line rounded-xl focus:outline-none focus:border-brand-500 bg-white text-ink text-sm"
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-bold text-ink mb-1.5">
                     Comentario *
                 </label>
                 <textarea
@@ -198,9 +198,9 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
                     minLength={10}
                     maxLength={1000}
                     disabled={isSubmitting}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                    className="w-full px-4 py-2 border border-line rounded-xl focus:outline-none focus:border-brand-500 bg-white text-ink text-sm resize-none"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted mt-1">
                     {comment.length}/1000 caracteres
                 </p>
             </div>

@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { useSettings } from '@/contexts/SettingsContext';
+import { esRutaDeAcceso } from '@/lib/rutas';
 
 // Números de ejemplo del seed: el botón avisa en vez de abrir un chat que no existe
 const SEED_PHONE_NUMBERS = ['584241234567', '4241234567'];
@@ -23,6 +24,8 @@ export default function WhatsAppButton() {
   // En contacto ya hay una tarjeta de WhatsApp; el admin no lo necesita
   if (!pathname || pathname.startsWith('/admin') || pathname.toLowerCase().includes('contacto')) return null;
 
+  // Sin barra inferior en las páginas de acceso: el botón baja a la esquina
+  const sinBarra = esRutaDeAcceso(pathname);
   const cleanedNumber = settings?.whatsapp?.replace(/\D/g, '') ?? '';
   if (!cleanedNumber) return null;
 
@@ -51,7 +54,7 @@ export default function WhatsAppButton() {
       onClick={handleClick}
       aria-label="Escríbenos por WhatsApp"
       title="¿Necesitas ayuda? Escríbenos"
-      className="fixed right-4 z-[var(--z-bottomnav)] flex h-12 w-12 items-center justify-center rounded-full bg-success-strong text-white shadow-lg transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-strong lg:right-6 lg:h-14 lg:w-14 bottom-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom)+0.75rem)] lg:bottom-6"
+      className={`fixed right-4 z-[var(--z-bottomnav)] flex h-12 w-12 items-center justify-center rounded-full bg-success-strong text-white shadow-lg transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-strong lg:right-6 lg:h-14 lg:w-14 ${sinBarra ? 'bottom-[calc(env(safe-area-inset-bottom)+1rem)]' : 'bottom-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom)+0.75rem)]'} lg:bottom-6`}
     >
       <FaWhatsapp className="h-6 w-6 lg:h-7 lg:w-7" aria-hidden="true" />
     </a>

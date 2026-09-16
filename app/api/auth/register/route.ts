@@ -7,34 +7,9 @@ import { sendVerificationEmail } from '@/lib/email-service';
 import { buscarUsuarioPorCorreo } from '@/lib/correo';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { verifyCaptcha } from '@/lib/captcha';
-import { z } from 'zod';
-import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
+import { registroSchema } from '@/lib/validations/registro';
 
-// Validation schema for registration
-const registerSchema = z.object({
-  name: z.string()
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(100, 'El nombre es demasiado largo')
-    .transform(val => val.trim().replace(/<[^>]*>/g, '')), // Strip HTML
-  email: z.string()
-    .email('Correo electrónico inválido')
-    .max(255, 'El correo es demasiado largo')
-    .transform(val => val.toLowerCase().trim()),
-  phone: z.string()
-    .min(10, 'Teléfono inválido')
-    .max(20, 'Teléfono demasiado largo')
-    .regex(/^[\d+\-\s()]+$/, 'Formato de teléfono inválido'),
-  password: z.string()
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .max(128, 'La contraseña es demasiado larga')
-    .regex(/[A-Z]/, 'La contraseña debe contener al menos una mayúscula')
-    .regex(/[a-z]/, 'La contraseña debe contener al menos una minúscula')
-    .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
-  idNumber: z.string()
-    .min(5, 'Cédula inválida')
-    .max(20, 'Cédula demasiado larga')
-    .regex(/^[VvEeJjGg]?-?\d{5,12}$/, 'Formato de cédula inválido'),
-});
+// Las reglas viven en lib/validations/registro.ts y son las mismas que usa la pantalla (C-84)
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,16 +27,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
 
     // SEGURIDAD: el captcha se verifica en el servidor, no solo en el navegador
     const captcha = await verifyCaptcha(body?.captchaToken, clientIP);
     if (!captcha.ok) {
-      return NextResponse.json({ error: captcha.error }, { status: captcha.status });
+      return NextResponse.json({ error: captcha.error, field: 'captcha' }, { status: captcha.status });
     }
 
-    // Validate with Zod
-    const validationResult = registerSchema.safeParse(body);
+    const validationResult = registroSchema.safeParse(body);
 
     if (!validationResult.success) {
       const firstError = validationResult.error.issues[0];
@@ -77,13 +51,12 @@ export async function POST(request: NextRequest) {
     const rawRef = request.cookies.get('electroshop_ref')?.value ?? '';
     const refCode = rawRef && /^[A-Z0-9_-]{3,20}$/.test(rawRef) ? rawRef : null;
 
-    // Check if user already exists
     // Sin distinguir mayúsculas: una cuenta vieja "Ana@…" y una nueva "ana@…" serían la misma persona (C-83)
     const existingUser = await buscarUsuarioPorCorreo(email);
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Este correo electrónico ya está registrado' },
+        { error: 'Este correo ya tiene una cuenta. Inicia sesión o recupera tu contraseña.', field: 'email' },
         { status: 400 }
       );
     }
@@ -111,22 +84,12 @@ export async function POST(request: NextRequest) {
         referredByCode: validatedRefCode,
         profile: {
           create: {
-            phone: phone,
-            idNumber: idNumber,
+            phone,
+            idNumber,
           }
         }
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-        profile: {
-          select: {
-            phone: true,
-          }
-        }
-      },
+      select: { id: true },
     });
 
     // Record referral conversion (fire-and-forget — registration itself must succeed)
@@ -162,7 +125,7 @@ export async function POST(request: NextRequest) {
           userId: user.id,
           type: 'SYSTEM',
           title: 'Bienvenido a Electro Shop',
-          message: `Hola ${name}, tu cuenta ha sido creada exitosamente. Para poder realizar compras, verifica tu correo electronico haciendo clic en el enlace que te enviamos.`,
+          message: `Hola ${name}, tu cuenta está lista. Para comprar, confirma tu correo con el enlace que te enviamos.`,
           link: '/customer/settings',
           icon: 'FiMail',
         },
@@ -173,7 +136,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId: user.id,
           type: 'PROMOTION',
-          title: '¡Descubre los descuentos exclusivos!',
+          title: 'Descubre los descuentos exclusivos',
           message: 'Guarda productos en tu Lista de Deseos y solicita descuentos especiales. Nuestro equipo revisará tu solicitud y te notificará cuando sea aprobada.',
           link: '/customer/wishlist',
           icon: 'FiPercent',
@@ -192,26 +155,27 @@ export async function POST(request: NextRequest) {
       link: '/admin/customers',
     });
 
+    // El correo va normalizado: la pantalla inicia sesión con este y no con lo que escribió el cliente
     return NextResponse.json(
       {
-        message: 'Usuario registrado exitosamente. Revisa tu correo para verificar tu cuenta.',
-        user,
+        message: 'Tu cuenta está lista. Revisa tu correo para confirmarlo.',
+        email,
         requiresVerification: true,
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error('Registration error:', error);
 
-    if (error.code === 'P2002') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       return NextResponse.json(
-        { error: 'Este correo electronico ya esta registrado' },
+        { error: 'Este correo ya tiene una cuenta. Inicia sesión o recupera tu contraseña.', field: 'email' },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Error al registrar usuario' },
+      { error: 'No pudimos crear tu cuenta. Intenta de nuevo en unos minutos.' },
       { status: 500 }
     );
   }

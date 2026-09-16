@@ -71,30 +71,21 @@ export default function OrderTracking({
             {/* Compact Horizontal Timeline */}
             <div className="relative flex items-center justify-between">
                 {/* Progress Line Background */}
-                <div className="absolute top-4 left-4 right-4 h-1 bg-gray-200 rounded-full" />
+                <div className="absolute top-4 left-4 right-4 h-1 bg-line rounded-full" />
 
                 {/* Progress Line Filled */}
                 <div
-                    className="absolute top-4 left-4 h-1 rounded-full transition-all duration-1000 ease-out overflow-hidden"
-                    style={{
-                        width: `calc(${progress}% - 16px)`,
-                        background: isDelivered
-                            ? 'linear-gradient(90deg, #10b981, #059669)'
+                    className={`absolute top-4 left-4 h-1 rounded-full transition-all duration-1000 ease-out overflow-hidden ${
+                        isDelivered
+                            ? 'bg-success-strong'
                             : isCancelled
-                                ? 'linear-gradient(90deg, #ef4444, #dc2626)'
-                                : 'linear-gradient(90deg, #2a63cd, #1e4ba3)'
+                                ? 'bg-deal'
+                                : 'bg-brand-500'
+                    }`}
+                    style={{
+                        width: `calc(${progress}% - 16px)`
                     }}
-                >
-                    {/* Glow Effect */}
-                    <div
-                        className="absolute inset-0 animate-pulse"
-                        style={{
-                            boxShadow: isDelivered
-                                ? '0 0 10px #10b981, 0 0 20px #10b981'
-                                : '0 0 10px #2a63cd, 0 0 20px #2a63cd'
-                        }}
-                    />
-                </div>
+                />
 
                 {/* Steps */}
                 {steps.map((step, index) => {
@@ -109,12 +100,12 @@ export default function OrderTracking({
                             <div
                                 className={`
                                     relative w-8 h-8 rounded-full flex items-center justify-center
-                                    transition-all duration-500 transform
+                                    transition-all duration-300
                                     ${isCompleted
-                                        ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/40 scale-100'
+                                        ? 'bg-success-strong text-white shadow-sm'
                                         : isCurrent
-                                            ? `bg-gradient-to-br ${isDelivered ? 'from-emerald-400 to-emerald-600' : 'from-brand-500 to-brand-600'} shadow-lg ${isDelivered ? 'shadow-emerald-500/40' : 'shadow-blue-500/40'} scale-110`
-                                            : 'bg-gray-200 scale-90'
+                                            ? `${isDelivered ? 'bg-success-strong' : 'bg-brand-500'} text-white shadow-sm`
+                                            : 'bg-line text-subtle'
                                     }
                                 `}
                             >
@@ -132,16 +123,9 @@ export default function OrderTracking({
                                     <StepIcon
                                         className={`w-3.5 h-3.5 transition-all duration-300 ${isCurrent
                                             ? 'text-white'
-                                            : 'text-gray-400'
+                                            : 'text-subtle'
                                             }`}
                                     />
-                                )}
-
-                                {/* Current Step Ping Animation */}
-                                {isCurrent && (
-                                    <>
-                                        <span className={`absolute inset-0 rounded-full animate-ping opacity-30 ${isDelivered ? 'bg-emerald-400' : 'bg-brand-500'}`} />
-                                    </>
                                 )}
                             </div>
 
@@ -150,7 +134,7 @@ export default function OrderTracking({
                                 className={`
                                     mt-1.5 text-xs font-semibold text-center leading-tight max-w-[50px]
                                     transition-all duration-300
-                                    ${isCompleted || isCurrent ? 'text-gray-800' : 'text-gray-400'}
+                                    ${isCompleted || isCurrent ? 'text-ink' : 'text-muted'}
                                 `}
                             >
                                 {step.label}
@@ -165,14 +149,14 @@ export default function OrderTracking({
                 className={`
                     mt-4 px-3 py-2 rounded-lg flex items-center gap-2 text-xs font-medium
                     ${isDelivered
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        ? 'bg-success-strong/10 text-success-strong border border-success-strong/20'
                         : isCancelled
-                            ? 'bg-red-50 text-red-700 border border-red-200'
-                            : 'bg-blue-50 text-blue-700 border border-blue-200'
+                            ? 'bg-deal-bg text-deal border border-deal/30'
+                            : 'bg-brand-50 text-brand-700 border border-brand-200'
                     }
                 `}
             >
-                {status === 'DELIVERED' && <FiGift className="w-3.5 h-3.5 animate-bounce" />}
+                {status === 'DELIVERED' && <FiGift className="w-3.5 h-3.5" />}
                 {status === 'SHIPPED' && <FiTruck className="w-3.5 h-3.5" />}
                 {status === 'READY_FOR_PICKUP' && <FiShoppingBag className="w-3.5 h-3.5" />}
                 {status === 'PAID' && <FiCreditCard className="w-3.5 h-3.5" />}
@@ -193,18 +177,18 @@ export default function OrderTracking({
 
             {/* Shipping Information Card (when shipped) */}
             {(status === 'SHIPPED' || status === 'DELIVERED') && trackingNumber && (
-                <div className="mt-3 p-3 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-100">
+                <div className="mt-3 p-3 bg-surface rounded-xl border border-line">
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                                <FiTruck className="w-4 h-4 text-indigo-600" />
+                            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center text-brand-600">
+                                <FiTruck className="w-4 h-4" />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-indigo-900">
+                                <p className="text-xs font-bold text-ink">
                                     {shippingCarrier || 'Envío'}
                                 </p>
-                                <p className="text-xs text-indigo-600">
-                                    Guía: <span className="font-mono font-bold">{trackingNumber}</span>
+                                <p className="text-xs text-muted">
+                                    Guía: <span className="font-mono font-bold text-ink">{trackingNumber}</span>
                                 </p>
                             </div>
                         </div>
@@ -213,7 +197,7 @@ export default function OrderTracking({
                                 href={trackingUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 px-2 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+                                className="flex items-center gap-1 px-2 py-1 bg-brand-500 text-white text-xs font-semibold rounded-lg hover:bg-brand-600 transition-colors"
                             >
                                 <FiExternalLink className="w-3 h-3" />
                                 Rastrear
@@ -221,13 +205,13 @@ export default function OrderTracking({
                         )}
                     </div>
                     {shippingNotes && (
-                        <p className="mt-2 text-xs text-indigo-700 bg-indigo-100/50 px-2 py-1 rounded inline-flex items-center gap-1">
+                        <p className="mt-2 text-xs text-brand-700 bg-brand-50 px-2 py-1 rounded inline-flex items-center gap-1">
                             <FiMapPin className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />{shippingNotes}
                         </p>
                     )}
                     {estimatedDelivery && status === 'SHIPPED' && (
-                        <p className="mt-1.5 text-xs text-indigo-600 inline-flex items-center gap-1">
-                            <FiCalendar className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />Entrega estimada: <span className="font-semibold">{new Date(estimatedDelivery).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                        <p className="mt-1.5 text-xs text-muted inline-flex items-center gap-1">
+                            <FiCalendar className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />Entrega estimada: <span className="font-semibold text-ink">{new Date(estimatedDelivery).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                         </p>
                     )}
                 </div>

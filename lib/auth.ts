@@ -1,10 +1,55 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
+import { cookies } from 'next/headers';
+import { entrarConProveedor, googleHabilitado } from '@/lib/auth-social';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { prisma } from '@/lib/prisma';
 import { buscarUsuarioPorCorreo } from '@/lib/correo';
 import * as bcrypt from 'bcryptjs';
 import { headers } from 'next/headers';
+
+/** Último acceso (dispositivo e IP) y aviso al equipo si entra un admin. Lo usan el login con correo y el de Google. */
+async function registrarAcceso(userId: string, nombre: string, isAdmin: boolean, role: string) {
+  try {
+    const reqHeaders = await headers();
+    const userAgent = reqHeaders.get('user-agent') || 'Desconocido';
+    const ip = reqHeaders.get('x-forwarded-for')?.split(',')[0] || reqHeaders.get('x-real-ip') || '127.0.0.1';
+
+    let device = 'Desconocido';
+    if (userAgent.includes('Windows')) device = 'Windows';
+    else if (userAgent.includes('Macintosh')) device = 'macOS';
+    else if (userAgent.includes('iPhone')) device = 'iPhone';
+    else if (userAgent.includes('iPad')) device = 'iPad';
+    else if (userAgent.includes('Android')) device = 'Android';
+    else if (userAgent.includes('Linux')) device = 'Linux';
+
+    let browser = '';
+    if (userAgent.includes('Chrome')) browser = 'Chrome';
+    else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) browser = 'Safari';
+    else if (userAgent.includes('Firefox')) browser = 'Firefox';
+    else if (userAgent.includes('Edge')) browser = 'Edge';
+
+    const deviceString = browser ? `${device} (${browser})` : device;
+
+    await prisma.profile.upsert({
+      where: { userId },
+      create: { userId, lastLoginAt: new Date(), lastLoginDevice: deviceString, lastLoginIp: ip },
+      update: { lastLoginAt: new Date(), lastLoginDevice: deviceString, lastLoginIp: ip },
+    });
+    if (isAdmin) {
+      emitAdminEvent({
+        type: 'ADMIN_LOGIN',
+        title: `Inicio de sesión · ${nombre}`,
+        summary: 'Entró al panel de administración',
+        fields: [['Dispositivo', deviceString], ['IP', ip], ['Rol', role === 'SUPER_ADMIN' ? 'Super admin' : 'Admin']],
+        link: '/admin',
+      });
+    }
+  } catch (err) {
+    console.error('Failed to update last login info:', err);
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -25,6 +70,11 @@ export const authOptions: NextAuthOptions = {
         // Sin distinguir mayúsculas ni espacios: el registro guarda el correo en minúsculas (C-83)
         const user = await buscarUsuarioPorCorreo(credentials.email);
 
+        // Cuenta creada con Google (sin contraseña): decirlo en vez de "incorrectos" (C-85)
+        if (user && !user.password) {
+          throw new Error('CUENTA_SOCIAL');
+        }
+
         if (user && user.password) {
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
@@ -41,54 +91,7 @@ export const authOptions: NextAuthOptions = {
               });
             }
 
-            // Update last login info
-            try {
-              const reqHeaders = await headers();
-              const userAgent = reqHeaders.get('user-agent') || 'Desconocido';
-              const ip = reqHeaders.get('x-forwarded-for')?.split(',')[0] || reqHeaders.get('x-real-ip') || '127.0.0.1';
-
-              let device = 'Desconocido';
-              if (userAgent.includes('Windows')) device = 'Windows';
-              else if (userAgent.includes('Macintosh')) device = 'macOS';
-              else if (userAgent.includes('iPhone')) device = 'iPhone';
-              else if (userAgent.includes('iPad')) device = 'iPad';
-              else if (userAgent.includes('Android')) device = 'Android';
-              else if (userAgent.includes('Linux')) device = 'Linux';
-
-              let browser = '';
-              if (userAgent.includes('Chrome')) browser = 'Chrome';
-              else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) browser = 'Safari';
-              else if (userAgent.includes('Firefox')) browser = 'Firefox';
-              else if (userAgent.includes('Edge')) browser = 'Edge';
-
-              const deviceString = browser ? `${device} (${browser})` : device;
-
-              await prisma.profile.upsert({
-                where: { userId: user.id },
-                create: {
-                  userId: user.id,
-                  lastLoginAt: new Date(),
-                  lastLoginDevice: deviceString,
-                  lastLoginIp: ip,
-                },
-                update: {
-                  lastLoginAt: new Date(),
-                  lastLoginDevice: deviceString,
-                  lastLoginIp: ip,
-                },
-              });
-              if (isAdmin) {
-                emitAdminEvent({
-                  type: 'ADMIN_LOGIN',
-                  title: `Inicio de sesión · ${user.name || user.email}`,
-                  summary: 'Entró al panel de administración',
-                  fields: [['Dispositivo', deviceString], ['IP', ip], ['Rol', user.role === 'SUPER_ADMIN' ? 'Super admin' : 'Admin']],
-                  link: '/admin',
-                });
-              }
-            } catch (err) {
-              console.error('Failed to update last login info:', err);
-            }
+            await registrarAcceso(user.id, user.name || user.email || '', isAdmin, user.role);
 
             return {
               id: user.id,
@@ -107,6 +110,16 @@ export const authOptions: NextAuthOptions = {
         throw new Error('Credenciales invalidas');
       },
     }),
+    // C-85: solo existe si las dos variables están en el entorno
+    ...(googleHabilitado()
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID as string,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+            authorization: { params: { prompt: 'select_account' } },
+          }),
+        ]
+      : []),
   ],
   session: {
     strategy: 'jwt',
@@ -117,6 +130,48 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (!account || account.provider === 'unified-credentials') return true;
+
+      // Google (C-85): crea, vincula o rechaza. `user` es el mismo objeto que recibe jwt(): se completa con la cuenta de la tienda.
+      let referido: string | null = null;
+      try {
+        referido = (await cookies()).get('electroshop_ref')?.value ?? null;
+      } catch {
+        // Fuera de una petición (pruebas): sin código de promotor
+      }
+      const resultado = await entrarConProveedor({
+        provider: account.provider,
+        providerAccountId: account.providerAccountId,
+        email: user.email,
+        emailVerificado: (profile as { email_verified?: boolean } | undefined)?.email_verified === true,
+        nombre: user.name,
+        imagen: user.image,
+        codigoReferido: referido,
+        tipoCuenta: account.type,
+      });
+      if (!resultado.ok) return `/login?error=${account.provider}-${resultado.motivo}`;
+
+      const dbUser = await prisma.user.findUnique({
+        where: { id: resultado.userId },
+        select: { id: true, name: true, email: true, image: true, role: true, emailVerified: true, sessionVersion: true },
+      });
+      if (!dbUser) return `/login?error=${account.provider}-sin-correo`;
+
+      Object.assign(user, {
+        id: dbUser.id,
+        name: dbUser.name,
+        email: dbUser.email,
+        image: dbUser.image,
+        role: dbUser.role,
+        userType: 'customer',
+        emailVerified: Boolean(dbUser.emailVerified),
+        permissions: [],
+        sessionVersion: dbUser.sessionVersion,
+      });
+      await registrarAcceso(dbUser.id, dbUser.name || dbUser.email || '', false, dbUser.role);
+      return true;
+    },
     async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;

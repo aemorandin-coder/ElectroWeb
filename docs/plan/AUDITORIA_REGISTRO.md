@@ -31,7 +31,7 @@ El teclado del teléfono escribió el correo con mayúsculas (`CONTACTO@FRANDING
 
 ### Decisiones tuyas que harían el registro aún más corto
 
-1. **Cédula fuera del registro** (recomendado). Hoy el registro es el único momento en que se pide y después no se puede corregir. Se pediría en el primer pedido (checkout) y al aceptar los términos del saldo, que ya la pide. El registro bajaría a nombre, correo, teléfono y contraseña.
+1. **Cédula fuera del registro** — aprobado y hecho en C-85. Hoy el registro es el único momento en que se pide y después no se puede corregir. Se pediría en el primer pedido (checkout) y al aceptar los términos del saldo, que ya la pide. El registro bajaría a nombre, correo, teléfono y contraseña.
 2. **Teléfono opcional en el registro.** Se necesita para coordinar entregas; se podría pedir en el checkout igual que la dirección. Menos importante que la cédula.
 3. **Captcha.** hCaptcha visible es la mayor fricción que queda en el teléfono. El modo invisible de hCaptcha es de pago. Alternativa gratis: con Google (sección 3) no hace falta captcha.
 
@@ -71,11 +71,11 @@ El teclado del teléfono escribió el correo con mayúsculas (`CONTACTO@FRANDING
 - **Administradores**: no pueden entrar con Google; siguen con contraseña.
 - **No hace falta migración**: la tabla `accounts` ya existe en el esquema de Prisma.
 
-### Decisiones que necesito antes de C-85
+### Decisiones de Andrés (16/09) · implementadas en C-85
 
-1. Cuenta existente con el mismo correo: **vincular sola** (recomendado) o pedir primero la contraseña.
-2. Datos que faltan en cuentas de Google: **pedirlos en el checkout** (recomendado) o en una pantalla obligatoria apenas entra.
-3. ¿Los administradores pueden entrar con Google? Recomendado: **no**.
+1. Cuenta existente con el mismo correo: **se vincula sola**. Si esa cuenta nunca verificó su correo, su contraseña se anula al vincular (pudo crearla otra persona).
+2. Teléfono y cédula: **se piden en la primera compra** (checkout) y el servidor de órdenes los exige.
+3. Administradores: **nunca entran con Google**.
 
 ### Facebook y Apple (después de Google)
 

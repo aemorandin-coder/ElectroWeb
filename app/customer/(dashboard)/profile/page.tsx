@@ -641,11 +641,12 @@ export default function ProfilePage() {
                           <input
                             type="text"
                             value={profile.idNumber}
-                            onChange={(e) => !profile.idNumber && setProfile({ ...profile, idNumber: e.target.value })}
-                            disabled={!!profile.idNumber}
-                            maxLength={12}
+                            // Se bloquea con la cédula GUARDADA: con la que se escribe, el campo se cerraba después de la primera letra (C-85)
+                            onChange={(e) => !initialProfile.idNumber && setProfile({ ...profile, idNumber: e.target.value.toUpperCase() })}
+                            disabled={!!initialProfile.idNumber}
+                            maxLength={15}
                             className="w-full pl-10 pr-4 py-3 text-sm bg-surface border border-line focus:border-brand-500 focus:border-brand-500 rounded-xl outline-none hover:border-brand-500 transition-all duration-200 disabled:bg-surface disabled:text-muted disabled:border-line disabled:cursor-not-allowed uppercase font-medium shadow-sm"
-                            placeholder="V-1234..."
+                            placeholder="V-12345678"
                           />
                         </div>
                       </div>

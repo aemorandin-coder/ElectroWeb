@@ -111,11 +111,11 @@ export const contrasenaSchema = z
 export const documentoSchema = conLectura(leerDocumento);
 export const telefonoSchema = conLectura(leerTelefono);
 
+// Sin cédula desde C-85: se pide en la primera compra (checkout) y se puede escribir en el perfil
 export const registroSchema = z.object({
   name: nombreSchema,
   email: correoSchema,
   phone: telefonoSchema,
-  idNumber: documentoSchema,
   password: contrasenaSchema,
   acceptTerms: z.literal(true, { error: 'Acepta los términos para crear tu cuenta' }),
 });

@@ -23,6 +23,7 @@ import { faWallet } from '@fortawesome/free-solid-svg-icons';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { adminCard, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import DatosDelCliente from '@/components/checkout/DatosDelCliente';
 import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalculation, type PricingLine } from '@/lib/pricing';
 
 type CheckoutCartItem = ReturnType<typeof useCart>['items'][number];
@@ -69,6 +70,8 @@ export default function CheckoutPage() {
   const { items, getTotalPrice, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // C-85: el formulario de teléfono y cédula espera al perfil para no aparecer y desaparecer
+  const [perfilCargado, setPerfilCargado] = useState(false);
   const [companySettings, setCompanySettings] = useState<any>(null);
   const [userBalance, setUserBalance] = useState<number>(0);
   const [showRechargeModal, setShowRechargeModal] = useState(false);
@@ -203,6 +206,7 @@ export default function CheckoutPage() {
       fetch('/api/user/profile')
         .then(res => res.json())
         .then(data => {
+          setPerfilCargado(true);
           if (data.profile?.phone || data.profile?.idNumber) {
             setFormData(prev => ({
               ...prev,
@@ -238,7 +242,8 @@ export default function CheckoutPage() {
               console.error('Error parsing saved addresses', e);
             }
           }
-        });
+        })
+        .catch(() => setPerfilCargado(true));
 
       // Fetch active discounts
       fetch('/api/customer/discount-requests')
@@ -268,8 +273,10 @@ export default function CheckoutPage() {
   };
 
   // Auto-focus on shipping address when section becomes visible
+  // C-85: si faltan teléfono o cédula no se enfoca: el salto a la dirección escondía el bloque para completarlos
+  const faltanDatosCliente = !formData.customerPhone || !formData.customerIdNumber;
   useEffect(() => {
-    if (session?.user && formData.customerName) {
+    if (session?.user && formData.customerName && perfilCargado && !faltanDatosCliente) {
       // Small delay to ensure DOM is ready
       setTimeout(() => {
         if (!formData.isOfficeDelivery && shippingAddressRef.current) {
@@ -277,7 +284,7 @@ export default function CheckoutPage() {
         }
       }, 500);
     }
-  }, [session, formData.customerName]);
+  }, [session, formData.customerName, perfilCargado, faltanDatosCliente]);
 
   // State for redirect animation
   const [showRedirectMessage, setShowRedirectMessage] = useState(false);
@@ -380,6 +387,14 @@ export default function CheckoutPage() {
     if (!(session.user as any).emailVerified) {
       setError('Debes verificar tu correo electronico antes de realizar compras. Revisa tu bandeja de entrada y haz clic en el enlace de verificacion.');
       setLoading(false);
+      return;
+    }
+
+    // C-85: teléfono y cédula se piden en la primera compra (el servidor también los exige)
+    if (!formData.customerPhone || !formData.customerIdNumber) {
+      setError('Completa tu teléfono y tu cédula antes de hacer el pedido.');
+      setLoading(false);
+      document.getElementById('datos-del-cliente')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
 
@@ -785,6 +800,16 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {session?.user && perfilCargado && (
+                <DatosDelCliente
+                  telefono={formData.customerPhone}
+                  cedula={formData.customerIdNumber}
+                  onGuardado={({ telefono, cedula }) => {
+                    setFormData((prev) => ({ ...prev, customerPhone: telefono, customerIdNumber: cedula }));
+                    setError('');
+                  }}
+                />
+              )}
 
               {/* Shipping Information */}
               <div className="bg-white rounded-xl shadow-lg border border-line p-6 animate-fadeIn animation-delay-100">

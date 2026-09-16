@@ -4,6 +4,8 @@ import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import PublicHeader from '@/components/public/PublicHeader';
+import { formatUSD } from '@/lib/currency';
+import { adminCard, adminPrimaryButton, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
 
 /**
  * /checkout/success — Issue #4 (Bloque 3 Audit)
@@ -16,13 +18,13 @@ import PublicHeader from '@/components/public/PublicHeader';
 
 /* ─── Confetti CSS-only ─── */
 const CONFETTI_COLORS = [
-  '#2a63cd', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4',
+  '#2a63cd', '#10b981', '#f59e0b', '#dc2626', '#8b5cf6', '#06b6d4',
 ];
 const PIECES = 60;
 
 function Confetti() {
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-[9999]" aria-hidden="true">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-[var(--z-modal)]" aria-hidden="true">
       {Array.from({ length: PIECES }).map((_, i) => {
         const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
         const left = `${Math.random() * 100}%`;
@@ -62,10 +64,10 @@ function Confetti() {
 function AnimatedCheck() {
   return (
     <div className="relative w-24 h-24 mx-auto mb-6">
-      {/* Outer ring pulse */}
-      <div className="absolute inset-0 rounded-full bg-green-400/20 animate-ping" />
+      {/* Outer ring */}
+      <div className="absolute inset-0 rounded-full bg-success/15" />
       {/* Inner circle */}
-      <div className="relative w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-2xl shadow-green-500/30">
+      <div className="relative w-24 h-24 bg-success-strong rounded-full flex items-center justify-center shadow-lg">
         <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
@@ -89,10 +91,10 @@ function AnimatedCheck() {
 function Step({ n, text }: { n: number; text: string }) {
   return (
     <li className="flex items-start gap-3">
-      <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white flex items-center justify-center text-xs font-bold shadow-md">
+      <span className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-500 text-white flex items-center justify-center text-xs font-bold">
         {n}
       </span>
-      <span className="text-sm text-gray-600 leading-relaxed pt-0.5">{text}</span>
+      <span className="text-sm text-ink-soft leading-relaxed pt-0.5">{text}</span>
     </li>
   );
 }
@@ -109,7 +111,7 @@ function CheckoutSuccessContent() {
   const [showConfetti, setShowConfetti] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // Apagar confetti después de 4s
+  // Apagar confetti después de 4.5s
   useEffect(() => {
     const t = setTimeout(() => setShowConfetti(false), 4500);
     return () => clearTimeout(t);
@@ -121,69 +123,53 @@ function CheckoutSuccessContent() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const formatUSD = (n: number) =>
-    new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(n);
-
   return (
     <>
       {showConfetti && <Confetti />}
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 flex flex-col">
+      <div className="min-h-dvh bg-surface flex flex-col">
         <PublicHeader />
 
-        <main className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-10">
+        <main className="flex-1 max-w-2xl mx-auto px-4 py-8 sm:py-12 w-full">
 
-          {/* ── Card principal ── */}
-          <div className="bg-white rounded-3xl shadow-2xl shadow-gray-200/60 border border-gray-100 overflow-hidden">
+          {/* ── Tarjeta Principal ── */}
+          <div className={`${adminCard} p-6 sm:p-10 text-center relative overflow-hidden shadow-sm`}>
 
-            {/* Header verde */}
-            <div className="bg-gradient-to-r from-emerald-500 to-green-600 px-8 pt-10 pb-16 text-center relative overflow-hidden">
-              {/* Background blobs */}
-              <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+            {/* Check animado */}
+            <AnimatedCheck />
 
-              <AnimatedCheck />
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 drop-shadow-lg">
-                ¡Pedido Confirmado!
-              </h1>
-              <p className="text-green-100 text-base">
-                Tu compra ha sido procesada exitosamente
-              </p>
-            </div>
+            {/* Título */}
+            <h1 className="text-2xl sm:text-3xl font-bold text-ink mb-2">
+              ¡Gracias por tu compra!
+            </h1>
+            <p className="text-muted text-base mb-6 max-w-md mx-auto">
+              Tu pedido ha sido recibido y ya lo estamos procesando.
+            </p>
 
-            <div className="px-8 -mt-8 pb-8 space-y-6">
-
-              {/* ── Número(s) de orden ── */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-5">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  {orderNumbers.length > 1 ? 'Números de Orden' : 'Número de Orden'}
+            {/* ── Números de Orden ── */}
+            <div className="space-y-3 mb-6">
+              <div className="bg-surface rounded-xl border border-line p-4 mb-4 text-left">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">
+                  {orderNumbers.length > 1 ? 'Tus números de pedido' : 'Tu número de pedido'}
                 </p>
 
                 {orderNumbers.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
                     {orderNumbers.map((num) => (
                       <button
                         key={num}
+                        type="button"
                         onClick={() => copyOrder(num)}
-                        className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-brand-500/5 to-brand-600/5 rounded-xl border border-brand-500/20 hover:border-brand-500/40 group transition-all"
+                        title="Haz clic para copiar"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-line rounded-lg font-mono font-bold text-sm text-ink hover:border-brand-500 hover:text-brand-600 transition-colors group cursor-pointer"
                       >
-                        <span className="text-xl font-bold text-brand-500 tracking-wider">
-                          #{num}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-xs text-gray-400 group-hover:text-brand-500 transition-colors">
+                        <span>{num}</span>
+                        <span className="text-xs text-muted group-hover:text-brand-600 font-sans font-normal">
                           {copied === num ? (
-                            <>
-                              <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                              <span className="text-green-500 font-medium">¡Copiado!</span>
-                            </>
+                            <span className="text-success-strong font-medium">¡Copiado!</span>
                           ) : (
                             <>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3.5 h-3.5 inline mr-0.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                               </svg>
                               Copiar
@@ -194,51 +180,48 @@ function CheckoutSuccessContent() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400 text-sm">—</p>
+                  <p className="text-muted text-sm">—</p>
                 )}
 
                 {/* Total */}
                 {total > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-500">Total pagado:</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-xs font-bold text-gray-400">USD</span>
-                      <span className="text-2xl font-bold text-gray-800">{formatUSD(total)}</span>
-                    </div>
+                  <div className="mt-4 pt-4 border-t border-line flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted">Total pagado:</span>
+                    <span className="text-2xl font-bold text-ink">{formatUSD(total)}</span>
                   </div>
                 )}
               </div>
 
               {/* ── Info boxes ── */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                <div className="flex items-start gap-3 p-4 bg-brand-500/5 rounded-xl border border-brand-500/15">
                   <div className="flex-shrink-0 w-9 h-9 bg-brand-500/10 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-800">Email enviado</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Revisa tu correo para los detalles del pedido</p>
+                    <p className="text-sm font-bold text-ink">Email enviado</p>
+                    <p className="text-xs text-muted mt-0.5">Revisa tu correo para los detalles del pedido</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                  <div className="flex-shrink-0 w-9 h-9 bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start gap-3 p-4 bg-success/5 rounded-xl border border-success/15">
+                  <div className="flex-shrink-0 w-9 h-9 bg-success/10 rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 text-success-strong" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-800">Te contactaremos</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Nuestro equipo coordinará tu entrega</p>
+                    <p className="text-sm font-bold text-ink">Te contactaremos</p>
+                    <p className="text-xs text-muted mt-0.5">Nuestro equipo coordinará tu entrega</p>
                   </div>
                 </div>
               </div>
 
               {/* ── Próximos pasos ── */}
-              <div className="bg-gray-50 rounded-2xl border border-gray-200 p-5">
-                <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-surface rounded-xl border border-line p-5">
+                <h2 className="text-sm font-bold text-ink uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                   Próximos Pasos
@@ -252,21 +235,21 @@ function CheckoutSuccessContent() {
               </div>
 
               {/* ── CTA Buttons ── */}
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Link
                   href="/customer/orders"
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 hover:scale-[1.02] transition-all duration-200"
+                  className={`flex-1 ${adminPrimaryButton} py-3 text-sm font-bold justify-center`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                   Ver mis pedidos
                 </Link>
                 <Link
                   href="/productos"
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 bg-white text-gray-700 font-semibold rounded-2xl border-2 border-gray-200 hover:border-brand-500/40 hover:text-brand-500 hover:bg-blue-50/50 transition-all duration-200"
+                  className={`flex-1 ${adminSecondaryButton} py-3 text-sm font-semibold justify-center`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                   Seguir comprando
@@ -277,16 +260,16 @@ function CheckoutSuccessContent() {
           </div>
 
           {/* ── Soporte ── */}
-          <div className="mt-6 bg-white rounded-2xl border border-gray-200 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className={`${adminCard} mt-6 p-5 flex flex-col sm:flex-row items-center justify-between gap-4`}>
             <div>
-              <p className="text-sm font-bold text-gray-700">¿Tienes alguna pregunta?</p>
-              <p className="text-xs text-gray-400 mt-0.5">Nuestro equipo está disponible para ayudarte</p>
+              <p className="text-sm font-bold text-ink">¿Tienes alguna pregunta?</p>
+              <p className="text-xs text-muted mt-0.5">Nuestro equipo está disponible para ayudarte</p>
             </div>
             <Link
               href="/contacto"
-              className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition-all whitespace-nowrap"
+              className={`${adminSecondaryButton} px-4 py-2 text-sm whitespace-nowrap`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
               Contactar soporte
@@ -302,14 +285,10 @@ function CheckoutSuccessContent() {
 export default function CheckoutSuccessPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center animate-pulse">
-            <svg className="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <p className="text-gray-500 text-sm font-medium">Cargando confirmación...</p>
+      <div className="min-h-dvh bg-surface flex items-center justify-center">
+        <div className="text-center flex flex-col items-center gap-3">
+          <div className={adminSpinner} />
+          <p className="text-muted text-sm font-medium">Cargando confirmación...</p>
         </div>
       </div>
     }>

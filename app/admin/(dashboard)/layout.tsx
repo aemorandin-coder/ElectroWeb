@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   FiBarChart2, FiBox, FiClipboard, FiCreditCard, FiDollarSign, FiExternalLink, FiGift, FiGrid, FiLogOut,
-  FiBell, FiMenu, FiMessageSquare, FiPercent, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUsers, FiX,
+  FiBell, FiBookOpen, FiMenu, FiMessageSquare, FiPercent, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUsers, FiX,
 } from 'react-icons/fi';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { MdAdminPanelSettings } from 'react-icons/md';
@@ -26,6 +26,7 @@ interface SidebarCounts {
   pendingInquiries: number;
   pendingDiscounts: number;
   pendingCreators: number;
+  pendingCourses: number;
   unreadNotifications: number;
 }
 
@@ -49,6 +50,7 @@ export default function AdminLayout({
     pendingInquiries: 0,
     pendingDiscounts: 0,
     pendingCreators: 0,
+    pendingCourses: 0,
     unreadNotifications: 0,
   });
 
@@ -195,6 +197,20 @@ export default function AdminLayout({
       href: '/admin/marketing',
       icon: <FiTrendingUp className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_CONTENT',
+    },
+    // C-82: no había forma de llegar a los cursos ni a los creadores desde el menú (solo desde una notificación)
+    {
+      name: 'Cursos',
+      href: '/admin/cursos',
+      icon: <FiBookOpen className="h-5 w-5" aria-hidden="true" />,
+      permission: 'MANAGE_CONTENT',
+      countKey: 'pendingCourses',
+    },
+    {
+      name: 'Creadores',
+      href: '/admin/creators',
+      icon: <FiUserCheck className="h-5 w-5" aria-hidden="true" />,
+      permission: 'MANAGE_USERS',
       countKey: 'pendingCreators',
     },
     {

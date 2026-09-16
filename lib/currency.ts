@@ -52,7 +52,10 @@ export function formatPrice(
 // ============================================
 
 function formatAmount(value: number): string {
-  const safe = Number.isFinite(value) ? value : 0;
+  // Los Decimal de Prisma llegan del API como texto ("320"): Number.isFinite no convierte,
+  // así que antes se mostraban como $0,00.
+  const numero = typeof value === 'number' ? value : Number(value);
+  const safe = Number.isFinite(numero) ? numero : 0;
   const [integer, decimals] = Math.abs(safe).toFixed(2).split('.');
   const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   const sign = safe < 0 && Number(`${integer}.${decimals}`) !== 0 ? '-' : '';

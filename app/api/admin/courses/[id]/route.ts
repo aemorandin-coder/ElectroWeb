@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
+import { adminCoursePatchSchema, curriculumSchema } from '@/lib/validations/creator-course';
 
 export async function GET(
   request: NextRequest,
@@ -50,9 +52,13 @@ export async function PATCH(
 
     // Handle curriculum save (modules + lessons upsert)
     if (body.curriculum) {
-      const modules: any[] = body.curriculum;
+      const curriculum = curriculumSchema.safeParse(body.curriculum);
+      if (!curriculum.success) {
+        return NextResponse.json({ error: curriculum.error.issues[0]?.message || 'Currículum inválido' }, { status: 400 });
+      }
+      const modules = curriculum.data;
       // Delete removed modules then upsert
-      const incomingModuleIds = modules.filter((m) => m.id).map((m) => m.id);
+      const incomingModuleIds = modules.filter((m) => m.id).map((m) => m.id as string);
       await prisma.courseModule.deleteMany({
         where: { courseId: id, id: { notIn: incomingModuleIds } },
       });
@@ -65,7 +71,7 @@ export async function PATCH(
         });
 
         if (mod.lessons?.length) {
-          const incomingLessonIds = mod.lessons.filter((l: any) => l.id).map((l: any) => l.id);
+          const incomingLessonIds = mod.lessons.filter((l) => l.id).map((l) => l.id as string);
           await prisma.courseLesson.deleteMany({
             where: { moduleId: savedModule.id, id: { notIn: incomingLessonIds } },
           });
@@ -78,19 +84,17 @@ export async function PATCH(
                 title: lesson.title,
                 description: lesson.description || null,
                 videoUrl: lesson.videoUrl || null,
-                duration: lesson.duration ? parseInt(lesson.duration) : null,
+                duration: lesson.duration ? parseInt(String(lesson.duration)) : null,
                 isFree: lesson.isFree ?? false,
                 order: lesson.order ?? 0,
-                resources: lesson.resources ? JSON.stringify(lesson.resources) : null,
               },
               update: {
                 title: lesson.title,
                 description: lesson.description || null,
                 videoUrl: lesson.videoUrl || null,
-                duration: lesson.duration ? parseInt(lesson.duration) : null,
+                duration: lesson.duration ? parseInt(String(lesson.duration)) : null,
                 isFree: lesson.isFree ?? false,
                 order: lesson.order ?? 0,
-                resources: lesson.resources ? JSON.stringify(lesson.resources) : null,
               },
             });
           }
@@ -106,14 +110,37 @@ export async function PATCH(
       return NextResponse.json({ ok: true });
     }
 
-    // Regular field update
-    const { curriculum: _c, ...fields } = body;
-    if (fields.tags && Array.isArray(fields.tags)) {
-      fields.tags = JSON.stringify(fields.tags);
+    // Campos del curso: solo los de la lista blanca (C-82)
+    const parsed = adminCoursePatchSchema.safeParse(body);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      const campo = issue?.path.join('.');
+      return NextResponse.json(
+        { error: issue?.code === 'unrecognized_keys' ? 'Hay campos que no se pueden cambiar desde el panel.' : `${campo ? campo + ': ' : ''}${issue?.message ?? 'Datos inválidos'}` },
+        { status: 400 }
+      );
     }
-    if (fields.priceUSD !== undefined) fields.priceUSD = parseFloat(fields.priceUSD);
 
-    const course = await prisma.course.update({ where: { id }, data: fields });
+    const previo = await prisma.course.findUnique({
+      where: { id },
+      select: { isActive: true, title: true, slug: true, creator: { select: { userId: true } } },
+    });
+    if (!previo) return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
+
+    const course = await prisma.course.update({ where: { id }, data: parsed.data });
+
+    // Curso de un creador que pasa a activo: se le avisa (antes no se enteraba de que se aprobó)
+    if (parsed.data.isActive === true && !previo.isActive && previo.creator?.userId) {
+      await createNotification({
+        userId: previo.creator.userId,
+        type: 'SYSTEM_UPDATE',
+        title: 'Curso aprobado',
+        message: `Tu curso "${previo.title}" ya está publicado en el catálogo.`,
+        link: `/cursos/${previo.slug}`,
+        icon: 'confirm',
+      });
+    }
+
     return NextResponse.json(course);
   } catch (error) {
     console.error('PATCH /api/admin/courses/[id] error:', error);

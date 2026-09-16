@@ -25,6 +25,21 @@ export const creatorCourseSchema = z.object({
 
 export const creatorCoursePatchSchema = creatorCourseSchema.partial();
 
+/**
+ * Lo que el admin puede cambiar de un curso (C-82). Antes el PATCH hacía `data: body`: se podía reescribir
+ * el dueño, los inscritos o la calificación, y cualquier campo desconocido terminaba en un 500 sin explicación.
+ */
+export const adminCoursePatchSchema = creatorCourseSchema
+  .partial()
+  .extend({
+    instructor: optionalText(120),
+    isFeatured: z.boolean().optional(),
+    isActive: z.boolean().optional(),
+    metaTitle: optionalText(200),
+    metaDescription: optionalText(500),
+  })
+  .strict();
+
 const lessonSchema = z.object({
   id: z.string().max(40).optional(),
   title: z.string().trim().min(1).max(200),

@@ -3,6 +3,7 @@
 import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
+import { toast } from 'react-hot-toast';
 
 
 import { useState, useEffect } from 'react';
@@ -60,9 +61,14 @@ export default function AdminCreatorsPage() {
         setCreators((prev) =>
           prev.map((c) => c.id === modal.creator.id ? { ...c, status: modal.action, notes } : c)
         );
+        toast.success(`Creador ${STATUS_LABELS[modal.action].toLowerCase()}`);
         setModal(null);
         setNotes('');
         window.dispatchEvent(new Event('refresh-sidebar-counts'));
+      } else {
+        // Antes un error dejaba el modal abierto sin decir nada
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || 'No se pudo actualizar la solicitud');
       }
     } finally {
       setSaving(false);

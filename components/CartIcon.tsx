@@ -173,7 +173,7 @@ export default function CartIcon() {
                 </h3>
                 <button
                   onClick={handleClearCart}
-                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-all"
+                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-deal hover:text-deal/80 hover:bg-deal-bg rounded transition-colors"
                   title="Limpiar carrito"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,7 +189,7 @@ export default function CartIcon() {
                   <div key={item.id} className="p-4 border-b border-line hover:bg-surface transition-colors">
                     <div className="flex gap-3">
                       {/* Image */}
-                      <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded flex-shrink-0 relative overflow-hidden">
+                      <div className="w-16 h-16 bg-surface border border-line rounded flex-shrink-0 relative overflow-hidden">
                         {(() => {
                           // Check if it's a Gift Card with design info
                           const isGiftCard = item.id.startsWith('gift-card-');
@@ -230,7 +230,7 @@ export default function CartIcon() {
                                     style={{ background: `${design.accent}25` }}
                                   >
                                     <span
-                                      className="text-[8px] font-black tracking-wider"
+                                      className="text-[11px] font-bold tracking-wider"
                                       style={{ color: design.accent }}
                                     >
                                       GIFT
@@ -283,7 +283,7 @@ export default function CartIcon() {
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-8 h-8 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                               </svg>
                             </div>
@@ -324,7 +324,7 @@ export default function CartIcon() {
                           </button>
                           <button
                             onClick={() => removeItem(item.id)}
-                            className="ml-auto text-red-600 hover:text-red-700 transition-colors"
+                            className="ml-auto text-deal hover:text-deal/80 transition-colors"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

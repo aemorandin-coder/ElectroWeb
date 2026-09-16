@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { FiBell, FiCheck, FiCheckCircle, FiTrash2, FiPackage, FiCreditCard, FiTruck, FiShoppingBag, FiStar, FiGift, FiAlertCircle } from 'react-icons/fi';
+import { FiBell, FiCheck, FiCheckCircle } from 'react-icons/fi';
 import { useNotifications } from '@/components/notifications/NotificationProvider';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { notificationMeta, timeAgo } from '@/components/notifications/notification-meta';
+import { adminTab, adminIconChip } from '@/lib/admin-ui';
 import Link from 'next/link';
 
 export default function NotificationsPage() {
@@ -14,19 +14,6 @@ export default function NotificationsPage() {
     const filteredNotifications = filter === 'unread'
         ? notifications.filter(n => !n.read)
         : notifications;
-
-    const getNotificationIcon = (type: string) => {
-        const icons: Record<string, { icon: any; bg: string; color: string }> = {
-            ORDER_CONFIRMED: { icon: FiPackage, bg: 'bg-blue-100', color: 'text-blue-600' },
-            ORDER_PAID: { icon: FiCreditCard, bg: 'bg-green-100', color: 'text-green-600' },
-            ORDER_SHIPPED: { icon: FiTruck, bg: 'bg-indigo-100', color: 'text-indigo-600' },
-            ORDER_DELIVERED: { icon: FiGift, bg: 'bg-emerald-100', color: 'text-emerald-600' },
-            ORDER_CANCELLED: { icon: FiAlertCircle, bg: 'bg-red-100', color: 'text-red-600' },
-            PROMOTION: { icon: FiStar, bg: 'bg-amber-100', color: 'text-amber-600' },
-            REVIEW: { icon: FiStar, bg: 'bg-purple-100', color: 'text-purple-600' },
-        };
-        return icons[type] || { icon: FiBell, bg: 'bg-gray-100', color: 'text-gray-600' };
-    };
 
     const handleMarkAsRead = async (id: string) => {
         await markAsRead(id);
@@ -58,7 +45,7 @@ export default function NotificationsPage() {
                     {unreadCount > 0 && (
                         <button
                             onClick={markAllAsRead}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-500 bg-brand-500/10 rounded-lg hover:bg-brand-500/20 transition-colors"
+                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-600 bg-brand-50 rounded-lg hover:bg-brand-100 transition-colors"
                         >
                             <FiCheckCircle className="w-4 h-4" />
                             Marcar todas como leídas
@@ -68,22 +55,16 @@ export default function NotificationsPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1">
                 <button
                     onClick={() => setFilter('all')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filter === 'all'
-                            ? 'bg-brand-500 text-white'
-                            : 'bg-surface text-muted hover:bg-line'
-                        }`}
+                    className={adminTab(filter === 'all')}
                 >
                     Todas ({notifications.length})
                 </button>
                 <button
                     onClick={() => setFilter('unread')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filter === 'unread'
-                            ? 'bg-brand-500 text-white'
-                            : 'bg-surface text-muted hover:bg-line'
-                        }`}
+                    className={adminTab(filter === 'unread')}
                 >
                     No leídas ({unreadCount})
                 </button>
@@ -105,20 +86,20 @@ export default function NotificationsPage() {
             ) : (
                 <div className="bg-white rounded-xl border border-line overflow-hidden divide-y divide-line">
                     {filteredNotifications.map((notification) => {
-                        const iconConfig = getNotificationIcon(notification.type);
-                        const IconComponent = iconConfig.icon;
+                        const meta = notificationMeta(notification.type);
+                        const IconComponent = meta.Icon;
 
                         return (
                             <div
                                 key={notification.id}
-                                className={`p-4 transition-colors ${!notification.read ? 'bg-blue-50/50' : 'hover:bg-surface'
+                                className={`p-4 transition-colors ${!notification.read ? 'bg-brand-50/50' : 'hover:bg-surface'
                                     }`}
                             >
                                 <div className="flex items-start gap-3">
                                     {/* Icon */}
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconConfig.bg}`}>
-                                        <IconComponent className={`w-5 h-5 ${iconConfig.color}`} />
-                                    </div>
+                                    <span className={adminIconChip(meta.tone)}>
+                                        <IconComponent className="w-4 h-4" />
+                                    </span>
 
                                     {/* Content */}
                                     <div className="flex-1 min-w-0">
@@ -136,13 +117,13 @@ export default function NotificationsPage() {
 
                                         <div className="flex items-center gap-3 mt-2">
                                             <span className="text-xs text-subtle">
-                                                {format(new Date(notification.createdAt), "d MMM, HH:mm", { locale: es })}
+                                                {timeAgo(notification.createdAt)}
                                             </span>
 
                                             {notification.link && (
                                                 <Link
                                                     href={notification.link}
-                                                    className="text-xs font-medium text-brand-500 hover:underline"
+                                                    className="text-xs font-medium text-brand-600 hover:underline"
                                                 >
                                                     Ver detalles
                                                 </Link>

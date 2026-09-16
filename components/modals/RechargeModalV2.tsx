@@ -163,10 +163,6 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         }
     };
 
-    // Helper function to get gradient color - all blue for brand consistency
-    const getMethodColor = () => {
-        return 'from-brand-500 to-brand-600';
-    };
 
     // Build details object for display
     const getMethodDetails = (method: any) => {
@@ -348,24 +344,24 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center p-0 sm:p-2 lg:p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn"
+                className="absolute inset-0 bg-ink/50 animate-fadeIn"
                 onClick={onClose}
             />
 
             {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL (Desktop) */}
             <button
                 onClick={onClose}
-                className="hidden sm:flex fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 hover:bg-white rounded-full items-center justify-center shadow-lg active:scale-95 transition-all"
+                className="hidden sm:flex fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white hover:bg-surface rounded-full items-center justify-center shadow-lg transition-all"
                 style={{ zIndex: 'var(--z-modal)' }}
                 aria-label="Cerrar"
             >
-                <FiX className="w-6 h-6 text-gray-700" />
+                <FiX className="w-6 h-6 text-ink" />
             </button>
 
             {/* Modal */}
-            <div className="relative bg-white rounded-t-[32px] sm:rounded-2xl w-full max-w-3xl shadow-2xl h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden animate-slideInUp sm:animate-scaleIn z-10">
-                {/* Header - Compact on mobile */}
-                <div className="bg-gradient-to-r from-brand-500 to-brand-600 p-4 lg:p-6 rounded-t-[32px] sm:rounded-t-2xl flex-shrink-0">
+            <div className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-3xl shadow-lg h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden z-10">
+                {/* Header */}
+                <div className="bg-brand-600 p-4 lg:p-6 rounded-t-2xl flex-shrink-0">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 lg:gap-3">
                             {step !== 'SELECT_METHOD' && (
@@ -376,7 +372,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     <FiArrowLeft className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                                 </button>
                             )}
-                            <div className="w-9 h-9 lg:w-12 lg:h-12 bg-white/20 backdrop-blur-sm rounded-lg lg:rounded-xl flex items-center justify-center">
+                            <div className="w-9 h-9 lg:w-12 lg:h-12 bg-white/20 rounded-lg lg:rounded-xl flex items-center justify-center">
                                 {step === 'VERIFY_PAYMENT' ? (
                                     <FiShield className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
                                 ) : (
@@ -387,7 +383,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                 <h2 className="text-base lg:text-xl font-bold text-white">
                                     {step === 'VERIFY_PAYMENT' ? 'Verificar Pago' : 'Recargar'}
                                 </h2>
-                                <p className="text-xs lg:text-sm text-blue-100 hidden sm:block">
+                                <p className="text-xs lg:text-sm text-white/80 hidden sm:block">
                                     {step === 'VERIFY_PAYMENT'
                                         ? 'Verifica tu pago movil'
                                         : 'Añade fondos a tu cuenta'}
@@ -422,29 +418,24 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
                                     {/* Quick Amount Buttons - Responsive */}
                                     <div className="grid grid-cols-5 gap-1.5 lg:gap-2 mb-3 lg:mb-4">
-                                        {quickAmounts.map((quickAmount, index) => (
+                                        {quickAmounts.map((quickAmount) => (
                                             <button
                                                 key={quickAmount}
                                                 onClick={() => setAmount(quickAmount.toString())}
-                                                className={`group relative overflow-hidden rounded-lg lg:rounded-xl font-bold text-xs lg:text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 ${amount === quickAmount.toString()
-                                                    ? 'bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-lg shadow-brand-500/40 ring-1 lg:ring-2 ring-brand-500 ring-offset-1 lg:ring-offset-2'
-                                                    : 'bg-gradient-to-br from-gray-100 to-gray-200 text-ink hover:from-brand-500/10 hover:to-brand-600/10 hover:shadow-md'
+                                                className={`group relative overflow-hidden rounded-lg lg:rounded-xl font-bold text-xs lg:text-sm transition-all ${amount === quickAmount.toString()
+                                                    ? 'bg-brand-600 text-white shadow-sm ring-2 ring-brand-500'
+                                                    : 'bg-surface text-ink hover:bg-line border border-line'
                                                     }`}
-                                                style={{ animationDelay: `${index * 50}ms` }}
                                             >
-                                                {/* Shimmer effect */}
-                                                <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ${amount === quickAmount.toString() ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}></div>
-
                                                 <div className="relative py-2 lg:py-3 px-1 lg:px-2 flex flex-col items-center">
-                                                    <span className={`text-[11px] lg:text-xs font-bold tracking-wider mb-0.5 ${amount === quickAmount.toString() ? 'text-blue-200' : 'text-muted'
-                                                        }`}>USD</span>
+                                                    <span className={`text-xs font-bold tracking-wider mb-0.5 ${amount === quickAmount.toString() ? 'text-white/80' : 'text-muted'}`}>USD</span>
                                                     <span className="text-sm lg:text-lg font-bold">{quickAmount}</span>
                                                 </div>
 
                                                 {/* Selection indicator */}
                                                 {amount === quickAmount.toString() && (
-                                                    <div className="absolute top-0.5 right-0.5 lg:top-1 lg:right-1 w-3 h-3 lg:w-4 lg:h-4 bg-white rounded-full flex items-center justify-center shadow-md">
-                                                        <FiCheck className="w-2 h-2 lg:w-3 lg:h-3 text-brand-500" />
+                                                    <div className="absolute top-0.5 right-0.5 lg:top-1 lg:right-1 w-3 h-3 lg:w-4 lg:h-4 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                                        <FiCheck className="w-2 h-2 lg:w-3 lg:h-3 text-brand-600" />
                                                     </div>
                                                 )}
                                             </button>
@@ -476,7 +467,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                             <div className="w-5 h-5 lg:w-6 lg:h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                                         </div>
                                     ) : companyPaymentMethods.length === 0 ? (
-                                        <div className="text-center py-4 lg:py-6 text-gray-500">
+                                        <div className="text-center py-4 lg:py-6 text-muted">
                                             <p className="text-xs lg:text-sm">No hay metodos de pago disponibles</p>
                                         </div>
                                     ) : (
@@ -485,26 +476,26 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                 <button
                                                     key={method.id}
                                                     onClick={() => setSelectedMethod(method.type)}
-                                                    className={`w-full p-3 lg:p-4 rounded-lg lg:rounded-xl border-2 transition-all duration-300 text-left transform hover:scale-[1.01] lg:hover:scale-[1.02] active:scale-[0.98] ${selectedMethod === method.type
-                                                        ? 'border-brand-500 bg-gradient-to-r from-brand-500/10 to-brand-600/5 shadow-lg'
+                                                    className={`w-full p-3 lg:p-4 rounded-lg lg:rounded-xl border transition-all text-left ${selectedMethod === method.type
+                                                        ? 'border-brand-500 bg-brand-50 shadow-sm'
                                                         : 'border-line hover:border-brand-500/50 hover:bg-surface'
                                                         }`}
                                                 >
                                                     <div className="flex items-center gap-2 lg:gap-3">
-                                                        <div className={`w-9 h-9 lg:w-12 lg:h-12 rounded-lg lg:rounded-xl bg-gradient-to-br ${getMethodColor()} flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                                                        <div className="w-9 h-9 lg:w-12 lg:h-12 rounded-lg lg:rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0 shadow-sm">
                                                             <span className="scale-75 lg:scale-100">{getMethodIcon(method.type)}</span>
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center gap-1.5 lg:gap-2 mb-0.5 flex-wrap">
                                                                 <h3 className="font-bold text-ink text-sm lg:text-base">{method.name}</h3>
                                                                 {method.type === 'MOBILE_PAYMENT' && (
-                                                                    <span className="px-1.5 lg:px-2 py-0.5 text-[11px] lg:text-xs font-bold bg-green-100 text-green-700 rounded-full flex items-center gap-0.5">
+                                                                    <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-success-strong/10 text-success-strong rounded-full flex items-center gap-0.5">
                                                                         <FiShield className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
                                                                         <span className="hidden sm:inline">Verificacion</span> Auto
                                                                     </span>
                                                                 )}
                                                                 {method.type === 'MERCANTIL_PANAMA' && (
-                                                                    <span className="px-1.5 lg:px-2 py-0.5 text-[11px] lg:text-xs font-bold bg-blue-100 text-brand-500 rounded-full">
+                                                                    <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-brand-50 text-brand-700 rounded-full">
                                                                         Intl
                                                                     </span>
                                                                 )}
@@ -518,7 +509,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                                 <p className="text-xs text-muted">{method.bankName}</p>
                                                             )}
                                                             {method.displayNote && selectedMethod === method.type && (
-                                                                <p className="text-xs text-brand-500 mt-1 font-medium truncate">
+                                                                <p className="text-xs text-brand-600 mt-1 font-medium truncate">
                                                                     {method.displayNote}
                                                                 </p>
                                                             )}
@@ -534,7 +525,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                             {/* Right Column: Details & Reference */}
                             <div className="space-y-3 lg:space-y-4">
                                 {/* Selected Method Details */}
-                                <div className="bg-gradient-to-br from-surface to-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-line shadow-sm">
+                                <div className="bg-surface rounded-xl p-3 lg:p-4 border border-line shadow-sm">
                                     <h3 className="font-bold text-xs lg:text-sm text-ink mb-2 lg:mb-3 flex items-center gap-2">
                                         <div className="w-1 h-3 lg:h-4 bg-brand-500 rounded-full"></div>
                                         Datos para el pago
@@ -549,12 +540,12 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                 return Object.entries(details).map(([key, value]) => (
                                                     <div key={key} className="flex items-center justify-between py-1 border-b border-line last:border-0">
                                                         <div className="flex flex-col">
-                                                            <span className="text-[11px] lg:text-xs text-muted uppercase font-bold tracking-wider">{key}</span>
+                                                            <span className="text-xs text-muted uppercase font-bold tracking-wider">{key}</span>
                                                             <span className="text-xs lg:text-sm font-medium text-ink">{value}</span>
                                                         </div>
                                                         <button
                                                             onClick={() => { navigator.clipboard.writeText(value); toast.success('Copiado!'); }}
-                                                            className="text-brand-500 hover:bg-blue-50 px-1.5 lg:px-2 py-0.5 lg:py-1 rounded transition-colors text-[11px] lg:text-xs font-bold"
+                                                            className="text-brand-600 hover:bg-brand-50 px-1.5 lg:px-2 py-0.5 lg:py-1 rounded transition-colors text-xs font-bold"
                                                         >
                                                             COPIAR
                                                         </button>
@@ -566,14 +557,14 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                 const method = companyPaymentMethods.find(m => m.type === selectedMethod);
                                                 if (method?.qrCodeImage) {
                                                     return (
-                                                        <div className="mt-2 lg:mt-3 pt-2 lg:pt-3 border-t border-gray-200">
-                                                            <p className="text-xs text-gray-500 mb-2">Escanea el QR:</p>
+                                                        <div className="mt-2 lg:mt-3 pt-2 lg:pt-3 border-t border-line">
+                                                            <p className="text-xs text-muted mb-2">Escanea el QR:</p>
                                                             <Image
                                                                 src={method.qrCodeImage}
                                                                 alt="QR Code"
                                                                 width={100}
                                                                 height={100}
-                                                                className="rounded-lg border border-gray-200 w-20 h-20 lg:w-[120px] lg:h-[120px]"
+                                                                className="rounded-lg border border-line w-20 h-20 lg:w-[120px] lg:h-[120px]"
                                                             />
                                                         </div>
                                                     );
@@ -591,29 +582,29 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     )}
                                 </div>
 
-                                {/* Bs Conversion (For Mobile Payment and Bank Transfer) - Compact */}
+                                {/* Bs Conversion (For Mobile Payment and Bank Transfer) */}
                                 {(selectedMethod === 'MOBILE_PAYMENT' || selectedMethod === 'BANK_TRANSFER') && (
-                                    <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg lg:rounded-xl p-2.5 lg:p-3 border border-yellow-200 shadow-sm animate-fadeIn">
+                                    <div className="bg-warning/15 rounded-xl p-2.5 lg:p-3 border border-warning/30 shadow-sm">
                                         <div className="flex items-center gap-1.5 lg:gap-2 mb-1.5 lg:mb-2">
-                                            <div className="w-5 h-5 lg:w-6 lg:h-6 bg-gradient-to-br from-yellow-500 to-orange-500 rounded flex items-center justify-center">
-                                                <span className="text-white font-bold text-[11px] lg:text-xs">Bs</span>
+                                            <div className="w-5 h-5 lg:w-6 lg:h-6 bg-warning-strong rounded flex items-center justify-center">
+                                                <span className="text-white font-bold text-xs">Bs</span>
                                             </div>
                                             <span className="font-bold text-xs lg:text-sm text-ink">Monto en Bolivares</span>
                                         </div>
-                                        <div className="bg-white rounded-lg p-2 lg:p-3 border border-yellow-200">
+                                        <div className="bg-white rounded-lg p-2 lg:p-3 border border-warning/30">
                                             <div className="flex items-center justify-between text-xs mb-1">
                                                 <span className="text-muted">{formatUSD(amount ? parseFloat(amount) : 0)}</span>
                                                 <span className="text-muted">x {exchangeRate > 0 ? exchangeRate.toFixed(2) : '...'}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-xs font-semibold text-ink">Total:</span>
-                                                <span className="text-base lg:text-xl font-bold text-orange-600">
+                                                <span className="text-base lg:text-xl font-bold text-warning-strong">
                                                     {formatVES(amountInBs || 0)}
                                                 </span>
                                             </div>
                                         </div>
                                         {amount && parseFloat(amount) > 0 && (
-                                            <p className="text-[11px] lg:text-xs text-orange-700 mt-1 lg:mt-1.5 flex items-center gap-1">
+                                            <p className="text-xs text-warning-strong mt-1 lg:mt-1.5 flex items-center gap-1">
                                                 <FiAlertTriangle className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
                                                 Transfiere este monto exacto
                                             </p>
@@ -621,7 +612,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     </div>
                                 )}
 
-                                {/* Reference Number - Only for non-mobile payment */}
+                                {/* Reference Number */}
                                 {selectedMethod && selectedMethod !== 'MOBILE_PAYMENT' && (
                                     <div>
                                         <label className="block text-xs font-bold text-ink mb-1 lg:mb-1.5 uppercase tracking-wider">
@@ -632,10 +623,10 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                             value={reference}
                                             onChange={(e) => setReference(e.target.value)}
                                             placeholder="Ej: 123456789"
-                                            className="w-full px-3 py-2 lg:py-2.5 border-2 border-line rounded-lg lg:rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-xs lg:text-sm"
+                                            className="w-full px-3 py-2 lg:py-2.5 border border-line rounded-lg lg:rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-xs lg:text-sm bg-white text-ink"
                                         />
-                                        <p className="text-[11px] lg:text-xs text-muted mt-1 flex items-center gap-1">
-                                            <span className="min-w-5 h-5 px-1 rounded-full bg-blue-100 text-brand-500 flex items-center justify-center text-[11px] font-bold">i</span>
+                                        <p className="text-xs text-muted mt-1 flex items-center gap-1">
+                                            <span className="min-w-5 h-5 px-1 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold">i</span>
                                             ID de transaccion
                                         </p>
                                     </div>
@@ -643,14 +634,14 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
                                 {/* Mobile Payment Info */}
                                 {selectedMethod === 'MOBILE_PAYMENT' && (
-                                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg lg:rounded-xl p-3 lg:p-4 border border-green-200 animate-fadeIn">
+                                    <div className="bg-success-strong/10 rounded-xl p-3 lg:p-4 border border-success-strong/20">
                                         <div className="flex items-start gap-2 lg:gap-3">
-                                            <div className="w-6 h-6 lg:w-8 lg:h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                                <FiShield className="w-3 h-3 lg:w-4 lg:h-4 text-white" />
+                                            <div className="w-6 h-6 lg:w-8 lg:h-8 bg-success-strong rounded-full flex items-center justify-center flex-shrink-0 text-white">
+                                                <FiShield className="w-3 h-3 lg:w-4 lg:h-4" />
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-xs lg:text-sm text-green-800">Verificacion Automatica</h4>
-                                                <p className="text-xs text-green-700 mt-0.5 lg:mt-1">
+                                                <h4 className="font-bold text-xs lg:text-sm text-success-strong">Verificacion Automatica</h4>
+                                                <p className="text-xs text-success-strong/90 mt-0.5 lg:mt-1">
                                                     Verifica tu pago con el Banco de Venezuela y se aprueba al instante.
                                                 </p>
                                             </div>
@@ -674,12 +665,12 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                     )}
                 </div>
 
-                {/* Actions - Fixed at bottom */}
+                {/* Actions */}
                 <div className="p-3 lg:p-6 border-t border-line bg-white flex-shrink-0">
                     <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
                         <button
                             onClick={onClose}
-                            className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-surface text-ink font-semibold rounded-lg lg:rounded-xl hover:bg-line transition-all text-sm lg:text-base order-2 sm:order-1"
+                            className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-surface text-ink font-semibold rounded-xl hover:bg-line border border-line transition-all text-sm lg:text-base order-2 sm:order-1"
                         >
                             Cancelar
                         </button>
@@ -687,11 +678,10 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                         {step === 'SELECT_METHOD' && (
                             <>
                                 {isMobilePayment ? (
-                                    // Mobile Payment: Go to verification
                                     <button
                                         onClick={handleProceedToVerification}
                                         disabled={processing || !amount || !selectedMethod || !hasAcceptedTerms}
-                                        className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg lg:rounded-xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base order-1 sm:order-2"
+                                        className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-success-strong hover:bg-success-strong/90 text-white font-semibold rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base order-1 sm:order-2"
                                     >
                                         {processing ? (
                                             <>
@@ -709,11 +699,10 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                         )}
                                     </button>
                                 ) : (
-                                    // Other methods: Traditional submit
                                     <button
                                         onClick={handleTraditionalSubmit}
                                         disabled={processing || !amount || !selectedMethod || !reference || !hasAcceptedTerms}
-                                        className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold rounded-lg lg:rounded-xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base order-1 sm:order-2"
+                                        className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base order-1 sm:order-2"
                                     >
                                         {processing ? (
                                             <>

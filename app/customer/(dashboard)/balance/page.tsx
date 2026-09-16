@@ -32,37 +32,35 @@ interface UserBalance {
 const MobileBalanceSkeleton = () => (
   <div className="lg:hidden space-y-4 p-4">
     {/* Hero Balance Skeleton */}
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 p-6">
+    <div className="relative overflow-hidden rounded-2xl bg-brand-950 p-6">
       <div className="animate-pulse">
         <div className="h-3 w-20 bg-white/20 rounded-full mb-3" />
         <div className="h-10 w-40 bg-white/30 rounded-lg mb-4" />
         <div className="h-12 w-full bg-white/20 rounded-xl" />
       </div>
-      {/* Shimmer effect */}
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
     </div>
 
     {/* Stats Cards Skeleton */}
     <div className="grid grid-cols-2 gap-3">
       {[1, 2].map((i) => (
-        <div key={i} className="rounded-xl bg-white border border-gray-100 p-4 animate-pulse">
-          <div className="h-3 w-16 bg-gray-200 rounded-full mb-2" />
-          <div className="h-6 w-24 bg-gray-300 rounded-lg" />
+        <div key={i} className="rounded-xl bg-white border border-line p-4 animate-pulse">
+          <div className="h-3 w-16 bg-line rounded-full mb-2" />
+          <div className="h-6 w-24 bg-surface rounded-lg" />
         </div>
       ))}
     </div>
 
     {/* Transactions Skeleton */}
-    <div className="rounded-xl bg-white border border-gray-100 p-4">
-      <div className="h-4 w-24 bg-gray-200 rounded-full mb-4" />
+    <div className="rounded-xl bg-white border border-line p-4">
+      <div className="h-4 w-24 bg-line rounded-full mb-4" />
       {[1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0 animate-pulse">
-          <div className="w-10 h-10 bg-gray-200 rounded-xl" />
+        <div key={i} className="flex items-center gap-3 py-3 border-b border-line last:border-0 animate-pulse">
+          <div className="w-10 h-10 bg-surface rounded-xl" />
           <div className="flex-1">
-            <div className="h-3 w-28 bg-gray-200 rounded-full mb-2" />
-            <div className="h-2 w-20 bg-gray-100 rounded-full" />
+            <div className="h-3 w-28 bg-line rounded-full mb-2" />
+            <div className="h-2 w-20 bg-surface rounded-full" />
           </div>
-          <div className="h-4 w-16 bg-gray-200 rounded-full" />
+          <div className="h-4 w-16 bg-line rounded-full" />
         </div>
       ))}
     </div>
@@ -119,7 +117,7 @@ export default function BalancePage() {
   };
 
   const getTransactionColor = (type: string) => {
-    return isCreditTransaction(type) ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
+    return isCreditTransaction(type) ? 'text-success-strong bg-success-strong/10' : 'text-deal bg-deal-bg';
   };
 
   const filteredTransactions = filterType === 'ALL'
@@ -153,83 +151,55 @@ export default function BalancePage() {
         {/* ========================================
             ANIMATED HERO BALANCE - Premium Effects
             ======================================== */}
-        <div className="relative rounded-2xl overflow-hidden">
-          {/* Animated Gradient Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-700 via-[#2563eb] to-[#0ea5e9]">
-            {/* Floating Orbs with Animation */}
-            <div className="absolute top-2 right-4 w-20 h-20 bg-white/10 rounded-full blur-2xl" />
-            <div className="absolute bottom-4 left-2 w-16 h-16 bg-cyan-300/20 rounded-full blur-xl animate-pulse" style={{ animationDelay: '0.5s' }} />
-            <div className="absolute top-1/2 left-1/3 w-12 h-12 bg-blue-200/10 rounded-full blur-lg animate-bounce" style={{ animationDelay: '1s', animationDuration: '3s' }} />
-            {/* Shimmer Effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
+        <div className="relative rounded-2xl bg-brand-600 p-4 text-white overflow-hidden">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+              <FiDollarSign className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="text-white/80 text-xs font-medium tracking-wide uppercase">Saldo Disponible</span>
           </div>
 
-          {/* Content */}
-          <div className="relative z-10 p-4">
-            {/* Balance Label with Icon */}
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center animate-pulse">
-                <FiDollarSign className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-white/80 text-xs font-medium tracking-wide uppercase">Saldo Disponible</span>
-            </div>
-
-            {/* Main Balance - Animated Glow */}
-            <div className="relative mb-3">
-              <h1
-                className="text-4xl font-bold text-white tracking-tight animate-fadeIn"
-                style={{ textShadow: '0 4px 24px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.2)' }}
-              >
-                {formatUSD(userBalance?.balance || 0)}
-              </h1>
-              {/* Glow Bar */}
-              <div className="absolute -bottom-1 left-0 h-1 w-20 bg-gradient-to-r from-white/60 to-transparent rounded-full animate-pulse" />
-            </div>
-
-            {/* Stats Cards Row - Animated Entry */}
-            <div className="flex gap-2 mb-3">
-              {/* Recargado */}
-              <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/10 animate-slideInUp" style={{ animationDelay: '0.1s' }}>
-                <div className="flex items-center justify-center gap-1 mb-0.5">
-                  <FiArrowDownLeft className="w-3 h-3 text-emerald-300" />
-                  <span className="text-white/70 text-xs uppercase font-bold">Recargado</span>
-                </div>
-                <p className="text-white font-bold text-sm">${userBalance?.totalRecharges.toFixed(0) || '0'}</p>
-              </div>
-
-              {/* Gastado */}
-              <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/10 animate-slideInUp" style={{ animationDelay: '0.2s' }}>
-                <div className="flex items-center justify-center gap-1 mb-0.5">
-                  <FiArrowUpRight className="w-3 h-3 text-rose-300" />
-                  <span className="text-white/70 text-xs uppercase font-bold">Gastado</span>
-                </div>
-                <p className="text-white font-bold text-sm">${userBalance?.totalSpent.toFixed(0) || '0'}</p>
-              </div>
-            </div>
-
-            {/* CTA Button - Shimmer Effect */}
-            <button
-              onClick={() => setShowRechargeModal(true)}
-              className="group relative w-full py-3 rounded-xl font-bold text-sm overflow-hidden transition-all duration-300 active:scale-[0.98]"
-              style={{ background: 'rgba(255, 255, 255, 0.95)', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}
-            >
-              {/* Shimmer Animation */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full group-active:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-blue-100/60 to-transparent" />
-              <span className="relative flex items-center justify-center gap-2 text-brand-700">
-                <FiPlus className="w-4 h-4" />
-                Recargar Saldo
-              </span>
-            </button>
+          <div className="mb-3">
+            <h1 className="text-4xl font-bold text-white tracking-tight">
+              {formatUSD(userBalance?.balance || 0)}
+            </h1>
           </div>
+
+          {/* Stats Cards Row */}
+          <div className="flex gap-2 mb-3">
+            {/* Recargado */}
+            <div className="flex-1 bg-white/15 rounded-lg p-2 text-center border border-white/20">
+              <div className="flex items-center justify-center gap-1 mb-0.5">
+                <FiArrowDownLeft className="w-3 h-3 text-white" />
+                <span className="text-white/80 text-xs uppercase font-bold">Recargado</span>
+              </div>
+              <p className="text-white font-bold text-sm">{formatUSD(userBalance?.totalRecharges || 0)}</p>
+            </div>
+
+            {/* Gastado */}
+            <div className="flex-1 bg-white/15 rounded-lg p-2 text-center border border-white/20">
+              <div className="flex items-center justify-center gap-1 mb-0.5">
+                <FiArrowUpRight className="w-3 h-3 text-white" />
+                <span className="text-white/80 text-xs uppercase font-bold">Gastado</span>
+              </div>
+              <p className="text-white font-bold text-sm">{formatUSD(userBalance?.totalSpent || 0)}</p>
+            </div>
+          </div>
+
+          {/* CTA Button */}
+          <button
+            onClick={() => setShowRechargeModal(true)}
+            className="w-full py-3 rounded-xl font-bold text-sm bg-white text-brand-700 shadow-sm flex items-center justify-center gap-2 hover:bg-surface active:scale-[0.98] transition-all"
+          >
+            <FiPlus className="w-4 h-4" />
+            Recargar Saldo
+          </button>
         </div>
 
-        {/* ========================================
-            TRANSACTIONS - With Full Labels
-            ======================================== */}
+        {/* TRANSACTIONS */}
         <div className="pt-3 pb-20">
-          {/* Header with Full Filter Labels */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-gray-700">Movimientos</span>
+            <span className="text-xs font-bold text-ink">Movimientos</span>
             <div className="flex gap-1.5">
               {[
                 { value: 'ALL', label: 'Todos' },
@@ -240,8 +210,8 @@ export default function BalancePage() {
                   key={filter.value}
                   onClick={() => setFilterType(filter.value)}
                   className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all ${filterType === filter.value
-                    ? 'bg-brand-500 text-white shadow-md'
-                    : 'bg-gray-100/80 text-gray-500 hover:bg-gray-200/50'
+                    ? 'bg-brand-500 text-white shadow-sm'
+                    : 'bg-surface text-muted hover:bg-line border border-line'
                     }`}
                 >
                   {filter.label}
@@ -256,26 +226,26 @@ export default function BalancePage() {
               {filteredTransactions.slice(0, 10).map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="bg-white/80 backdrop-blur-sm rounded-lg p-2 border border-gray-150 shadow-sm"
+                  className="bg-white rounded-lg p-2 border border-line shadow-sm"
                 >
                   <div className="flex items-center gap-2">
                     {/* Icon */}
                     <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${isCreditTransaction(transaction.type)
-                      ? 'bg-emerald-500'
-                      : 'bg-rose-500'
+                      ? 'bg-success-strong/10 text-success-strong'
+                      : 'bg-deal-bg text-deal'
                       }`}>
                       {isCreditTransaction(transaction.type)
-                        ? <FiArrowDownLeft className="w-3 h-3 text-white" />
-                        : <FiArrowUpRight className="w-3 h-3 text-white" />
+                        ? <FiArrowDownLeft className="w-3 h-3" />
+                        : <FiArrowUpRight className="w-3 h-3" />
                       }
                     </div>
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                      <p className="font-semibold text-ink text-xs whitespace-nowrap overflow-hidden text-ellipsis">
                         {transaction.description}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted">
                         {new Date(transaction.createdAt).toLocaleDateString('es-ES', {
                           day: 'numeric',
                           month: 'short'
@@ -284,9 +254,8 @@ export default function BalancePage() {
                     </div>
 
                     {/* Amount */}
-                    <span className={`text-xs font-bold flex-shrink-0 ${isCreditTransaction(transaction.type) ? 'text-emerald-600' : 'text-gray-900'
-                      }`}>
-                      {isCreditTransaction(transaction.type) ? '+' : '-'}${transaction.amount.toFixed(0)}
+                    <span className={`text-xs font-bold flex-shrink-0 ${isCreditTransaction(transaction.type) ? 'text-success-strong' : 'text-ink'}`}>
+                      {isCreditTransaction(transaction.type) ? '+' : '-'}{formatUSD(transaction.amount)}
                     </span>
                   </div>
                 </div>
@@ -295,16 +264,16 @@ export default function BalancePage() {
           ) : (
             /* Empty State */
             <div className="text-center py-8">
-              <div className="w-12 h-12 mx-auto mb-2 bg-blue-50/50 rounded-full flex items-center justify-center">
-                <FiDollarSign className="w-6 h-6 text-blue-300" />
+              <div className="w-12 h-12 mx-auto mb-2 bg-brand-50 rounded-full flex items-center justify-center">
+                <FiDollarSign className="w-6 h-6 text-brand-500" />
               </div>
-              <p className="text-xs font-bold text-gray-700 mb-1">Sin movimientos</p>
-              <p className="text-xs text-gray-400 mb-3">
+              <p className="text-xs font-bold text-ink mb-1">Sin movimientos</p>
+              <p className="text-xs text-muted mb-3">
                 {filterType === 'ALL' ? 'Aún no tienes transacciones' : 'Sin resultados'}
               </p>
               <button
                 onClick={() => setShowRechargeModal(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-500 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-500 text-white text-xs font-bold rounded-lg hover:bg-brand-600 transition-colors shadow-sm"
               >
                 <FiPlus className="w-3.5 h-3.5" />
                 Recargar
@@ -319,21 +288,21 @@ export default function BalancePage() {
           Only shows on screens >= 1024px
           ============================================ */}
       <div className="hidden lg:block space-y-2 lg:space-y-3 overflow-y-auto h-full">
-        {/* Header - Responsive */}
-        <div className="bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg lg:rounded-xl p-3 lg:p-4 text-white shadow-lg animate-fadeIn">
+        {/* Header */}
+        <div className="bg-brand-600 rounded-xl p-3 lg:p-4 text-white shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 lg:gap-0">
             <div>
               <div className="flex items-center gap-2 mb-0.5 lg:mb-1">
-                <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <FiDollarSign className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-white" />
                 </div>
                 <h1 className="text-lg lg:text-xl font-bold">Saldo y Pagos</h1>
               </div>
-              <p className="text-blue-100 text-xs lg:text-base hidden sm:block">Gestiona tu saldo y realiza recargas</p>
+              <p className="text-white/80 text-xs lg:text-sm hidden sm:block">Gestiona tu saldo y realiza recargas</p>
             </div>
             <button
               onClick={() => setShowRechargeModal(true)}
-              className="px-3 lg:px-4 py-2 bg-white text-brand-500 font-bold rounded-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base w-full sm:w-auto"
+              className="px-3 lg:px-4 py-2 bg-white text-brand-600 font-bold rounded-lg hover:bg-surface transition-all flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base w-full sm:w-auto"
             >
               <FiPlus className="w-4 h-4" />
               <span className="sm:hidden">Recargar</span>
@@ -342,42 +311,42 @@ export default function BalancePage() {
           </div>
         </div>
 
-        {/* Balance Cards - Premium HUD Style */}
-        <div className="grid grid-cols-3 gap-2 lg:gap-3 animate-slideInUp">
-          <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-gray-100 shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
-            <p className="text-[11px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Saldo</p>
+        {/* Balance Cards */}
+        <div className="grid grid-cols-3 gap-2 lg:gap-3">
+          <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-line shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
+            <p className="text-xs font-bold text-muted uppercase tracking-widest mb-1">Saldo</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
-              <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap animate-marquee-text">
+              <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap">
                 {formatUSD(userBalance?.balance || 0)}
               </span>
             </div>
-            <div className="mt-1 w-6 h-1 bg-green-500 rounded-full opacity-20" />
+            <div className="mt-1 w-6 h-1 bg-success-strong rounded-full opacity-20" />
           </div>
 
-          <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-gray-100 shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
-            <p className="text-[11px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total</p>
+          <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-line shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
+            <p className="text-xs font-bold text-muted uppercase tracking-widest mb-1">Total</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
               <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap">
-                ${userBalance?.totalRecharges.toFixed(0) || '0'}
+                {formatUSD(userBalance?.totalRecharges || 0)}
               </span>
             </div>
-            <div className="mt-1 w-6 h-1 bg-blue-500 rounded-full opacity-20" />
+            <div className="mt-1 w-6 h-1 bg-brand-500 rounded-full opacity-20" />
           </div>
 
-          <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-gray-100 shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
-            <p className="text-[11px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Gastado</p>
+          <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-line shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
+            <p className="text-xs font-bold text-muted uppercase tracking-widest mb-1">Gastado</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
               <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap">
-                ${userBalance?.totalSpent.toFixed(0) || '0'}
+                {formatUSD(userBalance?.totalSpent || 0)}
               </span>
             </div>
-            <div className="mt-1 w-6 h-1 bg-red-500 rounded-full opacity-20" />
+            <div className="mt-1 w-6 h-1 bg-deal rounded-full opacity-20" />
           </div>
         </div>
 
-        {/* Transactions - Responsive & Optimized */}
-        <div className="bg-white rounded-lg border border-line shadow-sm overflow-hidden animate-slideInUp">
-          <div className="px-3 lg:px-4 py-2.5 border-b border-line bg-gradient-to-r from-surface to-white">
+        {/* Transactions */}
+        <div className="bg-white rounded-lg border border-line shadow-sm overflow-hidden">
+          <div className="px-3 lg:px-4 py-2.5 border-b border-line bg-surface">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-xs lg:text-sm font-bold text-ink flex items-center gap-1.5 lg:gap-2 flex-shrink-0">
                 <FiTrendingUp className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-brand-500" />
@@ -385,22 +354,22 @@ export default function BalancePage() {
                 <span className="sm:hidden">Historial</span>
               </h2>
               <div className="flex items-center gap-1 lg:gap-2">
-                <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-100">
+                <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-line">
                   <button
                     onClick={() => setFilterType('ALL')}
-                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'ALL' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-gray-50'}`}
+                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'ALL' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
                   >
                     Todas
                   </button>
                   <button
                     onClick={() => setFilterType('RECHARGE')}
-                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'RECHARGE' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-gray-50'}`}
+                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'RECHARGE' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
                   >
                     Recargas
                   </button>
                   <button
                     onClick={() => setFilterType('PURCHASE')}
-                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'PURCHASE' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-gray-50'}`}
+                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'PURCHASE' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
                   >
                     Compras
                   </button>
@@ -435,8 +404,8 @@ export default function BalancePage() {
                           </span>
                           {transaction.paymentMethod && (
                             <>
-                              <span className="text-gray-300 hidden sm:inline">•</span>
-                              <span className="text-[11px] lg:text-xs bg-gray-100 px-1.5 lg:px-2 py-0.5 rounded-full hidden sm:inline">
+                              <span className="text-subtle hidden sm:inline">•</span>
+                              <span className="text-xs bg-surface border border-line px-1.5 lg:px-2 py-0.5 rounded-full text-muted hidden sm:inline">
                                 {formatPaymentMethod(transaction.paymentMethod)}
                               </span>
                             </>
@@ -445,13 +414,13 @@ export default function BalancePage() {
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className={`text-sm lg:text-lg font-bold ${isCreditTransaction(transaction.type) ? 'text-green-600' : 'text-red-600'}`}>
+                      <p className={`text-sm lg:text-lg font-bold ${isCreditTransaction(transaction.type) ? 'text-success-strong' : 'text-deal'}`}>
                         {isCreditTransaction(transaction.type) ? '+' : '-'}{formatUSD(transaction.amount)}
                       </p>
-                      <span className={`inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full text-[11px] lg:text-xs font-semibold ${transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                        transaction.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
-                          transaction.status === 'CANCELLED' ? 'bg-gray-100 text-gray-600' :
-                            'bg-red-100 text-red-700'
+                      <span className={`inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full text-xs font-semibold ${transaction.status === 'COMPLETED' ? 'bg-success-strong/10 text-success-strong' :
+                        transaction.status === 'PENDING' ? 'bg-warning/15 text-warning-strong' :
+                          transaction.status === 'CANCELLED' ? 'bg-deal-bg text-deal' :
+                            'bg-deal-bg text-deal'
                         }`}>
                         {formatTransactionStatus(transaction.status)}
                       </span>
@@ -473,7 +442,7 @@ export default function BalancePage() {
                 </p>
                 <button
                   onClick={() => setShowRechargeModal(true)}
-                  className="inline-flex items-center gap-1.5 lg:gap-2 px-4 lg:px-6 py-2 lg:py-3 bg-brand-500 text-white font-semibold rounded-lg hover:bg-brand-600 transition-all shadow-md text-sm lg:text-base"
+                  className="inline-flex items-center gap-1.5 lg:gap-2 px-4 lg:px-6 py-2 lg:py-3 bg-brand-500 text-white font-semibold rounded-lg hover:bg-brand-600 transition-all shadow-sm text-sm lg:text-base"
                 >
                   <FiPlus className="w-4 h-4 lg:w-5 lg:h-5" />
                   Primera Recarga

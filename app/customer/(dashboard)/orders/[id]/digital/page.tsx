@@ -62,7 +62,7 @@ const platformIcons: Record<string, React.ReactNode> = {
     ITUNES: <SiApple className="w-4 h-4" />,
 };
 
-// EPIC ScratchCard Component with shimmer and glow effects
+// ScratchCard Component
 function ScratchCard({
     code,
     onReveal,
@@ -101,15 +101,12 @@ function ScratchCard({
 
         const drawCover = () => {
             if (!ctx) return;
-            // Epic gradient - matching brand colors
             const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-            gradient.addColorStop(0, '#1e3a8a');
-            gradient.addColorStop(0.5, '#2563eb');
-            gradient.addColorStop(1, '#0ea5e9');
+            gradient.addColorStop(0, '#1a3b7e');
+            gradient.addColorStop(1, '#1e4ba3');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Animated shimmer pattern
             ctx.strokeStyle = 'rgba(255,255,255,0.15)';
             ctx.lineWidth = 1;
             for (let i = 0; i < canvas.width; i += 4) {
@@ -118,14 +115,10 @@ function ScratchCard({
                 ctx.stroke();
             }
 
-            // Center text with glow
-            ctx.font = 'bold 10px system-ui';
+            ctx.font = 'bold 11px system-ui';
             ctx.fillStyle = 'rgba(255,255,255,0.9)';
             ctx.textAlign = 'center';
-            ctx.shadowColor = '#fff';
-            ctx.shadowBlur = 4;
-            ctx.fillText('RASPAR PARA REVELAR', canvas.width / 2, canvas.height / 2 + 3);
-            ctx.shadowBlur = 0;
+            ctx.fillText('RASPAR PARA REVELAR', canvas.width / 2, canvas.height / 2 + 4);
         };
 
         resize();
@@ -168,18 +161,15 @@ function ScratchCard({
     };
 
     return (
-        <div className="relative w-full h-9 rounded-lg overflow-hidden shadow-lg group">
-            {/* Glow effect behind */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 rounded-lg blur opacity-40 group-hover:opacity-70 transition duration-500 animate-pulse" />
-
+        <div className="relative w-full h-9 rounded-lg overflow-hidden border border-line">
             {/* The Code underneath */}
             <div
                 onClick={() => isInternalRevealed && onCopy()}
-                className={`relative z-10 h-full bg-brand-950 flex items-center justify-center font-mono text-xs font-bold text-white tracking-widest ${isInternalRevealed ? 'cursor-pointer hover:bg-[#1e293b] active:bg-brand-950 transition-colors shadow-[inset_0_0_15px_rgba(6,182,212,0.3)]' : ''}`}
+                className={`relative z-10 h-full bg-brand-950 flex items-center justify-center font-mono text-xs font-bold text-white tracking-widest ${isInternalRevealed ? 'cursor-pointer hover:bg-ink active:bg-brand-950 transition-colors' : ''}`}
             >
                 <span className="truncate px-2">{code}</span>
                 {isInternalRevealed && (
-                    <span className="absolute right-2 text-cyan-400 text-[11px] animate-pulse">TAP TO COPY</span>
+                    <span className="absolute right-2 text-brand-200 text-xs font-sans">COPIAR</span>
                 )}
             </div>
 
@@ -298,13 +288,13 @@ export default function DigitalCodesPage() {
 
     if (loading) {
         return (
-            <div className="min-h-dvh bg-gradient-to-br from-brand-700 via-[#2563eb] to-[#0ea5e9] flex items-center justify-center">
+            <div className="min-h-dvh bg-surface flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="relative">
-                        <div className="w-12 h-12 border-4 border-white/20 rounded-full"></div>
-                        <div className="absolute inset-0 w-12 h-12 border-4 border-t-white rounded-full animate-spin"></div>
+                    <div className="relative w-12 h-12">
+                        <div className="absolute inset-0 border-4 border-line rounded-full"></div>
+                        <div className="absolute inset-0 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
                     </div>
-                    <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">Cargando códigos...</p>
+                    <p className="text-muted text-xs font-bold uppercase tracking-[0.2em]">Cargando códigos...</p>
                 </div>
             </div>
         );
@@ -312,11 +302,11 @@ export default function DigitalCodesPage() {
 
     if (!data) {
         return (
-            <div className="min-h-dvh bg-[#0a0f1d] flex items-center justify-center p-4">
+            <div className="min-h-dvh bg-surface flex items-center justify-center p-4">
                 <div className="text-center">
-                    <FiAlertTriangle className="w-10 h-10 text-rose-500 mx-auto mb-3 animate-bounce shadow-[0_0_15px_rgba(244,63,94,0.5)] rounded-full" />
-                    <h1 className="text-lg font-bold text-white mb-2">Orden no encontrada</h1>
-                    <Link href="/customer/orders" className="inline-flex items-center gap-2 bg-white/5 text-white px-5 py-2 rounded-xl transition-all border border-white/10 mt-2 hover:bg-white/10 active:scale-95">
+                    <FiAlertTriangle className="w-10 h-10 text-deal mx-auto mb-3" />
+                    <h1 className="text-lg font-bold text-ink mb-2">Orden no encontrada</h1>
+                    <Link href="/customer/orders" className="inline-flex items-center gap-2 bg-white text-ink px-5 py-2 rounded-xl transition-all border border-line mt-2 hover:bg-surface">
                         <FiArrowLeft /> Volver
                     </Link>
                 </div>
@@ -329,47 +319,38 @@ export default function DigitalCodesPage() {
     const progressPercent = totalCodes > 0 ? (revealedCount / totalCodes) * 100 : 0;
 
     return (
-        <div className="min-h-dvh bg-[#0a0f1d] relative overflow-hidden">
-            {/* Epic Floating Orbs Background - Gaming Neon */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-10 right-10 w-40 h-40 bg-cyan-500/20 rounded-full blur-[80px]" />
-                <div className="absolute bottom-20 left-5 w-56 h-56 bg-purple-600/20 rounded-full blur-[100px]" style={{ animationDelay: '1s' }} />
-                <div className="absolute top-1/3 left-1/4 w-32 h-32 bg-blue-500/20 rounded-full blur-[60px] animate-bounce" style={{ animationDuration: '4s' }} />
-                {/* Shimmer overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-brand-950/50 to-[#0a0f1d]" />
-            </div>
-
-            {/* Compact Sticky Header */}
-            <div className="sticky top-0 z-50 backdrop-blur-xl border-b border-white/5 bg-[#0a0f1d]/80">
+        <div className="min-h-dvh bg-surface relative">
+            {/* Header */}
+            <div className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-white/95">
                 <div className="max-w-4xl mx-auto px-3 py-2">
                     <div className="flex items-center justify-between">
-                        <Link href="/customer/orders" className="p-2 bg-white/5 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all active:scale-90 border border-white/5 hover:border-white/20">
+                        <Link href="/customer/orders" className="p-2 bg-surface rounded-xl text-ink hover:bg-line transition-all border border-line">
                             <FiArrowLeft className="w-4 h-4" />
                         </Link>
 
                         <div className="flex-1 mx-3">
                             {/* Progress Bar */}
                             <div className="flex items-center gap-2">
-                                <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+                                <div className="flex-1 h-1.5 bg-line rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+                                        className="h-full bg-brand-500 rounded-full transition-all duration-500"
                                         style={{ width: `${progressPercent}%` }}
                                     />
                                 </div>
-                                <span className="text-[11px] text-gray-400 font-bold">{revealedCount}/{totalCodes}</span>
+                                <span className="text-xs text-muted font-bold">{revealedCount}/{totalCodes}</span>
                             </div>
                         </div>
 
                         <div className="text-right">
-                            <p className="text-white text-xs font-bold">#{data.orderNumber}</p>
-                            <p className="text-[11px] text-cyan-400 font-bold uppercase tracking-wider drop-shadow-[0_0_2px_rgba(34,211,238,0.8)]">Digital Delivery</p>
+                            <p className="text-ink text-xs font-bold">#{data.orderNumber}</p>
+                            <p className="text-xs text-brand-600 font-bold uppercase tracking-wider">Digital Delivery</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="max-w-4xl mx-auto px-3 py-3 relative z-10">
+            <div className="max-w-4xl mx-auto px-3 py-3">
                 <div className="space-y-2">
                     {data.digitalItems.map((item) => {
                         const isExpanded = expandedItems[item.orderItemId] !== false;
@@ -378,19 +359,19 @@ export default function DigitalCodesPage() {
                         return (
                             <div
                                 key={item.orderItemId}
-                                className="bg-white/95 backdrop-blur-md rounded-xl overflow-hidden shadow-xl transition-all duration-300 animate-fadeIn"
+                                className="bg-white rounded-xl overflow-hidden border border-line shadow-sm"
                             >
                                 <button
                                     onClick={() => toggleExpand(item.orderItemId)}
-                                    className="w-full p-3 flex items-center gap-3 hover:bg-[#1e293b]/50 transition-colors bg-brand-950/90 backdrop-blur-md border border-white/10 rounded-t-xl"
+                                    className="w-full p-3 flex items-center gap-3 hover:bg-surface transition-colors bg-surface border-b border-line"
                                 >
                                     {/* Product Image */}
                                     {item.image && (
-                                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-[#0a0f1d] flex-shrink-0 relative border border-white/10 shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+                                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-white flex-shrink-0 relative border border-line">
                                             <Image
                                                 src={item.image}
                                                 alt={item.productName}
-                                                fill
+                                                fill sizes="48px"
                                                 className="object-contain p-0.5"
                                             />
                                         </div>
@@ -399,47 +380,45 @@ export default function DigitalCodesPage() {
                                     {/* Info */}
                                     <div className="flex-1 min-w-0 text-left">
                                         <div className="flex items-center gap-1.5 mb-0.5">
-                                            {/* Platform Badge - Animated */}
-                                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-cyan-400 uppercase bg-cyan-950/50 border border-cyan-500/30 px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(34,211,238,0.2)]">
+                                            <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-700 uppercase bg-brand-50 border border-brand-200 px-1.5 py-0.5 rounded">
                                                 {getPlatformIcon(item.platform)}
                                                 {item.platform || 'Digital'}
                                             </span>
                                             {item.region && (
-                                                <span className="text-[11px] font-bold text-purple-400 uppercase bg-purple-950/50 border border-purple-500/30 px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(192,132,252,0.2)]">
+                                                <span className="text-xs font-bold text-ink-soft uppercase bg-surface border border-line px-1.5 py-0.5 rounded">
                                                     {item.region}
                                                 </span>
                                             )}
                                         </div>
-                                        <h3 className="text-xs font-bold text-gray-100 truncate">{item.productName}</h3>
+                                        <h3 className="text-xs font-bold text-ink truncate">{item.productName}</h3>
                                     </div>
 
                                     {/* Stats & Expand Icon */}
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[11px] font-bold text-gray-400">
+                                        <span className="text-xs font-bold text-muted">
                                             {itemRevealedCount}/{item.codes.length}
                                         </span>
-                                        <div className={`w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-white/10' : ''}`}>
-                                            <FiChevronDown className="w-3 h-3 text-gray-400" />
+                                        <div className={`w-6 h-6 rounded-full bg-surface border border-line flex items-center justify-center transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-line' : ''}`}>
+                                            <FiChevronDown className="w-3 h-3 text-muted" />
                                         </div>
                                     </div>
                                 </button>
 
                                 {/* Collapsible Codes Section */}
                                 <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                                    <div className="px-3 pb-3 space-y-2 bg-[#0a0f1d] border-x border-b border-white/10 rounded-b-xl pt-2">
+                                    <div className="px-3 pb-3 space-y-2 bg-white rounded-b-xl pt-2">
                                         {item.codes.length > 0 ? (
                                             item.codes.map((code, index) => (
                                                 <div
                                                     key={code.id}
-                                                    className="bg-brand-950 rounded-lg p-2 border border-white/5 shadow-inner shadow-black/50 animate-slideInUp"
-                                                    style={{ animationDelay: `${index * 0.05}s` }}
+                                                    className="bg-surface rounded-lg p-2 border border-line"
                                                 >
                                                     <div className="flex items-center justify-between mb-1.5">
-                                                        <span className="text-[11px] font-bold text-gray-500 uppercase">
+                                                        <span className="text-xs font-bold text-muted uppercase">
                                                             Confirmación de recarga {item.codes.length > 1 ? `#${index + 1}` : ''}
                                                         </span>
                                                         {revealedCodes[code.id] && (
-                                                            <span className="text-[11px] text-emerald-400 font-bold uppercase flex items-center gap-0.5 bg-emerald-950/50 border border-emerald-500/30 px-1.5 py-0.5 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.2)]">
+                                                            <span className="text-xs text-success-strong font-bold uppercase flex items-center gap-0.5 bg-success-strong/10 border border-success-strong/20 px-1.5 py-0.5 rounded-full">
                                                                 <FiCheck className="w-2 h-2" />
                                                                 Recibido
                                                             </span>
@@ -459,15 +438,15 @@ export default function DigitalCodesPage() {
                                                         <button
                                                             onClick={() => copyCode(code.id, code.code)}
                                                             disabled={!revealedCodes[code.id]}
-                                                            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all active:scale-90 border ${copiedCodes[code.id]
-                                                                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_15px_rgba(52,211,153,0.3)]'
+                                                            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all border ${copiedCodes[code.id]
+                                                                ? 'bg-success-strong/10 text-success-strong border-success-strong/30'
                                                                 : revealedCodes[code.id]
-                                                                    ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)] hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]'
-                                                                    : 'bg-white/5 text-gray-600 border-white/5 cursor-not-allowed'
+                                                                    ? 'bg-brand-50 text-brand-600 border-brand-200 hover:bg-brand-100'
+                                                                    : 'bg-line text-subtle border-line cursor-not-allowed'
                                                                 }`}
                                                         >
                                                             {copiedCodes[code.id] ? (
-                                                                <FiCheck className="w-4 h-4 animate-bounce" />
+                                                                <FiCheck className="w-4 h-4" />
                                                             ) : (
                                                                 <FiCopy className="w-4 h-4" />
                                                             )}
@@ -476,27 +455,26 @@ export default function DigitalCodesPage() {
                                                 </div>
                                             ))
                                         ) : item.deliveryMethod === 'MANUAL' ? (
-                                            <div className="p-4 rounded-xl border border-purple-500/20 bg-gradient-to-r from-purple-950/40 to-blue-950/40 backdrop-blur-sm text-center space-y-3">
-                                                <div className="w-10 h-10 bg-purple-950/80 border border-purple-500/30 rounded-full flex items-center justify-center mx-auto shadow-[0_0_15px_rgba(168,85,247,0.3)] animate-pulse">
-                                                    <FiClock className="w-5 h-5 text-purple-400" />
+                                            <div className="p-4 rounded-xl border border-brand-200 bg-brand-50 text-center space-y-3">
+                                                <div className="w-10 h-10 bg-white border border-brand-200 rounded-full flex items-center justify-center mx-auto text-brand-600">
+                                                    <FiClock className="w-5 h-5" />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <h4 className="text-xs font-bold text-purple-300 uppercase tracking-wider">Recarga Directa en Proceso</h4>
-                                                    <p className="text-xs text-gray-300 max-w-xs mx-auto leading-relaxed">
+                                                    <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider">Recarga Directa en Proceso</h4>
+                                                    <p className="text-xs text-brand-700 max-w-xs mx-auto leading-relaxed">
                                                         Esta compra se procesa por recarga manual directa a la cuenta ingresada. Nuestro equipo administrativo está acreditando tu saldo en este momento.
                                                     </p>
                                                 </div>
-                                                <div className="py-1 px-3 bg-purple-950/60 border border-purple-500/20 rounded-lg inline-block">
-                                                    <span className="text-[11px] font-bold text-purple-300 flex items-center gap-1.5 justify-center">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping"></span>
+                                                <div className="py-1 px-3 bg-white border border-brand-200 rounded-lg inline-block">
+                                                    <span className="text-xs font-bold text-brand-700 flex items-center gap-1.5 justify-center">
                                                         Tiempo estimado: 5 - 15 minutos
                                                     </span>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="text-center py-4 bg-brand-950 rounded-lg border border-dashed border-white/10">
-                                                <FiClock className="w-6 h-6 text-gray-600 mx-auto mb-1 animate-pulse" />
-                                                <p className="text-[11px] text-gray-500 font-bold uppercase">Preparando...</p>
+                                            <div className="text-center py-4 bg-surface rounded-lg border border-dashed border-line">
+                                                <FiClock className="w-6 h-6 text-muted mx-auto mb-1" />
+                                                <p className="text-xs text-muted font-bold uppercase">Preparando...</p>
                                             </div>
                                         )}
                                     </div>
@@ -508,21 +486,20 @@ export default function DigitalCodesPage() {
 
                 {/* Compact Footer Badges */}
                 <div className="mt-6 flex justify-center gap-2">
-                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-brand-950 rounded-full border border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
-                        <FiShield className="w-3 h-3 text-cyan-400" />
-                        <span className="text-[11px] text-cyan-100 font-bold uppercase tracking-wider">Encriptado</span>
+                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white rounded-full border border-line shadow-sm">
+                        <FiShield className="w-3 h-3 text-brand-600" />
+                        <span className="text-xs text-ink font-bold uppercase tracking-wider">Encriptado</span>
                     </div>
-                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-brand-950 rounded-full border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]">
-                        <FiCheck className="w-3 h-3 text-purple-400" />
-                        <span className="text-[11px] text-purple-100 font-bold uppercase tracking-wider">Garantizado</span>
+                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white rounded-full border border-line shadow-sm">
+                        <FiCheck className="w-3 h-3 text-success-strong" />
+                        <span className="text-xs text-ink font-bold uppercase tracking-wider">Garantizado</span>
                     </div>
                 </div>
 
                 {/* Compact Support CTA */}
                 <div className="mt-8 text-center pb-20">
-                    <Link href="/contacto" className="group inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-900/40 to-cyan-900/40 backdrop-blur-md rounded-full border border-cyan-500/30 hover:border-cyan-400/50 transition-all active:scale-95 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
-                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-                        <span className="text-cyan-50 text-xs font-bold uppercase tracking-widest group-hover:text-cyan-200 transition-colors">¿Necesitas ayuda?</span>
+                    <Link href="/contacto" className="inline-flex items-center gap-2 px-5 py-2.5 bg-white rounded-full border border-line hover:bg-surface transition-all shadow-sm">
+                        <span className="text-brand-600 text-xs font-bold uppercase tracking-wider">¿Necesitas ayuda?</span>
                     </Link>
                 </div>
             </div>

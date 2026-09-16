@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { FiBookOpen, FiAward } from 'react-icons/fi';
+import { adminTab } from '@/lib/admin-ui';
 
 type EnrolledCourse = {
   id: string;
@@ -75,11 +76,11 @@ export default function MisCursosPage() {
           <p className="text-xs text-muted mt-0.5">Total</p>
         </div>
         <div className="bg-surface rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-orange-500">{inProgressCount}</p>
+          <p className="text-2xl font-bold text-warning-strong">{inProgressCount}</p>
           <p className="text-xs text-muted mt-0.5">En progreso</p>
         </div>
         <div className="bg-surface rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-green-600">{completedCount}</p>
+          <p className="text-2xl font-bold text-success-strong">{completedCount}</p>
           <p className="text-xs text-muted mt-0.5">Completados</p>
         </div>
       </div>
@@ -94,7 +95,7 @@ export default function MisCursosPage() {
           <button
             key={key}
             onClick={() => setFilter(key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === key ? 'bg-brand-500 text-white' : 'bg-surface text-muted hover:bg-line'}`}
+            className={adminTab(filter === key)}
           >
             {label}
           </button>
@@ -150,7 +151,7 @@ export default function MisCursosPage() {
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h3 className="font-semibold text-ink text-sm line-clamp-2">{course.title}</h3>
                     {isCompleted && (
-                      <span className="shrink-0 flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                      <span className="shrink-0 flex items-center gap-1 px-2 py-0.5 bg-success-strong/10 text-success-strong text-xs font-bold rounded-full">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                         </svg>
@@ -165,7 +166,7 @@ export default function MisCursosPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <div className="flex-1 bg-line-strong rounded-full h-1.5">
                       <div
-                        className={`h-1.5 rounded-full transition-all ${isCompleted ? 'bg-green-500' : 'bg-brand-500'}`}
+                        className={`h-1.5 rounded-full transition-all ${isCompleted ? 'bg-success-strong' : 'bg-brand-500'}`}
                         style={{ width: `${enrollment.progress}%` }}
                       />
                     </div>
@@ -177,7 +178,7 @@ export default function MisCursosPage() {
                     <Link
                       href={`/cursos/${course.slug}/aprender`}
                       className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${isCompleted
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                        ? 'bg-success-strong/10 text-success-strong hover:bg-success-strong/20'
                         : 'bg-brand-500 text-white hover:bg-brand-600'
                       }`}
                     >
@@ -190,7 +191,7 @@ export default function MisCursosPage() {
                       Ver detalles
                     </Link>
                     {isCompleted && (
-                      <span className="flex items-center gap-1 text-xs text-yellow-600 font-semibold ml-1">
+                      <span className="flex items-center gap-1 text-xs text-warning-strong font-semibold ml-1">
                         <FiAward className="inline h-4 w-4 shrink-0" aria-hidden="true" /> Certificado disponible
                       </span>
                     )}
@@ -204,7 +205,7 @@ export default function MisCursosPage() {
 
       {/* Browse more CTA */}
       {enrollments.length > 0 && (
-        <div className="mt-8 p-6 bg-gradient-to-br from-brand-500/5 to-brand-500/10 rounded-xl border border-brand-500/20 text-center">
+        <div className="mt-8 p-6 bg-brand-50 rounded-xl border border-brand-200 text-center">
           <p className="text-sm font-semibold text-ink mb-1">¿Quieres aprender más?</p>
           <p className="text-xs text-muted mb-3">Explora nuevos cursos y sigue creciendo</p>
           <Link

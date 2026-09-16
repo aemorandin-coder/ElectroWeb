@@ -1,123 +1,75 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
-import { sendTestEmail, sendMarketingEmail, sendNotificationEmail } from '@/lib/email-service';
+import { isAuthorized } from '@/lib/auth-helpers';
+import { sendTestEmail } from '@/lib/email-service';
 import { prisma } from '@/lib/prisma';
 
-// POST - Enviar email de prueba o campaña
+/**
+ * Estado del correo y envío de prueba (C-75).
+ * Antes esta ruta también aceptaba `type: 'marketing'`, que mandaba un solo correo con todos los clientes
+ * en "Para" (cada uno veía el correo de los demás) y sin mirar si aceptaron publicidad, y `type: 'notification'`
+ * a cualquier dirección. Las campañas viven ahora en /api/admin/campaigns.
+ */
+
+const pruebaSchema = z.object({
+    type: z.literal('test', { error: 'Tipo de correo no válido: las campañas se envían desde Marketing → Campañas' }),
+    email: z.string().trim().email('Correo inválido').max(200),
+});
+
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-
-        // Solo admins pueden enviar emails
-        if (!session?.user || (session.user as any).role !== 'ADMIN' && (session.user as any).role !== 'SUPER_ADMIN') {
-            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        if (!isAuthorized(session, 'MANAGE_CONTENT')) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
-        const body = await request.json();
-        const { type, email, emails, campaign } = body;
-
-        switch (type) {
-            case 'test': {
-                // Enviar email de prueba
-                if (!email) {
-                    return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
-                }
-
-                const result = await sendTestEmail(email);
-
-                if (result.success) {
-                    return NextResponse.json({
-                        success: true,
-                        message: `Email de prueba enviado a ${email}`,
-                        messageId: result.messageId
-                    });
-                } else {
-                    return NextResponse.json({
-                        error: result.error || 'Error al enviar email'
-                    }, { status: 500 });
-                }
-            }
-
-            case 'marketing': {
-                // Enviar campaña de marketing
-                if (!campaign?.title || !campaign?.htmlContent) {
-                    return NextResponse.json({ error: 'Faltan datos de la campaña' }, { status: 400 });
-                }
-
-                // Obtener emails de usuarios si no se especifican
-                let targetEmails = emails;
-                if (!targetEmails || targetEmails.length === 0) {
-                    const users = await prisma.user.findMany({
-                        where: {
-                            email: { not: null },
-                        },
-                        select: { email: true }
-                    });
-                    targetEmails = users.map((u: { email: string | null }) => u.email).filter(Boolean);
-                }
-
-                if (targetEmails.length === 0) {
-                    return NextResponse.json({ error: 'No hay destinatarios' }, { status: 400 });
-                }
-
-                const result = await sendMarketingEmail(targetEmails, campaign);
-
-                return NextResponse.json({
-                    success: result.success,
-                    message: `Campaña enviada a ${targetEmails.length} usuarios`,
-                    recipients: targetEmails.length
-                });
-            }
-
-            case 'notification': {
-                // Enviar notificación a un usuario
-                if (!email || !body.notification) {
-                    return NextResponse.json({ error: 'Email y notificación requeridos' }, { status: 400 });
-                }
-
-                const result = await sendNotificationEmail(email, body.notification);
-
-                return NextResponse.json({
-                    success: result.success,
-                    message: `Notificación enviada a ${email}`
-                });
-            }
-
-            default:
-                return NextResponse.json({ error: 'Tipo de email no válido' }, { status: 400 });
+        const parsed = pruebaSchema.safeParse(await request.json().catch(() => null));
+        if (!parsed.success) {
+            return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 });
         }
 
-    } catch (error: any) {
+        const result = await sendTestEmail(parsed.data.email);
+        if (!result.success) {
+            return NextResponse.json({ error: result.error || 'No se pudo enviar el correo' }, { status: 502 });
+        }
+        return NextResponse.json({ success: true, message: `Correo de prueba enviado a ${parsed.data.email}` });
+    } catch (error) {
         console.error('Error en API de email:', error);
-        return NextResponse.json({
-            error: error.message || 'Error interno del servidor'
-        }, { status: 500 });
+        return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
     }
 }
 
-// GET - Verificar configuración de email
+// GET - Estado real del servicio: la configuración de la base de datos es la que usa el envío (lib/email-service)
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-
-        if (!session?.user || (session.user as any).role !== 'ADMIN' && (session.user as any).role !== 'SUPER_ADMIN') {
-            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        if (!isAuthorized(session, 'MANAGE_CONTENT')) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
-        const config = {
-            provider: process.env.EMAIL_PROVIDER || 'custom',
-            host: process.env.SMTP_HOST ? 'Configurado' : 'No configurado',
-            user: process.env.SMTP_USER ? 'Configurado' : 'No configurado',
-            fromName: process.env.SMTP_FROM_NAME || 'No configurado',
-            fromEmail: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER || 'No configurado',
-            notificationsEnabled: process.env.SEND_EMAIL_NOTIFICATIONS === 'true',
-            marketingEnabled: process.env.ENABLE_MARKETING_EMAILS === 'true',
-        };
+        const db = await prisma.emailSettings.findUnique({
+            where: { id: 'default' },
+            select: { provider: true, isConfigured: true, smtpHost: true, fromName: true, fromEmail: true, smtpUser: true, lastTestAt: true, lastTestStatus: true },
+        });
 
-        return NextResponse.json({ config });
+        const viaResend = Boolean(process.env.RESEND_API_KEY);
+        const viaSmtpBd = Boolean(db?.isConfigured && db.smtpHost);
+        const viaSmtpEntorno = Boolean(process.env.SMTP_HOST || process.env.EMAIL_PROVIDER);
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({
+            config: {
+                listo: viaResend || viaSmtpBd || viaSmtpEntorno,
+                via: viaResend ? 'Resend' : viaSmtpBd ? `SMTP (${db?.provider ?? 'personalizado'})` : viaSmtpEntorno ? 'SMTP (variables del servidor)' : 'Sin configurar',
+                remitente: db?.fromEmail || db?.smtpUser || process.env.SMTP_FROM_EMAIL || null,
+                nombreRemitente: db?.fromName || process.env.SMTP_FROM_NAME || null,
+                ultimaPrueba: db?.lastTestAt ?? null,
+                ultimaPruebaOk: db?.lastTestStatus ? db.lastTestStatus === 'success' : null,
+            },
+        });
+    } catch (error) {
+        console.error('Error leyendo estado del correo:', error);
+        return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
     }
 }

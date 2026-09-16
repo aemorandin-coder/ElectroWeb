@@ -2,7 +2,7 @@
 import type { IconType } from 'react-icons';
 import {
   FiAlertTriangle, FiBell, FiBookOpen, FiBox, FiCheckCircle, FiCreditCard, FiDollarSign, FiGift, FiLogIn,
-  FiMail, FiPackage, FiPercent, FiRefreshCw, FiShoppingBag, FiStar, FiTag, FiTool, FiTruck, FiUserPlus, FiUsers, FiXCircle,
+  FiMail, FiPackage, FiPercent, FiRefreshCw, FiSend, FiShoppingBag, FiStar, FiTag, FiTool, FiTruck, FiUserPlus, FiUsers, FiXCircle,
 } from 'react-icons/fi';
 import type { AdminTone } from '@/lib/admin-ui';
 import { ADMIN_EVENTS, isAdminEventType, type AdminEventCategory } from '@/lib/admin-events/catalog';
@@ -19,6 +19,7 @@ const CATEGORY_META: Record<AdminEventCategory, Meta> = {
   solicitudes: { Icon: FiMail, tone: 'brand' },
   cursos: { Icon: FiBookOpen, tone: 'brand' },
   promotores: { Icon: FiUserPlus, tone: 'success' },
+  marketing: { Icon: FiSend, tone: 'brand' },
   giftcards: { Icon: FiGift, tone: 'brand' },
   inventario: { Icon: FiPackage, tone: 'warning' },
   sistema: { Icon: FiTool, tone: 'neutral' },

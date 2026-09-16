@@ -144,7 +144,11 @@ export async function PUT(request: NextRequest) {
         if (notificationsEnabled !== undefined) updateData.notificationsEnabled = notificationsEnabled;
         if (marketingEnabled !== undefined) updateData.marketingEnabled = marketingEnabled;
         if (transactionalEnabled !== undefined) updateData.transactionalEnabled = transactionalEnabled;
-        if (dailyLimit !== undefined) updateData.dailyLimit = parseInt(dailyLimit);
+        if (dailyLimit !== undefined) {
+            // Entre 1 y 10.000: un campo vacío guardaba NaN y el guardado fallaba
+            const limite = parseInt(dailyLimit);
+            if (Number.isFinite(limite)) updateData.dailyLimit = Math.min(10000, Math.max(1, limite));
+        }
 
         // Check if configuration is complete
         updateData.isConfigured = !!(

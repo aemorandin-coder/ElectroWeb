@@ -16,6 +16,7 @@ import ShippingSection from './_components/ShippingSection';
 import StorefrontSection from './_components/StorefrontSection';
 import SeoSection from './_components/SeoSection';
 import SystemSection from './_components/SystemSection';
+import EmailSettingsPanel from '@/components/admin/EmailSettingsPanel';
 
 // Configuración (C-50b): 6 secciones por tarea, un solo guardado con los cambios de todas.
 // Antes: 1.594 líneas en un archivo, 29 campos sin efecto en la tienda y un botón de guardar por pestaña.
@@ -235,6 +236,7 @@ export default function SettingsPage() {
             {active === 'tienda' && <StorefrontSection {...sectionProps} hasAlertEmails={form.adminAlertEmails.length > 0} onGoToAlerts={() => goTo('sistema')} />}
             {active === 'seo' && <SeoSection {...sectionProps} />}
             {active === 'sistema' && <SystemSection {...sectionProps} />}
+            {active === 'correo' && <EmailSettingsPanel />}
           </div>
 
           {/* Barra de guardado: aparece con cambios y queda pegada abajo mientras se edita */}

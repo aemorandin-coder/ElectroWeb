@@ -5,9 +5,9 @@ import { toast } from 'react-hot-toast';
 import {
     FiMail, FiLock, FiServer, FiCheck, FiX, FiRefreshCw,
     FiSend, FiAlertCircle, FiCheckCircle, FiSettings,
-    FiEye, FiEyeOff, FiInfo, FiShield, FiBell,
+    FiEye, FiEyeOff, FiInfo, FiShield,
     FiGlobe, FiCloud, FiInbox, FiMessageSquare, FiTarget,
-    FiAtSign, FiBox
+    FiAtSign
 } from 'react-icons/fi';
 
 interface EmailSettingsData {
@@ -411,47 +411,40 @@ export default function EmailSettingsPanel() {
                 </div>
             </div>
 
-            {/* Email Types Toggle - Compact Horizontal */}
+            {/* Campañas (C-75). "Notificaciones" y "Transaccionales" se quitaron: el envío nunca los consultaba */}
             <div className="bg-white rounded-xl border border-line overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-line flex items-center gap-2">
-                    <FiMail className="w-4 h-4 text-brand-500" />
-                    <h3 className="font-bold text-sm text-ink">Tipos de Email</h3>
+                    <FiTarget className="w-4 h-4 text-brand-500" />
+                    <h3 className="font-bold text-sm text-ink">Campañas de marketing</h3>
                 </div>
-                <div className="p-3 grid grid-cols-3 gap-2">
-                    {[
-                        { key: 'notificationsEnabled', icon: FiBell, title: 'Notificaciones', desc: 'Pedidos y envíos' },
-                        { key: 'transactionalEnabled', icon: FiShield, title: 'Transaccionales', desc: 'Contraseñas' },
-                        { key: 'marketingEnabled', icon: FiTarget, title: 'Marketing', desc: 'Promociones' },
-                    ].map((item) => {
-                        const Icon = item.icon;
-                        const isEnabled = formData[item.key as keyof EmailSettingsData];
-                        return (
-                            <button
-                                key={item.key}
-                                onClick={() => handleInputChange(item.key as keyof EmailSettingsData, !isEnabled)}
-                                className={`relative p-3 rounded-lg border-2 transition-all text-left ${isEnabled
-                                    ? 'border-success bg-success/5'
-                                    : 'border-line hover:border-line'
-                                    }`}
-                            >
-                                {isEnabled && (
-                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-success rounded-full flex items-center justify-center">
-                                        <FiCheck className="w-2.5 h-2.5 text-white" />
-                                    </div>
-                                )}
-                                <div className="flex items-center gap-2">
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isEnabled ? 'bg-success text-white' : 'bg-surface text-brand-500'
-                                        }`}>
-                                        <Icon className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-semibold text-xs text-ink">{item.title}</h4>
-                                        <p className="text-xs text-muted">{item.desc}</p>
-                                    </div>
-                                </div>
-                            </button>
-                        );
-                    })}
+                <div className="p-4 grid gap-4 sm:grid-cols-2">
+                    <label className="flex items-start justify-between gap-3 rounded-lg border border-line p-3 cursor-pointer">
+                        <span>
+                            <span className="block text-sm font-semibold text-ink">Correos de marketing</span>
+                            <span className="block text-xs text-muted">Permite enviar campañas desde Marketing a los clientes que aceptaron promociones. Los correos de pedidos y contraseñas salen siempre.</span>
+                        </span>
+                        <input
+                            type="checkbox"
+                            checked={Boolean(formData.marketingEnabled)}
+                            onChange={(e) => handleInputChange('marketingEnabled', e.target.checked)}
+                            className="mt-1 h-5 w-5 shrink-0 accent-brand-500"
+                        />
+                    </label>
+                    <div>
+                        <label htmlFor="correo-limite" className="block text-xs font-bold text-muted uppercase tracking-wide mb-1">
+                            Límite de correos de campaña por día
+                        </label>
+                        <input
+                            id="correo-limite"
+                            type="number"
+                            min={1}
+                            max={10000}
+                            value={formData.dailyLimit ?? 500}
+                            onChange={(e) => handleInputChange('dailyLimit', e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                        />
+                        <p className="mt-1 text-xs text-muted">Al llegar al límite la campaña se pausa y se reanuda al día siguiente. GoDaddy y Gmail suelen permitir entre 250 y 500.</p>
+                    </div>
                 </div>
             </div>
 

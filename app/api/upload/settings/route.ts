@@ -77,12 +77,13 @@ export async function POST(request: NextRequest) {
         }
 
         const seoImageTypes = ['homeMetaImage', 'productsMetaImage', 'servicesMetaImage', 'coursesMetaImage'];
-        const allowedAssetTypes = ['logo', 'favicon', 'heroBackground', 'hotAd', ...seoImageTypes];
+        // campaign: imágenes de las campañas de correo de Marketing (C-75)
+        const allowedAssetTypes = ['logo', 'favicon', 'heroBackground', 'hotAd', 'campaign', ...seoImageTypes];
 
         if (!type || !allowedAssetTypes.includes(type)) {
             return NextResponse.json({ error: 'Tipo de asset no válido' }, { status: 400 });
         }
-        if (!canManageSettings && type !== 'hotAd') {
+        if (!canManageSettings && type !== 'hotAd' && type !== 'campaign') {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
@@ -96,9 +97,13 @@ export async function POST(request: NextRequest) {
                 error: 'Tipo de archivo no permitido. Solo se permiten imágenes JPG, PNG, WEBP, GIF e ICO'
             }, { status: 400 });
         }
+        // Outlook y varios clientes de correo no muestran WEBP ni ICO
+        if (type === 'campaign' && !['image/jpeg', 'image/jpg', 'image/png', 'image/gif'].includes(file.type)) {
+            return NextResponse.json({ error: 'Para correos usa JPG, PNG o GIF' }, { status: 400 });
+        }
 
         // Validate file size (max 2MB for logos/favicons, 5MB for backgrounds/SEO)
-        const maxSize = (type === 'heroBackground' || type === 'hotAd' || seoImageTypes.includes(type)) ? 5 * 1024 * 1024 : 2 * 1024 * 1024;
+        const maxSize = (type === 'heroBackground' || type === 'hotAd' || type === 'campaign' || seoImageTypes.includes(type)) ? 5 * 1024 * 1024 : 2 * 1024 * 1024;
         if (file.size > maxSize) {
             return NextResponse.json({
                 error: `El archivo es demasiado grande. Máximo ${maxSize / (1024 * 1024)}MB`

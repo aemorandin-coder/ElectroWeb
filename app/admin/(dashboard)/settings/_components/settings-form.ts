@@ -2,7 +2,7 @@
 // la validación real está en el servidor (lib/validations/settings.ts).
 
 import type { IconType } from 'react-icons';
-import { FiBriefcase, FiDollarSign, FiSearch, FiShield, FiShoppingBag, FiTruck } from 'react-icons/fi';
+import { FiBriefcase, FiDollarSign, FiMail, FiSearch, FiShield, FiShoppingBag, FiTruck } from 'react-icons/fi';
 
 export const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 export type WeekDay = (typeof WEEK_DAYS)[number];
@@ -53,7 +53,7 @@ export interface SectionProps {
   errors: FieldErrors;
 }
 
-export type SectionId = 'negocio' | 'precios' | 'envios' | 'tienda' | 'seo' | 'sistema';
+export type SectionId = 'negocio' | 'precios' | 'envios' | 'tienda' | 'seo' | 'sistema' | 'correo';
 
 export const SECTIONS: { id: SectionId; label: string; description: string; icon: IconType; fields: SettingsKey[] }[] = [
   {
@@ -91,6 +91,12 @@ export const SECTIONS: { id: SectionId; label: string; description: string; icon
     description: 'Correos que reciben las alertas, colores de los correos y modo mantenimiento.',
     fields: ['adminAlertEmails', 'primaryColor', 'secondaryColor', 'maintenanceMode', 'maintenanceMessage', 'maintenanceStartTime',
       'maintenanceEndTime', 'maintenanceAllowedIPs'],
+  },
+  // C-75: el servidor de correo estaba en Marketing. Tiene su propio guardado (no usa la barra común)
+  {
+    id: 'correo', label: 'Correo', icon: FiMail,
+    description: 'Servidor con el que salen todos los correos de la tienda, remitente y campañas de marketing.',
+    fields: [],
   },
 ];
 

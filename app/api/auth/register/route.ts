@@ -131,8 +131,8 @@ export async function POST(request: NextRequest) {
 
     // Record referral conversion (fire-and-forget — registration itself must succeed)
     if (validatedRefCode) {
-      const { recordConversion } = await import('@/lib/influencer-commission');
-      recordConversion({ referredUserId: user.id, type: 'REGISTRATION', grossAmount: 0 }).catch(() => {});
+      const { recordRegistration } = await import('@/lib/influencer-commission');
+      recordRegistration(user.id).catch(() => {});
     }
 
     // Create verification token (24 hours expiry)

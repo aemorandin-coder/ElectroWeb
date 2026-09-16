@@ -1492,3 +1492,42 @@ model ReferralConversion {
   @@index([type])
   @@map("referral_conversions")
 }
+
+// C-75: campañas de correo de Marketing. Solo van a clientes que aceptaron promociones,
+// un correo por persona con enlace de baja; los destinatarios quedan guardados para reanudar un envío.
+model EmailCampaign {
+  id              String    @id @default(cuid())
+  subject         String
+  preheader       String?
+  content         String    // JSON con los bloques: título, texto, imagen y botón
+  status          String    @default("DRAFT") // DRAFT | SENDING | PAUSED | SENT
+  totalRecipients Int       @default(0)
+  sentCount       Int       @default(0)
+  failedCount     Int       @default(0)
+  lastError       String?
+  createdById     String?
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  recipients      EmailCampaignRecipient[]
+
+  @@index([status])
+  @@map("email_campaigns")
+}
+
+model EmailCampaignRecipient {
+  id          String        @id @default(cuid())
+  campaignId  String
+  campaign    EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId      String
+  email       String
+  status      String        @default("PENDING") // PENDING | SENT | FAILED
+  error       String?
+  sentAt      DateTime?
+
+  @@unique([campaignId, userId])
+  @@index([campaignId, status])
+  @@map("email_campaign_recipients")
+}

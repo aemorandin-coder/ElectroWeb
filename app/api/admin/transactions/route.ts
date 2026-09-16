@@ -167,14 +167,7 @@ export async function PATCH(request: NextRequest) {
             const customerId = transaction.balance.user.id;
             if (status === 'COMPLETED') {
                 await notifyRechargeApproved(customerId, Number(transaction.amount));
-                // Referral commission for recharge (fire-and-forget)
-                const { recordConversion } = await import('@/lib/influencer-commission');
-                recordConversion({
-                    referredUserId: customerId,
-                    type: 'RECHARGE',
-                    grossAmount: Number(transaction.amount),
-                    transactionId: transaction.id,
-                }).catch(() => {});
+                // Las recargas ya no generan comisión de promotor: se comisiona la compra pagada (C-75)
             } else if (status === 'CANCELLED') {
                 await notifyRechargeRejected(customerId, Number(transaction.amount), rejectionReason);
             }

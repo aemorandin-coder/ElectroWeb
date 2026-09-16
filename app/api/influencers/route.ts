@@ -3,6 +3,16 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
+
+// Antes el % de comisión llegaba sin validar (500%, texto, negativo)
+const crearSchema = z.object({
+  userId: z.string().min(1, 'Elige el usuario').max(40),
+  code: z.string().trim().min(3, 'El código debe tener entre 3 y 20 caracteres').max(20, 'El código debe tener entre 3 y 20 caracteres'),
+  name: z.string().trim().min(2, 'El nombre es muy corto').max(80),
+  commissionRate: z.coerce.number().min(0, 'La comisión no puede ser negativa').max(50, 'La comisión máxima es 50%').default(5),
+  notes: z.string().trim().max(500).nullable().optional(),
+});
 
 // GET /api/influencers — list all with stats
 export async function GET(req: NextRequest) {
@@ -53,14 +63,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 
-  const body = await req.json();
-  const { userId, code, name, commissionRate, notes } = body;
-
-  if (!userId || !code || !name) {
-    return NextResponse.json({ error: 'userId, code y name son requeridos' }, { status: 400 });
+  const parsed = crearSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 });
   }
+  const { userId, code, name, commissionRate, notes } = parsed.data;
 
-  const upperCode = (code as string).toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+  const upperCode = code.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
   if (upperCode.length < 3 || upperCode.length > 20) {
     return NextResponse.json({ error: 'El código debe tener entre 3 y 20 caracteres (letras, números, _ -)' }, { status: 400 });
   }
@@ -79,8 +88,8 @@ export async function POST(req: NextRequest) {
       userId,
       code: upperCode,
       name,
-      commissionRate: commissionRate ?? 5,
-      notes: notes ?? null,
+      commissionRate,
+      notes: notes || null,
     },
     include: { user: { select: { id: true, name: true, email: true } } },
   });

@@ -100,8 +100,8 @@ export default function RegisterPage() {
 
       case 'email':
         if (!value || value.trim() === '') return 'Por favor, ingresa tu correo electrónico';
-        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-        if (!emailRegex.test(value)) return 'Ingresa un correo electrónico válido';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(value.trim())) return 'Ingresa un correo electrónico válido';
         return '';
 
       case 'phone':
@@ -469,6 +469,10 @@ export default function RegisterPage() {
                       id="email"
                       name="email"
                       type="email"
+                      inputMode="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
                       value={formData.email}
                       onChange={handleChange}
                       onBlur={() => handleBlur('email')}

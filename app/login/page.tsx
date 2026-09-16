@@ -152,8 +152,8 @@ function LoginPageContent() {
     switch (fieldName) {
       case 'email':
         if (!value || value.trim() === '') return 'Por favor, ingresa tu correo electrónico';
-        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-        if (!emailRegex.test(value)) return 'Ingresa un correo electrónico válido';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(value.trim())) return 'Ingresa un correo electrónico válido';
         return '';
 
       case 'password':
@@ -211,7 +211,7 @@ function LoginPageContent() {
 
       if (result?.error) {
         incrementFailedAttempts();
-        setError('Credenciales invalidas. Por favor, verifique su informacion.');
+        setError('Correo o contraseña incorrectos. Revisa los datos e intenta de nuevo.');
       } else if (result?.ok) {
         // Reset failed attempts on success
         resetFailedAttempts();
@@ -335,6 +335,10 @@ function LoginPageContent() {
                   <input
                     id="email"
                     type="email"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={email}
                     onChange={(e) => handleEmailChange(e.target.value)}
                     onBlur={() => handleBlur('email', email)}

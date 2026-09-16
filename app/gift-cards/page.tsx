@@ -314,7 +314,7 @@ export default function GiftCardsPage() {
             />
 
             {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 lg:py-12 relative z-10">
+            <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 lg:py-12">
                 <div className="grid lg:grid-cols-2 gap-4 lg:gap-8">
 
                     {/* Left: Gift Card Preview */}

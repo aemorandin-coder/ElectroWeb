@@ -1,42 +1,33 @@
 import PublicHeader from '@/components/public/PublicHeader';
+import Container from '@/components/ui/Container';
+import { PageHeaderSkeleton } from '@/components/ui/Skeleton';
 
+// Misma forma que el catálogo de cursos (C-78): encabezado, filtros y rejilla de tarjetas
 export default function CursosLoading() {
-    return (
-        <div className="min-h-dvh bg-gradient-to-br from-surface via-white to-surface">
-            <PublicHeader />
-
-            {/* Hero Skeleton */}
-            <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 overflow-hidden">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                    <div className="text-center">
-                        <div className="w-40 h-8 bg-white/20 rounded-full mx-auto mb-6 animate-pulse" />
-                        <div className="w-64 h-14 bg-white/20 rounded-lg mx-auto mb-6 animate-pulse" />
-                        <div className="w-2/3 h-6 bg-white/10 rounded mx-auto animate-pulse" />
-                    </div>
-                </div>
-                <div className="h-16" />
-            </section>
-
-            {/* Courses Grid Skeleton */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                            <div className="w-full h-48 bg-line animate-pulse" />
-                            <div className="p-6">
-                                <div className="w-20 h-5 bg-line rounded-full mb-3 animate-pulse" />
-                                <div className="w-4/5 h-6 bg-line rounded mb-3 animate-pulse" />
-                                <div className="w-full h-4 bg-line rounded mb-2 animate-pulse" />
-                                <div className="w-2/3 h-4 bg-line rounded mb-4 animate-pulse" />
-                                <div className="flex justify-between items-center">
-                                    <div className="w-24 h-8 bg-line rounded animate-pulse" />
-                                    <div className="w-28 h-10 bg-line rounded-lg animate-pulse" />
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+  return (
+    <div className="min-h-dvh bg-white" aria-busy="true" aria-label="Cargando cursos">
+      <PublicHeader />
+      <PageHeaderSkeleton />
+      <Container className="py-8 lg:py-12">
+        <div className="mb-6 flex gap-2 overflow-hidden">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-10 w-24 shrink-0 animate-pulse rounded-full bg-line" />
+          ))}
         </div>
-    );
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="overflow-hidden rounded-xl border border-line bg-white">
+              <div className="h-40 animate-pulse bg-line" />
+              <div className="space-y-2 p-4">
+                <div className="h-4 w-4/5 animate-pulse rounded bg-line" />
+                <div className="h-3 w-full animate-pulse rounded bg-line" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-line" />
+                <div className="h-6 w-20 animate-pulse rounded bg-line" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Container>
+    </div>
+  );
 }

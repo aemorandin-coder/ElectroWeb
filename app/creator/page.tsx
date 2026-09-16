@@ -69,7 +69,7 @@ export default function CreatorLandingPage() {
       />
       
       {/* Content wrapper under wave */}
-      <div className="max-w-5xl w-full mx-auto px-4 md:px-8 py-10 lg:py-16 relative z-10 space-y-16 flex-grow">
+      <div className="max-w-5xl w-full mx-auto px-4 md:px-8 py-10 lg:py-16 space-y-16 flex-grow">
         
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
+import Image from 'next/image';
 import { formatUSD } from '@/lib/currency';
+import { useSettings } from '@/contexts/SettingsContext';
 import { formatGiftCardCode, getGiftCardDesign, type GiftCardDesign } from '@/lib/gift-card-designs';
 import { createCardEngine, type GiftCardFace } from './cardEngine';
 import styles from './GiftCard3D.module.css';
@@ -64,6 +66,10 @@ export default function GiftCard3D({
 }: GiftCard3DProps) {
   const design = typeof designProp === 'object' && designProp ? designProp : getGiftCardDesign(designProp as string | null | undefined);
   const reduced = useSyncExternalStore(subscribeReduced, getReduced, getReducedServer);
+  // Favicon de Configuración en el cuadro de la marca; si no hay o no carga, se dibuja la "E"
+  const { settings } = useSettings();
+  const [marcaRota, setMarcaRota] = useState<string | null>(null);
+  const marca = settings?.favicon && settings.favicon !== marcaRota ? settings.favicon : null;
 
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -169,7 +175,11 @@ export default function GiftCard3D({
             <div className={styles.brandRow}>
               <div className={styles.mark}>
                 <span className={styles.monogram} aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none"><path d="M5 5h13M5 12h10M5 19h13M5 5v14" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
+                  {marca ? (
+                    <Image src={marca} alt="" width={64} height={64} unoptimized className={styles.monogramImg} onError={() => setMarcaRota(marca)} />
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M5 5h13M5 12h10M5 19h13M5 5v14" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
+                  )}
                 </span>
                 <span className={styles.wordmark}><b>ELECTRO</b><span>SHOP</span></span>
               </div>

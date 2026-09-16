@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { FiSend } from 'react-icons/fi';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import { adminPrimaryButton, adminLabel } from '@/lib/admin-ui';
 
@@ -234,18 +235,16 @@ export default function ContactForm() {
     }
 
     return (
-        <div className="rounded-2xl border border-line bg-white shadow-sm p-5 md:p-8 relative overflow-hidden">
-
-
-            <div className="relative">
+        <div className="rounded-2xl border border-line bg-white shadow-sm p-5 md:p-6">
+            <div>
                 <h2 className="text-xl md:text-2xl font-bold text-ink mb-1">
                     Envíanos un Mensaje
                 </h2>
-                <p className="text-muted mb-4 md:mb-6 text-xs md:text-sm">
+                <p className="text-muted mb-4 text-xs md:text-sm">
                     Completa el formulario y nos pondremos en contacto contigo lo antes posible
                 </p>
 
-                <form onSubmit={handleSubmit} className="space-y-2 md:space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Banner para datos precargados (desde soporte de pago móvil) */}
                     {hasPrefilledData && (
                         <div className="p-4 bg-warning/15 border border-warning/30 rounded-xl animate-fadeIn">
@@ -276,12 +275,10 @@ export default function ContactForm() {
                     )}
 
                     {/* Name Field */}
-                    <div className="space-y-1 md:space-y-1.5">
-                        <div className="flex items-center gap-2">
-                            <label htmlFor="name" className={adminLabel}>
-                                Nombre Completo
-                            </label>
-                        </div>
+                    <div>
+                        <label htmlFor="name" className={adminLabel}>
+                            Nombre Completo
+                        </label>
                         <div className="relative group">
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                                 <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -302,16 +299,16 @@ export default function ContactForm() {
                                 }`}
                                 placeholder="Tu nombre completo"
                             />
-                            {touchedFields.name && validationErrors.name && (
-                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-deal font-medium">{validationErrors.name}</p>
-                            )}
                         </div>
+                        {touchedFields.name && validationErrors.name && (
+                            <p className="mt-1 text-xs font-semibold text-deal">{validationErrors.name}</p>
+                        )}
                     </div>
 
                     {/* Email & Phone Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Email Field */}
-                        <div className="space-y-1 md:space-y-1.5">
+                        <div>
                             <label htmlFor="email" className={adminLabel}>
                                 Email
                             </label>
@@ -334,19 +331,17 @@ export default function ContactForm() {
                                     }`}
                                     placeholder="tu@email.com"
                                 />
-                                {touchedFields.email && validationErrors.email && (
-                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-deal font-medium">{validationErrors.email}</p>
-                                )}
                             </div>
+                            {touchedFields.email && validationErrors.email && (
+                                <p className="mt-1 text-xs font-semibold text-deal">{validationErrors.email}</p>
+                            )}
                         </div>
 
                         {/* Phone Field */}
-                        <div className="space-y-1 md:space-y-1.5">
-                            <div className="flex items-center gap-1">
-                                <label htmlFor="phone" className={adminLabel}>
-                                    Teléfono
-                                </label>
-                            </div>
+                        <div>
+                            <label htmlFor="phone" className={adminLabel}>
+                                Teléfono
+                            </label>
                             <div className="relative group">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
                                     <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -369,15 +364,15 @@ export default function ContactForm() {
                                     }`}
                                     placeholder="0412..."
                                 />
-                                {touchedFields.phone && validationErrors.phone && (
-                                    <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-deal font-medium">{validationErrors.phone}</p>
-                                )}
                             </div>
+                            {touchedFields.phone && validationErrors.phone && (
+                                <p className="mt-1 text-xs font-semibold text-deal">{validationErrors.phone}</p>
+                            )}
                         </div>
                     </div>
 
                     {/* Subject Field */}
-                    <div className="space-y-1 md:space-y-1.5 pt-1 md:pt-2">
+                    <div>
                         <label htmlFor="subject" className={adminLabel}>
                             Asunto
                         </label>
@@ -411,14 +406,14 @@ export default function ContactForm() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
                             </div>
-                            {touchedFields.subject && validationErrors.subject && (
-                                <p className="absolute -bottom-4 md:-bottom-5 left-0 text-xs text-deal font-medium">{validationErrors.subject}</p>
-                            )}
                         </div>
+                        {touchedFields.subject && validationErrors.subject && (
+                            <p className="mt-1 text-xs font-semibold text-deal">{validationErrors.subject}</p>
+                        )}
                     </div>
 
                     {/* Message Field */}
-                    <div className="space-y-1 md:space-y-1.5 pt-1 md:pt-2">
+                    <div>
                         <label htmlFor="message" className={adminLabel}>
                             Mensaje
                         </label>
@@ -441,14 +436,14 @@ export default function ContactForm() {
                                 }`}
                                 placeholder="Escribe tu mensaje..."
                             />
-                            {touchedFields.message && validationErrors.message && (
-                                <p className="absolute -bottom-5 left-0 text-xs text-deal font-medium">{validationErrors.message}</p>
-                            )}
                         </div>
+                        {touchedFields.message && validationErrors.message && (
+                            <p className="mt-1 text-xs font-semibold text-deal">{validationErrors.message}</p>
+                        )}
                     </div>
 
                     {/* hCaptcha */}
-                    <div className="flex justify-center pt-1 md:pt-2">
+                    <div className="flex justify-center">
                         <div className="bg-surface p-2 md:p-3 rounded-xl border border-line transform scale-90 md:scale-100 origin-center">
                             <HCaptchaWrapper
                                 sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
@@ -464,7 +459,7 @@ export default function ContactForm() {
                     <button
                         type="submit"
                         disabled={loading || !captchaToken}
-                        className={`${adminPrimaryButton} w-full mt-2`}
+                        className={`${adminPrimaryButton} w-full`}
                     >
                         {loading ? (
                             <>
@@ -476,9 +471,7 @@ export default function ContactForm() {
                             </>
                         ) : (
                             <>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                </svg>
+                                <FiSend className="w-4 h-4" aria-hidden="true" />
                                 <span>Enviar Mensaje</span>
                             </>
                         )}

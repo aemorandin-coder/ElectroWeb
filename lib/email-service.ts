@@ -483,58 +483,6 @@ export const sendLegalDocumentEmail = async (
   });
 };
 
-// MARKETING EMAIL
-export const sendMarketingEmail = async (
-  emails: string[],
-  campaign: { title: string; preheader: string; htmlContent: string; ctaText?: string; ctaUrl?: string; }
-) => {
-  if (process.env.ENABLE_MARKETING_EMAILS !== 'true') {
-    return { success: false, error: 'Marketing emails disabled' };
-  }
-
-  const content = `
-    <h2 style="margin:0 0 20px;color:#212529;font-size:24px;font-weight:600;">${campaign.title}</h2>
-    ${campaign.htmlContent}
-    ${campaign.ctaText && campaign.ctaUrl ? `
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${campaign.ctaUrl}" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        ${campaign.ctaText}
-      </a>
-    </div>` : ''}`;
-
-  return sendEmail({
-    to: emails,
-    subject: campaign.title,
-    html: await getBaseTemplate(content, campaign.preheader),
-  });
-};
-
-// NOTIFICATION EMAIL
-export const sendNotificationEmail = async (
-  email: string,
-  notification: { title: string; message: string; actionUrl?: string; actionText?: string; }
-) => {
-  if (process.env.SEND_EMAIL_NOTIFICATIONS !== 'true') {
-    return { success: true, messageId: 'disabled' };
-  }
-
-  const content = `
-    <h2 style="margin:0 0 20px;color:#212529;font-size:24px;font-weight:600;">${notification.title}</h2>
-    <p style="color:#6a6c6b;font-size:16px;line-height:1.6;">${notification.message}</p>
-    ${notification.actionUrl && notification.actionText ? `
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${notification.actionUrl}" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        ${notification.actionText}
-      </a>
-    </div>` : ''}`;
-
-  return sendEmail({
-    to: email,
-    subject: notification.title,
-    html: await getBaseTemplate(content),
-  });
-};
-
 // TEST EMAIL
 export const sendTestEmail = async (email: string) => {
   const content = `

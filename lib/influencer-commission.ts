@@ -1,65 +1,91 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD } from '@/lib/currency';
+import { roundMoney } from '@/lib/pricing';
 
 export const REF_COOKIE = 'electroshop_ref';
 
 /**
- * Record a referral conversion and create a PENDING commission.
- * Call this after a successful order or recharge.
+ * Reglas de comisiones de promotores (C-75, decisión de Andrés del 16/09):
+ * - Solo generan comisión las **compras pagadas**. La comisión nace cuando la orden queda pagada
+ *   (al crearse ya pagada o cuando el admin confirma el pago), nunca al crear una orden sin pagar.
+ * - Las recargas no generan comisión: ese dinero se comisiona cuando se gasta. Antes una recarga y la
+ *   compra hecha con ese saldo pagaban dos veces sobre el mismo dinero.
+ * - Si la orden se cancela, su comisión pendiente se rechaza sola.
+ * - Un registro queda como dato (sin comisión) y no espera aprobación.
+ * - La comisión se acredita como saldo de la tienda, nunca como dinero.
  */
-export async function recordConversion({
-  referredUserId,
-  type,
-  grossAmount,
-  orderId,
-  transactionId,
-}: {
-  referredUserId: string;
-  type: 'PURCHASE' | 'RECHARGE' | 'REGISTRATION';
-  grossAmount: number;
-  orderId?: string;
-  transactionId?: string;
-}) {
-  const user = await prisma.user.findUnique({
-    where: { id: referredUserId },
-    select: { referredByCode: true },
-  });
 
+type Cliente = Prisma.TransactionClient | typeof prisma;
+
+async function promotorDe(db: Cliente, referredUserId: string) {
+  const user = await db.user.findUnique({ where: { id: referredUserId }, select: { referredByCode: true } });
   if (!user?.referredByCode) return null;
-
-  const influencer = await prisma.influencer.findUnique({
+  const influencer = await db.influencer.findUnique({
     where: { code: user.referredByCode, status: 'ACTIVE' },
     select: { id: true, userId: true, commissionRate: true, name: true, code: true },
   });
+  // Sin autocomisión
+  if (!influencer || influencer.userId === referredUserId) return null;
+  return influencer;
+}
 
+/** Registro de un cliente referido: queda como dato, sin comisión ni aprobación pendiente. */
+export async function recordRegistration(referredUserId: string) {
+  const influencer = await promotorDe(prisma, referredUserId);
+  if (!influencer) return null;
+  return prisma.referralConversion.create({
+    data: {
+      influencerId: influencer.id,
+      referredUserId,
+      type: 'REGISTRATION',
+      grossAmount: 0,
+      commission: 0,
+      status: 'APPROVED',
+      approvedAt: new Date(),
+    },
+  });
+}
+
+/**
+ * Comisión de una orden pagada. Idempotente: si la orden ya tiene comisión, no crea otra
+ * (el admin puede confirmar el pago dos veces o la orden puede nacer pagada).
+ */
+export async function recordPaidOrder(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, userId: true, orderNumber: true, totalUSD: true, paymentStatus: true, status: true },
+  });
+  if (!order?.userId || order.paymentStatus !== 'PAID' || order.status === 'CANCELLED') return null;
+
+  const influencer = await promotorDe(prisma, order.userId);
   if (!influencer) return null;
 
-  // No self-commission
-  if (influencer.userId === referredUserId) return null;
+  const existente = await prisma.referralConversion.findFirst({ where: { orderId: order.id }, select: { id: true } });
+  if (existente) return null;
 
-  const commission = (grossAmount * Number(influencer.commissionRate)) / 100;
+  const grossAmount = Number(order.totalUSD);
+  const commission = roundMoney((grossAmount * Number(influencer.commissionRate)) / 100);
 
   const conversion = await prisma.referralConversion.create({
     data: {
       influencerId: influencer.id,
-      referredUserId,
-      type,
+      referredUserId: order.userId,
+      type: 'PURCHASE',
       grossAmount,
       commission,
-      orderId: orderId ?? null,
-      transactionId: transactionId ?? null,
+      orderId: order.id,
       status: 'PENDING',
     },
   });
 
-  const what = { PURCHASE: 'una compra', RECHARGE: 'una recarga', REGISTRATION: 'un registro' }[type];
   emitAdminEvent({
     type: 'REFERRAL_CONVERSION',
-    title: `Promotor ${influencer.name} · ${what}`.slice(0, 150),
-    summary: `Un cliente referido con el código ${influencer.code} generó ${what}`,
+    title: `Promotor ${influencer.name} · una compra`.slice(0, 150),
+    summary: `Un cliente referido con el código ${influencer.code} pagó la orden ${order.orderNumber}`,
     fields: [
-      ['Monto', grossAmount > 0 ? formatUSD(grossAmount) : null],
+      ['Monto', formatUSD(grossAmount)],
       ['Comisión por aprobar', commission > 0 ? formatUSD(commission) : null],
     ],
     link: '/admin/marketing',
@@ -68,55 +94,64 @@ export async function recordConversion({
   return conversion;
 }
 
-/**
- * Approve a conversion: set status=APPROVED and credit influencer's balance.
- * Returns the updated conversion or throws on error.
- */
-export async function approveConversion(conversionId: string) {
-  const conversion = await prisma.referralConversion.findUniqueOrThrow({
-    where: { id: conversionId },
-    include: { influencer: { select: { userId: true, commissionRate: true } } },
+/** La orden se canceló: su comisión pendiente se rechaza. Una ya aprobada no se toca (el saldo ya se acreditó). */
+export async function rejectOrderConversions(orderId: string, db: Cliente = prisma) {
+  return db.referralConversion.updateMany({
+    where: { orderId, status: 'PENDING' },
+    data: { status: 'REJECTED' },
   });
+}
 
-  if (conversion.status !== 'PENDING') {
-    throw new Error(`Conversion is already ${conversion.status}`);
-  }
-
-  const influencerUserId = conversion.influencer.userId;
-
+/**
+ * Aprueba una comisión y acredita el saldo del promotor, todo en una transacción.
+ * El cambio de PENDING a APPROVED se hace primero y con condición: dos clics seguidos ya no acreditan dos veces
+ * (antes el estado se leía fuera de la transacción).
+ */
+export async function approveConversion(conversionId: string, influencerId: string) {
   return prisma.$transaction(async (tx) => {
-    // Ensure balance record exists
-    let balance = await tx.userBalance.findUnique({ where: { userId: influencerUserId } });
-    if (!balance) {
-      balance = await tx.userBalance.create({
-        data: { userId: influencerUserId, balance: 0, currency: 'USD' },
+    const conversion = await tx.referralConversion.findFirst({
+      where: { id: conversionId, influencerId },
+      include: { influencer: { select: { userId: true } } },
+    });
+    if (!conversion) throw new Error('La comisión no es de este promotor');
+
+    // Una compra cuya orden se canceló o dejó de estar pagada no se paga
+    if (conversion.type === 'PURCHASE' && conversion.orderId) {
+      const order = await tx.order.findUnique({ where: { id: conversion.orderId }, select: { paymentStatus: true, status: true } });
+      if (!order || order.paymentStatus !== 'PAID' || order.status === 'CANCELLED') {
+        await tx.referralConversion.updateMany({ where: { id: conversionId, status: 'PENDING' }, data: { status: 'REJECTED' } });
+        throw new Error('La orden de esta comisión ya no está pagada');
+      }
+    }
+
+    const marcada = await tx.referralConversion.updateMany({
+      where: { id: conversionId, influencerId, status: 'PENDING' },
+      data: { status: 'APPROVED', approvedAt: new Date() },
+    });
+    if (marcada.count === 0) throw new Error('La comisión ya no está pendiente');
+
+    const monto = Number(conversion.commission);
+    if (monto > 0) {
+      const balance = await tx.userBalance.upsert({
+        where: { userId: conversion.influencer.userId },
+        create: { userId: conversion.influencer.userId, balance: 0, currency: 'USD' },
+        update: {},
+      });
+      await tx.userBalance.update({ where: { id: balance.id }, data: { balance: { increment: monto } } });
+      await tx.transaction.create({
+        data: {
+          balanceId: balance.id,
+          type: 'DEPOSIT',
+          status: 'COMPLETED',
+          amount: monto,
+          currency: 'USD',
+          description: 'Comisión de promotor por una compra referida',
+          reference: `REF-${conversion.id}`,
+          paymentMethod: 'REFERRAL',
+        },
       });
     }
 
-    // Credit the commission
-    await tx.userBalance.update({
-      where: { id: balance.id },
-      data: { balance: { increment: conversion.commission } },
-    });
-
-    // Record transaction for traceability
-    await tx.transaction.create({
-      data: {
-        balanceId: balance.id,
-        type: 'DEPOSIT',
-        status: 'COMPLETED',
-        amount: conversion.commission,
-        currency: 'USD',
-        description: `Comisión de referido — ${conversion.type}`,
-        reference: `REF-${conversion.id}`,
-        paymentMethod: 'REFERRAL',
-      },
-    });
-
-    // Mark conversion as approved
-    return tx.referralConversion.update({
-      where: { id: conversionId },
-      data: { status: 'APPROVED', approvedAt: new Date() },
-    });
+    return conversion.id;
   });
 }

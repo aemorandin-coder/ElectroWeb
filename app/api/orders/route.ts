@@ -38,6 +38,7 @@ import {
   escaparHtml,
   MOTIVO_CANCELACION_MINIMO,
 } from '@/lib/order-admin';
+import { recordPaidOrder, rejectOrderConversions } from '@/lib/influencer-commission';
 
 
 // GET - Get all orders
@@ -581,15 +582,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Comisión de referidos con el total del servidor (fire-and-forget)
-    const { recordConversion } = await import('@/lib/influencer-commission');
-    for (const order of orders) {
-      recordConversion({
-        referredUserId: userId,
-        type: 'PURCHASE',
-        grossAmount: Number(order.totalUSD),
-        orderId: order.id,
-      }).catch(() => {});
+    // Comisión de promotor solo si la orden ya nació pagada (saldo o pago móvil verificado).
+    // Las demás la generan cuando el admin confirma el pago (C-75).
+    if (isPaymentConfirmed) {
+      const { recordPaidOrder } = await import('@/lib/influencer-commission');
+      for (const order of orders) {
+        recordPaidOrder(order.id).catch(() => {});
+      }
     }
 
     // Nota: las reservas de pagos sin confirmar no se borran aquí; expiran solas
@@ -736,6 +735,9 @@ export async function PATCH(request: NextRequest) {
         }
         await liberarReservas(tx, orden.userId, orden.items);
 
+        // La comisión pendiente del promotor por esta orden se rechaza (C-75)
+        await rejectOrderConversions(orden.id, tx);
+
         // Pago con saldo: el total vuelve al saldo de la tienda (nunca sale dinero de la empresa).
         // Decisión de Andrés (2026-09-15): es crédito para comprar aquí, no un reembolso.
         const pagoConSaldo = orden.paymentMethod === 'WALLET' && orden.paymentStatus === PaymentStatus.PAID;
@@ -814,6 +816,11 @@ export async function PATCH(request: NextRequest) {
 
     if (cambiosStock.length > 0) {
       notifyStockCrossings(cambiosStock).catch((error) => console.error('Error enviando avisos de stock:', error));
+    }
+
+    // Pago confirmado: si el cliente llegó por un promotor, nace su comisión pendiente (C-75)
+    if (confirmandoPago) {
+      recordPaidOrder(order.id).catch((error) => console.error('Error registrando comisión de promotor:', error));
     }
 
     // Avisos al cliente (fuera de la transacción: correos y notificaciones no deben bloquear el cambio)

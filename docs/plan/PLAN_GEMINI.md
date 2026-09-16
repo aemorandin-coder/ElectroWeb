@@ -1068,3 +1068,58 @@ Archivos:
 QA: `/esta-ruta-no-existe` y `/customer/nada` a 390 y 1440 px; un certificado se sigue viendo igual al imprimir.
 
 **Prompt de arranque para Gemini (Andrés):** ver `docs/plan/SIGUIENTE.md` §5.
+
+---
+
+## Lo que salió mal en R10 y R11 (revisión C-86, 2026-09-16)
+R10 y R11 se mergearon a `main` con 6 arreglos de Claude. **Lee esto antes de R12.**
+1. **Cambiaste lógica "de paso".** En el carrito, la miniatura de la gift card pasó a leer `(item as any).design`, un campo que no existe: todas las gift cards salían con el mismo diseño. Además metiste un `any`. Si algo que no es `className` te parece mal, **anótalo en el estado; no lo reescribas**.
+2. **Quitaste un `disabled`.** En Configuración del cliente, "Empresa" quedó elegible sin verificación. Un `disabled`, un `required` o un `if` que bloquea algo **son lógica**.
+3. **Borraste un bloque entero** ("¿Necesitas ayuda?" en garantía) porque tenía datos inventados. Lo correcto era dejarlo y escribir `PEDIDO:` para que Claude pusiera los datos reales.
+4. **G-41 quedó a medias** y el estado decía HECHO: el resumen del checkout sigue con 55 clases de la paleta vieja y montos como "USD 50,00$". Antes de marcar HECHO corre el grep de colores del archivo completo y pega el número.
+5. **Sangría otra vez:** referidos 1.363 líneas de diff para 231 cambios reales; garantía 780/210; reseñas 329/77. Compara `git diff --stat` con `git diff -w --stat` **antes** de cada commit.
+6. Imports sin uso (`adminLabel`, `adminSuccessButton`, `goToBusinessAndDismiss`): ESLint del archivo antes del commit.
+
+---
+
+## Ronda R12 · Terminar el checkout y piezas compartidas con tokens · G-44 → G-45 → G-46
+- Rama `gemini/R12` desde `main` actualizado (**`main` ya tiene R10 y R11 mergeadas con los arreglos de C-86**; tu rama `gemini/R11` queda vieja: no la sigas).
+- Un commit por tarjeta con su `docs/plan/estado/G-XX.md`.
+- **Carril cambiado desde el 16/09:** `app/login`, `app/registro` → Claude. `app/creator`, `app/recuperar-contrasena`, `app/verificar-email` y el panel admin → ChatGPT. No los toques aunque veas algo.
+
+### Reglas de R12
+- **Solo `className`** y los "Arreglos permitidos" de cada tarjeta. Todo lo de "Lo que salió mal en R10 y R11" es obligatorio.
+- **Piezas compartidas (G-45, G-46):** las usa toda la tienda y el panel. No cambies props, variantes, nombres exportados ni textos. Si un color no tiene token claro, deja el que está y anótalo.
+- Hex → token: tabla de la sección 4 de `GEMINI.md`. Rojos de error → `deal`.
+- Verificación de cada tarjeta, pegada en el estado:
+  ```bash
+  bash -c 'grep -rnoE "(text|bg|border|from|to|ring|divide|placeholder)-(gray|slate|blue|green|red|amber|yellow|orange|purple|indigo|emerald|rose|pink|cyan|teal|violet)-[0-9]+|\[#[0-9a-fA-F]{3,6}\]|z-\[[0-9]+\]|font-black|font-extrabold|text-\[(7|8|9|10)px\]" <archivos de la tarjeta> | wc -l'
+  npx tsc --noEmit
+  npx eslint <archivos de la tarjeta>          # ningún problema nuevo contra main
+  git diff --stat && git diff -w --stat        # cifras parecidas
+  ```
+
+### G-44 · Terminar el checkout · Depende: —
+Archivos: `app/checkout/page.tsx` (55 colores viejos, casi todos en "Resumen del Pedido" e "Información de Contacto", ~l.1800-2160), `components/checkout/CheckoutPagoMovilForm.tsx` (6), `components/pago-movil/VerificarPagoMovilForm.tsx` (5).
+**Arreglos permitidos:**
+1. Montos del resumen con `formatNumber(x)` + `USD` + `$` → `formatUSD(x)`, quitando el `<span>USD</span>` y el `$` de al lado: subtotal (~1870), envío (~1927) y total (~2061).
+2. Bolívares con `new Intl.NumberFormat('es-VE', …).format(x * Number(companySettings.exchangeRateVES))` → `formatVES(x * Number(companySettings.exchangeRateVES))`, quitando el `Bs.` escrito a mano: ~1874, ~1893 (descuento: conserva el `-` delante), ~1931, ~2066.
+3. `CheckoutPagoMovilForm.tsx` ~386: `${montoEsperado.toFixed(2)}` → `{formatUSD(montoEsperado)}` (importa `formatUSD` de `@/lib/currency`).
+4. **No toques:** `formatNumber` si se sigue usando en otro lado, los `toFixed` de kg (~1915, ~1994, ~1997, ~2003), el de ~481 (va en un mensaje) y los de `VerificarPagoMovilForm.tsx` 133-134 (van en el texto de WhatsApp).
+**Criterio:** grep de colores de los 3 archivos = 0. QA: `/checkout` con un producto a 390 y 1440 px, resumen sin "USD … $".
+
+### G-45 · `components/ui` con tokens · Depende: G-44
+Archivos: `components/ui/LoadingSpinner.tsx` (14 hex), `StatusBadge.tsx` (15 colores), `Button.tsx` (8 hex, 5 colores), `ImageUploadField.tsx` (7 + 1 hex), `Badge.tsx` (6), `ErrorState.tsx` (5 + 2 hex), `EmptyState.tsx` (4 hex), `Modal.tsx` (3 colores, 4 hex y `z-[100000]`).
+**Arreglos permitidos:**
+1. `Modal.tsx`: `z-[100000]` → `z-[var(--z-modal)]`.
+2. `StatusBadge.tsx` y `Badge.tsx`: cada variante con los tonos de `adminBadge` (`@/lib/admin-ui`): pendiente/advertencia → `warning`, pagado/en proceso/info → `brand`, completado/éxito → `success`, cancelado/error → `deal` (`bg-deal-bg text-deal`), neutro → `bg-surface text-ink-soft`. **Mismos nombres de variantes.**
+**Criterio:** grep = 0 en los 8 archivos (o anota cuáles quedan y por qué). QA: `/admin/orders` (badges), un botón primario de la tienda y el esqueleto de `/productos`.
+
+### G-46 · Footer, botón de cuenta y carrito del header · Depende: G-45
+Archivos: `components/Footer.tsx` (12 hex `#2a63cd`), `components/UserAccountButton.tsx` (27 colores, 2 `font-black`, 2 `text-[10px]`), `components/CartIcon.tsx` (5 colores, `font-black`, `text-[8px]`).
+**Arreglos permitidos:**
+1. `font-black` → `font-bold`; `text-[10px]` y `text-[8px]` → `text-xs` (si en `CartIcon` ~233 no cabe, `text-[11px]` y lo anotas).
+2. `UserAccountButton` ~120: el degradado `bg-gradient-to-br from-brand-500 to-brand-600` del avatar → `bg-brand-500`.
+**Criterio:** grep = 0. QA: header a 390 y 1440 px con y sin sesión, menú de cuenta abierto, contador del carrito con 1 y con 12 productos, footer.
+
+**Prompt de arranque:** ver `docs/plan/SIGUIENTE.md` §5.

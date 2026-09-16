@@ -229,18 +229,18 @@ components/catalog/**  components/product/**
 components/checkout/** (*)   components/Footer.tsx   components/CartIcon.tsx
 components/UserAccountButton.tsx   components/WhatsAppButton.tsx   components/HotAdOverlay.tsx
 components/MobileScrollProgress.tsx   components/DynamicFavicon.tsx   components/AnalyticsTracker.tsx
-CLAUDE.md  GEMINI.md  docs/plan/PLAN.md  docs/plan/AUDITORIA.md  docs/plan/estado/C-*.md
+app/login/**  app/registro/**  components/auth/**        (desde C-84: seguridad y registro con Google)
+CLAUDE.md  GEMINI.md  CHATGPT.md  docs/plan/PLAN*.md  docs/plan/AUDITORIA*.md  docs/plan/estado/C-*.md
 ```
 (*) Se **liberan para Gemini** cuando `estado/C-01.md` y `estado/C-05.md` digan `Estado: HECHO` en `main` (solo para las tareas G-05g y G-06g).
 
 ### Carril GEMINI
 ```
 app/customer/**          components/customer/**
-app/creator/**           app/cursos/**            components/cursos/**
+app/cursos/**            components/cursos/**
 app/servicios/**         components/servicios/**
 app/contacto/**          components/contact/**
 app/gift-cards/**        app/canjear-gift-card/**
-app/login/**  app/registro/**  app/recuperar-contrasena/**  app/verificar-email/**
 app/solicitar-producto/**  app/privacidad/**  app/terminos/**
 components/modals/**  components/reviews/**  components/orders/**  components/social/**
 components/pago-movil/**  components/onboarding/**
@@ -248,10 +248,23 @@ app/admin/**  components/admin/**   ← SOLO arreglos mecánicos pedidos por una
                                         Excepto admin/(dashboard)/settings/** y products/** (C-50 y C-51).
 docs/plan/estado/G-*.md
 ```
+Desde R12 (2026-09-16), solo para cambiar clases: `components/ui/**`, `components/Footer.tsx`, `components/UserAccountButton.tsx`, `components/CartIcon.tsx` y el resumen de `app/checkout/page.tsx` (ver `PLAN_GEMINI.md`, Ronda R12).
+
+### Carril CHATGPT (desde 2026-09-16) · diseño y jerarquía
+Reglas en `CHATGPT.md`, rondas en `PLAN_CHATGPT.md`. Reescribe pantallas completas sin cambiar qué hacen (`fetch`, cuerpos, permisos, cálculos y destinos quedan igual).
+```
+R1: app/admin/(dashboard)/page.tsx   app/admin/(dashboard)/orders/**   app/admin/(dashboard)/customers/**
+    app/admin/(dashboard)/transactions/**   app/admin/(dashboard)/gift-cards/**   app/admin/(dashboard)/reports/**
+    app/creator/**   app/recuperar-contrasena/**   app/verificar-email/**
+    app/admin/(dashboard)/layout.tsx → solo el className del contenedor de {children} (GPT-01)
+docs/plan/estado/GPT-*.md
+```
+Gemini no toca el carril ChatGPT ni ChatGPT el de Gemini. Si una ronda de uno necesita un archivo del otro, Claude lo reasigna en `PLAN.md` antes de empezar.
+
 Borrado de archivos muertos (G-02): **solo** la lista exacta de esa tarea, aunque el archivo esté en el carril de Claude.
 
 ### Protocolo anti-choque
-1. **Worktrees separados.** Claude trabaja en la carpeta principal, en ramas `claude/<id>`. Gemini trabaja en otra carpeta:
+1. **Worktrees separados.** Claude trabaja en la carpeta principal, en ramas `claude/<id>`. Gemini y ChatGPT trabajan cada uno en su carpeta (`../ElectroShopVe-gemini`, `../ElectroShopVe-chatgpt`, ramas `gemini/RN` y `chatgpt/RN`):
    ```bash
    git worktree add "../ElectroShopVe-gemini" -b gemini/base
    ```

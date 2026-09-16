@@ -13,9 +13,9 @@ Contexto: `docs/plan/PLAN.md` (diseño) y `docs/plan/AUDITORIA.md` (problemas). 
 1. **Haz SOLO las tareas de la ronda que te asignaron** (ej. Ronda R2: `G-05a`…), en el orden de `PLAN_GEMINI.md`. Nada de "de paso arreglé…".
 2. **Solo edita archivos de TU carril** (sección 2). Si el archivo no está en tu carril, NO lo toques, aunque veas un error.
 3. **No borres, renombres ni muevas archivos**, salvo la lista exacta de la tarea G-02.
-4. **No toques:** `app/api/**`, `prisma/**`, `lib/**`, `contexts/**`, `proxy.ts`, `next.config.js`, `package.json`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `components/ui/**`, `components/public/**`, `CLAUDE.md`, `GEMINI.md`, `docs/plan/PLAN.md`, `docs/plan/PLAN_CLAUDE.md`, `docs/plan/PLAN_GEMINI.md`, `docs/plan/AUDITORIA.md`, `docs/plan/estado/C-*.md`.
+4. **No toques:** `app/api/**`, `prisma/**`, `lib/**`, `contexts/**`, `proxy.ts`, `next.config.js`, `package.json`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `components/ui/**` (salvo R12, sección 2), `components/public/**`, `CLAUDE.md`, `GEMINI.md`, `CHATGPT.md`, `docs/plan/PLAN.md`, `docs/plan/PLAN_CLAUDE.md`, `docs/plan/PLAN_GEMINI.md`, `docs/plan/AUDITORIA.md`, `docs/plan/estado/C-*.md`.
 5. **No instales dependencias.** No ejecutes `npm install`, `prisma migrate`, `prisma db push`, `git push` (a ninguna rama), `git reset --hard`, `git rebase`, `rm -rf` ni `git merge` a `main`. Terminar una ronda = commits en tu rama y avisar a Andrés; **Claude revisa, mergea y sube**. (En R9 se mergeó y subió a `main` sin revisión: no se repite.)
-6. **Cambios mínimos.** No reformatees archivos, no cambies comillas, indentación ni orden de imports, y no reescribas componentes enteros. Si el diff tiene líneas que la tarea no pide, deshazlas. Antes de cada commit: `git diff --stat` y `git diff -w --stat` deben dar números parecidos; si el primero es mucho mayor, cambiaste la sangría (en G-33 quedaron 8 archivos con 1 espacio de sangría). `'use client'` siempre es la primera línea del archivo.
+6. **Cambios mínimos.** En R11 se reindentaron archivos enteros otra vez (referidos: 1.363 líneas de diff para 231 cambios reales; garantía 780/210). No reformatees archivos, no cambies comillas, indentación ni orden de imports, y no reescribas componentes enteros. Si el diff tiene líneas que la tarea no pide, deshazlas. Antes de cada commit: `git diff --stat` y `git diff -w --stat` deben dar números parecidos; si el primero es mucho mayor, cambiaste la sangría (en G-33 quedaron 8 archivos con 1 espacio de sangría). `'use client'` siempre es la primera línea del archivo.
 7. **No cambies textos visibles** (copys, mensajes) salvo que la tarea lo diga.
 8. **Colores:** solo los tokens de la sección 4. Nunca escribas un hex nuevo en un className.
 9. **Tipografía:** nunca `text-[7px]`, `text-[8px]`, `text-[9px]`, `text-[9.5px]`, `text-[10px]`, `font-black` ni `font-extrabold`.
@@ -29,15 +29,21 @@ Contexto: `docs/plan/PLAN.md` (diseño) y `docs/plan/AUDITORIA.md` (problemas). 
 
 ```
 app/customer/**          components/customer/**
-app/creator/**           app/cursos/**            components/cursos/**
+app/cursos/**            components/cursos/**
 app/servicios/**         components/servicios/**
 app/contacto/**          components/contact/**
 app/gift-cards/**        app/canjear-gift-card/**
-app/login/**   app/registro/**   app/recuperar-contrasena/**   app/verificar-email/**
 app/solicitar-producto/**   app/privacidad/**   app/terminos/**
 components/modals/**   components/reviews/**   components/orders/**   components/social/**
 components/pago-movil/**   components/onboarding/**
 docs/plan/estado/G-*.md      (solo archivos que empiecen con G-)
+# Desde el 2026-09-16 ya NO son tuyos:
+#   app/login/**, app/registro/** → Claude (C-84: registro y Google)
+#   app/creator/**, app/recuperar-contrasena/**, app/verificar-email/** y el panel admin
+#   (dashboard, orders, customers, transactions, gift-cards, reports) → ChatGPT (CHATGPT.md)
+# Solo en R12 y solo para cambiar clases (ver PLAN_GEMINI.md, "Reglas de R12"):
+#   app/checkout/page.tsx   components/checkout/CheckoutPagoMovilForm.tsx   components/pago-movil/VerificarPagoMovilForm.tsx
+#   components/ui/**   components/Footer.tsx   components/UserAccountButton.tsx   components/CartIcon.tsx
 # Solo en R11 y solo para cambiar clases (ver PLAN_GEMINI.md, "Reglas de R11"):
 app/carrito/page.tsx   app/checkout/**   components/checkout/**   components/pago-movil/VerificarPagoMovilForm.tsx
 components/ProcessingOverlay.tsx   components/EpicTooltip.tsx   app/not-found.tsx   app/error.tsx

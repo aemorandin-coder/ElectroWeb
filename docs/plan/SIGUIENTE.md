@@ -1,107 +1,119 @@
-# Punto de partida para la próxima conversación (actualizado 2026-09-15, tarde)
+# Punto de partida para la próxima conversación (actualizado 2026-09-16, noche)
 
-Léelo antes de empezar. Resume dónde quedó todo, qué falta subir a producción y qué hace cada agente.
+Léelo antes de empezar. Resume dónde quedó todo, qué falta subir, qué decide Andrés y qué hace cada agente.
 
 ## 1. Estado de las ramas
 
-- **`main` local = `origin/main`.** Todo lo revisado ya está subido a GitHub (46 commits). Contiene:
-  - **C-54** encabezado único · **C-33** imágenes optimizadas · **C-23b** popup de escritorio · **C-50b** Configuración rediseñada.
-  - **C-72** hotfix de seguridad y dinero (recargas por Pago Móvil, documentos privados).
-  - **C-73** notificaciones del equipo y bot de Telegram.
-  - **R10 de Gemini** (G-35 acceso, G-36 páginas públicas, G-37 panel de creadores), revisada y corregida en **C-77**.
-  - **C-74** flujo de órdenes del admin (stock, saldo y estados).
-- **C-55** (marco del panel del cliente) está en `main` local desde el 16/09 con su estado: **G-38 y G-39 quedan desbloqueadas**. Trajo un arreglo global de animaciones (`globals.css`): cajones y modales ya no quedan debajo de la barra inferior.
-- **`gemini/R10`** (worktree `../ElectroShopVe-gemini`): G-35…G-37 mergeadas. Sigue con G-38 y G-39 y, en la misma sesión, **R11** en `gemini/R11` (G-40…G-43: carrito, checkout, modales compartidos, páginas de error).
+- **`origin/main` = `dbd2027`** (último push, 15/09).
+- **`main` local va 31 commits adelante y NO está subido** (Andrés: "No subas nada todavía"). Contiene, todo revisado y probado:
+  - **C-55** marco del panel del cliente · **C-78** retoques de la tienda · **C-82** hotfix aprobar cursos y creadores.
+  - **C-83** hotfix "Credenciales invalidas" (correo con mayúsculas).
+  - **C-75** Marketing: campañas de correo con imágenes, promotores con comisión solo por compras pagadas, plantillas reales, correo en Configuración.
+  - **C-84** registro más fácil, login con el mismo marco, `/api/user/profile` blindado.
+  - **Gemini R10 (G-38, G-39) y R11 (G-40…G-43)** con los 6 arreglos de **C-86**.
+  - **C-88** contraseñas con una sola regla; recuperar la clave cierra las sesiones.
+- Worktree de Gemini `../ElectroShopVe-gemini`: `gemini/R11` ya está en `main`. R12 se empieza desde `main`.
+- Worktree de ChatGPT `../ElectroShopVe-chatgpt`: **no existe todavía** (ver §5).
 
-## 2. Deploy pendiente (el código ya está en GitHub; falta aplicarlo en el servidor)
+## 2. Deploy pendiente (cuando Andrés pida el push)
 
 En el servidor (`/var/www/electroshopve`, PM2 `electroshop-web`):
 
 ```bash
 git pull
-npx prisma db push      # ← solo esto necesita tu OK; ver abajo
-npx tsx scripts/move-business-documents.ts          # muestra cuántos documentos movería (no toca nada)
-npx tsx scripts/move-business-documents.ts --apply  # los mueve de verdad
+npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script   # mira antes qué SQL correría
+npx prisma db push                                   # ← necesita el OK de Andrés
+npx tsx scripts/move-business-documents.ts           # cuenta, no mueve
+npx tsx scripts/move-business-documents.ts --apply   # mueve
 npm run build
 pm2 restart electroshop-web --update-env
 ```
+`npm ci` no hace falta: `package-lock.json` no cambió. **No hay variables de entorno nuevas obligatorias.**
 
-`npm ci` no hace falta: `package-lock.json` no cambió.
+### 2.1 Qué crea `prisma db push`
+Solo tablas nuevas. **No borra ni cambia ninguna tabla ni columna existente.**
+- Si el deploy del 15/09 no se aplicó: `admin_notification_settings` y `telegram_chats` (C-73, avisos y bot de Telegram).
+- Siempre: `email_campaigns` y `email_campaign_recipients` (C-75, campañas de correo y a quién se le envió cada una).
 
-### 2.1 Base de datos — qué hace exactamente `prisma db push`
+En la salida de `migrate diff` solo deben aparecer `CREATE TABLE`, `CREATE INDEX` y `ADD CONSTRAINT … FOREIGN KEY` de esas tablas. Si aparece un `DROP`, no se corre y se avisa a Claude.
 
-Crea **2 tablas nuevas y 1 índice**, nada más. **No borra ni modifica ninguna tabla ni columna existente**, así que los datos de la tienda no corren riesgo. Es lo que necesita C-73 para guardar la configuración de avisos y los chats del bot de Telegram:
+### 2.2 Documentos de empresa (`move-business-documents.ts`)
+Mueve las cédulas, RIF y actas que suben los clientes de `public/uploads/documents/` (se podían abrir sin sesión) a `private-uploads/` y actualiza la ruta en la base. Sin `--apply` solo cuenta.
 
-```sql
-CREATE TABLE "admin_notification_settings" (…);  -- qué se avisa y por dónde, token del bot
-CREATE TABLE "telegram_chats" (…);               -- los chats conectados al bot
-CREATE UNIQUE INDEX "telegram_chats_chatId_key" ON "telegram_chats"("chatId");
-```
-
-**Puedes comprobarlo tú mismo antes de aplicarlo.** Este comando imprime el SQL que se ejecutaría, sin tocar la base:
-
-```bash
-npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script
-```
-
-Si en esa salida solo ves `CREATE TABLE` y `CREATE INDEX` (sin `DROP` ni `ALTER … DROP COLUMN`), es seguro. Y si quieres respaldo antes, `pg_dump` de la base y listo. **Este es el paso que dijiste que necesita tu OK: sin él, la página de Notificaciones del panel no puede guardar nada.**
-
-### 2.2 Documentos de empresa — qué hace `move-business-documents.ts`
-
-C-72 arregló un hueco de seguridad: las cédulas, RIF y documentos que suben los clientes para verificar su empresa estaban en `public/uploads/documents/`, o sea que **cualquiera con el enlace podía abrirlos sin iniciar sesión**. Ahora se sirven por una ruta que exige sesión.
-
-El script mueve los archivos que ya existen de `public/uploads/documents/` a `private-uploads/` y actualiza la ruta guardada en la base:
-- **Sin `--apply`** solo cuenta y lista lo que movería. Córrelo así primero.
-- **Con `--apply`** mueve de verdad. Si no lo corres, los documentos viejos siguen siendo públicos.
-
-### 2.3 Después del deploy (cosas que haces tú en el panel)
-1. **Notificaciones → Telegram:** crear el bot con @BotFather, pegar el token y "Conectar un chat".
-2. **Configuración → Precios y pagos:** decidir si la tasa BCV se actualiza sola.
+### 2.3 Después del deploy (Andrés, en el panel)
+1. **Configuración → Correo:** activar "Correos de marketing" y revisar el límite diario.
+2. **Marketing → Campañas:** mandar una campaña de prueba a tu correo (con imagen).
+3. **Notificaciones → Telegram:** token de @BotFather y "Conectar un chat" (si no se hizo).
 
 ### 2.4 Cómo comprobar que quedó bien
-- `/api/uploads/documents/<archivo>` sin sesión → 404, y `/uploads/documents/…` → 404.
-- Una recarga de prueba por Pago Móvil con un monto menor al pedido **no** se aprueba sola.
-- En el panel de órdenes (C-74): "Marcar pagado" descuenta stock, y cancelar pide el motivo.
-- Entrar a la tienda, abrir un modal (por ejemplo el video de un curso) con la página desplazada: el modal debe salir centrado en la pantalla, no al final de la página.
+- Entrar escribiendo el correo en MAYÚSCULAS → entra (C-83).
+- Registrarse desde el teléfono: errores bajo cada campo, la barra inferior no tapa la contraseña (C-84).
+- Recuperar la contraseña con una clave de 6 caracteres → la rechaza con el motivo (C-88).
+- `/admin/cursos`: un curso de creador aparece "En revisión" y se puede aprobar (C-82).
+- Carrito con una gift card: la miniatura tiene el diseño elegido y los bolívares usan la tasa de la tienda (C-86).
+- `/api/uploads/documents/<archivo>` sin sesión → 404.
 
-## 3. Trabajo de Claude (detalle en `PLAN_CLAUDE.md` §4b)
-1. ~~Revisar y mergear `gemini/R10`~~ → **hecho (C-77)**.
-2. ~~C-74 flujo de órdenes del admin~~ → **hecho**.
-3. ~~C-55 marco del panel del cliente~~ → **hecho**.
-4. **C-78 · Retoques de la tienda** (pedido de Andrés el 16/09): Contáctanos más compacto, esqueletos de carga sin el hero viejo, logo del favicon en la gift card, `Modal` compartido con portal, `relative z-10` de `/servicios`.
-5. **C-75 · Marketing y Contenido:** Andrés aprobó el rediseño; los correos deben poder llevar imágenes de verdad.
-6. **C-79** panel de creadores en móvil, **C-80** límite de intentos en el login, **C-81** `components/ui` con estilos viejos, **C-51**, **C-60b**, **C-76**, **C-40**. Orden en `PLAN_CLAUDE.md` §4b.
+## 3. Decisiones de Andrés que desbloquean trabajo
 
+| Tema | Pregunta | Recomendación | Detalle |
+|---|---|---|---|
+| **Google (C-85)** | Crear el cliente OAuth en Google Cloud y poner `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` en el `.env` del servidor | 20-30 min, gratis | `AUDITORIA_REGISTRO.md` §3, paso a paso |
+| Google | Si ya existe una cuenta con ese correo: ¿vincular sola? | Sí | Google solo entrega correos verificados |
+| Google | Teléfono y cédula que Google no trae: ¿dónde se piden? | En el checkout, la primera compra | |
+| Google | ¿Admins entran con Google? | No | |
+| **Registro** | ¿Sacar la cédula del registro y pedirla en la primera compra? | Sí | El registro baja a 4 campos |
+| **Gift cards (C-87)** | Sin saldo suficiente, ¿qué pasa? | Recargar saldo primero | Hoy va al carrito y el checkout la rechaza |
+| Facebook / Apple | ¿Cuándo? | Facebook después de Google; Apple (99 USD/año) cuando haya volumen de iPhone | |
 
-**Decisiones ya tomadas por Andrés (no volver a preguntar):**
-- **C-74:** cancelar una orden pagada con saldo **devuelve ese saldo como crédito de la tienda**; el dinero nunca sale de la empresa (no hay ni habrá retiros). Una orden enviada o entregada no se cancela.
-- **C-50b:** queda pendiente decidir si se borran de la BD las 29 columnas muertas de Configuración (es una migración; hoy no molestan).
+**Ya decidido (no volver a preguntar):** el dinero nunca sale de la empresa: cancelar una orden pagada con saldo devuelve crédito de la tienda, sin retiros (C-74). Comisiones de promotores solo por compras pagadas, se acreditan como saldo (C-75). Campañas completas en el panel; IA fuera del generador de redes; SMTP en Configuración.
 
-## 4. Trabajo de Gemini (detalle en `PLAN_GEMINI.md`, Ronda R10)
-- **G-35, G-36, G-37:** hechas, revisadas y en `main`. Lo que salió mal está en `PLAN_GEMINI.md` ("Lo que salió mal en G-35…G-37") y en `GEMINI.md`: **no corrió `tsc` y el build quedó roto por dos imports que faltaban**, volvió a dejar texto blanco sobre fondo claro y usó `danger` en vez de `deal` para los rojos.
-- **G-38 y G-39:** desbloqueadas (C-55 en `main`).
-- **R11 (G-40…G-43):** carrito, checkout (2.356 líneas), modales compartidos y páginas de error. Se hace en la misma sesión, en `gemini/R11` desde `gemini/R10`.
-  - **G-38:** el modal de recarga lee la tasa de `/api/settings/public` desde C-72; no revertirlo.
-  - **G-39:** la página de notificaciones del cliente usa `notification-meta` de C-73.
+## 4. Qué hace cada agente
+
+### Claude (`PLAN_CLAUDE.md` §4b)
+1. **C-85 Google** en cuanto Andrés cree el cliente OAuth y decida (§3).
+2. **C-87** gift card sin saldo (con la decisión de Andrés).
+3. **C-80** límite de intentos de login en el servidor, cuentas desactivadas, DTO del perfil.
+4. **Revisar `chatgpt/R1` y `gemini/R12`** cuando avisen.
+5. C-51, C-60b, C-76, C-40.
+
+### Gemini (`PLAN_GEMINI.md`, Ronda R12)
+- **G-44** terminar el checkout (G-41 quedó a medias: 55 clases viejas y "USD 50,00$" en el resumen).
+- **G-45** `components/ui` con tokens · **G-46** Footer, botón de cuenta y carrito del header.
+- Lo que salió mal en R10/R11 está en `PLAN_GEMINI.md`: cambió lógica "de paso" (gift card del carrito, `disabled` de Empresa), borró un bloque entero y volvió a reindentar archivos.
+
+### ChatGPT (`PLAN_CHATGPT.md`, Ronda R1) · nuevo
+- Diseño y jerarquía de pantallas completas, sin cambiar lógica.
+- **GPT-01** dashboard admin · **GPT-02** órdenes · **GPT-03** transacciones, clientes y gift cards · **GPT-04** reportes · **GPT-05** panel de creadores en móvil (antes C-79) · **GPT-06** recuperar contraseña y verificar correo.
 
 ## 5. Mensajes para empezar
 
+### Preparar la carpeta de ChatGPT (una sola vez, Andrés, desde "ElectroShopVe WEB")
+```bash
+git worktree add "../ElectroShopVe-chatgpt" -b chatgpt/base main
+ln -s "$PWD/node_modules" "../ElectroShopVe-chatgpt/node_modules"
+cp .env "../ElectroShopVe-chatgpt/.env"
+```
+
 ### Conversación nueva de Claude
-> Continúa el proyecto ElectroShopVe. Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b. Sigue el orden de la tabla (C-78 retoques de la tienda, C-75 Marketing). Cuando Gemini avise, revisa `gemini/R10` (G-38, G-39) y `gemini/R11` (G-40…G-43) antes de mergear. Busca bugs, seguridad y diseño inconsistente en todo lo que toques; nada de `git push` sin que yo lo pida.
+> Continúa el proyecto ElectroShopVe. Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b. Revisa en §3 qué decisiones ya tomé y sigue el orden de la tabla. Cuando Gemini o ChatGPT avisen, revisa `gemini/R12` o `chatgpt/R1` antes de mergear. Busca bugs, seguridad y diseño inconsistente en todo lo que toques; nada de `git push` sin que yo lo pida.
 
-### Conversación nueva de Gemini (sesión larga: R10 + R11)
-> Trabajo pesado en dos rondas seguidas de `docs/plan/PLAN_GEMINI.md`, sin esperar revisión entre ellas.
-> 1. **Ronda R10:** en la rama `gemini/R10`, trae `main` (`git merge main`) y comprueba que existe `docs/plan/estado/C-55.md`. Lee "Lo que salió mal en G-35…G-37" y `docs/plan/estado/C-55.md` ("Para Gemini"). Haz **G-38** y **G-39**.
-> 2. **Ronda R11:** después del commit de G-39, crea `gemini/R11` desde `gemini/R10` y haz **G-40, G-41, G-42 y G-43** en orden. Lee "Reglas de R11": el carrito y el checkout mueven dinero, **solo cambias `className`** salvo los "Arreglos permitidos".
-> En cada tarjeta, antes del commit: `npx tsc --noEmit` (pega la salida real), `git diff --stat` vs `git diff -w --stat` (misma cifra aproximada), `'use client'` en la primera línea, greps de la tarjeta y QA a 390 y 1440 px. Un commit por tarjeta con su `docs/plan/estado/G-XX.md`. Si algo no cuadra, `BLOQUEADO` en el estado y pasas a la siguiente. No hagas merge ni push: al terminar, avisa a Andrés.
+### Conversación nueva de Gemini (Ronda R12)
+> Haz la **Ronda R12** de `docs/plan/PLAN_GEMINI.md` (G-44, G-45 y G-46) en la rama `gemini/R12` creada desde `main` (`git switch -c gemini/R12 main`; `main` ya trae R10 y R11 mergeadas con arreglos, no sigas en `gemini/R11`). Antes de empezar lee completo `GEMINI.md` (el carril cambió el 16/09) y la sección "Lo que salió mal en R10 y R11": **solo cambias `className`** y los "Arreglos permitidos"; un `disabled`, un `if` o un bloque con datos raros no se tocan, se anotan con `PEDIDO:`. En cada tarjeta, antes del commit: el grep de colores de la tarjeta (pega el número), `npx tsc --noEmit` (pega la salida real), `npx eslint` de los archivos (sin problemas nuevos), `git diff --stat` contra `git diff -w --stat` (cifras parecidas) y QA a 390 y 1440 px. Un commit por tarjeta con su `docs/plan/estado/G-XX.md`. Si algo no cuadra, `BLOQUEADO` y sigues. No hagas merge ni push: al terminar avisa a Andrés.
 
-## 6. Datos útiles para el agente
+### Conversación nueva de ChatGPT (Ronda R1, trabajo pesado)
+> Eres parte del equipo de ElectroShopVe (tienda online en Next.js 16, React 19 y Tailwind 4) junto con Claude y Gemini. Tu papel: **diseño y jerarquía de pantallas completas**. Trabajas en la carpeta `../ElectroShopVe-chatgpt`.
+> 1. Lee **completo** `CHATGPT.md` (reglas, carril y guía de diseño), `docs/plan/PLAN_CHATGPT.md` (tu ronda), `docs/plan/PLAN.md` §1 (tokens) y `lib/admin-ui.ts` (recetas). Mira como referencia `app/admin/(dashboard)/marketing/`, `app/customer/(dashboard)/layout.tsx` y `app/registro/page.tsx`.
+> 2. Crea la rama `chatgpt/R1` desde `main` y haz **GPT-01 a GPT-06 en orden**, un commit por tarjeta (`[GPT-XX] …`) con su `docs/plan/estado/GPT-XX.md`.
+> 3. En cada pantalla: primero el **inventario de acciones** (botones, enlaces, filtros, modales), después el rediseño, y al final comprueba que siguen todas. **No cambias qué hace la pantalla**: mismos `fetch`, cuerpos, permisos, cálculos y destinos. Puedes reescribir el JSX y dividirlo en `_components/`.
+> 4. Lo primero que se ve a 360 px tiene que ser lo que el admin viene a hacer. Montos nunca cortados, tabla y tarjetas nunca a la vez, una acción primaria por pantalla, solo tokens y recetas, sin emojis.
+> 5. Verificación real pegada en el estado: `npx tsc --noEmit`, ESLint de cada archivo contra `main` (sin problemas nuevos), `npm run build` si puedes, capturas a 360, 768, 1024 y 1440 px (o `QA visual pendiente` con el motivo).
+> 6. Lo que esté fuera de tu carril va como `PEDIDO:` en el estado. Si algo no cuadra, `BLOQUEADO` y sigues con la siguiente. No instales dependencias, no hagas merge ni push: al terminar la ronda avisa a Andrés; Claude la revisa y la mergea.
+
+## 6. Datos útiles para Claude
 - **Node:** `export PATH="$HOME/.local/lib/nodejs/node-v20.18.0-linux-x64/bin:$PATH"`.
-- **Pruebas E2E:**
-  - Esquema aislado `cNN_demo` (reemplazar `schema=public` en `DATABASE_URL`), `prisma db push`, datos de prueba, `npm run build` y `next start -p 3100` con `SMTP_HOST= EMAIL_PROVIDER= RESEND_API_KEY=`.
-  - Al final: `DROP SCHEMA … CASCADE`.
-- **Servicios externos simulados** (Telegram, BDV, hCaptcha, DolarAPI): `NODE_OPTIONS="--require ./scripts/e2e/fetch-mock.cjs"`; su estado vive en `scripts/e2e/mock/`.
-- **Navegador:** Firefox headless con `--remote-debugging-port` + WebDriver BiDi (conectar a `ws://127.0.0.1:9333/session`, no a la raíz). Sirve para capturas con espera, clics y medir estilos calculados.
-- **Sesión sin login:** firmar el JWT con `encode` de `next-auth/jwt` y ponerlo en la cookie `next-auth.session-token` con `storage.setCookie`.
-- **Lint:** comparar contra `main` (`git show main:f | npx eslint --stdin --stdin-filename f`); el repo tiene errores viejos.
+- **Tienda de ejemplo:** esquema `rev10_demo` (en `DATABASE_URL`, `schema=public` → `schema=rev10_demo`), con productos, órdenes, cliente, admin y creadora. `npm run build` con esa URL y `next start -p 3100` con `SMTP_HOST= EMAIL_PROVIDER= RESEND_API_KEY= HCAPTCHA_SECRET=test NODE_OPTIONS="--require ./scripts/e2e/fetch-mock.cjs"`. Tiene las tablas de C-75. **Borrarlo al cerrar el ciclo** (`DROP SCHEMA "rev10_demo" CASCADE` con `prisma db execute --url`).
+- **Navegador:** Firefox headless con `--remote-debugging-port 9333` + WebDriver BiDi (`ws://127.0.0.1:9333/session`). Reiniciar Firefox antes de cada script ("Maximum number of active sessions"). Borrar cookies al empezar: el perfil guarda la sesión de la corrida anterior.
+- **Sesión sin login:** JWT firmado con `encode` de `next-auth/jwt` en la cookie `next-auth.session-token`.
+- **Carrito en pruebas con sesión:** escribir `localStorage.cart` estando en `/carrito`, con `cart-owner = 'guest'`, y recargar.
+- **Revisar ramas de otros agentes:** comparar sin `className` ni sangría para ver solo la lógica (script de C-86); ESLint por archivo contra `main`.
 - **Commits de Claude:** `git -c user.name="Claude" -c user.email="claude@electroshop.local" commit …`.

@@ -285,6 +285,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Solicitud inválida' }, { status: 400 });
     }
 
+    // C-85: teléfono y cédula se piden en la primera compra (el registro ya no pide la cédula y Google no trae ninguno)
+    const perfil = await prisma.profile.findUnique({ where: { userId }, select: { phone: true, idNumber: true } });
+    if (!perfil?.phone?.trim() || !perfil?.idNumber?.trim()) {
+      return NextResponse.json(
+        { error: 'Completa tu teléfono y tu cédula antes de hacer el pedido.', field: 'datos-cliente' },
+        { status: 400 }
+      );
+    }
+
     const items = parseOrderItems(body.items);
     const deliveryMethod = parseDeliveryMethod(body.deliveryMethod);
 

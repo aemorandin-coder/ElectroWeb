@@ -280,7 +280,8 @@ export async function POST(request: NextRequest) {
 
         if (!user?.password) {
             return NextResponse.json(
-                { error: 'No se puede cambiar la contraseña de esta cuenta' },
+                // Cuenta creada con Google (C-85): la contraseña se crea con "¿La olvidaste?" en el login
+                { error: 'Tu cuenta entra con Google y no tiene contraseña. Para crear una, usa "¿La olvidaste?" en el inicio de sesión.' },
                 { status: 400 }
             );
         }

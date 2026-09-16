@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, phone, password, idNumber } = validationResult.data;
+    const { name, email, phone, password } = validationResult.data;
 
     // Read referral code from httpOnly cookie (set by middleware when ?ref= is present)
     const rawRef = request.cookies.get('electroshop_ref')?.value ?? '';
@@ -83,9 +83,9 @@ export async function POST(request: NextRequest) {
         emailVerified: null, // Not verified until email confirmation
         referredByCode: validatedRefCode,
         profile: {
+          // La cédula se pide en la primera compra (C-85)
           create: {
             phone,
-            idNumber,
           }
         }
       },

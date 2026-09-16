@@ -20,6 +20,9 @@ import { FaCheck } from 'react-icons/fa';
 import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWallet } from '@fortawesome/free-solid-svg-icons';
+import { formatUSD, formatVES } from '@/lib/currency';
+import { adminCard, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalculation, type PricingLine } from '@/lib/pricing';
 
 type CheckoutCartItem = ReturnType<typeof useCart>['items'][number];
@@ -111,6 +114,7 @@ export default function CheckoutPage() {
   // State for tooltips
   const [showShippingWarning, setShowShippingWarning] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  useBodyScrollLock(showTermsModal);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // Saved addresses
@@ -665,10 +669,10 @@ export default function CheckoutPage() {
   // Show loading while checking authentication to prevent flash
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg font-medium">Cargando...</p>
+      <div className="min-h-dvh bg-surface flex items-center justify-center">
+        <div className="text-center flex flex-col items-center gap-3">
+          <div className={adminSpinner} />
+          <p className="text-sm font-medium text-muted">Cargando...</p>
         </div>
       </div>
     );
@@ -680,27 +684,24 @@ export default function CheckoutPage() {
   // Only show empty cart if not processing and not completed
   if (items.length === 0 && !showProcessingOverlay && !orderCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-surface via-white to-surface">
+      <div className="min-h-dvh bg-surface flex flex-col">
         <PublicHeader />
 
         {/* Empty Cart Message */}
-        <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="bg-white rounded-lg shadow-md border border-line p-12 text-center">
-            <svg className="w-20 h-20 text-line mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1">
+          <div className={`${adminCard} p-12 text-center max-w-xl mx-auto my-8`}>
+            <svg className="w-16 h-16 text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             <h2 className="text-2xl font-bold text-ink mb-2">Tu carrito está vacío</h2>
-            <p className="text-muted mb-6">
-              Agrega productos a tu carrito para continuar con el proceso de pago
+            <p className="text-sm text-muted mb-6">
+              Agrega productos a tu carrito para continuar con el proceso de pago.
             </p>
             <Link
               href="/productos"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-brand-500 text-white font-semibold rounded-lg hover:bg-brand-600 transition-all shadow-md"
+              className={adminPrimaryButton}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-              Ver Productos
+              Ver productos
             </Link>
           </div>
         </main>
@@ -722,63 +723,40 @@ export default function CheckoutPage() {
   // Show redirect message IMMEDIATELY if not authenticated (check status directly)
   if (status === 'unauthenticated' || showRedirectMessage) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center px-4 relative overflow-hidden">
-        {/* Animated Background Orbs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-cyan-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-purple-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        </div>
+      <div className="min-h-dvh bg-surface flex items-center justify-center px-4">
+        <div className={`${adminCard} max-w-md w-full p-8 text-center`}>
+          <div className="w-16 h-16 mx-auto mb-4 bg-brand-500/10 rounded-full flex items-center justify-center border border-brand-500/20">
+            <FiUser className="w-8 h-8 text-brand-600" />
+          </div>
 
-        {/* Main Card - Optimal Width for Readability */}
-        <div className="relative z-10 max-w-3xl w-full px-4">
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 shadow-2xl animate-slideInUp">
-            {/* Icon */}
-            <div className="w-24 h-24 mx-auto mb-6 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 shadow-2xl">
-              <FiUser className="w-12 h-12 text-white" />
-            </div>
+          <h2 className="text-2xl font-bold text-ink mb-2">
+            ¡Un momento!
+          </h2>
 
-            {/* Title */}
-            <h2 className="text-3xl font-bold text-white text-center mb-3 font-[family-name:var(--font-tektur)]">
-              ¡Un momento!
-            </h2>
-
-            {/* Subtitle with icon */}
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <FiAlertCircle className="w-5 h-5 text-cyan-200" />
-              <p className="text-blue-100 text-center font-medium">
-                No tienes cuenta creada
-              </p>
-            </div>
-
-            {/* Description */}
-            <p className="text-white/90 text-center mb-8 leading-relaxed">
-              Crea una y luego te regresamos a tu compra
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <FiAlertCircle className="w-4 h-4 text-brand-600" />
+            <p className="text-sm font-semibold text-ink">
+              No tienes cuenta creada
             </p>
+          </div>
 
-            {/* Progress Bar */}
-            <div className="mb-6">
-              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-cyan-400 to-white rounded-full animate-progress"></div>
-              </div>
-            </div>
+          <p className="text-sm text-muted mb-6 leading-relaxed">
+            Crea una y luego te regresamos a tu compra.
+          </p>
 
-            {/* Redirect Info */}
-            <div className="flex items-center justify-center gap-2 px-4 py-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
-              <FiArrowRight className="w-4 h-4 text-cyan-200 animate-pulse" />
-              <p className="text-sm text-blue-100 font-medium">
-                Redirigiendo al registro en segundos...
-              </p>
-            </div>
+          <div className="flex items-center justify-center gap-2 px-4 py-3 bg-surface rounded-xl border border-line">
+            <div className={adminSpinner} style={{ width: '1.25rem', height: '1.25rem', borderWidth: '2px' }} />
+            <p className="text-sm text-muted font-medium">
+              Redirigiendo al registro en segundos...
+            </p>
           </div>
         </div>
-
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface via-white to-surface">
+    <div className="min-h-dvh bg-surface flex flex-col">
       <PublicHeader />
 
       <PageHeader
@@ -797,8 +775,8 @@ export default function CheckoutPage() {
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-red-800">
+                <div className="p-4 bg-deal-bg border border-deal/30 rounded-lg">
+                  <div className="flex items-center gap-2 text-deal">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -812,21 +790,21 @@ export default function CheckoutPage() {
               <div className="bg-white rounded-xl shadow-lg border border-line p-6 animate-fadeIn animation-delay-100">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-ink flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-sm">
-                      <FiMapPin className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
+                      <FiMapPin className="w-4 h-4 text-brand-600" />
                     </div>
                     Dirección de Envío
                   </h2>
                   {/* Compact Warning Badge with Tooltip */}
                   <div className="relative group">
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-100 to-orange-100 border border-orange-300 rounded-full cursor-help">
-                      <FiAlertCircle className="w-3.5 h-3.5 text-orange-600" />
-                      <span className="text-xs font-bold text-orange-700">Recuerda verificar tus datos</span>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-warning/10 border border-warning/30 rounded-full cursor-help">
+                      <FiAlertCircle className="w-3.5 h-3.5 text-warning-strong" />
+                      <span className="text-xs font-bold text-warning-strong">Recuerda verificar tus datos</span>
                     </div>
                     {/* Tooltip on hover */}
-                    <div className="absolute right-0 top-full mt-2 w-72 p-3 bg-orange-50 border border-orange-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                      <div className="absolute -top-1.5 right-6 w-3 h-3 bg-orange-50 border-l border-t border-orange-200 transform rotate-45"></div>
-                      <p className="text-xs text-orange-800 leading-relaxed">
+                    <div className="absolute right-0 top-full mt-2 w-72 p-3 bg-surface border border-line rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[var(--z-dropdown)]">
+                      <div className="absolute -top-1.5 right-6 w-3 h-3 bg-surface border-l border-t border-line transform rotate-45"></div>
+                      <p className="text-xs text-ink leading-relaxed">
                         Los datos de envío serán usados para entregar tus productos. <strong className="font-bold">La empresa no se hace responsable de datos errados.</strong>
                       </p>
                     </div>
@@ -886,13 +864,13 @@ export default function CheckoutPage() {
                         type="button"
                         onClick={() => setFormData({ ...formData, deliveryMethod: 'PICKUP', isOfficeDelivery: false, courierOfficeId: '' })}
                         className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.deliveryMethod === 'PICKUP'
-                          ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                          : 'border-line hover:border-emerald-300'
+                          ? 'border-success-strong bg-success/5 shadow-sm'
+                          : 'border-line hover:border-success/40'
                           }`}
                       >
-                        <FiMapPin className={`w-5 h-5 flex-shrink-0 ${formData.deliveryMethod === 'PICKUP' ? 'text-emerald-600' : 'text-muted'}`} />
+                        <FiMapPin className={`w-5 h-5 flex-shrink-0 ${formData.deliveryMethod === 'PICKUP' ? 'text-success-strong' : 'text-muted'}`} />
                         <div className="text-left">
-                          <p className={`text-sm font-bold ${formData.deliveryMethod === 'PICKUP' ? 'text-emerald-700' : 'text-ink'}`}>
+                          <p className={`text-sm font-bold ${formData.deliveryMethod === 'PICKUP' ? 'text-success-strong' : 'text-ink'}`}>
                             Retiro en Tienda
                           </p>
                           <p className="text-xs text-muted">Sin costo de envío</p>
@@ -903,25 +881,25 @@ export default function CheckoutPage() {
 
                   {/* Info card cuando selecciona PICKUP */}
                   {formData.deliveryMethod === 'PICKUP' && (
-                    <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl animate-fadeIn">
+                    <div className="mt-4 p-4 bg-success/5 border border-success/30 rounded-xl">
                       <div className="flex items-start gap-3">
-                        <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <FiMapPin className="w-5 h-5 text-emerald-600" />
+                        <div className="w-9 h-9 bg-success/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FiMapPin className="w-5 h-5 text-success-strong" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-bold text-emerald-800 mb-1">Retiro en nuestra tienda</p>
+                          <p className="text-sm font-bold text-success-strong mb-1">Retiro en nuestra tienda</p>
                           {companySettings?.pickupAddress && (
-                            <p className="text-xs text-emerald-700 mb-1 flex items-center gap-1">
+                            <p className="text-xs text-success-strong mb-1 flex items-center gap-1">
                               <FiMapPin className="w-3 h-3 flex-shrink-0" />
                               {companySettings.pickupAddress}
                             </p>
                           )}
                           {companySettings?.pickupInstructions && (
-                            <p className="text-xs text-emerald-600">{companySettings.pickupInstructions}</p>
+                            <p className="text-xs text-success-strong">{companySettings.pickupInstructions}</p>
                           )}
-                          <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 rounded-full">
-                            <FiCheck className="w-3 h-3 text-emerald-600" />
-                            <span className="text-[11px] font-bold text-emerald-700">Envío gratis · $0.00</span>
+                          <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-success/15 rounded-full">
+                            <FiCheck className="w-3 h-3 text-success-strong" />
+                            <span className="text-[11px] font-bold text-success-strong">Envío gratis · $0.00</span>
                           </div>
                         </div>
                       </div>
@@ -938,10 +916,10 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={() => setShowAddressSelector(!showAddressSelector)}
-                          className="w-full p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl hover:border-blue-400 transition-all flex items-center justify-between group"
+                          className="w-full p-4 bg-brand-500/5 border border-brand-500/30 rounded-xl hover:border-brand-500 transition-colors flex items-center justify-between group"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                            <div className="w-10 h-10 bg-brand-500/10 text-brand-600 rounded-xl flex items-center justify-center transition-transform">
                               <FiMapPin className="w-5 h-5 text-white" />
                             </div>
                             <div className="text-left">
@@ -949,7 +927,7 @@ export default function CheckoutPage() {
                               <p className="text-xs text-muted">Tienes {savedAddresses.length} dirección(es) guardada(s)</p>
                             </div>
                           </div>
-                          <FiArrowRight className={`w-5 h-5 text-blue-600 transition-transform ${showAddressSelector ? 'rotate-90' : ''}`} />
+                          <FiArrowRight className={`w-5 h-5 text-brand-600 transition-transform ${showAddressSelector ? 'rotate-90' : ''}`} />
                         </button>
 
                         {showAddressSelector && (
@@ -959,10 +937,10 @@ export default function CheckoutPage() {
                                 key={index}
                                 type="button"
                                 onClick={() => handleSelectSavedAddress(address)}
-                                className="w-full p-4 bg-white border-2 border-line rounded-xl hover:border-brand-500 hover:bg-blue-50/50 transition-all text-left group"
+                                className="w-full p-4 bg-white border-2 border-line rounded-xl hover:border-brand-500 hover:bg-brand-500/5 transition-all text-left group"
                               >
                                 <div className="flex items-start gap-3">
-                                  <FiCheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                  <FiCheckCircle className="w-5 h-5 text-success-strong mt-0.5 flex-shrink-0" />
                                   <div className="flex-1">
                                     <p className="text-sm font-semibold text-ink mb-1">{address.address}</p>
                                     <p className="text-xs text-muted">{address.city}, {address.state}</p>
@@ -977,10 +955,10 @@ export default function CheckoutPage() {
                                 setShowAddressSelector(false);
                                 setFormData(prev => ({ ...prev, shippingAddress: '', shippingCity: '', shippingState: '' }));
                               }}
-                              className="w-full p-3 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-dashed border-green-300 rounded-xl hover:border-green-500 transition-all flex items-center justify-center gap-2 group"
+                              className="w-full p-3 bg-success/5 border-2 border-dashed border-success/30 rounded-xl hover:border-success-strong transition-colors flex items-center justify-center gap-2 group text-success-strong"
                             >
-                              <FiPlus className="w-4 h-4 text-green-600 group-hover:scale-125 transition-transform" />
-                              <span className="text-sm font-bold text-green-700">Agregar Nueva Dirección</span>
+                              <FiPlus className="w-4 h-4 text-success-strong transition-transform" />
+                              <span className="text-sm font-bold text-success-strong">Agregar Nueva Dirección</span>
                             </button>
                           </div>
                         )}
@@ -996,7 +974,7 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={() => setShowGoogleMapsHelper(!showGoogleMapsHelper)}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full hover:from-red-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+                          className="flex items-center gap-2 px-3 py-1.5 bg-deal text-white text-xs font-bold rounded-full cursor-pointer"
                         >
                           <FiMapPin className="w-3.5 h-3.5" />
                           Google Maps
@@ -1005,37 +983,37 @@ export default function CheckoutPage() {
 
                       {/* Google Maps Helper Panel */}
                       {showGoogleMapsHelper && (
-                        <div className="mb-3 p-4 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 border-2 border-orange-300 rounded-xl animate-slideDown shadow-lg">
+                        <div className="mb-3 p-4 bg-warning/10 border border-warning/30 rounded-xl shadow-sm">
                           <div className="flex items-start gap-3 mb-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                            <div className="w-10 h-10 bg-warning-strong rounded-xl flex items-center justify-center flex-shrink-0 text-white">
                               <FiMapPin className="w-6 h-6 text-white" />
                             </div>
                             <div className="flex-1">
-                              <h4 className="font-bold text-orange-900 text-sm mb-1 flex items-center gap-2">
+                              <h4 className="font-bold text-ink text-sm mb-1 flex items-center gap-2">
                                 <FiMapPin className="w-4 h-4" />
                                 Ayuda de Google Maps
                               </h4>
-                              <p className="text-xs text-orange-800 leading-relaxed">
+                              <p className="text-xs text-ink-soft leading-relaxed">
                                 Si no conoces tu dirección exacta o quieres copiarla fácilmente desde Google Maps:
                               </p>
                             </div>
                           </div>
 
                           <div className="space-y-2 mb-3">
-                            <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-bold text-orange-600 flex-shrink-0">1.</span>
+                            <div className="flex items-start gap-2 text-xs text-ink-soft">
+                              <span className="font-bold text-warning-strong flex-shrink-0">1.</span>
                               <p>Abre <strong>Google Maps</strong> en otra pestaña</p>
                             </div>
-                            <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-bold text-orange-600 flex-shrink-0">2.</span>
+                            <div className="flex items-start gap-2 text-xs text-ink-soft">
+                              <span className="font-bold text-warning-strong flex-shrink-0">2.</span>
                               <p>Busca tu ubicación y haz clic derecho en el mapa</p>
                             </div>
-                            <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-bold text-orange-600 flex-shrink-0">3.</span>
+                            <div className="flex items-start gap-2 text-xs text-ink-soft">
+                              <span className="font-bold text-warning-strong flex-shrink-0">3.</span>
                               <p>Copia la dirección que aparece</p>
                             </div>
-                            <div className="flex items-start gap-2 text-xs text-orange-900">
-                              <span className="font-bold text-orange-600 flex-shrink-0">4.</span>
+                            <div className="flex items-start gap-2 text-xs text-ink-soft">
+                              <span className="font-bold text-warning-strong flex-shrink-0">4.</span>
                               <p>Haz clic en el botón de abajo para pegarla automáticamente</p>
                             </div>
                           </div>
@@ -1043,11 +1021,11 @@ export default function CheckoutPage() {
                           <button
                             type="button"
                             onClick={handlePasteFromGoogleMaps}
-                            className="w-full p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl hover:from-orange-600 hover:to-red-600 transition-all shadow-md hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                            className={`w-full ${adminPrimaryButton} py-2.5 text-sm font-bold justify-center gap-2`}
                           >
                             {copiedFromMaps ? (
                               <>
-                                <FiCheckCircle className="w-5 h-5 animate-bounce" />
+                                <FiCheckCircle className="w-5 h-5" />
                                 <span>Dirección Pegada!</span>
                               </>
                             ) : (
@@ -1080,7 +1058,7 @@ export default function CheckoutPage() {
                         />
                       </div>
                       {showShippingWarning && (
-                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2 text-xs text-blue-800 animate-scaleIn">
+                        <div className="mt-2 p-2 bg-brand-500/5 border border-brand-500/20 rounded-lg flex items-center gap-2 text-xs text-brand-700">
                           <FiInfo className="w-4 h-4 flex-shrink-0" />
                           <span>Incluye puntos de referencia para facilitar la entrega</span>
                         </div>
@@ -1189,7 +1167,7 @@ export default function CheckoutPage() {
                     )}
 
                     {/* Info about courier services */}
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="p-4 bg-brand-500/5 border border-brand-500/20 rounded-xl">
                       <h4 className="font-bold text-sm text-ink mb-2 flex items-center gap-2">
                         <FiInfo className="w-4 h-4 text-brand-500" />
                         Sobre las oficinas de encomienda
@@ -1207,7 +1185,7 @@ export default function CheckoutPage() {
               {/* Payment Method */}
               <div className="bg-white rounded-lg shadow-md border border-line p-6 relative overflow-hidden">
                 <h2 className="text-lg font-bold text-ink mb-4 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-sm">
+                  <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
@@ -1217,23 +1195,23 @@ export default function CheckoutPage() {
 
                 {/* Email Verification Backdrop */}
                 {session?.user && !(session.user as any).emailVerified && (
-                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-md rounded-lg overflow-auto p-4">
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 rounded-lg overflow-auto p-4">
                     <div className="text-center w-full max-w-sm mx-auto">
-                      <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/30 animate-bounce" style={{ animationDuration: '2s' }}>
-                        <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-12 h-12 bg-warning-strong rounded-full flex items-center justify-center mx-auto mb-3 text-white shadow-sm">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-bold text-ink mb-1">Verificación requerida</h3>
-                      <p className="text-sm text-muted mb-3">
+                      <h3 className="text-base font-bold text-ink mb-1">Verificación requerida</h3>
+                      <p className="text-xs text-muted mb-3">
                         Debes verificar tu correo electrónico antes de continuar.
                       </p>
-                      <p className="text-xs text-amber-600 font-medium mb-4 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                      <p className="text-xs text-warning-strong font-medium mb-4 bg-warning/10 p-2 rounded-lg border border-warning/30">
                         Revisa tu bandeja de entrada
                       </p>
                       <Link
                         href="/customer/settings"
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-bold rounded-xl hover:shadow-lg transition-all"
+                        className={`inline-flex items-center justify-center gap-2 ${adminPrimaryButton} px-5 py-2 text-xs font-bold`}
                       >
                         <FiUser className="w-4 h-4" />
                         Ir a Mi Cuenta
@@ -1248,29 +1226,24 @@ export default function CheckoutPage() {
                     type="button"
                     onClick={() => setPaymentMode(paymentMode === 'DIRECT' ? null : 'DIRECT')}
                     className={`relative p-6 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'DIRECT'
-                      ? 'border-amber-500 bg-amber-50 shadow-lg'
-                      : 'border-amber-200 bg-gradient-to-br from-amber-50/50 to-yellow-50/50 hover:border-amber-400 hover:shadow-md'
+                      ? 'border-brand-500 bg-brand-500/5 shadow-sm'
+                      : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
                       }`}
                   >
-                    {/* Gift shimmer effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-200/30 to-transparent animate-shimmer"></div>
-
-                    <div className={`relative w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all ${paymentMode === 'DIRECT'
-                      ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
-                      : 'bg-gradient-to-br from-amber-100 to-yellow-100 text-amber-600 group-hover:from-amber-200 group-hover:to-yellow-200'
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${paymentMode === 'DIRECT'
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-brand-500/10 text-brand-600'
                       }`}>
-                      {/* Sparkle effect */}
-                      <div className="absolute inset-[-2px] rounded-full border-2 border-dashed border-amber-400/50 animate-spin" style={{ animationDuration: '8s' }}></div>
-                      <FiGift className="w-6 h-6 relative z-10" />
+                      <FiGift className="w-6 h-6" />
                     </div>
-                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'DIRECT' ? 'text-amber-700' : 'text-ink'}`}>
+                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'DIRECT' ? 'text-brand-600' : 'text-ink'}`}>
                       Canjear Gift Card
                     </h3>
                     <p className="text-sm text-muted">
                       Usa una Gift Card para agregar saldo a tu cuenta
                     </p>
                     {paymentMode === 'DIRECT' && (
-                      <div className="absolute top-4 right-4 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+                      <div className="absolute top-4 right-4 w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center">
                         <FiCheck className="w-4 h-4 text-white" />
                       </div>
                     )}
@@ -1280,37 +1253,25 @@ export default function CheckoutPage() {
                     type="button"
                     onClick={() => setPaymentMode(paymentMode === 'WALLET' ? null : 'WALLET')}
                     className={`relative p-6 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'WALLET'
-                      ? 'border-brand-500 bg-brand-500/5 shadow-lg'
-                      : 'border-brand-500/30 bg-gradient-to-br from-white to-blue-50 hover:border-brand-500/50 hover:shadow-lg shadow-md'
+                      ? 'border-brand-500 bg-brand-500/5 shadow-sm'
+                      : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
                       }`}
                   >
-                    {/* Animated glow effect - Always active */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-500/15 to-transparent animate-shimmer"></div>
-
-                    {/* Sparkle effects */}
-                    <div className="absolute top-2 right-8 w-2 h-2 bg-brand-500 rounded-full animate-ping opacity-40"></div>
-                    <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-[#6366f1] rounded-full animate-ping opacity-30" style={{ animationDelay: '0.5s' }}></div>
-
-                    {/* Icon with epic animation - Always animated */}
-                    <div className={`relative w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${paymentMode === 'WALLET'
-                      ? 'bg-gradient-to-br from-brand-500 to-[#6366f1] text-white shadow-lg shadow-brand-500/40'
-                      : 'bg-gradient-to-br from-brand-500/20 to-[#6366f1]/20 text-brand-500'
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${paymentMode === 'WALLET'
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-brand-500/10 text-brand-600'
                       }`}
                     >
-                      {/* Pulse ring animation - Always active */}
-                      <div className="absolute inset-0 rounded-full animate-ping opacity-20 bg-brand-500"></div>
-                      {/* Rotating ring - Always active */}
-                      <div className="absolute inset-[-3px] rounded-full border-2 border-dashed border-brand-500/40 animate-spin" style={{ animationDuration: '6s' }}></div>
-                      <FontAwesomeIcon icon={faWallet} className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110" />
+                      <FontAwesomeIcon icon={faWallet} className="w-6 h-6" />
                     </div>
-                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'WALLET' ? 'text-brand-500' : 'text-ink'}`}>
+                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'WALLET' ? 'text-brand-600' : 'text-ink'}`}>
                       Usar Saldo / Recargar
                     </h3>
                     <p className="text-sm text-muted">
                       Paga con tu saldo disponible en la plataforma
                     </p>
                     {paymentMode === 'WALLET' && (
-                      <div className="absolute top-4 right-4 w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center animate-bounce">
+                      <div className="absolute top-4 right-4 w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center">
                         <FiCheck className="w-4 h-4 text-white" />
                       </div>
                     )}
@@ -1319,16 +1280,13 @@ export default function CheckoutPage() {
 
                 {/* Gift Card Redemption Section */}
                 {paymentMode === 'DIRECT' && (
-                  <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-amber-200 animate-fadeIn shadow-sm overflow-hidden relative">
-                    {/* Decorative elements */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-300/20 to-transparent rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-300/20 to-transparent rounded-full blur-2xl"></div>
+                  <div className="bg-surface rounded-2xl p-6 border border-line shadow-sm overflow-hidden relative">
 
                     <div className="relative">
                       {/* Code Input */}
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-semibold text-amber-800 mb-2">
+                          <label className="block text-sm font-semibold text-ink mb-2">
                             Código de Gift Card
                           </label>
                           <div className="relative">
@@ -1337,7 +1295,7 @@ export default function CheckoutPage() {
                               value={giftCardCode}
                               onChange={(e) => handleGiftCardCodeChange(e.target.value)}
                               maxLength={19}
-                              className="w-full px-4 py-4 text-center text-xl font-mono font-bold tracking-widest border-2 border-amber-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all uppercase"
+                              className="w-full px-4 py-4 text-center text-xl font-mono font-bold tracking-widest border border-line rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all uppercase"
                               placeholder="ESMC-XXXX-XXXX-XXXX"
                             />
                             {giftCardCode.length === 19 && !giftCardInfo && (
@@ -1370,12 +1328,12 @@ export default function CheckoutPage() {
 
                         {/* Error Message */}
                         {giftCardError && (
-                          <div className="flex flex-col items-center justify-center gap-3 p-5 bg-gradient-to-br from-red-50 to-rose-100 border-2 border-red-300 rounded-2xl text-red-700 shadow-lg shadow-red-200/50 animate-fadeIn">
-                            <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                              <FiAlertCircle className="w-7 h-7 text-white" />
+                          <div className="flex flex-col items-center justify-center gap-2 p-4 bg-deal-bg border border-deal/30 rounded-xl text-deal">
+                            <div className="w-10 h-10 bg-deal text-white rounded-full flex items-center justify-center">
+                              <FiAlertCircle className="w-5 h-5" />
                             </div>
-                            <span className="font-bold text-lg text-center">{giftCardError}</span>
-                            <p className="text-sm text-red-500 text-center">Verifica el código e intenta de nuevo</p>
+                            <span className="font-bold text-sm text-center">{giftCardError}</span>
+                            <p className="text-xs text-deal/80 text-center">Verifica el código e intenta de nuevo</p>
                           </div>
                         )}
 
@@ -1384,13 +1342,13 @@ export default function CheckoutPage() {
                           <div className="animate-fadeIn space-y-4">
                             {/* Balance Display */}
                             <div className={`p-6 rounded-xl border-2 ${giftCardInfo.status === 'ACTIVE' && giftCardInfo.balanceUSD > 0
-                              ? 'bg-green-50 border-green-300'
+                              ? 'bg-success/5 border-success/30'
                               : 'bg-gray-50 border-gray-300'}`}
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm text-gray-600">Estado</span>
                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${giftCardInfo.status === 'ACTIVE'
-                                  ? 'bg-green-500 text-white'
+                                  ? 'bg-success-strong text-white'
                                   : 'bg-gray-400 text-white'}`}
                                 >
                                   {giftCardInfo.status === 'ACTIVE' ? 'Activa' : giftCardInfo.status === 'DEPLETED' ? 'Sin saldo' : giftCardInfo.status}
@@ -1398,8 +1356,8 @@ export default function CheckoutPage() {
                               </div>
                               <div className="text-center py-4">
                                 <p className="text-sm text-gray-500 mb-1">Saldo disponible</p>
-                                <p className="text-4xl font-bold text-green-600">
-                                  ${giftCardInfo.balanceUSD.toFixed(2)}
+                                <p className="text-3xl font-bold text-ink">
+                                  {formatUSD(giftCardInfo.balanceUSD)}
                                 </p>
                                 <p className="text-sm text-gray-500">USD</p>
                               </div>
@@ -1408,7 +1366,7 @@ export default function CheckoutPage() {
                             {/* PIN: solo tarjetas impresas (C-71) */}
                             {giftCardInfo.status === 'ACTIVE' && giftCardInfo.balanceUSD > 0 && giftCardInfo.requiresPin && (
                               <div>
-                                <label className="block text-sm font-semibold text-amber-800 mb-2">
+                                <label className="block text-sm font-semibold text-ink mb-2">
                                   <FiLock className="inline w-4 h-4 mr-1" />
                                   PIN de la tarjeta
                                 </label>
@@ -1418,7 +1376,7 @@ export default function CheckoutPage() {
                                   value={giftCardPin}
                                   onChange={(e) => setGiftCardPin(e.target.value.replace(/\D/g, '').slice(0, GIFT_CARD_PIN_LENGTH))}
                                   maxLength={GIFT_CARD_PIN_LENGTH}
-                                  className="w-full px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.5em] border-2 border-amber-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                                  className="w-full px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.5em] border border-line rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                                   placeholder="••••••"
                                 />
                               </div>
@@ -1430,7 +1388,7 @@ export default function CheckoutPage() {
                                 type="button"
                                 onClick={handleRedeemGiftCard}
                                 disabled={giftCardLoading}
-                                className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-lg rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg shadow-green-500/30 disabled:opacity-50 flex items-center justify-center gap-2"
+                                className={`w-full ${adminPrimaryButton} py-3 text-base font-bold justify-center gap-2 disabled:opacity-50`}
                               >
                                 {giftCardLoading ? (
                                   <>
@@ -1440,7 +1398,7 @@ export default function CheckoutPage() {
                                 ) : (
                                   <>
                                     <FiGift className="w-5 h-5" />
-                                    Canjear ${giftCardInfo.balanceUSD.toFixed(2)} USD
+                                    Canjear {formatUSD(giftCardInfo.balanceUSD)}
                                   </>
                                 )}
                               </button>
@@ -1448,48 +1406,26 @@ export default function CheckoutPage() {
                           </div>
                         )}
 
-                        {/* Success Message - shows after redemption with premium amber design */}
+                        {/* Success Message - shows after redemption */}
                         {giftCardRedeemed && (
-                          <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-amber-300 animate-fadeIn shadow-lg overflow-hidden relative">
-                            {/* Subtle animated background */}
-                            <div className="absolute inset-0 opacity-30">
-                              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-amber-300/20 to-transparent rounded-full blur-3xl animate-pulse" />
-                              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-orange-300/20 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-                            </div>
-
-                            {/* Main Content - Circle + Info */}
-                            <div className="relative flex flex-col md:flex-row items-center gap-6">
-                              {/* Animated Circle - 100% */}
-                              <div className="relative flex-shrink-0">
-                                <div className="absolute inset-[-8px] rounded-full border-2 border-dashed border-amber-400/30 animate-spin" style={{ animationDuration: '20s' }} />
-                                <div className="absolute inset-[-4px] rounded-full animate-ping opacity-20 bg-amber-500" style={{ animationDuration: '2s' }} />
-                                <svg className="w-28 h-28 md:w-32 md:h-32 transform -rotate-90" viewBox="0 0 120 120">
-                                  <circle cx="60" cy="60" r="54" fill="none" stroke="#fde68a" strokeWidth="8" />
-                                  <circle cx="60" cy="60" r="54" fill="none" stroke="url(#amberGradientSuccess)" strokeWidth="8" strokeDasharray="339.29" strokeDashoffset="0" strokeLinecap="round" className="transition-all duration-1000" />
-                                  <defs>
-                                    <linearGradient id="amberGradientSuccess" x1="0%" y1="0%" x2="100%" y2="100%">
-                                      <stop offset="0%" stopColor="#f59e0b" />
-                                      <stop offset="100%" stopColor="#d97706" />
-                                    </linearGradient>
-                                  </defs>
-                                </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                  <FiCheck className="w-8 h-8 text-amber-600 mb-1" />
-                                  <span className="text-lg font-bold text-amber-700">100%</span>
-                                </div>
+                          <div className="bg-surface rounded-2xl p-6 border border-line shadow-sm overflow-hidden relative">
+                            {/* Main Content */}
+                            <div className="flex flex-col md:flex-row items-center gap-6">
+                              <div className="w-20 h-20 rounded-full bg-success/10 border border-success/30 flex items-center justify-center text-success-strong flex-shrink-0">
+                                <FiCheck className="w-10 h-10" />
                               </div>
 
                               {/* Balance Info */}
                               <div className="flex-1 text-center md:text-left">
-                                <p className="text-sm text-amber-600 mb-1">Tu saldo disponible</p>
-                                <p className="text-3xl md:text-4xl font-bold text-amber-700 mb-3">
-                                  USD {userBalance.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$
+                                <p className="text-sm text-muted mb-1">Tu saldo disponible</p>
+                                <p className="text-3xl font-bold text-ink mb-3">
+                                  {formatUSD(userBalance)}
                                 </p>
 
                                 {/* Saldo suficiente badge */}
                                 {userBalance >= finalTotal && (
-                                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold rounded-full shadow-md mb-3">
-                                    <FiCheck className="w-4 h-4" />
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-success/15 text-success-strong text-xs font-bold rounded-full mb-3">
+                                    <FiCheck className="w-3.5 h-3.5" />
                                     Saldo suficiente
                                   </span>
                                 )}
@@ -1497,30 +1433,30 @@ export default function CheckoutPage() {
                                 {/* Order details */}
                                 <div className="space-y-1.5 mt-3">
                                   <div className="flex items-center justify-center md:justify-start gap-2 text-sm">
-                                    <FiPackage className="w-4 h-4 text-amber-500" />
-                                    <span className="text-gray-600">Total del pedido:</span>
-                                    <span className="font-bold text-amber-700">USD {finalTotal.toFixed(2)}$</span>
+                                    <FiPackage className="w-4 h-4 text-muted" />
+                                    <span className="text-muted">Total del pedido:</span>
+                                    <span className="font-bold text-ink">{formatUSD(finalTotal)}</span>
                                   </div>
                                   {userBalance >= finalTotal && (
                                     <div className="flex items-center justify-center md:justify-start gap-2 text-sm">
-                                      <FiDollarSign className="w-4 h-4 text-amber-500" />
-                                      <span className="text-gray-600">Saldo restante después de la compra:</span>
-                                      <span className="font-bold text-green-600">USD {(userBalance - finalTotal).toFixed(2)}$</span>
+                                      <FiDollarSign className="w-4 h-4 text-success-strong" />
+                                      <span className="text-muted">Saldo restante después de la compra:</span>
+                                      <span className="font-bold text-success-strong">{formatUSD(userBalance - finalTotal)}</span>
                                     </div>
                                   )}
                                 </div>
                               </div>
                             </div>
 
-                            {/* Listo para pagar - centered */}
-                            <div className="mt-6 p-4 bg-white/80 rounded-xl border border-amber-200 text-center">
+                            {/* Listo para pagar */}
+                            <div className="mt-6 p-4 bg-white rounded-xl border border-line text-center">
                               <div className="flex flex-col items-center justify-center gap-2">
-                                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                                  <FiCheck className="w-5 h-5 text-white" />
+                                <div className="w-10 h-10 bg-success-strong rounded-full flex items-center justify-center text-white">
+                                  <FiCheck className="w-5 h-5" />
                                 </div>
                                 <div>
-                                  <p className="font-bold text-amber-800">¡Gift Card canjeada!</p>
-                                  <p className="text-sm text-amber-600">El saldo se ha agregado a tu cuenta</p>
+                                  <p className="font-bold text-ink">¡Gift Card canjeada!</p>
+                                  <p className="text-sm text-muted">El saldo se ha agregado a tu cuenta</p>
                                 </div>
                               </div>
                             </div>
@@ -1528,16 +1464,16 @@ export default function CheckoutPage() {
                         )}
 
                         {/* Help text */}
-                        <p className="text-xs text-amber-600 text-center">
+                        <p className="text-xs text-muted text-center">
                           El código está en el email de confirmación o en el reverso de la tarjeta
                         </p>
 
                         {/* Link to buy gift card */}
-                        <div className="pt-4 border-t border-amber-200 text-center">
-                          <p className="text-sm text-amber-700 mb-2">¿No tienes una Gift Card?</p>
+                        <div className="pt-4 border-t border-line text-center">
+                          <p className="text-sm text-muted mb-2">¿No tienes una Gift Card?</p>
                           <Link
                             href="/gift-cards"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 font-semibold rounded-lg hover:bg-amber-200 transition-all text-sm"
+                            className={`inline-flex items-center gap-2 ${adminSecondaryButton} px-4 py-2 text-sm font-semibold`}
                           >
                             <FiGift className="w-4 h-4" />
                             Comprar Gift Card
@@ -1550,22 +1486,10 @@ export default function CheckoutPage() {
 
                 {/* Wallet Payment Options - Premium Circle Progress Design */}
                 {paymentMode === 'WALLET' && (
-                  <div className="bg-gradient-to-br from-surface to-white rounded-2xl p-6 border border-line animate-fadeIn shadow-sm overflow-hidden relative">
-                    {/* Subtle animated background */}
-                    <div className="absolute inset-0 opacity-30">
-                      <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-brand-500/10 to-transparent rounded-full blur-3xl animate-pulse" />
-                      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-brand-500/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-                    </div>
-
+                  <div className="bg-surface rounded-2xl p-6 border border-line shadow-sm overflow-hidden relative">
                     {/* Main Content - Circle + Info */}
-                    <div className="relative flex flex-col md:flex-row items-center gap-6">
-                      {/* Animated Circle Progress */}
+                    <div className="flex flex-col md:flex-row items-center gap-6">
                       <div className="relative flex-shrink-0">
-                        {/* Outer rotating ring */}
-                        <div className="absolute inset-[-8px] rounded-full border-2 border-dashed border-brand-500/20 animate-spin" style={{ animationDuration: '20s' }} />
-
-                        {/* Pulse ring effect */}
-                        <div className="absolute inset-[-4px] rounded-full animate-ping opacity-20 bg-brand-500" style={{ animationDuration: '2s' }} />
 
                         <svg className="w-36 h-36 transform -rotate-90 relative z-10" viewBox="0 0 100 100">
                           {/* Background circle with subtle gradient */}
@@ -1601,9 +1525,9 @@ export default function CheckoutPage() {
                         </svg>
 
                         <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-                          <div className="w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-all duration-500 bg-gradient-to-br from-brand-500/10 to-brand-500/20 text-brand-500">
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-all duration-500 bg-brand-500/10 text-brand-600">
                             {userBalance >= finalTotal ? (
-                              <FiCheckCircle className="w-6 h-6 animate-bounce" style={{ animationDuration: '2s' }} />
+                              <FiCheckCircle className="w-6 h-6" />
                             ) : (
                               <FontAwesomeIcon icon={faWallet} className="w-5 h-5" />
                             )}
@@ -1665,7 +1589,7 @@ export default function CheckoutPage() {
                           <button
                             type="button"
                             onClick={() => setShowRechargeModal(true)}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
+                            className={`inline-flex items-center gap-2 ${adminPrimaryButton} px-5 py-2.5 font-bold`}
                           >
                             <FiPlus className="w-5 h-5" />
                             Recargar Saldo
@@ -1674,8 +1598,8 @@ export default function CheckoutPage() {
                       </div>
                     ) : (
                       <div className="relative mt-6 pt-6 border-t border-line">
-                        <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-brand-500/5 to-brand-600/10 border border-brand-500/20 rounded-xl">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-500/30 animate-pulse">
+                        <div className="flex items-center gap-4 p-4 bg-brand-500/5 border border-brand-500/20 rounded-xl">
+                          <div className="w-10 h-10 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center flex-shrink-0">
                             <FaCheck className="w-5 h-5 text-white" />
                           </div>
                           <div>
@@ -1699,7 +1623,7 @@ export default function CheckoutPage() {
                   className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                 >
                   <h2 className="text-lg font-bold text-ink flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-sm">
+                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
                       <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                       </svg>
@@ -1759,7 +1683,7 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={loading || !acceptedTerms || (paymentMode === 'WALLET' && userBalance < finalTotal) || (paymentMode === 'DIRECT' && formData.paymentMethod === 'MOBILE_PAYMENT' && !mobilePaymentVerified)}
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold text-lg rounded-xl hover:from-brand-600 hover:to-brand-500 transition-all shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:scale-[1.02] active:scale-[0.98]"
+                className={`w-full flex items-center justify-center gap-2 ${adminPrimaryButton} py-3.5 text-base font-bold disabled:opacity-50`}
               >
                 {loading ? (
                   <>
@@ -1779,12 +1703,12 @@ export default function CheckoutPage() {
               </button>
 
               {!acceptedTerms && (
-                <p className="text-center text-xs text-red-600 -mt-2 animate-pulse">
+                <p className="text-center text-xs text-deal -mt-2">
                   Debes aceptar los términos y condiciones para continuar
                 </p>
               )}
               {paymentMode === 'DIRECT' && formData.paymentMethod === 'MOBILE_PAYMENT' && !mobilePaymentVerified && (
-                <p className="text-center text-xs text-orange-600 -mt-2 animate-pulse flex items-center justify-center gap-1">
+                <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
                   <FiAlertCircle className="w-3 h-3" />
                   Debes verificar tu pago móvil antes de continuar
                 </p>
@@ -1796,18 +1720,18 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1 space-y-5">
             <div className="sticky top-24 space-y-5">
               {/* Contact Information - Compact Version */}
-              <div className="bg-gradient-to-br from-white to-blue-50/30 rounded-2xl shadow-lg border border-blue-100 p-5 animate-fadeIn">
+              <div className={`${adminCard} shadow-sm p-5 space-y-4`}>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-ink flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-sm">
+                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
                       <FiUser className="w-4 h-4 text-white" />
                     </div>
                     Información de Contacto
                   </h2>
                   {(session?.user as any)?.emailVerified && (
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-green-100 border border-green-300 rounded-full">
-                      <FiCheckCircle className="w-3 h-3 text-green-700" />
-                      <span className="text-xs font-bold text-green-700">Verificado</span>
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-success/15 border border-success/30 rounded-full">
+                      <FiCheckCircle className="w-3 h-3 text-success-strong" />
+                      <span className="text-xs font-bold text-success-strong">Verificado</span>
                     </div>
                   )}
                 </div>
@@ -1851,7 +1775,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Edit Profile Link */}
-                <div className="mt-4 pt-3 border-t border-blue-100">
+                <div className="mt-4 pt-3 border-t border-line">
                   <Link
                     href="/customer/profile"
                     className="flex items-center justify-center gap-2 text-xs text-brand-500 hover:text-brand-600 font-semibold transition-colors"
@@ -1867,7 +1791,7 @@ export default function CheckoutPage() {
                 {/* Header - Same style as other sections */}
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h2 className="text-lg font-bold text-ink flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-sm">
+                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
                       <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
@@ -1892,13 +1816,12 @@ export default function CheckoutPage() {
 
                       return (
                         <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors">
-                          <div className="relative flex-shrink-0 w-14 h-14 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 overflow-hidden">
+                          <div className="relative flex-shrink-0 w-14 h-14 bg-surface rounded-xl border border-line overflow-hidden">
                             {item.imageUrl ? (
                               <Image
                                 src={item.imageUrl}
                                 alt={item.name}
-                                fill
-                                sizes="56px"
+                                fill sizes="56px"
                                 unoptimized={!item.imageUrl.startsWith('/')}
                                 className="object-contain p-1"
                               />
@@ -1920,7 +1843,7 @@ export default function CheckoutPage() {
                                 {activeDiscount ? (
                                   <div className="flex flex-col items-end">
                                     <span className="text-xs text-gray-400 line-through">{formatPrice(originalTotal)}</span>
-                                    <span className="text-sm font-bold text-green-600">{formatPrice(finalItemTotal)}</span>
+                                    <span className="text-sm font-bold text-success-strong">{formatPrice(finalItemTotal)}</span>
                                   </div>
                                 ) : (
                                   <span className="text-sm font-bold text-gray-800">{formatPrice(originalTotal)}</span>
@@ -1957,16 +1880,16 @@ export default function CheckoutPage() {
                     {/* Discount */}
                     {cartDiscount > 0 && (
                       <div className="flex justify-between items-center animate-pulse">
-                        <span className="text-green-600 flex items-center gap-1 text-sm font-medium">
+                        <span className="text-success-strong flex items-center gap-1 text-sm font-medium">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
                           </svg>
                           Descuento:
                         </span>
                         <div className="text-right">
-                          <span className="text-base font-bold text-green-600">-{formatPrice(cartDiscount)}</span>
+                          <span className="text-base font-bold text-success-strong">-{formatPrice(cartDiscount)}</span>
                           {companySettings?.exchangeRateVES && (
-                            <div className="text-xs text-green-500 font-medium">
+                            <div className="text-xs text-success font-medium">
                               -Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cartDiscount * Number(companySettings.exchangeRateVES))}
                             </div>
                           )}
@@ -1982,14 +1905,14 @@ export default function CheckoutPage() {
                           {/* Info tooltip */}
                           <div className="group relative">
                             <FiInfo className="w-3.5 h-3.5 text-gray-400 cursor-help" />
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-72 z-50">
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-72 z-[var(--z-dropdown)]">
                               <div className="font-semibold mb-1 flex items-center gap-1"><FiPackage className="h-3.5 w-3.5" aria-hidden="true" />Sobre el envío</div>
                               <p className="text-gray-300 leading-relaxed">
-                                Los costos de envío son manejados por las empresas de encomienda (ZOOM, MRW, TEALCA). Solo cobramos <strong className="text-white">${shippingBreakdown.packagingFee.toFixed(2)}</strong> por embalaje.
+                                Los costos de envío son manejados por las empresas de encomienda (ZOOM, MRW, TEALCA). Solo cobramos <strong className="text-ink">{formatUSD(shippingBreakdown.packagingFee)}</strong> por embalaje.
                               </p>
                               {shippingBreakdown.totalWeight > 0 && (
                                 <p className="text-gray-300 mt-1">
-                                  Peso total: <strong className="text-white">{shippingBreakdown.totalWeight.toFixed(2)} kg</strong>
+                                  Peso total: <strong className="text-ink">{shippingBreakdown.totalWeight.toFixed(2)} kg</strong>
                                 </p>
                               )}
                               <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800"></div>
@@ -2010,7 +1933,7 @@ export default function CheckoutPage() {
                               )}
                             </>
                           ) : (
-                            <span className="text-sm font-bold text-green-600">Gratis</span>
+                            <span className="text-sm font-bold text-success-strong">Gratis</span>
                           )}
                         </div>
                       </div>
@@ -2027,7 +1950,7 @@ export default function CheckoutPage() {
                           <div className="mt-2 p-3 bg-gray-50 rounded-lg text-xs space-y-2">
                             {/* Free shipping badge */}
                             {shippingBreakdown.isFreeShipping && (
-                              <div className="flex items-center gap-2 text-green-600 bg-green-50 px-2 py-1.5 rounded-lg">
+                              <div className="flex items-center gap-2 text-success-strong bg-success/5 px-2 py-1.5 rounded-lg">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -2047,7 +1970,7 @@ export default function CheckoutPage() {
                                 {shippingBreakdown.digitalItems.map((item, idx) => (
                                   <div key={idx} className="flex justify-between text-gray-500 pl-4">
                                     <span className="truncate max-w-[60%]">{item.name} x{item.quantity}</span>
-                                    <span className="text-green-600 font-medium">$0.00</span>
+                                    <span className="text-success-strong font-medium">$0.00</span>
                                   </div>
                                 ))}
                               </div>
@@ -2056,7 +1979,7 @@ export default function CheckoutPage() {
                             {/* Consolidable items */}
                             {shippingBreakdown.consolidableItems.length > 0 && !shippingBreakdown.isFreeShipping && (
                               <div className="space-y-1">
-                                <div className="font-semibold text-blue-600 flex items-center gap-1">
+                                <div className="font-semibold text-brand-600 flex items-center gap-1">
                                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                   </svg>
@@ -2078,7 +2001,7 @@ export default function CheckoutPage() {
                                 ))}
                                 <div className="flex justify-between pt-1 border-t border-gray-200 font-medium">
                                   <span className="text-gray-600">Subtotal ({shippingBreakdown.totalWeight.toFixed(2)} kg × $2/kg):</span>
-                                  <span className="text-blue-600">${shippingBreakdown.consolidatedCost.toFixed(2)}</span>
+                                  <span className="text-brand-600 font-medium">{formatUSD(shippingBreakdown.consolidatedCost)}</span>
                                 </div>
                               </div>
                             )}
@@ -2095,12 +2018,12 @@ export default function CheckoutPage() {
                                 {shippingBreakdown.bulkyItems.map((item, idx) => (
                                   <div key={idx} className="flex justify-between text-gray-500 pl-4">
                                     <span className="truncate max-w-[60%]">{item.name} x{item.quantity}</span>
-                                    <span className="text-amber-600 font-medium">${item.cost.toFixed(2)}</span>
+                                    <span className="text-warning-strong font-medium">{formatUSD(item.cost)}</span>
                                   </div>
                                 ))}
                                 <div className="flex justify-between pt-1 border-t border-gray-200 font-medium">
                                   <span className="text-gray-600">Subtotal envío individual:</span>
-                                  <span className="text-amber-600">${shippingBreakdown.bulkyCost.toFixed(2)}</span>
+                                  <span className="text-warning-strong font-medium">{formatUSD(shippingBreakdown.bulkyCost)}</span>
                                 </div>
                               </div>
                             )}
@@ -2113,7 +2036,7 @@ export default function CheckoutPage() {
                                 </svg>
                                 Embalaje y preparación:
                               </span>
-                              <span className="font-medium">${shippingBreakdown.packagingFee.toFixed(2)}</span>
+                              <span className="font-medium">{formatUSD(shippingBreakdown.packagingFee)}</span>
                             </div>
 
                             {/* Volumetric weight note */}
@@ -2151,7 +2074,7 @@ export default function CheckoutPage() {
                     {/* Exchange Rate Note */}
                     {companySettings?.exchangeRateVES && (
                       <div className="text-xs text-gray-400 text-center pt-2">
-                        Tasa de cambio: 1 USD = Bs. {Number(companySettings.exchangeRateVES).toFixed(2)}
+                        Tasa de cambio: 1 USD = {formatVES(Number(companySettings.exchangeRateVES))}
                       </div>
                     )}
                   </div>
@@ -2172,12 +2095,12 @@ export default function CheckoutPage() {
               </div>
 
               {/* Trust Badges */}
-              <div className="bg-gradient-to-br from-brand-500/5 to-purple-500/5 rounded-2xl border border-gray-200 p-5 shadow-lg space-y-4 animate-slideUp" style={{ animationDelay: '0.1s' }}>
+              <div className={`${adminCard} shadow-sm p-5 space-y-4`}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Envíos Asegurados</h3>
                   <div className="flex gap-2">
-                    <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[11px] font-bold">ZOOM</span>
-                    <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[11px] font-bold">MRW</span>
+                    <span className="px-2 py-0.5 bg-warning/10 text-warning-strong border border-warning/20 rounded text-[11px] font-bold">ZOOM</span>
+                    <span className="px-2 py-0.5 bg-deal-bg text-deal border border-deal/20 rounded text-[11px] font-bold">MRW</span>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -2192,8 +2115,8 @@ export default function CheckoutPage() {
                   </div>
                   
                   <div className="flex items-start gap-3 text-xs text-gray-600">
-                    <div className="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <FiShield className="w-3.5 h-3.5 text-emerald-600" />
+                    <div className="w-7 h-7 bg-success/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <FiShield className="w-3.5 h-3.5 text-success-strong" />
                     </div>
                     <div>
                       <p className="font-semibold text-gray-700">Protección del Comprador</p>
@@ -2216,129 +2139,115 @@ export default function CheckoutPage() {
       />
 
       {/* Terms and Conditions Modal */}
-      {
-        showTermsModal && (
-          <div
-            className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            style={{ zIndex: 99999 }}
-          >
-            <div
-              className="bg-white rounded-2xl shadow-2xl overflow-hidden"
-              style={{
-                width: '100%',
-                maxWidth: '700px',
-                minWidth: '320px',
-                maxHeight: '85vh',
-                animation: 'modalScaleIn 0.3s ease-out'
-              }}
-            >
-              {/* Header */}
-              <div className="bg-gradient-to-r from-brand-500 to-brand-600 p-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-white">Términos y Condiciones</h2>
-                  <button
-                    onClick={() => setShowTermsModal(false)}
-                    className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
-                  >
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+      {showTermsModal && (
+        <div className={adminModalOverlay}>
+          <div className={`${adminModalPanel} max-w-2xl`}>
+            {/* Header */}
+            <div className={adminModalHeader}>
+              <h2 className={adminModalTitle}>Términos y Condiciones</h2>
+              <button
+                type="button"
+                onClick={() => setShowTermsModal(false)}
+                className="p-1.5 text-muted hover:text-ink rounded-lg transition-colors"
+                aria-label="Cerrar modal"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className={`${adminModalBody} space-y-6 text-sm text-ink`}>
+              {/* Critical Warning */}
+              <div className="p-4 bg-warning/10 border-l-4 border-warning-strong rounded-r-xl">
+                <h3 className="font-bold text-ink mb-2 flex items-center gap-2">
+                  <FiAlertCircle className="w-5 h-5 text-warning-strong" />
+                  Responsabilidad del Usuario
+                </h3>
+                <p className="text-ink-soft leading-relaxed">
+                  <strong>IMPORTANTE:</strong> El usuario es completamente responsable de verificar que todos los datos de envío (dirección, ciudad, estado, oficina de encomienda, etc.) sean correctos antes de completar su pedido.
+                </p>
+                <p className="text-ink mt-2 leading-relaxed font-bold">
+                  Electro Shop Morandin C.A. NO SE HACE RESPONSABLE por pérdidas, retrasos o costos adicionales derivados de datos errados ingresados por el usuario.
+                </p>
               </div>
 
-              {/* Content */}
-              <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 180px)' }}>
-                <div className="space-y-6 text-sm text-ink">
-                  {/* Critical Warning */}
-                  <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-orange-500 rounded-r-xl">
-                    <h3 className="font-bold text-orange-900 mb-2 flex items-center gap-2">
-                      <FiAlertCircle className="w-5 h-5" />
-                      Responsabilidad del Usuario
-                    </h3>
-                    <p className="text-orange-800 leading-relaxed">
-                      <strong>IMPORTANTE:</strong> El usuario es completamente responsable de verificar que todos los datos de envío (dirección, ciudad, estado, oficina de encomienda, etc.) sean correctos antes de completar su pedido.
-                    </p>
-                    <p className="text-orange-800 mt-2 leading-relaxed font-bold">
-                      Electro Shop Morandin C.A. NO SE HACE RESPONSABLE por pérdidas, retrasos o costos adicionales derivados de datos errados ingresados por el usuario.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-lg mb-2">1. Información General</h3>
-                    <p className="leading-relaxed">
-                      Al realizar una compra en Electro Shop Morandin C.A., usted acepta estos términos y condiciones en su totalidad. Por favor, léalos cuidadosamente antes de completar su pedido.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-lg mb-2">2. Datos de Envío</h3>
-                    <ul className="list-disc ml-6 space-y-2">
-                      <li>Es responsabilidad del cliente proporcionar una dirección de envío completa y correcta.</li>
-                      <li>Los datos de contacto (nombre, email, teléfono) provienen de su registro y son verificados.</li>
-                      <li>Si selecciona envío a oficina de encomienda (ZOOM o MRW), debe proporcionar el código correcto de la oficina o casillero.</li>
-                      <li>La empresa NO corregirá datos errados después de que el pedido haya sido procesado.</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-lg mb-2">3. Envíos mediante ZOOM y MRW</h3>
-                    <ul className="list-disc ml-6 space-y-2">
-                      <li>Los pedidos se envían mediante las empresas certificadas ZOOM o MRW según la selección del cliente.</li>
-                      <li>El cliente debe proporcionar un código de oficina válido o número de casillero.</li>
-                      <li>Para retirar el paquete, debe presentar cédula de identidad.</li>
-                      <li>El tiempo de entrega depende de la empresa de encomienda seleccionada.</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-lg mb-2">4. Limitación de Responsabilidad</h3>
-                    <ul className="list-disc ml-6 space-y-2">
-                      <li>La empresa no se hace responsable de direcciones incorrectas o incompletas proporcionadas por el usuario.</li>
-                      <li>No se procesan reembolsos por entregas fallidas debido a datos incorrectos del cliente.</li>
-                      <li>Los costos adicionales de reenvío por datos incorrectos serán asumidos por el cliente.</li>
-                      <li>La empresa verificará la identidad del destinatario al momento de la entrega.</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-lg mb-2">5. Métodos de Pago</h3>
-                    <p className="leading-relaxed">
-                      Aceptamos transferencias bancarias, pago móvil, criptomonedas y saldo de billetera. Los pedidos se procesan una vez confirmado el pago.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-lg mb-2">6. Política de Cambios y Devoluciones</h3>
-                    <p className="leading-relaxed">
-                      Consulte nuestra política de cambios y devoluciones. No se aceptan devoluciones por datos de envío incorrectos proporcionados por el cliente.
-                    </p>
-                  </div>
-                </div>
+              <div>
+                <h3 className="font-bold text-base mb-2">1. Información General</h3>
+                <p className="leading-relaxed text-ink-soft">
+                  Al realizar una compra en Electro Shop Morandin C.A., usted acepta estos términos y condiciones en su totalidad. Por favor, léalos cuidadosamente antes de completar su pedido.
+                </p>
               </div>
 
-              {/* Footer */}
-              <div className="p-6 bg-surface border-t border-line flex gap-3">
-                <button
-                  onClick={() => {
-                    setAcceptedTerms(true);
-                    setShowTermsModal(false);
-                  }}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-lg transition-all"
-                >
-                  Aceptar y Continuar
-                </button>
-                <button
-                  onClick={() => setShowTermsModal(false)}
-                  className="px-6 py-3 bg-white border-2 border-line text-ink font-medium rounded-xl hover:bg-surface transition-all"
-                >
-                  Cerrar
-                </button>
+              <div>
+                <h3 className="font-bold text-base mb-2">2. Datos de Envío</h3>
+                <ul className="list-disc ml-6 space-y-2 text-ink-soft">
+                  <li>Es responsabilidad del cliente proporcionar una dirección de envío completa y correcta.</li>
+                  <li>Los datos de contacto (nombre, email, teléfono) provienen de su registro y son verificados.</li>
+                  <li>Si selecciona envío a oficina de encomienda (ZOOM o MRW), debe proporcionar el código correcto de la oficina o casillero.</li>
+                  <li>La empresa NO corregirá datos errados después de que el pedido haya sido procesado.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-base mb-2">3. Envíos mediante ZOOM y MRW</h3>
+                <ul className="list-disc ml-6 space-y-2 text-ink-soft">
+                  <li>Los pedidos se envían mediante las empresas certificadas ZOOM o MRW según la selección del cliente.</li>
+                  <li>El cliente debe proporcionar un código de oficina válido o número de casillero.</li>
+                  <li>Para retirar el paquete, debe presentar cédula de identidad.</li>
+                  <li>El tiempo de entrega depende de la empresa de encomienda seleccionada.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-base mb-2">4. Limitación de Responsabilidad</h3>
+                <ul className="list-disc ml-6 space-y-2 text-ink-soft">
+                  <li>La empresa no se hace responsable de direcciones incorrectas o incompletas proporcionadas por el usuario.</li>
+                  <li>No se procesan reembolsos por entregas fallidas debido a datos incorrectos del cliente.</li>
+                  <li>Los costos adicionales de reenvío por datos incorrectos serán asumidos por el cliente.</li>
+                  <li>La empresa verificará la identidad del destinatario al momento de la entrega.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-base mb-2">5. Métodos de Pago</h3>
+                <p className="leading-relaxed text-ink-soft">
+                  Aceptamos transferencias bancarias, pago móvil, criptomonedas y saldo de billetera. Los pedidos se procesan una vez confirmado el pago.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-base mb-2">6. Política de Cambios y Devoluciones</h3>
+                <p className="leading-relaxed text-ink-soft">
+                  Consulte nuestra política de cambios y devoluciones. No se aceptan devoluciones por datos de envío incorrectos proporcionados por el cliente.
+                </p>
               </div>
             </div>
+
+            {/* Footer */}
+            <div className={adminModalFooter}>
+              <button
+                type="button"
+                onClick={() => {
+                  setAcceptedTerms(true);
+                  setShowTermsModal(false);
+                }}
+                className={`w-full sm:w-auto ${adminPrimaryButton}`}
+              >
+                Aceptar y Continuar
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowTermsModal(false)}
+                className={`w-full sm:w-auto ${adminSecondaryButton}`}
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
-        )
-      }
+        </div>
+      )}
 
       {/* Processing Overlay - Reusable component */}
       <ProcessingOverlay

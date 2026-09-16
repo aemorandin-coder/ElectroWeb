@@ -207,6 +207,10 @@ body {
    ANIMATIONS & TRANSITIONS
    Una sola definición por keyframe: varias se usan por nombre desde estilos inline.
    animate-spin y animate-pulse vienen de Tailwind.
+   Las de ENTRADA usan `backwards`, nunca `forwards`: una animación que se queda aplicada con
+   `transform` convierte al elemento en el contenedor de todo `position: fixed` que tenga dentro,
+   y además crea un contexto de apilamiento. Un modal dentro de una tarjeta animada quedaba
+   descolocado o debajo de la barra inferior. Solo las de SALIDA (removeItem, clearItem) usan `forwards`.
    ============================================ */
 
 /* Fade In */
@@ -223,7 +227,7 @@ body {
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.3s ease-out backwards;
 }
 
 /* Slide In From Right */
@@ -240,7 +244,7 @@ body {
 }
 
 .animate-slideInRight {
-  animation: slideInRight 0.3s ease-out forwards;
+  animation: slideInRight 0.3s ease-out backwards;
 }
 
 /* Slide In From Left */
@@ -250,7 +254,7 @@ body {
 }
 
 .animate-slideInLeft {
-  animation: slideInLeft 0.5s ease-out forwards;
+  animation: slideInLeft 0.5s ease-out backwards;
 }
 
 /* Scale In */
@@ -287,8 +291,7 @@ body {
 
 /* Staggered Children Animation */
 .stagger-children>* {
-  opacity: 0;
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.3s ease-out backwards;
 }
 
 .stagger-children>*:nth-child(1) {
@@ -337,7 +340,7 @@ body {
 }
 
 .animate-fade-in {
-  animation: fade-in 0.2s ease-out forwards;
+  animation: fade-in 0.2s ease-out backwards;
 }
 
 /* Shake Animation */
@@ -382,7 +385,7 @@ body {
 }
 
 .animate-slideInUp {
-  animation: slideInUp 0.5s ease-out forwards;
+  animation: slideInUp 0.5s ease-out backwards;
 }
 
 /* Slide Up Animation (for modals using portal) */
@@ -436,7 +439,10 @@ body {
    Solo opacidad: con `transform` (aunque termine en `none`), el modo `forwards` deja un valor
    calculado de transform en el wrapper, y eso convierte al wrapper en el bloque contenedor de
    todo `position: fixed` de la página. Los modales de la tienda aparecían al final del documento
-   en vez de sobre la pantalla cuando la página estaba desplazada. */
+   en vez de sobre la pantalla cuando la página estaba desplazada.
+   Y sin `forwards`: una animación que se queda aplicada crea un contexto de apilamiento, y los
+   cajones y modales de la página quedaban debajo de la barra inferior y del botón de WhatsApp
+   (que viven fuera del wrapper). Al terminar, la opacidad ya es 1 por defecto. */
 @keyframes pageFadeIn {
   from {
     opacity: 0;
@@ -448,7 +454,7 @@ body {
 }
 
 .page-transition-wrapper {
-  animation: pageFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: pageFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Smooth page transitions */
@@ -509,7 +515,7 @@ html {
 }
 
 .animate-slideDown {
-  animation: slideDown 0.3s ease-out forwards;
+  animation: slideDown 0.3s ease-out backwards;
 }
 
 /* Gradient X Animation (for gift card buttons) */
@@ -536,7 +542,7 @@ html {
 }
 
 .animate-slide-in-right {
-  animation: slide-in-right 0.3s ease-out forwards;
+  animation: slide-in-right 0.3s ease-out backwards;
 }
 
 @keyframes removeItem {

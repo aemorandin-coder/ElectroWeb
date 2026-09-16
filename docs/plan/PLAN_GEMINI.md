@@ -984,3 +984,86 @@ Carga: ~571 colores, 43 degradados, 4 modales.
 QA: las 9 páginas a 390 px; en `/customer/profile` los modales cubren la pantalla.
 
 **Prompt de arranque para Gemini (Andrés):** "Haz la Ronda R10 de `docs/plan/PLAN_GEMINI.md` en orden (G-35 a G-39) en la rama `gemini/R10` desde `main`. Lee primero 'Lo que aprendimos en R9'. G-38 y G-39 esperan a que exista `docs/plan/estado/C-55.md` en `main`; si no está cuando llegues, haz commit de G-35 a G-37 y avisa. Un commit por tarjeta con su estado y la salida de la verificación. No hagas merge ni push."
+
+---
+
+## Ronda R11 (muy pesada) · Carrito, checkout, modales compartidos y páginas de error · G-40 → G-41 → G-42 → G-43
+**Se hace en la misma sesión que G-38 y G-39**, sin esperar a Claude.
+- Rama: `gemini/R11`, creada **desde `gemini/R10` después del commit de G-39** (`git switch -c gemini/R11`).
+- Un commit por tarjeta con su `docs/plan/estado/G-XX.md`. Claude revisa R10 y R11 juntas.
+- Carga total: ~1.100 colores sueltos y efectos, 7 modales y ~7.700 líneas en 21 archivos.
+
+### Reglas de R11
+- **Las mismas de R9 (R1-R8) y R10** (imágenes con `sizes`, sin otro hero, texto blanco revisado), con las recetas de `@/lib/admin-ui`.
+- **"Lo que salió mal en G-35…G-37"** (arriba) es obligatorio: **`npx tsc --noEmit` de verdad** con su salida pegada, cada receta importada, rojos con `deal`.
+- **Carril ampliado solo para R11 y solo para cambiar clases**: `app/carrito/page.tsx`, `app/checkout/**`, `components/checkout/**`, `components/pago-movil/VerificarPagoMovilForm.tsx`, `components/ProcessingOverlay.tsx`, `components/EpicTooltip.tsx`, `app/not-found.tsx`, `app/error.tsx`.
+- **Dinero:** el carrito y el checkout mueven dinero. **No se toca nada que no sea `className`** salvo lo que diga "Arreglos permitidos". En particular: `finalTotal`, `shippingBreakdown`, `orderData`, `userBalance`, `useCart`, cantidades, pasos del checkout, `fetch`, `router`, validaciones, payloads y mensajes de WhatsApp.
+- **Fuera de límites:** `app/global-error.tsx` (se pinta fuera del layout y sin los estilos de la tienda), `components/ui/**`, `components/Footer.tsx`, `components/CartIcon.tsx`, `components/UserAccountButton.tsx`, `lib/**`, `app/api/**`.
+- **Modales:** R5 como siempre. Si el modal ya usa `createPortal`, se queda.
+- **Contenedores que envuelven un modal:** si tienen `relative z-10` (o cualquier `z-*`), `transform`, `filter` o `backdrop-blur`, el modal queda encerrado y debajo de la barra inferior. Quita esa clase del contenedor (ver `estado/C-55.md`).
+- **Sin productos en tu BD local:** si no puedes llenar el carrito para ver el checkout, escribe en el estado `QA visual pendiente: sin productos` y sigue. Claude lo prueba con una tienda de ejemplo.
+
+### G-40 · Carrito y confirmación de compra · Depende: G-39
+Archivos:
+- `app/carrito/page.tsx` (578 líneas, ~84)
+- `app/checkout/success/page.tsx` (319 líneas, ~57)
+- `components/ProcessingOverlay.tsx` (282 líneas, ~38)
+
+**Arreglos permitidos:**
+1. **`carrito`:** el `toFixed` que se muestra como precio → `formatUSD`.
+2. **`checkout/success`:** el confeti usa `z-[9999]` → `z-[var(--z-modal)]`. No borres el confeti ni cambies su `style`.
+3. **`ProcessingOverlay`:** capa con `adminModalOverlay` solo si hoy es un `fixed inset-0` con fondo oscuro; conserva su `useBodyScrollLock`.
+
+QA: `/carrito` con un producto y vacío, a 390 y 1440 px. Los botones de cantidad y "Proceder al pago" siguen funcionando.
+
+### G-41 · Checkout · Depende: G-40
+Archivos:
+- `app/checkout/page.tsx` (**2.356 líneas**, ~335: 263 colores y 72 degradados, blur o hex)
+- `components/checkout/CheckoutPagoMovilForm.tsx` (762 líneas, ~88, 1 modal con portal)
+- `components/pago-movil/VerificarPagoMovilForm.tsx` (584 líneas, ~57)
+
+Trabaja `checkout/page.tsx` **por bloques** (datos, envío, pago, resumen) y corre `git diff -w --stat` entre bloques: si el número se dispara, cambiaste la sangría.
+
+**Arreglos permitidos:**
+1. **Montos que se muestran** con `toFixed` → `formatUSD` / `formatVES` (el `$` y "USD" que estén al lado del número se quitan, porque `formatUSD` ya los pone):
+   - `giftCardInfo.balanceUSD.toFixed(2)` (2 veces, líneas ~1402 y ~1443)
+   - `USD {finalTotal.toFixed(2)}$` (~1502) y `USD {(userBalance - finalTotal).toFixed(2)}$` (~1508)
+   - `shippingBreakdown.packagingFee` (~1988 y ~2116), `consolidatedCost` (~2081), `item.cost` (~2098), `bulkyCost` (~2103)
+   - Tasa `Number(companySettings.exchangeRateVES).toFixed(2)` (~2154) → `formatVES(Number(companySettings.exchangeRateVES))`.
+   - **No toques:** los `kg` (`totalWeight`, `usedWeight`: no son dinero) ni el `toFixed` de la línea ~477 (va dentro de un texto que se envía).
+2. **Modal de términos** (~2220, `fixed inset-0 … bg-black/60 backdrop-blur-sm`): R5 con `adminModalOverlay`, `adminModalPanel` y `useBodyScrollLock(showTermsModal)`.
+3. **Texto blanco** del bloque de envío (`<strong className="text-white">` ~1988 y ~1992): si su fondo deja de ser azul, pasa a `text-ink`.
+
+QA: `/checkout` con un producto a 390 y 1440 px: los pasos se ven, el resumen no se corta, el modal de términos cubre la pantalla y el de QR de Pago Móvil abre.
+
+### G-42 · Modales y piezas compartidas · Depende: G-41
+Archivos:
+- `components/social/ShareEarnModal.tsx` (362 líneas, ~53, 1 modal) y `components/social/ShareEarnButton.tsx`
+- `components/modals/ConfirmDialog.tsx` (159 líneas, ~24, 1 modal) · **lo usan el admin y la tienda**
+- `components/modals/BalanceTermsModal.tsx` (459 líneas, ~21, 1 modal)
+- `components/reviews/ReviewForm.tsx`, `ReviewList.tsx`, `ReviewStats.tsx`, `StarRating.tsx`
+- `components/onboarding/GuidedTour.tsx` (256 líneas, 1 capa `z-[var(--z-popup)]`: esa capa se queda)
+- `components/EpicTooltip.tsx`
+
+**Arreglos permitidos:**
+1. **`ConfirmDialog`:** el botón de confirmar según `type`: `'danger'` → `adminDangerButton`, `'warning'` → `adminPrimaryButton`, `'info'` → `adminPrimaryButton`. Cancelar → `adminSecondaryButton`. El ícono en `adminIconChip('danger' | 'warning' | 'brand')`. No cambies props ni la promesa que devuelve.
+2. **`ShareEarnModal`:** R5 (hoy `bg-black/60 backdrop-blur-sm`) y `useBodyScrollLock` con el estado que lo abre. El monto con `toFixed` → `formatUSD`.
+3. **Estrellas** (`StarRating`, `ReviewStats`, `ReviewForm`): llenas `text-warning fill-warning`, vacías `text-line fill-line`. El promedio con `toFixed(1)` se queda (no es dinero).
+
+QA: borrar algo en `/customer/addresses` abre `ConfirmDialog` rojo; "Compartir y ganar" en una tarjeta de curso abre el modal y cubre la pantalla a 390 px.
+
+### G-43 · Páginas de error y certificado · Depende: G-42
+Archivos:
+- `app/not-found.tsx` (87 líneas, 46 efectos: degradados y manchas)
+- `app/error.tsx` (58 líneas)
+- `app/customer/(dashboard)/not-found.tsx` (54 líneas)
+- `app/certificado/[token]/CertificatePage.tsx` (210 líneas)
+
+**Arreglos permitidos:**
+1. **`not-found` y `error`:** fondo `min-h-dvh bg-surface`, el bloque central en `adminCard` (`max-w-md` centrado), botones `adminPrimaryButton` (volver al inicio) y `adminSecondaryButton` (reintentar o atrás). Borra las manchas y degradados (R4). Los textos blancos pasan a `text-ink` / `text-muted`.
+2. **`customer/(dashboard)/not-found.tsx`:** ya va dentro de la tarjeta blanca del panel (C-55): sin fondo propio, solo `adminEmpty` con su ícono, texto y botón.
+3. **`CertificatePage`:** **no toques** nada con `style={{…}}` ni lo que esté dentro del certificado (es el diseño que se imprime). Solo los controles de alrededor: botones de imprimir o descargar y la franja de fondo de la página.
+
+QA: `/esta-ruta-no-existe` y `/customer/nada` a 390 y 1440 px; un certificado se sigue viendo igual al imprimir.
+
+**Prompt de arranque para Gemini (Andrés):** ver `docs/plan/SIGUIENTE.md` §5.

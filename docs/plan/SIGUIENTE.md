@@ -10,8 +10,8 @@ Léelo antes de empezar. Resume dónde quedó todo, qué falta subir a producci�
   - **C-73** notificaciones del equipo y bot de Telegram.
   - **R10 de Gemini** (G-35 acceso, G-36 páginas públicas, G-37 panel de creadores), revisada y corregida en **C-77**.
   - **C-74** flujo de órdenes del admin (stock, saldo y estados).
-- **`claude/C-55`**: marco del panel del cliente **a medio hacer**. El layout ya está reescrito (cajón móvil, sin `backdrop-blur` ni `transform`, `useBodyScrollLock`, campana de C-73) y pasa `tsc` y ESLint, pero **le falta la prueba visual a 390 y 1440 px y su archivo de estado**. No mergear hasta terminar eso.
-- **`gemini/R10`** (worktree `../ElectroShopVe-gemini`): ya mergeada. Gemini trajo `main` a su rama el 15/09 a las 18:21; **G-38 y G-39 siguen esperando `docs/plan/estado/C-55.md` en `main`**.
+- **C-55** (marco del panel del cliente) está en `main` local desde el 16/09 con su estado: **G-38 y G-39 quedan desbloqueadas**. Trajo un arreglo global de animaciones (`globals.css`): cajones y modales ya no quedan debajo de la barra inferior.
+- **`gemini/R10`** (worktree `../ElectroShopVe-gemini`): G-35…G-37 mergeadas. Sigue con G-38 y G-39 y, en la misma sesión, **R11** en `gemini/R11` (G-40…G-43: carrito, checkout, modales compartidos, páginas de error).
 
 ## 2. Deploy pendiente (el código ya está en GitHub; falta aplicarlo en el servidor)
 
@@ -67,13 +67,11 @@ El script mueve los archivos que ya existen de `public/uploads/documents/` a `pr
 ## 3. Trabajo de Claude (detalle en `PLAN_CLAUDE.md` §4b)
 1. ~~Revisar y mergear `gemini/R10`~~ → **hecho (C-77)**.
 2. ~~C-74 flujo de órdenes del admin~~ → **hecho**.
-3. **C-55 · Marco del panel del cliente** → *en curso* en `claude/C-55`. Falta QA a 390/1440 y el estado. **Gemini está bloqueado esperándolo.**
-4. **C-75 · Marketing y Contenido:** primero la auditoría y el mapa para Andrés, después el rediseño.
-5. **C-51**, **C-60b**, **C-76**, **C-40**.
+3. ~~C-55 marco del panel del cliente~~ → **hecho**.
+4. **C-78 · Retoques de la tienda** (pedido de Andrés el 16/09): Contáctanos más compacto, esqueletos de carga sin el hero viejo, logo del favicon en la gift card, `Modal` compartido con portal, `relative z-10` de `/servicios`.
+5. **C-75 · Marketing y Contenido:** Andrés aprobó el rediseño; los correos deben poder llevar imágenes de verdad.
+6. **C-79** panel de creadores en móvil, **C-80** límite de intentos en el login, **C-81** `components/ui` con estilos viejos, **C-51**, **C-60b**, **C-76**, **C-40**. Orden en `PLAN_CLAUDE.md` §4b.
 
-**Tareas nuevas que salieron de la revisión (proponer a Andrés):**
-- **Panel de creadores a 390 px:** la barra lateral fija de 240 px deja ~138 px de contenido y todo se apila. Necesita cajón móvil como el admin y el cliente.
-- **Login sin límite de intentos en el servidor** (ya anotado en `C-08.md`): el captcha solo se exige en el navegador y no se envía a NextAuth. Un atacante puede probar contraseñas contra cuentas de admin sin freno.
 
 **Decisiones ya tomadas por Andrés (no volver a preguntar):**
 - **C-74:** cancelar una orden pagada con saldo **devuelve ese saldo como crédito de la tienda**; el dinero nunca sale de la empresa (no hay ni habrá retiros). Una orden enviada o entregada no se cancela.
@@ -81,17 +79,21 @@ El script mueve los archivos que ya existen de `public/uploads/documents/` a `pr
 
 ## 4. Trabajo de Gemini (detalle en `PLAN_GEMINI.md`, Ronda R10)
 - **G-35, G-36, G-37:** hechas, revisadas y en `main`. Lo que salió mal está en `PLAN_GEMINI.md` ("Lo que salió mal en G-35…G-37") y en `GEMINI.md`: **no corrió `tsc` y el build quedó roto por dos imports que faltaban**, volvió a dejar texto blanco sobre fondo claro y usó `danger` en vez de `deal` para los rojos.
-- **G-38 y G-39:** esperan `docs/plan/estado/C-55.md` en `main`.
+- **G-38 y G-39:** desbloqueadas (C-55 en `main`).
+- **R11 (G-40…G-43):** carrito, checkout (2.356 líneas), modales compartidos y páginas de error. Se hace en la misma sesión, en `gemini/R11` desde `gemini/R10`.
   - **G-38:** el modal de recarga lee la tasa de `/api/settings/public` desde C-72; no revertirlo.
   - **G-39:** la página de notificaciones del cliente usa `notification-meta` de C-73.
 
 ## 5. Mensajes para empezar
 
 ### Conversación nueva de Claude
-> Continúa el proyecto ElectroShopVe. Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b. Termina **C-55** (está a medias en `claude/C-55`: falta la prueba visual a 390 y 1440 px y el archivo de estado) y mergéala a `main` para desbloquear a Gemini. Luego sigue con C-75 y C-51. Busca bugs, seguridad y diseño inconsistente en todo lo que toques; nada de `git push` sin que yo lo pida.
+> Continúa el proyecto ElectroShopVe. Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b. Sigue el orden de la tabla (C-78 retoques de la tienda, C-75 Marketing). Cuando Gemini avise, revisa `gemini/R10` (G-38, G-39) y `gemini/R11` (G-40…G-43) antes de mergear. Busca bugs, seguridad y diseño inconsistente en todo lo que toques; nada de `git push` sin que yo lo pida.
 
-### Conversación nueva de Gemini
-> Continúa la Ronda R10 de `docs/plan/PLAN_GEMINI.md` en la rama `gemini/R10`. G-35 a G-37 ya están revisadas y en `main`. Antes de G-38 trae `main` a tu rama (`git merge main`) y comprueba que exista `docs/plan/estado/C-55.md`. Si no existe, no empieces y avisa. Lee "Lo que salió mal en G-35…G-37" antes de tocar nada. Un commit por tarjeta con su estado. No hagas merge ni push.
+### Conversación nueva de Gemini (sesión larga: R10 + R11)
+> Trabajo pesado en dos rondas seguidas de `docs/plan/PLAN_GEMINI.md`, sin esperar revisión entre ellas.
+> 1. **Ronda R10:** en la rama `gemini/R10`, trae `main` (`git merge main`) y comprueba que existe `docs/plan/estado/C-55.md`. Lee "Lo que salió mal en G-35…G-37" y `docs/plan/estado/C-55.md` ("Para Gemini"). Haz **G-38** y **G-39**.
+> 2. **Ronda R11:** después del commit de G-39, crea `gemini/R11` desde `gemini/R10` y haz **G-40, G-41, G-42 y G-43** en orden. Lee "Reglas de R11": el carrito y el checkout mueven dinero, **solo cambias `className`** salvo los "Arreglos permitidos".
+> En cada tarjeta, antes del commit: `npx tsc --noEmit` (pega la salida real), `git diff --stat` vs `git diff -w --stat` (misma cifra aproximada), `'use client'` en la primera línea, greps de la tarjeta y QA a 390 y 1440 px. Un commit por tarjeta con su `docs/plan/estado/G-XX.md`. Si algo no cuadra, `BLOQUEADO` en el estado y pasas a la siguiente. No hagas merge ni push: al terminar, avisa a Andrés.
 
 ## 6. Datos útiles para el agente
 - **Node:** `export PATH="$HOME/.local/lib/nodejs/node-v20.18.0-linux-x64/bin:$PATH"`.

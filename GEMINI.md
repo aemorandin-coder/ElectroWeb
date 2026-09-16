@@ -38,6 +38,9 @@ app/solicitar-producto/**   app/privacidad/**   app/terminos/**
 components/modals/**   components/reviews/**   components/orders/**   components/social/**
 components/pago-movil/**   components/onboarding/**
 docs/plan/estado/G-*.md      (solo archivos que empiecen con G-)
+# Solo en R11 y solo para cambiar clases (ver PLAN_GEMINI.md, "Reglas de R11"):
+app/carrito/page.tsx   app/checkout/**   components/checkout/**   components/pago-movil/VerificarPagoMovilForm.tsx
+components/ProcessingOverlay.tsx   components/EpicTooltip.tsx   app/not-found.tsx   app/error.tsx
 ```
 Excepciones puntuales (solo cuando la tarea lo dice):
 - `app/admin/**` y `components/admin/**` → **solo arreglos mecánicos** y **solo cuando una tarjeta G lo pide**. Autorizado por Andrés el 2026-09-14.
@@ -57,7 +60,7 @@ Excepciones puntuales (solo cuando la tarea lo dice):
   - **`components/modals/RechargeModalV2.tsx` (G-38):** la tasa se lee de `/api/settings/public` (`exchangeRateVES`) desde C-72. No volver a `/api/exchange-rates`: el servidor aprueba la recarga con la tasa de la tienda.
   - **`components/notifications/**`, `lib/admin-events/**`, `lib/telegram/**` y `app/admin/(dashboard)/notifications/**` son carril Claude (C-73).** Para íconos de notificaciones usa `notificationMeta` y `timeAgo` de `@/components/notifications/notification-meta`.
   - **R10:** las páginas de acceso, el contenido de las páginas públicas, el panel de creadores y el panel del cliente usan también `lib/admin-ui.ts` (ver tarjetas G-35…G-39). `app/customer/(dashboard)/layout.tsx` lo hace Claude (C-55).
-- `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → solo G-04b, G-05g y G-06g, **y solo cuando en `main` existan `docs/plan/estado/C-01.md` y `docs/plan/estado/C-05.md` con `Estado: HECHO`**.
+- `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → G-04b, G-05g, G-06g y **R11 (G-40, G-41: solo `className` y los arreglos permitidos)**. El carrito y el checkout mueven dinero: nada de lógica.
 - Borrado de la lista cerrada de G-02.
 
 ---

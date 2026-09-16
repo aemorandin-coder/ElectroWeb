@@ -156,16 +156,21 @@ Revisar las ramas `gemini/*` pendientes, convertir el reporte G-14 en tarjetas n
 > Antes de cada tarea, lee `docs/plan/SIGUIENTE.md` (estado de ramas, deploy pendiente y qué espera Gemini).
 > Regla vigente de Andrés: **en todo lo que toques o leas, busca bugs, huecos de seguridad, código mal hecho y diseño inconsistente**; arregla lo del carril Claude y anota el resto en el estado.
 
-| Orden | Tarea | Por qué va aquí |
+| Orden | Tarea | Estado |
 |---|---|---|
-| 1 | **Revisar y mergear `gemini/R10` (G-35…G-37)** | Gemini ya terminó esas 3 y espera. Merge local, sin push hasta que Andrés lo pida. |
-| 2 | **C-74 · Flujo de órdenes del admin** | Bugs de dinero y stock en producción. |
-| 3 | **C-55 · Marco del panel del cliente** | Desbloquea G-38 y G-39 de Gemini. |
-| 4 | **C-75 · Auditoría y rediseño de Marketing y Contenido** | Andrés la marcó como sección crítica. |
-| 5 | **C-51 · Lista de productos del admin** | 1.544 líneas; `ProductForm.tsx` (1.057) sin uso; `alert()`. |
-| 6 | **C-60b · Surtido de pedidos digitales** | Campos de proveedor, referencia y costo (F7); aviso de pedido digital por entregar. |
-| 7 | **C-76 · Correos sin emojis y con plantilla única** | 39 emojis en 10 archivos (`lib/email-service.ts`, certificados, reseñas, pago móvil). |
-| 8 | **C-40 · Cierre** | README, checklist de `PLAN.md` §6 con Andrés. |
+| 1 | **Revisar y mergear `gemini/R10` (G-35…G-37)** | ✅ Hecho (C-77) |
+| 2 | **C-74 · Flujo de órdenes del admin** | ✅ Hecho |
+| 3 | **C-55 · Marco del panel del cliente** | ✅ Hecho (desbloqueó G-38/G-39) |
+| 4 | **C-78 · Retoques de la tienda** | Contáctanos más compacto, esqueletos de carga sin el hero viejo, logo del favicon en la gift card, `Modal` compartido con portal y el `relative z-10` de `/servicios`. Pedido de Andrés el 16/09. |
+| 5 | **C-75 · Marketing y Contenido** | Andrés la marcó crítica y aprobó el rediseño. Incluye correos con imágenes de verdad. |
+| 6 | **Revisar R10 (G-38, G-39) y R11 (G-40…G-43)** | Cuando Gemini avise. Checkout y carrito: revisar línea por línea que solo cambió `className`. |
+| 7 | **C-79 · Panel de creadores en móvil** | La barra lateral fija de 240 px deja ~138 px de contenido a 390 px. Cajón como C-52/C-55. |
+| 8 | **C-80 · Login con límite de intentos en el servidor** | Hoy el captcha solo lo exige el navegador: fuerza bruta contra cuentas de admin. |
+| 9 | **C-81 · Piezas del carril Claude con estilos viejos** | `components/ui/` (Button, Badge, StatusBadge, LoadingSpinner, ErrorState, EmptyState, Skeleton, Modal), `Footer`, `UserAccountButton`, `CartIcon`: ~190 colores sueltos o hex. |
+| 10 | **C-51 · Lista de productos del admin** | 1.544 líneas; `ProductForm.tsx` (1.057) sin uso; `alert()`. |
+| 11 | **C-60b · Surtido de pedidos digitales** | Campos de proveedor, referencia y costo (F7); aviso de pedido digital por entregar; `orderItemId` sin comprobar. |
+| 12 | **C-76 · Correos sin emojis y con plantilla única** | 39 emojis en 10 archivos. Puede salir junto con el rediseño de correos de C-75. |
+| 13 | **C-40 · Cierre** | README, checklist de `PLAN.md` §6 con Andrés. |
 
 ### C-74 · Flujo de órdenes del admin 💰
 **Archivos:** `app/api/orders/route.ts` (PATCH), `app/admin/(dashboard)/orders/page.tsx`, `app/admin/(dashboard)/orders/[id]/digital/page.tsx`, `app/api/orders/[id]/digital/route.ts`, `lib/stock.ts`.

@@ -161,7 +161,8 @@ Revisar las ramas `gemini/*` pendientes, convertir el reporte G-14 en tarjetas n
 | 1 | **Revisar y mergear `gemini/R10` (G-35…G-37)** | ✅ Hecho (C-77) |
 | 2 | **C-74 · Flujo de órdenes del admin** | ✅ Hecho |
 | 3 | **C-55 · Marco del panel del cliente** | ✅ Hecho (desbloqueó G-38/G-39) |
-| 4 | **C-78 · Retoques de la tienda** | Contáctanos más compacto, esqueletos de carga sin el hero viejo, logo del favicon en la gift card, `Modal` compartido con portal y el `relative z-10` de `/servicios`. Pedido de Andrés el 16/09. |
+| 4 | **C-78 · Retoques de la tienda** | ✅ Hecho (Contáctanos, esqueletos, favicon en gift card, modales encerrados por `relative z-10`) |
+| 4b | **C-82 · Hotfix aprobar cursos y creadores** | ✅ Hecho (menú Cursos/Creadores, `formatUSD` con texto, lista blanca de cursos) |
 | 5 | **C-75 · Marketing y Contenido** | Andrés la marcó crítica y aprobó el rediseño. Incluye correos con imágenes de verdad. |
 | 6 | **Revisar R10 (G-38, G-39) y R11 (G-40…G-43)** | Cuando Gemini avise. Checkout y carrito: revisar línea por línea que solo cambió `className`. |
 | 7 | **C-79 · Panel de creadores en móvil** | La barra lateral fija de 240 px deja ~138 px de contenido a 390 px. Cajón como C-52/C-55. |

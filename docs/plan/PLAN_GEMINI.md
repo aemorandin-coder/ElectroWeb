@@ -1033,6 +1033,7 @@ Trabaja `checkout/page.tsx` **por bloques** (datos, envío, pago, resumen) y cor
    - **No toques:** los `kg` (`totalWeight`, `usedWeight`: no son dinero) ni el `toFixed` de la línea ~477 (va dentro de un texto que se envía).
 2. **Modal de términos** (~2220, `fixed inset-0 … bg-black/60 backdrop-blur-sm`): R5 con `adminModalOverlay`, `adminModalPanel` y `useBodyScrollLock(showTermsModal)`.
 3. **Texto blanco** del bloque de envío (`<strong className="text-white">` ~1988 y ~1992): si su fondo deja de ser azul, pasa a `text-ink`.
+4. **Pantallas de carga y de acceso a pantalla completa** (~668 `status === 'loading'` y ~725): hoy son un degradado azul de toda la pantalla, el mismo "rectángulo azul" que Andrés vio en los esqueletos. Pasan a `min-h-dvh bg-surface`, el spinner a `adminSpinner` y los textos blancos a `text-ink` / `text-muted` (el resto del bloque de ~725 en `adminCard`).
 
 QA: `/checkout` con un producto a 390 y 1440 px: los pasos se ven, el resumen no se corta, el modal de términos cubre la pantalla y el de QR de Pago Móvil abre.
 

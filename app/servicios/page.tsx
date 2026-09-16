@@ -90,7 +90,7 @@ export default async function ServiciosPage() {
       />
 
       {/* 1. MODO MOBILE (lg:hidden) - Current Optimized Layout */}
-      <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 py-4 relative z-10">
+      <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 py-4">
         {/* 1. Portfolio Mobile (Trabajos Realizados) */}
         <div className="mb-8">
           <div className="text-center mb-4">
@@ -228,7 +228,7 @@ export default async function ServiciosPage() {
       </div>
 
       {/* 2. MODO ESCRITORIO (hidden lg:block) - Reorganized & Compacted */}
-      <div className="hidden lg:block max-w-7xl mx-auto px-8 py-12 relative z-10">
+      <div className="hidden lg:block max-w-7xl mx-auto px-8 py-12">
         {/* 1. Portfolio Desktop (Trabajos Realizados) */}
         <div className="mb-16">
           <div className="text-center mb-8">

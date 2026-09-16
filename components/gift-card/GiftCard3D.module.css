@@ -139,6 +139,13 @@
   height: 58%;
 }
 
+/* Favicon de Configuración en lugar de la "E" (C-78) */
+.monogramImg {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+
 .wordmark {
   font-family: var(--font-brand);
   line-height: 1.05;

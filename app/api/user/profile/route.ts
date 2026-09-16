@@ -2,6 +2,45 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
+import { z } from 'zod';
+import { leerDocumento, leerTelefono, nombreSchema } from '@/lib/validations/registro';
+
+// null se acepta como vacío: la ruta ya lo trataba así
+const texto = (max: number) => z.string().trim().max(max, `Máximo ${max} caracteres`).nullable();
+// Avatar subido a la tienda o foto https (la de Google, por ejemplo). Antes se guardaba cualquier texto.
+const imagen = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => v === '' || /^\/(api\/)?uploads\/[\w./-]+$/.test(v) && !v.includes('..') || /^https:\/\/[^\s]+$/i.test(v), 'Imagen inválida')
+  .nullable()
+  .transform((v) => v || null);
+
+const datosPerfil = z.object({
+  phone: texto(24).optional(),
+  whatsapp: texto(24).optional(),
+  idNumber: texto(20).optional(),
+  bio: texto(500).optional(),
+  birthdate: texto(30).refine((v) => !v || /^\d{4}-\d{2}-\d{2}/.test(v), 'Fecha de nacimiento inválida').optional(),
+  gender: texto(30).optional(),
+  avatar: imagen.optional(),
+  city: texto(80).optional(),
+  state: texto(80).optional(),
+  country: texto(80).optional(),
+  customerType: z.enum(['', 'PERSON', 'COMPANY'], { error: 'Tipo de cliente inválido' }).nullable().optional(),
+  companyName: texto(150).optional(),
+  taxId: texto(30).optional(),
+});
+
+const perfilSchema = datosPerfil.extend({
+  name: z.string().max(120).nullable().optional(),
+  image: imagen.optional(),
+  profile: datosPerfil.optional(),
+  address: z
+    .object({ state: texto(80).optional(), city: texto(80).optional(), street: texto(300).optional(), zipCode: texto(20).optional() })
+    .optional(),
+});
 
 export async function GET() {
   try {
@@ -43,12 +82,30 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const parsed = perfilSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 });
+    }
+    const body = parsed.data;
+    // Extract profile data from body or body.profile
+    const profileData = body.profile ?? body;
 
-    // Update user name and image
-    const userUpdateData: any = {};
-    if (body.name) {
-      userUpdateData.name = body.name;
+    const actual = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, profile: { select: { idNumber: true, phone: true, whatsapp: true } } },
+    });
+    if (!actual) {
+      return NextResponse.json({ success: false, error: 'Usuario no encontrado' }, { status: 404 });
+    }
+
+    // C-84: antes esta ruta guardaba cualquier cosa. La pantalla bloquea la cédula una vez escrita, pero la API
+    // la dejaba cambiar (y es la que queda en la firma de los términos del saldo). Nombre, teléfono y cédula
+    // se validan con las reglas del registro solo si cambian: los datos viejos no dejan de guardarse.
+    const userUpdateData: { name?: string; image?: string | null } = {};
+    if (body.name && body.name.trim() !== (actual.name ?? '')) {
+      const nombre = nombreSchema.safeParse(body.name);
+      if (!nombre.success) return NextResponse.json({ success: false, error: nombre.error.issues[0].message }, { status: 400 });
+      userUpdateData.name = nombre.data;
     }
     if (body.image !== undefined) {
       userUpdateData.image = body.image;
@@ -61,19 +118,42 @@ export async function PUT(request: NextRequest) {
       });
     }
 
-    // Extract profile data from body or body.profile
-    const profileData = body.profile || body;
+    const profileUpdateData: Prisma.ProfileUpdateInput = {};
 
-    // Prepare profile update data
-    const profileUpdateData: any = {};
+    const telefono = (campo: 'phone' | 'whatsapp') => {
+      const valor = profileData[campo];
+      if (valor === undefined) return { ok: true as const };
+      if (!valor?.trim()) return { ok: true as const, valor: null };
+      if (valor === actual.profile?.[campo]) return { ok: true as const };
+      const lectura = leerTelefono(valor);
+      return lectura.ok ? { ok: true as const, valor: lectura.valor } : { ok: false as const, error: lectura.error };
+    };
+    for (const campo of ['phone', 'whatsapp'] as const) {
+      const r = telefono(campo);
+      if (!r.ok) return NextResponse.json({ success: false, error: r.error }, { status: 400 });
+      if ('valor' in r) profileUpdateData[campo] = r.valor;
+    }
 
-    if (profileData.phone !== undefined) profileUpdateData.phone = profileData.phone || null;
-    if (profileData.whatsapp !== undefined) profileUpdateData.whatsapp = profileData.whatsapp || null;
-    if (profileData.idNumber !== undefined) profileUpdateData.idNumber = profileData.idNumber || null;
+    if (profileData.idNumber?.trim()) {
+      const guardada = actual.profile?.idNumber;
+      const lectura = leerDocumento(profileData.idNumber);
+      if (guardada) {
+        const anterior = leerDocumento(guardada);
+        const igual = profileData.idNumber === guardada || (lectura.ok && anterior.ok && lectura.valor === anterior.valor);
+        if (!igual) {
+          return NextResponse.json({ success: false, error: 'La cédula ya registrada no se puede cambiar. Escríbenos si hay un error.' }, { status: 400 });
+        }
+      } else if (!lectura.ok) {
+        return NextResponse.json({ success: false, error: lectura.error }, { status: 400 });
+      } else {
+        profileUpdateData.idNumber = lectura.valor;
+      }
+    }
+
     if (profileData.bio !== undefined) profileUpdateData.bio = profileData.bio || null;
     if (profileData.birthdate !== undefined) profileUpdateData.birthdate = profileData.birthdate || null;
     if (profileData.gender !== undefined) profileUpdateData.gender = profileData.gender || null;
-    if (profileData.avatar !== undefined) profileUpdateData.avatar = profileData.avatar || null;
+    if (profileData.avatar !== undefined) profileUpdateData.avatar = profileData.avatar;
     if (profileData.city !== undefined) profileUpdateData.city = profileData.city || null;
     if (profileData.state !== undefined) profileUpdateData.state = profileData.state || null;
     if (profileData.country !== undefined) profileUpdateData.country = profileData.country || 'Venezuela';
@@ -86,8 +166,8 @@ export async function PUT(request: NextRequest) {
       where: { userId: session.user.id },
       update: profileUpdateData,
       create: {
-        userId: session.user.id,
-        ...profileUpdateData,
+        user: { connect: { id: session.user.id } },
+        ...(profileUpdateData as Omit<Prisma.ProfileCreateInput, 'user'>),
       },
     });
 

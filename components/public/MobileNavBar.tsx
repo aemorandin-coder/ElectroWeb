@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { esRutaDeAcceso } from '@/lib/rutas';
 
 type IconType = ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
 
@@ -94,8 +95,16 @@ export default function MobileNavBar() {
     };
   }, [isDrawerOpen]);
 
-  // Paneles de cliente y admin tienen su propia navegación
-  if (pathname?.startsWith('/customer') || pathname?.startsWith('/admin')) return null;
+  // Paneles de cliente, admin y creadores tienen su propia navegación. En login y registro tapaba la contraseña,
+  // y en el panel de creadores quedaba encima de su menú (C-84)
+  if (
+    pathname?.startsWith('/customer') ||
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/creator/dashboard') ||
+    esRutaDeAcceso(pathname)
+  ) {
+    return null;
+  }
 
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname?.startsWith(href));
   const closeDrawer = () => setIsDrawerOpen(false);

@@ -187,6 +187,10 @@ export default function RecuperarContrasenaPage() {
                                             </div>
                                             <input
                                                 type="email"
+                                                inputMode="email"
+                                                autoCapitalize="none"
+                                                autoCorrect="off"
+                                                spellCheck={false}
                                                 id="email"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}

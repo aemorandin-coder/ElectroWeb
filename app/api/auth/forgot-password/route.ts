@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/email-service';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { verifyCaptcha } from '@/lib/captcha';
+import { buscarUsuarioPorCorreo, normalizarCorreo } from '@/lib/correo';
 
 export async function POST(request: NextRequest) {
     try {
@@ -21,7 +22,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { email, captchaToken } = await request.json();
+        const body = await request.json();
+        const email = normalizarCorreo(body.email);
+        const captchaToken = body.captchaToken;
 
         // SEGURIDAD: el captcha se verifica en el servidor, no solo en el navegador
         const captcha = await verifyCaptcha(captchaToken, clientIP);
@@ -37,9 +40,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Find user by email
-        const user = await prisma.user.findUnique({
-            where: { email },
-        });
+        const user = await buscarUsuarioPorCorreo(email);
 
         // Always return success to prevent email enumeration
         if (!user || !user.email) {

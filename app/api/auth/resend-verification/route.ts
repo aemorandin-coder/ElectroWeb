@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 import { sendVerificationEmail } from '@/lib/email-service';
+import { buscarUsuarioPorCorreo, normalizarCorreo } from '@/lib/correo';
 
 // Rate limiting configuration
 const MAX_RESEND_ATTEMPTS = 3; // Maximum resends per time window
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
 
         try {
             const body = await request.json();
-            email = body.email || null;
+            email = normalizarCorreo(body.email) || null;
         } catch {
             // No body provided, try session
         }
@@ -38,9 +39,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Find user
-        const user = await prisma.user.findUnique({
-            where: { email },
-        });
+        const user = await buscarUsuarioPorCorreo(email);
 
         if (!user) {
             // Don't reveal if user exists

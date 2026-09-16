@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { normalizarCorreo } from '@/lib/correo';
 import { isAuthorized } from '@/lib/auth-helpers';
 
 // GET - Get customer details
@@ -94,7 +95,9 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, email, phone, whatsapp, customerType, companyName, taxId } = body;
+    const { name, phone, whatsapp, customerType, companyName, taxId } = body;
+    // Minúsculas y sin espacios, como en el registro: si no, el cliente no podía iniciar sesión con su correo (C-83)
+    const email = body.email === undefined ? undefined : normalizarCorreo(body.email);
 
     // Validate email format if provided
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -105,7 +108,7 @@ export async function PUT(
     if (email) {
       const existingUser = await prisma.user.findFirst({
         where: {
-          email,
+          email: { equals: email, mode: 'insensitive' },
           NOT: { id: customerId },
         },
       });

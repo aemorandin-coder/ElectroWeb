@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { sendVerificationEmail } from '@/lib/email-service';
+import { buscarUsuarioPorCorreo } from '@/lib/correo';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { verifyCaptcha } from '@/lib/captcha';
 import { z } from 'zod';
@@ -77,9 +78,8 @@ export async function POST(request: NextRequest) {
     const refCode = rawRef && /^[A-Z0-9_-]{3,20}$/.test(rawRef) ? rawRef : null;
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    // Sin distinguir mayúsculas: una cuenta vieja "Ana@…" y una nueva "ana@…" serían la misma persona (C-83)
+    const existingUser = await buscarUsuarioPorCorreo(email);
 
     if (existingUser) {
       return NextResponse.json(

@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { prisma } from '@/lib/prisma';
+import { buscarUsuarioPorCorreo } from '@/lib/correo';
 import * as bcrypt from 'bcryptjs';
 import { headers } from 'next/headers';
 
@@ -21,9 +22,8 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Unified login: check User table for both admins and customers
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+        // Sin distinguir mayúsculas ni espacios: el registro guarda el correo en minúsculas (C-83)
+        const user = await buscarUsuarioPorCorreo(credentials.email);
 
         if (user && user.password) {
           const isPasswordValid = await bcrypt.compare(

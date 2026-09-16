@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
+import { contrasenaSchema } from '@/lib/validations/registro';
 
 export async function GET(request: NextRequest) {
     try {
@@ -262,9 +263,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (newPassword.length < 8) {
+        // C-88: la misma regla que el registro (antes solo 8 caracteres)
+        const regla = contrasenaSchema.safeParse(newPassword);
+        if (!regla.success) {
             return NextResponse.json(
-                { error: 'La contraseña debe tener al menos 8 caracteres' },
+                { error: regla.error.issues[0]?.message ?? 'Contraseña inválida' },
                 { status: 400 }
             );
         }
@@ -292,7 +295,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Hash new password and update
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
         await prisma.user.update({
             where: { id: userId },
             data: { password: hashedPassword },

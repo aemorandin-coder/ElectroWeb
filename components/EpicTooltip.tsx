@@ -52,21 +52,19 @@ export default function EpicTooltip({
     };
 
     const arrowClasses = {
-        top: 'top-full left-1/2 -translate-x-1/2 -mt-1 border-t-cyan-500/30 border-l-transparent border-r-transparent border-b-transparent',
-        bottom: 'bottom-full left-1/2 -translate-x-1/2 -mb-1 border-b-cyan-500/30 border-l-transparent border-r-transparent border-t-transparent',
-        left: 'left-full top-1/2 -translate-y-1/2 -ml-1 border-l-cyan-500/30 border-t-transparent border-b-transparent border-r-transparent',
-        right: 'right-full top-1/2 -translate-y-1/2 -mr-1 border-r-cyan-500/30 border-t-transparent border-b-transparent border-l-transparent',
+        top: 'top-full left-1/2 -translate-x-1/2 -mt-1 border-t-deal border-l-transparent border-r-transparent border-b-transparent',
+        bottom: 'bottom-full left-1/2 -translate-x-1/2 -mb-1 border-b-deal border-l-transparent border-r-transparent border-t-transparent',
+        left: 'left-full top-1/2 -translate-y-1/2 -ml-1 border-l-deal border-t-transparent border-b-transparent border-r-transparent',
+        right: 'right-full top-1/2 -translate-y-1/2 -mr-1 border-r-deal border-t-transparent border-b-transparent border-l-transparent',
     };
 
     return (
         <div
-            className={`absolute ${positionClasses[position]} z-50 transition-all duration-300 ${isAnimatingOut ? 'opacity-0 scale-95' : 'opacity-100 scale-100 animate-fade-in'
+            className={`absolute ${positionClasses[position]} z-[var(--z-dropdown)] transition-all duration-300 ${isAnimatingOut ? 'opacity-0 scale-95' : 'opacity-100 scale-100 animate-fade-in'
                 }`}
             role="alert"
         >
-            <div className="relative px-4 py-2.5 bg-gradient-to-br from-red-500/90 to-red-600/90 backdrop-blur-xl border border-red-400/30 rounded-xl shadow-2xl min-w-[200px] max-w-[300px]">
-                {/* Glow effect */}
-                <div className="absolute inset-0 bg-red-400/20 rounded-xl blur-xl -z-10"></div>
+            <div className="relative px-4 py-2.5 bg-deal text-white rounded-xl shadow-lg border border-deal/40 min-w-[200px] max-w-[300px]">
 
                 {/* Icon */}
                 <div className="flex items-start gap-2">

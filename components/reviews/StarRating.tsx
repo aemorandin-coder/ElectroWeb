@@ -43,12 +43,12 @@ export default function StarRating({
                     onMouseEnter={() => !readonly && setHoverRating(star)}
                     onMouseLeave={() => !readonly && setHoverRating(0)}
                     disabled={readonly}
-                    className={`${readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110'} transition-transform`}
+                    className={`${readonly ? 'cursor-default' : 'cursor-pointer '} transition-transform`}
                 >
                     <svg
                         className={`${sizes[size]} ${star <= displayRating
-                                ? 'text-yellow-400 fill-yellow-400'
-                                : 'text-gray-300 fill-gray-300'
+                                ? 'text-warning fill-warning'
+                                : 'text-line fill-line'
                             } transition-colors`}
                         viewBox="0 0 20 20"
                     >
@@ -57,7 +57,7 @@ export default function StarRating({
                 </button>
             ))}
             {showNumber && (
-                <span className="ml-2 text-sm font-semibold text-gray-700">
+                <span className="ml-2 text-sm font-semibold text-ink">
                     {rating.toFixed(1)}
                 </span>
             )}

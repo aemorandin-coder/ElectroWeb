@@ -51,14 +51,6 @@ const Icons = {
     ),
 };
 
-// Step icon gradient colors
-const stepGradients = [
-    'from-blue-400 to-blue-600',
-    'from-indigo-400 to-indigo-600',
-    'from-cyan-400 to-cyan-600',
-    'from-emerald-400 to-emerald-600',
-];
-
 export default function ProcessingOverlay({
     isVisible,
     currentStep,
@@ -87,122 +79,104 @@ export default function ProcessingOverlay({
     return (
         <div
             ref={overlayRef}
-            className="fixed inset-0 z-[9999] bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 backdrop-blur-md flex justify-center pt-8 sm:pt-16 overflow-y-auto"
+            className="fixed inset-0 z-[var(--z-modal)] bg-ink/75 flex items-center justify-center p-4 overflow-y-auto"
             role="dialog"
             aria-modal="true"
             aria-labelledby="processing-title"
         >
-            <div className="max-w-md w-full h-fit px-4 sm:px-0">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-2xl border border-line my-auto">
                 {/* Error State */}
                 {error ? (
-                    <div className="text-center animate-[shake_0.5s_ease-in-out]">
-                        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-2xl shadow-red-500/30">
-                            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-deal-bg flex items-center justify-center text-deal">
+                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </div>
-                        <h2 id="processing-title" className="text-2xl font-bold text-white mb-2">
+                        <h2 id="processing-title" className="text-xl font-bold text-ink mb-2">
                             Ocurrió un error
                         </h2>
-                        <p className="text-red-400 text-lg mb-4">{error}</p>
-                        <p className="text-gray-400 text-sm">Cerrando automáticamente...</p>
+                        <p className="text-deal text-sm font-semibold mb-3">{error}</p>
+                        <p className="text-muted text-xs">Cerrando automáticamente...</p>
                     </div>
                 ) : (
                     <>
-                        {/* Header with animated logo or icon */}
-                        <div className="text-center mb-8">
-                            <div className="relative w-28 h-28 mx-auto mb-4">
-                                {/* Outer ring pulse */}
-                                <div className="absolute inset-0 rounded-full border-4 border-blue-500/30 animate-pulse" />
-                                {/* Spinning ring */}
-                                <div
-                                    className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 animate-spin"
-                                    style={{ animationDuration: '1.5s' }}
-                                />
-                                {/* Inner content - Logo or Icon */}
-                                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-2xl shadow-blue-500/40 overflow-hidden">
-                                    {isComplete ? (
-                                        <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    ) : logoUrl ? (
-                                        <Image
-                                            src={logoUrl}
-                                            alt="Logo"
-                                            width={80}
-                                            height={80}
-                                            className="w-full h-full object-contain p-2"
-                                            priority
-                                        />
-                                    ) : (
-                                        <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            {steps[0]?.icon && Icons[steps[0].icon]}
-                                        </svg>
-                                    )}
+                        {/* Header with animated logo or spinner */}
+                        <div className="text-center mb-6">
+                            {logoUrl ? (
+                                <div className="relative w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                                    <div className="absolute inset-0 rounded-full border-2 border-line border-t-brand-500 animate-spin" />
+                                    <Image src={logoUrl} alt="Logo" width={64} height={64} className="object-contain" />
                                 </div>
-                            </div>
-                            <h2 id="processing-title" className="text-2xl font-bold text-white mb-2">
-                                {isComplete ? '¡Proceso completado!' : title}
+                            ) : (
+                                <div className="w-14 h-14 mx-auto mb-4 rounded-full border-4 border-line border-t-brand-500 animate-spin" />
+                            )}
+                            <h2 id="processing-title" className="text-xl font-bold text-ink mb-1">
+                                {title}
                             </h2>
-                            <p className="text-gray-400">
-                                {isComplete ? 'Redirigiendo...' : subtitle}
+                            <p className="text-xs text-muted">
+                                {subtitle}
                             </p>
                         </div>
 
-
-                        {/* Steps */}
-                        <div className="space-y-3">
+                        {/* Steps list */}
+                        <div className="space-y-2.5">
                             {steps.map((step, index) => {
                                 const stepNumber = index + 1;
                                 const isActive = currentStep === stepNumber - 1;
                                 const isCompleted = currentStep >= stepNumber;
-                                const gradient = stepGradients[index % stepGradients.length];
 
                                 return (
                                     <div
                                         key={step.id}
-                                        className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-500 ${isCompleted
-                                            ? 'bg-blue-500/20 border border-blue-500/40'
-                                            : 'bg-white/5 border border-white/10'
-                                            }`}
+                                        className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                                            isCompleted
+                                                ? 'bg-success/5 border-success/30'
+                                                : isActive
+                                                ? 'bg-brand-500/5 border-brand-500/40'
+                                                : 'bg-surface border-line'
+                                        }`}
                                     >
                                         {/* Step icon */}
                                         <div
-                                            className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 flex-shrink-0 ${isCompleted
-                                                ? `bg-gradient-to-br ${gradient} text-white shadow-lg`
-                                                : isActive
-                                                    ? 'bg-white/20 text-white'
-                                                    : 'bg-white/10 text-gray-400'
-                                                }`}
+                                            className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                                                isCompleted
+                                                    ? 'bg-success-strong text-white'
+                                                    : isActive
+                                                    ? 'bg-brand-500 text-white'
+                                                    : 'bg-line text-subtle'
+                                            }`}
                                         >
                                             {isActive && !isCompleted ? (
-                                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                            ) : isCompleted ? (
-                                                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    {Icons[step.icon]}
-                                                </svg>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                             ) : (
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     {Icons[step.icon]}
                                                 </svg>
                                             )}
                                         </div>
 
                                         {/* Step content */}
-                                        <div className="flex-1 text-center">
+                                        <div className="flex-1 text-left min-w-0">
                                             <p
-                                                className={`font-semibold transition-colors ${isCompleted
-                                                    ? 'text-white'
-                                                    : isActive
-                                                        ? 'text-gray-200'
-                                                        : 'text-gray-400'
-                                                    }`}
+                                                className={`text-xs font-semibold truncate ${
+                                                    isCompleted
+                                                        ? 'text-ink'
+                                                        : isActive
+                                                        ? 'text-brand-600'
+                                                        : 'text-muted'
+                                                }`}
                                             >
                                                 {step.title}
                                             </p>
                                             <p
-                                                className={`text-sm transition-colors ${isCompleted ? 'text-blue-200' : 'text-gray-500'
-                                                    }`}
+                                                className={`text-[11px] truncate ${
+                                                    isCompleted
+                                                        ? 'text-muted'
+                                                        : isActive
+                                                        ? 'text-brand-700'
+                                                        : 'text-subtle'
+                                                }`}
                                             >
                                                 {step.description}
                                             </p>
@@ -211,7 +185,7 @@ export default function ProcessingOverlay({
                                         {/* Checkmark */}
                                         {isCompleted && (
                                             <svg
-                                                className="w-6 h-6 text-green-400 flex-shrink-0"
+                                                className="w-4 h-4 text-success-strong flex-shrink-0"
                                                 fill="none"
                                                 stroke="currentColor"
                                                 viewBox="0 0 24 24"
@@ -230,14 +204,14 @@ export default function ProcessingOverlay({
                         </div>
 
                         {/* Progress bar */}
-                        <div className="mt-8">
-                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div className="mt-5">
+                            <div className="h-1.5 bg-line rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-1000 ease-out"
+                                    className="h-full bg-brand-500 rounded-full transition-all duration-500 ease-out"
                                     style={{ width: `${progress}%` }}
                                 />
                             </div>
-                            <p className="text-center text-gray-400 text-sm mt-3">
+                            <p className="text-center text-muted text-xs mt-2">
                                 {isComplete
                                     ? '¡Proceso completado!'
                                     : `Paso ${currentStep} de ${totalSteps}`}
@@ -245,22 +219,6 @@ export default function ProcessingOverlay({
                         </div>
                     </>
                 )}
-            </div>
-
-            {/* Floating particles */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                {[...Array(15)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="absolute w-2 h-2 bg-blue-500/20 rounded-full animate-pulse"
-                        style={{
-                            left: `${10 + i * 6}%`,
-                            top: `${20 + ((i * 7) % 60)}%`,
-                            animationDelay: `${i * 0.2}s`,
-                            animationDuration: `${2 + (i % 3)}s`,
-                        }}
-                    />
-                ))}
             </div>
         </div>
     );

@@ -300,7 +300,7 @@ Por favor necesito ayuda para verificar mi pago.
                 {/* Fecha del pago */}
                 <div>
                     <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Fecha del Pago <span className="text-red-500">*</span>
+                        Fecha del Pago <span className="text-deal">*</span>
                     </label>
                     <div className="form-field">
                         <FiCalendar className="field-icon text-muted" />
@@ -312,12 +312,12 @@ Por favor necesito ayuda para verificar mi pago.
                             max={new Date().toISOString().split('T')[0]}
                             disabled={disabled || verificationState === 'verifying'}
                             className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                                fieldErrors.fechaPago ? 'border-red-400 bg-red-50' : 'border-line'
+                                fieldErrors.fechaPago ? 'border-deal/40 bg-deal-bg' : 'border-line'
                             }`}
                         />
                     </div>
                     {fieldErrors.fechaPago && (
-                        <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <p className="text-deal text-xs mt-1 flex items-center gap-1">
                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.fechaPago}
                         </p>
                     )}
@@ -326,7 +326,7 @@ Por favor necesito ayuda para verificar mi pago.
                 {/* Referencia */}
                 <div>
                     <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Nº de Referencia <span className="text-red-500">*</span>
+                        Nº de Referencia <span className="text-deal">*</span>
                     </label>
                     <div className="form-field">
                         <FiHash className="field-icon text-muted" />
@@ -340,12 +340,12 @@ Por favor necesito ayuda para verificar mi pago.
                             inputMode="numeric"
                             disabled={disabled || verificationState === 'verifying'}
                             className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                                fieldErrors.referencia ? 'border-red-400 bg-red-50' : 'border-line'
+                                fieldErrors.referencia ? 'border-deal/40 bg-deal-bg' : 'border-line'
                             }`}
                         />
                     </div>
                     {fieldErrors.referencia ? (
-                        <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <p className="text-deal text-xs mt-1 flex items-center gap-1">
                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.referencia}
                         </p>
                     ) : (
@@ -359,7 +359,7 @@ Por favor necesito ayuda para verificar mi pago.
                 {/* Cédula del pagador */}
                 <div>
                     <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Cédula del Titular <span className="text-red-500">*</span>
+                        Cédula del Titular <span className="text-deal">*</span>
                     </label>
                     <div className="form-field">
                         <FiUser className="field-icon text-muted" />
@@ -373,12 +373,12 @@ Por favor necesito ayuda para verificar mi pago.
                             autoCapitalize="characters"
                             disabled={disabled || verificationState === 'verifying'}
                             className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                                fieldErrors.cedulaPagador ? 'border-red-400 bg-red-50' : 'border-line'
+                                fieldErrors.cedulaPagador ? 'border-deal/40 bg-deal-bg' : 'border-line'
                             }`}
                         />
                     </div>
                     {fieldErrors.cedulaPagador ? (
-                        <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <p className="text-deal text-xs mt-1 flex items-center gap-1">
                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.cedulaPagador}
                         </p>
                     ) : (
@@ -389,7 +389,7 @@ Por favor necesito ayuda para verificar mi pago.
                 {/* Teléfono del pagador */}
                 <div>
                     <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Teléfono del Pago <span className="text-red-500">*</span>
+                        Teléfono del Pago <span className="text-deal">*</span>
                     </label>
                     <div className="form-field">
                         <FiPhone className="field-icon text-muted" />
@@ -403,12 +403,12 @@ Por favor necesito ayuda para verificar mi pago.
                             maxLength={11}
                             disabled={disabled || verificationState === 'verifying'}
                             className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                                fieldErrors.telefonoPagador ? 'border-red-400 bg-red-50' : 'border-line'
+                                fieldErrors.telefonoPagador ? 'border-deal/40 bg-deal-bg' : 'border-line'
                             }`}
                         />
                     </div>
                     {fieldErrors.telefonoPagador ? (
-                        <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <p className="text-deal text-xs mt-1 flex items-center gap-1">
                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.telefonoPagador}
                         </p>
                     ) : (
@@ -419,10 +419,10 @@ Por favor necesito ayuda para verificar mi pago.
                 {/* Banco origen - Dropdown mejorado */}
                 <div className="relative">
                     <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Banco de Origen <span className="text-red-500">*</span>
+                        Banco de Origen <span className="text-deal">*</span>
                     </label>
                     {fieldErrors.bancoOrigen && (
-                        <p className="text-red-500 text-xs mb-1 flex items-center gap-1">
+                        <p className="text-deal text-xs mb-1 flex items-center gap-1">
                             <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.bancoOrigen}
                         </p>
                     )}
@@ -460,7 +460,7 @@ Por favor necesito ayuda para verificar mi pago.
                                             key={banco.codigo}
                                             type="button"
                                             onClick={() => handleSelectBanco(banco)}
-                                            className={`w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 transition-colors flex items-center justify-between ${formData.bancoOrigen === banco.codigo ? 'bg-blue-50 text-brand-500' : 'text-ink'
+                                            className={`w-full px-4 py-2.5 text-left text-sm hover:bg-brand-500/5 transition-colors flex items-center justify-between ${formData.bancoOrigen === banco.codigo ? 'bg-brand-500/10 text-brand-600' : 'text-ink'
                                                 }`}
                                         >
                                             <span>{banco.nombre}</span>
@@ -478,16 +478,16 @@ Por favor necesito ayuda para verificar mi pago.
                 </div>
 
                 {/* Monto a verificar - Bs como protagonista */}
-                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-200">
+                <div className="bg-warning/10 rounded-xl p-4 border border-warning/30">
                     <div className="flex items-center justify-between">
                         <div>
                             <span className="text-xs font-semibold text-muted uppercase tracking-wider">Monto a pagar:</span>
-                            <p className="text-xs text-orange-600 mt-0.5">Tasa BCV oficial</p>
+                            <p className="text-xs text-warning-strong mt-0.5">Tasa BCV oficial</p>
                         </div>
                         <div className="text-right">
                             {montoEnBs ? (
                                 <>
-                                    <span className="text-2xl font-bold text-orange-600">{formatVES(montoEnBs)}</span>
+                                    <span className="text-2xl font-bold text-warning-strong">{formatVES(montoEnBs)}</span>
                                     <p className="text-xs text-muted">({formatUSD(montoEsperado)})</p>
                                 </>
                             ) : (
@@ -502,19 +502,19 @@ Por favor necesito ayuda para verificar mi pago.
             {resultado && (
                 <div
                     className={`rounded-xl p-4 border animate-fadeIn text-center ${verificationState === 'success'
-                        ? 'bg-green-50 border-green-200'
+                        ? 'bg-success/5 border-success/30'
                         : verificationState === 'duplicate'
-                            ? 'bg-orange-50 border-orange-300'
-                            : 'bg-red-50 border-red-200'
+                            ? 'bg-warning/10 border-warning/30'
+                            : 'bg-deal-bg border-deal/30'
                         }`}
                 >
                     <div className="flex items-center justify-center gap-2 mb-2">
                         <div
                             className={`w-6 h-6 rounded-full flex items-center justify-center ${verificationState === 'success'
-                                ? 'bg-green-500'
+                                ? 'bg-success-strong'
                                 : verificationState === 'duplicate'
-                                    ? 'bg-orange-500'
-                                    : 'bg-red-500'
+                                    ? 'bg-warning'
+                                    : 'bg-deal-bg0'
                                 }`}
                         >
                             {verificationState === 'success' ? (
@@ -525,10 +525,10 @@ Por favor necesito ayuda para verificar mi pago.
                         </div>
                         <span
                             className={`font-bold text-sm ${verificationState === 'success'
-                                ? 'text-green-700'
+                                ? 'text-success-strong'
                                 : verificationState === 'duplicate'
-                                    ? 'text-orange-700'
-                                    : 'text-red-700'
+                                    ? 'text-warning-strong'
+                                    : 'text-deal'
                                 }`}
                         >
                             {verificationState === 'success'
@@ -542,10 +542,10 @@ Por favor necesito ayuda para verificar mi pago.
                     </div>
                     <p
                         className={`text-xs ${verificationState === 'success'
-                            ? 'text-green-600'
+                            ? 'text-success-strong'
                             : verificationState === 'duplicate'
-                                ? 'text-orange-600'
-                                : 'text-red-600'
+                                ? 'text-warning-strong'
+                                : 'text-deal'
                             }`}
                     >
                         {resultado.message}
@@ -554,8 +554,8 @@ Por favor necesito ayuda para verificar mi pago.
                         <button
                             onClick={handleContactRedirect}
                             className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-xs transition-all ${verificationState === 'duplicate'
-                                ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                                : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                ? 'bg-warning/20 text-warning-strong hover:bg-warning/30'
+                                : 'bg-deal-bg text-deal hover:bg-deal/20'
                                 }`}
                         >
                             <FiMessageCircle className="w-3.5 h-3.5" />
@@ -571,10 +571,10 @@ Por favor necesito ayuda para verificar mi pago.
                 onClick={handleVerificar}
                 disabled={!canSubmit || verificationState === 'success'}
                 className={`w-full py-3.5 font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${verificationState === 'success'
-                    ? 'bg-green-500 text-white cursor-default'
+                    ? 'bg-success-strong text-white cursor-default'
                     : verificationState === 'verifying'
-                        ? 'bg-gradient-to-r from-blue-400 to-blue-500 text-white cursor-wait'
-                        : 'bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
+                        ? 'bg-brand-500 text-white cursor-wait'
+                        : 'bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed'
                     }`}
             >
                 {getButtonContent()}

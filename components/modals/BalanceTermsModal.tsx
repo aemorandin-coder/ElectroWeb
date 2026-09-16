@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { FiX, FiCheck, FiAlertTriangle, FiFileText, FiEdit3, FiLoader } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { adminModalOverlay, adminModalPanel, adminLabel, adminInput, adminPrimaryButton, adminSecondaryButton, adminSuccessButton } from '@/lib/admin-ui';
 
 interface BalanceTermsModalProps {
     isOpen: boolean;
@@ -186,30 +187,29 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
 
     // Use portal to render outside of parent container constraints
     return createPortal(
-        <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-3 lg:p-4 bg-black/70 backdrop-blur-sm">
-            {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL */}
-            <button
-                onClick={onClose}
-                className="fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all z-10"
-                aria-label="Cerrar"
-            >
-                <FiX className="w-6 h-6 text-gray-700" />
-            </button>
-
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[700px] max-h-[90vh] overflow-hidden animate-scaleIn flex flex-col">
+        <div className={adminModalOverlay}>
+            <div className={`${adminModalPanel} max-w-[700px] w-full max-h-[90vh] overflow-hidden flex flex-col`}>
                 {/* Header */}
-                <div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white px-4 lg:px-6 py-3 lg:py-4">
+                <div className="px-4 lg:px-6 py-3 lg:py-4 border-b border-line flex items-center justify-between">
                     <div className="flex items-center gap-2 lg:gap-3">
-                        <div className="w-8 h-8 lg:w-10 lg:h-10 bg-white/20 rounded-lg lg:rounded-xl flex items-center justify-center">
+                        <div className="w-8 h-8 lg:w-10 lg:h-10 bg-brand-500/10 rounded-lg lg:rounded-xl flex items-center justify-center text-brand-500">
                             <FiFileText className="w-4 h-4 lg:w-5 lg:h-5" />
                         </div>
                         <div>
-                            <h2 className="text-sm lg:text-lg font-bold">Términos de Recarga</h2>
-                            <p className="text-xs lg:text-sm text-white/70">
+                            <h2 className="text-sm lg:text-base font-bold text-ink">Términos de Recarga</h2>
+                            <p className="text-xs text-muted">
                                 {step === 'terms' ? 'Paso 1: Leer términos' : 'Paso 2: Firmar'}
                             </p>
                         </div>
                     </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="p-2 text-muted hover:text-ink hover:bg-surface rounded-lg transition-colors"
+                        aria-label="Cerrar"
+                    >
+                        <FiX className="w-5 h-5" />
+                    </button>
                 </div>
 
                 {step === 'terms' ? (
@@ -218,17 +218,17 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                         <div
                             ref={termsRef}
                             onScroll={handleScroll}
-                            className="p-6 overflow-y-auto max-h-[50vh] text-sm text-ink-soft space-y-4"
+                            className="p-6 overflow-y-auto max-h-[50vh] text-xs text-ink-soft space-y-4"
                         >
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
-                                <FiAlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                                <p className="text-yellow-800">
-                                    <strong>IMPORTANTE:</strong> Lee cuidadosamente estos términos antes de realizar tu primera recarga.
+                            <div className="bg-warning/10 border border-warning/30 rounded-xl p-4 flex items-start gap-3">
+                                <FiAlertTriangle className="w-5 h-5 text-warning-strong flex-shrink-0 mt-0.5" />
+                                <p className="text-xs text-ink-soft leading-relaxed">
+                                    <strong className="text-ink font-bold">IMPORTANTE:</strong> Lee cuidadosamente estos términos antes de realizar tu primera recarga.
                                     Al continuar, aceptas legalmente todas las condiciones aquí descritas.
                                 </p>
                             </div>
 
-                            <h3 className="font-bold text-ink text-base">1. ORIGEN LÍCITO DE FONDOS</h3>
+                            <h3 className="font-bold text-ink text-sm">1. ORIGEN LÍCITO DE FONDOS</h3>
                             <p>
                                 El usuario declara bajo juramento que todos los fondos utilizados para recargar saldo en esta plataforma
                                 provienen de actividades lícitas y legales. Queda estrictamente prohibido el uso de fondos provenientes de:
@@ -241,9 +241,9 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                 <li>Evasión fiscal o fondos no declarados</li>
                             </ul>
 
-                            <h3 className="font-bold text-ink text-base">2. POLÍTICA DE NO REEMBOLSO</h3>
+                            <h3 className="font-bold text-ink text-sm">2. POLÍTICA DE NO REEMBOLSO</h3>
                             <p>
-                                <strong className="text-red-600">EL SALDO RECARGADO NO ES REEMBOLSABLE BAJO NINGUNA CIRCUNSTANCIA.</strong>
+                                <strong className="text-deal font-bold">EL SALDO RECARGADO NO ES REEMBOLSABLE BAJO NINGUNA CIRCUNSTANCIA.</strong>
                             </p>
                             <p>
                                 Una vez que el saldo haya sido acreditado a tu cuenta, no podrá ser retirado, transferido a terceros,
@@ -251,96 +251,58 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                 ser utilizado para realizar compras de productos dentro de esta plataforma.
                             </p>
 
-                            <h3 className="font-bold text-ink text-base">3. VERACIDAD DE LA INFORMACIÓN</h3>
+                            <h3 className="font-bold text-ink text-sm">3. VERACIDAD DE LA INFORMACIÓN</h3>
                             <p>
                                 El usuario se compromete a proporcionar información veraz, exacta y actualizada en todas sus transacciones,
                                 incluyendo pero no limitado a:
                             </p>
                             <ul className="list-disc pl-6 space-y-1">
                                 <li>Número de referencia de pago correcto</li>
-                                <li>Monto exacto de la transferencia</li>
-                                <li>Datos personales verídicos</li>
-                                <li>Comprobantes de pago auténticos</li>
+                                <li>Monto exacto transferido</li>
+                                <li>Datos bancarios propios (no de terceros)</li>
+                                <li>Comprobantes de pago legítimos y sin alteraciones</li>
                             </ul>
-                            <p>
-                                La provisión de información falsa o fraudulenta resultará en el rechazo de la transacción y posible
-                                suspensión de la cuenta sin derecho a reembolso.
-                            </p>
 
-                            <h3 className="font-bold text-ink text-base">4. TRANSACCIONES FALLIDAS O RECHAZADAS</h3>
+                            <h3 className="font-bold text-ink text-sm">4. SANCIONES POR INCUMPLIMIENTO</h3>
                             <p>
-                                El usuario acepta que las transacciones pueden ser rechazadas por los siguientes motivos:
+                                Cualquier intento de fraude, uso de comprobantes falsificados, o suministro de información
+                                engañosa resultará en:
                             </p>
                             <ul className="list-disc pl-6 space-y-1">
-                                <li>Número de referencia incorrecto o inválido</li>
-                                <li>Monto transferido diferente al declarado</li>
-                                <li>Datos inconsistentes o sospechosos</li>
-                                <li>Múltiples intentos fallidos consecutivos</li>
-                                <li>Sospecha de actividad fraudulenta</li>
-                            </ul>
-                            <p>
-                                <strong>Las transacciones rechazadas repetidamente pueden resultar en la suspensión temporal o permanente
-                                    de la capacidad de recarga del usuario.</strong>
-                            </p>
-
-                            <h3 className="font-bold text-ink text-base">5. VERIFICACIÓN Y AUDITORÍA</h3>
-                            <p>
-                                La empresa se reserva el derecho de:
-                            </p>
-                            <ul className="list-disc pl-6 space-y-1">
-                                <li>Verificar la identidad del usuario en cualquier momento</li>
-                                <li>Solicitar documentación adicional para validar transacciones</li>
-                                <li>Reportar actividades sospechosas a las autoridades competentes</li>
-                                <li>Retener fondos durante investigaciones de fraude</li>
-                                <li>Cancelar cuentas que violen estos términos</li>
+                                <li>Suspensión inmediata y definitiva de la cuenta</li>
+                                <li>Pérdida total del saldo acumulado sin derecho a reclamo</li>
+                                <li>Reporte a las autoridades financieras y judiciales competentes</li>
+                                <li>Acciones legales pertinentes según las leyes de la República Bolivariana de Venezuela</li>
                             </ul>
 
-                            <h3 className="font-bold text-ink text-base">6. RESPONSABILIDAD LEGAL</h3>
+                            <h3 className="font-bold text-ink text-sm">5. ACEPTACIÓN EXPRESA</h3>
                             <p>
-                                El usuario acepta total responsabilidad legal por cualquier violación de estos términos y exime a la
-                                empresa de cualquier responsabilidad derivada del uso indebido de la plataforma. En caso de disputas
-                                legales, el usuario acepta someterse a la jurisdicción de los tribunales competentes de la República
-                                Bolivariana de Venezuela.
+                                Al marcar la casilla de aceptación y estampar tu firma digital, confirmas que has leído,
+                                comprendido y aceptado en su totalidad estos Términos y Condiciones, los cuales tienen
+                                plena validez legal como contrato de adhesión.
                             </p>
-
-                            <h3 className="font-bold text-ink text-base">7. MODIFICACIONES</h3>
-                            <p>
-                                La empresa se reserva el derecho de modificar estos términos en cualquier momento. Los usuarios serán
-                                notificados de cambios significativos y deberán aceptar los nuevos términos para continuar utilizando
-                                el servicio de recarga.
-                            </p>
-
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
-                                <p className="text-blue-800 text-xs">
-                                    <strong>Última actualización:</strong> Diciembre 2024 | Versión 1.0
-                                </p>
-                            </div>
                         </div>
 
-                        {/* Footer */}
-                        <div className="p-6 border-t border-line bg-surface">
-                            {!hasScrolledToBottom && (
-                                <p className="text-xs text-center text-muted mb-4">
-                                    Desplázate hasta el final para poder continuar
-                                </p>
-                            )}
-                            <label className="flex items-start gap-3 cursor-pointer mb-4">
+                        {/* Terms Footer */}
+                        <div className="p-4 lg:p-6 border-t border-line bg-surface space-y-4">
+                            <label className="flex items-start gap-3 cursor-pointer">
                                 <input
                                     type="checkbox"
                                     checked={agreedToTerms}
                                     onChange={(e) => setAgreedToTerms(e.target.checked)}
                                     disabled={!hasScrolledToBottom}
-                                    className="w-5 h-5 rounded border-2 border-brand-500 text-brand-500 focus:ring-brand-500 mt-0.5"
+                                    className="w-5 h-5 rounded border border-line text-brand-500 focus:ring-brand-500 mt-0.5"
                                 />
-                                <span className={`text-sm ${hasScrolledToBottom ? 'text-ink' : 'text-subtle'}`}>
+                                <span className={`text-xs ${hasScrolledToBottom ? 'text-ink' : 'text-subtle'}`}>
                                     He leído, entiendo y acepto todos los términos y condiciones descritos anteriormente.
                                     Declaro que los fondos que utilizaré son de origen lícito.
                                 </span>
                             </label>
                             <button
+                                type="button"
                                 onClick={() => setStep('signature')}
                                 disabled={!agreedToTerms || !hasScrolledToBottom}
-                                className="w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`${adminPrimaryButton} w-full`}
                             >
                                 Continuar a Firma Digital
                             </button>
@@ -352,7 +314,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                         <div className="p-6 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-ink mb-1 uppercase tracking-wider">
+                                    <label className={adminLabel}>
                                         Cédula de Identidad *
                                     </label>
                                     <input
@@ -360,11 +322,11 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                         value={idNumber}
                                         onChange={(e) => setIdNumber(e.target.value)}
                                         placeholder="V-12345678"
-                                        className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                                        className={adminInput()}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-ink mb-1 uppercase tracking-wider">
+                                    <label className={adminLabel}>
                                         Teléfono
                                     </label>
                                     <input
@@ -372,12 +334,12 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="0414-1234567"
-                                        className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                                        className={adminInput()}
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-ink mb-1 uppercase tracking-wider">
+                                <label className={adminLabel}>
                                     Dirección
                                 </label>
                                 <input
@@ -385,24 +347,25 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                     value={address}
                                     onChange={(e) => setAddress(e.target.value)}
                                     placeholder="Ciudad, Estado, País"
-                                    className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                                    className={adminInput()}
                                 />
                             </div>
 
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <label className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+                                    <label className={`${adminLabel} mb-0 flex items-center gap-2`}>
                                         <FiEdit3 className="w-4 h-4" />
                                         Firma Digital *
                                     </label>
                                     <button
+                                        type="button"
                                         onClick={clearSignature}
-                                        className="text-xs text-red-600 hover:text-red-700 font-medium"
+                                        className="text-xs text-deal hover:text-deal/80 font-bold"
                                     >
                                         Limpiar Firma
                                     </button>
                                 </div>
-                                <div className="border-2 border-dashed border-brand-500 rounded-xl p-1 bg-white">
+                                <div className="border border-line rounded-xl p-1 bg-white">
                                     <canvas
                                         ref={canvasRef}
                                         width={500}
@@ -422,25 +385,27 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
                                 </p>
                             </div>
 
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
-                                <strong>Nota Legal:</strong> Tu firma y datos serán guardados como constancia de aceptación
+                            <div className="bg-info/10 border border-info/30 rounded-xl p-3 text-xs text-ink-soft">
+                                <strong className="font-bold text-ink">Nota Legal:</strong> Tu firma y datos serán guardados como constancia de aceptación
                                 de los términos y condiciones. Este documento puede ser utilizado como prueba legal en caso
                                 de disputas.
                             </div>
                         </div>
 
                         {/* Footer */}
-                        <div className="p-6 border-t border-line bg-surface flex gap-3">
+                        <div className="p-4 lg:p-6 border-t border-line bg-surface flex gap-3">
                             <button
+                                type="button"
                                 onClick={() => setStep('terms')}
-                                className="flex-1 py-3 border-2 border-line text-ink font-bold rounded-xl hover:bg-white transition-all"
+                                className={`${adminSecondaryButton} flex-1`}
                             >
                                 Volver
                             </button>
                             <button
+                                type="button"
                                 onClick={handleSubmit}
                                 disabled={isSubmitting || !idNumber || !hasSignature}
-                                className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className={`${adminSuccessButton} flex-1 flex items-center justify-center gap-2`}
                             >
                                 {isSubmitting ? (
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

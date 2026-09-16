@@ -1,14 +1,38 @@
 'use client';
-import { formatUSD } from '@/lib/currency';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { FiShoppingCart, FiTrash2, FiPackage, FiExternalLink, FiSearch, FiGrid, FiList, FiFilter, FiTrendingUp, FiClock, FiDollarSign, FiPercent, FiX, FiCheck, FiSend, FiGift } from 'react-icons/fi';
+import {
+  FiShoppingCart,
+  FiTrash2,
+  FiPackage,
+  FiExternalLink,
+  FiSearch,
+  FiGrid,
+  FiList,
+  FiFilter,
+  FiTrendingUp,
+  FiDollarSign,
+  FiPercent,
+  FiX,
+  FiSend,
+  FiGift,
+} from 'react-icons/fi';
 import { PiListHeartBold, PiHeartBreakBold, PiSparkle } from 'react-icons/pi';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import toast from 'react-hot-toast';
+import { formatUSD } from '@/lib/currency';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import {
+  adminCard,
+  adminPrimaryButton,
+  adminBadge,
+  adminLabel,
+  adminModalOverlay,
+  adminModalPanel,
+} from '@/lib/admin-ui';
 
 interface WishlistItem {
   id: string;
@@ -50,6 +74,8 @@ export default function WishlistPage() {
   const [requestingDiscount, setRequestingDiscount] = useState(false);
   const [showInfoBanner, setShowInfoBanner] = useState(true);
 
+  useBodyScrollLock(showDiscountModal);
+
   useEffect(() => {
     const bannerDismissed = localStorage.getItem('wishlist-info-dismissed');
     if (bannerDismissed === 'true') {
@@ -74,7 +100,6 @@ export default function WishlistPage() {
         const data = await response.json();
         // Map products to WishlistItem format
         const items: WishlistItem[] = (data.products || []).map((product: any) => {
-          // Parse images if it's a JSON string
           let images: string[] = [];
           if (product.images) {
             if (typeof product.images === 'string') {
@@ -150,10 +175,9 @@ export default function WishlistPage() {
       name: item.productName,
       price: item.price,
       imageUrl: item.imageUrl || '',
-      stock: 999, // Default max stock since we only know it's in stock
-      // Default shipping fields - these products don't have full info
+      stock: 999,
       productType: 'PHYSICAL',
-      weightKg: 0.1, // Default weight
+      weightKg: 0.1,
       isConsolidable: true,
       shippingCost: 0,
     }, 1);
@@ -204,7 +228,7 @@ export default function WishlistPage() {
       } else {
         toast.error(data.error || 'Error al enviar solicitud');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error de conexion');
     } finally {
       setRequestingDiscount(false);
@@ -229,8 +253,6 @@ export default function WishlistPage() {
 
   const totalValue = wishlist.reduce((sum, item) => sum + item.price, 0);
   const inStockCount = wishlist.filter(item => item.inStock).length;
-  const pendingDiscounts = discountRequests.filter(r => r.status === 'PENDING').length;
-  const approvedDiscounts = discountRequests.filter(r => r.status === 'APPROVED' && r.expiresAt && new Date(r.expiresAt) > new Date()).length;
 
   if (loading) {
     return (
@@ -250,80 +272,73 @@ export default function WishlistPage() {
       const expires = new Date(expiresAt);
       const hoursLeft = Math.max(0, Math.floor((expires.getTime() - now.getTime()) / (1000 * 60 * 60)));
       if (hoursLeft <= 0) {
-        return <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-full">Expirado</span>;
+        return <span className={adminBadge('neutral')}>Expirado</span>;
       }
-      return <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full animate-pulse">{hoursLeft}h restantes</span>;
+      return <span className={adminBadge('success')}>{hoursLeft}h restantes</span>;
     }
     switch (status) {
       case 'PENDING':
-        return <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">Pendiente</span>;
+        return <span className={adminBadge('warning')}>Pendiente</span>;
       case 'REJECTED':
-        return <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded-full">Rechazado</span>;
+        return <span className={adminBadge('danger')}>Rechazado</span>;
       default:
         return null;
     }
   };
 
   return (
-    <div className="space-y-3 lg:space-y-6">
-      {/* Premium Header - Mobile Optimized */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-brand-500 via-brand-600 to-brand-500 rounded-lg lg:rounded-2xl p-3 lg:p-6 text-white shadow-xl">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-          <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-white/5 rounded-full blur-3xl"></div>
+    <div className="space-y-4 lg:space-y-6">
+      {/* Header */}
+      <div className={`${adminCard} p-4 lg:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-brand-50 text-brand-500 flex items-center justify-center flex-shrink-0">
+            <PiListHeartBold className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-lg lg:text-2xl font-bold text-ink tracking-tight">Favoritos</h1>
+            <p className="text-xs lg:text-sm text-muted flex items-center gap-1">
+              <PiSparkle className="w-3.5 h-3.5 text-brand-500" />
+              {wishlist.length} producto{wishlist.length !== 1 ? 's' : ''}
+            </p>
+          </div>
         </div>
 
-        <div className="relative flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 lg:gap-4">
-            <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-lg lg:rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-lg">
-              <PiListHeartBold className="w-5 h-5 lg:w-7 lg:h-7" />
-            </div>
-            <div>
-              <h1 className="text-base lg:text-3xl font-bold tracking-tight">Favoritos</h1>
-              <p className="text-blue-100 text-xs lg:text-base flex items-center gap-1">
-                <PiSparkle className="w-3 h-3 lg:w-4 lg:h-4" />
-                {wishlist.length} producto{wishlist.length !== 1 ? 's' : ''}
-              </p>
-            </div>
+        {/* Stats Pills */}
+        <div className="flex flex-wrap gap-2">
+          <div className="px-3 py-1.5 bg-surface rounded-lg border border-line flex items-center gap-1.5">
+            <FiDollarSign className="w-3.5 h-3.5 text-brand-500" />
+            <span className="text-xs font-semibold text-ink">${totalValue.toFixed(0)}</span>
           </div>
-
-          {/* Stats Pills - Compact on mobile */}
-          <div className="flex flex-wrap gap-1.5 lg:gap-2">
-            <div className="px-2 lg:px-3 py-1 lg:py-1.5 bg-white/15 backdrop-blur-md rounded-lg border border-white/20 flex items-center gap-1 lg:gap-2">
-              <FiDollarSign className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-blue-200" />
-              <span className="text-xs font-semibold">${totalValue.toFixed(0)}</span>
-            </div>
-            <div className="px-2 lg:px-3 py-1 lg:py-1.5 bg-white/15 backdrop-blur-md rounded-lg border border-white/20 flex items-center gap-1 lg:gap-2">
-              <FiTrendingUp className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-blue-200" />
-              <span className="text-xs font-semibold">{inStockCount}</span>
-            </div>
+          <div className="px-3 py-1.5 bg-surface rounded-lg border border-line flex items-center gap-1.5">
+            <FiTrendingUp className="w-3.5 h-3.5 text-success-strong" />
+            <span className="text-xs font-semibold text-ink">{inStockCount} en stock</span>
           </div>
         </div>
       </div>
 
       {/* Info Tooltip - Discount Feature Explanation */}
       {showInfoBanner && (
-        <div className="relative bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 rounded-xl border border-blue-200/60 p-4 shadow-sm overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="relative flex items-center gap-2">
-            <div className="flex-shrink-0 w-8 lg:w-10 h-8 lg:h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg lg:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <FiPercent className="w-4 lg:w-5 h-4 lg:h-5 text-white" />
+        <div className="relative bg-surface rounded-xl border border-line p-3 lg:p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-brand-50 text-brand-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <FiPercent className="w-4 h-4" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-gray-800 text-xs lg:text-sm mb-0 flex items-center gap-1.5">
+              <h3 className="font-bold text-ink text-xs lg:text-sm mb-0 flex items-center gap-1.5">
                 <span className="truncate">¡Solicita descuentos exclusivos!</span>
                 <span className="px-1.5 py-0.5 bg-brand-500 text-white text-[11px] font-bold rounded-full">NUEVO</span>
               </h3>
-              <p className="text-xs text-gray-500 truncate">
+              <p className="text-xs text-muted truncate">
                 Guarda productos y pide precio especial.
               </p>
             </div>
             <button
+              type="button"
               onClick={dismissInfoBanner}
-              className="flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Cerrar"
+              className="flex-shrink-0 p-1.5 text-muted hover:text-ink hover:bg-line/50 rounded-lg transition-colors"
+              aria-label="Cerrar"
             >
-              <FiX className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+              <FiX className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -331,7 +346,7 @@ export default function WishlistPage() {
 
       {/* Toolbar */}
       {wishlist.length > 0 && (
-        <div className="bg-white rounded-xl border border-line shadow-sm p-4">
+        <div className={`${adminCard} p-4`}>
           <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
             <div className="relative flex-1 w-full md:max-w-md">
               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
@@ -340,7 +355,7 @@ export default function WishlistPage() {
                 placeholder="Buscar en tu lista..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-surface border border-line rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-surface border border-line rounded-xl text-sm text-ink placeholder:text-subtle focus:border-brand-500 outline-none transition-all"
               />
             </div>
 
@@ -361,14 +376,18 @@ export default function WishlistPage() {
 
               <div className="flex items-center bg-surface rounded-xl p-1 border border-line">
                 <button
+                  type="button"
                   onClick={() => setViewMode('grid')}
                   className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow text-brand-500' : 'text-muted hover:text-ink'}`}
+                  aria-label="Vista cuadrícula"
                 >
                   <FiGrid className="w-4 h-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow text-brand-500' : 'text-muted hover:text-ink'}`}
+                  aria-label="Vista lista"
                 >
                   <FiList className="w-4 h-4" />
                 </button>
@@ -389,26 +408,25 @@ export default function WishlistPage() {
               return (
                 <div
                   key={item.id}
-                  className={`bg-white rounded-lg border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group relative
-                    ${hasActiveDiscount ? 'border-green-300 ring-1 ring-green-100' : 'border-line'}
-                    ${removingId === item.id ? 'animate-pulse opacity-50' : ''}
-                  `}
+                  className={`${adminCard} overflow-hidden group relative transition-all duration-300 hover:border-brand-500/40 ${
+                    hasActiveDiscount ? 'border-success-strong/40' : ''
+                  } ${removingId === item.id ? 'opacity-50' : ''}`}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   {/* Active discount badge */}
                   {hasActiveDiscount && (
-                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-green-500 to-green-600 text-white text-center py-0.5 text-xs font-bold z-10">
+                    <div className="absolute top-0 left-0 right-0 bg-success-strong text-white text-center py-0.5 text-xs font-bold z-10">
                       <FiGift className="inline w-2.5 h-2.5 mr-0.5" />
                       {discountStatus?.approvedDiscount}% OFF
                     </div>
                   )}
 
-                  <div className={`relative aspect-square bg-gradient-to-br from-surface to-line ${hasActiveDiscount ? 'mt-4' : ''}`}>
+                  <div className={`relative aspect-square bg-surface ${hasActiveDiscount ? 'mt-4' : ''}`}>
                     {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}
                         alt={item.productName}
-                        fill
+                        fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
@@ -418,16 +436,18 @@ export default function WishlistPage() {
                     )}
 
                     <button
+                      type="button"
                       onClick={() => removeFromWishlist(item.productId)}
                       disabled={removingId === item.productId}
-                      className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow hover:bg-red-50 hover:text-red-600 transition-all lg:opacity-0 lg:group-hover:opacity-100"
+                      className="absolute top-2 right-2 p-1.5 bg-white rounded-lg shadow text-deal hover:bg-deal-bg transition-all lg:opacity-0 lg:group-hover:opacity-100"
+                      aria-label="Eliminar de favoritos"
                     >
                       <FiTrash2 className="w-3.5 h-3.5" />
                     </button>
 
                     {!item.inStock && (
-                      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                        <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-lg">Agotado</span>
+                      <div className="absolute inset-0 bg-ink/60 flex items-center justify-center">
+                        <span className="px-2 py-1 bg-deal text-white text-xs font-bold rounded-lg">Agotado</span>
                       </div>
                     )}
 
@@ -446,7 +466,7 @@ export default function WishlistPage() {
                       {hasActiveDiscount ? (
                         <>
                           <span className="text-xs text-muted line-through">{formatUSD(item.price)}</span>
-                          <span className="text-base font-bold text-green-600">
+                          <span className="text-base font-bold text-success-strong">
                             {formatUSD(item.price * (1 - (discountStatus?.approvedDiscount || 0) / 100))}
                           </span>
                         </>
@@ -465,9 +485,10 @@ export default function WishlistPage() {
                         Ver
                       </Link>
                       <button
+                        type="button"
                         onClick={() => handleAddToCart(item)}
                         disabled={!item.inStock}
-                        className="flex-1 px-2 py-1.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-xs font-semibold rounded-lg hover:shadow-md disabled:opacity-50 flex items-center justify-center gap-1"
+                        className={`flex-1 px-2 py-1.5 ${adminPrimaryButton} text-xs py-1.5 px-2 flex items-center justify-center gap-1`}
                       >
                         <FiShoppingCart className="w-3 h-3" />
                         Añadir
@@ -477,8 +498,9 @@ export default function WishlistPage() {
                     {/* Request discount button */}
                     {item.inStock && !discountStatus && (
                       <button
+                        type="button"
                         onClick={() => openDiscountModal(item)}
-                        className="w-full px-2 py-1.5 bg-brand-500/10 text-brand-500 border border-brand-500/20 text-xs font-semibold rounded-lg hover:bg-brand-500/20 transition-all flex items-center justify-center gap-1"
+                        className="w-full px-2 py-1.5 bg-brand-50 text-brand-600 border border-brand-200 text-xs font-semibold rounded-lg hover:bg-brand-100 transition-all flex items-center justify-center gap-1"
                       >
                         <FiPercent className="w-3 h-3" />
                         Pedir Descuento
@@ -497,15 +519,20 @@ export default function WishlistPage() {
             })}
           </div>
         ) : (
-          /* List View - simplified */
-          <div className="bg-white rounded-xl border border-line overflow-hidden divide-y divide-line">
+          /* List View */
+          <div className={`${adminCard} overflow-hidden divide-y divide-line`}>
             {filteredAndSortedWishlist.map((item) => {
               const discountStatus = getDiscountStatus(item.productId);
               return (
                 <div key={item.id} className="flex items-center gap-4 p-4 hover:bg-surface transition-colors">
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-surface flex-shrink-0">
                     {item.imageUrl ? (
-                      <Image src={item.imageUrl} alt={item.productName} fill className="object-cover" />
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.productName}
+                        fill sizes="80px"
+                        className="object-cover"
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <FiPackage className="w-8 h-8 text-subtle" />
@@ -513,8 +540,8 @@ export default function WishlistPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-ink truncate">{item.productName}</h3>
-                    <p className="text-xl font-bold text-brand-500">{formatUSD(item.price)}</p>
+                    <h3 className="font-bold text-ink truncate text-sm lg:text-base">{item.productName}</h3>
+                    <p className="text-lg lg:text-xl font-bold text-brand-500">{formatUSD(item.price)}</p>
                     <div className="flex items-center gap-2 mt-1">
                       {discountStatus && getStatusBadge(discountStatus.status, discountStatus.expiresAt)}
                     </div>
@@ -522,23 +549,28 @@ export default function WishlistPage() {
                   <div className="flex items-center gap-2">
                     {item.inStock && !discountStatus && (
                       <button
+                        type="button"
                         onClick={() => openDiscountModal(item)}
-                        className="p-2.5 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-all"
+                        className="p-2.5 bg-brand-50 text-brand-600 border border-brand-200 rounded-xl hover:bg-brand-100 transition-all"
                         title="Solicitar descuento"
                       >
                         <FiPercent className="w-4 h-4" />
                       </button>
                     )}
                     <button
+                      type="button"
                       onClick={() => handleAddToCart(item)}
                       disabled={!item.inStock}
-                      className="p-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 disabled:opacity-50 transition-all"
+                      className={`p-2.5 ${adminPrimaryButton}`}
+                      aria-label="Añadir al carrito"
                     >
                       <FiShoppingCart className="w-4 h-4" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => removeFromWishlist(item.id)}
-                      className="p-2.5 bg-surface text-muted rounded-xl hover:bg-red-50 hover:text-red-600 transition-all"
+                      className="p-2.5 bg-surface text-deal rounded-xl hover:bg-deal-bg transition-all"
+                      aria-label="Eliminar"
                     >
                       <FiTrash2 className="w-4 h-4" />
                     </button>
@@ -549,29 +581,30 @@ export default function WishlistPage() {
           </div>
         )
       ) : searchTerm ? (
-        <div className="bg-white rounded-xl border border-line p-12 text-center">
+        <div className={`${adminCard} p-12 text-center`}>
           <FiSearch className="w-16 h-16 text-subtle mx-auto mb-4" />
           <h3 className="text-lg font-bold text-ink mb-2">Sin resultados para "{searchTerm}"</h3>
-          <button onClick={() => setSearchTerm('')} className="px-4 py-2 text-brand-500 font-semibold hover:underline">
+          <button
+            type="button"
+            onClick={() => setSearchTerm('')}
+            className="px-4 py-2 text-brand-500 font-semibold hover:underline"
+          >
             Limpiar busqueda
           </button>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-white to-surface rounded-2xl border border-line p-12 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-brand-500/5 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-60 h-60 bg-brand-500/5 rounded-full blur-3xl"></div>
-
+        <div className={`${adminCard} p-12 text-center relative overflow-hidden`}>
           <div className="relative">
-            <div className="w-24 h-24 bg-gradient-to-br from-brand-500/20 to-brand-500/5 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <PiHeartBreakBold className="w-12 h-12 text-brand-500" />
+            <div className="w-20 h-20 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <PiHeartBreakBold className="w-10 h-10 text-brand-500" />
             </div>
-            <h3 className="text-xl font-bold text-ink mb-3">Tu lista de deseos está vacía</h3>
-            <p className="text-muted mb-8 font-medium">
+            <h3 className="text-xl font-bold text-ink mb-2">Tu lista de deseos está vacía</h3>
+            <p className="text-muted mb-6 text-sm">
               Guarda favoritos y pide descuentos exclusivos
             </p>
             <Link
               href="/"
-              className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-xl transition-all"
+              className={`${adminPrimaryButton} inline-flex items-center gap-2 px-6 py-3`}
             >
               <PiSparkle className="w-5 h-5" />
               Ver Ofertas de Hoy
@@ -584,124 +617,137 @@ export default function WishlistPage() {
       {showDiscountModal && selectedItem && typeof document !== 'undefined' && createPortal(
         <div
           onClick={() => setShowDiscountModal(false)}
-          className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
+          className={adminModalOverlay}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-t-[32px] sm:rounded-2xl shadow-2xl w-full max-w-[512px] max-h-[95vh] sm:max-h-[90vh] flex flex-col animate-slideInUp sm:animate-fadeIn"
+            className={`${adminModalPanel} w-full max-w-[512px] max-h-[95dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden`}
           >
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-brand-500 to-brand-600 p-4 sm:p-5 text-white flex-shrink-0 rounded-t-[32px] sm:rounded-none">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <FiPercent className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-base sm:text-lg font-bold">Solicitar Descuento</h2>
-                    <p className="text-xs sm:text-sm text-blue-100">Producto de tu lista de deseos</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowDiscountModal(false)} className="p-2 sm:hidden hover:bg-white/20 rounded-lg transition-all">
-                  <FiX className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            
-            {/* Scrollable Content */}
-            <div className="overflow-y-auto flex-1 pb-6 sm:pb-0">
-
-            {/* Product Info */}
-            <div className="p-5 border-b border-line">
-              <div className="flex gap-4">
-                <div className="w-20 h-20 bg-surface rounded-xl overflow-hidden flex-shrink-0">
-                  {selectedItem.imageUrl ? (
-                    <Image src={selectedItem.imageUrl} alt={selectedItem.productName} width={80} height={80} className="object-cover w-full h-full" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <FiPackage className="w-8 h-8 text-subtle" />
-                    </div>
-                  )}
+            <div className="bg-surface border-b border-line p-4 sm:p-5 flex-shrink-0 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-500 flex items-center justify-center">
+                  <FiPercent className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-ink line-clamp-2">{selectedItem.productName}</h3>
-                  <p className="text-2xl font-bold text-brand-500 mt-1">{formatUSD(selectedItem.price)}</p>
+                  <h2 className="text-base sm:text-lg font-bold text-ink">Solicitar Descuento</h2>
+                  <p className="text-xs sm:text-sm text-muted">Producto de tu lista de deseos</p>
                 </div>
               </div>
-            </div>
-
-            {/* Discount Selector */}
-            <div className="p-5 space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-ink mb-3">Descuento solicitado</label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((percent) => (
-                    <button
-                      key={percent}
-                      onClick={() => setDiscountPercent(percent)}
-                      className={`flex-1 py-3 rounded-xl font-bold text-lg transition-all ${discountPercent === percent
-                        ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-blue-500/20'
-                        : 'bg-surface text-ink hover:bg-line'
-                        }`}
-                    >
-                      {percent}%
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Price Preview */}
-              <div className="bg-gradient-to-r from-blue-50/50 via-indigo-50/30 to-blue-50/50 rounded-xl border border-blue-100/60 p-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted">Precio original:</span>
-                  <span className="font-semibold text-ink">{formatUSD(selectedItem.price)}</span>
-                </div>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-sm text-muted">Descuento ({discountPercent}%):</span>
-                  <span className="font-semibold text-blue-600">-{formatUSD(selectedItem.price * discountPercent / 100)}</span>
-                </div>
-                <div className="border-t border-line mt-3 pt-3 flex justify-between items-center">
-                  <span className="font-bold text-ink">Precio final:</span>
-                  <span className="text-2xl font-bold text-emerald-600">{formatUSD(selectedItem.price * (1 - discountPercent / 100))}</span>
-                </div>
-              </div>
-
-              {/* Message */}
-              <div>
-                <label className="block text-sm font-bold text-ink mb-2">Mensaje (opcional)</label>
-                <textarea
-                  value={discountMessage}
-                  onChange={(e) => setDiscountMessage(e.target.value)}
-                  placeholder="Ejemplo: Tengo $95 disponibles, seria posible un pequeno descuento?"
-                  className="w-full px-4 py-3 bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 resize-none text-ink"
-                  rows={3}
-                />
-              </div>
-
-              {/* Submit Button */}
               <button
-                onClick={handleRequestDiscount}
-                disabled={requestingDiscount}
-                className="w-full py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                type="button"
+                onClick={() => setShowDiscountModal(false)}
+                className="p-2 text-muted hover:bg-line/50 rounded-lg transition-all"
+                aria-label="Cerrar modal"
               >
-                {requestingDiscount ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Enviando...
-                  </>
-                ) : (
-                  <>
-                    <FiSend className="w-5 h-5" />
-                    Enviar Solicitud
-                  </>
-                )}
+                <FiX className="w-5 h-5" />
               </button>
-
-              <p className="text-xs text-center text-muted">
-                El administrador revisara tu solicitud y te notificara cuando sea aprobada.
-                Los descuentos aprobados tienen tiempo limitado.
-              </p>
             </div>
+
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto flex-1 pb-6 sm:pb-0">
+              {/* Product Info */}
+              <div className="p-5 border-b border-line">
+                <div className="flex gap-4">
+                  <div className="w-20 h-20 bg-surface rounded-xl overflow-hidden flex-shrink-0 border border-line">
+                    {selectedItem.imageUrl ? (
+                      <Image
+                        src={selectedItem.imageUrl}
+                        alt={selectedItem.productName}
+                        width={80}
+                        height={80}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <FiPackage className="w-8 h-8 text-subtle" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-ink line-clamp-2 text-sm lg:text-base">{selectedItem.productName}</h3>
+                    <p className="text-xl font-bold text-brand-500 mt-1">{formatUSD(selectedItem.price)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Discount Selector */}
+              <div className="p-5 space-y-5">
+                <div>
+                  <label className={adminLabel}>Descuento solicitado</label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((percent) => (
+                      <button
+                        key={percent}
+                        type="button"
+                        onClick={() => setDiscountPercent(percent)}
+                        className={`flex-1 py-3 rounded-xl font-bold text-base transition-all ${
+                          discountPercent === percent
+                            ? adminPrimaryButton
+                            : 'bg-surface text-ink hover:bg-line border border-line'
+                        }`}
+                      >
+                        {percent}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Price Preview */}
+                <div className="bg-surface rounded-xl border border-line p-4 space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted">Precio original:</span>
+                    <span className="font-semibold text-ink">{formatUSD(selectedItem.price)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted">Descuento ({discountPercent}%):</span>
+                    <span className="font-semibold text-brand-600">-{formatUSD(selectedItem.price * discountPercent / 100)}</span>
+                  </div>
+                  <div className="border-t border-line pt-2 flex justify-between items-center">
+                    <span className="font-bold text-ink">Precio final:</span>
+                    <span className="text-xl font-bold text-success-strong">
+                      {formatUSD(selectedItem.price * (1 - discountPercent / 100))}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label className={adminLabel}>Mensaje (opcional)</label>
+                  <textarea
+                    value={discountMessage}
+                    onChange={(e) => setDiscountMessage(e.target.value)}
+                    placeholder="Ejemplo: Tengo $95 disponibles, sería posible un pequeño descuento?"
+                    className="w-full px-3.5 py-2.5 bg-surface border border-line focus:border-brand-500 focus:bg-white rounded-xl outline-none transition-all resize-none text-ink text-sm placeholder:text-subtle"
+                    rows={3}
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="button"
+                  onClick={handleRequestDiscount}
+                  disabled={requestingDiscount}
+                  className={`${adminPrimaryButton} w-full py-3.5 flex items-center justify-center gap-2`}
+                >
+                  {requestingDiscount ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <FiSend className="w-5 h-5" />
+                      Enviar Solicitud
+                    </>
+                  )}
+                </button>
+
+                <p className="text-xs text-center text-muted">
+                  El administrador revisará tu solicitud y te notificará cuando sea aprobada.
+                  Los descuentos aprobados tienen tiempo limitado.
+                </p>
+              </div>
             </div>
           </div>
         </div>,

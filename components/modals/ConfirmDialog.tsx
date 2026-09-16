@@ -3,6 +3,15 @@
 import { useEffect } from 'react';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { FiAlertTriangle, FiInfo, FiAlertCircle, FiX } from 'react-icons/fi';
+import {
+    adminModalOverlay,
+    adminModalPanel,
+    adminPrimaryButton,
+    adminSecondaryButton,
+    adminDangerButton,
+    adminIconChip,
+    type AdminTone,
+} from '@/lib/admin-ui';
 
 export interface ConfirmDialogProps {
     isOpen: boolean;
@@ -46,105 +55,79 @@ export default function ConfirmDialog({
 
     if (!isOpen) return null;
 
+    const tone: AdminTone = type === 'danger' ? 'danger' : type === 'warning' ? 'warning' : 'brand';
+
     const getIcon = () => {
         switch (type) {
             case 'danger':
-                return <FiAlertCircle className="w-12 h-12" />;
+                return <FiAlertCircle className="w-8 h-8" />;
             case 'warning':
-                return <FiAlertTriangle className="w-12 h-12" />;
+                return <FiAlertTriangle className="w-8 h-8" />;
             case 'info':
-                return <FiInfo className="w-12 h-12" />;
+                return <FiInfo className="w-8 h-8" />;
             default:
-                return <FiAlertTriangle className="w-12 h-12" />;
+                return <FiAlertTriangle className="w-8 h-8" />;
         }
     };
 
-    const getColors = () => {
-        switch (type) {
-            case 'danger':
-                return {
-                    iconBg: 'bg-red-100',
-                    iconText: 'text-red-600',
-                    confirmBg: 'from-red-500 to-red-600 hover:from-red-600 hover:to-red-700',
-                    confirmText: 'text-white',
-                };
-            case 'warning':
-                return {
-                    iconBg: 'bg-yellow-100',
-                    iconText: 'text-yellow-600',
-                    confirmBg: 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700',
-                    confirmText: 'text-white',
-                };
-            case 'info':
-                return {
-                    iconBg: 'bg-blue-100',
-                    iconText: 'text-blue-600',
-                    confirmBg: 'from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700',
-                    confirmText: 'text-white',
-                };
-            default:
-                return {
-                    iconBg: 'bg-yellow-100',
-                    iconText: 'text-yellow-600',
-                    confirmBg: 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700',
-                    confirmText: 'text-white',
-                };
-        }
-    };
-
-    const colors = getColors();
+    const confirmButtonClass = type === 'danger' ? adminDangerButton : adminPrimaryButton;
 
     return (
-        <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-3 lg:p-4">
-            {/* Backdrop */}
+        <div className={adminModalOverlay}>
+            {/* Backdrop click */}
             <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fadeIn"
+                className="fixed inset-0"
                 onClick={onCancel}
+                aria-hidden="true"
             />
-
-            {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL */}
-            <button
-                onClick={onCancel}
-                className="fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all z-10"
-                aria-label="Cerrar"
-            >
-                <FiX className="w-6 h-6 text-gray-700" />
-            </button>
 
             {/* Dialog Panel */}
             <div
-                className="relative w-full transform overflow-hidden rounded-2xl bg-white p-5 lg:p-8 text-left shadow-2xl animate-scaleIn"
-                style={{ maxWidth: '42rem', width: '95%' }}
+                className={`${adminModalPanel} max-w-md p-6 sm:p-8 text-center relative z-10 my-auto`}
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="confirm-dialog-title"
+                aria-describedby="confirm-dialog-message"
             >
+                {/* Close Button */}
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="absolute top-4 right-4 p-1.5 text-muted hover:text-ink rounded-lg transition-colors"
+                    aria-label="Cerrar"
+                >
+                    <FiX className="w-5 h-5" />
+                </button>
+
                 {/* Icon */}
-                <div className={`mx-auto flex h-12 w-12 lg:h-16 lg:w-16 items-center justify-center rounded-full ${colors.iconBg} mb-3 lg:mb-4`}>
-                    <div className={`${colors.iconText} scale-75 lg:scale-100`}>{getIcon()}</div>
+                <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${adminIconChip(tone)}`}>
+                    {getIcon()}
                 </div>
 
                 {/* Title */}
-                <h3 className="text-base lg:text-xl font-bold text-ink text-center mb-1.5 lg:mb-2">
+                <h3 id="confirm-dialog-title" className="text-lg lg:text-xl font-bold text-ink mb-2">
                     {title}
                 </h3>
 
                 {/* Message */}
-                <div className="mt-1.5 lg:mt-2 mb-4 lg:mb-6">
-                    <p className="text-sm lg:text-base text-muted text-center whitespace-normal break-words leading-relaxed">
+                <div id="confirm-dialog-message" className="mb-6">
+                    <p className="text-sm text-muted leading-relaxed whitespace-normal break-words">
                         {message}
                     </p>
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
+                <div className="flex flex-col-reverse sm:flex-row gap-2.5">
                     <button
                         type="button"
-                        className="flex-1 px-4 py-2.5 lg:py-3 bg-white text-muted font-semibold border-2 border-line rounded-xl hover:bg-surface hover:border-line-strong transition-all text-sm lg:text-base order-2 sm:order-1"
+                        className={`flex-1 ${adminSecondaryButton} py-2.5 font-semibold justify-center`}
                         onClick={onCancel}
                     >
                         {cancelText}
                     </button>
                     <button
                         type="button"
-                        className={`flex-1 px-4 py-2.5 lg:py-3 bg-gradient-to-r ${colors.confirmBg} ${colors.confirmText} font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm lg:text-base order-1 sm:order-2`}
+                        className={`flex-1 ${confirmButtonClass} py-2.5 font-semibold justify-center`}
                         onClick={() => {
                             onConfirm();
                             onCancel();

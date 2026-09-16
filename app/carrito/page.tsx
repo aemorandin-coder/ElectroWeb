@@ -9,11 +9,12 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import CheckoutSteps from '@/components/ui/CheckoutSteps';
 import PageHeader from '@/components/ui/PageHeader';
-import { FiShoppingCart } from 'react-icons/fi';
+import { FiShoppingCart, FiTruck, FiShield } from 'react-icons/fi';
 import Footer from '@/components/Footer';
 import { toast } from 'react-hot-toast';
-import { HiShieldCheck, HiBadgeCheck, HiTrash } from 'react-icons/hi';
-import { FiTruck, FiShield } from 'react-icons/fi';
+import { HiTrash } from 'react-icons/hi';
+import { adminCard, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { formatUSD, formatVES } from '@/lib/currency';
 
 // Gift Card Designs - Same as gift-cards page
 const GIFT_CARD_DESIGNS: Record<string, { gradient: string; accent: string; name: string }> = {
@@ -66,19 +67,6 @@ export default function CarritoPage() {
       .catch(err => console.error('Error fetching settings:', err));
   }, []);
 
-  const formatPriceUSD = (price: number) => {
-    return Number(price).toFixed(2).replace('.', ',');
-  };
-
-  const formatPriceVES = (priceUSD: number) => {
-    if (!settings?.exchangeRateVES) return null;
-    const priceVES = priceUSD * settings.exchangeRateVES;
-    return new Intl.NumberFormat('es-VE', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(priceVES);
-  };
-
   const handleRemoveItem = async (id: string) => {
     setRemoving(id);
     // Wait for animation to complete before removing
@@ -100,7 +88,6 @@ export default function CarritoPage() {
 
     if (confirmed) {
       setIsClearing(true);
-      // Animate all items out before clearing
       setTimeout(() => {
         clearCart();
         setIsClearing(false);
@@ -112,8 +99,6 @@ export default function CarritoPage() {
   const handleCheckout = async () => {
     setIsCheckingOut(true);
     try {
-      // No longer reserving stock here - stock will be reserved only when order is created with DIRECT payment
-      // For WALLET payments, stock is deducted immediately upon order creation
       router.push('/checkout');
     } catch (error: any) {
       console.error('Checkout error:', error);
@@ -128,7 +113,7 @@ export default function CarritoPage() {
   const tax = 0; // Exento para saldos y códigos digitales
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-dvh flex flex-col bg-surface">
       <PublicHeader />
 
       <PageHeader
@@ -142,280 +127,213 @@ export default function CarritoPage() {
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
         {items.length === 0 ? (
-          /* Empty Cart State - Epic */
-          <div
-            className="relative bg-white rounded-3xl border border-gray-200 p-12 md:p-16 text-center shadow-xl animate-fadeIn"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 rounded-3xl" />
-            <div className="relative px-6 md:px-12">
-              <div className="w-28 h-28 md:w-32 md:h-32 mx-auto mb-6 md:mb-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center shadow-inner animate-pulse-slow">
-                <svg className="w-14 h-14 md:w-16 md:h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
-                Tu carrito está vacío
-              </h2>
-              <p className="text-base md:text-lg text-gray-500 mb-8">
-                Explora nuestros productos y añade tus favoritos al carrito
-              </p>
-              <Link
-                href="/productos"
-                className="inline-flex items-center gap-3 px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 hover:scale-105 hover:-translate-y-1"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                Ver Productos
-              </Link>
+          /* Empty Cart State */
+          <div className={`${adminCard} text-center py-16 px-6 max-w-xl mx-auto my-8`}>
+            <div className="w-20 h-20 mx-auto mb-6 bg-surface rounded-full flex items-center justify-center border border-line">
+              <FiShoppingCart className="w-10 h-10 text-muted" />
             </div>
+            <h2 className="text-2xl font-bold text-ink mb-2">
+              Tu carrito está vacío
+            </h2>
+            <p className="text-sm text-muted mb-6">
+              Explora nuestros productos y añade tus favoritos al carrito.
+            </p>
+            <Link
+              href="/productos"
+              className={adminPrimaryButton}
+            >
+              Ver productos
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {/* Header */}
-              <div className="flex justify-between items-center mb-6 animate-fadeIn">
-                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-ink flex items-center gap-2">
                   <span className="w-8 h-8 bg-brand-500/10 rounded-lg flex items-center justify-center">
-                    <svg className="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
+                    <FiShoppingCart className="w-4 h-4 text-brand-600" />
                   </span>
                   Productos ({items.length})
                 </h2>
                 <button
                   onClick={handleClearCart}
-                  className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 font-medium text-sm group hover:scale-105 active:scale-95"
+                  className="flex items-center gap-2 px-3 py-1.5 text-deal hover:bg-deal-bg rounded-xl transition-colors font-medium text-sm"
                 >
-                  <HiTrash className={`w-4 h-4 transition-transform ${isClearing ? 'animate-shake' : 'group-hover:rotate-12'}`} />
+                  <HiTrash className="w-4 h-4" />
                   <span className={isClearing ? 'animate-pulse' : ''}>Vaciar</span>
                 </button>
               </div>
 
               {/* Items List */}
-              {items.map((item, index) => (
+              {items.map((item) => (
                 <div
                   key={item.id}
-                  className={`group relative bg-white rounded-2xl border border-gray-200 overflow-hidden transition-all duration-500 hover:shadow-xl hover:border-brand-500/30 ${removing === item.id
-                    ? 'animate-removeItem'
-                    : isClearing
-                      ? 'animate-clearItem'
-                      : ''
-                    }`}
-                  style={
-                    removing !== item.id && !isClearing
-                      ? {
-                        animationName: 'slideInLeft',
-                        animationDuration: '0.5s',
-                        animationTimingFunction: 'ease-out',
-                        animationDelay: `${index * 0.1}s`,
-                        animationFillMode: 'both',
-                      }
-                      : isClearing
-                        ? { animationDelay: `${index * 0.05}s` }
-                        : undefined
-                  }
+                  className={`${adminCard} relative overflow-hidden transition-shadow hover:shadow-sm ${removing === item.id ? 'opacity-50 scale-95 transition-all duration-300' : ''}`}
                 >
-                  {/* Hover Glow */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-brand-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="flex gap-4">
+                    {/* Thumbnail */}
+                    <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-surface flex-shrink-0 border border-line">
+                      {(() => {
+                        const isGiftCard = item.id.startsWith('gift-card-') || item.name.toLowerCase().includes('gift card');
 
-                  <div className="relative p-5">
-                    <div className="flex gap-5">
-                      {/* Product Image */}
-                      <div className="relative w-28 h-28 flex-shrink-0 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden group/img">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover/img:translate-x-full transition-transform duration-1000 z-10" />
-                        {(() => {
-                          const isGiftCard = item.id.startsWith('gift-card-') || item.name.toLowerCase().includes('gift card');
-                          const isWalletRecharge = item.id.startsWith('wallet-recharge-') || item.name.toLowerCase().includes('recarga de saldo');
+                        if (isGiftCard) {
+                          const designKey = (item as any).design || 'obsidian-gold';
+                          const design = GIFT_CARD_DESIGNS[designKey] || GIFT_CARD_DESIGNS['obsidian-gold'];
 
-                          if (isGiftCard) {
-                            const idParts = item.id.split('-');
-                            const designId = idParts.length >= 3 ? idParts.slice(2, -1).join('-') : 'aurora-neon';
-                            const design = GIFT_CARD_DESIGNS[designId] || GIFT_CARD_DESIGNS['aurora-neon'];
-
-                            return (
-                              <div className="absolute inset-0 overflow-hidden rounded-xl" style={{ background: design.gradient }}>
-                                <div className="absolute inset-0" style={{
-                                  background: `linear-gradient(105deg, transparent 40%, ${design.accent}25 45%, ${design.accent}40 50%, ${design.accent}25 55%, transparent 60%)`,
-                                  animation: 'shimmer 2s ease-in-out infinite',
-                                }} />
-                                <div className="relative w-full h-full p-2 flex flex-col justify-between">
-                                  <div className="flex items-center gap-1">
-                                    <div className="w-5 h-5 rounded flex items-center justify-center" style={{ background: `${design.accent}30` }}>
-                                      <span className="text-[11px] font-bold text-white">ES</span>
-                                    </div>
-                                  </div>
-                                  <div className="text-center py-1 rounded" style={{ background: `${design.accent}20` }}>
-                                    <span className="text-xs font-bold tracking-widest" style={{ color: design.accent, textShadow: `0 0 10px ${design.accent}80` }}>
-                                      GIFT CARD
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: `linear-gradient(90deg, ${design.accent}, ${design.accent}cc, ${design.accent})` }} />
+                          return (
+                            <div
+                              className="w-full h-full flex flex-col justify-between p-2.5 text-white"
+                              style={{ background: design.gradient }}
+                            >
+                              <div className="flex justify-between items-start">
+                                <span className="text-[11px] font-bold opacity-80 tracking-wider">GIFT CARD</span>
+                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: design.accent }} />
                               </div>
-                            );
-                          }
-
-                          if (isWalletRecharge) {
-                            return (
-                              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-                                <div className="text-center text-white">
-                                  <svg className="w-10 h-10 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                  </svg>
-                                  <span className="text-xs font-bold">RECARGA</span>
-                                </div>
+                              <div className="text-center my-auto">
+                                <span className="text-sm font-bold tracking-tight">
+                                  {formatUSD(item.price)}
+                                </span>
                               </div>
-                            );
-                          }
-
-                          let imageUrl: string | undefined = item.imageUrl;
-                          if (typeof imageUrl === 'string' && (imageUrl.startsWith('[') || imageUrl.includes('","'))) {
-                            try {
-                              const parsed = JSON.parse(imageUrl);
-                              if (Array.isArray(parsed) && parsed.length > 0) imageUrl = parsed[0];
-                            } catch (e) {
-                              if (imageUrl?.startsWith('["') && imageUrl.endsWith('"]')) imageUrl = imageUrl.slice(2, -2);
-                            }
-                          }
-                          if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) imageUrl = `/${imageUrl}`;
-
-                          return imageUrl ? (
-                            <Image
-                              src={imageUrl}
-                              alt={item.name}
-                              fill
-                              sizes="(min-width: 768px) 128px, 96px"
-                              unoptimized={!imageUrl.startsWith('/')}
-                              className="object-cover group-hover/img:scale-110 transition-transform duration-700"
-                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                            />
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                              </svg>
+                              <div className="flex justify-between items-center text-[11px] opacity-70">
+                                <span>ElectroShop</span>
+                                <span className="font-mono">••••</span>
+                              </div>
                             </div>
                           );
-                        })()}
-                      </div>
+                        }
 
-                      {/* Product Info */}
-                      <div className="flex-1 flex flex-col min-w-0">
-                        <div className="flex-1">
-                          <h3 className="text-base font-bold text-gray-800 mb-1.5 line-clamp-2 group-hover:text-brand-500 transition-colors">
-                            {item.name}
-                          </h3>
-                          {item.digitalUsername && (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 border border-purple-200/50 rounded-lg text-purple-700 text-xs font-bold shadow-sm mb-2 animate-fadeIn">
-                              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                              </svg>
-                              <span>Recarga para: {item.digitalUsername}</span>
+                        let imageUrl: string | undefined = item.imageUrl;
+                        if (imageUrl && typeof imageUrl === 'string') {
+                          if (imageUrl.startsWith('[')) {
+                            try {
+                              const parsed = JSON.parse(imageUrl);
+                              imageUrl = Array.isArray(parsed) ? parsed[0] : imageUrl;
+                            } catch {
+                              // keep imageUrl
+                            }
+                          }
+                        }
+                        if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                          imageUrl = `/${imageUrl}`;
+                        }
+
+                        return imageUrl ? (
+                          <Image
+                            src={imageUrl}
+                            alt={item.name}
+                            fill sizes="(min-width: 768px) 128px, 96px"
+                            unoptimized={!imageUrl.startsWith('/')}
+                            className="object-cover"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <FiShoppingCart className="w-8 h-8 text-subtle" />
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="flex-1 flex flex-col min-w-0">
+                      <div className="flex-1">
+                        <h3 className="text-base font-bold text-ink mb-1.5 line-clamp-2 hover:text-brand-600 transition-colors">
+                          {item.name}
+                        </h3>
+                        {item.digitalUsername && (
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface border border-line rounded-lg text-ink text-xs font-semibold mb-2">
+                            <span>Recarga para: {item.digitalUsername}</span>
+                          </div>
+                        )}
+                        {/* Price Display */}
+                        <div className="space-y-1">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-xl font-bold text-ink">
+                              {formatUSD(item.price)}
+                            </span>
+                            <span className="text-xs text-muted">c/u</span>
+                          </div>
+                          {settings?.exchangeRateVES && (
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-xs font-semibold text-brand-600">
+                                {formatVES(item.price * settings.exchangeRateVES)}
+                              </span>
+                              <span className="text-xs text-muted">ref.</span>
                             </div>
                           )}
-                          {/* Price Display - USD + Bs. */}
-                          <div className="space-y-1">
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-xs font-bold text-gray-400">USD</span>
-                              <span className="text-2xl font-bold text-gray-800">
-                                {formatPriceUSD(item.price)}
-                              </span>
-                              <span className="text-xs text-gray-400">c/u</span>
-                            </div>
-                            {settings?.exchangeRateVES && (
-                              <div className="flex items-baseline gap-1.5 animate-fadeIn">
-                                <span className="text-xs font-bold text-brand-500">Bs.</span>
-                                <span className="text-sm font-bold text-brand-500">
-                                  {formatPriceVES(item.price)}
-                                </span>
-                                <span className="text-xs text-gray-400">ref.</span>
-                              </div>
-                            )}
-                          </div>
                         </div>
+                      </div>
 
-                        {/* Quantity Controls */}
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                          <div className="flex items-center gap-3">
-                            {(() => {
-                              const isGiftCard = item.id.startsWith('gift-card-') || item.name.toLowerCase().includes('gift card');
+                      {/* Quantity Controls */}
+                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-line">
+                        <div className="flex items-center gap-3">
+                          {(() => {
+                            const isGiftCard = item.id.startsWith('gift-card-') || item.name.toLowerCase().includes('gift card');
 
-                              if (isGiftCard) {
-                                return (
-                                  <div className="flex items-center gap-2">
-                                    <div className="px-4 py-2 bg-gray-100 rounded-xl">
-                                      <span className="text-lg font-bold text-gray-800">1</span>
-                                    </div>
-                                    <span className="text-xs text-blue-600 font-medium flex items-center gap-1">
-                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                      </svg>
-                                      Fija
-                                    </span>
-                                  </div>
-                                );
-                              }
-
+                            if (isGiftCard) {
                               return (
                                 <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                    className="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-xl hover:bg-brand-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
-                                    </svg>
-                                  </button>
-                                  <span className="w-12 text-center text-lg font-bold text-gray-800">
-                                    {item.quantity}
-                                  </span>
-                                  <button
-                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                    disabled={item.quantity >= item.stock}
-                                    className="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-xl hover:bg-brand-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 disabled:hover:text-gray-800"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                  </button>
-                                  {item.quantity >= item.stock && (
-                                    <span className="text-xs text-amber-600 font-medium">Máx</span>
-                                  )}
+                                  <div className="px-3 py-1 bg-surface border border-line rounded-lg">
+                                    <span className="text-sm font-bold text-ink">1</span>
+                                  </div>
+                                  <span className="text-xs text-brand-600 font-medium">Fija</span>
                                 </div>
                               );
-                            })()}
-                          </div>
+                            }
 
-                          {/* Subtotal + Remove */}
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <div className="flex items-baseline gap-1 justify-end">
-                                <span className="text-xs font-bold text-gray-400">USD</span>
-                                <span className="text-lg font-bold text-gray-800">
-                                  {formatPriceUSD(item.price * item.quantity)}
+                            return (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  className="w-8 h-8 flex items-center justify-center bg-surface border border-line rounded-lg text-ink hover:bg-line transition-colors"
+                                  aria-label="Disminuir cantidad"
+                                >
+                                  -
+                                </button>
+                                <span className="w-8 text-center text-sm font-bold text-ink">
+                                  {item.quantity}
                                 </span>
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  disabled={item.quantity >= item.stock}
+                                  className="w-8 h-8 flex items-center justify-center bg-surface border border-line rounded-lg text-ink hover:bg-line transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                  aria-label="Aumentar cantidad"
+                                >
+                                  +
+                                </button>
+                                {item.quantity >= item.stock && (
+                                  <span className="text-xs text-warning-strong font-medium">Máx</span>
+                                )}
                               </div>
-                              {settings?.exchangeRateVES && (
-                                <div className="flex items-baseline gap-1 justify-end">
-                                  <span className="text-xs font-bold text-brand-500">Bs.</span>
-                                  <span className="text-xs font-bold text-brand-500">
-                                    {formatPriceVES(item.price * item.quantity)}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                            <button
-                              onClick={() => handleRemoveItem(item.id)}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 hover:scale-110"
-                              title="Eliminar"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
+                            );
+                          })()}
+                        </div>
+
+                        {/* Subtotal + Remove */}
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <span className="text-base font-bold text-ink block">
+                              {formatUSD(item.price * item.quantity)}
+                            </span>
+                            {settings?.exchangeRateVES && (
+                              <span className="text-xs text-brand-600 font-semibold block">
+                                {formatVES(item.price * item.quantity * settings.exchangeRateVES)}
+                              </span>
+                            )}
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveItem(item.id)}
+                            className="p-2 text-muted hover:text-deal hover:bg-deal-bg rounded-lg transition-colors"
+                            title="Eliminar producto"
+                            aria-label="Eliminar producto"
+                          >
+                            <HiTrash className="w-5 h-5" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -424,143 +342,102 @@ export default function CarritoPage() {
               ))}
             </div>
 
-            {/* Order Summary - Sticky */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-24 space-y-5">
-                {/* Summary Card */}
-                <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xl animate-slideUp">
-                  {/* Premium Header */}
-                  <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-6 py-4">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                      Resumen
-                    </h2>
-                  </div>
+            {/* Order Summary */}
+            <div className="space-y-6">
+              <div className={`${adminCard} space-y-6`}>
+                <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                  <FiShoppingCart className="w-5 h-5 text-brand-600" />
+                  Resumen del pedido
+                </h2>
 
-                  <div className="p-6 space-y-4">
-                    {/* Subtotal */}
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500 text-sm">Subtotal:</span>
-                      <div className="text-right">
-                        <div className="flex items-baseline gap-1 justify-end">
-                          <span className="text-xs text-gray-400">USD</span>
-                          <span className="text-base font-bold text-gray-700">{formatPriceUSD(subtotal)}</span>
-                        </div>
-                        {settings?.exchangeRateVES && (
-                          <div className="text-xs text-brand-500 font-medium">
-                            Bs. {formatPriceVES(subtotal)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Tax */}
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500 text-sm">Impuestos (Exento):</span>
-                      <div className="text-right">
-                        <div className="flex items-baseline gap-1 justify-end">
-                          <span className="text-xs text-gray-400">USD</span>
-                          <span className="text-base font-bold text-gray-700">{formatPriceUSD(tax)}</span>
-                        </div>
-                        {settings?.exchangeRateVES && (
-                          <div className="text-xs text-brand-500 font-medium">
-                            Bs. {formatPriceVES(tax)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Total */}
-                    <div className="pt-4 border-t-2 border-dashed border-gray-200">
-                      <div className="flex justify-between items-start">
-                        <span className="text-lg font-bold text-gray-800">Total:</span>
-                        <div className="text-right">
-                          <div className="flex items-baseline gap-1 justify-end">
-                            <span className="text-sm font-bold text-gray-400">USD</span>
-                            <span className="text-3xl font-bold text-gray-800">{formatPriceUSD(total)}</span>
-                          </div>
-                          {settings?.exchangeRateVES && (
-                            <div className="mt-1 px-3 py-1 bg-brand-500/10 rounded-lg inline-block">
-                              <span className="text-sm font-bold text-brand-500">
-                                Bs. {formatPriceVES(total)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Checkout Button */}
-                  <div className="px-6 pb-6 space-y-3">
-                    <button
-                      onClick={handleCheckout}
-                      disabled={isCheckingOut}
-                      className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-base font-bold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 group"
-                    >
-                      {isCheckingOut ? (
-                        <>
-                          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                          Procesando...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                          </svg>
-                          Proceder al Pago
-                          <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </>
+                {/* Subtotal / Impuestos / Total */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted">Subtotal ({items.reduce((acc, i) => acc + i.quantity, 0)} productos):</span>
+                    <div className="text-right">
+                      <span className="font-bold text-ink block">{formatUSD(subtotal)}</span>
+                      {settings?.exchangeRateVES && (
+                        <span className="text-xs text-brand-600 font-medium block">
+                          {formatVES(subtotal * settings.exchangeRateVES)}
+                        </span>
                       )}
-                    </button>
+                    </div>
+                  </div>
 
-                    <Link
-                      href="/productos"
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all duration-300 text-sm"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                      Seguir Comprando
-                    </Link>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted">Impuestos (Exento):</span>
+                    <div className="text-right">
+                      <span className="font-bold text-ink block">{formatUSD(tax)}</span>
+                      {settings?.exchangeRateVES && (
+                        <span className="text-xs text-brand-600 font-medium block">
+                          {formatVES(tax * settings.exchangeRateVES)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-line">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-base font-bold text-ink">Total:</span>
+                      <div className="text-right">
+                        <span className="text-2xl font-bold text-ink block">{formatUSD(total)}</span>
+                        {settings?.exchangeRateVES && (
+                          <span className="text-sm font-bold text-brand-600 block mt-0.5">
+                            {formatVES(total * settings.exchangeRateVES)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Trust Badges */}
-                <div className="bg-gradient-to-br from-brand-500/5 to-purple-500/5 rounded-2xl border border-gray-200 p-5 shadow-lg space-y-4 animate-slideUp" style={{ animationDelay: '0.1s' }}>
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Envíos Asegurados</h3>
-                    <div className="flex gap-2">
-                      <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded text-[11px] font-bold">ZOOM</span>
-                      <span className="px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20 rounded text-[11px] font-bold">MRW</span>
+                {/* Actions */}
+                <div className="space-y-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleCheckout}
+                    disabled={isCheckingOut}
+                    className={`w-full ${adminPrimaryButton} py-3 text-base font-bold justify-center disabled:opacity-70`}
+                  >
+                    {isCheckingOut ? 'Procesando...' : 'Proceder al pago'}
+                  </button>
+
+                  <Link
+                    href="/productos"
+                    className={`w-full ${adminSecondaryButton} py-2.5 text-sm font-semibold justify-center`}
+                  >
+                    Seguir comprando
+                  </Link>
+                </div>
+              </div>
+
+              {/* Trust Badges */}
+              <div className={`${adminCard} space-y-4`}>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Envíos asegurados</h3>
+                  <div className="flex gap-2">
+                    <span className="px-2 py-0.5 bg-warning/10 text-warning-strong border border-warning/20 rounded text-[11px] font-bold">ZOOM</span>
+                    <span className="px-2 py-0.5 bg-deal-bg text-deal border border-deal/20 rounded text-[11px] font-bold">MRW</span>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 text-xs text-ink-soft">
+                    <div className="w-7 h-7 bg-brand-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <FiTruck className="w-3.5 h-3.5 text-brand-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-ink">Despacho nacional garantizado</p>
+                      <p className="text-muted">Envíos rápidos y seguros a nivel nacional por ZOOM y MRW.</p>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3 text-xs text-gray-600">
-                      <div className="w-7 h-7 bg-brand-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <FiTruck className="w-3.5 h-3.5 text-brand-500" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-700">Despacho Nacional Garantizado</p>
-                        <p className="text-gray-500">Envíos Rápidos y Seguros a nivel nacional por ZOOM y MRW.</p>
-                      </div>
+
+                  <div className="flex items-start gap-3 text-xs text-ink-soft">
+                    <div className="w-7 h-7 bg-success/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <FiShield className="w-3.5 h-3.5 text-success-strong" />
                     </div>
-                    
-                    <div className="flex items-start gap-3 text-xs text-gray-600">
-                      <div className="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <FiShield className="w-3.5 h-3.5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-700">Protección del Comprador</p>
-                        <p className="text-gray-500">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
-                      </div>
+                    <div>
+                      <p className="font-semibold text-ink">Protección del comprador</p>
+                      <p className="text-muted">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
                     </div>
                   </div>
                 </div>
@@ -571,8 +448,6 @@ export default function CarritoPage() {
       </main>
 
       <Footer />
-
-
     </div>
   );
 }

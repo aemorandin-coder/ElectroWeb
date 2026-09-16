@@ -1,10 +1,19 @@
 'use client';
-import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FiMapPin, FiPlus, FiEdit, FiTrash2, FiCheck, FiHome, FiBriefcase, FiPackage, FiTruck, FiX, FiInfo } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import {
+  adminCard,
+  adminPrimaryButton,
+  adminSecondaryButton,
+  adminLabel,
+  adminModalOverlay,
+  adminModalPanel,
+} from '@/lib/admin-ui';
 
 // Address types including shipping companies
 const ADDRESS_TYPES = [
@@ -53,6 +62,8 @@ export default function AddressesPage() {
     agencyCode: '',
   });
 
+  useBodyScrollLock(showModal);
+
   useEffect(() => {
     fetchAddresses();
   }, []);
@@ -75,9 +86,19 @@ export default function AddressesPage() {
   };
 
   const handleSubmit = async () => {
+    if (!formData.addressLine1 || !formData.city || !formData.state) {
+      toast.error('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    if ((formData.type === 'ZOOM' || formData.type === 'MRW') && !formData.agencyName) {
+      toast.error('Por favor ingresa el nombre de la agencia');
+      return;
+    }
+
     try {
       const url = editingAddress
-        ? '/api/customer/addresses'
+        ? `/api/customer/addresses/${editingAddress.id}`
         : '/api/customer/addresses';
       const method = editingAddress ? 'PATCH' : 'POST';
 
@@ -163,37 +184,36 @@ export default function AddressesPage() {
   }
 
   return (
-    <div className="space-y-3 lg:space-y-6 overflow-y-auto h-full">
-      {/* Header - Responsive */}
-      <div className="bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg lg:rounded-xl p-3 lg:p-6 text-white shadow-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 lg:gap-3">
-            <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <FiMapPin className="w-4 h-4 lg:w-5 lg:h-5" />
-            </div>
-            <div>
-              <h1 className="text-base lg:text-2xl font-bold">Direcciones</h1>
-              <p className="text-xs lg:text-sm text-blue-100">{addresses.length} guardadas</p>
-            </div>
+    <div className="space-y-4 lg:space-y-6 overflow-y-auto h-full">
+      {/* Header */}
+      <div className={`${adminCard} p-4 lg:p-6 flex items-center justify-between gap-4`}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-500 flex items-center justify-center flex-shrink-0">
+            <FiMapPin className="w-5 h-5" />
           </div>
-          <button
-            onClick={() => {
-              setEditingAddress(null);
-              resetForm();
-              setShowModal(true);
-            }}
-            className="px-3 lg:px-4 py-2 bg-white text-brand-500 font-semibold rounded-lg hover:bg-gray-50 transition-all shadow-md flex items-center gap-1.5 lg:gap-2 text-xs lg:text-base"
-          >
-            <FiPlus className="w-4 h-4" />
-            <span className="hidden sm:inline">Agregar</span>
-          </button>
+          <div>
+            <h1 className="text-lg lg:text-xl font-bold text-ink">Direcciones</h1>
+            <p className="text-xs lg:text-sm text-muted">{addresses.length} guardadas</p>
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            setEditingAddress(null);
+            resetForm();
+            setShowModal(true);
+          }}
+          className={`${adminPrimaryButton} text-xs lg:text-sm`}
+        >
+          <FiPlus className="w-4 h-4" />
+          <span className="hidden sm:inline">Agregar</span>
+        </button>
       </div>
 
-      {/* Info Box - Compact on mobile */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg lg:rounded-xl p-2.5 lg:p-4">
-        <p className="text-xs lg:text-sm text-blue-800 flex items-start gap-2">
-          <FiInfo className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+      {/* Info Box */}
+      <div className="bg-surface border border-line rounded-xl p-3 lg:p-4">
+        <p className="text-xs lg:text-sm text-ink-soft flex items-start gap-2">
+          <FiInfo className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
           <span><strong>Tip:</strong> Agrega direcciones físicas o agencias de <strong>Zoom</strong> / <strong>MRW</strong>.</span>
         </p>
       </div>
@@ -208,26 +228,24 @@ export default function AddressesPage() {
             return (
               <div
                 key={address.id}
-                className="bg-white rounded-xl border border-line shadow-sm hover:shadow-md transition-all p-6"
+                className={`${adminCard} p-5 lg:p-6 transition-all hover:border-brand-500/40`}
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${address.type === 'ZOOM' ? 'bg-orange-100' :
-                      address.type === 'MRW' ? 'bg-red-100' :
-                        'bg-surface'
-                      }`}>
-                      <TypeIcon className={`w-4 h-4 ${address.type === 'ZOOM' ? 'text-orange-600' :
-                        address.type === 'MRW' ? 'text-red-600' :
-                          'text-brand-500'
-                        }`} />
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      address.type === 'ZOOM' ? 'bg-warning/10 text-warning-strong' :
+                      address.type === 'MRW' ? 'bg-deal-bg text-deal' :
+                      'bg-brand-50 text-brand-500'
+                    }`}>
+                      <TypeIcon className="w-4 h-4" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-ink">
+                        <h3 className="font-semibold text-ink text-sm lg:text-base">
                           {typeInfo.label}
                         </h3>
                         {address.isDefault && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-success/10 text-success-strong text-xs font-semibold rounded-full">
                             <FiCheck className="w-3 h-3" />
                             Predeterminada
                           </span>
@@ -236,16 +254,20 @@ export default function AddressesPage() {
                       <p className="text-xs text-muted mt-0.5">{address.city}, {address.state}</p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <button
+                      type="button"
                       onClick={() => handleEdit(address)}
                       className="p-2 text-brand-500 hover:bg-surface rounded-lg transition-all"
+                      aria-label="Editar"
                     >
                       <FiEdit className="w-4 h-4" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleDelete(address.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      className="p-2 text-deal hover:bg-deal-bg rounded-lg transition-all"
+                      aria-label="Eliminar"
                     >
                       <FiTrash2 className="w-4 h-4" />
                     </button>
@@ -259,7 +281,7 @@ export default function AddressesPage() {
                     </p>
                   )}
                   <p>{address.addressLine1}</p>
-                  {address.addressLine2 && <p className="text-xs">{address.addressLine2}</p>}
+                  {address.addressLine2 && <p className="text-xs text-subtle">{address.addressLine2}</p>}
                   <p>{address.city}, {address.state} {address.postalCode && `- ${address.postalCode}`}</p>
                 </div>
               </div>
@@ -267,17 +289,18 @@ export default function AddressesPage() {
           })}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-line shadow-sm p-12 text-center">
-          <FiMapPin className="w-16 h-16 text-muted mx-auto mb-4" />
+        <div className={`${adminCard} p-12 text-center`}>
+          <FiMapPin className="w-16 h-16 text-subtle mx-auto mb-4" />
           <h3 className="text-lg font-bold text-ink mb-2">
             No tienes direcciones guardadas
           </h3>
-          <p className="text-muted mb-6">
+          <p className="text-muted text-sm mb-6">
             Agrega direcciones de envío para agilizar tus compras
           </p>
           <button
+            type="button"
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-brand-500 text-white font-semibold rounded-lg hover:bg-brand-600 transition-all shadow-md"
+            className={`${adminPrimaryButton} inline-flex items-center gap-2`}
           >
             <FiPlus className="w-5 h-5" />
             Agregar Dirección
@@ -287,52 +310,57 @@ export default function AddressesPage() {
 
       {/* Modal - Using Portal */}
       {showModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+        <div className={adminModalOverlay}>
           {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL (Desktop Only) */}
           <button
+            type="button"
             onClick={() => setShowModal(false)}
-            className="hidden sm:flex fixed top-4 right-4 w-12 h-12 bg-white/90 hover:bg-white rounded-full items-center justify-center shadow-lg active:scale-95 transition-all z-10"
+            className="hidden sm:flex fixed top-4 right-4 w-10 h-10 bg-white hover:bg-surface text-ink rounded-full items-center justify-center border border-line shadow-md active:scale-95 transition-all z-10"
             aria-label="Cerrar"
           >
-            <FiX className="w-6 h-6 text-gray-700" />
+            <FiX className="w-5 h-5 text-ink-soft" />
           </button>
 
-          <div className="bg-white rounded-t-[32px] sm:rounded-2xl shadow-2xl w-full max-w-[700px] h-[92vh] sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col animate-slideInUp sm:animate-fadeIn">
+          <div className={`${adminModalPanel} w-full max-w-[700px] h-[92dvh] sm:h-auto sm:max-h-[90dvh] overflow-hidden flex flex-col`}>
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white px-5 lg:px-6 py-4 flex-shrink-0 rounded-t-[32px] sm:rounded-none">
+            <div className="bg-surface border-b border-line px-5 lg:px-6 py-4 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <FiMapPin className="w-6 h-6" />
+                  <div className="w-9 h-9 rounded-lg bg-brand-50 text-brand-500 flex items-center justify-center flex-shrink-0">
+                    <FiMapPin className="w-5 h-5" />
+                  </div>
                   <div>
-                    <h3 className="text-base lg:text-lg font-bold">
+                    <h3 className="text-base lg:text-lg font-bold text-ink">
                       {editingAddress ? 'Editar Dirección' : 'Nueva Dirección'}
                     </h3>
-                    <p className="text-xs lg:text-sm text-white/80">Completa los datos de envío</p>
+                    <p className="text-xs lg:text-sm text-muted">Completa los datos de envío</p>
                   </div>
                 </div>
                 {/* Save & Close Icons in Header - Mobile Only */}
                 <div className="flex sm:hidden items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => setShowModal(false)}
-                    className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all active:scale-90"
+                    className="p-2 text-muted hover:bg-surface rounded-lg transition-all"
                   >
-                    <FiX className="w-5 h-5 text-white" />
+                    <FiX className="w-5 h-5" />
                   </button>
                   <button
+                    type="button"
                     onClick={handleSubmit}
-                    className="p-2.5 bg-emerald-500/80 hover:bg-emerald-500 rounded-xl transition-all active:scale-90 shadow-sm"
+                    className="p-2 bg-brand-500 text-white rounded-lg transition-all shadow-sm"
                   >
-                    <FiCheck className="w-5 h-5 text-white" />
+                    <FiCheck className="w-5 h-5" />
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Modal Content - Scrollable */}
-            <div className="p-4 lg:p-6 overflow-y-auto flex-1">
+            <div className="p-4 lg:p-6 overflow-y-auto flex-1 space-y-5">
               {/* Address Type Selection */}
-              <div className="mb-6">
-                <label className="block text-xs font-bold text-ink mb-3 uppercase tracking-wider">
+              <div>
+                <label className={adminLabel}>
                   Tipo de Dirección *
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -343,16 +371,21 @@ export default function AddressesPage() {
                         key={type.id}
                         type="button"
                         onClick={() => setFormData({ ...formData, type: type.id })}
-                        className={`p-2 lg:p-3 rounded-xl border-2 transition-all text-left group ${formData.type === type.id
-                          ? 'border-brand-500 bg-blue-50/50 shadow-sm'
-                          : 'border-line hover:border-brand-500/30'
-                          }`}
+                        className={`p-2 lg:p-3 rounded-xl border transition-all text-left group ${
+                          formData.type === type.id
+                            ? 'border-brand-500 bg-brand-50/50 shadow-sm'
+                            : 'border-line hover:border-brand-500/40 bg-white'
+                        }`}
                       >
-                        <TypeIcon className={`w-4 h-4 lg:w-5 lg:h-5 mb-1 ${formData.type === type.id ? 'text-brand-500' : 'text-muted'
-                          }`} />
-                        <p className={`text-xs lg:text-sm font-bold leading-tight mb-0.5 ${formData.type === type.id ? 'text-brand-500' : 'text-ink'
-                          }`}>{type.label}</p>
-                        <p className={`text-xs ${formData.type === type.id ? 'text-brand-500/70' : 'text-muted'}`}>{type.description}</p>
+                        <TypeIcon className={`w-4 h-4 lg:w-5 lg:h-5 mb-1 ${
+                          formData.type === type.id ? 'text-brand-500' : 'text-muted'
+                        }`} />
+                        <p className={`text-xs lg:text-sm font-bold leading-tight mb-0.5 ${
+                          formData.type === type.id ? 'text-brand-500' : 'text-ink'
+                        }`}>{type.label}</p>
+                        <p className={`text-xs ${
+                          formData.type === type.id ? 'text-brand-500/70' : 'text-muted'
+                        }`}>{type.description}</p>
                       </button>
                     );
                   })}
@@ -361,35 +394,35 @@ export default function AddressesPage() {
 
               {/* Agency Info for ZOOM/MRW */}
               {isShippingCompany && (
-                <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                  <p className="text-sm text-yellow-800 mb-4 flex items-center gap-2">
-                    <FiPackage className="w-4 h-4 flex-shrink-0" />
+                <div className="bg-surface border border-line rounded-xl p-4">
+                  <p className="text-sm text-ink-soft mb-4 flex items-center gap-2">
+                    <FiPackage className="w-4 h-4 flex-shrink-0 text-brand-500" />
                     <span><strong>{formData.type === 'ZOOM' ? 'Zoom Envíos' : 'MRW'}:</strong> Ingresa los datos de la agencia donde retirarás tu pedido.</span>
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Nombre de Agencia *</label>
+                      <label className={adminLabel}>Nombre de la Agencia *</label>
                       <div className="relative">
-                        <FiPackage className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <FiPackage className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
                         <input
                           type="text"
                           value={formData.agencyName || ''}
                           onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
-                          placeholder={formData.type === 'ZOOM' ? 'Zoom Centro Guanare' : 'MRW Guanare'}
-                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                          placeholder="Ej: Agencia Principal La Florida"
+                          className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface border border-line focus:border-brand-500 focus:bg-white rounded-xl outline-none transition-all text-ink placeholder:text-subtle"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Código de Agencia</label>
+                      <label className={adminLabel}>Código de Agencia</label>
                       <div className="relative">
-                        <FiInfo className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <FiInfo className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
                         <input
                           type="text"
                           value={formData.agencyCode || ''}
                           onChange={(e) => setFormData({ ...formData, agencyCode: e.target.value })}
                           placeholder="Ej: GUA-001"
-                          className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                          className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface border border-line focus:border-brand-500 focus:bg-white rounded-xl outline-none transition-all text-ink placeholder:text-subtle"
                         />
                       </div>
                     </div>
@@ -400,31 +433,31 @@ export default function AddressesPage() {
               <div className="space-y-4">
                 {/* Address */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
+                  <label className={adminLabel}>
                     {isShippingCompany ? 'Dirección de la Agencia *' : 'Dirección *'}
                   </label>
                   <div className="relative">
-                    <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
                     <input
                       type="text"
                       value={formData.addressLine1}
                       onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
                       placeholder={isShippingCompany ? 'Av. Principal, Centro Comercial...' : 'Calle, Avenida, Casa/Apto...'}
-                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface border border-line focus:border-brand-500 focus:bg-white rounded-xl outline-none transition-all text-ink placeholder:text-subtle"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Referencia (Opcional)</label>
+                  <label className={adminLabel}>Referencia (Opcional)</label>
                   <div className="relative">
-                    <FiInfo className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <FiInfo className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
                     <input
                       type="text"
                       value={formData.addressLine2}
                       onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
                       placeholder="Punto de referencia, local, piso..."
-                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface border border-line focus:border-brand-500 focus:bg-white rounded-xl outline-none transition-all text-ink placeholder:text-subtle"
                     />
                   </div>
                 </div>
@@ -432,26 +465,26 @@ export default function AddressesPage() {
                 {/* City & State */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Ciudad *</label>
+                    <label className={adminLabel}>Ciudad *</label>
                     <div className="relative">
-                      <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
                       <input
                         type="text"
                         value={formData.city}
                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                        className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface border border-line focus:border-brand-500 focus:bg-white rounded-xl outline-none transition-all text-ink placeholder:text-subtle"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Estado *</label>
+                    <label className={adminLabel}>Estado *</label>
                     <div className="relative">
-                      <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
                       <input
                         type="text"
                         value={formData.state}
                         onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                        className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface border border-line focus:border-brand-500 focus:bg-white rounded-xl outline-none transition-all text-ink placeholder:text-subtle"
                       />
                     </div>
                   </div>
@@ -459,15 +492,15 @@ export default function AddressesPage() {
 
                 {/* Postal Code */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Código Postal</label>
+                  <label className={adminLabel}>Código Postal</label>
                   <div className="relative">
-                    <FiInfo className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <FiInfo className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
                     <input
                       type="text"
                       value={formData.postalCode}
                       onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
                       placeholder="(Opcional)"
-                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/70 border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none hover:border-blue-400 transition-all duration-200 font-medium shadow-sm"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface border border-line focus:border-brand-500 focus:bg-white rounded-xl outline-none transition-all text-ink placeholder:text-subtle"
                     />
                   </div>
                 </div>
@@ -479,16 +512,16 @@ export default function AddressesPage() {
                       type="checkbox"
                       checked={formData.isDefault}
                       onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-                      className="w-4 h-4 text-brand-500 rounded focus:ring-brand-500"
+                      className="w-4 h-4 text-brand-500 rounded border-line focus:ring-brand-500"
                     />
                     <span className="text-sm text-ink">Establecer como dirección predeterminada</span>
                   </label>
                 </div>
 
                 {/* Info Note */}
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                  <p className="text-xs text-blue-800 flex items-start gap-2">
-                    <FiInfo className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="p-3 bg-surface border border-line rounded-xl">
+                  <p className="text-xs text-muted flex items-start gap-2">
+                    <FiInfo className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
                     <span><strong>Nota:</strong> Los datos de contacto (nombre, teléfono, cédula) se tomarán automáticamente de tu perfil registrado.</span>
                   </p>
                 </div>
@@ -498,14 +531,16 @@ export default function AddressesPage() {
             {/* Modal Footer - Desktop only */}
             <div className="hidden sm:flex p-6 border-t border-line bg-white gap-3 flex-shrink-0">
               <button
+                type="button"
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-6 py-3 bg-surface text-ink font-semibold rounded-xl hover:bg-line transition-all"
+                className={`${adminSecondaryButton} flex-1`}
               >
                 Cancelar
               </button>
               <button
+                type="button"
                 onClick={handleSubmit}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+                className={`${adminPrimaryButton} flex-1`}
               >
                 {editingAddress ? 'Actualizar' : 'Guardar'}
               </button>

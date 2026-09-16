@@ -53,7 +53,7 @@ interface Order {
 const MobileOrdersSkeleton = () => (
   <div className="lg:hidden space-y-4 p-4">
     {/* Hero Stats Skeleton */}
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-800 to-gray-900 p-5">
+    <div className="relative overflow-hidden rounded-2xl bg-brand-950 p-5">
       <div className="animate-pulse">
         <div className="h-3 w-20 bg-white/20 rounded-full mb-3" />
         <div className="h-10 w-32 bg-white/30 rounded-lg mb-4" />
@@ -63,23 +63,22 @@ const MobileOrdersSkeleton = () => (
           <div className="h-14 flex-1 bg-white/10 rounded-xl" />
         </div>
       </div>
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
     </div>
 
     {/* Search Skeleton */}
-    <div className="h-11 bg-white rounded-xl border border-gray-100 animate-pulse" />
+    <div className="h-11 bg-white rounded-xl border border-line animate-pulse" />
 
     {/* Orders Skeleton */}
     <div className="space-y-2">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="rounded-xl bg-white border border-gray-100 p-3 animate-pulse">
+        <div key={i} className="rounded-xl bg-white border border-line p-3 animate-pulse">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gray-200 rounded-xl" />
+            <div className="w-12 h-12 bg-surface rounded-xl" />
             <div className="flex-1">
-              <div className="h-4 w-28 bg-gray-200 rounded-full mb-2" />
-              <div className="h-3 w-20 bg-gray-100 rounded-full" />
+              <div className="h-4 w-28 bg-line rounded-full mb-2" />
+              <div className="h-3 w-20 bg-surface rounded-full" />
             </div>
-            <div className="h-5 w-16 bg-gray-200 rounded-full" />
+            <div className="h-5 w-16 bg-line rounded-full" />
           </div>
         </div>
       ))}
@@ -146,13 +145,14 @@ export default function OrdersPage() {
   };
 
   const getStatusConfig = (status: string) => {
-    const configs: Record<string, { bg: string; text: string; border: string; icon: React.ReactNode; animation?: string; gradient?: string }> = {
-      PENDING: { bg: 'bg-amber-100', text: 'text-amber-600', border: 'border-amber-300', icon: <FiClock className="w-4 h-4" />, animation: 'animate-pulse', gradient: 'from-amber-400 to-amber-500' },
-      PAID: { bg: 'bg-blue-100', text: 'text-blue-600', border: 'border-blue-300', icon: <FiCheck className="w-4 h-4" />, gradient: 'from-blue-400 to-blue-500' },
-      PROCESSING: { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-300', icon: <FiPackage className="w-4 h-4" />, gradient: 'from-purple-400 to-purple-500' },
-      SHIPPED: { bg: 'bg-indigo-100', text: 'text-indigo-600', border: 'border-indigo-300', icon: <FiTruck className="w-4 h-4" />, gradient: 'from-indigo-400 to-indigo-500' },
-      DELIVERED: { bg: 'bg-emerald-100', text: 'text-emerald-600', border: 'border-emerald-300', icon: <FiCheck className="w-4 h-4" />, gradient: 'from-emerald-400 to-emerald-500' },
-      CANCELLED: { bg: 'bg-red-100', text: 'text-red-600', border: 'border-red-300', icon: <FiX className="w-4 h-4" />, gradient: 'from-red-400 to-red-500' },
+    const configs: Record<string, { bg: string; text: string; border: string; icon: React.ReactNode }> = {
+      PENDING: { bg: 'bg-warning/15', text: 'text-warning-strong', border: 'border-warning/30', icon: <FiClock className="w-4 h-4" /> },
+      CONFIRMED: { bg: 'bg-brand-50', text: 'text-brand-700', border: 'border-brand-200', icon: <FiCheck className="w-4 h-4" /> },
+      PAID: { bg: 'bg-brand-50', text: 'text-brand-700', border: 'border-brand-200', icon: <FiCheck className="w-4 h-4" /> },
+      PROCESSING: { bg: 'bg-brand-50', text: 'text-brand-700', border: 'border-brand-200', icon: <FiPackage className="w-4 h-4" /> },
+      SHIPPED: { bg: 'bg-brand-50', text: 'text-brand-700', border: 'border-brand-200', icon: <FiTruck className="w-4 h-4" /> },
+      DELIVERED: { bg: 'bg-success-strong/10', text: 'text-success-strong', border: 'border-success-strong/20', icon: <FiCheck className="w-4 h-4" /> },
+      CANCELLED: { bg: 'bg-deal-bg', text: 'text-deal', border: 'border-deal/30', icon: <FiX className="w-4 h-4" /> },
     };
     return configs[status] || configs.PENDING;
   };
@@ -221,63 +221,51 @@ export default function OrdersPage() {
         {/* ========================================
             ANIMATED HERO - Premium Effects
             ======================================== */}
-        <div className="relative rounded-2xl overflow-hidden">
-          {/* Animated Gradient Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-700 via-[#2563eb] to-[#0ea5e9]">
-            {/* Floating Orbs */}
-            <div className="absolute top-2 right-4 w-16 h-16 bg-white/10 rounded-full blur-2xl" />
-            <div className="absolute bottom-3 left-3 w-12 h-12 bg-cyan-300/15 rounded-full blur-xl animate-pulse" style={{ animationDelay: '0.5s' }} />
-            {/* Shimmer */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
-          </div>
+        <div className="relative rounded-2xl bg-brand-600 p-3 text-white overflow-hidden">
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: Title + Total */}
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                <FiPackage className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-white/80 uppercase font-bold tracking-wider">Mis Pedidos</p>
+                <p className="text-xl font-bold text-white">
+                  {formatUSD(stats.totalSpent)}
+                </p>
+              </div>
+            </div>
 
-          {/* Content */}
-          <div className="relative z-10 p-3">
-            <div className="flex items-center justify-between gap-2">
-              {/* Left: Title + Total */}
-              <div className="flex items-center gap-2 animate-fadeIn">
-                <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <FiPackage className="w-4 h-4 text-white" />
+            {/* Right: Icon Stats */}
+            <div className="flex items-center gap-1.5">
+              {/* Completed */}
+              <div className="relative">
+                <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center border border-white/20">
+                  <FiCheck className="w-4 h-4 text-white" />
                 </div>
-                <div>
-                  <p className="text-xs text-blue-200 uppercase font-bold tracking-wider">Mis Pedidos</p>
-                  <p className="text-xl font-bold text-white" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
-                    ${stats.totalSpent.toFixed(0)}
-                  </p>
-                </div>
+                <span className="absolute -top-1.5 -right-1.5 bg-success-strong text-white text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center shadow">
+                  {stats.completedOrders}
+                </span>
               </div>
 
-              {/* Right: Animated Icon Stats */}
-              <div className="flex items-center gap-1.5">
-                {/* Completed - Animated Badge */}
-                <div className="relative animate-slideInUp" style={{ animationDelay: '0.1s' }}>
-                  <div className="w-8 h-8 bg-emerald-500/30 rounded-lg flex items-center justify-center backdrop-blur-sm border border-emerald-300/20">
-                    <FiCheck className="w-4 h-4 text-emerald-200" />
-                  </div>
-                  <span className="absolute -top-1.5 -right-1.5 bg-white text-emerald-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg animate-pulse">
-                    {stats.completedOrders}
-                  </span>
+              {/* Pending */}
+              <div className="relative">
+                <div className="w-8 h-8 bg-warning-strong/30 rounded-lg flex items-center justify-center border border-white/20">
+                  <FiClock className="w-4 h-4 text-white" />
                 </div>
+                <span className="absolute -top-1.5 -right-1.5 bg-warning-strong text-white text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center shadow">
+                  {stats.pendingOrders}
+                </span>
+              </div>
 
-                {/* Pending - Animated Badge */}
-                <div className="relative animate-slideInUp" style={{ animationDelay: '0.15s' }}>
-                  <div className="w-8 h-8 bg-amber-500/30 rounded-lg flex items-center justify-center backdrop-blur-sm border border-amber-300/20">
-                    <FiClock className="w-4 h-4 text-amber-200" />
-                  </div>
-                  <span className="absolute -top-1.5 -right-1.5 bg-white text-amber-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg animate-pulse" style={{ animationDelay: '0.3s' }}>
-                    {stats.pendingOrders}
-                  </span>
+              {/* Items */}
+              <div className="relative">
+                <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center border border-white/20">
+                  <FiShoppingBag className="w-4 h-4 text-white" />
                 </div>
-
-                {/* Items - Animated Badge */}
-                <div className="relative animate-slideInUp" style={{ animationDelay: '0.2s' }}>
-                  <div className="w-8 h-8 bg-blue-500/30 rounded-lg flex items-center justify-center backdrop-blur-sm border border-blue-300/20">
-                    <FiShoppingBag className="w-4 h-4 text-blue-200" />
-                  </div>
-                  <span className="absolute -top-1.5 -right-1.5 bg-white text-blue-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
-                    {stats.totalItems}
-                  </span>
-                </div>
+                <span className="absolute -top-1.5 -right-1.5 bg-brand-500 text-white text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center shadow">
+                  {stats.totalItems}
+                </span>
               </div>
             </div>
           </div>
@@ -287,25 +275,25 @@ export default function OrdersPage() {
             SEARCH & FILTERS - Comfortable Spacing
             ======================================== */}
         <div className="pt-3 pb-2 space-y-3">
-          {/* Search Bar - Centered placeholder */}
+          {/* Search Bar */}
           <div className="relative">
-            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
             <input
               type="text"
               placeholder="Buscar pedido..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 text-sm bg-white/70 border border-gray-200 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-blue-500/20 hover:border-blue-400 transition-all duration-200 shadow-sm"
+              className="w-full pl-10 pr-10 py-2.5 text-sm bg-white border border-line rounded-xl focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 hover:border-line-strong transition-all shadow-sm text-ink"
             />
             <button
               onClick={fetchOrders}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-blue-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted hover:text-brand-600"
             >
               <FiRefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
 
-          {/* Filter Pills - FULL TEXT (no abbreviations) */}
+          {/* Filter Pills */}
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
             {[
               { value: 'ALL', label: 'Todos' },
@@ -318,8 +306,8 @@ export default function OrdersPage() {
                 key={filter.value}
                 onClick={() => setSelectedStatus(filter.value)}
                 className={`px-3.5 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all flex-shrink-0 ${selectedStatus === filter.value
-                  ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
-                  : 'bg-white/80 text-gray-500 border border-gray-200 hover:bg-gray-50'
+                  ? 'bg-brand-500 text-white shadow-sm'
+                  : 'bg-white text-muted border border-line hover:bg-surface'
                   }`}
               >
                 {filter.label}
@@ -335,65 +323,64 @@ export default function OrdersPage() {
           {filteredOrders.length === 0 ? (
             /* Empty State */
             <div className="text-center py-8">
-              <div className="w-12 h-12 mx-auto mb-2 bg-blue-50 rounded-full flex items-center justify-center">
-                <FiPackage className="w-6 h-6 text-blue-300" />
+              <div className="w-12 h-12 mx-auto mb-2 bg-brand-50 rounded-full flex items-center justify-center">
+                <FiPackage className="w-6 h-6 text-brand-500" />
               </div>
-              <p className="text-xs font-bold text-gray-700 mb-1">Sin pedidos</p>
-              <p className="text-xs text-gray-400 mb-3">
+              <p className="text-xs font-bold text-ink mb-1">Sin pedidos</p>
+              <p className="text-xs text-muted mb-3">
                 {selectedStatus === 'ALL' ? 'Aún no has realizado ningún pedido' : 'No hay pedidos con este estado'}
               </p>
               <Link
                 href="/"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-500 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-500 text-white text-xs font-bold rounded-lg hover:bg-brand-600 transition-colors shadow-sm"
               >
                 <FiShoppingBag className="w-3 h-3" />
                 Explorar
               </Link>
             </div>
           ) : (
-            /* Orders List - Comfortable */
             filteredOrders.map((order) => {
               const statusConfig = getStatusConfig(order.status);
               return (
                 <div
                   key={order.id}
-                  className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-gray-150 hover:shadow-md transition-shadow"
+                  className="bg-white rounded-xl p-3 shadow-sm border border-line hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-center gap-3">
-                    {/* Status Icon - Normal size */}
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${statusConfig.gradient || 'from-blue-400 to-blue-500'} flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                      <FiPackage className="w-4 h-4 text-white" />
+                    {/* Status Icon */}
+                    <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0 shadow-sm text-brand-600">
+                      <FiPackage className="w-4 h-4" />
                     </div>
 
-                    {/* Order Info - More breathing room */}
+                    {/* Order Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-bold text-gray-900 text-xs">#{order.orderNumber}</span>
+                        <span className="font-bold text-ink text-xs">#{order.orderNumber}</span>
                         <span className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${statusConfig.bg} ${statusConfig.text}`}>
                           {getStatusText(order.status)}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted">
                         {getTimeSince(order.createdAt)} • {order.items.length} item{order.items.length > 1 ? 's' : ''}
                       </p>
                     </div>
 
                     {/* Price */}
-                    <span className="text-sm font-bold text-gray-900 flex-shrink-0 mr-1">${order.totalUSD.toFixed(0)}</span>
+                    <span className="text-sm font-bold text-ink flex-shrink-0 mr-1">{formatUSD(order.totalUSD)}</span>
 
-                    {/* Actions - Proper hit area */}
+                    {/* Actions */}
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       {order.hasDigital && order.paymentStatus === 'PAID' && (
                         <Link
                           href={`/customer/orders/${order.id}/digital`}
-                          className="w-8 h-8 bg-purple-500 text-white rounded-lg flex items-center justify-center hover:bg-purple-600 transition-colors shadow-sm shadow-purple-500/30"
+                          className="w-8 h-8 bg-brand-600 text-white rounded-lg flex items-center justify-center hover:bg-brand-700 transition-colors shadow-sm"
                         >
                           <BsCardList className="w-4 h-4" />
                         </Link>
                       )}
                       <button
                         onClick={() => { setSelectedOrder(order); setShowOrderDetails(true); }}
-                        className="w-8 h-8 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors border border-gray-200"
+                        className="w-8 h-8 bg-surface text-ink-soft hover:bg-line rounded-lg flex items-center justify-center transition-colors border border-line"
                       >
                         <FiChevronRight className="w-4 h-4" />
                       </button>
@@ -411,70 +398,70 @@ export default function OrdersPage() {
           Only shows on screens >= 1024px
           ============================================ */}
       < div className="hidden lg:block space-y-2" >
-        {/* STATS - Premium icons with counter on top */}
-        < div className="flex items-center gap-1.5 overflow-x-auto pb-1" >
-          {/* Total Spent - Only medal style */}
-          < div className="bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl px-3 py-2 text-white flex-shrink-0 min-w-[90px]" >
+        {/* STATS */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          {/* Total Spent */}
+          <div className="bg-brand-600 rounded-xl px-3 py-2 text-white flex-shrink-0 min-w-[90px]">
             <div className="flex items-center gap-1.5 mb-0.5">
               <FiDollarSign className="w-4 h-4 opacity-80" />
-              <span className="text-[11px] opacity-70">Total</span>
+              <span className="text-xs opacity-70">Total</span>
             </div>
-            <p className="text-base lg:text-lg font-bold">${stats.totalSpent.toFixed(0)}</p>
-          </div >
+            <p className="text-base lg:text-lg font-bold">{formatUSD(stats.totalSpent)}</p>
+          </div>
 
-          {/* Completed - Icon with counter */}
-          < div className="flex flex-col items-center justify-center bg-white rounded-xl p-2 border border-emerald-200 flex-shrink-0 min-w-[56px]" >
+          {/* Completed */}
+          <div className="flex flex-col items-center justify-center bg-white rounded-xl p-2 border border-line flex-shrink-0 min-w-[56px]">
             <div className="relative">
-              <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <FiCheck className="w-5 h-5 text-emerald-600" />
+              <div className="w-9 h-9 bg-success-strong/10 rounded-lg flex items-center justify-center">
+                <FiCheck className="w-5 h-5 text-success-strong" />
               </div>
-              <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
+              <span className="absolute -top-1.5 -right-1.5 bg-success-strong text-white text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center shadow-sm">
                 {stats.completedOrders}
               </span>
             </div>
-          </div >
+          </div>
 
-          {/* In Process - Icon with counter and animation */}
-          < div className="flex flex-col items-center justify-center bg-white rounded-xl p-2 border border-amber-200 flex-shrink-0 min-w-[56px]" >
+          {/* In Process */}
+          <div className="flex flex-col items-center justify-center bg-white rounded-xl p-2 border border-line flex-shrink-0 min-w-[56px]">
             <div className="relative">
-              <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center animate-pulse">
-                <FiClock className="w-5 h-5 text-amber-600" />
+              <div className="w-9 h-9 bg-warning/15 rounded-lg flex items-center justify-center">
+                <FiClock className="w-5 h-5 text-warning-strong" />
               </div>
-              <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
+              <span className="absolute -top-1.5 -right-1.5 bg-warning-strong text-white text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center shadow-sm">
                 {stats.pendingOrders}
               </span>
             </div>
-          </div >
+          </div>
 
-          {/* Items - Icon with counter */}
-          < div className="flex flex-col items-center justify-center bg-white rounded-xl p-2 border border-blue-200 flex-shrink-0 min-w-[56px]" >
+          {/* Items */}
+          <div className="flex flex-col items-center justify-center bg-white rounded-xl p-2 border border-line flex-shrink-0 min-w-[56px]">
             <div className="relative">
-              <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
-                <FiPackage className="w-5 h-5 text-blue-600" />
+              <div className="w-9 h-9 bg-brand-50 rounded-lg flex items-center justify-center">
+                <FiPackage className="w-5 h-5 text-brand-600" />
               </div>
-              <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
+              <span className="absolute -top-1.5 -right-1.5 bg-brand-500 text-white text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center shadow-sm">
                 {stats.totalItems}
               </span>
             </div>
-          </div >
-        </div >
+          </div>
+        </div>
 
         {/* Search & Filter - Compact */}
-        < div className="flex items-center gap-1.5" >
+        <div className="flex items-center gap-1.5">
           <div className="relative flex-1">
-            <FiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+            <FiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted w-3.5 h-3.5" />
             <input
               type="text"
               placeholder="Buscar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-7 pr-2 py-1.5 text-xs border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+              className="w-full pl-7 pr-2 py-1.5 text-xs border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-ink bg-white"
             />
           </div>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-2 py-1.5 text-xs border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 bg-white min-w-[65px]"
+            className="px-2 py-1.5 text-xs border border-line rounded-lg focus:ring-2 focus:ring-brand-500/20 bg-white text-ink min-w-[65px]"
           >
             <option value="ALL">Todos</option>
             <option value="PENDING">Pend</option>
@@ -489,7 +476,7 @@ export default function OrdersPage() {
           >
             <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-        </div >
+        </div>
 
         {/* Orders List - Compact cards */}
         {
@@ -515,43 +502,43 @@ export default function OrdersPage() {
                     <div className="flex items-center gap-2">
                       {/* Order Icon - Compact */}
                       <div className="relative flex-shrink-0">
-                        <div className="w-10 h-10 bg-gradient-to-br from-brand-500/10 to-brand-500/5 rounded-lg flex items-center justify-center">
-                          <FiPackage className="w-4 h-4 text-brand-500" />
+                        <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center">
+                          <FiPackage className="w-4 h-4 text-brand-600" />
                         </div>
                         <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ${statusConfig.bg} ${statusConfig.border} border flex items-center justify-center`}>
-                          <span className={`${statusConfig.text} ${statusConfig.animation} scale-75`}>{statusConfig.icon}</span>
+                          <span className={`${statusConfig.text} scale-75`}>{statusConfig.icon}</span>
                         </div>
                       </div>
 
                       {/* Order Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 mb-0.5">
-                          <h3 className="font-bold text-ink text-[11px] lg:text-xs">#{order.orderNumber}</h3>
-                          <span className={`px-1 py-0.5 rounded text-[11px] font-bold ${statusConfig.bg} ${statusConfig.text}`}>
+                          <h3 className="font-bold text-ink text-xs">#{order.orderNumber}</h3>
+                          <span className={`px-1 py-0.5 rounded text-xs font-bold ${statusConfig.bg} ${statusConfig.text}`}>
                             {getStatusTextShort(order.status)}
                           </span>
                         </div>
-                        <p className="text-[11px] lg:text-xs text-muted">
+                        <p className="text-xs text-muted">
                           {getTimeSince(order.createdAt)} • {order.items.length} item{order.items.length > 1 ? 's' : ''}
                         </p>
                       </div>
 
                       {/* Price */}
-                      <p className="text-xs lg:text-sm font-bold text-ink mr-1">${order.totalUSD.toFixed(0)}</p>
+                      <p className="text-xs lg:text-sm font-bold text-ink mr-1">{formatUSD(order.totalUSD)}</p>
 
-                      {/* Actions - Larger and centered */}
+                      {/* Actions */}
                       <div className="flex items-center gap-1">
                         {order.hasDigital && order.paymentStatus === 'PAID' && (
                           <Link
                             href={`/customer/orders/${order.id}/digital`}
-                            className="w-9 h-9 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg flex items-center justify-center shadow-sm active:scale-95"
+                            className="w-9 h-9 bg-brand-600 hover:bg-brand-700 text-white rounded-lg flex items-center justify-center shadow-sm"
                           >
                             <BsCardList className="w-4 h-4" />
                           </Link>
                         )}
                         <button
                           onClick={() => { setSelectedOrder(order); setShowOrderDetails(true); }}
-                          className="w-9 h-9 bg-surface hover:bg-brand-500 text-muted hover:text-white rounded-lg flex items-center justify-center transition-all active:scale-95"
+                          className="w-9 h-9 bg-surface hover:bg-brand-500 text-muted hover:text-white rounded-lg flex items-center justify-center transition-all"
                         >
                           <FiEye className="w-4 h-4" />
                         </button>
@@ -575,26 +562,26 @@ export default function OrdersPage() {
             {/* Backdrop */}
             <div
               onClick={closeModal}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-ink/50"
             />
 
             {/* CLOSE BUTTON - POSITIONED OUTSIDE THE MODAL (Desktop) */}
             <button
               onClick={closeModal}
-              className="hidden sm:flex fixed top-4 right-4 w-12 h-12 bg-white/90 hover:bg-white rounded-full items-center justify-center shadow-lg active:scale-95 transition-all"
+              className="hidden sm:flex fixed top-4 right-4 w-12 h-12 bg-white hover:bg-surface rounded-full items-center justify-center shadow-lg transition-all"
               style={{ zIndex: 'var(--z-modal)' }}
               aria-label="Cerrar"
             >
-              <FiX className="w-6 h-6 text-gray-700" />
+              <FiX className="w-6 h-6 text-ink" />
             </button>
 
             {/* Modal Content */}
             <div
-              className="relative bg-white rounded-t-[32px] sm:rounded-2xl w-full max-w-xl h-[92vh] sm:h-auto sm:max-h-[85vh] shadow-2xl overflow-hidden flex flex-col animate-slideInUp sm:animate-fadeIn"
+              className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-xl h-[92vh] sm:h-auto sm:max-h-[85vh] shadow-lg overflow-hidden flex flex-col"
               style={{ zIndex: 1 }}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-5 sm:px-4 py-4 sm:py-3 text-white flex-shrink-0 flex items-center justify-between rounded-t-[32px] sm:rounded-none">
+              <div className="bg-brand-600 px-5 sm:px-4 py-4 sm:py-3 text-white flex-shrink-0 flex items-center justify-between rounded-t-2xl sm:rounded-none">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                     <FiPackage className="w-5 h-5" />
@@ -657,14 +644,14 @@ export default function OrdersPage() {
                   <span className="text-xs text-muted">
                     {selectedOrder.paymentMethod && <>Pago: <strong className="text-ink">{formatPaymentMethod(selectedOrder.paymentMethod)}</strong></>}
                   </span>
-                  <div className="bg-brand-500 text-white px-3 py-1.5 rounded-lg">
-                    <p className="text-[11px] opacity-70">Total</p>
+                  <div className="bg-brand-600 text-white px-3 py-1.5 rounded-lg">
+                    <p className="text-xs opacity-70">Total</p>
                     <p className="text-base font-bold">{formatUSD(selectedOrder.totalUSD)}</p>
                   </div>
                 </div>
                 <button
                   onClick={closeModal}
-                  className="w-full py-2.5 bg-white border-2 border-line text-ink font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all text-sm"
+                  className="w-full py-2.5 bg-white border border-line text-ink font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-surface active:scale-[0.98] transition-all text-sm"
                 >
                   <FiArrowLeft className="w-4 h-4" />
                   Cerrar

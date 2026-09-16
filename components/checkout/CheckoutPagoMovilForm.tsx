@@ -7,6 +7,7 @@ import { HiOutlineQrcode } from 'react-icons/hi';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { BANCOS_VENEZUELA, type BancoVenezuela } from '@/lib/pago-movil/bancos-venezuela';
+import { adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminSuccessButton } from '@/lib/admin-ui';
 
 interface CheckoutPagoMovilFormProps {
     /** Monto esperado del pago */
@@ -271,21 +272,21 @@ export default function CheckoutPagoMovilForm({
     if (isVerified) {
         return (
             <div className={`${className}`}>
-                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 animate-fadeIn">
+                <div className="bg-success/5 border border-success/30 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                            <FiCheck className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 bg-success-strong rounded-full flex items-center justify-center flex-shrink-0 text-white">
+                            <FiCheck className="w-5 h-5" />
                         </div>
                         <div className="flex-1">
-                            <h4 className="font-bold text-green-800">Pago Movil Verificado</h4>
-                            <p className="text-sm text-green-700">
+                            <h4 className="font-bold text-success-strong">Pago Móvil Verificado</h4>
+                            <p className="text-sm text-ink">
                                 Ref: {formData.referencia} - Banco: {bancoSeleccionado?.nombreCorto || formData.bancoOrigen}
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={handleReset}
-                            className="text-green-600 hover:text-green-800 text-sm font-semibold underline"
+                            className="text-brand-600 hover:text-brand-700 text-sm font-semibold underline"
                         >
                             Cambiar
                         </button>
@@ -299,8 +300,8 @@ export default function CheckoutPagoMovilForm({
         <div className={`space-y-4 ${className}`}>
             {/* Header con icono - CENTRADO */}
             <div className="flex flex-col items-center text-center gap-2 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-brand-500 to-brand-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                    <FiShield className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 bg-brand-500/10 rounded-xl flex items-center justify-center text-brand-600">
+                    <FiShield className="w-6 h-6 text-brand-600" />
                 </div>
                 <div>
                     <h3 className="text-lg font-bold text-ink">Verificación de Pago Móvil</h3>
@@ -308,64 +309,58 @@ export default function CheckoutPagoMovilForm({
                 </div>
             </div>
 
-            {/* Datos del comercio - Premium Card */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-500 to-brand-600 rounded-2xl p-5 shadow-xl shadow-blue-500/20">
-                {/* Background pattern */}
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2" />
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full blur-2xl transform -translate-x-1/2 translate-y-1/2" />
-                </div>
-
+            {/* Datos del comercio */}
+            <div className="relative overflow-hidden bg-surface border border-line rounded-2xl p-5">
                 {/* Content */}
-                <div className="relative">
+                <div>
                     {/* Title */}
                     <div className="flex items-center gap-2 mb-4">
-                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                        <span className="text-xs font-bold text-white/80 uppercase tracking-widest">Datos para transferir</span>
+                        <div className="w-2 h-2 bg-success rounded-full" />
+                        <span className="text-xs font-bold text-muted uppercase tracking-widest">Datos para transferir</span>
                     </div>
 
                     {/* Grid of payment details */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                         {/* Teléfono */}
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
-                            <div className="flex items-center justify-center gap-2 mb-1">
-                                <FiPhone className="w-3.5 h-3.5 text-blue-200" />
-                                <span className="text-xs font-medium text-blue-200 uppercase">Teléfono</span>
+                        <div className="bg-white rounded-xl p-3 border border-line text-center">
+                            <div className="flex items-center justify-center gap-1.5 mb-1">
+                                <FiPhone className="w-3.5 h-3.5 text-brand-600" />
+                                <span className="text-xs font-semibold text-muted uppercase">Teléfono</span>
                             </div>
-                            <p className="text-base font-bold text-white tracking-wide">{datosComercio.telefono || '-'}</p>
+                            <p className="text-base font-bold text-ink tracking-wide">{datosComercio.telefono || '-'}</p>
                         </div>
 
                         {/* Cédula/RIF */}
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
-                            <div className="flex items-center justify-center gap-2 mb-1">
-                                <FiCreditCard className="w-3.5 h-3.5 text-blue-200" />
-                                <span className="text-xs font-medium text-blue-200 uppercase">CI/RIF</span>
+                        <div className="bg-white rounded-xl p-3 border border-line text-center">
+                            <div className="flex items-center justify-center gap-1.5 mb-1">
+                                <FiCreditCard className="w-3.5 h-3.5 text-brand-600" />
+                                <span className="text-xs font-semibold text-muted uppercase">CI/RIF</span>
                             </div>
-                            <p className="text-base font-bold text-white tracking-wide">{datosComercio.cedula || '-'}</p>
+                            <p className="text-base font-bold text-ink tracking-wide">{datosComercio.cedula || '-'}</p>
                         </div>
 
                         {/* Banco */}
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
-                            <div className="flex items-center justify-center gap-2 mb-1">
-                                <svg className="w-3.5 h-3.5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="bg-white rounded-xl p-3 border border-line text-center">
+                            <div className="flex items-center justify-center gap-1.5 mb-1">
+                                <svg className="w-3.5 h-3.5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
-                                <span className="text-xs font-medium text-blue-200 uppercase">Banco</span>
+                                <span className="text-xs font-semibold text-muted uppercase">Banco</span>
                             </div>
-                            <p className="text-sm font-bold text-white leading-tight">{(datosComercio.banco || 'BDV').replace('Banco de ', '')}</p>
+                            <p className="text-sm font-bold text-ink leading-tight">{(datosComercio.banco || 'BDV').replace('Banco de ', '')}</p>
                         </div>
 
                         {/* QR Button */}
                         <button
                             type="button"
                             onClick={() => setShowQRModal(true)}
-                            className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 hover:bg-white/20 transition-all group cursor-pointer text-center"
+                            className="bg-white rounded-xl p-3 border border-line hover:bg-surface transition-colors group cursor-pointer text-center"
                         >
-                            <div className="flex items-center justify-center gap-2 mb-1">
-                                <HiOutlineQrcode className="w-3.5 h-3.5 text-blue-200" />
-                                <span className="text-xs font-medium text-blue-200 uppercase">Código QR</span>
+                            <div className="flex items-center justify-center gap-1.5 mb-1">
+                                <HiOutlineQrcode className="w-3.5 h-3.5 text-brand-600" />
+                                <span className="text-xs font-semibold text-muted uppercase">Código QR</span>
                             </div>
-                            <p className="text-sm font-bold text-white group-hover:text-blue-200 transition-colors flex items-center justify-center gap-1">
+                            <p className="text-sm font-bold text-brand-600 group-hover:text-brand-700 transition-colors flex items-center justify-center gap-1">
                                 Ver QR
                                 <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -375,20 +370,20 @@ export default function CheckoutPagoMovilForm({
                     </div>
 
                     {/* Monto destacado */}
-                    <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-4 shadow-lg shadow-orange-500/30">
+                    <div className="bg-warning/10 border border-warning/30 rounded-xl p-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                                    <span className="text-xl font-bold text-white">Bs</span>
+                                <div className="w-10 h-10 bg-warning/20 rounded-xl flex items-center justify-center">
+                                    <span className="text-xl font-bold text-warning-strong">Bs</span>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-medium text-orange-100 uppercase">Monto a transferir</p>
-                                    <p className="text-2xl font-bold text-white tracking-tight">{montoEnBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                    <p className="text-xs font-semibold text-warning-strong uppercase">Monto a transferir</p>
+                                    <p className="text-2xl font-bold text-ink tracking-tight">{montoEnBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="text-xs font-medium text-orange-100 uppercase">Equivalente</p>
-                                <p className="text-lg font-bold text-white">${montoEsperado.toFixed(2)}</p>
+                                <p className="text-xs font-semibold text-muted uppercase">Equivalente</p>
+                                <p className="text-lg font-bold text-ink">${montoEsperado.toFixed(2)}</p>
                             </div>
                         </div>
                     </div>
@@ -400,7 +395,7 @@ export default function CheckoutPagoMovilForm({
                 {/* Cédula del pagador */}
                 <div>
                     <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Tu Cédula <span className="text-red-500">*</span>
+                        Tu Cédula <span className="text-deal">*</span>
                     </label>
                     <div className="form-field">
                         <FiCreditCard className="field-icon text-muted" />
@@ -422,7 +417,7 @@ export default function CheckoutPagoMovilForm({
                 {/* Teléfono del pagador */}
                 <div>
                     <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Tu Teléfono <span className="text-red-500">*</span>
+                        Tu Teléfono <span className="text-deal">*</span>
                     </label>
                     <div className="form-field">
                         <FiPhone className="field-icon text-muted" />
@@ -476,7 +471,7 @@ export default function CheckoutPagoMovilForm({
                                             key={banco.codigo}
                                             type="button"
                                             onClick={() => handleSelectBanco(banco)}
-                                            className={`w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 transition-colors flex items-center justify-between ${formData.bancoOrigen === banco.codigo ? 'bg-blue-50 text-brand-500' : 'text-ink'
+                                            className={`w-full px-4 py-2.5 text-left text-sm hover:bg-brand-500/5 transition-colors flex items-center justify-between ${formData.bancoOrigen === banco.codigo ? 'bg-brand-500/10 text-brand-600' : 'text-ink'
                                                 }`}
                                         >
                                             <span>{banco.nombreCorto}</span>
@@ -518,7 +513,7 @@ export default function CheckoutPagoMovilForm({
                 {/* Fecha del pago */}
                 <div>
                     <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Fecha del Pago <span className="text-red-500">*</span>
+                        Fecha del Pago <span className="text-deal">*</span>
                     </label>
                     <div className="form-field">
                         <FiCalendar className="field-icon text-muted" />
@@ -552,7 +547,7 @@ export default function CheckoutPagoMovilForm({
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             disabled={uploadingImage}
-                            className="w-full py-2.5 px-4 border-2 border-dashed border-line rounded-xl hover:border-brand-500 hover:bg-blue-50/50 transition-all flex items-center justify-center gap-2 group"
+                            className="w-full py-2.5 px-4 border-2 border-dashed border-line rounded-xl hover:border-brand-500 hover:bg-brand-500/5/50 transition-all flex items-center justify-center gap-2 group"
                         >
                             {uploadingImage ? (
                                 <FiLoader className="w-4 h-4 text-brand-500 animate-spin" />
@@ -572,13 +567,13 @@ export default function CheckoutPagoMovilForm({
                                 alt="Comprobante"
                                 width={40}
                                 height={40}
-                                className="rounded-lg border-2 border-green-200 object-cover"
+                                className="rounded-lg border border-success/30 object-cover"
                             />
-                            <span className="text-xs text-green-600 font-medium">Subido</span>
+                            <span className="text-xs text-success-strong font-medium">Subido</span>
                             <button
                                 type="button"
                                 onClick={removeImage}
-                                className="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
+                                className="w-5 h-5 bg-deal text-white rounded-full flex items-center justify-center hover:bg-deal/90 transition-colors shadow-md"
                             >
                                 <FiX className="w-3 h-3" />
                             </button>
@@ -591,19 +586,19 @@ export default function CheckoutPagoMovilForm({
             {resultado && (
                 <div
                     className={`rounded-2xl p-4 border-2 animate-fadeIn ${resultado.verified
-                        ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300'
+                        ? 'bg-success/5 border-success/30'
                         : resultado.duplicateReference
-                            ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-300'
-                            : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300'
+                            ? 'bg-warning/10 border-warning/30'
+                            : 'bg-deal-bg border-deal/30'
                         }`}
                 >
                     <div className="flex items-start gap-3">
                         <div
                             className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ${resultado.verified
-                                ? 'bg-gradient-to-br from-green-500 to-emerald-600'
+                                ? 'bg-success-strong'
                                 : resultado.duplicateReference
-                                    ? 'bg-gradient-to-br from-orange-500 to-amber-600'
-                                    : 'bg-gradient-to-br from-red-500 to-rose-600'
+                                    ? 'bg-warning'
+                                    : 'bg-deal'
                                 }`}
                         >
                             {resultado.verified ? (
@@ -616,10 +611,10 @@ export default function CheckoutPagoMovilForm({
                             <div className="flex items-center justify-between">
                                 <h4
                                     className={`font-bold ${resultado.verified
-                                        ? 'text-green-700'
+                                        ? 'text-success-strong'
                                         : resultado.duplicateReference
-                                            ? 'text-orange-700'
-                                            : 'text-red-700'
+                                            ? 'text-warning-strong'
+                                            : 'text-deal'
                                         }`}
                                 >
                                     {resultado.verified
@@ -636,20 +631,20 @@ export default function CheckoutPagoMovilForm({
                             </div>
                             <p
                                 className={`text-sm mt-1 leading-relaxed ${resultado.verified
-                                    ? 'text-green-600'
+                                    ? 'text-success-strong'
                                     : resultado.duplicateReference
-                                        ? 'text-orange-600'
-                                        : 'text-red-600'
+                                        ? 'text-warning-strong'
+                                        : 'text-deal'
                                     }`}
                             >
                                 {resultado.message}
                             </p>
                             {!resultado.verified && !resultado.duplicateReference && (
-                                <div className="mt-3 pt-3 border-t border-red-200">
-                                    <p className="text-xs text-red-500/80 font-medium">
+                                <div className="mt-3 pt-3 border-t border-deal/30">
+                                    <p className="text-xs text-deal/80 font-medium">
                                         Sugerencias:
                                     </p>
-                                    <ul className="mt-1 text-xs text-red-500/70 space-y-0.5">
+                                    <ul className="mt-1 text-xs text-deal/70 space-y-0.5">
                                         <li>• Verifica que la referencia sea exacta (revisa tu SMS o app bancaria)</li>
                                         <li>• Confirma que el monto transferido sea exactamente Bs. {montoEnBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</li>
                                         <li>• Asegúrate de seleccionar el banco correcto</li>
@@ -666,7 +661,7 @@ export default function CheckoutPagoMovilForm({
                 type="button"
                 onClick={handleVerificar}
                 disabled={!canSubmit}
-                className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors"
             >
                 {verificando ? (
                     <>
@@ -688,53 +683,50 @@ export default function CheckoutPagoMovilForm({
             {/* QR Modal - Using Portal to render outside of parent constraints */}
             {showQRModal && mounted && createPortal(
                 <div
-                    className="fixed inset-0 flex items-center justify-center p-4"
-                    style={{ zIndex: 99999 }}
+                    className={adminModalOverlay}
                     onClick={() => setShowQRModal(false)}
                 >
-                    {/* Backdrop */}
-                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-
                     {/* Modal Content */}
                     <div
-                        className="relative bg-white rounded-2xl shadow-2xl overflow-hidden"
-                        style={{ width: '95%', maxWidth: '550px' }}
+                        className={`${adminModalPanel} max-w-sm`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-6 py-5 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <HiOutlineQrcode className="w-7 h-7 text-white" />
+                        <div className={adminModalHeader}>
+                            <div className="flex items-center gap-2.5">
+                                <HiOutlineQrcode className="w-5 h-5 text-brand-600" />
                                 <div>
-                                    <h3 className="text-white font-bold text-lg">Código QR</h3>
-                                    <p className="text-blue-200 text-sm">Escanea con tu banco para pagar</p>
+                                    <h3 className={adminModalTitle}>Código QR Pago Móvil</h3>
+                                    <p className="text-xs text-muted">Escanea con tu banco para pagar</p>
                                 </div>
                             </div>
                             <button
+                                type="button"
                                 onClick={() => setShowQRModal(false)}
-                                className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
+                                className="p-1.5 text-muted hover:text-ink rounded-lg transition-colors"
+                                aria-label="Cerrar modal"
                             >
-                                <FiX className="w-6 h-6 text-white" />
+                                <FiX className="w-5 h-5" />
                             </button>
                         </div>
 
                         {/* QR Image */}
-                        <div className="p-10 flex flex-col items-center bg-gray-50">
-                            <div className="bg-white p-6 rounded-2xl shadow-xl border-2 border-gray-100">
+                        <div className={`${adminModalBody} flex flex-col items-center text-center p-6`}>
+                            <div className="bg-white p-4 rounded-xl border border-line shadow-sm mb-4">
                                 <Image
                                     src="/images/qrbdv.png"
                                     alt="Código QR Pago Móvil BDV"
-                                    width={400}
-                                    height={400}
-                                    className="rounded-xl"
+                                    width={280}
+                                    height={280}
+                                    className="rounded-lg"
                                 />
                             </div>
-                            <p className="mt-4 text-sm text-gray-600 text-center">
-                                Escanea este código QR con tu app bancaria o VeQR para realizar el pago
+                            <p className="text-xs text-muted text-center mb-3">
+                                Escanea este código QR con tu app bancaria o VeQR para realizar el pago.
                             </p>
-                            <div className="mt-3 flex items-center gap-2 text-xs text-brand-500 bg-blue-50 px-3 py-2 rounded-lg">
-                                <FiShield className="w-4 h-4" />
-                                <span className="font-medium">Pago seguro con Banco de Venezuela</span>
+                            <div className="inline-flex items-center gap-1.5 text-xs text-brand-600 bg-brand-500/10 px-3 py-1.5 rounded-lg font-medium">
+                                <FiShield className="w-3.5 h-3.5" />
+                                <span>Pago seguro con Banco de Venezuela</span>
                             </div>
                         </div>
                     </div>
@@ -742,21 +734,6 @@ export default function CheckoutPagoMovilForm({
                 document.body
             )}
 
-            <style jsx>{`
-                @keyframes scaleIn {
-                    from {
-                        opacity: 0;
-                        transform: scale(0.9);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: scale(1);
-                    }
-                }
-                .animate-scaleIn {
-                    animation: scaleIn 0.2s ease-out;
-                }
-            `}</style>
-        </div>
+            </div>
     );
 }

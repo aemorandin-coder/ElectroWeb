@@ -38,6 +38,10 @@ export async function PATCH(request: NextRequest) {
     if (!id || !status) {
       return NextResponse.json({ error: 'id y status son requeridos' }, { status: 400 });
     }
+    // Solo estados conocidos: antes se guardaba cualquier texto y el creador quedaba en un estado que ninguna página entiende
+    if (!['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'].includes(status)) {
+      return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
+    }
 
     const creator = await prisma.courseCreator.update({
       where: { id },

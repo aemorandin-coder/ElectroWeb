@@ -69,8 +69,12 @@ type Course = {
   rating?: number;
   metaTitle?: string;
   metaDescription?: string;
+  creator?: { displayName: string } | null;
   _count?: { enrollments: number; reviews: number; modules: number };
 };
+
+/** Curso de un creador que todavía no se publicó: es el que espera aprobación. */
+const enRevision = (course: Course) => !course.isActive && Boolean(course.creator);
 
 const EMPTY_FORM = {
   title: '',
@@ -178,15 +182,24 @@ export default function AdminCursosPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, priceUSD: parseFloat(form.priceUSD) || 0 }),
       });
-      if (!res.ok) throw new Error();
-      const saved = await res.json();
+      const saved = await res.json().catch(() => null);
+      if (!res.ok) {
+        toast.error(saved?.error || 'Error al guardar el curso');
+        return;
+      }
       const courseId = editingId || saved.id;
       if (curriculum.length > 0) {
-        await fetch('/api/admin/courses/' + courseId, {
+        const resCurriculum = await fetch('/api/admin/courses/' + courseId, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ curriculum }),
         });
+        if (!resCurriculum.ok) {
+          const data = await resCurriculum.json().catch(() => null);
+          toast.error(data?.error || 'El curso se guardó, pero el currículum no');
+          loadCourses();
+          return;
+        }
       }
       setShowModal(false);
       loadCourses();
@@ -197,12 +210,19 @@ export default function AdminCursosPage() {
     }
   }
 
+  // Antes no se revisaba la respuesta: si el servidor fallaba, el botón no hacía nada visible
   async function handleToggle(course: Course) {
-    await fetch('/api/admin/courses/' + course.id, {
+    const res = await fetch('/api/admin/courses/' + course.id, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isActive: !course.isActive }),
     });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      toast.error(data?.error || 'No se pudo actualizar el curso');
+      return;
+    }
+    toast.success(course.isActive ? 'Curso desactivado' : enRevision(course) ? 'Curso aprobado y publicado' : 'Curso activado');
     loadCourses();
   }
 
@@ -335,13 +355,14 @@ export default function AdminCursosPage() {
                   )}
                 </div>
                 <div className="absolute top-2 right-2">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${course.isActive ? 'bg-success/10 text-success-strong' : 'bg-surface text-muted'}`}>
-                    {course.isActive ? 'Activo' : 'Inactivo'}
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${course.isActive ? 'bg-success/10 text-success-strong' : enRevision(course) ? 'bg-warning/15 text-warning-strong' : 'bg-surface text-muted'}`}>
+                    {course.isActive ? 'Activo' : enRevision(course) ? 'En revisión' : 'Inactivo'}
                   </span>
                 </div>
               </div>
               <div className="p-4">
                 <h3 className="font-semibold text-ink text-sm line-clamp-2 mb-1">{course.title}</h3>
+                {course.creator && <p className="text-xs text-muted mb-1">Creador: {course.creator.displayName}</p>}
                 {course.shortDesc && <p className="text-xs text-muted line-clamp-2 mb-2">{course.shortDesc}</p>}
                 <div className="flex items-center gap-3 text-xs text-muted mb-3">
                   <span>{formatUSD(Number(course.priceUSD))}</span>
@@ -353,9 +374,9 @@ export default function AdminCursosPage() {
                   <button onClick={() => openEdit(course)} className="flex-1 py-1.5 text-xs font-semibold text-brand-500 border border-brand-500 rounded-lg hover:bg-brand-500 hover:text-white transition-colors">Editar</button>
                   <button
                     onClick={() => handleToggle(course)}
-                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${course.isActive ? 'border-warning/30 text-warning-strong hover:bg-warning/10' : 'border-success/30 text-success-strong hover:bg-success/10'}`}
+                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${course.isActive ? 'border-warning/30 text-warning-strong hover:bg-warning/10' : enRevision(course) ? 'border-success-strong bg-success-strong text-white hover:bg-success-strong/90' : 'border-success/30 text-success-strong hover:bg-success/10'}`}
                   >
-                    {course.isActive ? 'Desactivar' : 'Activar'}
+                    {course.isActive ? 'Desactivar' : enRevision(course) ? 'Aprobar' : 'Activar'}
                   </button>
                   <button onClick={() => handleDelete(course.id)} disabled={deletingId === course.id} className="p-1.5 text-deal hover:text-deal hover:bg-deal/10 rounded-lg transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

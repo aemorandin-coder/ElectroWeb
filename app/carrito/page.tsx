@@ -204,7 +204,7 @@ export default function CarritoPage() {
                           );
                         }
 
-                        let imageUrl = item.image;
+                        let imageUrl: string | undefined = item.imageUrl;
                         if (imageUrl && typeof imageUrl === 'string') {
                           if (imageUrl.startsWith('[')) {
                             try {

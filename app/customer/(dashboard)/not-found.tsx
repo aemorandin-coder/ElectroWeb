@@ -3,47 +3,41 @@
 import Link from 'next/link';
 import { FiHome, FiShoppingBag, FiArrowLeft } from 'react-icons/fi';
 import { PiHeartBreakBold } from 'react-icons/pi';
+import { adminEmpty, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 
 export default function CustomerNotFound() {
     return (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center min-h-[60vh]">
-            {/* 404 Visual */}
-            <div className="flex flex-col items-center gap-2 mb-8">
-                <span className="text-[100px] font-bold bg-gradient-to-br from-line to-line-strong bg-clip-text text-transparent leading-none select-none">
-                    404
-                </span>
-                <div className="w-16 h-16 bg-gradient-to-br from-brand-500/10 to-brand-600/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-brand-500/20 shadow-lg -mt-4">
-                    <PiHeartBreakBold className="w-8 h-8 text-brand-500" />
-                </div>
+        <div className={`${adminEmpty} min-h-[50vh] my-6`}>
+            <div className="w-14 h-14 bg-brand-500/10 rounded-2xl flex items-center justify-center border border-brand-500/20 mb-4 text-brand-500">
+                <PiHeartBreakBold className="w-7 h-7" />
             </div>
 
-            {/* Title & Description */}
-            <h1 className="text-2xl md:text-3xl font-bold text-ink mb-3">
+            <h1 className="text-xl sm:text-2xl font-bold text-ink mb-2">
                 Página no encontrada
             </h1>
-            <p className="text-base text-muted max-w-md mx-auto leading-relaxed mb-8">
+            <p className="text-sm text-muted max-w-md mx-auto leading-relaxed mb-6">
                 Lo sentimos, la página que buscas no existe o ha sido movida a otra ubicación.
             </p>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex flex-wrap items-center justify-center gap-3">
                 <button
+                    type="button"
                     onClick={() => window.history.back()}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-surface text-ink font-bold rounded-xl border border-line hover:bg-line transition-all hover:scale-105"
+                    className={`${adminSecondaryButton} gap-2`}
                 >
                     <FiArrowLeft className="w-4 h-4" />
                     Volver atrás
                 </button>
                 <Link
                     href="/customer"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-xl hover:shadow-lg transition-all hover:scale-105"
+                    className={`${adminPrimaryButton} gap-2`}
                 >
                     <FiHome className="w-4 h-4" />
                     Ir al Panel
                 </Link>
                 <Link
                     href="/productos"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-brand-500 font-bold rounded-xl border-2 border-brand-500 hover:bg-blue-50 transition-all hover:scale-105"
+                    className={`${adminSecondaryButton} gap-2`}
                 >
                     <FiShoppingBag className="w-4 h-4" />
                     Ver Productos

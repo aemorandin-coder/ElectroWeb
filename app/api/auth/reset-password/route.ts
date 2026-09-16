@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { contrasenaSchema } from '@/lib/validations/registro';
 
 export async function POST(request: NextRequest) {
     try {
-        const { token, password } = await request.json();
+        const { token, password } = (await request.json().catch(() => ({}))) as { token?: unknown; password?: unknown };
 
-        if (!token || !password) {
+        if (typeof token !== 'string' || !token || typeof password !== 'string' || !password) {
             return NextResponse.json(
                 { message: 'Token y contraseña son requeridos' },
                 { status: 400 }
             );
         }
 
-        if (password.length < 6) {
+        // C-88: la misma regla que el registro. Antes aquí bastaban 6 caracteres
+        const regla = contrasenaSchema.safeParse(password);
+        if (!regla.success) {
             return NextResponse.json(
-                { message: 'La contraseña debe tener al menos 6 caracteres' },
+                { message: regla.error.issues[0]?.message ?? 'Contraseña inválida' },
                 { status: 400 }
             );
         }
@@ -46,19 +49,27 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Hash new password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Update user password
-        await prisma.user.update({
-            where: { id: resetToken.userId },
-            data: { password: hashedPassword },
+        // C-88: el enlace sirve una sola vez aunque se envíe dos veces a la vez (se borra antes de cambiar la clave),
+        // y cambiar la contraseña cierra las sesiones abiertas: si alguien más había entrado a la cuenta, sale.
+        const usado = await prisma.$transaction(async (tx) => {
+            const borrado = await tx.passwordResetToken.deleteMany({ where: { id: resetToken.id } });
+            if (borrado.count === 0) return false;
+            await tx.user.update({
+                where: { id: resetToken.userId },
+                data: { password: hashedPassword, sessionVersion: { increment: 1 } },
+            });
+            await tx.passwordResetToken.deleteMany({ where: { userId: resetToken.userId } });
+            return true;
         });
 
-        // Delete used token
-        await prisma.passwordResetToken.delete({
-            where: { id: resetToken.id },
-        });
+        if (!usado) {
+            return NextResponse.json(
+                { message: 'Este enlace ya se usó. Solicita uno nuevo si lo necesitas.' },
+                { status: 400 }
+            );
+        }
 
         return NextResponse.json(
             { message: 'Contraseña actualizada exitosamente' },

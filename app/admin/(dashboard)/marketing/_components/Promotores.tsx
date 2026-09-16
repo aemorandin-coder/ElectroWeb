@@ -51,7 +51,6 @@ export default function Promotores() {
   const { confirm } = useConfirm();
   const [promotores, setPromotores] = useState<Promotor[]>([]);
   const [cargando, setCargando] = useState(true);
-  const [montado, setMontado] = useState(false);
 
   const [detalle, setDetalle] = useState<Promotor | null>(null);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
@@ -81,16 +80,20 @@ export default function Promotores() {
   }, []);
 
   useEffect(() => {
-    setMontado(true);
-    cargar();
-  }, [cargar]);
+    let cancelado = false;
+    fetch('/api/influencers')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => { if (!cancelado) setPromotores(d); })
+      .catch(() => toast.error('No se pudieron cargar los promotores'))
+      .finally(() => { if (!cancelado) setCargando(false); });
+    return () => { cancelado = true; };
+  }, []);
 
   // Búsqueda de usuarios con espera: antes se pedía al servidor en cada tecla
+  const buscar = busqueda.trim().length >= 2 && !form.userId;
+  const resultadosVisibles = buscar ? resultados : [];
   useEffect(() => {
-    if (busqueda.trim().length < 2 || form.userId) {
-      setResultados([]);
-      return;
-    }
+    if (!buscar) return;
     const t = setTimeout(async () => {
       const res = await fetch(`/api/admin/users?search=${encodeURIComponent(busqueda.trim())}&limit=8`);
       if (res.ok) {
@@ -99,7 +102,7 @@ export default function Promotores() {
       }
     }, 300);
     return () => clearTimeout(t);
-  }, [busqueda, form.userId]);
+  }, [busqueda, buscar]);
 
   const abrirDetalle = async (promotor: Promotor) => {
     setDetalle(promotor);
@@ -216,10 +219,11 @@ export default function Promotores() {
           { icono: <FiDollarSign className="h-5 w-5" />, tono: 'success' as const, label: 'Ventas referidas', valor: formatUSD(generadoTotal) },
         ].map((stat) => (
           <div key={stat.label} className={`${adminStatCard} p-4`}>
-            <span className={adminIconChip(stat.tono)} aria-hidden="true">{stat.icono}</span>
+            {/* En el teléfono el ícono se oculta: sin él, el monto cabe completo */}
+            <span className="hidden sm:block" aria-hidden="true"><span className={adminIconChip(stat.tono)}>{stat.icono}</span></span>
             <div className="min-w-0">
               <p className={adminStatLabel}>{stat.label}</p>
-              <p className={`${adminStatValue} truncate text-xl`}>{stat.valor}</p>
+              <p className={`${adminStatValue} text-lg sm:text-xl`}>{stat.valor}</p>
             </div>
           </div>
         ))}
@@ -282,7 +286,8 @@ export default function Promotores() {
       </div>
 
       {/* Comisiones del promotor */}
-      {detalle && montado && createPortal(
+      {/* Solo se abre tras un clic: nunca se pinta en el servidor */}
+      {detalle && createPortal(
         <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setDetalle(null); }}>
           <div className={`${adminModalPanel} sm:max-w-2xl`} role="dialog" aria-modal="true" aria-labelledby="titulo-comisiones">
             <div className={adminModalHeader}>
@@ -376,7 +381,7 @@ export default function Promotores() {
       )}
 
       {/* Nuevo promotor */}
-      {creando && montado && createPortal(
+      {creando && createPortal(
         <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setCreando(false); }}>
           <div className={`${adminModalPanel} sm:max-w-md`} role="dialog" aria-modal="true" aria-labelledby="titulo-nuevo-promotor">
             <div className={adminModalHeader}>
@@ -394,9 +399,9 @@ export default function Promotores() {
                   className={adminInput()}
                   autoComplete="off"
                 />
-                {resultados.length > 0 && (
+                {resultadosVisibles.length > 0 && (
                   <ul className="mt-1 overflow-hidden rounded-lg border border-line">
-                    {resultados.map((u) => (
+                    {resultadosVisibles.map((u) => (
                       <li key={u.id}>
                         <button
                           type="button"

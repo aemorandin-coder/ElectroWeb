@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import type { IconType } from 'react-icons';
 import { FiEye, FiImage, FiSend, FiTv, FiUserCheck } from 'react-icons/fi';
 import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
@@ -24,24 +24,22 @@ const SECCIONES: { id: SeccionId; label: string; descripcion: string; icon: Icon
 ];
 
 function seccionDelHash(): SeccionId {
-  if (typeof window === 'undefined') return 'promotores';
   const hash = window.location.hash.slice(1);
   return SECCIONES.some((s) => s.id === hash) ? (hash as SeccionId) : 'promotores';
 }
 
+function suscribirHash(avisar: () => void) {
+  window.addEventListener('hashchange', avisar);
+  return () => window.removeEventListener('hashchange', avisar);
+}
+
 export default function MarketingPage() {
-  const [activa, setActiva] = useState<SeccionId>('promotores');
+  const activa = useSyncExternalStore(suscribirHash, seccionDelHash, () => 'promotores' as SeccionId);
 
-  useEffect(() => {
-    setActiva(seccionDelHash());
-    const onHash = () => setActiva(seccionDelHash());
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, []);
-
+  // Cambiar el hash dispara hashchange y la sección se lee de ahí; replaceState no lo dispara, por eso se avisa a mano
   const ir = useCallback((id: SeccionId) => {
-    setActiva(id);
     window.history.replaceState(null, '', `#${id}`);
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
   }, []);
 
   const seccion = SECCIONES.find((s) => s.id === activa) ?? SECCIONES[0];

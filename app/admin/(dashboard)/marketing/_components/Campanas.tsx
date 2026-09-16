@@ -65,7 +65,14 @@ export default function Campanas() {
     }
   }, []);
 
-  useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    let cancelado = false;
+    fetch('/api/admin/campaigns')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => { if (!cancelado) setDatos(d); })
+      .catch(() => toast.error('No se pudieron cargar las campañas'));
+    return () => { cancelado = true; };
+  }, []);
 
   // Mientras una campaña se envía, el avance se refresca solo
   const hayEnvio = datos?.campanas.some((c) => c.status === 'SENDING');
@@ -241,15 +248,13 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
   const [guardando, setGuardando] = useState(false);
   const [html, setHtml] = useState('');
   const [errorVista, setErrorVista] = useState<string | null>(null);
-  const [correoPrueba, setCorreoPrueba] = useState('');
+  // Por defecto, el correo de quien está en el panel (derivado, sin efecto)
+  const [correoElegido, setCorreoPrueba] = useState<string | null>(null);
+  const correoPrueba = correoElegido ?? session?.user?.email ?? '';
   const [probando, setProbando] = useState(false);
   const [subiendo, setSubiendo] = useState<number | null>(null);
   const archivo = useRef<HTMLInputElement>(null);
   const indiceSubida = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (session?.user?.email) setCorreoPrueba((actual) => actual || session.user.email || '');
-  }, [session]);
 
   useEffect(() => {
     if (!id) return;
@@ -264,9 +269,18 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
   useEffect(() => {
     if (cargando) return;
     const t = setTimeout(async () => {
+      // Mientras se escribe, los bloques vacíos no cuentan: la validación completa es al guardar o probar
+      const bloques = campana.bloques.filter((b) =>
+        b.tipo === 'imagen' ? b.url.trim() !== '' : b.tipo === 'boton' ? b.texto.trim() !== '' && b.url.trim() !== '' : b.texto.trim() !== ''
+      );
+      if (bloques.length === 0) {
+        setHtml('');
+        setErrorVista('Escribe o agrega un bloque para ver la vista previa.');
+        return;
+      }
       const res = await fetch('/api/admin/campaigns/preview', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...campana, subject: campana.subject || 'Sin asunto' }),
+        body: JSON.stringify({ ...campana, bloques, subject: campana.subject || 'Sin asunto' }),
       });
       const data = await res.json().catch(() => null);
       if (res.ok) {

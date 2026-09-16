@@ -14,8 +14,7 @@ interface Plantilla { id: string; name: string; description: string }
 export default function Plantillas() {
   const [plantillas, setPlantillas] = useState<Plantilla[]>([]);
   const [elegida, setElegida] = useState('welcome');
-  const [vista, setVista] = useState<{ subject: string; html: string } | null>(null);
-  const [cargando, setCargando] = useState(false);
+  const [vista, setVista] = useState<{ id: string; subject: string; html: string } | null>(null);
   const [modo, setModo] = useState<'escritorio' | 'movil'>('escritorio');
 
   useEffect(() => {
@@ -27,14 +26,14 @@ export default function Plantillas() {
 
   useEffect(() => {
     let cancelado = false;
-    setCargando(true);
     fetch(`/api/admin/email/preview?template=${encodeURIComponent(elegida)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => { if (!cancelado) setVista({ subject: d.subject || '', html: d.html || '' }); })
-      .catch(() => { if (!cancelado) toast.error('No se pudo generar la vista previa'); })
-      .finally(() => { if (!cancelado) setCargando(false); });
+      .then((d) => { if (!cancelado) setVista({ id: elegida, subject: d.subject || '', html: d.html || '' }); })
+      .catch(() => { if (!cancelado) toast.error('No se pudo generar la vista previa'); });
     return () => { cancelado = true; };
   }, [elegida]);
+
+  const cargando = vista?.id !== elegida;
 
   return (
     <div className="grid gap-5 lg:grid-cols-[16rem_minmax(0,1fr)]">

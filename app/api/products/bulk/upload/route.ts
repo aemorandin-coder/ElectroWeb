@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
     const results = {
       success: 0,
       failed: 0,
-      errors: [] as any[],
+      errors: [] as Array<{ row?: number; sku?: string; error: string; data?: unknown }>,
+
     };
 
     // Obtener todas las categorías para mapeo
@@ -120,11 +121,13 @@ export async function POST(request: NextRequest) {
         });
 
         results.success++;
-      } catch (error: any) {
+      } catch (err: unknown) {
+        const error = err as { message?: string };
         results.failed++;
+        const message = error instanceof Error ? error.message : 'Error desconocido';
         results.errors.push({
           row: i + 2,
-          error: error.message || 'Error desconocido',
+          error: message,
           data: row,
         });
       }

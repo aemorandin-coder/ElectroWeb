@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 // GET - Get digital codes for a product (admin only)
 export async function GET(request: Request) {
@@ -16,9 +17,9 @@ export async function GET(request: Request) {
         const productId = searchParams.get('productId');
         const status = searchParams.get('status');
 
-        const where: any = {};
+        const where: Prisma.DigitalCodeWhereInput = {};
         if (productId) where.productId = productId;
-        if (status) where.status = status;
+        if (status) where.status = status as Prisma.DigitalCodeWhereInput['status'];
 
         const codes = await prisma.digitalCode.findMany({
             where,

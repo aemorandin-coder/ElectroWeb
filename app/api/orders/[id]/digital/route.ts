@@ -36,12 +36,12 @@ export async function GET(request: NextRequest) {
                                 mainImage: true,
                                 redemptionInstructions: true,
                                 deliveryMethod: true,
-                            } as any
+                            }
                         }
                     }
                 }
             }
-        }) as any;
+        });
 
         if (!order) {
             return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 });
@@ -85,7 +85,8 @@ export async function GET(request: NextRequest) {
         }));
 
         // Map digital items from order
-        const digitalItems = order.items.filter((item: any) => item.product.productType === 'DIGITAL').map((item: any) => ({
+        type DigitalOrderItem = { id: string; productId: string; productName?: string | null; productImage?: string | null; quantity: number; product: { id: string; name: string; productType: string; digitalPlatform: string | null; digitalRegion: string | null; mainImage: string | null; redemptionInstructions: string | null; deliveryMethod: string | null } };
+        const digitalItems = (order.items as DigitalOrderItem[]).filter((item) => item.product.productType === 'DIGITAL').map((item) => ({
             orderItemId: item.id,
             productId: item.productId,
             productName: item.productName || item.product.name,
@@ -206,7 +207,7 @@ export async function POST(request: NextRequest) {
                         digitalPlatform: true,
                         redemptionInstructions: true,
                     }
-                }) as any;
+                });
 
                 await sendDigitalCodeEmail(order.user.email, {
                     orderNumber: order.orderNumber,

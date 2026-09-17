@@ -145,15 +145,16 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: 'Reseña no encontrada' }, { status: 404 });
         }
 
-        const userRole = (session.user as any).role;
-        const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || (session.user as any).permissions?.includes('MANAGE_CONTENT');
+        const user = session.user as { role?: string; permissions?: string[]; id?: string };
+        const userRole = user.role;
+        const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || user.permissions?.includes('MANAGE_CONTENT');
         const isOwner = review.userId === session.user.id;
 
         if (!isAdmin && !isOwner) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
-        const updateData: any = {};
+        const updateData: Record<string, unknown> = {};
 
         if (isOwner && !isAdmin) {
             if (rating !== undefined) updateData.rating = rating;
@@ -248,8 +249,9 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'Reseña no encontrada' }, { status: 404 });
         }
 
-        const userRole = (session.user as any).role;
-        const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || (session.user as any).permissions?.includes('MANAGE_CONTENT');
+        const user = session.user as { role?: string; permissions?: string[] };
+        const userRole = user.role;
+        const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || user.permissions?.includes('MANAGE_CONTENT');
         const isOwner = review.userId === session.user.id;
 
         if (!isAdmin && !isOwner) {

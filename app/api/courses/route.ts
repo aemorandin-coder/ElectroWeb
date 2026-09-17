@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const featured = searchParams.get('featured');
 
-    const where: any = { isActive: true };
+    const where: Prisma.CourseWhereInput = { isActive: true };
     if (category) where.category = category;
     if (level) where.level = level;
     if (featured === 'true') where.isFeatured = true;

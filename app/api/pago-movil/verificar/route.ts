@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { verificarPagoMovil, interpretarErrorBDV, BDV_RESPONSE_CODES } from '@/lib/pago-movil/verificar-pago';
+import { verificarPagoMovil, interpretarErrorBDV } from '@/lib/pago-movil/verificar-pago';
 import {
     validarTelefonoVenezolano,
     validarReferencia,
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const userId = (session.user as any).id;
+        const userId = (session.user as { id: string }).id;
 
         // Rate limiting por usuario - SENSITIVO para verificaciones de pago
         const rateLimit = checkRateLimit(userId, 'pago-movil:verificar', RATE_LIMITS.SENSITIVE);
@@ -54,7 +54,6 @@ export async function POST(req: NextRequest) {
             referencia,
             fechaPago,
             importe,           // Monto en Bs para verificar con BDV
-            importeUsd,        // Monto en USD para la transacción (opcional, fallback a importe)
             cedulaPagador,
             reqCed = true,      // Validar cédula por defecto para mayor seguridad
             // Contexto de la verificación
@@ -235,9 +234,10 @@ export async function POST(req: NextRequest) {
                     rawResponse: resultado.rawResponse ? JSON.stringify(resultado.rawResponse) : null,
                 },
             });
-        } catch (dbError: any) {
+        } catch (dbError: unknown) {
+            const dbErr = dbError as { code?: string };
             // Si es error de constraint único, significa que otra solicitud procesó esta referencia
-            if (dbError?.code === 'P2002') {
+            if (dbErr?.code === 'P2002') {
                 console.error('[SECURITY] Race condition detectada - referencia duplicada:', referencia);
                 return NextResponse.json({
                     success: false,

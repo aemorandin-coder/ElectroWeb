@@ -109,9 +109,8 @@ export class SadesClient {
             const filepath = path.join(uploadDir, filename);
 
             // Guardar archivo (stream)
-            // @ts-ignore - fetch response body compatibility with node streams
             if (res.body) {
-                // @ts-ignore
+                // @ts-expect-error - Readable.fromWeb body type mismatch with pipeline
                 await pipeline(Readable.fromWeb(res.body), fs.createWriteStream(filepath));
             }
 

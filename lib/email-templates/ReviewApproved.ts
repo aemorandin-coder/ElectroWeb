@@ -1,4 +1,3 @@
-import { generateReviewReminderEmail } from './ReviewReminder';
 
 interface ReviewApprovedData {
     companyName: string;
@@ -12,8 +11,7 @@ interface ReviewApprovedData {
 export function generateReviewApprovedEmail(data: ReviewApprovedData): string {
     const { companyName, companyLogo, customerName, productName, productUrl, rating } = data;
 
-    const stars = '⭐'.repeat(rating);
-
+  
     return `
     <!DOCTYPE html>
     <html lang="es">

@@ -24,8 +24,10 @@ export interface SendEmailOptions {
   }>;
 }
 
+import type { EmailSettings, CompanySettings } from '@prisma/client';
+
 // Cache for email settings from database
-let cachedEmailSettings: any = null;
+let cachedEmailSettings: EmailSettings | null = null;
 let emailSettingsCacheTime = 0;
 const EMAIL_SETTINGS_CACHE_DURATION = 60 * 1000; // 1 minute - shorter for email settings
 
@@ -88,35 +90,35 @@ const getTransporterWithSettings = async () => {
     },
   };
 
-  const providerConfigs: Record<string, any> = {
+  const providerConfigs: Record<string, nodemailer.TransportOptions> = {
     gmail: {
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: Number(process.env.SMTP_PORT) || 465,
       secure: process.env.SMTP_SECURE === 'true',
       connectionTimeout: 10000,
       ...baseConfig,
-    },
+    } as nodemailer.TransportOptions,
     contabo: {
       host: process.env.SMTP_HOST || 'mail.contabo.net',
       port: Number(process.env.SMTP_PORT) || 465,
       secure: true,
       connectionTimeout: 10000,
       ...baseConfig,
-    },
+    } as nodemailer.TransportOptions,
     godaddy: {
       host: process.env.SMTP_HOST || 'smtpout.secureserver.net',
       port: Number(process.env.SMTP_PORT) || 465,
       secure: true,
       connectionTimeout: 10000,
       ...baseConfig,
-    },
+    } as nodemailer.TransportOptions,
     custom: {
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT) || 587,
       secure: process.env.SMTP_SECURE === 'true',
       connectionTimeout: 10000,
       ...baseConfig,
-    },
+    } as nodemailer.TransportOptions,
   };
 
   return nodemailer.createTransport(providerConfigs[provider] || providerConfigs.custom);
@@ -188,9 +190,10 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
         console.error('[EMAIL] Error Resend:', result.error);
         return { success: false, error: result.error?.message || 'Error desconocido' };
       }
-    } catch (error: any) {
-      console.error('[EMAIL] Error Resend:', error.message);
-      return { success: false, error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      console.error('[EMAIL] Error Resend:', message);
+      return { success: false, error: message };
     }
   }
 
@@ -213,16 +216,17 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
       subject,
       html,
       text: text || html.replace(/<[^>]*>/g, ''),
-      replyTo: replyToEmail,
+      replyTo: (replyToEmail || undefined) as string | undefined,
       headers,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions) as { messageId?: string };
 
     return { success: true, messageId: info.messageId };
-  } catch (error: any) {
-    console.error('[EMAIL] Error SMTP:', error.message);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error al enviar email';
+    console.error('[EMAIL] Error SMTP:', message);
+    return { success: false, error: message };
   }
 };
 
@@ -231,7 +235,7 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
 import { prisma } from './prisma';
 
 // Cache for company settings to avoid too many DB calls
-let cachedSettings: any = null;
+let cachedSettings: CompanySettings | null = null;
 let cacheTime = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -481,6 +485,7 @@ export const sendLegalDocumentEmail = async (
   documentUrl?: string,
   pdfAttachment?: Buffer
 ) => {
+  void pdfAttachment;
   const titles = {
     terms_acceptance: 'Constancia de Aceptacion de Terminos',
     privacy_update: 'Actualizacion de Politica de Privacidad',

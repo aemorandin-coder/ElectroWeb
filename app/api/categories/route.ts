@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(category, { status: 201 });
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message?: string };
     if (error?.code === 'P2002') {
       return NextResponse.json({ error: 'Ya existe una categoría con ese nombre' }, { status: 409 });
     }
@@ -103,7 +104,8 @@ export async function PATCH(request: NextRequest) {
     });
 
     return NextResponse.json(category);
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message?: string };
     if (error?.code === 'P2002') {
       return NextResponse.json({ error: 'Ya existe una categoría con ese nombre' }, { status: 409 });
     }
@@ -131,7 +133,8 @@ export async function DELETE(request: NextRequest) {
     await prisma.category.delete({ where: { id } });
 
     return NextResponse.json({ message: 'Categoría eliminada exitosamente' });
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message?: string };
     if (error?.code === 'P2025') {
       return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
     }

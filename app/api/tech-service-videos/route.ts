@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 
 // GET /api/tech-service-videos - List all tech service videos (public)
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('activeOnly') === 'true';
 
-    const where: any = {};
+    const where: Prisma.TechServiceVideoWhereInput = {};
 
     if (activeOnly) {
       where.isActive = true;

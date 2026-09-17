@@ -12,9 +12,9 @@ export async function GET(request: NextRequest) {
 
     if (isProduction) {
         const session = await getServerSession(authOptions);
-        const userRole = (session?.user as any)?.role;
+        const userRole = (session?.user as { role?: string } | undefined)?.role;
 
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
+        if (!session?.user || !userRole || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
             return NextResponse.json({
                 error: 'Este endpoint solo está disponible para administradores en producción.',
                 hint: 'Inicia sesión como admin para acceder.'
@@ -130,7 +130,8 @@ export async function GET(request: NextRequest) {
                 : '❌ Image URL is not absolute. Check NEXT_PUBLIC_BASE_URL.',
         });
 
-    } catch (error: any) {
+    } catch (err: unknown) {
+    const error = err as { message?: string };
         return NextResponse.json({
             error: 'Server error',
             message: error.message

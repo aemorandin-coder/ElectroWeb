@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
 
 // GET /api/products/public - Get all active products (public endpoint)
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit');
     const featured = searchParams.get('featured');
 
-    const where: any = {
+    const where: Prisma.ProductWhereInput = {
       status: 'PUBLISHED', // Only show published products
     };
 

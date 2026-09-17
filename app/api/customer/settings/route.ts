@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
 import { contrasenaSchema } from '@/lib/validations/registro';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         const session = await getServerSession(authOptions);
 
@@ -166,7 +166,7 @@ export async function PATCH(request: NextRequest) {
         }
 
         // Update profile settings
-        const profileData: any = {};
+        const profileData: Record<string, unknown> = {};
 
         if (body.purchaseAsBusinessDefault !== undefined) {
             if (body.purchaseAsBusinessDefault === true) {
@@ -313,7 +313,7 @@ export async function POST(request: NextRequest) {
 }
 
 // DELETE for revoking all sessions
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
     try {
         const session = await getServerSession(authOptions);
 

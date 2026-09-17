@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { parseSavedAddresses } from '@/lib/saved-addresses';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         const session = await getServerSession(authOptions);
 
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
             wishlistCount = await prisma.wishlist.count({
                 where: { userId },
             });
-        } catch (error) {
+        } catch {
             // Wishlist table might not exist yet
         }
 
@@ -87,7 +87,15 @@ export async function GET(request: NextRequest) {
         );
 
         // Get recent transactions - use balanceId directly if userBalance exists
-        let recentTransactions: any[] = [];
+        type RecentTx = {
+            id: string;
+            type: string;
+            amount: unknown;
+            description: string | null;
+            createdAt: Date;
+            status: string;
+        };
+        let recentTransactions: RecentTx[] = [];
         if (userBalance) {
             recentTransactions = await prisma.transaction.findMany({
                 where: {
@@ -136,7 +144,15 @@ export async function GET(request: NextRequest) {
         });
 
         // Build activity array
-        const recentActivity: any[] = [];
+        type ActivityItem = {
+            id: string;
+            type: string;
+            description: string | null;
+            createdAt: Date;
+            amount?: unknown;
+            status?: string;
+        };
+        const recentActivity: ActivityItem[] = [];
 
         // Add last login
         if (profile?.lastLoginAt) {

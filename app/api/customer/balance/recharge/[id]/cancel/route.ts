@@ -22,7 +22,7 @@ export async function POST(
         }
 
         const { id: transactionId } = await params;
-        const userId = (session.user as any).id;
+        const userId = (session.user as { id: string }).id;
 
         // Find the transaction
         const transaction = await prisma.transaction.findUnique({

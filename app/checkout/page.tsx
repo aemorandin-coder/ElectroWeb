@@ -520,14 +520,8 @@ export default function CheckoutPage() {
     });
   };
 
-  const formatPrice = (price: number) => {
-    // Format: USD 1.200,00$
-    const formatted = new Intl.NumberFormat('de-DE', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(price);
-    return `USD ${formatted}$`;
-  };
+  // Mismo formato que el resto de la tienda ("$1.200,00"). Antes: "USD 1.200,00$" (revisión R12)
+  const formatPrice = (price: number) => formatUSD(price);
 
   // Function to paste from clipboard (Google Maps feature)
   const handlePasteFromGoogleMaps = async () => {

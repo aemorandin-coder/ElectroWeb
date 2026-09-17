@@ -6,30 +6,7 @@ import Image from 'next/image';
 import { useCartSafe } from '@/contexts/CartContext';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatUSD } from '@/lib/currency';
-
-// Gift Card Designs for thumbnail display
-const GIFT_CARD_DESIGNS: Record<string, { gradient: string; accent: string; name: string }> = {
-  'obsidian-gold': {
-    name: 'Obsidian Gold',
-    gradient: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 30%, #2d2d2d 70%, #1a1a1a 100%)',
-    accent: '#fbbf24',
-  },
-  'aurora-neon': {
-    name: 'Aurora Neon',
-    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 70%, #1a1a2e 100%)',
-    accent: '#00d4ff',
-  },
-  'cosmic-violet': {
-    name: 'Cosmic Violet',
-    gradient: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 30%, #4a1f6e 70%, #2d1b4e 100%)',
-    accent: '#a855f7',
-  },
-  'matrix-green': {
-    name: 'Matrix Green',
-    gradient: 'linear-gradient(135deg, #0a1a0a 0%, #0d2d0d 30%, #1a4a1a 70%, #0d2d0d 100%)',
-    accent: '#22c55e',
-  },
-};
+import { getGiftCardDesign } from '@/lib/gift-card-designs';
 
 export default function CartIcon() {
   const { items, totalItems, getTotalPrice, removeItem, updateQuantity, clearCart } = useCartSafe();
@@ -70,32 +47,6 @@ export default function CartIcon() {
   };
 
   // Badge styles as a complete inline style object - immune to CSS overrides
-  const badgeStyles: React.CSSProperties = {
-    position: 'absolute',
-    top: '0px',
-    right: '0px',
-    width: '16px',
-    height: '16px',
-    minWidth: '16px',
-    maxWidth: '16px',
-    minHeight: '16px',
-    maxHeight: '16px',
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #2a63cd 0%, #1e4ba3 100%)',
-    color: 'white',
-    fontSize: '9px',
-    fontWeight: 700,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    lineHeight: 1,
-    padding: 0,
-    margin: 0,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-    zIndex: 10,
-    pointerEvents: 'none' as const,
-  };
-
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Cart Button */}
@@ -117,10 +68,13 @@ export default function CartIcon() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
 
-        {/* Badge Counter - Pure inline styles */}
+        {/* Contador igual al de la barra inferior y la campana (revisión R12: tenía estilos en línea con hex y letra de 9 px, y cortaba en "9+") */}
         {totalItems > 0 && (
-          <span style={badgeStyles}>
-            {totalItems > 9 ? '9+' : totalItems}
+          <span
+            className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-deal px-1 text-[11px] font-semibold leading-none text-white"
+            aria-hidden="true"
+          >
+            {totalItems > 99 ? '99+' : totalItems}
           </span>
         )}
       </button>
@@ -195,16 +149,14 @@ export default function CartIcon() {
                           const isGiftCard = item.id.startsWith('gift-card-');
 
                           if (isGiftCard) {
-                            // Extract design ID from item ID (format: gift-card-{designId}-{timestamp})
-                            const idParts = item.id.split('-');
-                            const designId = idParts.length >= 3 ? idParts.slice(2, -1).join('-') : 'aurora-neon';
-                            const design = GIFT_CARD_DESIGNS[designId] || GIFT_CARD_DESIGNS['aurora-neon'];
+                            // Diseño desde el id (gift-card-{diseño}-{fecha}) con el mapa compartido, que entiende los nombres viejos (revisión R12)
+                            const design = getGiftCardDesign(item.id.replace(/^gift-card-/, '').replace(/-\d+$/, ''));
 
                             // Epic compact Gift Card thumbnail
                             return (
                               <div
                                 className="absolute inset-0 overflow-hidden rounded"
-                                style={{ background: design.gradient }}
+                                style={{ background: design.background }}
                               >
                                 {/* Shimmer */}
                                 <div

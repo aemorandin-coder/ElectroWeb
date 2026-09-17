@@ -34,6 +34,19 @@ import {
   adminModalPanel,
 } from '@/lib/admin-ui';
 
+type SortOption = 'recent' | 'price-asc' | 'price-desc' | 'name';
+
+interface WishlistProduct {
+  id: string;
+  name: string;
+  priceUSD: number | string;
+  stock: number;
+  createdAt: string;
+  mainImage?: string | null;
+  images?: string | string[] | null;
+  [key: string]: unknown;
+}
+
 interface WishlistItem {
   id: string;
   productId: string;
@@ -99,7 +112,7 @@ export default function WishlistPage() {
       if (response.ok) {
         const data = await response.json();
         // Map products to WishlistItem format
-        const items: WishlistItem[] = (data.products || []).map((product: any) => {
+        const items: WishlistItem[] = (data.products || []).map((product: WishlistProduct) => {
           let images: string[] = [];
           if (product.images) {
             if (typeof product.images === 'string') {
@@ -364,7 +377,7 @@ export default function WishlistPage() {
                 <FiFilter className="w-4 h-4 text-muted ml-2" />
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
                   className="bg-transparent text-sm text-ink font-medium focus:outline-none pr-2 py-1.5"
                 >
                   <option value="recent">Recientes</option>

@@ -223,9 +223,9 @@ export default function GiftCardsPage() {
             setProcessingStep(4);
             toast.success('Gift Card enviada');
             router.push('/customer/balance');
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error:', error);
-            setProcessingError(error.message || 'Ocurrió un error. Intenta de nuevo.');
+            setProcessingError(error instanceof Error ? error.message : 'Ocurrió un error. Intenta de nuevo.');
             await new Promise(resolve => setTimeout(resolve, 3000));
             setShowProcessingOverlay(false);
             setProcessingError(null);

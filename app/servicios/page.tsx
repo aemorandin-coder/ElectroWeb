@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import PublicHeader from '@/components/public/PublicHeader';
 import PageHeader from '@/components/ui/PageHeader';
 import { getPublicSettings } from '@/lib/site-settings';
-import ServiciosPortfolio from '@/components/servicios/ServiciosPortfolio';
+import ServiciosPortfolio, { type Video } from '@/components/servicios/ServiciosPortfolio';
 import { FiMonitor, FiShield, FiCreditCard, FiAward, FiUsers, FiCheckCircle, FiMail, FiClock, FiVideo, FiTool } from 'react-icons/fi';
 import { PiSecurityCameraDuotone } from 'react-icons/pi';
 import { FaEthernet } from 'react-icons/fa';
@@ -63,16 +63,25 @@ export default async function ServiciosPage() {
     getPublicSettings(),
   ]);
 
-  const videos = rawVideos.map((v) => {
+  const videos: Video[] = rawVideos.map((v) => {
     const avg =
       v.reviews.length > 0
         ? v.reviews.reduce((s, r) => s + r.rating, 0) / v.reviews.length
         : null;
     return {
-      ...v,
+      id: v.id,
+      title: v.title,
+      description: v.description,
+      videoUrl: v.videoUrl,
+      thumbnail: v.thumbnail,
+      platform: v.platform,
+      category: v.category,
+      beforeImage: v.beforeImage,
+      afterImage: v.afterImage,
+      customerName: v.customerName,
+      testimonial: v.testimonial,
       avgRating: avg,
       reviewCount: v.reviews.length,
-      reviews: undefined,
     };
   });
 
@@ -100,7 +109,7 @@ export default async function ServiciosPage() {
           </div>
           
           {videos.length > 0 ? (
-            <ServiciosPortfolio videos={videos as any} />
+            <ServiciosPortfolio videos={videos} />
           ) : (
             <div className="bg-surface rounded-xl border border-dashed border-line-strong p-6 text-center shadow-sm">
               <div className="w-10 h-10 bg-brand-50 border border-brand-200 rounded-full flex items-center justify-center text-brand-500 mx-auto mb-3">
@@ -238,7 +247,7 @@ export default async function ServiciosPage() {
           </div>
           
           {videos.length > 0 ? (
-            <ServiciosPortfolio videos={videos as any} />
+            <ServiciosPortfolio videos={videos} />
           ) : (
             <div className="relative bg-surface rounded-2xl border-2 border-dashed border-line p-12 text-center overflow-hidden max-w-3xl mx-auto shadow-xs">
               <div className="absolute -top-10 -left-10 w-24 h-24 bg-brand-500/5 rounded-full blur-xl pointer-events-none"></div>

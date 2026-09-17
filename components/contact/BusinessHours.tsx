@@ -27,8 +27,8 @@ const fallbackHours = [
 ];
 
 // Convert 24h format to 12h AM/PM format
-const convertTo12Hour = (time24: string): string => {
-    if (!time24 || typeof time24 !== 'string') return time24;
+const convertTo12Hour = (time24?: string): string => {
+    if (!time24 || typeof time24 !== 'string') return '';
 
     // If already in AM/PM format, return as is
     if (time24.toLowerCase().includes('am') || time24.toLowerCase().includes('pm')) {
@@ -52,15 +52,21 @@ const convertTo12Hour = (time24: string): string => {
     return `${hours}:${minutes} ${ampm}`;
 };
 
+interface ScheduleItem {
+    enabled?: boolean;
+    open?: string;
+    close?: string;
+}
+
 export default function BusinessHours({ businessHours }: BusinessHoursProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     const parseHours = () => {
         try {
             if (businessHours) {
-                const hours = JSON.parse(businessHours);
+                const hours = JSON.parse(businessHours) as Record<string, ScheduleItem>;
                 if (hours && typeof hours === 'object') {
-                    return Object.entries(hours).map(([day, schedule]: [string, any]) => {
+                    return Object.entries(hours).map(([day, schedule]) => {
                         const dayInfo = daysMap[day] || { name: day, abbr: day.substring(0, 3).toUpperCase() };
                         const openTime = convertTo12Hour(schedule?.open);
                         const closeTime = convertTo12Hour(schedule?.close);

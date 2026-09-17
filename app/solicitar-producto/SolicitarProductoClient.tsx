@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import type { HCaptchaRefMethods } from '@/components/HCaptchaWrapper';
 import { FiUser, FiMail, FiPhone, FiPackage, FiDollarSign, FiClock, FiCheck, FiShield, FiTruck, FiSearch } from 'react-icons/fi';
 import { IoMdPricetags } from 'react-icons/io';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
@@ -37,7 +38,7 @@ export default function SolicitarProductoClient() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const captchaRef = useRef<any>(null);
+  const captchaRef = useRef<HCaptchaRefMethods>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
@@ -557,7 +558,7 @@ export default function SolicitarProductoClient() {
     </>
   );
 }
-function FiAlertCircle(props: any) {
+function FiAlertCircle(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}

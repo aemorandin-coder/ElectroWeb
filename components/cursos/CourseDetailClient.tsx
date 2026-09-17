@@ -43,8 +43,8 @@ type Course = {
   category?: string | null;
   level?: string | null;
   instructor?: string | null;
-  priceUSD: any;
-  rating?: any;
+  priceUSD: number | string;
+  rating?: number | string | null;
   enrollmentCount: number;
   totalLessons?: number | null;
   totalDuration?: number | null;

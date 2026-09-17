@@ -1,4 +1,5 @@
 import { formatUSD } from '@/lib/currency';
+import type { Prisma } from '@prisma/client';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -86,7 +87,7 @@ type CourseCardProps = {
   course: {
     id: string; title: string; slug: string; shortDesc?: string | null;
     thumbnail?: string | null; category?: string | null; level?: string | null;
-    priceUSD: any; rating?: any; enrollmentCount: number;
+    priceUSD: number | string | Prisma.Decimal; rating?: number | string | Prisma.Decimal | null; enrollmentCount: number;
     totalDuration?: number | null; totalLessons?: number | null;
     isFeatured: boolean; instructor?: string | null;
     creator?: { displayName: string } | null;

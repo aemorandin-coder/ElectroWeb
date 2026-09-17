@@ -37,8 +37,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     const [step, setStep] = useState<Step>('SELECT_METHOD');
     const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
 
-    // Dynamic payment methods from database
-    const [companyPaymentMethods, setCompanyPaymentMethods] = useState<Array<{
+interface CompanyPaymentMethod {
         id: string;
         type: string;
         name: string;
@@ -52,7 +51,10 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         displayNote?: string;
         qrCodeImage?: string;
         isActive: boolean;
-    }>>([]);
+    }
+
+    // Dynamic payment methods from database
+    const [companyPaymentMethods, setCompanyPaymentMethods] = useState<CompanyPaymentMethod[]>([]);
 
     const quickAmounts = [10, 25, 50, 100, 200];
 
@@ -78,7 +80,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                 if (response.ok) {
                     const data = await response.json();
                     if (Array.isArray(data)) {
-                        setCompanyPaymentMethods(data.filter((m: any) => m.isActive));
+                        setCompanyPaymentMethods(data.filter((m: CompanyPaymentMethod) => m.isActive));
                     }
                 }
             } catch (error) {
@@ -163,7 +165,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
 
     // Build details object for display
-    const getMethodDetails = (method: any) => {
+    const getMethodDetails = (method: Partial<CompanyPaymentMethod>) => {
         const details: Record<string, string> = {};
         if (method.holderId) details['Cedula/RIF'] = method.holderId;
         if (method.phone) details['Telefono'] = method.phone;

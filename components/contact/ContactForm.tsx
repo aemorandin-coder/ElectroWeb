@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import type { HCaptchaRefMethods } from '@/components/HCaptchaWrapper';
 import { FiSend } from 'react-icons/fi';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import { adminPrimaryButton, adminLabel } from '@/lib/admin-ui';
@@ -29,7 +30,7 @@ export default function ContactForm() {
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
     const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
     const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-    const captchaRef = useRef<any>(null);
+    const captchaRef = useRef<HCaptchaRefMethods>(null);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [hasPrefilledData, setHasPrefilledData] = useState(false);
 

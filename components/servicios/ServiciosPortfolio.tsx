@@ -23,7 +23,7 @@ const PLATFORM_BADGES: Record<string, { label: string; cls: string }> = {
   KICK: { label: 'Kick', cls: 'bg-success text-white' },
 };
 
-type Video = {
+export type Video = {
   id: string;
   title: string;
   description: string | null;
@@ -113,7 +113,13 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
   const [filter, setFilter] = useState('');
   const [activeModal, setActiveModal] = useState<Video | null>(null);
   const [beforeAfterView, setBeforeAfterView] = useState<'before' | 'after'>('after');
-  const [reviews, setReviews] = useState<any[]>([]);
+  interface ServiceReview {
+    id: string;
+    rating: number;
+    user?: { name?: string | null };
+    comment?: string | null;
+  }
+  const [reviews, setReviews] = useState<ServiceReview[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [ratingValue, setRatingValue] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
@@ -418,7 +424,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                       Sé el primero en dejar una reseña.
                     </p>
                   )}
-                  {reviews.map((r: any) => (
+                  {reviews.map((r) => (
                     <div key={r.id} className="p-3 bg-surface rounded-xl">
                       <div className="flex items-center gap-2 mb-1">
                         <StarDisplay rating={r.rating} />

@@ -8,6 +8,25 @@ import { useState, useEffect } from 'react';
 import CustomerOnboarding from '@/components/customer/CustomerOnboarding';
 import { adminPrimaryButton } from '@/lib/admin-ui';
 
+import type { IconType } from 'react-icons';
+
+interface RecentOrder {
+  id: string;
+  orderNumber: string;
+  status: string;
+  itemCount: number;
+  total: number;
+  createdAt: string;
+}
+
+interface RecentActivity {
+  id: string;
+  type: string;
+  description: string;
+  createdAt: string;
+  amount?: number | null;
+}
+
 interface DashboardStats {
   balance: number;
   totalRecharges: number;
@@ -18,8 +37,8 @@ interface DashboardStats {
   tieneDireccion?: boolean;
   datosCompletos?: boolean;
   totalSpentThisMonth: number;
-  recentOrders: any[];
-  recentActivity: any[];
+  recentOrders: RecentOrder[];
+  recentActivity: RecentActivity[];
 }
 
 export default function CustomerDashboard() {
@@ -52,7 +71,7 @@ export default function CustomerDashboard() {
   };
 
   const getStatusConfig = (status: string) => {
-    const configs: Record<string, { bg: string; text: string; label: string; icon: any }> = {
+    const configs: Record<string, { bg: string; text: string; label: string; icon: IconType }> = {
       PENDING: { bg: 'bg-warning/15', text: 'text-warning-strong', label: 'Pendiente', icon: FiClock },
       CONFIRMED: { bg: 'bg-brand-50', text: 'text-brand-700', label: 'Confirmado', icon: FiCheck },
       PAID: { bg: 'bg-success-strong/10', text: 'text-success-strong', label: 'Pagado', icon: FiDollarSign },

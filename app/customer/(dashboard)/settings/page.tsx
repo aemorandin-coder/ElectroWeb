@@ -81,7 +81,7 @@ export default function SettingsPage() {
     fetchSettings();
     // Check email verification status from session
     if (session?.user) {
-      setEmailVerified(!!(session.user as any).emailVerified);
+      setEmailVerified(Boolean((session.user as { emailVerified?: boolean }).emailVerified));
     }
   }, [session]);
 

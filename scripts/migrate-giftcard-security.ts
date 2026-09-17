@@ -23,7 +23,7 @@ function hashPin(pin: string): string {
 const prisma = new PrismaClient();
 
 async function migrateGiftCards() {
-    console.log('🔐 Starting gift card security migration...\n');
+    console.log('[AVISO] Starting gift card security migration...\n');
 
     // Find all gift cards without codeHash
     const cardsToMigrate = await prisma.giftCard.findMany({
@@ -60,17 +60,17 @@ async function migrateGiftCards() {
             });
 
             migrated++;
-            console.log(`✅ Migrated card ****${codeLast4}`);
+            console.log(`[OK] Migrated card ****${codeLast4}`);
         } catch (error) {
             errors++;
-            console.error(`❌ Error migrating card ${card.id}:`, error);
+            console.error(`[ERROR] Error migrating card ${card.id}:`, error);
         }
     }
 
     console.log('\n' + '='.repeat(50));
     console.log(`Migration complete!`);
-    console.log(`  ✅ Migrated: ${migrated}`);
-    console.log(`  ❌ Errors: ${errors}`);
+    console.log(`  [OK] Migrated: ${migrated}`);
+    console.log(`  [ERROR] Errors: ${errors}`);
     console.log('='.repeat(50));
 }
 

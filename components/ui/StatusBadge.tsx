@@ -18,18 +18,18 @@ interface StatusConfig {
 
 const STATUS_MAP: Record<string, StatusConfig> = {
   // Pedidos
-  PENDING:    { bg: 'bg-amber-100',   text: 'text-amber-700',   dot: 'bg-amber-500',   label: 'Pendiente'   },
-  CONFIRMED:  { bg: 'bg-blue-100',    text: 'text-blue-700',    dot: 'bg-blue-500',    label: 'Confirmado'  },
-  PROCESSING: { bg: 'bg-purple-100',  text: 'text-purple-700',  dot: 'bg-purple-500',  label: 'Procesando'  },
-  COMPLETED:  { bg: 'bg-green-100',   text: 'text-green-700',   dot: 'bg-green-500',   label: 'Completado'  },
-  CANCELLED:  { bg: 'bg-red-100',     text: 'text-red-700',     dot: 'bg-red-500',     label: 'Cancelado'   },
-  DELIVERED:  { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500', label: 'Entregado'   },
-  SHIPPED:    { bg: 'bg-indigo-100',  text: 'text-indigo-700',  dot: 'bg-indigo-500',  label: 'Enviado'     },
-  REFUNDED:   { bg: 'bg-gray-100',    text: 'text-gray-700',    dot: 'bg-gray-500',    label: 'Reembolsado' },
+  PENDING:    { bg: 'bg-warning/15',          text: 'text-warning-strong', dot: 'bg-warning-strong', label: 'Pendiente'   },
+  CONFIRMED:  { bg: 'bg-brand-50',            text: 'text-brand-700',      dot: 'bg-brand-500',    label: 'Confirmado'  },
+  PROCESSING: { bg: 'bg-brand-50',            text: 'text-brand-700',      dot: 'bg-brand-500',    label: 'Procesando'  },
+  COMPLETED:  { bg: 'bg-success-strong/10',   text: 'text-success-strong', dot: 'bg-success-strong', label: 'Completado' },
+  CANCELLED:  { bg: 'bg-deal-bg',             text: 'text-deal',           dot: 'bg-deal',         label: 'Cancelado'   },
+  DELIVERED:  { bg: 'bg-success-strong/10',   text: 'text-success-strong', dot: 'bg-success-strong', label: 'Entregado'   },
+  SHIPPED:    { bg: 'bg-brand-50',            text: 'text-brand-700',      dot: 'bg-brand-500',    label: 'Enviado'     },
+  REFUNDED:   { bg: 'bg-surface',             text: 'text-ink-soft',       dot: 'bg-subtle',       label: 'Reembolsado' },
   // Pagos
-  PAID:       { bg: 'bg-green-100',   text: 'text-green-700',   dot: 'bg-green-500',   label: 'Pagado'      },
-  UNPAID:     { bg: 'bg-red-100',     text: 'text-red-700',     dot: 'bg-red-500',     label: 'Sin Pagar'   },
-  VERIFYING:  { bg: 'bg-yellow-100',  text: 'text-yellow-700',  dot: 'bg-yellow-500',  label: 'Verificando' },
+  PAID:       { bg: 'bg-success-strong/10',   text: 'text-success-strong', dot: 'bg-success-strong', label: 'Pagado'      },
+  UNPAID:     { bg: 'bg-deal-bg',             text: 'text-deal',           dot: 'bg-deal',         label: 'Sin Pagar'   },
+  VERIFYING:  { bg: 'bg-warning/15',          text: 'text-warning-strong', dot: 'bg-warning-strong', label: 'Verificando' },
 };
 
 interface StatusBadgeProps {
@@ -41,9 +41,9 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, showDot = false, className = '' }: StatusBadgeProps) {
   const cfg = STATUS_MAP[status?.toUpperCase()] ?? {
-    bg: 'bg-gray-100',
-    text: 'text-gray-600',
-    dot: 'bg-gray-400',
+    bg: 'bg-surface',
+    text: 'text-ink-soft',
+    dot: 'bg-subtle',
     label: status ?? 'Desconocido',
   };
 
@@ -62,7 +62,7 @@ export function StatusBadge({ status, showDot = false, className = '' }: StatusB
 /** Variante de texto plano sin fondo (para tablas compactas) */
 export function StatusText({ status }: { status: string }) {
   const cfg = STATUS_MAP[status?.toUpperCase()] ?? {
-    text: 'text-gray-600',
+    text: 'text-muted',
     label: status ?? 'Desconocido',
   };
   return <span className={`text-xs font-semibold ${cfg.text}`}>{cfg.label}</span>;

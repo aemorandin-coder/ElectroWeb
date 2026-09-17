@@ -22,12 +22,12 @@ export function Button({
     const baseStyles = 'group inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden';
 
     const variantStyles = {
-        primary: 'bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white hover:shadow-lg hover:shadow-[#2a63cd]/30 hover:scale-[1.02] active:scale-[0.98] focus:ring-[#2a63cd]',
-        secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] focus:ring-gray-400',
-        outline: 'border-2 border-[#2a63cd] text-[#2a63cd] hover:bg-[#2a63cd] hover:text-white hover:shadow-md hover:scale-[1.02] active:scale-[0.98] focus:ring-[#2a63cd]',
-        ghost: 'text-gray-700 hover:bg-gray-100 hover:scale-[1.02] active:scale-[0.98] focus:ring-gray-400',
-        danger: 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:shadow-lg hover:shadow-red-500/30 hover:scale-[1.02] active:scale-[0.98] focus:ring-red-500',
-        success: 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-lg hover:shadow-green-500/30 hover:scale-[1.02] active:scale-[0.98] focus:ring-green-500',
+        primary: 'bg-brand-500 text-white hover:bg-brand-600 focus:ring-brand-500 shadow-sm',
+        secondary: 'bg-surface text-ink hover:bg-line border border-line focus:ring-brand-500 shadow-sm',
+        outline: 'border border-brand-500 text-brand-500 hover:bg-brand-50 focus:ring-brand-500',
+        ghost: 'text-ink-soft hover:text-ink hover:bg-surface focus:ring-brand-500',
+        danger: 'bg-deal text-white hover:bg-deal/90 focus:ring-deal shadow-sm',
+        success: 'bg-success-strong text-white hover:bg-success focus:ring-success-strong shadow-sm',
     };
 
     const sizeStyles = {

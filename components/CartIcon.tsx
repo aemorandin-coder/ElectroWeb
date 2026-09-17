@@ -6,30 +6,7 @@ import Image from 'next/image';
 import { useCartSafe } from '@/contexts/CartContext';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatUSD } from '@/lib/currency';
-
-// Gift Card Designs for thumbnail display
-const GIFT_CARD_DESIGNS: Record<string, { gradient: string; accent: string; name: string }> = {
-  'obsidian-gold': {
-    name: 'Obsidian Gold',
-    gradient: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 30%, #2d2d2d 70%, #1a1a1a 100%)',
-    accent: '#fbbf24',
-  },
-  'aurora-neon': {
-    name: 'Aurora Neon',
-    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 70%, #1a1a2e 100%)',
-    accent: '#00d4ff',
-  },
-  'cosmic-violet': {
-    name: 'Cosmic Violet',
-    gradient: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 30%, #4a1f6e 70%, #2d1b4e 100%)',
-    accent: '#a855f7',
-  },
-  'matrix-green': {
-    name: 'Matrix Green',
-    gradient: 'linear-gradient(135deg, #0a1a0a 0%, #0d2d0d 30%, #1a4a1a 70%, #0d2d0d 100%)',
-    accent: '#22c55e',
-  },
-};
+import { getGiftCardDesign } from '@/lib/gift-card-designs';
 
 export default function CartIcon() {
   const { items, totalItems, getTotalPrice, removeItem, updateQuantity, clearCart } = useCartSafe();
@@ -70,32 +47,6 @@ export default function CartIcon() {
   };
 
   // Badge styles as a complete inline style object - immune to CSS overrides
-  const badgeStyles: React.CSSProperties = {
-    position: 'absolute',
-    top: '0px',
-    right: '0px',
-    width: '16px',
-    height: '16px',
-    minWidth: '16px',
-    maxWidth: '16px',
-    minHeight: '16px',
-    maxHeight: '16px',
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #2a63cd 0%, #1e4ba3 100%)',
-    color: 'white',
-    fontSize: '9px',
-    fontWeight: 700,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    lineHeight: 1,
-    padding: 0,
-    margin: 0,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-    zIndex: 10,
-    pointerEvents: 'none' as const,
-  };
-
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Cart Button */}
@@ -117,10 +68,13 @@ export default function CartIcon() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
 
-        {/* Badge Counter - Pure inline styles */}
+        {/* Contador igual al de la barra inferior y la campana (revisión R12: tenía estilos en línea con hex y letra de 9 px, y cortaba en "9+") */}
         {totalItems > 0 && (
-          <span style={badgeStyles}>
-            {totalItems > 9 ? '9+' : totalItems}
+          <span
+            className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-deal px-1 text-[11px] font-semibold leading-none text-white"
+            aria-hidden="true"
+          >
+            {totalItems > 99 ? '99+' : totalItems}
           </span>
         )}
       </button>
@@ -173,7 +127,7 @@ export default function CartIcon() {
                 </h3>
                 <button
                   onClick={handleClearCart}
-                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-all"
+                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-deal hover:text-deal/80 hover:bg-deal-bg rounded transition-colors"
                   title="Limpiar carrito"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,22 +143,20 @@ export default function CartIcon() {
                   <div key={item.id} className="p-4 border-b border-line hover:bg-surface transition-colors">
                     <div className="flex gap-3">
                       {/* Image */}
-                      <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded flex-shrink-0 relative overflow-hidden">
+                      <div className="w-16 h-16 bg-surface border border-line rounded flex-shrink-0 relative overflow-hidden">
                         {(() => {
                           // Check if it's a Gift Card with design info
                           const isGiftCard = item.id.startsWith('gift-card-');
 
                           if (isGiftCard) {
-                            // Extract design ID from item ID (format: gift-card-{designId}-{timestamp})
-                            const idParts = item.id.split('-');
-                            const designId = idParts.length >= 3 ? idParts.slice(2, -1).join('-') : 'aurora-neon';
-                            const design = GIFT_CARD_DESIGNS[designId] || GIFT_CARD_DESIGNS['aurora-neon'];
+                            // Diseño desde el id (gift-card-{diseño}-{fecha}) con el mapa compartido, que entiende los nombres viejos (revisión R12)
+                            const design = getGiftCardDesign(item.id.replace(/^gift-card-/, '').replace(/-\d+$/, ''));
 
                             // Epic compact Gift Card thumbnail
                             return (
                               <div
                                 className="absolute inset-0 overflow-hidden rounded"
-                                style={{ background: design.gradient }}
+                                style={{ background: design.background }}
                               >
                                 {/* Shimmer */}
                                 <div
@@ -230,7 +182,7 @@ export default function CartIcon() {
                                     style={{ background: `${design.accent}25` }}
                                   >
                                     <span
-                                      className="text-[8px] font-black tracking-wider"
+                                      className="text-[11px] font-bold tracking-wider"
                                       style={{ color: design.accent }}
                                     >
                                       GIFT
@@ -283,7 +235,7 @@ export default function CartIcon() {
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-8 h-8 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                               </svg>
                             </div>
@@ -324,7 +276,7 @@ export default function CartIcon() {
                           </button>
                           <button
                             onClick={() => removeItem(item.id)}
-                            className="ml-auto text-red-600 hover:text-red-700 transition-colors"
+                            className="ml-auto text-deal hover:text-deal/80 transition-colors"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

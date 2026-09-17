@@ -51,7 +51,7 @@ export default function ImageUploadField({
     if (file) handleFile(file);
   }
 
-  const INPUT_CLASS = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-[#2a63cd] text-sm transition-colors';
+  const INPUT_CLASS = 'w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-brand-500 text-sm transition-colors';
 
   return (
     <div>
@@ -112,7 +112,7 @@ export default function ImageUploadField({
         />
       </div>
 
-      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+      {error && <p className="text-deal text-xs mt-1">{error}</p>}
       <p className="text-white/20 text-xs mt-1">Arrastra una imagen o pega una URL. JPG, PNG, WEBP · máx 5 MB</p>
     </div>
   );

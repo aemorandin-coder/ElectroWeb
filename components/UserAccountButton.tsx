@@ -30,10 +30,17 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
       }
     }
 
+    // Escape también cierra (revisión R12: solo cerraba con clic afuera)
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setIsOpen(false);
+    }
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscape);
       };
     }
   }, [isOpen]);
@@ -66,7 +73,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
 
   if (!session) {
     const buttonClasses = useBlueHeader
-      ? "relative flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-brand-500 bg-white hover:bg-gray-100 rounded-lg transition-all duration-300 shadow-md shadow-white/20 hover:shadow-lg hover:shadow-white/30 hover:scale-105"
+      ? "relative flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-brand-500 bg-white hover:bg-surface rounded-lg transition-all duration-300 shadow-md shadow-white/20 hover:shadow-lg hover:shadow-white/30 hover:scale-105"
       : "relative flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-white bg-brand-500 hover:bg-brand-600 rounded-lg transition-all duration-300 shadow-md shadow-brand-500/20 hover:shadow-lg hover:shadow-brand-500/30 hover:scale-105";
 
     return (
@@ -102,8 +109,8 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
       >
         {userImage && !imageError ? (
           <div className={`relative w-9 h-9 rounded-full overflow-hidden border-2 shadow-md group-hover:shadow-lg transition-all ${isVerified
-            ? 'border-emerald-400 shadow-emerald-500/20'
-            : 'border-amber-400 shadow-amber-500/20'
+            ? 'border-success shadow-success/20'
+            : 'border-warning shadow-warning/20'
             }`}>
             <Image
               src={userImage}
@@ -117,9 +124,9 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
             />
           </div>
         ) : (
-          <div className={`w-9 h-9 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-xs font-black shadow-md group-hover:shadow-lg transition-all border-2 ${isVerified
-            ? 'border-emerald-400 shadow-emerald-500/20'
-            : 'border-amber-400 shadow-amber-500/20'
+          <div className={`w-9 h-9 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold shadow-md group-hover:shadow-lg transition-all border-2 ${isVerified
+            ? 'border-success shadow-success/20'
+            : 'border-warning shadow-warning/20'
             }`}>
             {userName.charAt(0).toUpperCase()}
           </div>
@@ -137,13 +144,13 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
             max-h-[calc(100dvh-6rem-var(--bottom-nav-h)-env(safe-area-inset-bottom))] overflow-y-auto lg:max-h-none lg:overflow-hidden
             bg-white rounded-2xl
             shadow-2xl
-            border border-gray-100
+            border border-line
             animate-fade-in lg:animate-dropdown-enter
           `}
         >
 
           {/* Premium Header Profile Section */}
-          <div className="px-5 py-4 bg-gradient-to-b from-surface to-white border-b border-gray-100">
+          <div className="px-5 py-4 bg-surface border-b border-line">
             <div className="flex items-center gap-4">
               {userImage && !imageError ? (
                 <div className="relative w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-md flex-shrink-0">
@@ -163,20 +170,20 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
               )}
               
               <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-ink font-black text-base truncate leading-tight">{userName}</span>
+                <span className="text-ink font-bold text-base truncate leading-tight">{userName}</span>
                 <span className="text-muted text-xs truncate mt-0.5">{userEmail}</span>
                 
                 {/* Status Badge */}
                 <div className="mt-2">
                   {isVerified ? (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-100">
-                      <FiCheckCircle className="w-3 h-3 text-emerald-500" />
-                      <span className="text-emerald-700 text-[10px] font-bold tracking-wide">CUENTA VERIFICADA</span>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-success/15 rounded-lg border border-success/30">
+                      <FiCheckCircle className="w-3 h-3 text-success" />
+                      <span className="text-success-strong text-xs font-bold tracking-wide">CUENTA VERIFICADA</span>
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 rounded-lg border border-amber-100 animate-pulse">
-                      <FiAlertCircle className="w-3 h-3 text-amber-500" />
-                      <span className="text-amber-700 text-[10px] font-bold tracking-wide">SIN VERIFICAR</span>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-warning/15 rounded-lg border border-warning/30">
+                      <FiAlertCircle className="w-3 h-3 text-warning" />
+                      <span className="text-warning-strong text-xs font-bold tracking-wide">SIN VERIFICAR</span>
                     </div>
                   )}
                 </div>
@@ -190,10 +197,10 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                 <Link
                   href="/customer"
                   onClick={() => setIsOpen(false)}
-                  className="group flex items-center justify-between px-3 py-3 rounded-xl hover:bg-blue-50 transition-colors duration-200 active:scale-95"
+                  className="group flex items-center justify-between px-3 py-3 rounded-xl hover:bg-surface transition-colors duration-200 active:scale-95"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-blue-100/50 flex items-center justify-center text-brand-500 group-hover:bg-brand-500 group-hover:text-white transition-colors">
+                    <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 group-hover:bg-brand-500 group-hover:text-white transition-colors">
                       <FiUser className="w-4 h-4" />
                     </div>
                     <div>
@@ -201,16 +208,16 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                       <span className="text-muted text-xs">Gestión de cuenta</span>
                     </div>
                   </div>
-                  <FiChevronRight className="w-4 h-4 text-gray-300 group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
+                  <FiChevronRight className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
                 </Link>
 
                 <Link
                   href="/customer/orders"
                   onClick={() => setIsOpen(false)}
-                  className="group flex items-center justify-between px-3 py-3 rounded-xl hover:bg-purple-50 transition-colors duration-200 active:scale-95"
+                  className="group flex items-center justify-between px-3 py-3 rounded-xl hover:bg-surface transition-colors duration-200 active:scale-95"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-purple-100/50 flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                    <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 group-hover:bg-brand-500 group-hover:text-white transition-colors">
                       <FiPackage className="w-4 h-4" />
                     </div>
                     <div>
@@ -218,7 +225,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                       <span className="text-muted text-xs">Historial de compras</span>
                     </div>
                   </div>
-                  <FiChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+                  <FiChevronRight className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
                 </Link>
               </>
 
@@ -226,10 +233,10 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
               <Link
                 href="/admin"
                 onClick={() => setIsOpen(false)}
-                className="group flex items-center justify-between px-3 py-3 rounded-xl hover:bg-indigo-50 transition-colors duration-200 active:scale-95"
+                className="group flex items-center justify-between px-3 py-3 rounded-xl hover:bg-surface transition-colors duration-200 active:scale-95"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-indigo-100/50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 group-hover:bg-brand-500 group-hover:text-white transition-colors">
                     <FiSettings className="w-4 h-4" />
                   </div>
                   <div>
@@ -237,19 +244,19 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                     <span className="text-muted text-xs">Administración del sitio</span>
                   </div>
                 </div>
-                <FiChevronRight className="w-4 h-4 text-gray-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
+                <FiChevronRight className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
               </Link>
             )}
           </div>
 
           {/* Logout Section */}
-          <div className="p-3 border-t border-gray-100 bg-surface lg:rounded-b-2xl">
+          <div className="p-3 border-t border-line bg-surface lg:rounded-b-2xl">
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 hover:border-red-200 hover:bg-red-50 rounded-xl transition-all duration-200 group shadow-sm active:scale-95"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-line hover:border-deal/30 hover:bg-deal-bg rounded-xl transition-all duration-200 group shadow-sm active:scale-95"
             >
-              <FiLogOut className="w-4 h-4 text-muted group-hover:text-red-600 transition-colors" />
-              <span className="text-ink group-hover:text-red-600 font-bold text-sm transition-colors">Cerrar Sesión</span>
+              <FiLogOut className="w-4 h-4 text-muted group-hover:text-deal transition-colors" />
+              <span className="text-ink group-hover:text-deal font-bold text-sm transition-colors">Cerrar Sesión</span>
             </button>
           </div>
         </div>

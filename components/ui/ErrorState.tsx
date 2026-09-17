@@ -31,12 +31,12 @@ export function ErrorState({
     >
       {/* Ícono de error */}
       <div
-        className={`bg-red-50 rounded-2xl flex items-center justify-center mb-4 ${
+        className={`bg-deal-bg rounded-2xl flex items-center justify-center mb-4 ${
           compact ? 'w-12 h-12' : 'w-16 h-16'
         }`}
       >
         <svg
-          className={`text-red-400 ${compact ? 'w-6 h-6' : 'w-8 h-8'}`}
+          className={`text-deal ${compact ? 'w-6 h-6' : 'w-8 h-8'}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -51,7 +51,7 @@ export function ErrorState({
       </div>
 
       <h3
-        className={`font-bold text-slate-800 mb-2 ${
+        className={`font-bold text-ink mb-2 ${
           compact ? 'text-base' : 'text-lg'
         }`}
       >
@@ -59,7 +59,7 @@ export function ErrorState({
       </h3>
 
       {description && (
-        <p className="text-sm text-slate-500 max-w-xs mb-6 leading-relaxed">
+        <p className="text-sm text-muted max-w-xs mb-6 leading-relaxed">
           {description}
         </p>
       )}
@@ -69,7 +69,8 @@ export function ErrorState({
         {onRetry && (
           <button
             onClick={onRetry}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#2a63cd] to-[#1e4ba3] text-white rounded-xl text-sm font-bold hover:shadow-lg hover:scale-105 transition-all duration-200"
+            type="button"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-bold hover:bg-brand-600 transition-colors shadow-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -85,7 +86,7 @@ export function ErrorState({
         {showContact && (
           <Link
             href="/contacto"
-            className="inline-flex items-center gap-2 px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
+            className="inline-flex items-center gap-2 px-5 py-2.5 border border-line text-ink-soft rounded-xl text-sm font-semibold hover:bg-surface hover:text-ink transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { formatUSD } from '@/lib/currency';
 import { createPortal } from 'react-dom';
 import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiCreditCard, FiUpload, FiImage, FiX, FiShield } from 'react-icons/fi';
 import { HiOutlineQrcode } from 'react-icons/hi';
@@ -383,7 +384,7 @@ export default function CheckoutPagoMovilForm({
                             </div>
                             <div className="text-right">
                                 <p className="text-xs font-semibold text-muted uppercase">Equivalente</p>
-                                <p className="text-lg font-bold text-ink">${montoEsperado.toFixed(2)}</p>
+                                <p className="text-lg font-bold text-ink">{formatUSD(montoEsperado)}</p>
                             </div>
                         </div>
                     </div>
@@ -408,7 +409,7 @@ export default function CheckoutPagoMovilForm({
                             maxLength={10}
                             autoCapitalize="characters"
                             disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed"
                         />
                     </div>
                     <p className="text-xs text-muted mt-1">Cédula del titular de la cuenta</p>
@@ -430,7 +431,7 @@ export default function CheckoutPagoMovilForm({
                             inputMode="tel"
                             maxLength={11}
                             disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed"
                         />
                     </div>
                 </div>
@@ -444,7 +445,7 @@ export default function CheckoutPagoMovilForm({
                         type="button"
                         onClick={() => !verificando && setShowBankDropdown(!showBankDropdown)}
                         disabled={verificando}
-                        className="w-full flex items-center justify-between px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-between px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm bg-white disabled:bg-surface disabled:cursor-not-allowed"
                     >
                         <span className={bancoSeleccionado ? 'text-ink' : 'text-muted'}>
                             {bancoSeleccionado ? bancoSeleccionado.nombreCorto : 'Selecciona...'}
@@ -504,7 +505,7 @@ export default function CheckoutPagoMovilForm({
                             maxLength={8}
                             inputMode="numeric"
                             disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed"
                         />
                     </div>
                     <p className="text-xs text-muted mt-1">4 a 8 dígitos numéricos</p>
@@ -524,7 +525,7 @@ export default function CheckoutPagoMovilForm({
                             onChange={handleChange}
                             max={new Date().toISOString().split('T')[0]}
                             disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed"
                         />
                     </div>
                 </div>
@@ -624,7 +625,7 @@ export default function CheckoutPagoMovilForm({
                                             : 'Verificación Fallida'}
                                 </h4>
                                 {resultado.code && !resultado.verified && (
-                                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">
+                                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-line text-ink-soft">
                                         Código: {resultado.code}
                                     </span>
                                 )}

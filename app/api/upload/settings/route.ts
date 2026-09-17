@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
-import { writeFile, mkdir, unlink } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
-        const userId = (session?.user as any)?.id || 'unknown';
+        const userId = (session?.user as { id?: string } | undefined)?.id || 'unknown';
 
         // Rate limiting
         const rateLimit = checkRateLimit(userId, 'upload:settings', UPLOAD_RATE_LIMIT);

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import {
-  FiSettings, FiBell, FiShield, FiEye, FiEyeOff, FiSave, FiUser, FiLock,
+  FiSettings, FiBell, FiEye, FiEyeOff, FiSave, FiUser, FiLock,
   FiAlertCircle, FiMail, FiPackage, FiTag, FiVolume2, FiCheck, FiMonitor,
   FiClock, FiLogOut, FiTrash2, FiAlertTriangle, FiActivity, FiX, FiSend
 } from 'react-icons/fi';
@@ -81,7 +81,7 @@ export default function SettingsPage() {
     fetchSettings();
     // Check email verification status from session
     if (session?.user) {
-      setEmailVerified(!!(session.user as any).emailVerified);
+      setEmailVerified(Boolean((session.user as { emailVerified?: boolean }).emailVerified));
     }
   }, [session]);
 
@@ -143,7 +143,7 @@ export default function SettingsPage() {
       } else {
         toast.error('Error al guardar');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al guardar');
     } finally {
       setSaving(false);
@@ -178,7 +178,7 @@ export default function SettingsPage() {
       } else {
         toast.error(data.error || 'Error');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error');
     } finally {
       setChangingPassword(false);
@@ -207,7 +207,7 @@ export default function SettingsPage() {
           const data = await response.json();
           toast.error(data.error || 'Error al cerrar las sesiones');
         }
-      } catch (error) {
+      } catch {
         toast.error('Error al cerrar las sesiones');
       }
     }
@@ -236,7 +236,7 @@ export default function SettingsPage() {
         } else {
           toast.error('Error al desactivar');
         }
-      } catch (error) {
+      } catch {
         toast.error('Error');
       }
     }
@@ -266,7 +266,7 @@ export default function SettingsPage() {
         } else {
           toast.error('Error al procesar solicitud');
         }
-      } catch (error) {
+      } catch {
         toast.error('Error');
       }
     }
@@ -286,7 +286,7 @@ export default function SettingsPage() {
       } else {
         toast.error('Error');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error');
     }
   };
@@ -304,7 +304,7 @@ export default function SettingsPage() {
       } else {
         toast.error(data.error || 'Error al enviar correo');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al enviar correo de verificación');
     } finally {
       setResendingVerification(false);

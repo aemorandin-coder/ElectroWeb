@@ -23,7 +23,7 @@ export async function GET(
 
         if (!verificationToken) {
             return NextResponse.json(
-                { error: 'Token invalido o expirado' },
+                { error: 'Token inválido o expirado' },
                 { status: 400 }
             );
         }
@@ -54,7 +54,7 @@ export async function GET(
 
         return NextResponse.json({
             success: true,
-            message: 'Email verificado exitosamente. Ya puedes iniciar sesion.',
+            message: 'Email verificado exitosamente. Ya puedes iniciar sesión.',
         });
     } catch (error) {
         console.error('Error verifying email:', error);

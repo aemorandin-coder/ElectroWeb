@@ -16,7 +16,7 @@ export async function GET(
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const creator = await getApprovedCreator(userId);
     if (!creator) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
 
@@ -47,7 +47,7 @@ export async function PATCH(
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const creator = await getApprovedCreator(userId);
     if (!creator) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
 
@@ -136,7 +136,7 @@ export async function DELETE(
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const creator = await getApprovedCreator(userId);
     if (!creator) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
 

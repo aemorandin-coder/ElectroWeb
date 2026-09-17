@@ -3,7 +3,7 @@ import { PrismaClient, NotificationType, NotificationPriority } from '@prisma/cl
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🔔 Seeding notifications...');
+  console.log('[AVISO] Seeding notifications...');
 
   // Sample notifications
   const notifications = [
@@ -24,7 +24,7 @@ async function main() {
     {
       type: NotificationType.STOCK_CRITICAL,
       priority: NotificationPriority.URGENT,
-      title: '⚠️ Stock Crítico',
+      title: '[AVISO] Stock Crítico',
       message: '¡URGENTE! El producto "Mouse Logitech G502" tiene solo 1 unidad en stock',
       actionUrl: '/admin/products',
     },
@@ -57,12 +57,12 @@ async function main() {
     });
   }
 
-  console.log('✅ Notifications seeded successfully!');
+  console.log('[OK] Notifications seeded successfully!');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error seeding notifications:', e);
+    console.error('[ERROR] Error seeding notifications:', e);
     process.exit(1);
   })
   .finally(async () => {

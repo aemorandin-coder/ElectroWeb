@@ -12,7 +12,24 @@ import OrderTracking from '@/components/orders/OrderTracking';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatPaymentMethod } from '@/lib/format-helpers';
 
+interface RawOrderItem {
+  id?: string;
+  priceUSD?: number | string;
+  totalUSD?: number | string;
+  product?: {
+    productType?: string;
+  };
+  [key: string]: unknown;
+}
+
+interface RawOrder {
+  totalUSD?: number | string;
+  items?: RawOrderItem[];
+  [key: string]: unknown;
+}
+
 interface OrderItem {
+
   id: string;
   productName: string;
   productSku: string;
@@ -33,7 +50,7 @@ interface Order {
   shippedAt?: string;
   deliveredAt?: string;
   items: OrderItem[];
-  address?: any;
+  address?: unknown;
   paymentMethod?: string;
   paymentStatus?: string;
   deliveryMethod?: string;
@@ -125,11 +142,11 @@ export default function OrdersPage() {
       if (response.ok) {
         const result = await response.json();
         const data = Array.isArray(result) ? result : (result.orders || []);
-        setOrders(data.map((order: any) => ({
+        setOrders(data.map((order: RawOrder) => ({
           ...order,
           totalUSD: Number(order.totalUSD) || 0,
-          hasDigital: order.items?.some((item: any) => item.product?.productType === 'DIGITAL') || false,
-          items: order.items?.map((item: any) => ({
+          hasDigital: order.items?.some((item: RawOrderItem) => item.product?.productType === 'DIGITAL') || false,
+          items: order.items?.map((item: RawOrderItem) => ({
             ...item,
             priceUSD: Number(item.priceUSD) || 0,
             totalUSD: Number(item.totalUSD) || 0,

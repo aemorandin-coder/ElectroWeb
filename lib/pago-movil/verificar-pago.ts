@@ -37,7 +37,7 @@ export interface VerificarPagoResponse {
     code: number;
     message: string;
     amount?: string;
-    rawResponse?: any;
+    rawResponse?: unknown;
 }
 
 /**
@@ -129,7 +129,8 @@ export async function verificarPagoMovil(
                 rawResponse: data,
             };
         }
-    } catch (error: any) {
+    } catch (err: unknown) {
+        const error = err as { name?: string };
         // Timeout del AbortController
         if (error?.name === 'AbortError') {
             console.error('[BDV API] Timeout: la petición tardó más de 15 segundos');

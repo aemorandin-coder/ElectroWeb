@@ -24,13 +24,15 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
+        const user = session.user as { id?: string };
+
         // SECURITY: Only admins can add balance directly
         if (!isAuthorized(session, 'MANAGE_ORDERS')) {
             // Log suspicious attempt
             const metadata = getRequestMetadata(request);
             await createAuditLog({
                 action: 'SECURITY_SUSPICIOUS_ACTIVITY',
-                userId: (session.user as any).id,
+                userId: user.id || '',
                 userEmail: session.user.email || undefined,
                 severity: 'WARNING',
                 details: {
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Rate limiting for admins too
-        const adminId = (session.user as any).id;
+        const adminId = user.id || '';
         const rateLimit = checkRateLimit(adminId, 'admin:balance-add', RATE_LIMITS.SENSITIVE);
 
         if (!rateLimit.success) {

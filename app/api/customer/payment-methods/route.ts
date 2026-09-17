@@ -12,7 +12,7 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
 
     const paymentMethods = await prisma.savedPaymentMethod.findMany({
       where: { userId },
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const body = await req.json();
 
     const {
@@ -132,7 +132,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const body = await req.json();
     const { id, ...updates } = body;
 
@@ -183,7 +183,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 

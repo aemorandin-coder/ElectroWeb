@@ -18,8 +18,7 @@ export async function GET(request: NextRequest) {
         const type = searchParams.get('type') || 'overview';
 
         // Calculate date range
-        const now = new Date();
-        let startDate = new Date();
+        const startDate = new Date();
         switch (period) {
             case '24h':
                 startDate.setHours(startDate.getHours() - 24);
@@ -88,38 +87,38 @@ export async function GET(request: NextRequest) {
 
             try {
                 // Try to fetch analytics data if the model exists
-                if ((prisma as any).analyticsEvent) {
-                    totalPageViews = await (prisma as any).analyticsEvent.count({
+                if (prisma.analyticsEvent) {
+                    totalPageViews = await prisma.analyticsEvent.count({
                         where: {
                             eventType: 'page_view',
                             createdAt: { gte: startDate },
                         },
                     });
-                    totalClicks = await (prisma as any).analyticsEvent.count({
+                    totalClicks = await prisma.analyticsEvent.count({
                         where: {
                             eventType: 'click',
                             createdAt: { gte: startDate },
                         },
                     });
                 }
-            } catch (e) {
+            } catch {
                 // AnalyticsEvent model doesn't exist, use defaults
             }
 
             try {
                 // Try to fetch audit data if the model exists
-                if ((prisma as any).auditLog) {
-                    securityAlerts = await (prisma as any).auditLog.count({
+                if (prisma.auditLog) {
+                    securityAlerts = await prisma.auditLog.count({
                         where: { createdAt: { gte: startDate } },
                     });
-                    criticalAlerts = await (prisma as any).auditLog.count({
+                    criticalAlerts = await prisma.auditLog.count({
                         where: {
                             severity: 'CRITICAL',
                             createdAt: { gte: startDate },
                         },
                     });
                 }
-            } catch (e) {
+            } catch {
                 // AuditLog model doesn't exist, use defaults
             }
 
@@ -237,7 +236,7 @@ export async function GET(request: NextRequest) {
 
         if (type === 'interactions') {
             // Check if AnalyticsEvent model exists
-            if (!(prisma as any).analyticsEvent) {
+            if (!prisma.analyticsEvent) {
                 return NextResponse.json({
                     interactions: {
                         byType: [],
@@ -253,7 +252,7 @@ export async function GET(request: NextRequest) {
 
             try {
                 // Event type breakdown
-                const eventsByType = await (prisma as any).analyticsEvent.groupBy({
+                const eventsByType = await prisma.analyticsEvent.groupBy({
                     by: ['eventType'],
                     _count: true,
                     where: { createdAt: { gte: startDate } },
@@ -261,21 +260,21 @@ export async function GET(request: NextRequest) {
                 });
 
                 // Device breakdown
-                const eventsByDevice = await (prisma as any).analyticsEvent.groupBy({
+                const eventsByDevice = await prisma.analyticsEvent.groupBy({
                     by: ['deviceType'],
                     _count: true,
                     where: { createdAt: { gte: startDate } },
                 });
 
                 // Browser breakdown
-                const eventsByBrowser = await (prisma as any).analyticsEvent.groupBy({
+                const eventsByBrowser = await prisma.analyticsEvent.groupBy({
                     by: ['browser'],
                     _count: true,
                     where: { createdAt: { gte: startDate } },
                 });
 
                 // Top pages
-                const topPages = await (prisma as any).analyticsEvent.groupBy({
+                const topPages = await prisma.analyticsEvent.groupBy({
                     by: ['page'],
                     _count: true,
                     where: {
@@ -288,7 +287,7 @@ export async function GET(request: NextRequest) {
                 });
 
                 // Daily events for chart
-                let dailyEvents: any[] = [];
+                let dailyEvents: unknown[] = [];
                 try {
                     dailyEvents = await prisma.$queryRaw`
                         SELECT DATE("createdAt") as date, COUNT(*)::integer as count
@@ -297,7 +296,7 @@ export async function GET(request: NextRequest) {
                         GROUP BY DATE("createdAt")
                         ORDER BY date ASC
                     `;
-                } catch (e) {
+                } catch {
                     // Query failed, use empty array
                 }
 
@@ -311,7 +310,7 @@ export async function GET(request: NextRequest) {
                     },
                     period,
                 });
-            } catch (e) {
+            } catch {
                 return NextResponse.json({
                     interactions: {
                         byType: [],
@@ -328,7 +327,7 @@ export async function GET(request: NextRequest) {
 
         if (type === 'security') {
             // Check if AuditLog model exists
-            if (!(prisma as any).auditLog) {
+            if (!prisma.auditLog) {
                 return NextResponse.json({
                     security: {
                         byType: [],
@@ -343,28 +342,28 @@ export async function GET(request: NextRequest) {
 
             try {
                 // Security events from AuditLog (using action field)
-                const securityByType = await (prisma as any).auditLog.groupBy({
+                const securityByType = await prisma.auditLog.groupBy({
                     by: ['action'],
                     _count: true,
                     where: { createdAt: { gte: startDate } },
                     orderBy: { _count: { action: 'desc' } },
                 });
 
-                const securityBySeverity = await (prisma as any).auditLog.groupBy({
+                const securityBySeverity = await prisma.auditLog.groupBy({
                     by: ['severity'],
                     _count: true,
                     where: { createdAt: { gte: startDate } },
                 });
 
                 // Recent audit logs
-                const recentSecurityLogs = await (prisma as any).auditLog.findMany({
+                const recentSecurityLogs = await prisma.auditLog.findMany({
                     where: { createdAt: { gte: startDate } },
                     orderBy: { createdAt: 'desc' },
                     take: 50,
                 });
 
                 // Top IPs with warning/critical events
-                const suspiciousIPs = await (prisma as any).auditLog.groupBy({
+                const suspiciousIPs = await prisma.auditLog.groupBy({
                     by: ['ipAddress'],
                     _count: true,
                     where: {
@@ -385,7 +384,7 @@ export async function GET(request: NextRequest) {
                     },
                     period,
                 });
-            } catch (e) {
+            } catch {
                 return NextResponse.json({
                     security: {
                         byType: [],

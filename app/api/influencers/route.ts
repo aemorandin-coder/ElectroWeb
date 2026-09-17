@@ -15,7 +15,7 @@ const crearSchema = z.object({
 });
 
 // GET /api/influencers — list all with stats
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await getServerSession(authOptions);
   if (!isAuthorized(session, 'MANAGE_USERS')) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });

@@ -49,7 +49,7 @@ export async function GET(
     }
 
     // Safely convert Decimal fields to Number for proper JSON serialization
-    const safeNumber = (val: any): number | null => {
+    const safeNumber = (val: unknown): number | null => {
       if (val === null || val === undefined) return null;
       const num = Number(val);
       return isNaN(num) ? null : num;
@@ -67,7 +67,8 @@ export async function GET(
     };
 
     return NextResponse.json(formattedProduct);
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message?: string };
     console.error('Error fetching product:', error);
 
     // Handle specific Prisma errors
@@ -113,7 +114,7 @@ export async function PATCH(
       }, { status: 400 });
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     // Only update fields that are provided and exist in schema
     if (body.name !== undefined) updateData.name = body.name;
@@ -139,7 +140,7 @@ export async function PATCH(
     // Handle specs: map specifications -> specs and stringify
     // For digital products, include digitalPricing in specs
     if (body.specifications !== undefined || body.digitalPricing !== undefined) {
-      const specsToSave: Record<string, any> = {};
+      const specsToSave: Record<string, unknown> = {};
 
       // Add regular specifications
       if (body.specifications && typeof body.specifications === 'object') {
@@ -228,7 +229,7 @@ export async function PATCH(
       return tx.product.findUniqueOrThrow({ where: { id }, include: { category: true, digitalVariants: adminVariantsInclude } });
     });
 
-    const safeNum = (v: any) => v != null ? Number(v) : null;
+    const safeNum = (v: unknown) => v != null ? Number(v) : null;
     const formattedProduct = {
       ...product,
       priceUSD: safeNum(product.priceUSD) ?? 0,
@@ -241,7 +242,8 @@ export async function PATCH(
     };
 
     return NextResponse.json(formattedProduct);
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message?: string };
     console.error('Error updating product:', error);
 
     if (error.code === 'P2002') {
@@ -333,7 +335,8 @@ export async function DELETE(
     });
 
     return NextResponse.json({ message: 'Producto eliminado correctamente' });
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message?: string };
     console.error('Error deleting product:', error);
 
     // Handle foreign key constraint errors

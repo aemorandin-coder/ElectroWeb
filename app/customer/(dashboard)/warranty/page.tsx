@@ -81,7 +81,7 @@ export default function WarrantyPage() {
         const result = await response.json();
         // Handle both paginated format { orders: [...] } and legacy array format
         const data = Array.isArray(result) ? result : (result.orders || []);
-        setOrders(data.filter((o: any) => o.status === 'DELIVERED').slice(0, 5));
+        setOrders(data.filter((o: Order) => o.status === 'DELIVERED').slice(0, 5));
       }
     } catch (error) {
       console.error('Error:', error);

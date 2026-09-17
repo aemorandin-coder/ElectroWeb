@@ -36,26 +36,6 @@ function validateMagicBytes(buffer: Buffer, expectedType: string): boolean {
   });
 }
 
-/**
- * Sanitize filename to prevent directory traversal and special characters
- */
-function sanitizeFilename(filename: string): string {
-  // Remove path components and special characters
-  const sanitized = filename
-    .replace(/[^a-zA-Z0-9.-]/g, '_')
-    .replace(/\.{2,}/g, '.')
-    .substring(0, 100);
-
-  // Ensure it has a valid extension
-  const ext = sanitized.split('.').pop()?.toLowerCase();
-  const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-
-  if (!ext || !validExtensions.includes(ext)) {
-    return `image_${Date.now()}.jpg`;
-  }
-
-  return sanitized;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +44,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
-    const userId = (session?.user as any)?.id || 'unknown';
+    const userId = (session?.user as { id?: string } | undefined)?.id || 'unknown';
 
     // Rate limiting
     const rateLimit = checkRateLimit(userId, 'upload:image', UPLOAD_RATE_LIMIT);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import Link from 'next/link';
@@ -57,12 +57,6 @@ function formatDuration(secs: number) {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
-}
-
-function formatProgress(mins: number) {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
 export default function CoursePlayer({ course, enrollment, isCreatorPreview = false }: Props) {

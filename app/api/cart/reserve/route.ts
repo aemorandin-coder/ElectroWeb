@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
             expiresAt,
             message: 'Stock reservado por 15 minutos'
         });
-    } catch (error: any) {
+    } catch (err: unknown) {
+    const error = err as { message?: string };
         console.error('Error reserving stock:', error);
         return NextResponse.json({
             error: error.message || 'Error al reservar stock'

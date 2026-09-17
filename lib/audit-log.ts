@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 /**
  * Tipos de acciones que se registran en el audit log
@@ -53,7 +54,7 @@ interface AuditLogParams {
     userEmail?: string;
     targetType?: string; // 'USER', 'PRODUCT', 'ORDER', 'SETTINGS', etc.
     targetId?: string;
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
     ipAddress?: string;
     userAgent?: string;
     severity?: AuditSeverity;
@@ -117,7 +118,7 @@ export async function logAdminAction(
     adminEmail: string,
     action: AuditAction,
     target: { type: string; id?: string },
-    details: Record<string, any>,
+    details: Record<string, unknown>,
     request?: Request
 ) {
     const metadata = request ? getRequestMetadata(request) : {};
@@ -177,7 +178,7 @@ export async function queryAuditLogs(filters: {
     limit?: number;
     offset?: number;
 }) {
-    const where: any = {};
+    const where: Prisma.AuditLogWhereInput = {};
 
     if (filters.userId) where.userId = filters.userId;
     if (filters.action) where.action = filters.action;

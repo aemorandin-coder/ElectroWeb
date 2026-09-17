@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { createNotification } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
 
-    const where: any = {};
+    const where: Prisma.ProductRequestWhereInput = {};
 
     if (status && status !== 'all') {
       where.status = status;

@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type DigitalVariantInput } from '@/lib/digital-variants';
-import { createNotification } from '@/lib/notifications';
 import { generateShortCode } from '@/lib/short-code';
 
 export async function GET(request: NextRequest) {
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const all = searchParams.get('all') === 'true'; // For admin panel that needs all products
     const skip = (page - 1) * limit;
 
-    const where: any = {
+    const where: Prisma.ProductWhereInput = {
       OR: search ? [
         { name: { contains: search, mode: 'insensitive' } },
         { sku: { contains: search, mode: 'insensitive' } },
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       ...(all ? {} : { take: limit, skip }),
     });
 
-    const safeNum = (v: any) => v != null ? Number(v) : null;
+    const safeNum = (v: unknown) => v != null ? Number(v) : null;
     const formattedProducts = products.map(p => ({
       ...p,
       priceUSD: safeNum(p.priceUSD) ?? 0,
@@ -226,7 +226,8 @@ export async function POST(request: NextRequest) {
     // TODO: Implement proper admin notifications
 
     return NextResponse.json(product, { status: 201 });
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message?: string };
     console.error('Error creating product:', error);
 
     // Handle Prisma errors
@@ -282,7 +283,7 @@ export async function PATCH(request: NextRequest) {
     ];
 
     // Filter body to only include allowed fields
-    const filteredData: Record<string, any> = {};
+    const filteredData: Record<string, unknown> = {};
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
         filteredData[field] = body[field];
@@ -291,28 +292,28 @@ export async function PATCH(request: NextRequest) {
 
     // Parse numeric fields safely
     if (filteredData.priceUSD !== undefined) {
-      filteredData.priceUSD = parseFloat(filteredData.priceUSD);
-      if (isNaN(filteredData.priceUSD) || filteredData.priceUSD < 0) {
+      const price = parseFloat(String(filteredData.priceUSD));
+      if (isNaN(price) || price < 0) {
         return NextResponse.json({ error: 'Precio inválido' }, { status: 400 });
       }
+      filteredData.priceUSD = price;
     }
 
     if (filteredData.stock !== undefined) {
-      filteredData.stock = parseInt(filteredData.stock);
-      if (isNaN(filteredData.stock) || filteredData.stock < 0) {
+      const stock = parseInt(String(filteredData.stock), 10);
+      if (isNaN(stock) || stock < 0) {
         return NextResponse.json({ error: 'Stock inválido' }, { status: 400 });
       }
+      filteredData.stock = stock;
     }
 
     if (filteredData.minStock !== undefined) {
-      filteredData.minStock = parseInt(filteredData.minStock);
-      if (isNaN(filteredData.minStock) || filteredData.minStock < 0) {
-        filteredData.minStock = 0;
-      }
+      const minStock = parseInt(String(filteredData.minStock), 10);
+      filteredData.minStock = (isNaN(minStock) || minStock < 0) ? 0 : minStock;
     }
 
     // Validate status if provided
-    if (filteredData.status && !['PUBLISHED', 'DRAFT', 'ARCHIVED'].includes(filteredData.status)) {
+    if (filteredData.status && !['PUBLISHED', 'DRAFT', 'ARCHIVED'].includes(String(filteredData.status))) {
       return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
     }
 

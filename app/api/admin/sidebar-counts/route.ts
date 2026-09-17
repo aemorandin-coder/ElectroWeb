@@ -14,12 +14,13 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const role = (session.user as any).role;
+    const user = session.user as { role?: string; id?: string };
+    const role = user.role;
     if (role !== 'ADMIN' && role !== 'SUPER_ADMIN' && role !== 'SUPPORT') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = user.id;
 
     const [
       pendingOrders,

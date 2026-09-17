@@ -378,14 +378,14 @@ export default function CheckoutPage() {
     setError('');
 
     if (!session?.user) {
-      setError('Debes iniciar sesion para realizar un pedido');
+      setError('Debes iniciar sesión para realizar un pedido');
       router.push('/login?callbackUrl=%2Fcheckout');
       return;
     }
 
     // Check if email is verified
     if (!(session.user as any).emailVerified) {
-      setError('Debes verificar tu correo electronico antes de realizar compras. Revisa tu bandeja de entrada y haz clic en el enlace de verificacion.');
+      setError('Debes verificar tu correo electrónico antes de realizar compras. Revisa tu bandeja de entrada y haz clic en el enlace de verificación.');
       setLoading(false);
       return;
     }

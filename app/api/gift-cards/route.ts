@@ -115,7 +115,6 @@ export async function POST(request: Request) {
             orderId,
             // Admin-specific fields
             forPrint = false, // Flag for physical cards
-            quantity = 1      // Number of cards to generate
         } = body;
 
         // Auto-detect if it's a gift when recipient email is provided (la compra de un cliente siempre es para un destinatario)

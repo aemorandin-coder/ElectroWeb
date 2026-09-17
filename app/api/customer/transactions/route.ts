@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 // GET /api/customer/transactions - Obtener historial de transacciones
 export async function GET(req: NextRequest) {
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const { searchParams } = new URL(req.url);
 
     // Paginación
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Construir filtros
-    const where: any = {
+    const where: Prisma.TransactionWhereInput = {
       balanceId: userBalance.id,
     };
 

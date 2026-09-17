@@ -29,7 +29,7 @@ async function convertDataURIToFile(
         // Extract the base64 data and mime type
         const matches = dataUri.match(/^data:image\/([a-zA-Z+]+);base64,(.+)$/);
         if (!matches) {
-            console.warn(`  ⚠️  Invalid data URI format for ${fieldName}`);
+            console.warn(`  [AVISO] Invalid data URI format for ${fieldName}`);
             return null;
         }
 
@@ -51,23 +51,23 @@ async function convertDataURIToFile(
         const buffer = Buffer.from(base64Data, 'base64');
         await writeFile(filepath, buffer);
 
-        console.log(`  ✅ Saved ${fieldName}: /uploads/${filename} (${buffer.length} bytes)`);
+        console.log(`  [OK] Saved ${fieldName}: /uploads/${filename} (${buffer.length} bytes)`);
 
         return `/uploads/${filename}`;
     } catch (error) {
-        console.error(`  ❌ Error converting ${fieldName}:`, error);
+        console.error(`  [ERROR] Error converting ${fieldName}:`, error);
         return null;
     }
 }
 
 async function main() {
-    console.log('🔍 Scanning database for data URI images...\n');
+    console.log('[AVISO] Scanning database for data URI images...\n');
 
     // Ensure upload directory exists
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
     if (!existsSync(uploadDir)) {
         await mkdir(uploadDir, { recursive: true });
-        console.log(`📁 Created upload directory: ${uploadDir}\n`);
+        console.log(`[OK] Created upload directory: ${uploadDir}\n`);
     }
 
     // Get company settings
@@ -93,7 +93,7 @@ async function main() {
         }
 
         if (value.startsWith('data:')) {
-            console.log(`📦 ${field}: Found data URI (${value.length} chars)`);
+            console.log(`[AVISO] ${field}: Found data URI (${value.length} chars)`);
 
             const newUrl = await convertDataURIToFile(value, field, uploadDir);
             if (newUrl) {
@@ -101,22 +101,22 @@ async function main() {
                 hasChanges = true;
             }
         } else if (value.startsWith('/') || value.startsWith('http')) {
-            console.log(`✓  ${field}: Already a proper URL - ${value}`);
+            console.log(`[OK] ${field}: Already a proper URL - ${value}`);
         } else {
-            console.log(`❓ ${field}: Unknown format - ${value.substring(0, 50)}...`);
+            console.log(`[AVISO] ${field}: Unknown format - ${value.substring(0, 50)}...`);
         }
     }
 
     // Update database if there are changes
     if (hasChanges) {
-        console.log('\n💾 Updating database...');
+        console.log('\n[AVISO] Updating database...');
 
         await prisma.companySettings.update({
             where: { id: 'default' },
             data: updatedFields,
         });
 
-        console.log('✅ Database updated successfully!\n');
+        console.log('[OK] Database updated successfully!\n');
         console.log('Updated fields:');
         for (const [field, url] of Object.entries(updatedFields)) {
             console.log(`  - ${field}: ${url}`);
@@ -125,12 +125,12 @@ async function main() {
         console.log('\nℹ️  No data URIs found that need conversion.');
     }
 
-    console.log('\n🎉 Migration complete!');
+    console.log('\n[OK] Migration complete!');
 }
 
 main()
     .catch((error) => {
-        console.error('❌ Migration failed:', error);
+        console.error('[ERROR] Migration failed:', error);
         process.exit(1);
     })
     .finally(async () => {

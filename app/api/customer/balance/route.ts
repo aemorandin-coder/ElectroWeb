@@ -12,7 +12,7 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
 
     // Get or create user balance
     let userBalance = await prisma.userBalance.findUnique({

@@ -43,7 +43,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
 
   if (!course) notFound();
 
-  const userId = (session?.user as any)?.id;
+  const userId = (session?.user as { id?: string } | undefined)?.id;
   let enrollment = null;
   let userBalance = null;
 

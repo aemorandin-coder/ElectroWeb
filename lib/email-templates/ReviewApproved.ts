@@ -1,4 +1,3 @@
-import { generateReviewReminderEmail } from './ReviewReminder';
 
 interface ReviewApprovedData {
     companyName: string;
@@ -12,8 +11,7 @@ interface ReviewApprovedData {
 export function generateReviewApprovedEmail(data: ReviewApprovedData): string {
     const { companyName, companyLogo, customerName, productName, productUrl, rating } = data;
 
-    const stars = '⭐'.repeat(rating);
-
+  
     return `
     <!DOCTYPE html>
     <html lang="es">
@@ -126,8 +124,8 @@ export function generateReviewApprovedEmail(data: ReviewApprovedData): string {
           <div class="rating-display">
             ${[...Array(5)].map((_, i) =>
         i < rating
-            ? '<span style="color: #ffc107;">★</span>'
-            : '<span style="color: #e9ecef;">★</span>'
+            ? '<span style="color: #ffc107;">&#9733;</span>'
+            : '<span style="color: #e9ecef;">&#9733;</span>'
     ).join('')}
           </div>
 

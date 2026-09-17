@@ -10,7 +10,7 @@ export async function GET() {
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const creator = await prisma.courseCreator.findUnique({
       where: { userId },
       include: { _count: { select: { courses: true } } },
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const { displayName, bio, expertise } = await request.json();
 
     if (!displayName) {
@@ -67,7 +67,7 @@ export async function PATCH(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const body = await request.json();
 
     const creator = await prisma.courseCreator.update({

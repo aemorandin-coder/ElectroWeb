@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
 
     const review = await prisma.serviceReview.upsert({
       where: { serviceVideoId_userId: { serviceVideoId, userId } },

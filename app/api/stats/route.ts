@@ -123,7 +123,8 @@ export async function GET() {
         businessVerifications: pendingBusinessVerifications,
       }
     });
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as { message?: string; code?: string; stack?: string };
     console.error('Error fetching stats:', {
       message: error?.message,
       code: error?.code,

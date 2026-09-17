@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         const os = userAgent.match(/(Windows|Mac OS|Linux|Android|iOS)/i)?.[0] || 'unknown';
 
         // Sanitize optional string fields
-        const sanitizeString = (val: any, maxLen: number = 255): string | null => {
+        const sanitizeString = (val: unknown, maxLen: number = 255): string | null => {
             if (!val || typeof val !== 'string') return null;
             return val.substring(0, maxLen).replace(/<[^>]*>/g, ''); // Strip HTML
         };

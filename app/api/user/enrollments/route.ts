@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
 
     const enrollments = await prisma.courseEnrollment.findMany({
       where: { userId },

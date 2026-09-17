@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
-        const userId = (session.user as any).id;
+        const userId = (session.user as { id: string }).id;
 
         // Rate limiting
         const rateLimit = checkRateLimit(userId, 'balance:deduct', RATE_LIMITS.SENSITIVE);
@@ -136,11 +136,11 @@ export async function POST(request: NextRequest) {
             transactionId: result.transaction.id,
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error deducting balance:', error);
 
         // Handle optimistic locking failure (balance changed during transaction)
-        if (error.code === 'P2025') {
+        if ((error as { code?: string })?.code === 'P2025') {
             return NextResponse.json({
                 error: 'El saldo cambió durante la operación. Por favor, intenta de nuevo.',
                 retry: true,

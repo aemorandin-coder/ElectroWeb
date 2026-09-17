@@ -50,7 +50,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, phone, bio, birthdate, gender } = body;
+    const { name, phone } = body;
 
     // Update user name if provided
     if (name) {

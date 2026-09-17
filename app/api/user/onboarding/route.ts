@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
  *
  * Issue #26 (Bloque 3) — Tour guiado post-registro
  */
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
 
     // Intentar actualizar el campo onboardingCompleted si existe en el schema
     // (fire-and-forget — si el campo no existe en Prisma aún, no falla la app)

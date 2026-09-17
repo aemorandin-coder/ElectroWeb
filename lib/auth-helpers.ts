@@ -7,7 +7,7 @@ import { Session } from 'next-auth';
 export function hasPermission(session: Session | null, permission: string): boolean {
     if (!session) return false;
 
-    const user = session.user as any;
+    const user = session.user as { role?: string; permissions?: string[] };
     const userRole = user?.role;
     const userPermissions = user?.permissions || [];
 

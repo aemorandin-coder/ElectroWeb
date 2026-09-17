@@ -15,7 +15,7 @@ export async function PATCH(
     }
 
     const { slug } = await params;
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const { lessonId, completed } = await request.json();
 
     const course = await prisma.course.findUnique({
@@ -72,8 +72,9 @@ export async function PATCH(
 
     // Send certificate email asynchronously (don't block the response)
     if (justCompleted && certificateId) {
-      const userEmail = (session.user as any).email;
-      const userName = (session.user as any).name || 'Estudiante';
+      const user = session.user as { email?: string | null; name?: string | null };
+      const userEmail = user.email || '';
+      const userName = user.name || 'Estudiante';
       const instructorName = course.creator?.displayName || course.instructor || 'ElectroShop';
       const completedAtDate = completedAt ?? new Date();
 

@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const userId = searchParams.get('userId');
-    const userRole = (session.user as any)?.role;
+    const userRole = (session.user as { role?: string })?.role;
 
     // PERFORMANCE: Pagination
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     const all = searchParams.get('all') === 'true'; // For exports
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.OrderWhereInput = {};
 
     // If user is a customer (not admin), only show their orders
     if (userRole === 'USER') {
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (status && status !== 'all') {
-      where.status = status;
+      where.status = status as Prisma.OrderWhereInput['status'];
     }
 
     // Count total for pagination

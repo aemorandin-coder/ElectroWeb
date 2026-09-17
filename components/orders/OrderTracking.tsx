@@ -36,10 +36,6 @@ const pickupSteps = [
 
 export default function OrderTracking({
     status,
-    createdAt,
-    paidAt,
-    shippedAt,
-    deliveredAt,
     deliveryMethod,
     shippingCarrier,
     trackingNumber,

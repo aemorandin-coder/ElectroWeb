@@ -12,7 +12,7 @@ export default async function CoursePlayerPage({ params }: { params: Promise<{ s
     redirect(`/login?redirect=/cursos/${slug}/aprender`);
   }
 
-  const userId = (session.user as any).id;
+  const userId = (session.user as { id: string }).id;
 
   const course = await prisma.course.findUnique({
     where: { slug, isActive: true },

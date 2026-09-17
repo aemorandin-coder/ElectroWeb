@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const userName = session.user.name || session.user.email || 'Usuario';
     const body = await req.json().catch(() => null);
     const amount = Number(body?.amount);

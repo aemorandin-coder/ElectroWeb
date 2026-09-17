@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -13,6 +13,7 @@ import { BsCardList, BsNintendoSwitch } from 'react-icons/bs';
 import { SiSteam, SiPlaystation, SiRoblox, SiNetflix, SiSpotify, SiApple } from 'react-icons/si';
 import { FaGamepad } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import PlatformScratchCard from './_components/PlatformScratchCard';
 
 interface DigitalCode {
     id: string;
@@ -61,131 +62,6 @@ const platformIcons: Record<string, React.ReactNode> = {
     APPLE: <SiApple className="w-4 h-4" />,
     ITUNES: <SiApple className="w-4 h-4" />,
 };
-
-// ScratchCard Component
-function ScratchCard({
-    code,
-    onReveal,
-    isAlreadyRevealed,
-    onCopy
-}: {
-    code: string,
-    onReveal: () => void,
-    isAlreadyRevealed: boolean,
-    onCopy: () => void
-}) {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [isInternalRevealed, setIsInternalRevealed] = useState(isAlreadyRevealed);
-    const [isRevealing, setIsRevealing] = useState(false);
-
-    useEffect(() => {
-        setIsInternalRevealed(isAlreadyRevealed);
-    }, [isAlreadyRevealed]);
-
-    useEffect(() => {
-        if (isInternalRevealed) return;
-
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (!ctx) return;
-
-        const resize = () => {
-            const container = canvas.parentElement;
-            if (container) {
-                canvas.width = container.offsetWidth;
-                canvas.height = container.offsetHeight;
-                drawCover();
-            }
-        };
-
-        const drawCover = () => {
-            if (!ctx) return;
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-            gradient.addColorStop(0, '#1a3b7e');
-            gradient.addColorStop(1, '#1e4ba3');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 1;
-            for (let i = 0; i < canvas.width; i += 4) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0); ctx.lineTo(i + 20, canvas.height);
-                ctx.stroke();
-            }
-
-            ctx.font = 'bold 11px system-ui';
-            ctx.fillStyle = 'rgba(255,255,255,0.9)';
-            ctx.textAlign = 'center';
-            ctx.fillText('RASPAR PARA REVELAR', canvas.width / 2, canvas.height / 2 + 4);
-        };
-
-        resize();
-        window.addEventListener('resize', resize);
-        return () => window.removeEventListener('resize', resize);
-    }, [isInternalRevealed]);
-
-    const scratch = (e: any) => {
-        if (isInternalRevealed) return;
-        setIsRevealing(true);
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        const rect = canvas.getBoundingClientRect();
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        if (clientX === undefined || clientY === undefined) return;
-
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath();
-        ctx.arc(x, y, 22, 0, Math.PI * 2);
-        ctx.fill();
-
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const pixels = imageData.data;
-        let transparent = 0;
-        for (let i = 0; i < pixels.length; i += 4) {
-            if (pixels[i + 3] === 0) transparent++;
-        }
-
-        if (transparent / (pixels.length / 4) > 0.40) {
-            setIsInternalRevealed(true);
-            onReveal();
-        }
-    };
-
-    return (
-        <div className="relative w-full h-9 rounded-lg overflow-hidden border border-line">
-            {/* The Code underneath */}
-            <div
-                onClick={() => isInternalRevealed && onCopy()}
-                className={`relative z-10 h-full bg-brand-950 flex items-center justify-center font-mono text-xs font-bold text-white tracking-widest ${isInternalRevealed ? 'cursor-pointer hover:bg-ink active:bg-brand-950 transition-colors' : ''}`}
-            >
-                <span className="truncate px-2">{code}</span>
-                {isInternalRevealed && (
-                    <span className="absolute right-2 text-brand-200 text-xs font-sans">COPIAR</span>
-                )}
-            </div>
-
-            {/* The Scratch Layer */}
-            {!isInternalRevealed && (
-                <canvas
-                    ref={canvasRef}
-                    onMouseMove={scratch}
-                    onTouchMove={scratch}
-                    className="absolute inset-0 z-20 cursor-crosshair touch-none transition-opacity duration-500"
-                    style={{ opacity: isRevealing ? 0.85 : 1 }}
-                />
-            )}
-        </div>
-    );
-}
 
 export default function DigitalCodesPage() {
     const params = useParams();
@@ -343,7 +219,7 @@ export default function DigitalCodesPage() {
 
                         <div className="text-right">
                             <p className="text-ink text-xs font-bold">#{data.orderNumber}</p>
-                            <p className="text-xs text-brand-600 font-bold uppercase tracking-wider">Digital Delivery</p>
+                            <p className="text-xs text-brand-600 font-bold uppercase tracking-wider">Códigos digitales</p>
                         </div>
                     </div>
                 </div>
@@ -359,7 +235,7 @@ export default function DigitalCodesPage() {
                         return (
                             <div
                                 key={item.orderItemId}
-                                className="bg-white rounded-xl overflow-hidden border border-line shadow-sm"
+                                className="rounded-2xl border border-line bg-white"
                             >
                                 <button
                                     onClick={() => toggleExpand(item.orderItemId)}
@@ -405,17 +281,17 @@ export default function DigitalCodesPage() {
                                 </button>
 
                                 {/* Collapsible Codes Section */}
-                                <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                                    <div className="px-3 pb-3 space-y-2 bg-white rounded-b-xl pt-2">
+                                <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100' : 'hidden'}`}>
+                                    <div className="grid gap-5 bg-white px-3 pb-4 pt-2 lg:grid-cols-2">
                                         {item.codes.length > 0 ? (
                                             item.codes.map((code, index) => (
                                                 <div
                                                     key={code.id}
-                                                    className="bg-surface rounded-lg p-2 border border-line"
+                                                    className="py-4"
                                                 >
                                                     <div className="flex items-center justify-between mb-1.5">
                                                         <span className="text-xs font-bold text-muted uppercase">
-                                                            Confirmación de recarga {item.codes.length > 1 ? `#${index + 1}` : ''}
+                                                            Código digital {item.codes.length > 1 ? `#${index + 1}` : ''}
                                                         </span>
                                                         {revealedCodes[code.id] && (
                                                             <span className="text-xs text-success-strong font-bold uppercase flex items-center gap-0.5 bg-success-strong/10 border border-success-strong/20 px-1.5 py-0.5 rounded-full">
@@ -425,10 +301,14 @@ export default function DigitalCodesPage() {
                                                         )}
                                                     </div>
 
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex-1">
-                                                            <ScratchCard
+                                                    <div className="flex flex-col gap-3">
+                                                        <div className="min-w-0 flex-1">
+                                                            <PlatformScratchCard
                                                                 code={code.code}
+                                                                platform={item.platform}
+                                                                productName={item.productName}
+                                                                image={item.image}
+                                                                region={item.region}
                                                                 onReveal={() => handleReveal(code.id)}
                                                                 isAlreadyRevealed={!!revealedCodes[code.id]}
                                                                 onCopy={() => copyCode(code.id, code.code)}
@@ -438,13 +318,16 @@ export default function DigitalCodesPage() {
                                                         <button
                                                             onClick={() => copyCode(code.id, code.code)}
                                                             disabled={!revealedCodes[code.id]}
-                                                            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all border ${copiedCodes[code.id]
+                                                            aria-label={copiedCodes[code.id] ? 'Código copiado' : 'Copiar código'}
+                                                            title="Copiar código"
+                                                            className={`h-11 self-center px-4 rounded-lg flex items-center justify-center gap-2 transition-colors border ${copiedCodes[code.id]
                                                                 ? 'bg-success-strong/10 text-success-strong border-success-strong/30'
                                                                 : revealedCodes[code.id]
                                                                     ? 'bg-brand-50 text-brand-600 border-brand-200 hover:bg-brand-100'
                                                                     : 'bg-line text-subtle border-line cursor-not-allowed'
                                                                 }`}
                                                         >
+                                                            <span className="text-sm font-semibold">{copiedCodes[code.id] ? 'Copiado' : 'Copiar código'}</span>
                                                             {copiedCodes[code.id] ? (
                                                                 <FiCheck className="w-4 h-4" />
                                                             ) : (

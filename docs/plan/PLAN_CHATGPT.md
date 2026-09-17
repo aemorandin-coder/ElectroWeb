@@ -98,9 +98,135 @@ QA: pedir recuperación con un correo con mayúsculas; enlace vencido; verificac
 
 ---
 
-## Ronda R2 (borrador, se detalla al revisar R1)
-- Resto del panel admin: métodos de pago, mensajes y solicitudes, reseñas, descuentos, solicitudes de producto, verificaciones, categorías, trabajos realizados y legales.
-- Panel del cliente (cuando Gemini lo suelte): a 390 px el número de pedido se parte en tres líneas, la barra inferior deja ver el contenido detrás y el perfil abre la hoja "¿Sabías que…?" apenas entra.
-- Páginas públicas de contenido (servicios, cursos, contacto, gift cards): jerarquía de la primera pantalla.
+## Resultado de GPT-01 y GPT-02 (revisión C-91, 17/09)
+**Aprobadas y en `main`.** Ninguna llamada, cuerpo, destino ni guardado cambió. El inventario de acciones se cumplió, y el raspado con física funciona con puntero real a 390 y 1440 px.
+
+Pendientes que se corrigen dentro de R1:
+- **Órdenes en el teléfono:**
+  - El ojo de "ver detalle" queda solo en una fila: toda la tarjeta abre el detalle y el ojo sale.
+  - "Actualizar" es un botón grande: pasa a botón de ícono con `aria-label`.
+  - Las métricas se deslizan de lado sin indicio: 2×2 compactas o una fila con degradado de borde.
+- Borra `docs/plan/estado/GPT-02-preview.html`: en `estado/` solo van los `GPT-XX.md`.
+- Firma cada commit como ChatGPT (`CHATGPT.md` §3). GPT-02 salió firmado "Gemini".
+
+### GPT-02b · "Cliente eliminado" en órdenes sin cliente · Depende: GPT-02
+Incidente del 17/09 (`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`): al borrar clientes en la base, sus órdenes quedan con `userId` nulo y el panel las muestra como "Invitado".
+- En `app/admin/(dashboard)/orders/page.tsx`, tarjeta, tabla y detalle:
+  - Si `!order.userId && !order.guestEmail` → "Cliente eliminado", con `adminBadge('neutral')` e ícono `FiUserX`.
+  - Si hay `guestEmail` → "Invitado" y el correo.
+- Si la API no manda `userId` o `guestEmail` en la lista, **no la cambies**: `PEDIDO:` en el estado.
+
+**Criterio:** una orden con `userId` nulo dice "Cliente eliminado" a 390 y 1440 px, y cancelar esa orden sigue funcionando.
+
+---
+
+## Cómo trabajar las rondas largas (R2 y R3)
+Claude descansa 3 días: nadie revisa ni mergea hasta que vuelva. Trabaja así para que la revisión sea rápida y nada se pierda:
+
+1. **Ramas encadenadas.** R2 sale de `chatgpt/R1` después del último commit de R1 (`git switch -c chatgpt/R2 chatgpt/R1`), y R3 sale de `chatgpt/R2`. No hagas `git merge main` ni `rebase`.
+2. **Un commit por tarjeta, en orden**, firmado como ChatGPT. Si una tarjeta es muy grande, varios commits `[GPT-XX] parte 1/3…`; cada uno compila solo.
+3. **Antes de escribir código, en cada tarjeta, crea `docs/plan/estado/GPT-XX.md` con cuatro secciones:**
+   - **Mapa:** archivos, líneas, qué pide cada `fetch` y qué recibe.
+   - **Inventario de acciones:** cada botón, filtro, atajo y modal, con su permiso.
+   - **Problemas:** con captura o medida (px, número de clics hasta la tarea).
+   - **Propuesta:** un boceto ASCII de la primera pantalla a 390 px y a 1440 px, y qué se mueve a segundo nivel.
+4. **Implementa por partes:**
+   1. La estructura: encabezado, barra de filtros y lista.
+   2. El detalle y los modales.
+   3. Los estados: vacío, cargando y error.
+
+   Corre `npx tsc --noEmit` y `npx eslint` al cerrar cada parte.
+5. **Autorrevisión antes del commit:**
+   - Los mismos `fetch`, `method`, `body`, `href` y `router.push` que al inicio. Lístalos con `grep -oE "fetch\(|method:|router\.push|href=" <archivo> | sort | uniq -c` antes y después, y pega las dos salidas.
+   - El inventario completo, la acción por acción probada, y las capturas a 360, 768, 1024 y 1440 px.
+6. **Componentes locales** en `_components/` de la carpeta de la página. Si dos pantallas necesitan la misma pieza, **no la muevas a `components/`**: escribe `PEDIDO:` y Claude decide si pasa a `lib/admin-ui.ts` o a `components/admin/`.
+7. **Si te bloqueas** (una API no devuelve lo que la pantalla necesita, un permiso raro):
+   - `PEDIDO:` o `BLOQUEADO — motivo` en el estado, y sigues con otra parte.
+   - **Nunca cambies una API**: el carril de APIs es de Claude.
+
+---
+
+## Ronda R2 (muy pesada) · Productos del admin · GPT-07 → GPT-11
+La zona más compleja del panel (antes C-51 de Claude, reasignada a ChatGPT el 17/09). 5.211 líneas en 19 archivos:
+- `products/page.tsx` (1.544): lista, estadísticas, filtros, carga masiva, exportar, edición rápida, pestaña SADES.
+- `_components/ProductWizard.tsx` (520) y `wizard/**` (13 archivos): alta y edición por pasos, físico y digital.
+- `_components/ProductForm.tsx` (1.057): **sin uso** (ningún archivo lo importa).
+- `products/new` y `products/[id]`: envoltorios del wizard.
+
+**Lo que no cambia en R2** (además de las reglas generales):
+- `/api/products`, `/api/products/[id]`, `/api/products/bulk/*`, `/api/categories`, `/api/upload`, `/api/admin/sades/*`: mismas URLs, métodos y cuerpos.
+- Los tipos de `wizard/types.ts` y las validaciones del wizard (qué campo es obligatorio en qué paso).
+- Precios: el admin escribe USD; los bolívares se muestran con `formatVES(usd * tasa)` si la pantalla ya tiene la tasa. **No agregues pedidos de tasa nuevos.**
+
+Hallazgos medidos el 17/09 (tienda de ejemplo):
+- **A 390 px la barra de acciones se sale de la pantalla:** "Nuevo Producto" queda cortado a la derecha y "Edición Rápida" no se ve (9 elementos fuera del ancho).
+- 5 tarjetas de estadísticas ocupan la primera pantalla del teléfono antes del primer producto.
+- Filtros en 3 filas. La tarjeta del producto corta el nombre ("Producto demo…").
+- **Precios con formato propio:** "$ 25.00" en el teléfono y "25 USD" en la tabla, en vez de `formatUSD` ("$25,00").
+- En escritorio los botones de la barra ponen el ícono encima del texto; las acciones de la fila son 4 íconos sin texto ni `aria-label` visible.
+- **7 `alert()` y 1 `confirm()` nativos** en `page.tsx`.
+
+### GPT-07 · Mapa completo de productos · Depende: GPT-06
+Solo el documento `docs/plan/estado/GPT-07.md` (sin código):
+- **Mapa** de los 19 archivos: qué hace cada uno, qué pide a la API y qué recibe.
+- **Inventario** de todas las acciones de la lista, la carga masiva, la edición rápida, la pestaña SADES y cada paso del wizard (físico y digital), con sus validaciones.
+- **Flujos** con el número de clics y pasos de hoy:
+  - crear un físico y crear un digital con montos,
+  - editar el precio o el stock de uno,
+  - cambiar muchos a la vez,
+  - duplicar, desactivar y borrar.
+- **Propuesta:** bocetos ASCII a 390 y 1440 de la lista, de la edición rápida y de cada paso del wizard; qué se fusiona, qué pasa a un menú "Más acciones" y qué sale.
+- **Confirmar con `git grep` que `ProductForm.tsx` no se usa** (pega la salida).
+
+### GPT-08 · Lista de productos · Depende: GPT-07
+`products/page.tsx`: divídelo en `_components/` (estadísticas, barra de acciones, filtros, tabla, tarjeta móvil, modales), manteniendo el estado en la página.
+- **Encabezado:** "Productos" con una sola primaria, "Nuevo producto". Carga masiva, Exportar y Edición rápida van en un menú "Más acciones" o como secundarias que caben a 360 px.
+- Pestañas "Catálogo local / ElectroCaja-SADES" con `adminTab`, sin salirse.
+- Estadísticas como filtros rápidos: tocar "Sin stock" filtra. En el teléfono, una fila compacta.
+- Filtros: búsqueda, categoría y estado en una fila; en el teléfono, búsqueda + botón "Filtros" que abre un panel.
+- **Tabla desde `lg`:** imagen, nombre con SKU debajo, categoría, precio con `formatUSD`, stock con color (sin stock `deal`, bajo `warning`), estado con `adminBadge`, y acciones con `aria-label`.
+- **Tarjeta en el teléfono:** nombre en 2 líneas, precio, stock, estado; acciones Editar y "Más".
+- **`alert()` → `toast`; `confirm()` → `useConfirm`**, con el mismo texto. Borrar un producto pide confirmación en rojo (`adminDangerButton`).
+- Vacío, cargando (esqueleto con la forma de la tabla) y error con "Reintentar".
+
+**Criterio:** nada se sale a 360 px, los 8 diálogos nativos quedan en 0 y el inventario de GPT-07 está completo.
+
+### GPT-09 · Carga masiva, exportar y edición rápida · Depende: GPT-08
+- **Carga masiva:** los pasos visibles (1. Descarga la plantilla → 2. Súbela → 3. Revisa el resultado); errores por fila legibles; sin cerrar el modal al fallar.
+- **Edición rápida:** tabla editable con guardar por fila o "Guardar cambios (N)"; en el teléfono, una tarjeta por producto. Mismo `/api/products/bulk/update` y mismo cuerpo.
+- **Pestaña SADES:** estado de conexión arriba (conectado / sin conexión, con la hora de la última sincronización si llega) y "Sincronizar" como única primaria de esa pestaña.
+
+### GPT-10 · Wizard de alta y edición · Depende: GPT-09
+`ProductWizard.tsx` y `wizard/**`:
+- **Progreso** siempre visible (`WizardProgress`): en el teléfono, "Paso 2 de 4 · Precios" y una barra, no la fila de círculos cortada.
+- **Barra inferior fija** con "Atrás" y "Siguiente/Publicar", siempre a mano (encima de `env(safe-area-inset-bottom)`), y "Guardar borrador" si el wizard ya lo tiene.
+- **Errores** del paso junto al campo (`adminError`) y un resumen arriba si el servidor rechaza al publicar; foco en el primer campo con error.
+- **Tipo de producto** (`StepTypeSelector`): dos tarjetas grandes, iguales de alto, con ejemplos.
+- **Imágenes** (`ImagePanel`): arrastrar o tocar para subir, orden visible y la principal marcada; subida con progreso si ya existe. Mismo `/api/upload`.
+- **Digital:** plataformas con ícono y nombre (`Step1Platform`), montos como chips editables (`Step2Variants`) y entrega clara (`Step3Delivery`).
+- **Publicar** (`StepPublish`): resumen legible de lo que se va a publicar y precio con `formatUSD`.
+- **Modal de SADES** (`SadesSearchModal`): recetas de modal y `useBodyScrollLock`; resultados con precio y stock.
+
+**Criterio:** crear un físico y un digital de punta a punta a 390 y 1440 px con los mismos datos enviados que antes. Pega en el estado el cuerpo del `POST` de antes y de después (DevTools → Red): deben ser iguales.
+
+### GPT-11 · Limpieza de productos · Depende: GPT-10
+- Borra `_components/ProductForm.tsx` **solo si** `git grep -n "ProductForm" -- app components lib` no devuelve ningún `import` (pega la salida). Es la única eliminación permitida en R2.
+- ESLint de todos los archivos de `products/**` sin problemas nuevos. Resuelve los `any` y las variables sin uso de los archivos que tocaste.
+- Recorrido final a 360, 768, 1024 y 1440 px de la lista, la edición rápida, la carga masiva, SADES y el wizard.
+
+---
+
+## Ronda R3 (pesada) · El resto del panel con la misma anatomía · GPT-12 → GPT-16
+Mismas reglas y método. Cada pantalla sigue `CHATGPT.md` §4.1 (encabezado → por atender → números → filtros → lista → estados).
+
+| ID | Pantallas | Líneas | Foco |
+|---|---|---|---|
+| **GPT-12** | `payments/**` (métodos de pago) | 1.084 | Qué métodos están activos arriba. Editar cada método en un modal con sus campos. Datos bancarios legibles y con botón de copiar. |
+| **GPT-13** | `inquiries/**`, `messages/**` | 990 | Bandeja: sin leer primero, respuesta rápida, estado con badge; en el teléfono lista → detalle a pantalla completa. |
+| **GPT-14** | `product-requests/**`, `discount-requests/**` | 816 | Pendientes por aprobar arriba, aprobar y rechazar con motivo en `useConfirm` o modal, y el historial abajo. |
+| **GPT-15** | `reviews/**`, `verifications/**` | 654 | Moderación en cola: una reseña o verificación a la vez con aprobar y rechazar a mano. Los documentos de empresa se abren en un visor (misma URL privada). |
+| **GPT-16** | `categories/**`, `servicios/**` (trabajos realizados), `legal/**` | 2.101 | Categorías como árbol o lista ordenable si ya existe el orden. Servicios con galería. Legal con editor y vista previa lado a lado desde `lg`. |
+
+**Fuera de R3:** `settings/**`, `marketing/**`, `notifications/**`, `cursos/**`, `creators/**` (Claude) y `layout.tsx`.
 
 **Prompt de arranque:** ver `docs/plan/SIGUIENTE.md` §5.

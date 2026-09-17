@@ -1,10 +1,10 @@
 'use client';
 
 import { formatUSD } from '@/lib/currency';
+import { adminCard, adminCardFlush, adminEmpty, adminPageHeader, adminPageTitle, adminPageSubtitle, adminSectionTitle, adminSecondaryButton, adminStatLabel, adminStatValue } from '@/lib/admin-ui';
 
 import { toast } from 'react-hot-toast';
 
-import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -20,7 +20,6 @@ import {
   FiAlertTriangle,
   FiClock,
   FiCheckCircle,
-  FiBell,
   FiChevronRight
 } from 'react-icons/fi';
 
@@ -85,7 +84,6 @@ interface Stats {
 }
 
 export default function AdminDashboard() {
-  const { data: session } = useSession();
   const [stats, setStats] = useState<Stats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -110,9 +108,9 @@ export default function AdminDashboard() {
 
   const dashboardStats = [
     {
-      name: 'Ventas Totales',
+      name: 'Ventas totales',
       value: isLoading ? '...' : formatUSD(stats?.sales?.total || 0),
-      change: '+0%',
+      change: '',
       changeType: 'neutral' as const,
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +122,7 @@ export default function AdminDashboard() {
     {
       name: 'Órdenes',
       value: isLoading ? '...' : (stats?.orders.total.toString() || '0'),
-      change: `+${stats?.orders.pending || 0}`,
+      change: `${stats?.orders.pending || 0} ${(stats?.orders.pending || 0) === 1 ? 'pendiente' : 'pendientes'}`,
       changeType: (stats?.orders.pending || 0) > 0 ? 'positive' as const : 'neutral' as const,
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +134,7 @@ export default function AdminDashboard() {
     {
       name: 'Productos',
       value: isLoading ? '...' : (stats?.products.total.toString() || '0'),
-      change: `+${stats?.products.published || 0}`,
+      change: `${stats?.products.published || 0} ${(stats?.products.published || 0) === 1 ? 'publicado' : 'publicados'}`,
       changeType: (stats?.products.published || 0) > 0 ? 'positive' as const : 'neutral' as const,
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,7 +146,7 @@ export default function AdminDashboard() {
     {
       name: 'Clientes',
       value: isLoading ? '...' : (stats?.customers.total.toString() || '0'),
-      change: '+0',
+      change: '',
       changeType: 'neutral' as const,
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -339,219 +337,104 @@ export default function AdminDashboard() {
     },
   ];
 
+  const pendingLabel = (id: string, count: number) => {
+    const plural = count !== 1;
+    const labels: Record<string, string> = {
+      orders: plural ? 'pedidos por procesar' : 'pedido por procesar',
+      outOfStock: plural ? 'productos sin stock' : 'producto sin stock',
+      creators: plural ? 'solicitudes de creadores' : 'solicitud de creador',
+      discounts: plural ? 'descuentos por aprobar' : 'descuento por aprobar',
+      productRequests: plural ? 'solicitudes especiales' : 'solicitud especial',
+      contactMessages: plural ? 'mensajes de clientes' : 'mensaje de cliente',
+      referrals: plural ? 'referidos por aprobar' : 'referido por aprobar',
+      reviews: plural ? 'reseñas por moderar' : 'reseña por moderar',
+      businessVerifications: plural ? 'perfiles por verificar' : 'perfil por verificar',
+    };
+    return `${count} ${labels[id]}`;
+  };
+
   const activeAlerts = alertsList.filter((alert) => alert.count > 0);
 
   return (
     <div className="space-y-4">
-      {/* Welcome Section */}
-      <div className="bg-brand-600 rounded-lg p-3.5 shadow-md">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-          <div>
-            <h1 className="text-2xl font-bold text-white mb-0.5">
-              Bienvenido, {session?.user?.name}
-            </h1>
-            <p className="text-base text-white/80">
-              Panel de administración de Electro Shop Morandin
-            </p>
-          </div>
+      <header className={adminPageHeader}>
+        <div>
+          <h1 className={adminPageTitle}>Resumen</h1>
+          <p className={adminPageSubtitle}>{new Date().toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
-      </div>
+      </header>
 
-      {/* Unified Action Center */}
-      <div className="bg-white rounded-lg border border-line p-4 shadow-sm animate-scaleIn">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-ink flex items-center gap-2">
-              <FiBell className={`w-4.5 h-4.5 text-brand-500 `} />
-              Centro de Alertas y Aprobaciones
-            </h2>
-            <p className="text-base text-muted">Control y gestión de tareas que requieren tu atención inmediata</p>
-          </div>
-          {totalPendingActions > 0 && (
-            <span className="flex h-5.5 px-2.5 items-center justify-center text-base font-bold bg-deal/10 text-deal rounded-full border border-deal/30">
-              {totalPendingActions} {totalPendingActions === 1 ? 'Alerta' : 'Alertas'}
-            </span>
-          )}
+      <section aria-labelledby="pendientes-titulo" className={adminCardFlush}>
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+          <h2 id="pendientes-titulo" className={adminSectionTitle}>Por atender</h2>
+          {totalPendingActions > 0 && <span className="text-sm text-muted">{totalPendingActions} pendientes</span>}
         </div>
-
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="animate-pulse bg-surface rounded p-3 border border-line h-14"></div>
-            ))}
+          <div role="status" aria-label="Cargando pendientes" className="space-y-2 px-4 pb-4">
+            {[0, 1].map((i) => <div key={i} className="h-11 rounded-lg bg-surface" />)}
           </div>
         ) : totalPendingActions === 0 ? (
-          <div className="flex flex-col items-center justify-center py-5 bg-surface border border-line rounded-lg text-ink">
-            <div className="flex items-center justify-center w-9 h-9 bg-brand-500 text-white rounded-full shadow mb-2">
-              <FiCheckCircle className="w-5 h-5" />
-            </div>
-            <h3 className="text-lg font-bold mb-0.5">¡Todo al día!</h3>
-            <p className="text-base text-muted">No hay tareas pendientes ni aprobaciones que requieran tu atención.</p>
-          </div>
+          <p className="flex items-center gap-2 px-4 pb-3 text-sm text-ink-soft"><FiCheckCircle className="h-4 w-4 text-success-strong" aria-hidden="true" /> Todo al día</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <ul className="divide-y divide-line border-t border-line">
             {activeAlerts.map((alert) => (
-              <Link
-                key={alert.id}
-                href={alert.href}
-                className="group relative flex items-center justify-between p-2.5 rounded-lg border border-line bg-white text-ink hover:bg-surface hover:border-brand-300 transition-all duration-300  shadow-sm hover:shadow"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-brand-50 text-brand-500 border border-brand-200 shadow-sm transition-transform duration-300 ">
-                    {alert.pulse && (
-                      <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-deal"></span>
-                      </span>
-                    )}
-                    {alert.icon}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-ink leading-tight group-hover:text-brand-500 transition-colors duration-300">
-                      {alert.title}
-                    </h3>
-                    <p className="text-base text-muted mt-0.5">{alert.description}</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-white/60 group-hover:bg-brand-500 group-hover:text-white transition-all duration-300 border border-line">
-                  <FiChevronRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
-                </div>
-              </Link>
+              <li key={alert.id}>
+                <Link href={alert.href} className="flex min-h-11 items-center gap-3 px-4 py-3 text-sm text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
+                  <span className="shrink-0 text-muted" aria-hidden="true">{alert.icon}</span>
+                  <span className="min-w-0 flex-1 font-medium">{pendingLabel(alert.id, alert.count)}</span>
+                  <FiChevronRight className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
-      </div>
+      </section>
 
-      {/* Stats Grid - Compact */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {dashboardStats.map((stat, index) => (
-          <div
-            key={stat.name}
-            style={{ animationDelay: `${index * 40}ms` }}
-            className="group relative bg-white rounded-lg border border-line p-3 shadow-sm hover:shadow-md transition-all duration-500  animate-fadeIn overflow-hidden"
-          >
-            <div className="relative flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex items-center justify-center w-9 h-9 bg-brand-50 text-brand-500 border border-brand-200 rounded-full shadow-sm group-hover:bg-brand-500 group-hover:text-white group-hover:border-brand-500 transition-all duration-300">
-                  {stat.icon}
-                </div>
-                <div>
-                  <p className="text-base text-muted font-medium group-hover:text-ink transition-colors duration-300">{stat.name}</p>
-                  <p className="text-2xl font-bold text-ink group-hover:text-brand-500 transition-colors duration-300">{stat.value}</p>
-                </div>
-              </div>
-              <span
-                className={`text-base font-semibold px-1.5 py-0.5 rounded-full transition-all duration-500 ${stat.changeType === 'positive'
-                  ? 'bg-success/10 text-success-strong'
-                  : 'bg-surface text-muted'
-                  }`}
-              >
-                {stat.change}
-              </span>
-            </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {dashboardStats.map((stat) => (
+          <div key={stat.name} className="min-w-0 rounded-2xl border border-line bg-white p-3 sm:p-4">
+            <p className={adminStatLabel}>{stat.name}</p>
+            <p className={`${adminStatValue} mt-1 text-lg tabular-nums [overflow-wrap:anywhere] sm:text-2xl`}>{stat.value}</p>
+            {stat.change && <p className="mt-1 text-xs text-muted">{stat.change}</p>}
           </div>
         ))}
       </div>
 
-      {/* Chart and Quick Actions Grid - Combined Side-by-Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Sales Chart (2/3) */}
-        <div className="lg:col-span-2 bg-white rounded-lg border border-line p-4 shadow-sm animate-scaleIn flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="text-xl font-bold text-ink">Resumen de Ventas</h2>
-              <p className="text-base text-muted">Últimos 7 días</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold text-brand-500">
-                Total: {formatUSD(stats?.sales?.total || 0)}
-              </span>
-            </div>
-          </div>
-
-          <div className="h-[160px] w-full">
-            {isLoading ? (
-              <div className="h-full w-full flex items-center justify-center bg-surface rounded">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
-              </div>
-            ) : stats?.sales?.history && stats.sales.history.length > 0 ? (
-              <ResponsiveContainer width="100%" height={160} minWidth={200}>
-                <AreaChart data={stats.sales.history} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2a63cd" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#2a63cd" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e9ecef" />
-                  <XAxis
-                    dataKey="date"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#6a6c6b', fontSize: 14 }}
-                    dy={5}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#6a6c6b', fontSize: 14 }}
-                    tickFormatter={(value) => `$${value}`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e9ecef',
-                      borderRadius: '6px',
-                      boxShadow: '0 2px 4px -1px rgb(0 0 0 / 0.05)',
-                      fontSize: '14px'
-                    }}
-                    formatter={(value: any) => [formatUSD(Number(value) || 0), 'Ventas']}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="amount"
-                    stroke="#2a63cd"
-                    strokeWidth={1.5}
-                    fillOpacity={1}
-                    fill="url(#colorSales)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full w-full flex flex-col items-center justify-center bg-surface rounded text-muted">
-                <svg className="w-8 h-8 mb-1.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <p className="text-base font-medium">No hay datos de ventas recientes</p>
-              </div>
-            )}
-          </div>
+      <section className={adminCard} aria-labelledby="ventas-titulo">
+        <div className="mb-4">
+          <h2 id="ventas-titulo" className={adminSectionTitle}>Ventas</h2>
+          <p className="text-sm text-muted">Últimos 7 días</p>
         </div>
-
-        {/* Quick Actions (1/3) */}
-        <div className="lg:col-span-1 bg-white rounded-lg border border-line p-4 shadow-sm animate-scaleIn flex flex-col justify-between">
-          <div className="h-full flex flex-col justify-between">
-            <h2 className="text-xl font-bold text-ink mb-3">Accesos Rápidos</h2>
-            <div className="grid grid-cols-2 gap-2.5 h-full">
-              {quickActions.map((action, index) => (
-                <Link
-                  key={action.title}
-                  href={action.href}
-                  style={{ animationDelay: `${index * 60}ms` }}
-                  className="group relative flex flex-col items-center justify-center gap-1 p-2 bg-surface rounded-lg border border-line shadow-sm hover:shadow hover:border-brand-200 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 overflow-hidden"
-                >
-                  <div className="relative flex items-center justify-center w-8 h-8 bg-brand-50 text-brand-500 border border-brand-200 rounded-full shadow-sm group-hover:bg-brand-500 group-hover:text-white transition-all duration-300">
-                    {action.icon}
-                  </div>
-                  <div className="relative text-center">
-                    <p className="text-base font-bold text-ink group-hover:text-brand-500 transition-colors duration-300 leading-tight">{action.title}</p>
-                    <p className="text-sm text-muted mt-0.5 leading-none">{action.description}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+        <div className="h-40 min-w-0 sm:h-56">
+          {isLoading ? (
+            <div role="status" aria-label="Cargando ventas" className="h-full rounded-lg bg-surface" />
+          ) : stats?.sales?.history && stats.sales.history.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <AreaChart data={stats.sales.history} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-line)" />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-muted)', fontSize: 12 }} dy={5} />
+                <YAxis width={76} axisLine={false} tickLine={false} tick={{ fill: 'var(--color-muted)', fontSize: 12 }} tickFormatter={(value) => formatUSD(Number(value))} />
+                <Tooltip formatter={(value) => [formatUSD(Number(value) || 0), 'Ventas']} />
+                <Area type="monotone" dataKey="amount" stroke="var(--color-brand-500)" strokeWidth={1.5} fillOpacity={0.15} fill="var(--color-brand-500)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className={`${adminEmpty} h-full py-4`}><p className="text-sm text-muted">No hay datos de ventas recientes</p></div>
+          )}
         </div>
-      </div>
+      </section>
+
+      <section aria-labelledby="accesos-titulo">
+        <h2 id="accesos-titulo" className={`${adminSectionTitle} mb-3`}>Accesos rápidos</h2>
+        <div className="flex flex-wrap gap-2">
+          {quickActions.map((action) => (
+            <Link key={action.title} href={action.href} title={action.description} className={adminSecondaryButton}>
+              <span aria-hidden="true">{action.icon}</span>{action.title}
+              <span className="sr-only">: {action.description}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

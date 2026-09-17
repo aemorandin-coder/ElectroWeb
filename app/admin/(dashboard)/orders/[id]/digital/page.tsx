@@ -15,6 +15,7 @@ import { SiSteam, SiPlaystation, SiRoblox } from 'react-icons/si';
 import { FaGamepad } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import {
+    adminSecondaryButton,
     adminPageTitle,
     adminPageSubtitle,
     adminSectionTitle,
@@ -200,25 +201,25 @@ export default function AdminDigitalCodesPage() {
     const completedItems = data.digitalItems.filter(item => item.codes.length >= item.quantity);
 
     return (
-        <div className="p-6 max-w-5xl mx-auto">
+        <div className="mx-auto max-w-5xl">
             {/* Header */}
             <div className="mb-6">
                 <Link
                     href="/admin/orders"
-                    className="inline-flex items-center gap-2 text-muted hover:text-ink mb-4 text-sm font-medium"
+                    className={`${adminSecondaryButton} mb-4`}
                 >
                     <FiArrowLeft /> Volver a órdenes
                 </Link>
 
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <div className="flex items-center gap-3">
-                            <div className={adminIconChip('brand')}>
+                            <div className={`${adminIconChip('brand')} hidden sm:flex`}>
                                 <FiMonitor className="w-6 h-6 text-brand-600" />
                             </div>
                             <div>
                                 <h1 className={adminPageTitle}>
-                                    Códigos Digitales
+                                    Códigos digitales
                                 </h1>
                                 <p className={adminPageSubtitle}>Orden #{data.orderNumber}</p>
                             </div>
@@ -247,9 +248,9 @@ export default function AdminDigitalCodesPage() {
             )}
 
             {/* Stats Summary */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className={adminStatCard}>
-                    <span className={adminIconChip('brand')}>
+            <div className="mb-5 flex gap-3 overflow-x-auto pb-1">
+                <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+                    <span className={`${adminIconChip('brand')} hidden sm:flex`}>
                         <FiPackage className="w-5 h-5" />
                     </span>
                     <div>
@@ -257,8 +258,8 @@ export default function AdminDigitalCodesPage() {
                         <p className={adminStatLabel}>Productos digitales</p>
                     </div>
                 </div>
-                <div className={adminStatCard}>
-                    <span className={adminIconChip('warning')}>
+                <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+                    <span className={`${adminIconChip('warning')} hidden sm:flex`}>
                         <FiClock className="w-5 h-5" />
                     </span>
                     <div>
@@ -266,8 +267,8 @@ export default function AdminDigitalCodesPage() {
                         <p className={adminStatLabel}>Pendientes</p>
                     </div>
                 </div>
-                <div className={adminStatCard}>
-                    <span className={adminIconChip('success')}>
+                <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+                    <span className={`${adminIconChip('success')} hidden sm:flex`}>
                         <FiCheck className="w-5 h-5" />
                     </span>
                     <div>
@@ -286,7 +287,7 @@ export default function AdminDigitalCodesPage() {
                     </h2>
 
                     <div className="space-y-4">
-                        {pendingItems.map((item) => (
+                        {pendingItems.map((item, index) => (
                             <div
                                 key={item.orderItemId}
                                 className="bg-white rounded-xl border border-warning/30 overflow-hidden"
@@ -304,7 +305,7 @@ export default function AdminDigitalCodesPage() {
                                                 />
                                             </div>
                                         )}
-                                        <div className="flex-1">
+                                        <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
                                             <div className="flex items-center gap-2 text-sm text-ink-soft mb-1">
                                                 {getPlatformIcon(item.platform)}
                                                 <span>{item.platform || 'Digital'}</span>
@@ -363,7 +364,7 @@ export default function AdminDigitalCodesPage() {
                                         <button
                                             onClick={() => sendCode(item.orderItemId)}
                                             disabled={!isPaid || sending === item.orderItemId || !newCodes[item.orderItemId]?.code}
-                                            className={`${adminPrimaryButton} w-full`}
+                                            className={`${index === 0 ? adminPrimaryButton : adminSecondaryButton} w-full`}
                                         >
                                             {sending === item.orderItemId ? (
                                                 <>
@@ -412,7 +413,7 @@ export default function AdminDigitalCodesPage() {
                                                 />
                                             </div>
                                         )}
-                                        <div className="flex-1">
+                                        <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
                                             <div className="flex items-center gap-2 text-sm text-ink-soft mb-1">
                                                 {getPlatformIcon(item.platform)}
                                                 <span>{item.platform || 'Digital'}</span>
@@ -430,9 +431,9 @@ export default function AdminDigitalCodesPage() {
                                     {item.codes.map((code) => (
                                         <div
                                             key={code.id}
-                                            className="flex items-center justify-between p-3 bg-surface border border-line rounded-lg"
+                                            className="flex flex-wrap items-center justify-between gap-2 border-b border-line py-3"
                                         >
-                                            <div className="flex-1">
+                                            <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
                                                 <p className="font-mono text-sm text-ink">{code.code}</p>
                                                 {code.notes && (
                                                     <p className="text-xs text-muted mt-1">{code.notes}</p>
@@ -455,7 +456,7 @@ export default function AdminDigitalCodesPage() {
                 <div className={`mt-8 p-6 text-center ${adminNotice('success')}`}>
                     <FiCheck className="w-12 h-12 text-success-strong mx-auto mb-3" />
                     <h3 className="text-lg font-bold text-success-strong mb-1">
-                        ¡Todos los códigos han sido entregados!
+                        Todos los códigos entregados
                     </h3>
                     <p className="text-sm text-success-strong/80">
                         El cliente ha recibido todos sus códigos digitales.

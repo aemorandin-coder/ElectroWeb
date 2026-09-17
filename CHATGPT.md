@@ -27,7 +27,7 @@ Tu trabajo se juzga con una pregunta: **¿la persona que abre esta pantalla ve p
    **Sí puedes:** mover y reescribir JSX; crear componentes locales en `_components/` dentro de la carpeta de la página; agregar estado de pura interfaz (pestaña, abierto/cerrado, filtro visible); derivar datos para mostrar (agrupar, contar, ordenar lo que ya llegó); acortar títulos y ayudas.
 4. **Inventario de acciones.** Antes de rediseñar una pantalla, lista cada acción (botón, enlace, filtro, búsqueda, modal, exportar). Al terminar comprueba que siguen todas y funcionan. Va en el estado: "Acciones: 14 antes → 14 después" con la lista. Si decides quitar una, no la quitas: la propones en Notas.
 5. **Datos visibles:** todo dato que hoy se muestra sigue visible (puede moverse a un detalle o a una fila secundaria), salvo lo que la tarjeta diga que sale.
-6. **No instales dependencias.** No ejecutes `npm install`, `prisma *`, `git push`, `git merge`, `git rebase`, `git reset --hard` ni `rm -rf`. Terminar = commits en tu rama y avisar a Andrés.
+6. **No instales dependencias.** No ejecutes `npm install`, `prisma *`, `git push`, `git merge`, `git rebase`, `git reset --hard` ni `rm -rf`. Terminar = commits en tu rama y avisar a Andrés. Las rondas largas se encadenan con `git switch -c chatgpt/R2 chatgpt/R1` (ver "Cómo trabajar las rondas largas" en `PLAN_CHATGPT.md`).
 7. **Colores y tipografía:** solo tokens de `PLAN.md` §1 (`brand-*`, `ink`, `ink-soft`, `muted`, `subtle`, `line`, `line-strong`, `surface`, `success`, `success-strong`, `warning`, `warning-strong`, `deal`, `deal-bg`). Los rojos de error y cancelado son `deal`, no `danger`. Sin hex, sin `gray-*`/`blue-*`/`red-*`, sin `text-[10px]` ni menos, sin `font-black`/`font-extrabold`, sin degradados ni manchas decorativas.
 8. **Prohibido nuevo:** `any`, `console.log`, `alert()`, `confirm()` nativo (usa `useConfirm` de `@/contexts/ConfirmDialogContext`), `<style jsx>`, `style={{ color/background }}`, **emojis** (textos, toasts, comentarios: usa `react-icons/fi`), `z-[9999]` o cualquier `z-[número]` (usa `z-[var(--z-*)]`), animaciones infinitas (solo el spinner mientras carga), algo que solo funcione con hover, `<button>` dentro de `<Link>`, `window.innerWidth` para decidir el diseño (usa CSS), `document.body.style.overflow` (usa `useBodyScrollLock`).
 9. **Montos:** `formatUSD` y `formatVES` de `@/lib/currency`. Los `Decimal` de Prisma llegan como texto: `Number(valor)` antes de sumar o comparar (un `toFixed` sobre texto tumbó el panel de creadores en producción).
@@ -61,8 +61,21 @@ Excepción puntual (solo GPT-01): en `app/admin/(dashboard)/layout.tsx`, **únic
 
 Ampliación autorizada por Andrés el 17/09 (GPT-02): `app/customer/(dashboard)/orders/[id]/digital/**` (raspado de códigos del cliente). Gemini no lo toca.
 
+### Ronda R2 (desde el 17/09) · Productos del admin
+```
+app/admin/(dashboard)/products/**        (incluye borrar _components/ProductForm.tsx solo en GPT-11, si no se usa)
+docs/plan/estado/GPT-*.md
+```
+
+### Ronda R3 · El resto del panel
+```
+app/admin/(dashboard)/payments/**   inquiries/**   messages/**   product-requests/**   discount-requests/**
+app/admin/(dashboard)/reviews/**    verifications/**   categories/**   servicios/**   legal/**
+docs/plan/estado/GPT-*.md
+```
+
 ### Fuera de límites (de otros carriles)
-- **Claude:** `app/api/**`, `lib/**`, `prisma/**`, `contexts/**`, `proxy.ts`, `next.config.*`, `package.json`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `components/ui/**`, `components/public/**`, `components/notifications/**`, `components/auth/**`, `app/login/**`, `app/registro/**`, `app/carrito/**`, `app/checkout/**`, el resto de `app/admin/(dashboard)/layout.tsx`, y en el admin: `settings/**`, `products/**`, `marketing/**`, `notifications/**`, `cursos/**`, `creators/**`.
+- **Claude:** `app/api/**`, `lib/**`, `prisma/**`, `contexts/**`, `proxy.ts`, `next.config.*`, `package.json`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `components/ui/**`, `components/public/**`, `components/notifications/**`, `components/auth/**`, `app/login/**`, `app/registro/**`, `app/carrito/**`, `app/checkout/**`, el resto de `app/admin/(dashboard)/layout.tsx`, y en el admin: `settings/**`, `marketing/**`, `notifications/**`, `cursos/**`, `creators/**`.
 - **Gemini:** `app/customer/**`, `components/customer/**`, `components/modals/**`, `components/reviews/**`, `components/orders/**`, `components/social/**`, `components/pago-movil/**`, `components/onboarding/**`, `app/cursos/**`, `app/servicios/**`, `app/contacto/**`, `app/gift-cards/**`.
 - Documentos: solo creas `docs/plan/estado/GPT-*.md`. No edites `CLAUDE.md`, `GEMINI.md`, `CHATGPT.md` ni `docs/plan/PLAN*.md`.
 

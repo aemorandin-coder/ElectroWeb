@@ -1123,3 +1123,76 @@ Archivos: `components/Footer.tsx` (12 hex `#2a63cd`), `components/UserAccountBut
 **Criterio:** grep = 0. QA: header a 390 y 1440 px con y sin sesión, menú de cuenta abierto, contador del carrito con 1 y con 12 productos, footer.
 
 **Prompt de arranque:** ver `docs/plan/SIGUIENTE.md` §5.
+
+---
+
+## Resultado de R12 (revisión C-90, 2026-09-17)
+**R12 salió bien: se mergeó sin tocar nada tuyo.**
+- 258 clases viejas → 0, sin sangría cambiada.
+- Solo los cambios de lógica permitidos, y cada estado con su verificación.
+
+Claude arregló aparte tres cosas que la tarjeta no pedía:
+- `formatPrice` del checkout, que seguía en "USD 300,00$".
+- El contador del carrito del header, con estilos en línea que el grep de clases no ve.
+- Escape en el menú de cuenta.
+
+**Aprendizaje para R13:** un `style={{ … }}` con hex o con letra chica es igual de malo que un `className`. Búscalos también.
+
+---
+
+## Ronda R13 · Limpieza de ESLint en tu carril (sin lógica) · G-47 → G-48
+- Rama `gemini/R13` desde `main` (ya trae R12 mergeada).
+- Un commit por tarjeta con su `docs/plan/estado/G-XX.md`.
+- **Fuera de límites:** `app/customer/(dashboard)/orders/[id]/digital/**` (lo rediseñó ChatGPT en GPT-02 con permiso de Andrés).
+- **No toques** las reglas de hooks (`react-hooks/set-state-in-effect`, `immutability`, `purity`, `exhaustive-deps`): arreglarlas cambia cuándo corre el código. Si ves una, no la cuentes como pendiente tuya.
+- Para contar problemas por archivo y regla:
+  ```bash
+  npx eslint <archivo> -f json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const c={};for(const m of JSON.parse(s)[0].messages)c[m.ruleId]=(c[m.ruleId]||0)+1;console.log(c)})'
+  ```
+
+### G-47 · Variables e imports sin uso y comillas en el texto · Depende: —
+Reglas `@typescript-eslint/no-unused-vars` (39) y `react/no-unescaped-entities` (14) en estos archivos:
+
+| Archivo | sin uso | comillas |
+|---|---|---|
+| `app/customer/(dashboard)/settings/page.tsx` | 8 | |
+| `components/customer/CustomerMobileNavBar.tsx` | 6 | |
+| `components/modals/RechargeModalV2.tsx` | 4 | |
+| `components/orders/OrderTracking.tsx` | 4 | |
+| `components/social/ShareEarnModal.tsx` | 3 | |
+| `app/customer/(dashboard)/profile/page.tsx` | 2 | 4 |
+| `components/cursos/CoursePlayer.tsx` | 2 | |
+| `components/modals/BalanceTermsModal.tsx` | 2 | |
+| `components/pago-movil/VerificarPagoMovilForm.tsx` | 2 | |
+| `app/customer/(dashboard)/page.tsx`, `app/servicios/page.tsx`, `components/cursos/CourseDetailClient.tsx`, `components/contact/BusinessHours.tsx`, `components/contact/ContactForm.tsx`, `app/customer/(dashboard)/mis-cursos/page.tsx` | 1 c/u | |
+| `components/servicios/ServiciosPortfolio.tsx` | | 4 |
+| `app/customer/(dashboard)/wishlist/page.tsx`, `app/gift-cards/page.tsx`, `app/terminos/page.tsx` | | 2 c/u |
+
+**Cómo:**
+1. Import sin uso → se borra de la lista del import (si queda vacío, la línea entera).
+2. Variable sin uso:
+   - `const x = …` sin efectos → se borra.
+   - Si la parte derecha llama a algo (`fetch`, un hook, un `set…`) → **no se borra**: anótala en Notas.
+   - `const [valor, setValor] = useState(…)` con `valor` sin uso → `const [, setValor] = useState(…)`.
+   - Parámetro de `catch` sin uso → `catch {`.
+3. Comillas dentro del texto JSX: `"hola"` → `&ldquo;hola&rdquo;`; un apóstrofo `'` → `&apos;`. **El texto que se ve no cambia.**
+
+**Criterio:** esas dos reglas en 0 en los 20 archivos. `npx tsc --noEmit` sin errores nuevos. `git diff -w --stat` parecido a `git diff --stat`.
+
+### G-48 · `any` → tipos · Depende: G-47
+Regla `@typescript-eslint/no-explicit-any` (29):
+- 4 en `customer/(dashboard)/orders/page.tsx`.
+- 3 en `customer/(dashboard)/page.tsx`.
+- 2 cada uno en `RechargeModalV2.tsx`, `ServiciosPortfolio.tsx`, `customer/(dashboard)/wishlist/page.tsx`, `app/servicios/page.tsx`, `CourseDetailClient.tsx`, `app/cursos/page.tsx` y `SolicitarProductoClient.tsx`.
+- 1 cada uno en `customer/(dashboard)/settings`, `gift-cards/page.tsx`, `BusinessHours.tsx`, `ContactForm.tsx`, `cursos/[slug]/aprender`, `cursos/[slug]/page.tsx`, `customer/(dashboard)/balance` y `customer/(dashboard)/warranty`.
+
+**Cómo (en este orden de preferencia):**
+1. `catch (error: any)` → `catch (error)` y donde se lea `error.message` → `error instanceof Error ? error.message : '<el texto de respaldo que ya estaba>'`.
+2. Un arreglo o un objeto que llega de una API (`any[]`) → `interface` local con **solo los campos que el archivo usa** (búscalos con el nombre de la variable). Si un campo llega como número o texto según el caso, usa `number | string`.
+3. Si el tipo no es claro → `unknown` y una comprobación (`typeof x === 'string'`) donde se usa.
+4. Si nada de eso compila sin cambiar lo que pasa → deja ese `any` y anótalo en el estado con archivo y línea.
+
+**Prohibido:** cambiar lo que hace el código, agregar `?.` o `??` que no estaban (salvo en el `catch` de la regla 1) y usar `// eslint-disable`.
+**Criterio:** `no-explicit-any` en 0 (o la lista anotada) y `npx tsc --noEmit` sin errores nuevos: pega la salida.
+
+**Prompt de arranque:** ver `docs/plan/SIGUIENTE.md` §5.

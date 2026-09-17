@@ -59,6 +59,8 @@ docs/plan/estado/GPT-*.md
 ```
 Excepción puntual (solo GPT-01): en `app/admin/(dashboard)/layout.tsx`, **únicamente el `className` del `<div>` que envuelve `{children}`**. Nada más de ese archivo.
 
+Ampliación autorizada por Andrés el 17/09 (GPT-02): `app/customer/(dashboard)/orders/[id]/digital/**` (raspado de códigos del cliente). Gemini no lo toca.
+
 ### Fuera de límites (de otros carriles)
 - **Claude:** `app/api/**`, `lib/**`, `prisma/**`, `contexts/**`, `proxy.ts`, `next.config.*`, `package.json`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `components/ui/**`, `components/public/**`, `components/notifications/**`, `components/auth/**`, `app/login/**`, `app/registro/**`, `app/carrito/**`, `app/checkout/**`, el resto de `app/admin/(dashboard)/layout.tsx`, y en el admin: `settings/**`, `products/**`, `marketing/**`, `notifications/**`, `cursos/**`, `creators/**`.
 - **Gemini:** `app/customer/**`, `components/customer/**`, `components/modals/**`, `components/reviews/**`, `components/orders/**`, `components/social/**`, `components/pago-movil/**`, `components/onboarding/**`, `app/cursos/**`, `app/servicios/**`, `app/contacto/**`, `app/gift-cards/**`.
@@ -86,7 +88,8 @@ npx tsc --noEmit > /tmp/tsc-antes.txt 2>&1
 npx tsc --noEmit > /tmp/tsc-despues.txt 2>&1 && diff /tmp/tsc-antes.txt /tmp/tsc-despues.txt
 git diff --stat && git diff -w --stat
 git add <archivos concretos> docs/plan/estado/GPT-XX.md    # nunca "git add -A"
-git commit -m "[GPT-XX] descripción corta"
+# La configuración git del repo dice "Gemini": firma tus commits como ChatGPT
+git -c user.name="ChatGPT" -c user.email="chatgpt@electroshop.local" commit -m "[GPT-XX] descripción corta"
 ```
 
 Plantilla de `docs/plan/estado/GPT-XX.md`:

@@ -169,10 +169,13 @@ Revisar las ramas `gemini/*` pendientes, convertir el reporte G-14 en tarjetas n
 | 5b | **C-84 · Registro más fácil y perfil blindado** | ✅ Hecho. Análisis y plan de Google en `AUDITORIA_REGISTRO.md` |
 | 6 | **Revisar R10 (G-38, G-39) y R11 (G-40…G-43)** | ✅ Hecho (C-86, 6 arreglos) |
 | 6b | **C-88 · Contraseñas con una sola regla** | ✅ Hecho (recuperar la clave cierra sesiones) |
-| 7 | **C-85 · Registro e inicio con Google** | **Espera a Andrés:** cliente OAuth en Google Cloud (pasos en `AUDITORIA_REGISTRO.md` §3) y las 3 decisiones. Luego Facebook; Apple al final. |
-| 8 | **C-87 · Gift card sin saldo: callejón sin salida** | Sin saldo, la gift card va al carrito y el checkout la rechaza. Además 9 s de pasos simulados. **Decisión de Andrés:** recargar saldo primero (recomendado, cuadra con "el dinero no sale de la empresa") o pagarla por el checkout. |
-| 9 | **C-80 · Login con límite de intentos en el servidor** | El captcha solo lo exige el navegador. Además: cuentas desactivadas entran; `GET /api/user/profile` sin DTO. |
-| 10 | **Revisar `chatgpt/R1` (GPT-01…GPT-06) y `gemini/R12` (G-44…G-46)** | Cuando avisen. En ChatGPT: inventario de acciones antes/después y ningún `fetch` distinto. |
+| 7 | **C-85 · Google, cédula fuera del registro y datos en la primera compra** | ✅ Hecho (el botón aparece cuando Andrés ponga las claves; decisiones del 16/09 aplicadas) |
+| 8 | **C-87 · Gift card solo con saldo** | ✅ Hecho (sin saldo se recarga en la misma página; `users/check` sin nombre y con tope) |
+| 8b | **C-89 · Onboarding con física** | ✅ Hecho (recorrido con resortes y confeti, misiones del panel con progreso real) |
+| 8c | **C-90 · Revisar `gemini/R12`** | ✅ Hecho (salió bien; 3 arreglos del carril Claude) |
+| 9 | **Revisar `chatgpt/R1` (GPT-01…GPT-06) y `gemini/R13` (G-47, G-48)** | Cuando avisen. ChatGPT: inventario de acciones antes/después, ningún `fetch` distinto, el raspado del cliente (autorizado por Andrés) y un `.module.css` nuevo en GPT-02. |
+| 10 | **C-80 · Login con límite de intentos en el servidor** | El captcha solo lo exige el navegador. Además: cuentas desactivadas entran; `GET /api/user/profile` sin DTO. |
+| 10b | **Facebook (sobre C-85)** | Cuando Andrés cree la app en Meta. `entrarConProveedor` ya recibe el proveedor. |
 | 11 | **C-51 · Lista de productos del admin** | 1.544 líneas; `ProductForm.tsx` (1.057) sin uso; `alert()`. |
 | 12 | **C-60b · Surtido de pedidos digitales** | Campos de proveedor, referencia y costo (F7); aviso de pedido digital por entregar; `orderItemId` sin comprobar. |
 | 13 | **C-76 · Correos sin emojis y con plantilla única** | 39 emojis en 10 archivos. |

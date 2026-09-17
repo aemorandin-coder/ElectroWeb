@@ -1,19 +1,19 @@
-# Punto de partida para la próxima conversación (actualizado 2026-09-16, noche)
+# Punto de partida para la próxima conversación (actualizado 2026-09-17)
 
 Léelo antes de empezar. Resume dónde quedó todo, qué falta subir, qué decide Andrés y qué hace cada agente.
 
 ## 1. Estado de las ramas
 
 - **`origin/main` = `dbd2027`** (último push, 15/09).
-- **`main` local va 31 commits adelante y NO está subido** (Andrés: "No subas nada todavía"). Contiene, todo revisado y probado:
-  - **C-55** marco del panel del cliente · **C-78** retoques de la tienda · **C-82** hotfix aprobar cursos y creadores.
-  - **C-83** hotfix "Credenciales invalidas" (correo con mayúsculas).
-  - **C-75** Marketing: campañas de correo con imágenes, promotores con comisión solo por compras pagadas, plantillas reales, correo en Configuración.
-  - **C-84** registro más fácil, login con el mismo marco, `/api/user/profile` blindado.
-  - **Gemini R10 (G-38, G-39) y R11 (G-40…G-43)** con los 6 arreglos de **C-86**.
-  - **C-88** contraseñas con una sola regla; recuperar la clave cierra las sesiones.
-- Worktree de Gemini `../ElectroShopVe-gemini`: `gemini/R11` ya está en `main`. R12 se empieza desde `main`.
-- Worktree de ChatGPT `../ElectroShopVe-chatgpt`: **no existe todavía** (ver §5).
+- **`main` local va 44 commits adelante y NO está subido** (Andrés: "No subas nada todavía"). Contiene, todo revisado y probado:
+  - **C-55** marco del panel del cliente · **C-78** retoques de la tienda · **C-82** hotfix aprobar cursos y creadores · **C-83** hotfix "Credenciales invalidas".
+  - **C-75** Marketing: campañas de correo con imágenes, promotores, plantillas reales.
+  - **C-84** registro más fácil y perfil blindado · **C-88** contraseñas con una sola regla.
+  - **C-85** registro e inicio con Google (listo para activar), cédula fuera del registro, teléfono y cédula en la primera compra.
+  - **C-87** gift card solo con saldo · **C-89** onboarding con física.
+  - **Gemini R10, R11 (C-86) y R12 (C-90)**, revisadas y con arreglos.
+- `../ElectroShopVe-gemini`: R12 mergeada. R13 se empieza desde `main`.
+- `../ElectroShopVe-chatgpt` en `chatgpt/R1`: GPT-01 y GPT-02 con commit, GPT-03 en curso. Sus commits salen firmados "Gemini" (identidad del repo): desde ahora firma como ChatGPT (`CHATGPT.md` §3).
 
 ## 2. Deploy pendiente (cuando Andrés pida el push)
 
@@ -28,17 +28,17 @@ npx tsx scripts/move-business-documents.ts --apply   # mueve
 npm run build
 pm2 restart electroshop-web --update-env
 ```
-`npm ci` no hace falta: `package-lock.json` no cambió. **No hay variables de entorno nuevas obligatorias.**
+`npm ci` no hace falta: `package-lock.json` no cambió. **No hay variables de entorno nuevas obligatorias.** Google es opcional (§2.5).
 
 ### 2.1 Qué crea `prisma db push`
-Solo tablas nuevas. **No borra ni cambia ninguna tabla ni columna existente.**
-- Si el deploy del 15/09 no se aplicó: `admin_notification_settings` y `telegram_chats` (C-73, avisos y bot de Telegram).
-- Siempre: `email_campaigns` y `email_campaign_recipients` (C-75, campañas de correo y a quién se le envió cada una).
+Solo tablas nuevas. **No borra ni cambia ninguna tabla ni columna existente.** Google no necesita migración: la tabla `accounts` ya existe.
+- Si el deploy del 15/09 no se aplicó: `admin_notification_settings` y `telegram_chats` (C-73).
+- Siempre: `email_campaigns` y `email_campaign_recipients` (C-75).
 
 En la salida de `migrate diff` solo deben aparecer `CREATE TABLE`, `CREATE INDEX` y `ADD CONSTRAINT … FOREIGN KEY` de esas tablas. Si aparece un `DROP`, no se corre y se avisa a Claude.
 
 ### 2.2 Documentos de empresa (`move-business-documents.ts`)
-Mueve las cédulas, RIF y actas que suben los clientes de `public/uploads/documents/` (se podían abrir sin sesión) a `private-uploads/` y actualiza la ruta en la base. Sin `--apply` solo cuenta.
+Mueve las cédulas, RIF y actas de `public/uploads/documents/` (se podían abrir sin sesión) a `private-uploads/` y actualiza la ruta en la base. Sin `--apply` solo cuenta.
 
 ### 2.3 Después del deploy (Andrés, en el panel)
 1. **Configuración → Correo:** activar "Correos de marketing" y revisar el límite diario.
@@ -47,63 +47,65 @@ Mueve las cédulas, RIF y actas que suben los clientes de `public/uploads/docume
 
 ### 2.4 Cómo comprobar que quedó bien
 - Entrar escribiendo el correo en MAYÚSCULAS → entra (C-83).
-- Registrarse desde el teléfono: errores bajo cada campo, la barra inferior no tapa la contraseña (C-84).
+- Registro: 4 campos sin cédula; errores bajo cada campo; la barra inferior no tapa la contraseña (C-84, C-85).
+- Checkout con una cuenta sin cédula: aparece "Completa tus datos para comprar" y no deja pagar hasta guardarlos (C-85).
+- Mi Perfil: se puede escribir la cédula completa y queda bloqueada al guardar (C-85).
+- Gift Cards sin saldo: "Te faltan $X" y "Recargar saldo", nunca "Agregar al carrito" (C-87).
+- Cliente nuevo en la tienda: recorrido "Hola, …" con foco que viaja y confeti al final; en su panel, misiones con anillo de progreso (C-89).
 - Recuperar la contraseña con una clave de 6 caracteres → la rechaza con el motivo (C-88).
-- `/admin/cursos`: un curso de creador aparece "En revisión" y se puede aprobar (C-82).
-- Carrito con una gift card: la miniatura tiene el diseño elegido y los bolívares usan la tasa de la tienda (C-86).
 - `/api/uploads/documents/<archivo>` sin sesión → 404.
 
-## 3. Decisiones de Andrés que desbloquean trabajo
+### 2.5 Activar Google (Andrés, cuando quiera)
+Pasos en `docs/plan/AUDITORIA_REGISTRO.md` §3:
+1. Crea el cliente OAuth en Google Cloud con la URI `https://www.electroshopve.com/api/auth/callback/google`.
+2. Pon `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en el `.env` del servidor.
+3. Reinicia: `pm2 restart electroshop-web --update-env`. No hace falta recompilar.
 
-| Tema | Pregunta | Recomendación | Detalle |
-|---|---|---|---|
-| **Google (C-85)** | Crear el cliente OAuth en Google Cloud y poner `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` en el `.env` del servidor | 20-30 min, gratis | `AUDITORIA_REGISTRO.md` §3, paso a paso |
-| Google | Si ya existe una cuenta con ese correo: ¿vincular sola? | Sí | Google solo entrega correos verificados |
-| Google | Teléfono y cédula que Google no trae: ¿dónde se piden? | En el checkout, la primera compra | |
-| Google | ¿Admins entran con Google? | No | |
-| **Registro** | ¿Sacar la cédula del registro y pedirla en la primera compra? | Sí | El registro baja a 4 campos |
-| **Gift cards (C-87)** | Sin saldo suficiente, ¿qué pasa? | Recargar saldo primero | Hoy va al carrito y el checkout la rechaza |
-| Facebook / Apple | ¿Cuándo? | Facebook después de Google; Apple (99 USD/año) cuando haya volumen de iPhone | |
+## 3. Decisiones de Andrés
 
-**Ya decidido (no volver a preguntar):** el dinero nunca sale de la empresa: cancelar una orden pagada con saldo devuelve crédito de la tienda, sin retiros (C-74). Comisiones de promotores solo por compras pagadas, se acreditan como saldo (C-75). Campañas completas en el panel; IA fuera del generador de redes; SMTP en Configuración.
+**Tomadas el 16-17/09 (no volver a preguntar):**
+- Google: la cuenta con el mismo correo se vincula sola; teléfono y cédula se piden en la primera compra; **los administradores nunca entran con Google**.
+- Cédula fuera del registro: aprobado, porque el cliente la agrega en Mi Perfil o en el checkout.
+- Gift card sin saldo: primero recarga.
+- Onboarding con física, épico, con el estilo de la tienda (hecho en C-89).
+- ChatGPT puede rediseñar el raspado de códigos del cliente (`app/customer/(dashboard)/orders/[id]/digital`).
+- Antes: el dinero nunca sale de la empresa: cancelar una orden pagada con saldo devuelve crédito de la tienda, sin retiros (C-74). Comisiones solo por compras pagadas, como saldo (C-75). Campañas completas; IA fuera del generador de redes; SMTP en Configuración.
+
+**Pendientes:**
+
+| Tema | Pregunta | Recomendación |
+|---|---|---|
+| Push y deploy | ¿Cuándo subir `main` (44 commits)? | Cuando revises lo del §2.4 en local o en un servidor de pruebas |
+| Google | Crear el cliente OAuth (§2.5) | 20-30 min, gratis |
+| Facebook / Apple | ¿Cuándo? | Facebook después de Google; Apple (99 USD/año) cuando haya volumen de iPhone |
+| Teléfono en el registro | ¿Opcional también? | Dejarlo: se usa para coordinar entregas |
 
 ## 4. Qué hace cada agente
 
 ### Claude (`PLAN_CLAUDE.md` §4b)
-1. **C-85 Google** en cuanto Andrés cree el cliente OAuth y decida (§3).
-2. **C-87** gift card sin saldo (con la decisión de Andrés).
-3. **C-80** límite de intentos de login en el servidor, cuentas desactivadas, DTO del perfil.
-4. **Revisar `chatgpt/R1` y `gemini/R12`** cuando avisen.
-5. C-51, C-60b, C-76, C-40.
+1. **Revisar `chatgpt/R1` y `gemini/R13`** cuando avisen.
+2. **C-80** límite de intentos de login en el servidor, cuentas desactivadas, DTO del perfil.
+3. Facebook cuando Andrés cree la app; C-51, C-60b, C-76, C-40.
 
-### Gemini (`PLAN_GEMINI.md`, Ronda R12)
-- **G-44** terminar el checkout (G-41 quedó a medias: 55 clases viejas y "USD 50,00$" en el resumen).
-- **G-45** `components/ui` con tokens · **G-46** Footer, botón de cuenta y carrito del header.
-- Lo que salió mal en R10/R11 está en `PLAN_GEMINI.md`: cambió lógica "de paso" (gift card del carrito, `disabled` de Empresa), borró un bloque entero y volvió a reindentar archivos.
+### Gemini (`PLAN_GEMINI.md`, Ronda R13)
+- **G-47** variables e imports sin uso y comillas en el texto (53 en 20 archivos). **G-48** `any` → tipos (29).
+- R12 salió bien (258 clases viejas → 0, sin lógica ni sangría fuera de lo pedido).
 
-### ChatGPT (`PLAN_CHATGPT.md`, Ronda R1) · nuevo
-- Diseño y jerarquía de pantallas completas, sin cambiar lógica.
-- **GPT-01** dashboard admin · **GPT-02** órdenes · **GPT-03** transacciones, clientes y gift cards · **GPT-04** reportes · **GPT-05** panel de creadores en móvil (antes C-79) · **GPT-06** recuperar contraseña y verificar correo.
+### ChatGPT (`PLAN_CHATGPT.md`, Ronda R1)
+- GPT-01 (dashboard) y GPT-02 (órdenes y raspado del cliente) con commit; sigue GPT-03 a GPT-06.
 
 ## 5. Mensajes para empezar
 
-### Preparar la carpeta de ChatGPT (una sola vez, Andrés, desde "ElectroShopVe WEB")
-```bash
-git worktree add "../ElectroShopVe-chatgpt" -b chatgpt/base main
-ln -s "$PWD/node_modules" "../ElectroShopVe-chatgpt/node_modules"
-cp .env "../ElectroShopVe-chatgpt/.env"
-```
-
 ### Conversación nueva de Claude
-> Continúa el proyecto ElectroShopVe. Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b. Revisa en §3 qué decisiones ya tomé y sigue el orden de la tabla. Cuando Gemini o ChatGPT avisen, revisa `gemini/R12` o `chatgpt/R1` antes de mergear. Busca bugs, seguridad y diseño inconsistente en todo lo que toques; nada de `git push` sin que yo lo pida.
+> Continúa el proyecto ElectroShopVe. Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b. Las decisiones del §3 ya están tomadas. Cuando Gemini o ChatGPT avisen, revisa `gemini/R13` o `chatgpt/R1` antes de mergear; si no, sigue con C-80. Busca bugs, seguridad y diseño inconsistente en todo lo que toques; nada de `git push` sin que yo lo pida.
 
-### Conversación nueva de Gemini (Ronda R12)
-> Haz la **Ronda R12** de `docs/plan/PLAN_GEMINI.md` (G-44, G-45 y G-46) en la rama `gemini/R12` creada desde `main` (`git switch -c gemini/R12 main`; `main` ya trae R10 y R11 mergeadas con arreglos, no sigas en `gemini/R11`). Antes de empezar lee completo `GEMINI.md` (el carril cambió el 16/09) y la sección "Lo que salió mal en R10 y R11": **solo cambias `className`** y los "Arreglos permitidos"; un `disabled`, un `if` o un bloque con datos raros no se tocan, se anotan con `PEDIDO:`. En cada tarjeta, antes del commit: el grep de colores de la tarjeta (pega el número), `npx tsc --noEmit` (pega la salida real), `npx eslint` de los archivos (sin problemas nuevos), `git diff --stat` contra `git diff -w --stat` (cifras parecidas) y QA a 390 y 1440 px. Un commit por tarjeta con su `docs/plan/estado/G-XX.md`. Si algo no cuadra, `BLOQUEADO` y sigues. No hagas merge ni push: al terminar avisa a Andrés.
+### Conversación nueva de Gemini (Ronda R13)
+> Haz la **Ronda R13** de `docs/plan/PLAN_GEMINI.md` (G-47 y G-48) en la rama `gemini/R13` creada desde `main` (`git switch -c gemini/R13 main`). Lee primero "Resultado de R12" y las reglas de R13: solo limpias ESLint en tu carril (imports y variables sin uso, comillas en el texto, `any` → tipos), **sin cambiar lo que hace el código** y sin tocar las reglas de hooks ni `app/customer/(dashboard)/orders/[id]/digital/**`. En cada tarjeta, antes del commit: ESLint de cada archivo con el conteo por regla (pega el antes y el después), `npx tsc --noEmit` (pega la salida real) y `git diff --stat` contra `git diff -w --stat`. Un commit por tarjeta con su `docs/plan/estado/G-XX.md`. Si algo no cuadra, anótalo o `BLOQUEADO`, y sigues. No hagas merge ni push: al terminar avisa a Andrés.
 
 ### Conversación nueva de ChatGPT (Ronda R1, trabajo pesado)
 > Eres parte del equipo de ElectroShopVe (tienda online en Next.js 16, React 19 y Tailwind 4) junto con Claude y Gemini. Tu papel: **diseño y jerarquía de pantallas completas**. Trabajas en la carpeta `../ElectroShopVe-chatgpt`.
 > 1. Lee **completo** `CHATGPT.md` (reglas, carril y guía de diseño), `docs/plan/PLAN_CHATGPT.md` (tu ronda), `docs/plan/PLAN.md` §1 (tokens) y `lib/admin-ui.ts` (recetas). Mira como referencia `app/admin/(dashboard)/marketing/`, `app/customer/(dashboard)/layout.tsx` y `app/registro/page.tsx`.
-> 2. Crea la rama `chatgpt/R1` desde `main` y haz **GPT-01 a GPT-06 en orden**, un commit por tarjeta (`[GPT-XX] …`) con su `docs/plan/estado/GPT-XX.md`.
+> 2. Si ya tienes `chatgpt/R1`, sigue desde la tarjeta que te falta; si no, créala desde `main`. **GPT-01 a GPT-06 en orden**, un commit por tarjeta (`[GPT-XX] …`) con su `docs/plan/estado/GPT-XX.md`, **firmado como ChatGPT** (`git -c user.name="ChatGPT" -c user.email="chatgpt@electroshop.local" commit …`).
 > 3. En cada pantalla: primero el **inventario de acciones** (botones, enlaces, filtros, modales), después el rediseño, y al final comprueba que siguen todas. **No cambias qué hace la pantalla**: mismos `fetch`, cuerpos, permisos, cálculos y destinos. Puedes reescribir el JSX y dividirlo en `_components/`.
 > 4. Lo primero que se ve a 360 px tiene que ser lo que el admin viene a hacer. Montos nunca cortados, tabla y tarjetas nunca a la vez, una acción primaria por pantalla, solo tokens y recetas, sin emojis.
 > 5. Verificación real pegada en el estado: `npx tsc --noEmit`, ESLint de cada archivo contra `main` (sin problemas nuevos), `npm run build` si puedes, capturas a 360, 768, 1024 y 1440 px (o `QA visual pendiente` con el motivo).

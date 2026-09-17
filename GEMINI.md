@@ -41,6 +41,7 @@ docs/plan/estado/G-*.md      (solo archivos que empiecen con G-)
 #   app/login/**, app/registro/** → Claude (C-84: registro y Google)
 #   app/creator/**, app/recuperar-contrasena/**, app/verificar-email/** y el panel admin
 #   (dashboard, orders, customers, transactions, gift-cards, reports) → ChatGPT (CHATGPT.md)
+# R13 (17/09): solo tu carril, sin app/customer/(dashboard)/orders/[id]/digital/** (lo rediseñó ChatGPT)
 # Solo en R12 y solo para cambiar clases (ver PLAN_GEMINI.md, "Reglas de R12"):
 #   app/checkout/page.tsx   components/checkout/CheckoutPagoMovilForm.tsx   components/pago-movil/VerificarPagoMovilForm.tsx
 #   components/ui/**   components/Footer.tsx   components/UserAccountButton.tsx   components/CartIcon.tsx

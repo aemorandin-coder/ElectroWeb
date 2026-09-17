@@ -1277,3 +1277,34 @@ Los tipos de TypeScript desaparecen al compilar: **si solo cambias tipos, el ser
 2. **Textos visibles sin tilde** ("electronico", "sesion", "verificacion"…) en `components/modals/RechargeModalV2.tsx` (3), `app/api/auth/verify-email/[token]/route.ts` (2), `app/checkout/page.tsx` (2) y `lib/pago-movil/verificar-pago.ts` (1): solo la tilde, **nunca en claves, nombres de variables, URLs ni valores que se comparan**.
 
 **Criterio de R15:** los 7 archivos de correo y API sin emojis, `scripts/reset-customers.ts` no existe, y `tsc` y `build` OK.
+
+---
+
+## Resultado de R13, R14 y R15 (revisión C-93, 17/09)
+**Aprobadas y en producción.** Revisión con la comparación más estricta hasta ahora: cada archivo compilado a JavaScript sin tipos, antes y después. **No hubo cambios de lógica** en las APIs (tampoco en las de dinero), y ESLint del proyecto bajó de 403 a 197 errores. Las 91 pruebas de las tareas anteriores pasan.
+
+Dos cosas quedaron a medias → **G-54**:
+1. Al quitar los emojis de las cabeceras de los correos **quedaron círculos de color vacíos**.
+2. El grep de G-53 no cubría todos los símbolos: quedaron **⏳** y **⏸**.
+
+### G-54 · Correos sin círculos vacíos ni símbolos · Depende: —
+Rama `gemini/R16` desde `main`.
+1. **Símbolos que quedan:**
+   - `lib/email-service.ts` ~l.548: `<span …>⏳</span>` → se borra el `<span>`.
+   - `lib/email-templates/CourseCertificate.ts` ~l.119: `emoji: '⏸'` → `emoji: ''`.
+   - Búscalos con el rango completo: `grep -rnP "[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{2300}-\x{23FF}\x{2B00}-\x{2BFF}\x{FE0F}]" lib app/api`.
+2. **Círculos vacíos:** son los `<div style="width:…;height:…;…border-radius:50%;…">` cuyo contenido quedó vacío.
+   - En `lib/email-service.ts`, cerca de las líneas ~590, ~688 y ~747.
+   - En `CourseCertificate.ts`, cerca de ~10 y ~53.
+   - **Se borra el `<div>` completo** (apertura, espacio y cierre).
+   - Los círculos que todavía tienen texto (`OK`, `&#10003;`) **se quedan**.
+3. **`sendCreatorStatusEmail`** (`CourseCertificate.ts`):
+   - El `<div style="font-size:50px…">${cfg.emoji}</div>` (~l.134) se borra.
+   - El asunto `` `${cfg.emoji} ${cfg.title} - ElectroShop` `` (~l.155) pasa a `` `${cfg.title} - ElectroShop` ``, porque hoy empieza con un espacio.
+   - Deja la propiedad `emoji` en los objetos (vacía): quitarla es cambiar el tipo.
+
+**Verificación:**
+- El grep del punto 1 da 0 en `lib/` y `app/api/`.
+- `grep -n "border-radius:50%" lib/email-service.ts lib/email-templates/*.ts`: pega la salida y confirma que ninguno quedó vacío.
+- `npx tsc --noEmit` y `npm run build`.
+- Si puedes, abre **Admin → Marketing → Correos de la tienda** y mira las plantillas de envío, código digital, gift card y certificado.

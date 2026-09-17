@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
-import { FiX, FiCheck, FiAlertTriangle, FiFileText, FiEdit3, FiLoader } from 'react-icons/fi';
+import { FiX, FiCheck, FiAlertTriangle, FiFileText, FiEdit3 } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { adminModalOverlay, adminModalPanel, adminLabel, adminInput, adminPrimaryButton, adminSecondaryButton, adminSuccessButton } from '@/lib/admin-ui';
@@ -23,7 +23,7 @@ export default function BalanceTermsModal({ isOpen, onClose, onAccept }: Balance
     const [address, setAddress] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
-    const [loadingProfile, setLoadingProfile] = useState(true);
+    const [, setLoadingProfile] = useState(true);
 
     const termsRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);

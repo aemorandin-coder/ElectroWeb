@@ -3,7 +3,7 @@ import { formatUSD } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FiShoppingBag, FiDollarSign, FiHeart, FiTrendingUp, FiPackage, FiClock, FiActivity, FiArrowUp, FiArrowDown, FiChevronRight, FiShield, FiTag, FiCheck, FiTruck, FiUser, FiLogIn } from 'react-icons/fi';
+import { FiShoppingBag, FiDollarSign, FiHeart, FiTrendingUp, FiPackage, FiClock, FiActivity, FiArrowUp, FiArrowDown, FiChevronRight, FiTag, FiCheck, FiTruck, FiUser, FiLogIn } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import CustomerOnboarding from '@/components/customer/CustomerOnboarding';
 import { adminPrimaryButton } from '@/lib/admin-ui';

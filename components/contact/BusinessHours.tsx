@@ -6,12 +6,6 @@ interface BusinessHoursProps {
     businessHours?: string | null;
 }
 
-interface DaySchedule {
-    enabled: boolean;
-    open: string;
-    close: string;
-}
-
 const daysMap: Record<string, { name: string; abbr: string }> = {
     monday: { name: 'Lunes', abbr: 'LUN' },
     tuesday: { name: 'Martes', abbr: 'MAR' },

@@ -583,7 +583,7 @@ export default function WishlistPage() {
       ) : searchTerm ? (
         <div className={`${adminCard} p-12 text-center`}>
           <FiSearch className="w-16 h-16 text-subtle mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-ink mb-2">Sin resultados para "{searchTerm}"</h3>
+          <h3 className="text-lg font-bold text-ink mb-2">Sin resultados para &ldquo;{searchTerm}&rdquo;</h3>
           <button
             type="button"
             onClick={() => setSearchTerm('')}

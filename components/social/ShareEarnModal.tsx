@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { adminModalOverlay, adminModalPanel, adminModalHeader, adminLabel, adminInput } from '@/lib/admin-ui';
 import Image from 'next/image';
-import { FiX, FiCopy, FiCheck, FiGift, FiUser, FiInfo, FiExternalLink } from 'react-icons/fi';
+import { FiX, FiCopy, FiCheck, FiGift, FiInfo, FiExternalLink } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 interface ShareItem {
@@ -30,7 +30,7 @@ export default function ShareEarnModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [item, setItem] = useState<ShareItem | null>(null);
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
-  const [loadingReferral, setLoadingReferral] = useState(false);
+  const [, setLoadingReferral] = useState(false);
   const [copied, setCopied] = useState(false);
   const [siteUrl, setSiteUrl] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
@@ -113,7 +113,7 @@ export default function ShareEarnModal() {
       setCopied(true);
       toast.success('¡Enlace de referido copiado!');
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       toast.error('Error al copiar el enlace');
     }
   };

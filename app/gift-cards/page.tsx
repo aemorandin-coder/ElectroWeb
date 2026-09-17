@@ -793,7 +793,7 @@ export default function GiftCardsPage() {
 
                             {personalMessage && (
                                 <div className="bg-surface rounded-lg p-3 mb-4 text-sm italic text-ink-soft border border-line">
-                                    "{personalMessage}"
+                                    &ldquo;{personalMessage}&rdquo;
                                 </div>
                             )}
 

@@ -441,7 +441,7 @@ type EnrollCardProps = {
 };
 
 function EnrollCard({
-  price, isFree, isEnrolled, canEnroll, isLoggedIn, hasBalance,
+  price, isFree, isEnrolled, isLoggedIn, hasBalance,
   userBalance, enrolling, enrollError, enrollSuccess, progress,
   slug, thumbnail, trailerUrl, onEnroll,
 }: EnrollCardProps) {

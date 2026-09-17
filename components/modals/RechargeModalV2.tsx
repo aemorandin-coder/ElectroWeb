@@ -4,10 +4,8 @@ import { formatUSD, formatVES } from '@/lib/currency';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import {
-    FiX, FiDollarSign, FiCheck, FiPhone, FiCreditCard, FiShield, FiArrowLeft, FiAlertTriangle, FiCheckCircle
+    FiX, FiDollarSign, FiCheck, FiShield, FiArrowLeft, FiAlertTriangle, FiCheckCircle
 } from 'react-icons/fi';
-import { SiBinance } from 'react-icons/si';
-import { BsBank2 } from 'react-icons/bs';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';

@@ -10,7 +10,6 @@ import { FiMonitor, FiShield, FiCreditCard, FiAward, FiUsers, FiCheckCircle, FiM
 import { PiSecurityCameraDuotone } from 'react-icons/pi';
 import { FaEthernet } from 'react-icons/fa';
 import { SiPcgamingwiki } from 'react-icons/si';
-import { FaScrewdriverWrench } from 'react-icons/fa6';
 
 export const revalidate = 0;
 

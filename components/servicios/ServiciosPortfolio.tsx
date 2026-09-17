@@ -264,7 +264,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                   )}
                   {v.testimonial && (
                     <div className="mt-3 p-3 bg-brand-50 rounded-xl border border-brand-200">
-                      <p className="text-xs italic text-ink line-clamp-2">"{v.testimonial}"</p>
+                      <p className="text-xs italic text-ink line-clamp-2">&ldquo;{v.testimonial}&rdquo;</p>
                       {v.customerName && (
                         <p className="text-xs font-bold text-brand-500 mt-1">— {v.customerName}</p>
                       )}
@@ -389,7 +389,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
               )}
               {activeModal.testimonial && (
                 <div className="p-4 bg-brand-50 rounded-xl border border-brand-200">
-                  <p className="text-sm italic text-ink">"{activeModal.testimonial}"</p>
+                  <p className="text-sm italic text-ink">&ldquo;{activeModal.testimonial}&rdquo;</p>
                   {activeModal.customerName && (
                     <p className="text-sm font-bold text-brand-500 mt-1.5">— {activeModal.customerName}</p>
                   )}

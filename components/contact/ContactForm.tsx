@@ -201,7 +201,7 @@ export default function ContactForm() {
                 captchaRef.current?.resetCaptcha();
                 setCaptchaToken(null);
             }
-        } catch (err) {
+        } catch {
             setError('Error al enviar el mensaje. Por favor intenta nuevamente.');
             captchaRef.current?.resetCaptcha();
             setCaptchaToken(null);

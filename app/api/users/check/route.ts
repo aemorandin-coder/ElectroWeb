@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { buscarUsuarioPorCorreo, normalizarCorreo } from '@/lib/correo';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 
-// GET - Check if user exists by email
+// Lo usa Gift Cards para avisar si quien recibe todavía no tiene cuenta.
+// C-87: antes devolvía el nombre del dueño del correo y no tenía límite: cualquier cliente podía recorrer correos
+// y saber quién está registrado y cómo se llama. Ahora solo responde sí/no y con tope por cliente.
+const LIMITE = { maxRequests: 30, windowSeconds: 10 * 60 };
+
 export async function GET(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
@@ -11,85 +16,23 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
-        const { searchParams } = new URL(request.url);
-        const email = searchParams.get('email');
+        const limite = checkRateLimit(session.user.id, 'users:check', LIMITE);
+        if (!limite.success) {
+            return NextResponse.json(
+                { error: 'Demasiadas consultas. Espera unos minutos.' },
+                { status: 429, headers: getRateLimitHeaders(limite, LIMITE) }
+            );
+        }
 
-        if (!email) {
+        const email = normalizarCorreo(new URL(request.url).searchParams.get('email'));
+        if (!email || email.length > 255) {
             return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
         }
 
-        // Check if user exists
-        const user = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-            }
-        });
-
-        if (user) {
-            return NextResponse.json({
-                exists: true,
-                user: {
-                    name: user.name,
-                    email: user.email,
-                }
-            });
-        }
-
-        return NextResponse.json({
-            exists: false,
-            email: email.toLowerCase()
-        });
-
+        const user = await buscarUsuarioPorCorreo(email);
+        return NextResponse.json({ exists: Boolean(user) });
     } catch (error) {
         console.error('Error checking user:', error);
         return NextResponse.json({ error: 'Error al verificar usuario' }, { status: 500 });
-    }
-}
-
-// POST - Send invitation email to non-registered user
-export async function POST(request: NextRequest) {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-        }
-
-        const body = await request.json();
-        const { email } = body;
-
-        if (!email) {
-            return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
-        }
-
-        // Check if user already exists
-        const existingUser = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() }
-        });
-
-        if (existingUser) {
-            return NextResponse.json({
-                error: 'El usuario ya está registrado',
-                exists: true
-            }, { status: 400 });
-        }
-
-        // TODO: Send invitation email
-        // For now, just log and return success
-
-        // In production, you would send an email here with a link like:
-        // https://electroshop.com/registro?ref=gift&from=senderEmail&amount=giftAmount
-
-        return NextResponse.json({
-            success: true,
-            message: `Invitación enviada a ${email}`,
-            // In production, you might store this pending gift in the database
-        });
-
-    } catch (error) {
-        console.error('Error sending invitation:', error);
-        return NextResponse.json({ error: 'Error al enviar invitación' }, { status: 500 });
     }
 }

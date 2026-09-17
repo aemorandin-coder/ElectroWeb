@@ -1,23 +1,23 @@
 'use client';
-import { formatUSD } from '@/lib/currency';
+import { formatUSD, formatVES } from '@/lib/currency';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import { useSettings } from '@/contexts/SettingsContext';
 import ProcessingOverlay, { GIFT_CARD_STEPS } from '@/components/ProcessingOverlay';
+import RechargeModal from '@/components/modals/RechargeModalV2';
 import GiftCard3D from '@/components/gift-card/GiftCard3D';
 import PageHeader from '@/components/ui/PageHeader';
 import { GIFT_CARD_DESIGNS, getGiftCardDesign, type GiftCardDesignSlug } from '@/lib/gift-card-designs';
 import Footer from '@/components/Footer';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
-import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminModalOverlay, adminModalPanel, adminNotice } from '@/lib/admin-ui';
 
-import { FiGift, FiCheck, FiAlertCircle, FiMail, FiArrowRight, FiClock, FiShoppingCart, FiCreditCard, FiLock, FiCalendar, FiEye, FiUser, FiStar } from 'react-icons/fi';
+import { FiGift, FiCheck, FiAlertCircle, FiMail, FiArrowRight, FiClock, FiPlusCircle, FiLogIn, FiCreditCard, FiLock, FiCalendar, FiEye, FiUser, FiStar } from 'react-icons/fi';
 import { AiOutlineDeliveredProcedure } from 'react-icons/ai';
 
 // Predefined amounts
@@ -26,7 +26,6 @@ const PRESET_AMOUNTS = [25, 50, 100, 200];
 export default function GiftCardsPage() {
     const { data: session } = useSession();
     const router = useRouter();
-    const { addItem } = useCart();
 
     // Form state
     const [selectedAmount, setSelectedAmount] = useState<number | null>(50);
@@ -46,12 +45,10 @@ export default function GiftCardsPage() {
     // NEW: Show email preview modal
     const [showEmailPreview, setShowEmailPreview] = useState(false);
 
-    // NEW: Exchange rate for Bs display
-    const [exchangeRate, setExchangeRate] = useState<number | null>(null);
-
-    // Company logo for overlay
+    // Tasa y logo de los settings que el layout ya leyó en el servidor (antes se pedía la tasa a /api/exchange-rates)
     const { settings: publicSettings } = useSettings();
     const companyLogo = publicSettings?.logo ?? null;
+    const exchangeRate = publicSettings?.exchangeRateVES || null;
 
     // Form refs for validation focus
     const recipientNameRef = useRef<HTMLInputElement>(null);
@@ -70,6 +67,8 @@ export default function GiftCardsPage() {
     // Purchase state
     const [isLoading, setIsLoading] = useState(false);
     const [userBalance, setUserBalance] = useState(0);
+    const [saldoCargado, setSaldoCargado] = useState(false);
+    const [showRecharge, setShowRecharge] = useState(false);
 
     // Processing overlay state
     const [showProcessingOverlay, setShowProcessingOverlay] = useState(false);
@@ -79,20 +78,10 @@ export default function GiftCardsPage() {
     // Calculate final amount
     const finalAmount = selectedAmount || (customAmount ? parseFloat(customAmount) : 0);
     const canPayWithBalance = userBalance >= finalAmount && finalAmount > 0;
+    // C-87 (Andrés, 16/09): la gift card solo se paga con saldo. Sin saldo suficiente se recarga primero;
+    // antes iba al carrito y el checkout la rechazaba ("Las gift cards no se pueden pagar desde el checkout").
+    const faltaSaldo = Math.max(0, finalAmount - userBalance);
     const finalAmountBs = exchangeRate ? finalAmount * exchangeRate : null;
-
-    // Fetch exchange rate and company logo
-    useEffect(() => {
-        // Fetch exchange rate
-        fetch('/api/exchange-rates')
-            .then(res => res.json())
-            .then(data => {
-                if (data.rateVES) setExchangeRate(data.rateVES);
-            })
-            .catch(console.error);
-
-
-    }, []);
 
     // NEW: Handle "for myself" checkbox
     useEffect(() => {
@@ -108,21 +97,20 @@ export default function GiftCardsPage() {
         }
     }, [isForMyself, session]);
 
-    // Fetch user balance
+    // Saldo del cliente: al entrar y después de recargar
+    const cargarSaldo = useCallback(() => {
+        return fetch('/api/customer/balance')
+            .then(res => res.json())
+            .then(data => {
+                if (data.balance !== undefined) setUserBalance(Number(data.balance) || 0);
+            })
+            .catch(console.error)
+            .finally(() => setSaldoCargado(true));
+    }, []);
+
     useEffect(() => {
-        if (session?.user) {
-            fetch('/api/customer/balance')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.balance !== undefined && typeof data.balance === 'number') {
-                        setUserBalance(data.balance);
-                    } else if (data.balance !== undefined) {
-                        setUserBalance(parseFloat(data.balance) || 0);
-                    }
-                })
-                .catch(console.error);
-        }
-    }, [session]);
+        if (session?.user) cargarSaldo();
+    }, [session, cargarSaldo]);
 
     // Check if recipient email exists
     const checkRecipientEmail = useCallback(async (email: string) => {
@@ -161,8 +149,7 @@ export default function GiftCardsPage() {
     // Handle purchase
     const handlePurchase = async () => {
         if (!session) {
-            toast.error('Debes iniciar sesión para comprar');
-            router.push('/login?redirect=/gift-cards');
+            router.push('/login?callbackUrl=%2Fgift-cards');
             return;
         }
 
@@ -196,6 +183,11 @@ export default function GiftCardsPage() {
             return;
         }
 
+        if (!canPayWithBalance) {
+            setShowRecharge(true);
+            return;
+        }
+
         // Show processing overlay and scroll to view
         setShowProcessingOverlay(true);
         setProcessingStep(0);
@@ -203,59 +195,34 @@ export default function GiftCardsPage() {
         setIsLoading(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
+        // Los pasos siguen lo que pasa de verdad: antes había 9 segundos de esperas simuladas con setTimeout
+        const pausa = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
         try {
-            // Step 1: Verificando pago (3 sec delay)
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            // El servidor descuenta el saldo y crea la tarjeta en una sola operación (C-71)
             setProcessingStep(1);
+            const giftRes = await fetch('/api/gift-cards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    amount: finalAmount,
+                    recipientEmail,
+                    recipientName,
+                    message: personalMessage,
+                    design: designSlug,
+                    payWithBalance: true,
+                }),
+            });
 
-            if (canPayWithBalance) {
-                // Step 2: Creando Gift Card. El servidor descuenta el saldo y crea la tarjeta en una sola operación (C-71)
-                setProcessingStep(2);
-                const giftRes = await fetch('/api/gift-cards', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        amount: finalAmount,
-                        recipientEmail,
-                        recipientName,
-                        message: personalMessage,
-                        design: designSlug,
-                        payWithBalance: true,
-                    }),
-                });
-
-                if (!giftRes.ok) {
-                    const errorData = await giftRes.json().catch(() => ({}));
-                    throw new Error(errorData.error || 'Error al crear la gift card');
-                }
-
-                // Step 3: Enviando al correo (3 sec delay)
-                setProcessingStep(3);
-                await new Promise(resolve => setTimeout(resolve, 3000));
-
-                // Step 4: Redirigiendo (3 sec delay)
-                setProcessingStep(4);
-                await new Promise(resolve => setTimeout(resolve, 3000));
-
-                toast.success('¡Gift Card enviada exitosamente!');
-                router.push('/customer/balance');
-            } else {
-                // Add to cart with design info encoded in ID
-                addItem({
-                    id: `gift-card-${designSlug}-${Date.now()}`,
-                    name: `Gift Card $${finalAmount} para ${recipientName}`,
-                    price: finalAmount,
-                    imageUrl: `gift-card-design:${designSlug}`,
-                    stock: 999,
-                });
-
-                setProcessingStep(4);
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
-                setShowProcessingOverlay(false);
-                toast.success('Gift Card agregada al carrito');
-                router.push('/carrito');
+            if (!giftRes.ok) {
+                const errorData = await giftRes.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Error al crear la gift card');
             }
+
+            setProcessingStep(3);
+            await pausa(700);
+            setProcessingStep(4);
+            toast.success('Gift Card enviada');
+            router.push('/customer/balance');
         } catch (error: any) {
             console.error('Error:', error);
             setProcessingError(error.message || 'Ocurrió un error. Intenta de nuevo.');
@@ -635,7 +602,7 @@ export default function GiftCardsPage() {
                                 <div className="text-right">
                                     <span className="font-bold text-ink">{formatUSD(finalAmount)}</span>
                                     {finalAmountBs && (
-                                        <p className="text-xs text-muted">≈ Bs. {finalAmountBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                        <p className="text-xs text-muted">≈ {formatVES(finalAmountBs)}</p>
                                     )}
                                 </div>
                             </div>
@@ -655,19 +622,29 @@ export default function GiftCardsPage() {
                             <span>Pago 100% seguro — Entrega garantizada</span>
                         </div>
 
+                        {/* C-87: sin saldo suficiente se recarga aquí mismo; la gift card no pasa por el carrito */}
+                        {session && saldoCargado && finalAmount >= 5 && !canPayWithBalance && (
+                            <p className={`${adminNotice('warning')} mb-3`}>
+                                Te faltan <strong>{formatUSD(faltaSaldo)}</strong> de saldo. Recarga y envía tu gift card desde esta misma página.
+                            </p>
+                        )}
+
                         {/* Purchase Button */}
                         <button
-                            onClick={handlePurchase}
-                            disabled={isLoading || finalAmount < 5}
-                            className={`w-full py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors ${finalAmount >= 5
+                            type="button"
+                            onClick={!session || canPayWithBalance ? handlePurchase : () => setShowRecharge(true)}
+                            disabled={isLoading || (Boolean(session) && (finalAmount < 5 || !saldoCargado))}
+                            className={`w-full py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors ${!session || finalAmount >= 5
                                 ? 'bg-brand-600 hover:bg-brand-700 text-white cursor-pointer'
                                 : 'bg-line text-muted cursor-not-allowed'
                                 }`}
                         >
-                            {isLoading ? '...' : canPayWithBalance ? (
+                            {!session ? (
+                                <><FiLogIn className="w-4 h-4" /> Inicia sesión para comprar</>
+                            ) : isLoading ? 'Procesando' : !saldoCargado ? 'Cargando tu saldo' : canPayWithBalance ? (
                                 <><FiCreditCard className="w-4 h-4" /> Pagar con saldo</>
                             ) : (
-                                <><FiShoppingCart className="w-4 h-4" /> Agregar al carrito</>
+                                <><FiPlusCircle className="w-4 h-4" /> Recargar saldo</>
                             )}
                         </button>
                     </div>
@@ -838,6 +815,15 @@ export default function GiftCardsPage() {
                     </div>
                 </div>
             )}
+
+            <RechargeModal
+                isOpen={showRecharge}
+                onClose={() => setShowRecharge(false)}
+                onSuccess={() => {
+                    setShowRecharge(false);
+                    cargarSaldo();
+                }}
+            />
 
             {/* Processing Overlay - Using reusable component */}
             <ProcessingOverlay

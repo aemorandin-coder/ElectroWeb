@@ -529,14 +529,6 @@ export default function CheckoutPage() {
     return `USD ${formatted}$`;
   };
 
-  // Format number only (without USD prefix and $ suffix) - for places that show USD separately
-  const formatNumber = (price: number) => {
-    return new Intl.NumberFormat('de-DE', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(price);
-  };
-
   // Function to paste from clipboard (Google Maps feature)
   const handlePasteFromGoogleMaps = async () => {
     try {
@@ -1328,7 +1320,7 @@ export default function CheckoutPage() {
                                 type="button"
                                 onClick={handleCheckGiftCard}
                                 disabled={giftCardLoading}
-                                className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 p-2 md:px-4 md:py-2 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600 transition-all disabled:opacity-70 disabled:cursor-wait"
+                                className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 p-2 md:px-4 md:py-2 bg-warning text-white text-sm font-bold rounded-lg hover:bg-warning-strong transition-all disabled:opacity-70 disabled:cursor-wait"
                               >
                                 {giftCardLoading ? (
                                   <span className="flex items-center gap-2">
@@ -1368,23 +1360,23 @@ export default function CheckoutPage() {
                             {/* Balance Display */}
                             <div className={`p-6 rounded-xl border-2 ${giftCardInfo.status === 'ACTIVE' && giftCardInfo.balanceUSD > 0
                               ? 'bg-success/5 border-success/30'
-                              : 'bg-gray-50 border-gray-300'}`}
+                              : 'bg-surface border-line-strong'}`}
                             >
                               <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">Estado</span>
+                                <span className="text-sm text-muted">Estado</span>
                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${giftCardInfo.status === 'ACTIVE'
                                   ? 'bg-success-strong text-white'
-                                  : 'bg-gray-400 text-white'}`}
+                                  : 'bg-subtle text-white'}`}
                                 >
                                   {giftCardInfo.status === 'ACTIVE' ? 'Activa' : giftCardInfo.status === 'DEPLETED' ? 'Sin saldo' : giftCardInfo.status}
                                 </span>
                               </div>
                               <div className="text-center py-4">
-                                <p className="text-sm text-gray-500 mb-1">Saldo disponible</p>
+                                <p className="text-sm text-muted mb-1">Saldo disponible</p>
                                 <p className="text-3xl font-bold text-ink">
                                   {formatUSD(giftCardInfo.balanceUSD)}
                                 </p>
-                                <p className="text-sm text-gray-500">USD</p>
+                                <p className="text-sm text-muted">USD</p>
                               </div>
                             </div>
 
@@ -1573,7 +1565,7 @@ export default function CheckoutPage() {
                         {/* Status Badge */}
                         <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${userBalance >= finalTotal
                           ? 'bg-brand-500/10 text-brand-500 border border-brand-500/20'
-                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                          : 'bg-warning/10 text-warning-strong border border-warning/30'
                           }`}>
                           {userBalance >= finalTotal ? (
                             <>
@@ -1645,7 +1637,7 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={() => setShowNotesSection(!showNotesSection)}
-                  className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  className="w-full px-5 py-4 flex items-center justify-between hover:bg-surface transition-colors"
                 >
                   <h2 className="text-lg font-bold text-ink flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
@@ -1696,7 +1688,7 @@ export default function CheckoutPage() {
                       términos y condiciones
                     </button>
                     . Confirmo que la información de envío es correcta y entiendo que{' '}
-                    <strong className="font-bold text-orange-700">
+                    <strong className="font-bold text-warning-strong">
                       la empresa no se hace responsable por datos errados ingresados por el usuario
                     </strong>
                     .
@@ -1812,9 +1804,9 @@ export default function CheckoutPage() {
               </div>
 
               {/* Summary Card */}
-              <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xl animate-slideUp">
+              <div className="relative bg-white rounded-2xl border border-line overflow-hidden shadow-xl animate-slideUp">
                 {/* Header - Same style as other sections */}
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-6 py-4 border-b border-line">
                   <h2 className="text-lg font-bold text-ink flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
                       <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1827,7 +1819,7 @@ export default function CheckoutPage() {
 
                 <div className="p-6">
                   {/* Products List */}
-                  <div className="space-y-3 mb-4 max-h-[250px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200">
+                  <div className="space-y-3 mb-4 max-h-[250px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-line">
                     {items.map((item) => {
                       const originalTotal = item.price * item.quantity;
                       const activeDiscount = activeDiscounts.find(d =>
@@ -1840,7 +1832,7 @@ export default function CheckoutPage() {
                       const finalItemTotal = activeDiscount ? originalTotal * (1 - discountVal / 100) : originalTotal;
 
                       return (
-                        <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors">
+                        <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface transition-colors">
                           <div className="relative flex-shrink-0 w-14 h-14 bg-surface rounded-xl border border-line overflow-hidden">
                             {item.imageUrl ? (
                               <Image
@@ -1852,26 +1844,26 @@ export default function CheckoutPage() {
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6 text-line" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                 </svg>
                               </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-semibold text-gray-800 line-clamp-1">
+                            <h4 className="text-sm font-semibold text-ink line-clamp-1">
                               {item.name}
                             </h4>
                             <div className="flex items-center justify-between mt-1">
-                              <span className="text-xs text-gray-500 font-medium">x{item.quantity}</span>
+                              <span className="text-xs text-muted font-medium">x{item.quantity}</span>
                               <div className="text-right">
                                 {activeDiscount ? (
                                   <div className="flex flex-col items-end">
-                                    <span className="text-xs text-gray-400 line-through">{formatPrice(originalTotal)}</span>
+                                    <span className="text-xs text-subtle line-through">{formatPrice(originalTotal)}</span>
                                     <span className="text-sm font-bold text-success-strong">{formatPrice(finalItemTotal)}</span>
                                   </div>
                                 ) : (
-                                  <span className="text-sm font-bold text-gray-800">{formatPrice(originalTotal)}</span>
+                                  <span className="text-sm font-bold text-ink">{formatPrice(originalTotal)}</span>
                                 )}
                               </div>
                             </div>
@@ -1882,21 +1874,18 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Divider */}
-                  <div className="border-t border-gray-200 my-4"></div>
+                  <div className="border-t border-line my-4"></div>
 
                   {/* Price Breakdown */}
                   <div className="space-y-3">
                     {/* Subtotal */}
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500 text-sm">Subtotal:</span>
+                      <span className="text-muted text-sm">Subtotal:</span>
                       <div className="text-right">
-                        <div className="flex items-baseline gap-1 justify-end">
-                          <span className="text-xs text-gray-400">USD</span>
-                          <span className="text-base font-bold text-gray-700">{formatNumber(cartSubtotal)}$</span>
-                        </div>
+                        <span className="text-base font-bold text-ink">{formatUSD(cartSubtotal)}</span>
                         {companySettings?.exchangeRateVES && (
                           <div className="text-xs text-brand-500 font-medium">
-                            Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cartSubtotal * Number(companySettings.exchangeRateVES))}
+                            {formatVES(cartSubtotal * Number(companySettings.exchangeRateVES))}
                           </div>
                         )}
                       </div>
@@ -1912,10 +1901,10 @@ export default function CheckoutPage() {
                           Descuento:
                         </span>
                         <div className="text-right">
-                          <span className="text-base font-bold text-success-strong">-{formatPrice(cartDiscount)}</span>
+                          <span className="text-base font-bold text-success-strong">-{formatUSD(cartDiscount)}</span>
                           {companySettings?.exchangeRateVES && (
                             <div className="text-xs text-success font-medium">
-                              -Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cartDiscount * Number(companySettings.exchangeRateVES))}
+                              -{formatVES(cartDiscount * Number(companySettings.exchangeRateVES))}
                             </div>
                           )}
                         </div>
@@ -1926,34 +1915,31 @@ export default function CheckoutPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-gray-500 text-sm">Envío:</span>
+                          <span className="text-muted text-sm">Envío:</span>
                           {/* Info tooltip */}
                           <div className="group relative">
-                            <FiInfo className="w-3.5 h-3.5 text-gray-400 cursor-help" />
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-72 z-[var(--z-dropdown)]">
+                            <FiInfo className="w-3.5 h-3.5 text-muted cursor-help" />
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-ink text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-72 z-[var(--z-dropdown)]">
                               <div className="font-semibold mb-1 flex items-center gap-1"><FiPackage className="h-3.5 w-3.5" aria-hidden="true" />Sobre el envío</div>
-                              <p className="text-gray-300 leading-relaxed">
+                              <p className="text-surface leading-relaxed">
                                 Los costos de envío son manejados por las empresas de encomienda (ZOOM, MRW, TEALCA). Solo cobramos <strong className="text-ink">{formatUSD(shippingBreakdown.packagingFee)}</strong> por embalaje.
                               </p>
                               {shippingBreakdown.totalWeight > 0 && (
-                                <p className="text-gray-300 mt-1">
+                                <p className="text-surface mt-1">
                                   Peso total: <strong className="text-ink">{shippingBreakdown.totalWeight.toFixed(2)} kg</strong>
                                 </p>
                               )}
-                              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800"></div>
+                              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-ink"></div>
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
                           {shippingCost > 0 ? (
                             <>
-                              <div className="flex items-baseline gap-1 justify-end">
-                                <span className="text-xs text-gray-400">USD</span>
-                                <span className="text-base font-bold text-gray-700">{formatNumber(shippingCost)}$</span>
-                              </div>
+                              <span className="text-base font-bold text-ink">{formatUSD(shippingCost)}</span>
                               {companySettings?.exchangeRateVES && (
                                 <div className="text-xs text-brand-500 font-medium">
-                                  Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(shippingCost * Number(companySettings.exchangeRateVES))}
+                                  {formatVES(shippingCost * Number(companySettings.exchangeRateVES))}
                                 </div>
                               )}
                             </>
@@ -1972,7 +1958,7 @@ export default function CheckoutPage() {
                             </svg>
                             Ver desglose de envío
                           </summary>
-                          <div className="mt-2 p-3 bg-gray-50 rounded-lg text-xs space-y-2">
+                          <div className="mt-2 p-3 bg-surface rounded-lg text-xs space-y-2">
                             {/* Free shipping badge */}
                             {shippingBreakdown.isFreeShipping && (
                               <div className="flex items-center gap-2 text-success-strong bg-success/5 px-2 py-1.5 rounded-lg">
@@ -1986,14 +1972,14 @@ export default function CheckoutPage() {
                             {/* Digital items */}
                             {shippingBreakdown.digitalItems.length > 0 && (
                               <div className="space-y-1">
-                                <div className="font-semibold text-purple-600 flex items-center gap-1">
+                                <div className="font-semibold text-brand-600 flex items-center gap-1">
                                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                   </svg>
                                   Digitales (sin envío):
                                 </div>
                                 {shippingBreakdown.digitalItems.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-gray-500 pl-4">
+                                  <div key={idx} className="flex justify-between text-muted pl-4">
                                     <span className="truncate max-w-[60%]">{item.name} x{item.quantity}</span>
                                     <span className="text-success-strong font-medium">$0.00</span>
                                   </div>
@@ -2011,11 +1997,11 @@ export default function CheckoutPage() {
                                   Consolidables (por peso):
                                 </div>
                                 {shippingBreakdown.consolidableItems.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-gray-500 pl-4">
+                                  <div key={idx} className="flex justify-between text-muted pl-4">
                                     <span className="truncate max-w-[55%]">{item.name} x{item.quantity}</span>
-                                    <span className="text-gray-600">
+                                    <span className="text-muted">
                                       {item.volumetricWeight > item.weight ? (
-                                        <span className="text-amber-600" title="Se usa peso volumétrico">
+                                        <span className="text-warning-strong" title="Se usa peso volumétrico">
                                           {item.usedWeight.toFixed(2)} kg*
                                         </span>
                                       ) : (
@@ -2024,8 +2010,8 @@ export default function CheckoutPage() {
                                     </span>
                                   </div>
                                 ))}
-                                <div className="flex justify-between pt-1 border-t border-gray-200 font-medium">
-                                  <span className="text-gray-600">Subtotal ({shippingBreakdown.totalWeight.toFixed(2)} kg × $2/kg):</span>
+                                <div className="flex justify-between pt-1 border-t border-line font-medium">
+                                  <span className="text-muted">Subtotal ({shippingBreakdown.totalWeight.toFixed(2)} kg × $2/kg):</span>
                                   <span className="text-brand-600 font-medium">{formatUSD(shippingBreakdown.consolidatedCost)}</span>
                                 </div>
                               </div>
@@ -2034,27 +2020,27 @@ export default function CheckoutPage() {
                             {/* Bulky items */}
                             {shippingBreakdown.bulkyItems.length > 0 && !shippingBreakdown.isFreeShipping && (
                               <div className="space-y-1">
-                                <div className="font-semibold text-amber-600 flex items-center gap-1">
+                                <div className="font-semibold text-warning-strong flex items-center gap-1">
                                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                                   </svg>
                                   Productos grandes (envío individual):
                                 </div>
                                 {shippingBreakdown.bulkyItems.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-gray-500 pl-4">
+                                  <div key={idx} className="flex justify-between text-muted pl-4">
                                     <span className="truncate max-w-[60%]">{item.name} x{item.quantity}</span>
                                     <span className="text-warning-strong font-medium">{formatUSD(item.cost)}</span>
                                   </div>
                                 ))}
-                                <div className="flex justify-between pt-1 border-t border-gray-200 font-medium">
-                                  <span className="text-gray-600">Subtotal envío individual:</span>
+                                <div className="flex justify-between pt-1 border-t border-line font-medium">
+                                  <span className="text-muted">Subtotal envío individual:</span>
                                   <span className="text-warning-strong font-medium">{formatUSD(shippingBreakdown.bulkyCost)}</span>
                                 </div>
                               </div>
                             )}
 
                             {/* Packaging fee */}
-                            <div className="flex justify-between pt-1 border-t border-gray-200 text-gray-600">
+                            <div className="flex justify-between pt-1 border-t border-line text-muted">
                               <span className="flex items-center gap-1">
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" />
@@ -2066,7 +2052,7 @@ export default function CheckoutPage() {
 
                             {/* Volumetric weight note */}
                             {shippingBreakdown.consolidableItems.some(item => item.volumetricWeight > item.weight) && (
-                              <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded flex items-start gap-1">
+                              <div className="text-xs text-warning-strong bg-warning/10 px-2 py-1 rounded flex items-start gap-1">
                                 <span className="font-bold">*</span>
                                 <span>Se usó peso volumétrico (L×A×H÷5000) por ser mayor al peso real.</span>
                               </div>
@@ -2077,18 +2063,15 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Total - Premium Style */}
-                    <div className="pt-4 border-t-2 border-dashed border-gray-200">
+                    <div className="pt-4 border-t-2 border-dashed border-line">
                       <div className="flex justify-between items-start">
-                        <span className="text-lg font-bold text-gray-800">Total:</span>
+                        <span className="text-lg font-bold text-ink">Total:</span>
                         <div className="text-right">
-                          <div className="flex items-baseline gap-1 justify-end">
-                            <span className="text-sm font-bold text-gray-400">USD</span>
-                            <span className="text-3xl font-bold text-gray-800">{formatNumber(finalTotal)}$</span>
-                          </div>
+                          <span className="text-3xl font-bold text-ink">{formatUSD(finalTotal)}</span>
                           {companySettings?.exchangeRateVES && (
                             <div className="mt-1 px-3 py-1 bg-brand-500/10 rounded-lg inline-block">
                               <span className="text-sm font-bold text-brand-500">
-                                Bs. {new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(finalTotal * Number(companySettings.exchangeRateVES))}
+                                {formatVES(finalTotal * Number(companySettings.exchangeRateVES))}
                               </span>
                             </div>
                           )}
@@ -2098,7 +2081,7 @@ export default function CheckoutPage() {
 
                     {/* Exchange Rate Note */}
                     {companySettings?.exchangeRateVES && (
-                      <div className="text-xs text-gray-400 text-center pt-2">
+                      <div className="text-xs text-muted text-center pt-2">
                         Tasa de cambio: 1 USD = {formatVES(Number(companySettings.exchangeRateVES))}
                       </div>
                     )}
@@ -2109,7 +2092,7 @@ export default function CheckoutPage() {
                 <div className="px-6 pb-6">
                   <Link
                     href="/productos"
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all duration-300 text-sm"
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-surface text-ink font-semibold rounded-xl hover:bg-line border border-line transition-all text-sm"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -2122,30 +2105,30 @@ export default function CheckoutPage() {
               {/* Trust Badges */}
               <div className={`${adminCard} shadow-sm p-5 space-y-4`}>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Envíos Asegurados</h3>
+                  <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Envíos Asegurados</h3>
                   <div className="flex gap-2">
                     <span className="px-2 py-0.5 bg-warning/10 text-warning-strong border border-warning/20 rounded text-[11px] font-bold">ZOOM</span>
                     <span className="px-2 py-0.5 bg-deal-bg text-deal border border-deal/20 rounded text-[11px] font-bold">MRW</span>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <div className="flex items-start gap-3 text-xs text-gray-600">
+                  <div className="flex items-start gap-3 text-xs text-muted">
                     <div className="w-7 h-7 bg-brand-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                       <FiTruck className="w-3.5 h-3.5 text-brand-500" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-700">Despacho Nacional Garantizado</p>
-                      <p className="text-gray-500">Envíos Rápidos y Seguros a nivel nacional por ZOOM y MRW.</p>
+                      <p className="font-semibold text-ink">Despacho Nacional Garantizado</p>
+                      <p className="text-muted">Envíos Rápidos y Seguros a nivel nacional por ZOOM y MRW.</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-start gap-3 text-xs text-gray-600">
+                  <div className="flex items-start gap-3 text-xs text-muted">
                     <div className="w-7 h-7 bg-success/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                       <FiShield className="w-3.5 h-3.5 text-success-strong" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-700">Protección del Comprador</p>
-                      <p className="text-gray-500">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
+                      <p className="font-semibold text-ink">Protección del Comprador</p>
+                      <p className="text-muted">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
                     </div>
                   </div>
                 </div>

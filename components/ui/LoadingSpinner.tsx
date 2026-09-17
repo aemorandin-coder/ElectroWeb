@@ -8,7 +8,7 @@ export function LoadingSpinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   return (
     <div className="flex items-center justify-center">
       <svg
-        className={`animate-spin ${sizeClasses[size]} text-[#2a63cd]`}
+        className={`animate-spin ${sizeClasses[size]} text-brand-500`}
         fill="none"
         viewBox="0 0 24 24"
       >
@@ -32,12 +32,12 @@ export function LoadingSpinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
 
 export function PageLoader() {
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center">
+    <div className="min-h-dvh bg-surface flex items-center justify-center">
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-[#2a63cd] mb-4 shadow-lg shadow-[#2a63cd]/20 animate-pulse">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-brand-500 mb-4 shadow-md shadow-brand-500/20 animate-pulse">
           <LoadingSpinner size="md" />
         </div>
-        <p className="text-sm text-[#6a6c6b] font-medium">Cargando...</p>
+        <p className="text-sm text-muted font-medium">Cargando...</p>
       </div>
     </div>
   );
@@ -45,14 +45,14 @@ export function PageLoader() {
 
 export function CardSkeleton() {
   return (
-    <div className="bg-white rounded-xl border border-[#e9ecef] p-6 shadow-sm animate-pulse">
+    <div className="bg-white rounded-xl border border-line p-6 shadow-sm animate-pulse">
       <div className="flex items-center justify-between mb-4">
-        <div className="w-12 h-12 bg-[#f8f9fa] rounded-lg" />
-        <div className="w-16 h-6 bg-[#f8f9fa] rounded-full" />
+        <div className="w-12 h-12 bg-surface rounded-lg" />
+        <div className="w-16 h-6 bg-surface rounded-full" />
       </div>
       <div className="space-y-2">
-        <div className="h-4 bg-[#f8f9fa] rounded w-1/3" />
-        <div className="h-6 bg-[#f8f9fa] rounded w-1/2" />
+        <div className="h-4 bg-surface rounded w-1/3" />
+        <div className="h-6 bg-surface rounded w-1/2" />
       </div>
     </div>
   );
@@ -62,13 +62,13 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="animate-pulse">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 p-4 border-b border-[#e9ecef]">
-          <div className="w-12 h-12 bg-[#f8f9fa] rounded-lg" />
+        <div key={i} className="flex items-center gap-4 p-4 border-b border-line">
+          <div className="w-12 h-12 bg-surface rounded-lg" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 bg-[#f8f9fa] rounded w-1/4" />
-            <div className="h-3 bg-[#f8f9fa] rounded w-1/3" />
+            <div className="h-4 bg-surface rounded w-1/4" />
+            <div className="h-3 bg-surface rounded w-1/3" />
           </div>
-          <div className="w-20 h-8 bg-[#f8f9fa] rounded" />
+          <div className="w-20 h-8 bg-surface rounded" />
         </div>
       ))}
     </div>

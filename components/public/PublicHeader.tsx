@@ -63,7 +63,7 @@ function PublicHeader() {
             </span>
           </Link>
 
-          <div className="hidden min-w-0 flex-1 justify-center lg:flex">
+          <div data-tour="buscar" className="hidden min-w-0 flex-1 justify-center lg:flex">
             <Suspense fallback={<SearchForm id="header-search" />}>
               <HeaderSearch id="header-search" />
             </Suspense>
@@ -71,11 +71,11 @@ function PublicHeader() {
 
           <div className="ml-auto flex shrink-0 items-center gap-1 text-ink-soft sm:gap-2 lg:ml-0">
             <NotificationBell />
-            {/* id="cart-icon" y id="user-menu": objetivos del tour guiado */}
-            <span id="cart-icon">
+            {/* data-tour: objetivos del recorrido de bienvenida (components/onboarding/GuidedTour) */}
+            <span id="cart-icon" data-tour="carrito">
               <CartIcon />
             </span>
-            <span id="user-menu">
+            <span id="user-menu" data-tour="cuenta">
               <UserAccountButton />
             </span>
           </div>
@@ -86,6 +86,7 @@ function PublicHeader() {
       <div
         ref={mobileSearchRef}
         inert={hideMobileSearch || undefined}
+        data-tour="buscar"
         className={`pointer-events-auto flex h-12 items-center border-b border-line bg-white px-4 transition-transform duration-200 lg:hidden ${hideMobileSearch ? '-translate-y-full' : ''}`}
       >
         <Suspense fallback={<SearchForm id="header-search-mobile" compact />}>
@@ -103,7 +104,7 @@ function PublicHeader() {
           </HeaderDropdown>
 
           {/* id="nav-productos": objetivo del tour guiado */}
-          <Link href="/productos" id="nav-productos" className={navLinkClass('/productos')} aria-current={isActive('/productos') ? 'page' : undefined}>
+          <Link href="/productos" id="nav-productos" data-tour="catalogo" className={navLinkClass('/productos')} aria-current={isActive('/productos') ? 'page' : undefined}>
             Productos
           </Link>
           <Link href="/gift-cards" className={navLinkClass('/gift-cards')} aria-current={isActive('/gift-cards') ? 'page' : undefined}>

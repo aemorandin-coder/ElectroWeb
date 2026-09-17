@@ -178,6 +178,7 @@ export default function MobileNavBar() {
               <li key={href} className="flex min-w-0 flex-1">
                 <Link
                   href={href}
+                  data-tour={href === '/productos' ? 'catalogo' : undefined}
                   aria-current={active ? 'page' : undefined}
                   aria-label={isCart && totalItems > 0 ? `Carrito, ${totalItems} ${totalItems === 1 ? 'producto' : 'productos'}` : undefined}
                   className={`${itemClass} ${active ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white'}`}

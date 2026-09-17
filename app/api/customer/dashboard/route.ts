@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { parseSavedAddresses } from '@/lib/saved-addresses';
 
 export async function GET(request: NextRequest) {
     try {
@@ -57,6 +58,12 @@ export async function GET(request: NextRequest) {
         } catch (error) {
             // Wishlist table might not exist yet
         }
+
+        // Misiones del panel (C-89): dirección guardada y teléfono + cédula (se piden en la primera compra desde C-85)
+        const perfil = await prisma.profile.findUnique({
+            where: { userId },
+            select: { phone: true, idNumber: true, savedAddresses: true },
+        });
 
         // Calculate total spent this month
         const startOfMonth = new Date();
@@ -189,6 +196,8 @@ export async function GET(request: NextRequest) {
             orders: totalOrders,
             pending: pendingOrders,
             wishlist: wishlistCount,
+            tieneDireccion: parseSavedAddresses(perfil?.savedAddresses).length > 0,
+            datosCompletos: Boolean(perfil?.phone?.trim() && perfil?.idNumber?.trim()),
             totalSpentThisMonth,
             recentOrders: recentOrders.map(order => ({
                 id: order.id,

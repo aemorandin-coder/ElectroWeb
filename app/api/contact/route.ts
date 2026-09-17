@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error submitting contact form:', error);
     return NextResponse.json(
       { error: 'Error al enviar el mensaje' },
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/contact - Get all messages (Admin only)
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // SEGURIDAD (C-70): antes bastaba cualquier sesión (un cliente leía y borraba los mensajes)
     const session = await getServerSession(authOptions);

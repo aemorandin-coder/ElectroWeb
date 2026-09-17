@@ -257,22 +257,22 @@ export default function GiftCardsAdminPage() {
       <div className={adminPageHeader}>
         <div>
           <h1 className={adminPageTitle}>Gift Cards</h1>
-          <p className={adminPageSubtitle}>Las digitales se compran en la tienda. Las impresas se generan aquí y se activan al venderlas en caja.</p>
+          <p className={adminPageSubtitle}>Genera las impresas y actívalas al cobrar. Las digitales se compran en la tienda.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => void fetchGiftCards()} className={adminIconButton} aria-label="Actualizar lista">
+          <button type="button" onClick={() => void fetchGiftCards()} className={`${adminIconButton} h-11 w-11`} aria-label="Actualizar lista" title="Actualizar lista">
             <FiRefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
           <button type="button" onClick={() => openSell()} className={adminSecondaryButton}>
             <FiShoppingBag className="h-4 w-4" aria-hidden="true" /> Vender en caja
           </button>
-          <button type="button" onClick={() => setShowCreate(true)} className={adminPrimaryButton}>
+          <button type="button" onClick={() => setShowCreate(true)} className={`${adminPrimaryButton} order-first`}>
             <FiPlus className="h-4 w-4" aria-hidden="true" /> Generar impresas
           </button>
         </div>
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="mb-4 flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-5">
         {[
           { label: 'Total', value: String(stats.total), icon: FiHash, tone: 'neutral' as AdminTone },
           { label: 'Por activar', value: String(stats.toActivate), icon: FiAlertTriangle, tone: 'warning' as AdminTone },
@@ -280,17 +280,17 @@ export default function GiftCardsAdminPage() {
           { label: 'Saldo activo', value: formatUSD(stats.activeBalance), icon: FiDollarSign, tone: 'brand' as AdminTone },
           { label: 'Canjeado', value: formatUSD(stats.redeemed), icon: FiGift, tone: 'brand' as AdminTone },
         ].map(({ label, value, icon: Icon, tone }) => (
-          <div key={label} className={adminStatCard}>
-            <span className={`${adminIconChip(tone)} max-sm:hidden`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
+          <div key={label} className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+            <span className={`${adminIconChip(tone)} hidden`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
             <div className="min-w-0">
               <p className={adminStatLabel}>{label}</p>
-              <p className={`${adminStatValue} max-sm:text-xl`}>{value}</p>
+              <p className={`${adminStatValue} text-lg tabular-nums`}>{value}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className={`${adminCard} mb-4 flex flex-col gap-3 sm:flex-row`}>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
           <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
           <label htmlFor="gc-search" className="sr-only">Buscar gift cards</label>
@@ -312,7 +312,33 @@ export default function GiftCardsAdminPage() {
           <p className={adminHint}>Genera tarjetas impresas o espera las compras de la tienda.</p>
         </div>
       ) : (
-        <div className={adminTableWrap}>
+        <>
+          <div className="space-y-3 xl:hidden">
+            {filtered.map((card) => {
+              const status = STATUS[card.status] ?? { label: card.status, tone: 'neutral' as AdminTone };
+              return (
+                <article key={card.id} className={`${adminCard} relative p-4`}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <button type="button" onClick={() => setDetails(card)} className="min-h-11 font-mono text-sm font-semibold text-ink underline-offset-2 hover:underline">
+                      ****{card.codeLast4 || card.code.slice(-4)}
+                    </button>
+                    <span className={adminBadge(status.tone)}>{status.label}</span>
+                  </div>
+                  <p className="text-xs text-muted">{isPrinted(card) ? 'Impresa' : 'Digital'} · {new Date(card.createdAt).toLocaleDateString('es-VE')}</p>
+                  <dl className="my-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                    <div><dt className="text-muted">Monto</dt><dd className="whitespace-nowrap font-semibold tabular-nums">{formatUSD(Number(card.amountUSD))}</dd></div>
+                    <div><dt className="text-muted">Saldo</dt><dd className="whitespace-nowrap font-semibold tabular-nums">{formatUSD(Number(card.balanceUSD))}</dd></div>
+                  </dl>
+                  {card.recipientEmail && <div className="mb-3 text-sm [overflow-wrap:anywhere]"><p className="font-medium text-ink">{card.recipientName}</p><p className="text-muted">{card.recipientEmail}</p></div>}
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => void copyCode(card.code)} className={`${adminSecondaryButton} relative px-3`}><FiCopy className="h-4 w-4" aria-hidden="true" /> Copiar código</button>
+                    {card.status === 'INACTIVE' && <button type="button" onClick={() => openSell(card.code)} className={`${adminSuccessButton} relative px-3`}>Activar</button>}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        <div className={`${adminTableWrap} hidden xl:block`}>
           <table className={`${adminTable} min-w-[760px]`}>
             <thead>
               <tr>
@@ -334,14 +360,14 @@ export default function GiftCardsAdminPage() {
                     <td className={adminTd}>
                       <div className="flex items-center gap-1">
                         <code className="rounded bg-surface px-2 py-1 font-mono text-xs">****{card.codeLast4 || card.code.slice(-4)}</code>
-                        <button type="button" onClick={() => void copyCode(card.code)} className={`${adminIconButton} h-8 w-8`} aria-label="Copiar código completo">
+                        <button type="button" onClick={() => void copyCode(card.code)} className={`${adminIconButton} h-11 w-11`} aria-label="Copiar código completo">
                           <FiCopy className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
                       </div>
                     </td>
                     <td className={`${adminTd} text-ink-soft`}>{isPrinted(card) ? 'Impresa' : 'Digital'}</td>
-                    <td className={`${adminTd} font-semibold`}>{formatUSD(Number(card.amountUSD))}</td>
-                    <td className={`${adminTd} font-semibold ${Number(card.balanceUSD) > 0 ? 'text-success-strong' : 'text-muted'}`}>{formatUSD(Number(card.balanceUSD))}</td>
+                    <td className={`${adminTd} whitespace-nowrap font-semibold`}>{formatUSD(Number(card.amountUSD))}</td>
+                    <td className={`${adminTd} whitespace-nowrap font-semibold ${Number(card.balanceUSD) > 0 ? 'text-success-strong' : 'text-muted'}`}>{formatUSD(Number(card.balanceUSD))}</td>
                     <td className={adminTd}><span className={adminBadge(status.tone)}>{status.label}</span></td>
                     <td className={adminTd}>
                       {card.recipientEmail ? (
@@ -352,7 +378,7 @@ export default function GiftCardsAdminPage() {
                     <td className={adminTd}>
                       <div className="flex items-center justify-end gap-1">
                         {card.status === 'INACTIVE' && (
-                          <button type="button" onClick={() => openSell(card.code)} className={`${adminSuccessButton} h-9 px-3 text-xs`}>Activar</button>
+                          <button type="button" onClick={() => openSell(card.code)} className={`${adminSuccessButton} h-11 px-3 text-sm`}>Activar</button>
                         )}
                         <button type="button" onClick={() => setDetails(card)} className={adminIconButton} aria-label={`Ver tarjeta terminada en ${card.codeLast4 || card.code.slice(-4)}`}>
                           <FiEye className="h-4 w-4" aria-hidden="true" />
@@ -365,6 +391,7 @@ export default function GiftCardsAdminPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {/* Generar tarjetas impresas */}
@@ -422,7 +449,7 @@ export default function GiftCardsAdminPage() {
                 Esta es la <strong>única vez</strong> que se ven los PIN: en la base de datos quedan cifrados. Imprime la hoja ahora y cubre cada PIN con un raspadito.
               </div>
               <div className="mx-auto w-full max-w-sm">
-                <GiftCard3D amountUSD={batch[0].amountUSD} kind="print" code={batch[0].code} pin={batch[0].pin} status="INACTIVE" face="back" />
+                <GiftCard3D amountUSD={batch[0].amountUSD} kind="print" code={batch[0].code} pin={batch[0].pin} status="INACTIVE" face="front" />
               </div>
               <div className={adminTableWrap}>
                 <table className={adminTable}>
@@ -505,12 +532,12 @@ export default function GiftCardsAdminPage() {
                 status={details.status === 'INACTIVE' ? 'INACTIVE' : details.status === 'ACTIVE' ? 'ACTIVE' : null}
               />
               <dl className="grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Monto</dt><dd className="font-semibold text-ink">{formatUSD(Number(details.amountUSD))}</dd></div>
-                <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Saldo</dt><dd className="font-semibold text-ink">{formatUSD(Number(details.balanceUSD))}</dd></div>
-                <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Estado</dt><dd><span className={adminBadge((STATUS[details.status] ?? STATUS.EXPIRED).tone)}>{STATUS[details.status]?.label ?? details.status}</span></dd></div>
-                <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Creada</dt><dd className="font-semibold text-ink">{new Date(details.createdAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>
-                {details.activatedAt && <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Activada</dt><dd className="font-semibold text-ink">{new Date(details.activatedAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>}
-                {details.redeemedAt && <div className="rounded-xl bg-surface p-3"><dt className="text-muted">Canjeada</dt><dd className="font-semibold text-ink">{new Date(details.redeemedAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>}
+                <div className="border-b border-line py-2"><dt className="text-muted">Monto</dt><dd className="font-semibold text-ink">{formatUSD(Number(details.amountUSD))}</dd></div>
+                <div className="border-b border-line py-2"><dt className="text-muted">Saldo</dt><dd className="font-semibold text-ink">{formatUSD(Number(details.balanceUSD))}</dd></div>
+                <div className="border-b border-line py-2"><dt className="text-muted">Estado</dt><dd><span className={adminBadge((STATUS[details.status] ?? STATUS.EXPIRED).tone)}>{STATUS[details.status]?.label ?? details.status}</span></dd></div>
+                <div className="border-b border-line py-2"><dt className="text-muted">Creada</dt><dd className="font-semibold text-ink">{new Date(details.createdAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>
+                {details.activatedAt && <div className="border-b border-line py-2"><dt className="text-muted">Activada</dt><dd className="font-semibold text-ink">{new Date(details.activatedAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>}
+                {details.redeemedAt && <div className="border-b border-line py-2"><dt className="text-muted">Canjeada</dt><dd className="font-semibold text-ink">{new Date(details.redeemedAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>}
               </dl>
               {isPrinted(details) && <p className={adminHint}>El PIN no se puede volver a ver: solo aparece en la hoja del lote.</p>}
             </div>

@@ -1,5 +1,4 @@
 'use client';
-import { toast } from 'react-hot-toast';
 
 // [MOBILE ONLY] Cliente Panel - Premium Floating Bottom Navigation Bar
 // Uses Portal to render outside the layout DOM tree for proper fixed positioning
@@ -9,8 +8,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 
 // [MOBILE ONLY] Premium SVG Icons with BLUE theme (same as homepage)
 const PremiumDashboardIcon = ({ active }: { active: boolean }) => (
@@ -26,13 +23,6 @@ const PremiumDashboardIcon = ({ active }: { active: boolean }) => (
     </svg>
 );
 
-const PremiumBalanceIcon = ({ active }: { active: boolean }) => (
-    <svg viewBox="0 0 24 24" fill="none" className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}>
-        <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth={active ? 2.5 : 2} fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
-        <path d="M2 10h20" stroke="currentColor" strokeWidth={active ? 2.5 : 2} />
-        <circle cx="17" cy="14" r="2" stroke="currentColor" strokeWidth={active ? 2.5 : 2} fill={active ? 'rgba(42, 99, 205, 0.5)' : 'currentColor'} />
-    </svg>
-);
 
 const PremiumOrdersIcon = ({ active }: { active: boolean }) => (
     <svg viewBox="0 0 24 24" fill="none" className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}>
@@ -53,32 +43,6 @@ const PremiumProfileIcon = ({ active }: { active: boolean }) => (
     </svg>
 );
 
-const PremiumAddressIcon = ({ active }: { active: boolean }) => (
-    <svg viewBox="0 0 24 24" fill="none" className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}>
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.15)' : 'none'} />
-        <circle cx="12" cy="10" r="3" stroke="currentColor" strokeWidth={active ? 2.5 : 2} fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
-    </svg>
-);
-
-const PremiumWarrantyIcon = ({ active }: { active: boolean }) => (
-    <svg viewBox="0 0 24 24" fill="none" className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}>
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
-    </svg>
-);
-
-const PremiumSettingsIcon = ({ active }: { active: boolean }) => (
-    <svg viewBox="0 0 24 24" fill="none" className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}>
-        <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.15)' : 'none'} />
-        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth={active ? 2.5 : 2} fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
-    </svg>
-);
-
-const PremiumLogoutIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 transition-all duration-300">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
 
 const PremiumReferralIcon = ({ active }: { active: boolean }) => (
     <svg viewBox="0 0 24 24" fill="none" className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}>
@@ -105,7 +69,6 @@ export default function CustomerMobileNavBar() {
     const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
     const navRef = useRef<HTMLElement>(null);
-    const router = useRouter();
 
     // Mount state for portal
     useEffect(() => {
@@ -131,15 +94,6 @@ export default function CustomerMobileNavBar() {
     const handleTouchStart = (href: string) => setActiveItem(href);
     const handleTouchEnd = () => setTimeout(() => setActiveItem(null), 150);
 
-    const handleLogout = async () => {
-        try {
-            await signOut({ callbackUrl: '/', redirect: true });
-        } catch (error) {
-            console.error('Error signing out:', error);
-            toast.error('No se pudo cerrar la sesión');
-            router.push('/');
-        }
-    };
 
     // Don't render until mounted (for portal)
     if (!mounted) return null;

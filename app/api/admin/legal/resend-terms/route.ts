@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         await prisma.notification.create({
             data: {
                 userId: userId,
-                type: 'SYSTEM' as any,
+                type: 'SYSTEM',
                 title: 'Actualización de Términos Requerida',
                 message: 'Se ha solicitado que vuelvas a aceptar los términos y condiciones. Por favor, completa este proceso en tu próxima recarga de saldo.',
                 icon: 'terms',

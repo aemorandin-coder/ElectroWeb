@@ -138,7 +138,8 @@ export async function reserveStock(userId: string, items: { productId: string; q
     if (reservations.length > 0) {
         try {
             await prisma.$transaction(reservations);
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as { code?: string };
             console.error('Error reserving stock transaction:', error);
             if (error.code === 'P2003') {
                 throw new Error('Error de sesión o producto no válido. Por favor, cierra sesión y vuelve a ingresar, o vacía tu carrito.');

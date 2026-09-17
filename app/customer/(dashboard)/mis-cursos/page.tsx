@@ -26,12 +26,6 @@ type EnrolledCourse = {
   };
 };
 
-const LEVEL_LABELS: Record<string, string> = {
-  PRINCIPIANTE: 'Principiante',
-  INTERMEDIO: 'Intermedio',
-  AVANZADO: 'Avanzado',
-};
-
 export default function MisCursosPage() {
   const { data: session } = useSession();
   const [enrollments, setEnrollments] = useState<EnrolledCourse[]>([]);

@@ -1,4 +1,4 @@
-export function parseProductImages(raw: any): string[] {
+export function parseProductImages(raw: unknown): string[] {
   if (!raw) return [];
   if (Array.isArray(raw)) return raw;
   if (typeof raw === 'string') {
@@ -12,7 +12,7 @@ export function parseProductImages(raw: any): string[] {
   return [];
 }
 
-export function parseProductTags(raw: any): string[] {
+export function parseProductTags(raw: unknown): string[] {
   if (!raw) return [];
   if (Array.isArray(raw)) return raw;
   if (typeof raw === 'string') {

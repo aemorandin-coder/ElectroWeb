@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function createMasterAdmin() {
     try {
-        console.log('🔐 Creating master admin user...');
+        console.log('[AVISO] Creating master admin user...');
 
         const hashedPassword = await bcrypt.hash('Lau2025.', 10);
 
@@ -42,13 +42,13 @@ async function createMasterAdmin() {
             },
         });
 
-        console.log('✅ Master admin created successfully!');
-        console.log('📧 Email: masteradmin@electroshopve.com');
-        console.log('🔑 Password: Lau2025.');
-        console.log('🔗 Login at: http://localhost:3000/admin/login');
+        console.log('[OK] Master admin created successfully!');
+        console.log('[AVISO] Email: masteradmin@electroshopve.com');
+        console.log('[AVISO] Password: Lau2025.');
+        console.log('[AVISO] Login at: http://localhost:3000/admin/login');
 
     } catch (error) {
-        console.error('❌ Error creating admin:', error);
+        console.error('[ERROR] Error creating admin:', error);
     } finally {
         await prisma.$disconnect();
     }

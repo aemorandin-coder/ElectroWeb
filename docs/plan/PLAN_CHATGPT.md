@@ -109,6 +109,16 @@ Pendientes que se corrigen dentro de R1:
 - Borra `docs/plan/estado/GPT-02-preview.html`: en `estado/` solo van los `GPT-XX.md`.
 - Firma cada commit como ChatGPT (`CHATGPT.md` §3). GPT-02 salió firmado "Gemini".
 
+### Resultado de GPT-03 y GPT-04 (revisión C-93, 17/09)
+**Aprobadas y en producción.**
+- Llamadas, cuerpos, CSV y condiciones de aprobar y rechazar iguales.
+- En el teléfono ya no aparece la tabla de escritorio.
+- Los reportes sin fechas ISO.
+
+**Otra vez los dos commits salieron firmados "Gemini":** usa `git -c user.name="ChatGPT" -c user.email="chatgpt@electroshop.local" commit`.
+
+Siguen pendientes de R1: los ajustes de GPT-02, **GPT-02b**, GPT-05 (a medias) y GPT-06.
+
 ### GPT-02b · "Cliente eliminado" en órdenes sin cliente · Depende: GPT-02
 Incidente del 17/09 (`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`): al borrar clientes en la base, sus órdenes quedan con `userId` nulo y el panel las muestra como "Invitado".
 - En `app/admin/(dashboard)/orders/page.tsx`, tarjeta, tabla y detalle:

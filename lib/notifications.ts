@@ -59,6 +59,7 @@ export async function createNotification(params: CreateNotificationParams) {
  * Create notification for order confirmed
  */
 export async function notifyOrderConfirmed(userId: string, orderNumber: string, orderId: string) {
+  void orderId;
   return createNotification({
     userId,
     type: 'ORDER_CONFIRMED',
@@ -73,6 +74,7 @@ export async function notifyOrderConfirmed(userId: string, orderNumber: string, 
  * Create notification for order shipped
  */
 export async function notifyOrderShipped(userId: string, orderNumber: string, orderId: string) {
+  void orderId;
   return createNotification({
     userId,
     type: 'ORDER_SHIPPED',
@@ -87,6 +89,7 @@ export async function notifyOrderShipped(userId: string, orderNumber: string, or
  * Create notification for order delivered
  */
 export async function notifyOrderDelivered(userId: string, orderNumber: string, orderId: string) {
+  void orderId;
   return createNotification({
     userId,
     type: 'ORDER_DELIVERED',

@@ -11,10 +11,10 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 export async function POST(req: NextRequest) {
     try {
         // 1. Seguridad: Verificar Admin
-        // @ts-ignore
         const session = await getServerSession(authOptions);
+        const userRole = (session?.user as { role?: string } | undefined)?.role;
 
-        if (!session || ((session.user as any).role !== 'ADMIN' && (session.user as any).role !== 'SUPER_ADMIN')) {
+        if (!session || !userRole || (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -155,8 +155,9 @@ export async function POST(req: NextRequest) {
             hasMore: sadesData.pagination.hasMore
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Sync Error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const message = error instanceof Error ? error.message : 'Error desconocido';
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }

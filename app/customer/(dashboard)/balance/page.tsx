@@ -8,6 +8,17 @@ import { formatPaymentMethod, formatTransactionStatus, isCreditTransaction } fro
 import { formatUSD } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
 
+interface RawTransaction {
+  id: string;
+  type: string;
+  amount: number | string;
+  description: string;
+  createdAt: string;
+  status: string;
+  paymentMethod?: string;
+  [key: string]: unknown;
+}
+
 interface Transaction {
   id: string;
   type: string;
@@ -98,7 +109,7 @@ export default function BalancePage() {
           balance: Number(data.balance || 0),
           totalRecharges: Number(data.totalRecharges || 0),
           totalSpent: Number(data.totalSpent || 0),
-          recentTransactions: (data.recentTransactions || []).map((t: any) => ({
+          recentTransactions: (data.recentTransactions || []).map((t: RawTransaction) => ({
             ...t,
             amount: Number(t.amount)
           }))

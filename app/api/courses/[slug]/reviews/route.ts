@@ -36,7 +36,7 @@ export async function POST(
     }
 
     const { slug } = await params;
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const { rating, comment } = await request.json();
 
     if (!rating || rating < 1 || rating > 5) {

@@ -175,9 +175,10 @@ Revisar las ramas `gemini/*` pendientes, convertir el reporte G-14 en tarjetas n
 | 8c | **C-90 · Revisar `gemini/R12`** | ✅ Hecho (salió bien; 3 arreglos del carril Claude) |
 | 8d | **C-91 · Revisar `chatgpt/R1` (GPT-01, GPT-02), super merge y push** | ✅ Hecho el 17/09 (sin editar código). Incidente de clientes borrados auditado. |
 | — | **Descanso de Claude 17/09 → 20/09** | Gemini hace R13-R15 y ChatGPT R1-R3 en ramas encadenadas. Nadie mergea. |
-| 9 | **Al volver: revisar `gemini/R13`, `R14`, `R15`** | Una rama sale de la anterior: mergear `R15` trae las tres. R14 toca APIs de dinero: revisar el `git diff -w` que pegó en cada estado y correr las pruebas de C-74, C-84, C-85, C-87 y C-88. |
+| 9 | ~~Al volver: revisar `gemini/R13`, `R14`, `R15`~~ ✅ C-93 | Una rama sale de la anterior: mergear `R15` trae las tres. R14 toca APIs de dinero: revisar el `git diff -w` que pegó en cada estado y correr las pruebas de C-74, C-84, C-85, C-87 y C-88. |
 | 10 | **Al volver: revisar `chatgpt/R1` (GPT-02b…GPT-06), `R2` (productos) y `R3`** | Mismo método que C-91: llamadas y cuerpos idénticos, inventario de acciones y navegador a 390/1440. En productos, el cuerpo del `POST` de antes y de después (GPT-10). |
-| 11 | **C-92 · Clientes: desactivar en vez de borrar** | `AUDITORIA_CLIENTES_BORRADOS.md`. Con la salida del diagnóstico de Andrés. Migración de `onDelete` con su OK. |
+| 8e | **C-93 · Revisar Gemini R13-R15 y ChatGPT GPT-03/04, merge y push** | ✅ Hecho el 17/09 (91 de 91 pruebas; ESLint 403→197 errores) |
+| 11 | **C-92 · Clientes: desactivar en vez de borrar** | `AUDITORIA_CLIENTES_BORRADOS.md`. **Decisión 17/09:** "Eliminar" borra de verdad solo si el cliente no tiene órdenes, saldo, transacciones ni gift cards (spam); si tiene algo, se desactiva. Con la salida del diagnóstico de Andrés. Migración de `onDelete` con su OK. |
 | 12 | **C-80 · Login con límite de intentos en el servidor** | Más: cuentas desactivadas (junto con C-92), `GET /api/user/profile` sin DTO, y **`/api/debug/og-metadata` en producción** (revisar si se borra o se protege). |
 | 12b | **Facebook (sobre C-85)** | Cuando Andrés cree la app en Meta. |
 | 13 | **C-60b · Surtido de pedidos digitales** | Campos de proveedor, referencia y costo (F7); aviso de pedido digital por entregar; `orderItemId` sin comprobar. |

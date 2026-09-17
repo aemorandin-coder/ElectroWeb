@@ -4,7 +4,9 @@ import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 
 // Initialize Gemini AI
-let genAI: any = null;
+import type { GoogleGenerativeAI } from '@google/generative-ai';
+
+let genAI: GoogleGenerativeAI | null = null;
 
 async function getGeminiAI() {
     if (!genAI) {
@@ -66,7 +68,7 @@ Sé creativo, usa el tono del template (${template}) y genera contenido que conv
                 } else {
                     throw new Error('No JSON found');
                 }
-            } catch (e) {
+            } catch {
                 // Default fallback
                 parsed = {
                     headline: 'OFERTA',
@@ -113,7 +115,7 @@ Responde con un JSON array así (sin markdown, solo JSON puro):
                 } else {
                     throw new Error('No JSON found');
                 }
-            } catch (e) {
+            } catch {
                 parsed = [
                     { text: 'SUPER OFERTA', style: 'urgente' },
                     { text: 'Diseño Exclusivo', style: 'elegante' },
@@ -156,7 +158,7 @@ Los colores deben ser vibrantes y atractivos para redes sociales.`;
                 if (jsonMatch) {
                     parsed = JSON.parse(jsonMatch[0]);
                 }
-            } catch (e) {
+            } catch {
                 parsed = {
                     primary: '#2a63cd',
                     secondary: '#1e4ba3',
@@ -174,11 +176,12 @@ Los colores deben ser vibrantes y atractivos para redes sociales.`;
 
         return NextResponse.json({ error: 'Acción no válida' }, { status: 400 });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error al procesar con IA';
         console.error('Gemini API error:', error);
         return NextResponse.json({
-            error: error.message || 'Error al generar contenido',
-            details: process.env.NODE_ENV === 'development' ? error.toString() : undefined
+            error: message,
+            details: process.env.NODE_ENV === 'development' ? String(error) : undefined
         }, { status: 500 });
     }
 }

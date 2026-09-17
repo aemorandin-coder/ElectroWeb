@@ -43,8 +43,8 @@ type Course = {
   category?: string | null;
   level?: string | null;
   instructor?: string | null;
-  priceUSD: any;
-  rating?: any;
+  priceUSD: number | string;
+  rating?: number | string | null;
   enrollmentCount: number;
   totalLessons?: number | null;
   totalDuration?: number | null;
@@ -441,7 +441,7 @@ type EnrollCardProps = {
 };
 
 function EnrollCard({
-  price, isFree, isEnrolled, canEnroll, isLoggedIn, hasBalance,
+  price, isFree, isEnrolled, isLoggedIn, hasBalance,
   userBalance, enrolling, enrollError, enrollSuccess, progress,
   slug, thumbnail, trailerUrl, onEnroll,
 }: EnrollCardProps) {

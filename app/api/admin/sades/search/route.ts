@@ -4,9 +4,9 @@ import { authOptions } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // @ts-ignore
     const session = await getServerSession(authOptions);
-    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
+    const userRole = (session?.user as { role?: string } | undefined)?.role;
+    if (!session || !userRole || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
@@ -30,7 +30,17 @@ export async function GET(request: NextRequest) {
     }
 
     const json = await res.json();
-    const all: any[] = json.data || [];
+    interface SadesProduct {
+      sku: string;
+      nombre: string;
+      descripcion?: string | null;
+      categoria?: string | null;
+      precioUSD?: number | null;
+      stockDisponible?: number | null;
+      stock?: number | null;
+      imagenApiUrl?: string | null;
+    }
+    const all: SadesProduct[] = json.data || [];
 
     const filtered = q
       ? all.filter(
@@ -52,7 +62,7 @@ export async function GET(request: NextRequest) {
         imagenApiUrl: p.imagenApiUrl || null,
       })),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('SADES search error:', error);
     return NextResponse.json({ error: 'Error al buscar en SADES' }, { status: 500 });
   }

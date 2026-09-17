@@ -20,9 +20,10 @@ export async function POST(
     }
 
     const { slug } = await params;
-    const userId = (session.user as any).id;
-    const userEmail = (session.user as any).email as string;
-    const userName = ((session.user as any).name as string) || 'Estudiante';
+    const user = session.user as { id: string; email?: string | null; name?: string | null };
+    const userId = user.id;
+    const userEmail = (user.email || '') as string;
+    const userName = (user.name as string) || 'Estudiante';
 
     const course = await prisma.course.findUnique({
       where: { slug, isActive: true },

@@ -13,7 +13,7 @@ function toSlug(title: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!isAuthorized(session, 'MANAGE_CONTENT')) {

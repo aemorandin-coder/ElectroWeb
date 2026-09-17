@@ -3,7 +3,7 @@ import { formatUSD, formatVES } from '@/lib/currency';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiCreditCard, FiMessageCircle, FiUser } from 'react-icons/fi';
+import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiMessageCircle, FiUser } from 'react-icons/fi';
 import { BANCOS_VENEZUELA, type BancoVenezuela } from '@/lib/pago-movil/bancos-venezuela';
 
 interface VerificarPagoMovilFormProps {
@@ -242,7 +242,7 @@ Por favor necesito ayuda para verificar mi pago.
                 });
                 onError?.(data.message);
             }
-        } catch (error) {
+        } catch {
             // Error de conexión/servidor
             const message = 'Error de conexión. Por favor, intenta nuevamente.';
             setVerificationState('error');

@@ -2,6 +2,8 @@
 import { toast } from 'react-hot-toast';
 
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import {
     FiBarChart2, FiShoppingCart, FiUsers, FiMousePointer,
     FiShield, FiTrendingUp, FiPackage, FiAlertTriangle,
@@ -9,7 +11,7 @@ import {
     FiGlobe, FiClock, FiRefreshCw, FiActivity, FiList,
     FiGift, FiDollarSign, FiCheckCircle, FiAward, FiDownload
 } from 'react-icons/fi';
-import { adminTab, adminTableWrap, adminTable, adminTh, adminTd, adminRowHover } from '@/lib/admin-ui';
+import { adminTab, adminTableWrap, adminTable, adminTh, adminTd, adminRowHover, adminPageHeader, adminPageTitle, adminPageSubtitle, adminInput, adminIconButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import {
     ResponsiveContainer, AreaChart, Area, BarChart, Bar,
@@ -43,6 +45,8 @@ interface LiveUsersData {
     devices: Record<string, number>;
     topPages: Array<{ page: string; count: number }>;
 }
+
+const formatChartDate = (value: string) => format(new Date(`${value.slice(0, 10)}T12:00:00`), 'd MMM', { locale: es });
 
 export default function ReportsPage() {
     const [mounted, setMounted] = useState(false);
@@ -158,121 +162,42 @@ export default function ReportsPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-surface p-4">
-            {/* Header - Compact */}
-            <div className="mb-4 animate-fadeIn">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-brand-500 rounded-lg flex items-center justify-center shadow-md">
-                        <FiBarChart2 className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-bold text-ink">Reportes y Analíticas</h1>
-                        <p className="text-xs text-muted">Métricas en tiempo real</p>
-                    </div>
+        <div className="min-w-0 space-y-4">
+            <div className={adminPageHeader}>
+                <div>
+                    <h1 className={adminPageTitle}>Reportes</h1>
+                    <p className={adminPageSubtitle}>Ventas, pedidos y actividad del período</p>
                 </div>
             </div>
 
-            {/* Live Users Counter - Compact */}
-            <div className="mb-4 animate-slideInRight">
-                <div className="bg-brand-500 rounded-xl p-3 shadow-lg">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                                    <FiActivity className="w-5 h-5 text-white" />
-                                </div>
-                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full" />
-                            </div>
-                            <div>
-                                <p className="text-white/70 text-xs font-medium uppercase tracking-wide">En vivo ahora</p>
-                                <div className="flex items-baseline gap-1.5">
-                                    <span className="text-2xl font-bold text-white">
-                                        {liveUsers?.liveCount ?? '...'}
-                                    </span>
-                                    <span className="text-white/70 text-xs">activos</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="hidden md:flex items-center gap-4">
-                            <div className="text-center px-3 border-l border-white/20">
-                                <p className="text-lg font-bold text-white">{liveUsers?.authenticatedCount ?? 0}</p>
-                                <p className="text-xs text-white/60">Logueados</p>
-                            </div>
-                            <div className="flex items-center gap-2 px-3 border-l border-white/20">
-                                <div className="text-center">
-                                    <FiMonitor className="w-3.5 h-3.5 text-white/60 mx-auto" />
-                                    <p className="text-xs font-bold text-white">{liveUsers?.devices?.desktop ?? 0}</p>
-                                </div>
-                                <div className="text-center">
-                                    <FiSmartphone className="w-3.5 h-3.5 text-white/60 mx-auto" />
-                                    <p className="text-xs font-bold text-white">{liveUsers?.devices?.mobile ?? 0}</p>
-                                </div>
-                                <div className="text-center">
-                                    <FiTablet className="w-3.5 h-3.5 text-white/60 mx-auto" />
-                                    <p className="text-xs font-bold text-white">{liveUsers?.devices?.tablet ?? 0}</p>
-                                </div>
-                            </div>
-                        </div>
+            <div className="space-y-3">
+                <div className="min-w-0 overflow-x-auto border-b border-line pb-2 pr-6" role="tablist" aria-label="Secciones de reportes">
+                    <div className="flex w-max gap-1">
+                        {tabs.map((tab) => {
+                            const Icon = tab.icon;
+                            return (
+                                <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
+                                    role="tab" aria-selected={activeTab === tab.id}
+                                    className={adminTab(activeTab === tab.id)}>
+                                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />{tab.label}
+                                </button>
+                            );
+                        })}
                     </div>
-                    {liveUsers?.topPages && liveUsers.topPages.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-white/20">
-                            <div className="flex flex-wrap gap-1.5">
-                                {liveUsers.topPages.slice(0, 4).map((page, i) => (
-                                    <span key={i} className="px-2 py-0.5 bg-white/15 rounded text-xs text-white font-mono">
-                                        {page.page} <span className="text-white/60">({page.count})</span>
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </div>
-            </div>
-
-            {/* Controls - Compact */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                    {tabs.map((tab) => {
-                        const Icon = tab.icon;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={adminTab(activeTab === tab.id)}
-                            >
-                                <Icon className="w-3.5 h-3.5" />
-                                {tab.label}
-                            </button>
-                        );
-                    })}
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2 bg-white rounded-lg px-2.5 py-1.5 shadow-sm border border-line">
-                        <select
-                            value={period}
-                            onChange={(e) => setPeriod(e.target.value)}
-                            className="text-xs bg-transparent border-0 focus:ring-0 text-muted pr-6"
-                        >
-                            {periodOptions.map((option) => (
-                                <option key={option.value} value={option.value}>{option.label}</option>
-                            ))}
-                        </select>
-                        <button
-                            onClick={fetchData}
-                            className="p-1 text-subtle hover:text-brand-500 rounded transition-colors"
-                            title="Actualizar datos"
-                        >
-                            <FiRefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={exportToCSV}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-line-strong rounded-lg hover:bg-surface transition-all hover:scale-105 active:scale-95 text-xs text-muted font-medium"
-                        title="Exportar a CSV"
-                    >
-                        <FiDownload className="w-4 h-4" />
-                        <span className="hidden sm:inline">Exportar CSV</span>
+                <p className="text-xs text-muted lg:hidden">Desliza las pestañas para ver más secciones.</p>
+                <div className="flex flex-wrap items-center gap-2">
+                    <label htmlFor="report-period" className="sr-only">Período del reporte</label>
+                    <select id="report-period" value={period} onChange={(e) => setPeriod(e.target.value)}
+                        className={`${adminInput()} w-32`}>
+                        {periodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                    </select>
+                    <button type="button" onClick={fetchData} className={`${adminIconButton} h-11 w-11 border border-line bg-white`}
+                        aria-label="Actualizar reporte" title="Actualizar reporte">
+                        <FiRefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                    </button>
+                    <button type="button" onClick={exportToCSV} className={adminSecondaryButton} aria-label="Exportar reporte a CSV">
+                        <FiDownload className="h-4 w-4" aria-hidden="true" /> Exportar CSV
                     </button>
                 </div>
             </div>
@@ -287,64 +212,64 @@ export default function ReportsPage() {
                     {/* Overview Tab */}
                     {activeTab === 'overview' && overview && (
                         <div className="space-y-4 animate-fadeIn">
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                                {/* Users */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-line p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
+                            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                                {/* Revenue */}
+                                <div className="col-span-2 min-w-0 rounded-xl border border-line bg-white p-3 sm:p-4 lg:col-span-1">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs text-subtle font-medium uppercase">Clientes</p>
-                                            <p className="text-2xl font-bold text-ink">{overview.users.total}</p>
+                                            <p className="text-sm text-muted">Ingresos</p>
+                                            <p className="whitespace-nowrap text-base font-bold tabular-nums text-ink sm:text-xl">
+                                                {formatUSD(Number(overview.revenue.total))}
+                                            </p>
+                                            <p className="text-xs text-subtle">En el período</p>
+                                        </div>
+                                        <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 sm:flex">
+                                            <FiTrendingUp className="w-5 h-5 text-brand-500" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Users */}
+                                <div className="min-w-0 rounded-xl border border-line bg-white p-3 sm:p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm text-muted">Clientes</p>
+                                            <p className="text-xl font-bold tabular-nums text-ink">{overview.users.total}</p>
                                             <p className="text-xs text-success-strong flex items-center gap-0.5">
                                                 <FiTrendingUp className="w-3 h-3" />+{overview.users.new} nuevos
                                             </p>
                                         </div>
-                                        <div className="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 sm:flex">
                                             <FiUsers className="w-5 h-5 text-brand-500" />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Orders */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-line p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
+                                <div className="min-w-0 rounded-xl border border-line bg-white p-3 sm:p-4">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs text-subtle font-medium uppercase">Pedidos</p>
-                                            <p className="text-2xl font-bold text-ink">{overview.orders.total}</p>
+                                            <p className="text-sm text-muted">Pedidos</p>
+                                            <p className="text-xl font-bold tabular-nums text-ink">{overview.orders.total}</p>
                                             <p className="text-xs text-success-strong flex items-center gap-0.5">
                                                 <FiTrendingUp className="w-3 h-3" />+{overview.orders.recent} recientes
                                             </p>
                                         </div>
-                                        <div className="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 sm:flex">
                                             <FiShoppingCart className="w-5 h-5 text-brand-500" />
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Revenue */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-line p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-xs text-subtle font-medium uppercase">Ingresos</p>
-                                            <p className="text-xl font-bold text-ink">
-                                                ${Number(overview.revenue.total).toLocaleString('es-VE', { minimumFractionDigits: 2 })}
-                                            </p>
-                                            <p className="text-xs text-subtle">En el período</p>
-                                        </div>
-                                        <div className="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                                            <FiTrendingUp className="w-5 h-5 text-brand-500" />
-                                        </div>
-                                    </div>
-                                </div>
-
                                 {/* Products */}
-                                <div className="group bg-white rounded-xl shadow-sm border border-line p-4 hover:shadow-md hover:border-brand-500/30 transition-all">
+                                <div className="col-span-2 min-w-0 rounded-xl border border-line bg-white p-3 sm:p-4 lg:col-span-1">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs text-subtle font-medium uppercase">Productos</p>
-                                            <p className="text-2xl font-bold text-ink">{overview.products.total}</p>
+                                            <p className="text-sm text-muted">Productos</p>
+                                            <p className="text-xl font-bold tabular-nums text-ink">{overview.products.total}</p>
                                             <p className="text-xs text-warning-strong">{overview.productRequests.pending} solicitudes</p>
                                         </div>
-                                        <div className="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 sm:flex">
                                             <FiPackage className="w-5 h-5 text-brand-500" />
                                         </div>
                                     </div>
@@ -366,23 +291,23 @@ export default function ReportsPage() {
                                         {/* Sales Area Chart */}
                                         <div className="space-y-2">
                                             <p className="text-xs font-semibold text-muted">Ventas e Ingresos (USD)</p>
-                                            <div className="h-64 w-full">
+                                            <div className="h-52 w-full sm:h-64">
                                                 <ResponsiveContainer width="100%" height="100%">
                                                     <AreaChart data={overview.dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                                         <defs>
                                                             <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                                                <stop offset="5%" stopColor="#2a63cd" stopOpacity={0.2}/>
-                                                                <stop offset="95%" stopColor="#2a63cd" stopOpacity={0}/>
+                                                                <stop offset="5%" stopColor="var(--color-brand-500)" stopOpacity={0.2}/>
+                                                                <stop offset="95%" stopColor="var(--color-brand-500)" stopOpacity={0}/>
                                                             </linearGradient>
                                                         </defs>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                                        <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickLine={false} />
-                                                        <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} />
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+                                                        <XAxis dataKey="date" stroke="var(--color-muted)" fontSize={11} tickLine={false} tickFormatter={formatChartDate} />
+                                                        <YAxis stroke="var(--color-muted)" fontSize={11} tickLine={false} />
                                                         <Tooltip 
-                                                            contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
+                                                            contentStyle={{ background: 'var(--color-surface)', border: '1px solid var(--color-line-strong)', borderRadius: '8px', fontSize: '11px' }}
                                                             formatter={(value) => [`${formatUSD(Number(value))}`, 'Ventas']}
                                                         />
-                                                        <Area type="monotone" dataKey="sales" stroke="#2a63cd" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
+                                                        <Area type="monotone" dataKey="sales" stroke="var(--color-brand-500)" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
                                                     </AreaChart>
                                                 </ResponsiveContainer>
                                             </div>
@@ -391,18 +316,18 @@ export default function ReportsPage() {
                                         {/* Orders and Users Line Chart */}
                                         <div className="space-y-2">
                                             <p className="text-xs font-semibold text-muted">Pedidos y Nuevos Clientes</p>
-                                            <div className="h-64 w-full">
+                                            <div className="h-52 w-full sm:h-64">
                                                 <ResponsiveContainer width="100%" height="100%">
                                                     <LineChart data={overview.dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                                        <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickLine={false} />
-                                                        <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} />
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+                                                        <XAxis dataKey="date" stroke="var(--color-muted)" fontSize={11} tickLine={false} tickFormatter={formatChartDate} />
+                                                        <YAxis stroke="var(--color-muted)" fontSize={11} tickLine={false} />
                                                         <Tooltip 
-                                                            contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
+                                                            contentStyle={{ background: 'var(--color-surface)', border: '1px solid var(--color-line-strong)', borderRadius: '8px', fontSize: '11px' }}
                                                         />
                                                         <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
-                                                        <Line type="monotone" dataKey="orders" name="Pedidos" stroke="#b45309" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                                                        <Line type="monotone" dataKey="users" name="Nuevos Clientes" stroke="#047857" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                                                        <Line type="monotone" dataKey="orders" name="Pedidos" stroke="var(--color-warning-strong)" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                                                        <Line type="monotone" dataKey="users" name="Nuevos Clientes" stroke="var(--color-success-strong)" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                                                     </LineChart>
                                                 </ResponsiveContainer>
                                             </div>
@@ -421,14 +346,14 @@ export default function ReportsPage() {
                                         Interacciones
                                     </h3>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-surface rounded-lg p-3 text-center group hover:bg-brand-500/5 transition-colors">
+                                        <div className="border-r border-line pr-3 text-center last:border-r-0">
                                             <FiEye className="w-5 h-5 text-brand-500 mx-auto mb-1" />
-                                            <p className="text-xl font-bold text-ink">{overview.interactions.pageViews}</p>
+                                            <p className="text-xl font-bold tabular-nums text-ink">{overview.interactions.pageViews}</p>
                                             <p className="text-xs text-muted">Vistas</p>
                                         </div>
-                                        <div className="bg-surface rounded-lg p-3 text-center group hover:bg-brand-500/5 transition-colors">
+                                        <div className="border-r border-line pr-3 text-center last:border-r-0">
                                             <FiMousePointer className="w-5 h-5 text-brand-500 mx-auto mb-1" />
-                                            <p className="text-xl font-bold text-ink">{overview.interactions.clicks}</p>
+                                            <p className="text-xl font-bold tabular-nums text-ink">{overview.interactions.clicks}</p>
                                             <p className="text-xs text-muted">Clics</p>
                                         </div>
                                     </div>
@@ -443,14 +368,14 @@ export default function ReportsPage() {
                                         Seguridad
                                     </h3>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-surface rounded-lg p-3 text-center">
+                                        <div className="border-r border-line pr-3 text-center last:border-r-0">
                                             <FiAlertTriangle className="w-5 h-5 text-warning mx-auto mb-1" />
-                                            <p className="text-xl font-bold text-ink">{overview.security.total}</p>
+                                            <p className="text-xl font-bold tabular-nums text-ink">{overview.security.total}</p>
                                             <p className="text-xs text-muted">Alertas</p>
                                         </div>
-                                        <div className={`rounded-lg p-3 text-center ${overview.security.critical > 0 ? 'bg-deal/5' : 'bg-success/5'}`}>
+                                        <div className={`pr-3 text-center ${overview.security.critical > 0 ? 'text-deal' : 'text-success-strong'}`}>
                                             <FiShield className={`w-5 h-5 mx-auto mb-1 ${overview.security.critical > 0 ? 'text-deal' : 'text-success'}`} />
-                                            <p className="text-xl font-bold text-ink">{overview.security.critical}</p>
+                                            <p className="text-xl font-bold tabular-nums text-ink">{overview.security.critical}</p>
                                             <p className="text-xs text-muted">Críticas</p>
                                         </div>
                                     </div>
@@ -472,7 +397,7 @@ export default function ReportsPage() {
                                         Top Productos Vendidos
                                     </h3>
                                     {mounted && products.topSelling.length > 0 ? (
-                                        <div className="h-64 w-full">
+                                        <div className="h-52 w-full sm:h-64">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <BarChart 
                                                     data={products.topSelling.map(p => ({
@@ -482,13 +407,13 @@ export default function ReportsPage() {
                                                     layout="vertical"
                                                     margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
                                                 >
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                                                    <XAxis type="number" stroke="#94a3b8" fontSize={10} tickLine={false} />
-                                                    <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={9} tickLine={false} width={100} />
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" horizontal={false} />
+                                                    <XAxis type="number" stroke="var(--color-muted)" fontSize={11} tickLine={false} />
+                                                    <YAxis dataKey="name" type="category" stroke="var(--color-muted)" fontSize={11} tickLine={false} width={100} />
                                                     <Tooltip 
-                                                        contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
+                                                        contentStyle={{ background: 'var(--color-surface)', border: '1px solid var(--color-line-strong)', borderRadius: '8px', fontSize: '11px' }}
                                                     />
-                                                    <Bar dataKey="ventas" fill="#047857" radius={[0, 4, 4, 0]} barSize={12} />
+                                                    <Bar dataKey="ventas" fill="var(--color-success-strong)" radius={[0, 4, 4, 0]} barSize={12} />
                                                 </BarChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -522,16 +447,16 @@ export default function ReportsPage() {
                                                         >
                                                             {products.requests.map((entry, index) => {
                                                                 const colors = {
-                                                                    PENDING: '#eab308',
-                                                                    APPROVED: '#10b981',
-                                                                    REJECTED: '#ef4444'
+                                                                    PENDING: 'var(--color-warning)',
+                                                                    APPROVED: 'var(--color-success)',
+                                                                    REJECTED: 'var(--color-danger)'
                                                                 };
-                                                                const color = colors[entry.status as keyof typeof colors] || '#64748b';
+                                                                const color = colors[entry.status as keyof typeof colors] || 'var(--color-muted)';
                                                                 return <Cell key={`cell-${index}`} fill={color} />;
                                                             })}
                                                         </Pie>
                                                         <Tooltip 
-                                                            contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
+                                                            contentStyle={{ background: 'var(--color-surface)', border: '1px solid var(--color-line-strong)', borderRadius: '8px', fontSize: '11px' }}
                                                         />
                                                     </PieChart>
                                                 </ResponsiveContainer>
@@ -637,22 +562,22 @@ export default function ReportsPage() {
                                                 Tendencia de Interacciones Diarias
                                             </h3>
                                             {mounted && interactions.daily && interactions.daily.length > 0 ? (
-                                                <div className="h-64 w-full">
+                                                <div className="h-52 w-full sm:h-64">
                                                     <ResponsiveContainer width="100%" height="100%">
                                                         <AreaChart data={interactions.daily} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                                             <defs>
                                                                 <linearGradient id="colorInteractions" x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="5%" stopColor="#2a63cd" stopOpacity={0.2}/>
-                                                                    <stop offset="95%" stopColor="#2a63cd" stopOpacity={0}/>
+                                                                    <stop offset="5%" stopColor="var(--color-brand-500)" stopOpacity={0.2}/>
+                                                                    <stop offset="95%" stopColor="var(--color-brand-500)" stopOpacity={0}/>
                                                                 </linearGradient>
                                                             </defs>
-                                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                                            <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickLine={false} />
-                                                            <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} />
+                                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+                                                            <XAxis dataKey="date" stroke="var(--color-muted)" fontSize={11} tickLine={false} tickFormatter={formatChartDate} />
+                                                            <YAxis stroke="var(--color-muted)" fontSize={11} tickLine={false} />
                                                             <Tooltip 
-                                                                contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
+                                                                contentStyle={{ background: 'var(--color-surface)', border: '1px solid var(--color-line-strong)', borderRadius: '8px', fontSize: '11px' }}
                                                             />
-                                                            <Area type="monotone" dataKey="count" stroke="#2a63cd" strokeWidth={2} fillOpacity={1} fill="url(#colorInteractions)" />
+                                                            <Area type="monotone" dataKey="count" stroke="var(--color-brand-500)" strokeWidth={2} fillOpacity={1} fill="url(#colorInteractions)" />
                                                         </AreaChart>
                                                     </ResponsiveContainer>
                                                 </div>
@@ -685,12 +610,12 @@ export default function ReportsPage() {
                                                                     nameKey="deviceType"
                                                                 >
                                                                     {interactions.byDevice.map((entry, index) => {
-                                                                        const colors = ['#2a63cd', '#10b981', '#f59e0b', '#ec4899'];
+                                                                        const colors = ['var(--color-brand-500)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-accent)'];
                                                                         return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
                                                                     })}
                                                                 </Pie>
                                                                 <Tooltip 
-                                                                    contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
+                                                                    contentStyle={{ background: 'var(--color-surface)', border: '1px solid var(--color-line-strong)', borderRadius: '8px', fontSize: '11px' }}
                                                                 />
                                                             </PieChart>
                                                         </ResponsiveContainer>
@@ -790,33 +715,33 @@ export default function ReportsPage() {
                     {activeTab === 'referrals' && referrals && (
                         <div className="space-y-4 animate-fadeIn">
                             {/* Influencer counts */}
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-2 gap-3">
                                 {[
                                     { label: 'Influencers Totales', value: referrals.totalInfluencers, Icon: FiUsers, color: 'text-brand-500', bg: 'bg-brand-500/10' },
                                     { label: 'Activos', value: referrals.activeInfluencers, Icon: FiCheckCircle, color: 'text-success-strong', bg: 'bg-success/5' },
                                     { label: 'Pausados', value: referrals.pausedInfluencers, Icon: FiActivity, color: 'text-warning-strong', bg: 'bg-warning/10' },
                                 ].map((card) => (
-                                    <div key={card.label} className="bg-white rounded-xl shadow-sm border border-line p-4">
-                                        <div className="flex items-center gap-2 mb-1.5">
+                                    <div key={card.label} className={`min-w-0 rounded-xl border border-line bg-white p-3 sm:p-4 ${card.label === 'Influencers Totales' ? 'col-span-2 sm:col-span-1' : ''}`}>
+                                        <div className="mb-1.5 flex items-center gap-2">
                                             <div className={`w-7 h-7 rounded-lg ${card.bg} flex items-center justify-center`}>
                                                 <card.Icon className={`w-3.5 h-3.5 ${card.color}`} />
                                             </div>
                                             <span className="text-xs text-subtle uppercase font-medium">{card.label}</span>
                                         </div>
-                                        <p className="text-2xl font-bold text-ink">{card.value}</p>
+                                        <p className="text-xl font-bold tabular-nums text-ink">{card.value}</p>
                                     </div>
                                 ))}
                             </div>
 
                             {/* Revenue cards */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div className="bg-success/5 border border-success/20 rounded-xl p-4">
                                     <div className="flex items-center gap-2 mb-1">
                                         <FiShoppingCart className="w-4 h-4 text-success-strong" />
                                         <span className="text-xs text-success-strong uppercase font-semibold">Ventas por referidos</span>
                                     </div>
-                                    <p className="text-xl font-bold text-success-strong">
-                                        ${referrals.approvedRevenue.gross.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+                                    <p className="whitespace-nowrap text-xl font-bold tabular-nums text-success-strong">
+                                        {formatUSD(Number(referrals.approvedRevenue.gross))}
                                     </p>
                                     <p className="text-xs text-success-strong mt-0.5">Monto bruto · período seleccionado</p>
                                 </div>
@@ -825,8 +750,8 @@ export default function ReportsPage() {
                                         <FiDollarSign className="w-4 h-4 text-brand-500" />
                                         <span className="text-xs text-brand-500 uppercase font-semibold">Comisiones pagadas</span>
                                     </div>
-                                    <p className="text-xl font-bold text-brand-600">
-                                        ${referrals.approvedRevenue.commission.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+                                    <p className="whitespace-nowrap text-xl font-bold tabular-nums text-brand-600">
+                                        {formatUSD(Number(referrals.approvedRevenue.commission))}
                                     </p>
                                     <p className="text-xs text-brand-500/70 mt-0.5">Comisiones aprobadas · período seleccionado</p>
                                 </div>
@@ -843,7 +768,7 @@ export default function ReportsPage() {
                                         Comisiones de Influencers (USD)
                                     </h3>
                                     {mounted && referrals.topInfluencers.length > 0 ? (
-                                        <div className="h-64 w-full">
+                                        <div className="h-52 w-full sm:h-64">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <BarChart 
                                                     data={referrals.topInfluencers.map(i => ({
@@ -852,14 +777,14 @@ export default function ReportsPage() {
                                                     }))}
                                                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                                                 >
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                                    <XAxis dataKey="name" stroke="#94a3b8" fontSize={9} tickLine={false} />
-                                                    <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} />
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
+                                                    <XAxis dataKey="name" stroke="var(--color-muted)" fontSize={11} tickLine={false} />
+                                                    <YAxis stroke="var(--color-muted)" fontSize={11} tickLine={false} />
                                                     <Tooltip 
-                                                        contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
+                                                        contentStyle={{ background: 'var(--color-surface)', border: '1px solid var(--color-line-strong)', borderRadius: '8px', fontSize: '11px' }}
                                                         formatter={(value) => [`${formatUSD(Number(value))}`, 'Comisión']}
                                                     />
-                                                    <Bar dataKey="comision" fill="#2a63cd" radius={[4, 4, 0, 0]} barSize={15} />
+                                                    <Bar dataKey="comision" fill="var(--color-brand-500)" radius={[4, 4, 0, 0]} barSize={15} />
                                                 </BarChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -893,16 +818,16 @@ export default function ReportsPage() {
                                                         >
                                                             {referrals.conversionsByStatus.map((entry, index) => {
                                                                 const colors = {
-                                                                    PENDING: '#f59e0b',
-                                                                    APPROVED: '#10b981',
-                                                                    REJECTED: '#ef4444'
+                                                                    PENDING: 'var(--color-warning)',
+                                                                    APPROVED: 'var(--color-success)',
+                                                                    REJECTED: 'var(--color-danger)'
                                                                 };
-                                                                const color = colors[entry.status as keyof typeof colors] || '#64748b';
+                                                                const color = colors[entry.status as keyof typeof colors] || 'var(--color-muted)';
                                                                 return <Cell key={`cell-${index}`} fill={color} />;
                                                             })}
                                                         </Pie>
                                                         <Tooltip 
-                                                            contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }}
+                                                            contentStyle={{ background: 'var(--color-surface)', border: '1px solid var(--color-line-strong)', borderRadius: '8px', fontSize: '11px' }}
                                                         />
                                                     </PieChart>
                                                 </ResponsiveContainer>
@@ -1145,6 +1070,35 @@ export default function ReportsPage() {
                     )}
                 </>
             )}
+            <section className="rounded-xl border border-line bg-white p-4" aria-label="Actividad en vivo">
+                <div className="flex flex-wrap items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600"><FiActivity className="h-5 w-5" aria-hidden="true" /></span>
+                    <div className="min-w-0 flex-1">
+                        <h2 className="text-sm font-semibold text-ink">En vivo ahora</h2>
+                        <p className="text-xs text-muted">{liveUsers?.liveCount ?? '...'} activos</p>
+                    </div>
+                    <div className="hidden items-center gap-3 text-xs text-muted md:flex">
+                        <span>{liveUsers?.authenticatedCount ?? 0} logueados</span>
+                        <span className="inline-flex items-center gap-1"><FiMonitor aria-hidden="true" />{liveUsers?.devices?.desktop ?? 0}</span>
+                        <span className="inline-flex items-center gap-1"><FiSmartphone aria-hidden="true" />{liveUsers?.devices?.mobile ?? 0}</span>
+                        <span className="inline-flex items-center gap-1"><FiTablet aria-hidden="true" />{liveUsers?.devices?.tablet ?? 0}</span>
+                    </div>
+                </div>
+                {liveUsers?.topPages && liveUsers.topPages.length > 0 && (
+                    <details className="mt-3 border-t border-line pt-2">
+                        <summary className="cursor-pointer text-xs font-medium text-brand-600">Ver rutas activas</summary>
+                        <ul className="mt-2 space-y-1 text-xs text-muted">
+                            {liveUsers.topPages.slice(0, 4).map((page, i) => (
+                                <li key={i} className="flex min-w-0 items-start justify-between gap-3">
+                                    <span className="min-w-0 break-all font-mono">{page.page}</span>
+                                    <span className="shrink-0 tabular-nums">{page.count}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </details>
+                )}
+            </section>
+
         </div>
     );
 }

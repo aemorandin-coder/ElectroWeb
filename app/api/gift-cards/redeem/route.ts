@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const userId = (session.user as any).id;
+        const userId = (session.user as { id: string }).id;
         const clientIP = getClientIP(request);
         const identifier = `${userId}:${clientIP}`;
 
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
         const codeHash = hashGiftCardCode(sanitizedCode);
 
         // Find the gift card - try by hash first, fallback to code for backwards compatibility
-        let giftCard = await prisma.giftCard.findFirst({
+        const giftCard = await prisma.giftCard.findFirst({
             where: {
                 OR: [
                     { codeHash },
@@ -346,7 +346,8 @@ export async function POST(request: NextRequest) {
             transactionId: result.walletTransaction.id
         });
 
-    } catch (error: any) {
+    } catch (err: unknown) {
+        const error = err as { message?: string; code?: string };
         console.error('Error redeeming gift card:', error);
 
         // Handle specific errors
@@ -431,7 +432,7 @@ export async function GET(request: NextRequest) {
         const hasBalance = giftCard.status === 'ACTIVE' && Number(giftCard.balanceUSD) > 0;
 
         // Build response - only show balance to authenticated users
-        const responseData: any = {
+        const responseData: Record<string, unknown> = {
             codeLast4: giftCard.code.slice(-4), // Only last 4 chars
             status: giftCard.status,
             isValid: hasBalance,

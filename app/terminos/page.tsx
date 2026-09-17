@@ -28,7 +28,7 @@ export default function TermsPage() {
                 <h2 className="text-xl font-bold text-ink">1. Aceptación de los Términos</h2>
               </div>
               <p>
-                Al acceder y utilizar los servicios de <strong>Electro Shop Morandin C.A.</strong> (en adelante "la Empresa"),
+                Al acceder y utilizar los servicios de <strong>Electro Shop Morandin C.A.</strong> (en adelante &ldquo;la Empresa&rdquo;),
                 usted acepta estar legalmente vinculado por estos términos y condiciones. Si no está de acuerdo con alguno
                 de estos términos, por favor no utilice nuestros servicios. La Empresa se reserva el derecho de modificar
                 estos términos en cualquier momento, siendo responsabilidad del usuario revisar periódicamente los cambios.

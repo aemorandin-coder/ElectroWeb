@@ -51,6 +51,6 @@ Andrés pidió unas tarjetas de saldo en una compra de prueba. Con los pedidos e
 | ID | Quién | Qué |
 |---|---|---|
 | **GPT-02b** | ChatGPT (R1) | En órdenes del admin: una orden con `userId` nulo **y** sin `guestEmail` dice "Cliente eliminado" (no "Invitado"), con un badge neutral. Solo presentación. |
-| **G-52** | Gemini (R15) | Borrar `scripts/reset-customers.ts` (autorizado en esta auditoría). |
+| **G-52** | Gemini (R15) | ✅ Borrado `scripts/reset-customers.ts` (C-93). |
 | **C-92** | Claude (después del descanso) | 1. "Eliminar cliente" pasa a **desactivar**: `accountStatus DEACTIVATED`, cierra sesiones, sale de listados y campañas; nunca se borra si tiene órdenes, saldo, transacciones o gift cards. 2. El login rechaza cuentas desactivadas (junto con C-80). 3. Esquema: `Order.user` con `onDelete: Restrict`, y `UserBalance` y `Transaction` que no se borren en cascada (**migración: necesita OK de Andrés**). 4. `scripts/ordenes-sin-cliente.ts` con modo de prueba y `--apply`, si el diagnóstico lo pide. |
-| **Decisión de Andrés** | — | ¿Se permite borrar de verdad a un cliente **sin** órdenes, saldo ni gift cards (por ejemplo, un registro de spam)? Recomendación: sí, solo en ese caso. |
+| **Decisión de Andrés (17/09)** | — | **Sí:** se borra de verdad un cliente **sin** órdenes, sin saldo ni transacciones y sin gift cards (por ejemplo, spam). Si tiene cualquiera de esas cosas, se **desactiva**. |

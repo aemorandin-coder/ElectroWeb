@@ -20,10 +20,10 @@ export async function POST(request: NextRequest) {
         if (updates && Array.isArray(updates)) {
             try {
                 const results = await prisma.$transaction(
-                    updates.map((update: any) => {
-                        const data: any = {};
-                        if (update.priceUSD !== undefined) data.priceUSD = parseFloat(update.priceUSD);
-                        if (update.stock !== undefined) data.stock = parseInt(update.stock);
+                    updates.map((update: { id: string; priceUSD?: number | string; stock?: number | string; categoryId?: string; status?: string; isActive?: boolean }) => {
+                        const data: Record<string, unknown> = {};
+                        if (update.priceUSD !== undefined) data.priceUSD = parseFloat(String(update.priceUSD));
+                        if (update.stock !== undefined) data.stock = parseInt(String(update.stock), 10);
                         if (update.categoryId !== undefined) data.categoryId = update.categoryId;
                         if (update.status !== undefined) data.status = update.status;
 
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Build update data for uniform field operations
-        let updateData: any = {};
+        const updateData: Record<string, unknown> = {};
 
         if (field === 'price') {
             const priceValue = parseFloat(value);
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
             message: `${result.count} productos actualizados exitosamente`,
             count: result.count,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error bulk updating products:', error);
         return NextResponse.json(
             { error: 'Error al actualizar productos' },

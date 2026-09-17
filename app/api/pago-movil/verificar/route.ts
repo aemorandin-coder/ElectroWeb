@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { verificarPagoMovil, interpretarErrorBDV, BDV_RESPONSE_CODES } from '@/lib/pago-movil/verificar-pago';
+import { verificarPagoMovil, interpretarErrorBDV } from '@/lib/pago-movil/verificar-pago';
 import {
     validarTelefonoVenezolano,
     validarReferencia,
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const userId = (session.user as any).id;
+        const userId = (session.user as { id: string }).id;
 
         // Rate limiting por usuario - SENSITIVO para verificaciones de pago
         const rateLimit = checkRateLimit(userId, 'pago-movil:verificar', RATE_LIMITS.SENSITIVE);
@@ -54,7 +54,6 @@ export async function POST(req: NextRequest) {
             referencia,
             fechaPago,
             importe,           // Monto en Bs para verificar con BDV
-            importeUsd,        // Monto en USD para la transacción (opcional, fallback a importe)
             cedulaPagador,
             reqCed = true,      // Validar cédula por defecto para mayor seguridad
             // Contexto de la verificación
@@ -235,9 +234,10 @@ export async function POST(req: NextRequest) {
                     rawResponse: resultado.rawResponse ? JSON.stringify(resultado.rawResponse) : null,
                 },
             });
-        } catch (dbError: any) {
+        } catch (dbError: unknown) {
+            const dbErr = dbError as { code?: string };
             // Si es error de constraint único, significa que otra solicitud procesó esta referencia
-            if (dbError?.code === 'P2002') {
+            if (dbErr?.code === 'P2002') {
                 console.error('[SECURITY] Race condition detectada - referencia duplicada:', referencia);
                 return NextResponse.json({
                     success: false,
@@ -366,13 +366,13 @@ export async function POST(req: NextRequest) {
                         const { sendEmail, getBaseTemplate } = await import('@/lib/email-service');
                         await sendEmail({
                             to: session.user.email!,
-                            subject: `✅ Recarga de $${montoUsd.toFixed(2)} aprobada — Electro Shop`,
+                            subject: `Recarga de $${montoUsd.toFixed(2)} aprobada — Electro Shop`,
                             html: await getBaseTemplate(
                                 `<div style="text-align:center;margin-bottom:20px;">
                                     <div style="width:64px;height:64px;background:linear-gradient(135deg,#10b981,#059669);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
                                         <span style="color:white;font-size:28px;">&#10003;</span>
                                     </div>
-                                    <h2 style="margin:0 0 8px;color:#212529;font-size:22px;font-weight:700;">¡Recarga Aprobada! 💰</h2>
+                                    <h2 style="margin:0 0 8px;color:#212529;font-size:22px;font-weight:700;">¡Recarga Aprobada!</h2>
                                     <p style="color:#6a6c6b;font-size:15px;line-height:1.7;">
                                         Tu recarga de <strong style="color:#10b981;">$${montoUsd.toFixed(2)} USD</strong>
                                         fue verificada automáticamente con el Banco de Venezuela y ya está disponible en tu saldo.

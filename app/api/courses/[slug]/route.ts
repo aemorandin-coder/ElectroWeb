@@ -10,7 +10,7 @@ export async function GET(
   try {
     const { slug } = await params;
     const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id;
+    const userId = (session?.user as { id?: string } | undefined)?.id;
 
     const course = await prisma.course.findUnique({
       where: { slug, isActive: true },

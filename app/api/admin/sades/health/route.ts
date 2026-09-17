@@ -4,7 +4,8 @@ import { authOptions } from '@/lib/auth';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
+  const userRole = (session?.user as { role?: string } | undefined)?.role;
+  if (!session || !userRole || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -25,7 +26,7 @@ export async function GET() {
       return NextResponse.json({ status: 'ok' });
     }
     return NextResponse.json({ status: 'error', message: `SADES respondió con status ${res.status}` }, { status: 502 });
-  } catch (err: any) {
-    return NextResponse.json({ status: 'error', message: err.message || 'Sin respuesta de SADES' }, { status: 503 });
+  } catch (err: unknown) {
+    return NextResponse.json({ status: 'error', message: err instanceof Error ? err.message : 'Sin respuesta de SADES' }, { status: 503 });
   }
 }

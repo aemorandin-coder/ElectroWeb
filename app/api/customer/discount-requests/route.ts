@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD } from '@/lib/currency';
 
@@ -16,8 +17,8 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const productId = searchParams.get('productId');
 
-        const whereClause: any = {
-            userId: (session.user as any).id,
+        const whereClause: Prisma.DiscountRequestWhereInput = {
+            userId: (session.user as { id: string }).id,
         };
 
         if (productId) {
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
         // Check if there's already a pending request for this product
         const existingRequest = await prisma.discountRequest.findFirst({
             where: {
-                userId: (session.user as any).id,
+                userId: (session.user as { id: string }).id,
                 productId,
                 status: { in: ['PENDING', 'APPROVED'] },
             },
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
         // Create the discount request
         const discountRequest = await prisma.discountRequest.create({
             data: {
-                userId: (session.user as any).id,
+                userId: (session.user as { id: string }).id,
                 productId,
                 productName,
                 originalPrice,
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
         // Create notification for the customer
         await prisma.notification.create({
             data: {
-                userId: (session.user as any).id,
+                userId: (session.user as { id: string }).id,
                 type: 'DISCOUNT_REQUEST',
                 title: 'Solicitud Enviada',
                 message: `Tu solicitud de ${requestedDiscount}% de descuento para "${productName}" ha sido enviada. Te notificaremos cuando sea revisada.`,

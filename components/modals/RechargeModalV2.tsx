@@ -4,10 +4,8 @@ import { formatUSD, formatVES } from '@/lib/currency';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import {
-    FiX, FiDollarSign, FiCheck, FiPhone, FiCreditCard, FiShield, FiArrowLeft, FiAlertTriangle, FiCheckCircle
+    FiX, FiDollarSign, FiCheck, FiShield, FiArrowLeft, FiAlertTriangle, FiCheckCircle
 } from 'react-icons/fi';
-import { SiBinance } from 'react-icons/si';
-import { BsBank2 } from 'react-icons/bs';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
@@ -39,8 +37,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     const [step, setStep] = useState<Step>('SELECT_METHOD');
     const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
 
-    // Dynamic payment methods from database
-    const [companyPaymentMethods, setCompanyPaymentMethods] = useState<Array<{
+interface CompanyPaymentMethod {
         id: string;
         type: string;
         name: string;
@@ -54,7 +51,10 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         displayNote?: string;
         qrCodeImage?: string;
         isActive: boolean;
-    }>>([]);
+    }
+
+    // Dynamic payment methods from database
+    const [companyPaymentMethods, setCompanyPaymentMethods] = useState<CompanyPaymentMethod[]>([]);
 
     const quickAmounts = [10, 25, 50, 100, 200];
 
@@ -80,7 +80,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                 if (response.ok) {
                     const data = await response.json();
                     if (Array.isArray(data)) {
-                        setCompanyPaymentMethods(data.filter((m: any) => m.isActive));
+                        setCompanyPaymentMethods(data.filter((m: CompanyPaymentMethod) => m.isActive));
                     }
                 }
             } catch (error) {
@@ -165,7 +165,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
 
     // Build details object for display
-    const getMethodDetails = (method: any) => {
+    const getMethodDetails = (method: Partial<CompanyPaymentMethod>) => {
         const details: Record<string, string> = {};
         if (method.holderId) details['Cedula/RIF'] = method.holderId;
         if (method.phone) details['Telefono'] = method.phone;
@@ -235,7 +235,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     // Create pending transaction and proceed to verification
     const handleProceedToVerification = async () => {
         if (!amount || !selectedMethod) {
-            toast.error('Por favor selecciona el monto y metodo de pago');
+            toast.error('Por favor selecciona el monto y método de pago');
             return;
         }
 
@@ -460,7 +460,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                 {/* Payment Method Selection */}
                                 <div>
                                     <label className="block text-xs lg:text-sm font-bold text-ink mb-2 lg:mb-3 uppercase tracking-wider">
-                                        Metodo de Pago
+                                        Método de Pago
                                     </label>
                                     {loadingMethods ? (
                                         <div className="flex items-center justify-center py-6 lg:py-8">
@@ -491,7 +491,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                                 {method.type === 'MOBILE_PAYMENT' && (
                                                                     <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-success-strong/10 text-success-strong rounded-full flex items-center gap-0.5">
                                                                         <FiShield className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
-                                                                        <span className="hidden sm:inline">Verificacion</span> Auto
+                                                                        <span className="hidden sm:inline">Verificación</span> Auto
                                                                     </span>
                                                                 )}
                                                                 {method.type === 'MERCANTIL_PANAMA' && (
@@ -577,7 +577,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-line rounded-full flex items-center justify-center mx-auto mb-2">
                                                 <FiDollarSign className="w-4 h-4 lg:w-5 lg:h-5 text-muted" />
                                             </div>
-                                            <p className="text-xs">Selecciona un metodo de pago</p>
+                                            <p className="text-xs">Selecciona un método de pago</p>
                                         </div>
                                     )}
                                 </div>
@@ -616,7 +616,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                 {selectedMethod && selectedMethod !== 'MOBILE_PAYMENT' && (
                                     <div>
                                         <label className="block text-xs font-bold text-ink mb-1 lg:mb-1.5 uppercase tracking-wider">
-                                            Numero de Referencia
+                                            Número de Referencia
                                         </label>
                                         <input
                                             type="text"
@@ -640,7 +640,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                 <FiShield className="w-3 h-3 lg:w-4 lg:h-4" />
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-xs lg:text-sm text-success-strong">Verificacion Automatica</h4>
+                                                <h4 className="font-bold text-xs lg:text-sm text-success-strong">Verificación Automática</h4>
                                                 <p className="text-xs text-success-strong/90 mt-0.5 lg:mt-1">
                                                     Verifica tu pago con el Banco de Venezuela y se aprueba al instante.
                                                 </p>

@@ -28,7 +28,7 @@ const API_URL = process.env.SADES_API_URL || '';
 const API_KEY = process.env.SADES_API_KEY || '';
 
 if (!API_URL || !API_KEY) {
-    console.warn('⚠️ SADES_API_URL o SADES_API_KEY no están configuradas en las variables de entorno.');
+    console.warn('[AVISO] SADES_API_URL o SADES_API_KEY no están configuradas en las variables de entorno.');
 }
 
 export class SadesClient {
@@ -109,9 +109,8 @@ export class SadesClient {
             const filepath = path.join(uploadDir, filename);
 
             // Guardar archivo (stream)
-            // @ts-ignore - fetch response body compatibility with node streams
             if (res.body) {
-                // @ts-ignore
+                // @ts-expect-error - Readable.fromWeb body type mismatch with pipeline
                 await pipeline(Readable.fromWeb(res.body), fs.createWriteStream(filepath));
             }
 

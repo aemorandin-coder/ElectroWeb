@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
-import { FiUser, FiMail, FiPhone, FiCalendar, FiSave, FiCamera, FiMapPin, FiGlobe, FiAward, FiShoppingBag, FiBriefcase, FiFileText, FiCheckCircle, FiAlertCircle, FiClock, FiTrendingUp, FiPackage } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiCalendar, FiSave, FiCamera, FiMapPin, FiGlobe, FiAward, FiBriefcase, FiFileText, FiCheckCircle, FiAlertCircle, FiClock, FiTrendingUp, FiPackage } from 'react-icons/fi';
 import { HiMiniBanknotes } from 'react-icons/hi2';
 import DocumentUpload from '@/components/customer/DocumentUpload';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
@@ -391,7 +391,7 @@ export default function ProfilePage() {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         toast.success('Solicitud enviada exitosamente. Te notificaremos cuando sea aprobada.');
         // Update local profile state
         setProfile(prev => ({
@@ -772,7 +772,7 @@ export default function ProfilePage() {
                         <FiAlertCircle className="w-4 h-4 text-subtle hover:text-brand-500 transition-colors cursor-help" />
                         <div className="absolute hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-ink text-white text-xs rounded-lg px-4 py-3 z-20 shadow-xl font-medium leading-relaxed">
                           <div className="relative">
-                            Esta información se usa principalmente para facturación. Para gestionar tus lugares de envío, dirígete a la sección <strong>"Direcciones"</strong> en el menú principal.
+                            Esta información se usa principalmente para facturación. Para gestionar tus lugares de envío, dirígete a la sección <strong>&ldquo;Direcciones&rdquo;</strong> en el menú principal.
                           </div>
                           <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
                             <div className="border-4 border-transparent border-t-ink"></div>
@@ -829,7 +829,7 @@ export default function ProfilePage() {
                         <FiAlertCircle className="w-4 h-4 text-subtle hover:text-brand-500 transition-colors cursor-help" />
                         <div className="absolute hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-ink text-white text-xs rounded-lg px-4 py-3 z-20 shadow-xl font-medium leading-relaxed">
                           <div className="relative">
-                            Selecciona cómo deseas recibir tus recibos de compra. La opción "Empresa Jurídica" requiere verificación empresarial aprobada.
+                            Selecciona cómo deseas recibir tus recibos de compra. La opción &ldquo;Empresa Jurídica&rdquo; requiere verificación empresarial aprobada.
                           </div>
                           <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
                             <div className="border-4 border-transparent border-t-ink"></div>

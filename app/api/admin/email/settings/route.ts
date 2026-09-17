@@ -237,11 +237,11 @@ export async function POST(request: NextRequest) {
             await transporter.sendMail({
                 from: `"${settings.fromName || 'Test'}" <${settings.fromEmail || settings.smtpUser}>`,
                 to: targetEmail,
-                subject: '✅ Prueba de Email - Electro Shop',
+                subject: 'Prueba de Email - Electro Shop',
                 html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                         <div style="background: linear-gradient(135deg, #2a63cd 0%, #1e4ba3 100%); color: white; padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
-                            <h1 style="margin: 0; font-size: 24px;">✅ Configuración Exitosa</h1>
+                            <h1 style="margin: 0; font-size: 24px;">Configuración Exitosa</h1>
                         </div>
                         <div style="background: #ffffff; padding: 30px; border: 1px solid #e9ecef; border-top: none; border-radius: 0 0 16px 16px;">
                             <p style="font-size: 16px; color: #212529;">

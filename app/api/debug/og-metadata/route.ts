@@ -126,8 +126,8 @@ export async function GET(request: NextRequest) {
                 productUrl: `${baseUrl}/productos/${product.slug}`,
             },
             recommendation: ogImage?.startsWith('http')
-                ? '✅ Image URL looks correct. Try clearing WhatsApp cache or use Facebook Debug Tool.'
-                : '❌ Image URL is not absolute. Check NEXT_PUBLIC_BASE_URL.',
+                ? 'Image URL looks correct. Try clearing WhatsApp cache or use Facebook Debug Tool.'
+                : 'Image URL is not absolute. Check NEXT_PUBLIC_BASE_URL.',
         });
 
     } catch (err: unknown) {

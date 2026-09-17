@@ -8,7 +8,7 @@ export async function sendCourseEnrollmentEmail(
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
       <div style="width:70px;height:70px;background:linear-gradient(135deg,#2a63cd 0%,#06b6d4 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
-        <span style="color:white;font-size:30px;">📚</span>
+        
       </div>
       <h2 style="margin:0 0 6px;color:#212529;font-size:22px;font-weight:700;">¡Inscripción Exitosa!</h2>
       <p style="color:#6a6c6b;font-size:15px;margin:0;">Ya puedes empezar a aprender</p>
@@ -51,7 +51,7 @@ export async function sendCourseCertificateEmail(
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
       <div style="width:80px;height:80px;background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(245,158,11,0.3);">
-        <span style="color:white;font-size:36px;">🏆</span>
+        
       </div>
       <h2 style="margin:0 0 6px;color:#212529;font-size:22px;font-weight:700;">¡Felicitaciones, ${data.studentName}!</h2>
       <p style="color:#6a6c6b;font-size:15px;margin:0;">Has completado el curso exitosamente</p>
@@ -74,7 +74,7 @@ export async function sendCourseCertificateEmail(
 
     <div style="text-align:center;margin:30px 0;">
       <a href="${certUrl}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 8px 20px rgba(245,158,11,0.3);">
-        Ver mi Certificado 🏆
+        Ver mi Certificado
       </a>
     </div>
     <p style="color:#adb5bd;font-size:12px;text-align:center;">
@@ -83,7 +83,7 @@ export async function sendCourseCertificateEmail(
 
   return sendEmail({
     to: email,
-    subject: `🏆 ¡Certificado de "${data.courseTitle}" obtenido!`,
+    subject: `¡Certificado de "${data.courseTitle}" obtenido!`,
     html: await getBaseTemplate(content, `¡Completaste el curso: ${data.courseTitle}!`),
   });
 }
@@ -96,7 +96,7 @@ export async function sendCreatorStatusEmail(
 
   const configs = {
     APPROVED: {
-      emoji: '🎉',
+      emoji: '',
       title: '¡Solicitud de Creador Aprobada!',
       body: `Tu solicitud para ser creador de contenido en ElectroShop ha sido <strong style="color:#059669;">aprobada</strong>. Ya puedes acceder a tu panel de creador, crear cursos y comenzar a monetizar tu conocimiento.`,
       cta: { text: 'Ir a mi Panel de Creador', url: `${appUrl}/creator/dashboard` },
@@ -106,7 +106,7 @@ export async function sendCreatorStatusEmail(
       preheader: '¡Tu solicitud fue aprobada! Bienvenido al equipo de creadores.',
     },
     REJECTED: {
-      emoji: '😔',
+      emoji: '',
       title: 'Solicitud de Creador No Aprobada',
       body: `Hemos revisado tu solicitud y lamentablemente no podemos aprobarte como creador en este momento. Si tienes preguntas, contáctanos.`,
       cta: { text: 'Contactar Soporte', url: `${appUrl}/contacto` },

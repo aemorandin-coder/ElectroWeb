@@ -124,8 +124,8 @@ export function generateReviewApprovedEmail(data: ReviewApprovedData): string {
           <div class="rating-display">
             ${[...Array(5)].map((_, i) =>
         i < rating
-            ? '<span style="color: #ffc107;">★</span>'
-            : '<span style="color: #e9ecef;">★</span>'
+            ? '<span style="color: #ffc107;">&#9733;</span>'
+            : '<span style="color: #e9ecef;">&#9733;</span>'
     ).join('')}
           </div>
 

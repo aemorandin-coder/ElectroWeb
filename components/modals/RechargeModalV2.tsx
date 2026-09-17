@@ -235,7 +235,7 @@ interface CompanyPaymentMethod {
     // Create pending transaction and proceed to verification
     const handleProceedToVerification = async () => {
         if (!amount || !selectedMethod) {
-            toast.error('Por favor selecciona el monto y metodo de pago');
+            toast.error('Por favor selecciona el monto y método de pago');
             return;
         }
 
@@ -460,7 +460,7 @@ interface CompanyPaymentMethod {
                                 {/* Payment Method Selection */}
                                 <div>
                                     <label className="block text-xs lg:text-sm font-bold text-ink mb-2 lg:mb-3 uppercase tracking-wider">
-                                        Metodo de Pago
+                                        Método de Pago
                                     </label>
                                     {loadingMethods ? (
                                         <div className="flex items-center justify-center py-6 lg:py-8">
@@ -491,7 +491,7 @@ interface CompanyPaymentMethod {
                                                                 {method.type === 'MOBILE_PAYMENT' && (
                                                                     <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-success-strong/10 text-success-strong rounded-full flex items-center gap-0.5">
                                                                         <FiShield className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
-                                                                        <span className="hidden sm:inline">Verificacion</span> Auto
+                                                                        <span className="hidden sm:inline">Verificación</span> Auto
                                                                     </span>
                                                                 )}
                                                                 {method.type === 'MERCANTIL_PANAMA' && (
@@ -577,7 +577,7 @@ interface CompanyPaymentMethod {
                                             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-line rounded-full flex items-center justify-center mx-auto mb-2">
                                                 <FiDollarSign className="w-4 h-4 lg:w-5 lg:h-5 text-muted" />
                                             </div>
-                                            <p className="text-xs">Selecciona un metodo de pago</p>
+                                            <p className="text-xs">Selecciona un método de pago</p>
                                         </div>
                                     )}
                                 </div>
@@ -616,7 +616,7 @@ interface CompanyPaymentMethod {
                                 {selectedMethod && selectedMethod !== 'MOBILE_PAYMENT' && (
                                     <div>
                                         <label className="block text-xs font-bold text-ink mb-1 lg:mb-1.5 uppercase tracking-wider">
-                                            Numero de Referencia
+                                            Número de Referencia
                                         </label>
                                         <input
                                             type="text"
@@ -640,7 +640,7 @@ interface CompanyPaymentMethod {
                                                 <FiShield className="w-3 h-3 lg:w-4 lg:h-4" />
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-xs lg:text-sm text-success-strong">Verificacion Automatica</h4>
+                                                <h4 className="font-bold text-xs lg:text-sm text-success-strong">Verificación Automática</h4>
                                                 <p className="text-xs text-success-strong/90 mt-0.5 lg:mt-1">
                                                     Verifica tu pago con el Banco de Venezuela y se aprueba al instante.
                                                 </p>

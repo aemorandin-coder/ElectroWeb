@@ -366,13 +366,13 @@ export async function POST(req: NextRequest) {
                         const { sendEmail, getBaseTemplate } = await import('@/lib/email-service');
                         await sendEmail({
                             to: session.user.email!,
-                            subject: `✅ Recarga de $${montoUsd.toFixed(2)} aprobada — Electro Shop`,
+                            subject: `Recarga de $${montoUsd.toFixed(2)} aprobada — Electro Shop`,
                             html: await getBaseTemplate(
                                 `<div style="text-align:center;margin-bottom:20px;">
                                     <div style="width:64px;height:64px;background:linear-gradient(135deg,#10b981,#059669);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
                                         <span style="color:white;font-size:28px;">&#10003;</span>
                                     </div>
-                                    <h2 style="margin:0 0 8px;color:#212529;font-size:22px;font-weight:700;">¡Recarga Aprobada! 💰</h2>
+                                    <h2 style="margin:0 0 8px;color:#212529;font-size:22px;font-weight:700;">¡Recarga Aprobada!</h2>
                                     <p style="color:#6a6c6b;font-size:15px;line-height:1.7;">
                                         Tu recarga de <strong style="color:#10b981;">$${montoUsd.toFixed(2)} USD</strong>
                                         fue verificada automáticamente con el Banco de Venezuela y ya está disponible en tu saldo.

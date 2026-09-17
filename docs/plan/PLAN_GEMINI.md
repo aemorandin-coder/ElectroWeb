@@ -1196,3 +1196,84 @@ Regla `@typescript-eslint/no-explicit-any` (29):
 **Criterio:** `no-explicit-any` en 0 (o la lista anotada) y `npx tsc --noEmit` sin errores nuevos: pega la salida.
 
 **Prompt de arranque:** ver `docs/plan/SIGUIENTE.md` §5.
+
+---
+
+## Plan de 3 días (17/09 → 20/09): R13 → R14 → R15 seguidas
+Claude descansa 3 días: nadie revisa ni mergea. Trabaja las tres rondas en cadena, sin esperar:
+- `gemini/R13` desde `main`.
+- `gemini/R14` desde `gemini/R13` después de su último commit (`git switch -c gemini/R14 gemini/R13`).
+- `gemini/R15` desde `gemini/R14`.
+- No hagas `git merge main` ni `rebase`: Claude mezcla todo al volver.
+- **Cada commit firmado como Gemini** (la configuración del repo ya lo hace) y con su `docs/plan/estado/G-XX.md`.
+- Si una tarjeta se bloquea, `BLOQUEADO — motivo` y sigues con la siguiente: **no te quedes esperando**.
+
+**Carril extra de estas rondas:**
+- `app/api/**` y `lib/**` (R14): **solo tipos**.
+- `scripts/**` (R15).
+- **Fuera siempre:** `lib/auth.ts` y `app/api/customers/[id]/route.ts` (Claude los cambia en C-80 y C-92), `prisma/**` y todo lo del carril ChatGPT (`app/admin/**`, `app/creator/**`, `app/recuperar-contrasena/**`, `app/verificar-email/**`, `app/customer/(dashboard)/orders/[id]/digital/**`).
+
+---
+
+## Ronda R14 (muy pesada) · Tipos en las APIs y `lib` sin cambiar lo que hacen · G-49 → G-50 → G-51
+203 problemas de ESLint: `no-explicit-any`, `no-unused-vars`, `prefer-const` y `ban-ts-comment`.
+Los tipos de TypeScript desaparecen al compilar: **si solo cambias tipos, el servidor hace exactamente lo mismo.** Esa es la regla de oro de R14.
+
+### Reglas de R14
+1. **Permitido:**
+   - Anotar tipos: `Prisma.OrderWhereInput`, `Prisma.ProductUpdateInput` e interfaces locales con solo los campos que el archivo usa.
+   - `catch (error: any)` → `catch (error)`, leyendo el mensaje con `error instanceof Error ? error.message : '<el texto de respaldo que ya había>'`.
+   - `error.code === 'P2002'` → `error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002'`.
+   - `let` que nunca cambia → `const`.
+   - Borrar imports y variables sin uso **que no llaman a nada**.
+   - `// @ts-ignore` → `// @ts-expect-error <motivo>` solo si el error sigue existiendo.
+2. **Prohibido:**
+   - Cambiar condiciones, orden de operaciones, `select`, `where`, `include`, `data`, respuestas (`NextResponse.json`), códigos de estado, mensajes, permisos (`isAuthorized`) o rate limits.
+   - Agregar `?.`, `??`, `!` o validaciones nuevas.
+   - `// eslint-disable`.
+   - Mover código de lugar.
+3. **Si tipar algo exige cambiar lógica** (por ejemplo, un `body: any` que se usa en veinte lugares), déjalo como está y anótalo en el estado con archivo y línea. Eso **no es fallar la tarjeta**.
+4. **Rutas de dinero** (`customer/balance/**`, `orders/**`, `gift-cards/**`, `pago-movil/**`, `products/bulk/**`): además de lo anterior, pega en el estado **el `git diff -w` completo** de esos archivos.
+5. **Verificación de cada tarjeta, pegada en el estado:**
+   - Conteo de ESLint por archivo antes y después (comando de R13).
+   - `npx tsc --noEmit` (salida real).
+   - `npm run build` (las últimas 5 líneas).
+   - `git diff --stat` contra `git diff -w --stat`.
+
+### G-49 · `app/api/admin/**` (58) · Depende: G-48
+`admin/reports` (24), `admin/discount-requests` (5), `admin/social/generate` (5), `admin/sades/search` (4), `admin/sades/sync` (4), `admin/email/settings` (3), y 1-2 en `courses`, `legal/resend-terms`, `legal/terms-acceptances`, `payments/seed`, `promote-super-admin`, `sades/health`, `sidebar-counts`, `transactions` y `verifications`.
+
+### G-50 · `app/api/customer/**` (39) · Depende: G-49
+- `dashboard` (4), `discount-requests` (5), `payment-methods` (4), `balance/terms` (3), `profile` (3), `settings` (3), `wishlist` (3).
+- 1-2 en `balance/add`, `balance/deduct`, `balance/recharge`, `balance/recharge/[id]/cancel`, `balance`, `chat`, `company-payment-methods`, `orders`, `referrals` y `transactions`.
+- **Seis son rutas de dinero:** regla 4.
+
+### G-51 · El resto de `app/api/**` y `lib/**` (106) · Depende: G-50
+- **APIs:**
+  - `products/[id]` (7), `products/bulk/update` (5), `products/route` (5), `products/bulk/upload` (2), `products/public` (1).
+  - `orders/[id]/digital` (5), `orders/route` (2).
+  - `reviews` (5), `gift-cards/redeem` (4), `gift-cards` (1), `pago-movil/verificar` (4).
+  - `courses/**` (9), `creator/**` (9), `upload/**` (4), `user/**` (4), `categories` (3), `contact` (2), `debug/og-metadata` (2).
+  - Una en `analytics`, `cart/reserve`, `customers/route`, `digital-codes`, `influencers`, `product-requests`, `service-reviews`, `stats`, `tech-service-videos` y `webhooks/sades`.
+- **`lib`:** `email-service` (6), `audit-log` (3), `notifications` (3), y 1-2 en `auth-helpers`, `email-templates/ReviewApproved`, `pago-movil/verificar-pago`, `product-utils`, `sades` y `stock`.
+
+**Criterio de R14:** las cuatro reglas en 0 en los archivos de cada tarjeta (o la lista anotada), `tsc` sin errores nuevos y `npm run build` OK.
+
+---
+
+## Ronda R15 · Emojis, textos y un script peligroso · G-52 → G-53
+### G-52 · Scripts · Depende: G-51
+1. **Borra `scripts/reset-customers.ts`.** Autorizado por Claude en la auditoría del 17/09 (`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`): borra todas las órdenes, saldos y usuarios, incluidos los administradores, y crea una cuenta con clave `password123`. Antes de borrarlo, `git grep -n "reset-customers"` y pega la salida (no debe usarse en ningún lado).
+2. **Emojis en los mensajes de consola de los scripts:**
+   - `scripts/fix-data-uri-images.ts` (12), `scripts/create-master-admin.ts` (6), `scripts/migrate-giftcard-security.ts` (5), `scripts/seed-notifications.ts` (4).
+   - Se reemplazan por texto (`[OK]`, `[ERROR]`, `[AVISO]`) sin cambiar nada más de la línea.
+
+### G-53 · Emojis en correos y APIs, y textos sin tilde · Depende: G-52
+1. **Emojis:**
+   - Archivos: `lib/email-service.ts` (12), `lib/email-templates/CourseCertificate.ts` (6), `lib/email-templates/ReviewApproved.ts` (3), `app/api/admin/email/settings/route.ts` (2), `app/api/debug/og-metadata/route.ts` (2), `app/api/pago-movil/verificar/route.ts` (2), `lib/sades.ts` (1).
+   - En asuntos y cuerpos de correo **se quita el emoji y el espacio que sobra**; el texto queda igual.
+   - No agregues íconos ni imágenes nuevas en los correos.
+   - Búscalos con `grep -nP "[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]" <archivo>`.
+2. **Textos visibles sin tilde** ("electronico", "sesion", "verificacion"…) en `components/modals/RechargeModalV2.tsx` (3), `app/api/auth/verify-email/[token]/route.ts` (2), `app/checkout/page.tsx` (2) y `lib/pago-movil/verificar-pago.ts` (1): solo la tilde, **nunca en claves, nombres de variables, URLs ni valores que se comparan**.
+
+**Criterio de R15:** los 7 archivos de correo y API sin emojis, `scripts/reset-customers.ts` no existe, y `tsc` y `build` OK.

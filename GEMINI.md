@@ -42,6 +42,8 @@ docs/plan/estado/G-*.md      (solo archivos que empiecen con G-)
 #   app/creator/**, app/recuperar-contrasena/**, app/verificar-email/** y el panel admin
 #   (dashboard, orders, customers, transactions, gift-cards, reports) → ChatGPT (CHATGPT.md)
 # R13 (17/09): solo tu carril, sin app/customer/(dashboard)/orders/[id]/digital/** (lo rediseñó ChatGPT)
+# R14: app/api/** y lib/** SOLO TIPOS (sin lib/auth.ts ni app/api/customers/[id]/route.ts)
+# R15: scripts/** (G-52), emojis de correos y APIs y tildes (G-53)
 # Solo en R12 y solo para cambiar clases (ver PLAN_GEMINI.md, "Reglas de R12"):
 #   app/checkout/page.tsx   components/checkout/CheckoutPagoMovilForm.tsx   components/pago-movil/VerificarPagoMovilForm.tsx
 #   components/ui/**   components/Footer.tsx   components/UserAccountButton.tsx   components/CartIcon.tsx
@@ -62,7 +64,7 @@ Excepciones puntuales (solo cuando la tarea lo dice):
     - Cambiar `fetch`, URLs de API, cuerpos de peticiones, validaciones, permisos o roles.
     - Tocar cálculos de precios, costos, saldos o stock, o agregar o quitar campos de formularios.
     - Mover lógica entre archivos o crear componentes nuevos.
-  - **Fuera de límites hasta nuevo aviso:** `app/admin/(dashboard)/settings/**` y `app/admin/(dashboard)/products/**`. Los rehace Claude en C-50 y C-51.
+  - **Fuera de límites hasta nuevo aviso:** `app/admin/(dashboard)/settings/**` (Claude) y `app/admin/(dashboard)/products/**` (ChatGPT R2 desde el 17/09).
     Únicas excepciones: los 6 archivos de **G-29** (solo `className`). En **R9 (G-31…G-34)** se rehace el resto del admin con `lib/admin-ui.ts`, pero `layout.tsx`, `settings/**` y `products/**` siguen fuera.
   - **`components/modals/RechargeModalV2.tsx` (G-38):** la tasa se lee de `/api/settings/public` (`exchangeRateVES`) desde C-72. No volver a `/api/exchange-rates`: el servidor aprueba la recarga con la tasa de la tienda.
   - **`components/notifications/**`, `lib/admin-events/**`, `lib/telegram/**` y `app/admin/(dashboard)/notifications/**` son carril Claude (C-73).** Para íconos de notificaciones usa `notificationMeta` y `timeAgo` de `@/components/notifications/notification-meta`.

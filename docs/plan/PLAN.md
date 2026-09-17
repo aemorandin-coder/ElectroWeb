@@ -257,6 +257,9 @@ R1: app/admin/(dashboard)/page.tsx   app/admin/(dashboard)/orders/**   app/admin
     app/admin/(dashboard)/transactions/**   app/admin/(dashboard)/gift-cards/**   app/admin/(dashboard)/reports/**
     app/creator/**   app/recuperar-contrasena/**   app/verificar-email/**
     app/admin/(dashboard)/layout.tsx → solo el className del contenedor de {children} (GPT-01)
+    app/customer/(dashboard)/orders/[id]/digital/** (autorizado por Andrés, GPT-02)
+R2: app/admin/(dashboard)/products/**   (antes C-51 de Claude; reasignado el 17/09)
+R3: app/admin/(dashboard)/{payments,inquiries,messages,product-requests,discount-requests,reviews,verifications,categories,servicios,legal}/**
 docs/plan/estado/GPT-*.md
 ```
 Gemini no toca el carril ChatGPT ni ChatGPT el de Gemini. Si una ronda de uno necesita un archivo del otro, Claude lo reasigna en `PLAN.md` antes de empezar.

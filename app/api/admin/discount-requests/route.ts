@@ -2,19 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 // GET - List all discount requests for admin
 export async function GET(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any)?.role)) {
+        const userRole = (session?.user as { role?: string } | undefined)?.role;
+        if (!session || !userRole || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status');
 
-        const whereClause: any = {};
+        const whereClause: Prisma.DiscountRequestWhereInput = {};
         if (status && status !== 'all') {
             whereClause.status = status;
         }
@@ -54,7 +56,8 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any)?.role)) {
+        const userRole = (session?.user as { role?: string } | undefined)?.role;
+        if (!session || !userRole || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
@@ -78,18 +81,19 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: 'Esta solicitud ya fue procesada' }, { status: 400 });
         }
 
-        let updateData: any = {
+        const updateData: Prisma.DiscountRequestUpdateInput = {
             adminResponse,
         };
 
         if (action === 'approve') {
             const hours = expirationHours || 24; // Default 24 hours
+            const discountVal = Number(approvedDiscount || discountRequest.requestedDiscount);
             updateData.status = 'APPROVED';
-            updateData.approvedDiscount = approvedDiscount || discountRequest.requestedDiscount;
+            updateData.approvedDiscount = discountVal;
             updateData.expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
 
             // Notify customer of approval
-            const discountAmount = (Number(discountRequest.originalPrice) * updateData.approvedDiscount / 100).toFixed(2);
+            const discountAmount = (Number(discountRequest.originalPrice) * discountVal / 100).toFixed(2);
             await prisma.notification.create({
                 data: {
                     userId: discountRequest.userId,

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
-import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
-import { logAdminAction, createAuditLog, getRequestMetadata } from '@/lib/audit-log';
+import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
+import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 
 /**
  * POST /api/admin/promote-super-admin

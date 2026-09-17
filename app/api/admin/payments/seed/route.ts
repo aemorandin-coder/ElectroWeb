@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 // POST - Seed initial payment methods
 export async function POST() {
@@ -9,7 +10,8 @@ export async function POST() {
         const session = await getServerSession(authOptions);
 
         // Check if user is admin
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
+        const userRole = (session?.user as { role?: string } | undefined)?.role;
+        if (!userRole || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
@@ -26,7 +28,7 @@ export async function POST() {
 
         // Create initial payment methods
         // Using 'as any' for type field to support new types before Prisma client regeneration
-        const methodsData: any[] = [
+        const methodsData: Prisma.CompanyPaymentMethodCreateInput[] = [
             {
                 type: 'BANK_TRANSFER',
                 name: 'Transferencia Bancaria',

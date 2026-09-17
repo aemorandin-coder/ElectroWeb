@@ -1,197 +1,261 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import {
-  FiCheckCircle,
-  FiCircle,
-  FiMapPin,
-  FiMail,
-  FiShoppingBag,
-  FiChevronRight,
-  FiTruck,
-  FiCreditCard,
-  FiNavigation,
-  FiChevronDown,
-} from 'react-icons/fi';
+import type { IconType } from 'react-icons';
+import { FiCheck, FiChevronDown, FiChevronRight, FiCreditCard, FiMail, FiMapPin, FiShoppingBag, FiTruck, FiUserCheck, FiX } from 'react-icons/fi';
 import { useSession } from 'next-auth/react';
 import { adminCard } from '@/lib/admin-ui';
+import { lanzarConfeti } from '@/lib/motion/confeti';
+import { RESORTES, avanzarResorte, crearResorte, fijarResorte, prefiereMenosMovimiento, useBucleAnimacion } from '@/lib/motion/resorte';
 
-interface OnboardingProps {
-  stats: any;
+/**
+ * Misiones de bienvenida del panel del cliente (C-89).
+ * Antes: el progreso contaba 2 misiones sobre 3 ("Agregar dirección" nunca se comprobaba), así que no pasaba de 67 %
+ * y el botón "Ocultar" (que solo salía al 100 %) nunca aparecía; al recargar volvía a mostrarse.
+ * Ahora: 4 misiones con datos reales del panel, anillo de progreso y contador con física, checks que rebotan
+ * al aparecer, confeti una sola vez al completar todo y "Ocultar" que se recuerda.
+ */
+
+type Stats = { orders?: number; tieneDireccion?: boolean; datosCompletos?: boolean } | null;
+type Mision = { id: string; titulo: string; texto: string; href: string; Icono: IconType; hecha: boolean };
+
+const KEY_OCULTAS = 'electroweb_misiones_ocultas';
+const KEY_CELEBRADAS = 'electroweb_misiones_celebradas';
+const EVENTO = 'electroweb-misiones';
+const RADIO = 26;
+const CIRCUNFERENCIA = 2 * Math.PI * RADIO;
+
+function leer(key: string) {
+  try {
+    return localStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+function guardar(key: string) {
+  try {
+    localStorage.setItem(key, '1');
+  } catch {
+    // Sin almacenamiento: se vuelve a mostrar la próxima vez
+  }
+  window.dispatchEvent(new Event(EVENTO));
+}
+function suscribir(avisar: () => void) {
+  window.addEventListener('storage', avisar);
+  window.addEventListener(EVENTO, avisar);
+  return () => {
+    window.removeEventListener('storage', avisar);
+    window.removeEventListener(EVENTO, avisar);
+  };
 }
 
-export default function CustomerOnboarding({ stats }: OnboardingProps) {
+export default function CustomerOnboarding({ stats }: { stats: Stats }) {
   const { data: session } = useSession();
-  const isEmailVerified = (session?.user as any)?.emailVerified;
-  const hasOrders = stats?.orders > 0;
+  const ocultas = useSyncExternalStore(suscribir, () => leer(KEY_OCULTAS), () => false);
+  const [verGuia, setVerGuia] = useState(false);
 
-  const [isDismissed, setIsDismissed] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
+  const misiones: Mision[] = [
+    {
+      id: 'correo',
+      titulo: 'Verifica tu correo',
+      texto: 'Para comprar y recuperar tu cuenta',
+      href: '/customer/settings',
+      Icono: FiMail,
+      hecha: Boolean((session?.user as { emailVerified?: boolean } | undefined)?.emailVerified),
+    },
+    { id: 'datos', titulo: 'Completa tus datos', texto: 'Teléfono y cédula para tus pedidos', href: '/customer/profile', Icono: FiUserCheck, hecha: Boolean(stats?.datosCompletos) },
+    { id: 'direccion', titulo: 'Agrega una dirección', texto: 'Para que tus envíos salgan sin demoras', href: '/customer/addresses', Icono: FiMapPin, hecha: Boolean(stats?.tieneDireccion) },
+    { id: 'pedido', titulo: 'Haz tu primer pedido', texto: 'Explora el catálogo', href: '/productos', Icono: FiShoppingBag, hecha: (stats?.orders ?? 0) > 0 },
+  ];
+  const hechas = misiones.filter((m) => m.hecha).length;
+  const porcentaje = Math.round((hechas / misiones.length) * 100);
+  const completo = hechas === misiones.length;
 
-  // If they have done everything, we could hide this, or just show 100%
-  const progress = [isEmailVerified, hasOrders].filter(Boolean).length;
-  const totalSteps = 3; // Email, Address, Order
-  const percentage = Math.round((progress / totalSteps) * 100);
+  // Física: el anillo y el número suben con un resorte; cada check rebota con un pequeño retraso
+  const anilloRef = useRef<SVGCircleElement>(null);
+  const numeroRef = useRef<HTMLSpanElement>(null);
+  const checksRef = useRef<Array<HTMLSpanElement | null>>([]);
+  const fisica = useRef({ progreso: crearResorte(0), checks: misiones.map(() => ({ r: crearResorte(0), retraso: 0 })) });
 
-  if (isDismissed) return null;
+  const paso = useCallback((dt: number) => {
+    const f = fisica.current;
+    let quieto = avanzarResorte(f.progreso, dt, RESORTES.firme, 0.05);
+    const valor = Math.max(0, Math.min(100, f.progreso.valor));
+    if (anilloRef.current) anilloRef.current.style.strokeDashoffset = String(CIRCUNFERENCIA * (1 - valor / 100));
+    if (numeroRef.current) numeroRef.current.textContent = `${Math.round(valor)}%`;
+
+    f.checks.forEach((c, i) => {
+      if (c.retraso > 0) {
+        c.retraso -= dt;
+        quieto = false;
+        return;
+      }
+      quieto = avanzarResorte(c.r, dt, RESORTES.rebote, 0.001) && quieto;
+      const el = checksRef.current[i];
+      if (el) el.style.transform = `scale(${Math.max(0, c.r.valor)})`;
+    });
+    return quieto;
+  }, []);
+  const iniciar = useBucleAnimacion(paso);
+
+  // Cuando llegan los datos: animar hasta el progreso real
+  const cargado = stats !== null;
+  const firma = misiones.map((m) => (m.hecha ? 1 : 0)).join('');
+  useEffect(() => {
+    if (!cargado || ocultas) return;
+    const f = fisica.current;
+    const reducido = prefiereMenosMovimiento();
+    f.progreso.destino = porcentaje;
+    let orden = 0;
+    firma.split('').forEach((h, i) => {
+      const c = f.checks[i];
+      const destino = h === '1' ? 1 : 0;
+      if (c.r.destino === destino) return;
+      c.r.destino = destino;
+      c.retraso = destino ? 0.25 + orden++ * 0.12 : 0;
+    });
+    if (reducido) {
+      fijarResorte(f.progreso, porcentaje);
+      f.checks.forEach((c) => {
+        fijarResorte(c.r, c.r.destino);
+        c.retraso = 0;
+      });
+    }
+    iniciar();
+  }, [cargado, ocultas, porcentaje, firma, iniciar]);
+
+  // Todo completo: confeti una sola vez en la vida de la cuenta en este navegador
+  useEffect(() => {
+    if (!cargado || !completo || ocultas || leer(KEY_CELEBRADAS)) return;
+    const t = setTimeout(() => {
+      const r = anilloRef.current?.getBoundingClientRect();
+      if (r) lanzarConfeti({ x: r.left + r.width / 2, y: r.top + r.height / 2 }, 90);
+      guardar(KEY_CELEBRADAS);
+    }, 900);
+    return () => clearTimeout(t);
+  }, [cargado, completo, ocultas]);
+
+  if (ocultas) return null;
+
+  if (!cargado) {
+    return <div className="mb-3 h-44 animate-pulse rounded-2xl bg-line" aria-hidden="true" />;
+  }
 
   return (
-    <div className={`${adminCard} p-4 lg:p-5 text-ink relative overflow-hidden mb-3`}>
-      <div className="relative z-10 flex flex-col md:flex-row gap-4 lg:gap-6 items-center">
-        {/* Left: Text & Progress */}
-        <div className="flex-1 w-full">
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <h2 className="text-base lg:text-lg font-bold text-ink mb-0.5">¡Bienvenido a tu Panel!</h2>
-              <p className="text-muted text-xs leading-tight">Completa estas misiones para disfrutar al máximo de la plataforma.</p>
-            </div>
-            <span className="text-xl lg:text-2xl font-bold text-brand-500">
-              {percentage}%
-            </span>
-          </div>
-
-          <div className="w-full h-2 bg-line rounded-full overflow-hidden mt-3 mb-2">
-            <div
-              className="h-full bg-brand-500 rounded-full transition-all duration-1000"
-              style={{ width: `${percentage}%` }}
+    <section aria-labelledby="misiones-titulo" className={`${adminCard} mb-3 p-4 lg:p-5`}>
+      <div className="flex items-center gap-4">
+        {/* Anillo de progreso */}
+        <div className="relative h-16 w-16 shrink-0" role="img" aria-label={`Progreso ${porcentaje}%`}>
+          <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90" aria-hidden="true">
+            <circle cx="32" cy="32" r={RADIO} fill="none" strokeWidth="6" className="stroke-line" />
+            <circle
+              ref={anilloRef}
+              cx="32"
+              cy="32"
+              r={RADIO}
+              fill="none"
+              strokeWidth="6"
+              strokeLinecap="round"
+              className={completo ? 'stroke-success-strong' : 'stroke-brand-500'}
+              strokeDasharray={CIRCUNFERENCIA}
+              style={{ strokeDashoffset: CIRCUNFERENCIA }}
             />
-          </div>
+          </svg>
+          <span ref={numeroRef} className="absolute inset-0 flex items-center justify-center text-xs font-bold tabular-nums text-ink" aria-hidden="true">
+            0%
+          </span>
         </div>
 
-        {/* Right: Missions */}
-        <div className="flex-1 w-full space-y-2">
-          {/* Mission 1: Verify */}
-          <Link
-            href="/customer/settings"
-            className="group flex items-center gap-3 bg-surface hover:bg-line border border-line p-2.5 rounded-xl transition-all"
-          >
-            {isEmailVerified ? (
-              <FiCheckCircle className="w-4 h-4 text-success-strong flex-shrink-0" />
-            ) : (
-              <FiCircle className="w-4 h-4 text-brand-500 flex-shrink-0" />
-            )}
-            <div className="flex-1">
-              <h3 className="text-xs font-bold text-ink flex items-center gap-1.5">
-                <FiMail className="w-3.5 h-3.5 text-brand-500" /> Verificar Correo
-              </h3>
-              <p className="text-xs text-muted">Seguridad para tu cuenta</p>
-            </div>
-            {!isEmailVerified && (
-              <FiChevronRight className="w-3.5 h-3.5 text-muted group-hover:text-ink group-hover:translate-x-0.5 transition-transform" />
-            )}
-          </Link>
-
-          {/* Mission 2: Address */}
-          <Link
-            href="/customer/addresses"
-            className="group flex items-center gap-3 bg-surface hover:bg-line border border-line p-2.5 rounded-xl transition-all"
-          >
-            <FiCircle className="w-4 h-4 text-brand-500 flex-shrink-0" />
-            <div className="flex-1">
-              <h3 className="text-xs font-bold text-ink flex items-center gap-1.5">
-                <FiMapPin className="w-3.5 h-3.5 text-brand-500" /> Agregar Dirección
-              </h3>
-              <p className="text-xs text-muted">Para envíos físicos rápidos</p>
-            </div>
-            <FiChevronRight className="w-3.5 h-3.5 text-muted group-hover:text-ink group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-
-          {/* Mission 3: First Order */}
-          <Link
-            href="/"
-            className="group flex items-center gap-3 bg-surface hover:bg-line border border-line p-2.5 rounded-xl transition-all"
-          >
-            {hasOrders ? (
-              <FiCheckCircle className="w-4 h-4 text-success-strong flex-shrink-0" />
-            ) : (
-              <FiCircle className="w-4 h-4 text-brand-500 flex-shrink-0" />
-            )}
-            <div className="flex-1">
-              <h3 className="text-xs font-bold text-ink flex items-center gap-1.5">
-                <FiShoppingBag className="w-3.5 h-3.5 text-brand-500" /> Tu Primer Pedido
-              </h3>
-              <p className="text-xs text-muted">Explora nuestras ofertas</p>
-            </div>
-            {!hasOrders && (
-              <FiChevronRight className="w-3.5 h-3.5 text-muted group-hover:text-ink group-hover:translate-x-0.5 transition-transform" />
-            )}
-          </Link>
+        <div className="min-w-0 flex-1">
+          <h2 id="misiones-titulo" className="text-base font-bold text-ink lg:text-lg">
+            {completo ? 'Tu cuenta está lista' : 'Deja tu cuenta lista para comprar'}
+          </h2>
+          <p className="text-sm text-muted">
+            {completo ? 'Completaste todas las misiones.' : `${hechas} de ${misiones.length} misiones completas.`}
+          </p>
         </div>
-      </div>
 
-      {/* Divider */}
-      <div className="border-t border-line my-4" />
-
-      {/* Quick Purchase Guide Toggle Header */}
-      <div className="relative z-10">
-        <button
-          type="button"
-          onClick={() => setShowGuide(!showGuide)}
-          className="w-full flex items-center justify-between py-1 text-xs font-bold text-brand-500 hover:text-brand-600 uppercase tracking-wider transition-colors outline-none"
-        >
-          <span className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
-            ¿Cómo funciona nuestra tienda?
-          </span>
-          <span className="text-xs font-semibold normal-case flex items-center gap-1">
-            {showGuide ? 'Ocultar guía' : 'Ver guía paso a paso'}
-            <FiChevronDown className={`w-4 h-4 transition-transform duration-300 ${showGuide ? 'rotate-180' : ''}`} />
-          </span>
-        </button>
-
-        {showGuide && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-            {/* Step 1: Recharge Wallet */}
-            <div className="bg-surface border border-line rounded-xl p-3 flex flex-col gap-2 hover:border-brand-500/30 transition-all duration-300">
-              <div className="w-7 h-7 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 flex-shrink-0">
-                <FiCreditCard className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-ink mb-0.5">1. Recarga tu Billetera</h4>
-                <p className="text-xs text-muted leading-normal">
-                  Agrega saldo usando Pago Móvil BDV en <strong>Saldo y Pagos</strong>. Las recargas se validan de forma automática al instante.
-                </p>
-              </div>
-            </div>
-            {/* Step 2: Pay and Ship */}
-            <div className="bg-surface border border-line rounded-xl p-3 flex flex-col gap-2 hover:border-brand-500/30 transition-all duration-300">
-              <div className="w-7 h-7 rounded-lg bg-brand-50 flex items-center justify-center text-brand-600 flex-shrink-0">
-                <FiTruck className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-ink mb-0.5">2. Compra y Despacho</h4>
-                <p className="text-xs text-muted leading-normal">
-                  Usa tu saldo acumulado para pagar al instante. Los productos físicos viajan asegurados por <strong>MRW y ZOOM</strong>.
-                </p>
-              </div>
-            </div>
-            {/* Step 3: Floating Menu */}
-            <div className="bg-surface border border-line rounded-xl p-3 flex flex-col gap-2 hover:border-brand-500/30 transition-all duration-300">
-              <div className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center text-brand-700 flex-shrink-0">
-                <FiNavigation className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-ink mb-0.5">3. Menú de Navegación</h4>
-                <p className="text-xs text-muted leading-normal">
-                  Encuentra cursos, servicios y soporte desde la barra flotante inferior en móviles o el header superior en PC.
-                </p>
-              </div>
-            </div>
-          </div>
+        {completo && (
+          <button
+            type="button"
+            onClick={() => guardar(KEY_OCULTAS)}
+            aria-label="Ocultar misiones"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink"
+          >
+            <FiX className="h-5 w-5" aria-hidden="true" />
+          </button>
         )}
       </div>
 
-      {/* Dismiss Button */}
-      {percentage === 100 && (
+      <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {misiones.map((m, i) => (
+          <li key={m.id}>
+            <Link
+              href={m.href}
+              className={`group flex min-h-14 items-center gap-3 rounded-xl border p-3 transition-[transform,background-color,border-color] duration-150 active:scale-[0.98] ${
+                m.hecha ? 'border-success-strong/20 bg-success-strong/5' : 'border-line bg-surface hover:border-brand-500/40 hover:bg-white'
+              }`}
+            >
+              <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-brand-600 ring-1 ring-line">
+                <m.Icono className="h-4 w-4" aria-hidden="true" />
+                {/* El check crece con rebote encima del ícono cuando la misión está hecha */}
+                <span
+                  ref={(el) => {
+                    checksRef.current[i] = el;
+                  }}
+                  className="absolute inset-0 flex items-center justify-center rounded-full bg-success-strong text-white"
+                  style={{ transform: 'scale(0)' }}
+                  aria-hidden="true"
+                >
+                  <FiCheck className="h-4 w-4" />
+                </span>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className={`block text-sm font-semibold ${m.hecha ? 'text-ink-soft' : 'text-ink'}`}>
+                  {m.titulo}
+                  <span className="sr-only">{m.hecha ? ': hecha' : ': pendiente'}</span>
+                </span>
+                <span className="block truncate text-xs text-muted">{m.texto}</span>
+              </span>
+              {!m.hecha && <FiChevronRight className="h-4 w-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />}
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-4 border-t border-line pt-3">
         <button
           type="button"
-          onClick={() => setIsDismissed(true)}
-          className="absolute top-2 right-2 text-muted hover:text-ink text-xs underline"
+          onClick={() => setVerGuia((v) => !v)}
+          aria-expanded={verGuia}
+          aria-controls="guia-tienda"
+          className="flex h-10 w-full items-center justify-between text-sm font-semibold text-brand-600 hover:text-brand-700"
         >
-          Ocultar
+          ¿Cómo funciona la tienda?
+          <FiChevronDown className={`h-4 w-4 transition-transform duration-300 ${verGuia ? 'rotate-180' : ''}`} aria-hidden="true" />
         </button>
-      )}
-    </div>
+        {/* Se abre midiendo su alto con grid-rows: sin saltos y sin alturas fijas */}
+        <div id="guia-tienda" className={`grid transition-[grid-template-rows] duration-300 ${verGuia ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+          <div className="overflow-hidden" inert={!verGuia || undefined}>
+            <ol className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-3">
+              {[
+                { Icono: FiCreditCard, titulo: '1. Recarga saldo', texto: 'Con Pago Móvil desde Saldo y pagos. La tasa es la de la tienda.' },
+                { Icono: FiShoppingBag, titulo: '2. Paga al instante', texto: 'Usa tu saldo en el checkout, sin esperar confirmaciones.' },
+                { Icono: FiTruck, titulo: '3. Recibe tu pedido', texto: 'Envío por MRW o ZOOM, o retiro en tienda.' },
+              ].map(({ Icono, titulo, texto }) => (
+                <li key={titulo} className="flex gap-3 rounded-xl border border-line bg-surface p-3">
+                  <Icono className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+                  <span>
+                    <span className="block text-sm font-semibold text-ink">{titulo}</span>
+                    <span className="block text-xs text-muted">{texto}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

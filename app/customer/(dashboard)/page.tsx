@@ -15,6 +15,8 @@ interface DashboardStats {
   orders: number;
   pending: number;
   wishlist: number;
+  tieneDireccion?: boolean;
+  datosCompletos?: boolean;
   totalSpentThisMonth: number;
   recentOrders: any[];
   recentActivity: any[];

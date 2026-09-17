@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
+import { esRutaDeAcceso } from '@/lib/rutas';
 
 /**
  * Wrapper cliente para GuidedTour.
@@ -15,7 +16,15 @@ const GuidedTour = dynamic(
 
 export function GuidedTourWrapper() {
   const pathname = usePathname();
-  // El tour habla de la tienda (catálogo, carrito): no pinta nada sobre los paneles.
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/creator/dashboard')) return null;
+  // El tour habla de la tienda (catálogo, carrito): no pinta nada sobre los paneles, el acceso ni el checkout (C-89)
+  if (
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/creator/dashboard') ||
+    pathname?.startsWith('/customer') ||
+    pathname?.startsWith('/checkout') ||
+    esRutaDeAcceso(pathname)
+  ) {
+    return null;
+  }
   return <GuidedTour />;
 }

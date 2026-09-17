@@ -17,6 +17,9 @@ import { formatPaymentMethod, isCreditTransaction } from '@/lib/format-helpers';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 import {
+    adminPageTitle,
+    adminPageSubtitle,
+    adminNotice,
     adminPageHeader,
         adminStatCard,
     adminStatLabel,
@@ -127,13 +130,13 @@ function StatCard({
     sub: React.ReactNode; accent?: boolean;
 }) {
     return (
-        <div className={adminStatCard}>
-            <span className={adminIconChip(accent ? 'warning' : 'brand')}>
+        <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+            <span className={`${adminIconChip(accent ? 'warning' : 'brand')} hidden xl:flex`}>
                 {icon}
             </span>
             <div className="min-w-0">
                 <p className={adminStatLabel}>{label}</p>
-                <p className={adminStatValue}>{value}</p>
+                <p className={`${adminStatValue} text-lg tabular-nums`}>{value}</p>
                 <div className="text-xs mt-1 text-muted">{sub}</div>
             </div>
         </div>
@@ -293,33 +296,27 @@ export default function TransactionsPage() {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    const fmtAmount = (n: number) => n.toLocaleString('es-VE', { minimumFractionDigits: 2 });
+    const fmtAmount = (n: number) => formatUSD(Number(n));
 
     // ── Render ───────────────────────────────────────────────────────────────
 
     return (
-        <div className="h-full flex flex-col gap-5">
+        <div className="flex min-h-0 flex-col gap-4">
 
             {/* ── Header ── */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className={adminPageHeader}>
                 <div>
-                    <h1 className="text-xl font-bold text-ink flex items-center gap-2.5">
-                        <span className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-sm flex-shrink-0">
-                            <FiDollarSign className="w-4 h-4 text-white" />
-                        </span>
+                    <h1 className={adminPageTitle}>
                         Transacciones
-                        {pendingCount > 0 && (
-                            <span className="px-2 py-0.5 bg-warning/20 text-warning-strong border border-warning/30 rounded-full text-xs font-bold animate-pulse">
-                                {pendingCount} pendiente{pendingCount > 1 ? 's' : ''}
-                            </span>
-                        )}
+
                     </h1>
-                    <p className="text-muted text-xs mt-1 ml-10.5">Recargas y movimientos de saldo · máx. 200 registros</p>
+                    <p className={adminPageSubtitle}>Recargas y movimientos de saldo · máx. 200 registros</p>
                 </div>
                 <div className="flex gap-2">
                     <button
                         onClick={() => { fetchTransactions(); fetchStats(); }}
-                        className="p-2 bg-white border border-line-strong rounded-lg hover:bg-surface transition-all"
+                        className={`${adminSecondaryButton} px-3`}
+                        aria-label="Actualizar transacciones"
                         title="Actualizar"
                     >
                         <FiRefreshCw className={`w-4 h-4 text-muted ${loading ? 'animate-spin' : ''}`} />
@@ -327,7 +324,7 @@ export default function TransactionsPage() {
                     <button
                         onClick={exportToCSV}
                         disabled={displayed.length === 0}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-line-strong rounded-lg text-xs font-semibold text-ink hover:bg-surface transition-all disabled:opacity-40"
+                        className={adminSecondaryButton}
                     >
                         <FiDownload className="w-3.5 h-3.5" />
                         Exportar CSV
@@ -335,37 +332,11 @@ export default function TransactionsPage() {
                 </div>
             </div>
 
-            {/* ── Stats ── */}
-            {stats && (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <StatCard
-                        icon={<FiClock className="w-5 h-5" />}
-                        label="Pendientes"
-                        value={stats.pendingCount}
-                        sub={<span className={stats.pendingCount > 0 ? 'text-warning-strong font-semibold' : 'text-muted'}>
-                            ${fmtAmount(stats.pendingAmount)} por aprobar
-                        </span>}
-                        accent={stats.pendingCount > 0}
-                    />
-                    <StatCard
-                        icon={<FiCheckCircle className="w-5 h-5 text-success-strong" />}
-                        label="Aprobadas hoy"
-                        value={stats.completedTodayCount}
-                        sub={<span className="text-success-strong font-semibold">+${fmtAmount(stats.completedTodayAmount)}</span>}
-                    />
-                    <StatCard
-                        icon={<FiTrendingUp className="w-5 h-5 text-brand-500" />}
-                        label="Esta semana"
-                        value={stats.weekCount}
-                        sub={<span className="text-brand-500 font-semibold">${fmtAmount(stats.weekAmount)}</span>}
-                    />
-                    <StatCard
-                        icon={<FiX className="w-5 h-5 text-deal" />}
-                        label="Rechazadas hoy"
-                        value={stats.cancelledTodayCount}
-                        sub={<span className="text-muted">transacciones canceladas</span>}
-                    />
-                </div>
+            {pendingCount > 0 && (
+                <button type="button" onClick={() => setFilterStatus('PENDING')} className={`${adminNotice('warning')} flex min-h-11 w-full items-center justify-between gap-3 text-left`}>
+                    <span><strong>{pendingCount}</strong> {pendingCount === 1 ? 'transacción pendiente' : 'transacciones pendientes'} en esta lista</span>
+                    <span className="shrink-0 font-semibold">Revisar</span>
+                </button>
             )}
 
             {/* ── Filters ── */}
@@ -375,13 +346,14 @@ export default function TransactionsPage() {
                     <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
                     <input
                         type="text"
-                        placeholder="Buscar por nombre, email o referencia..."
+                        aria-label="Buscar por nombre, correo o referencia"
+                        placeholder="Nombre, correo o referencia"
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-white border border-line-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
+                        className={`${adminInput()} pl-9 pr-11`}
                     />
                     {searchQuery && (
-                        <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-subtle hover:text-ink">
+                        <button onClick={() => setSearchQuery('')} aria-label="Limpiar búsqueda" title="Limpiar búsqueda" className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted">
                             <FiX className="w-4 h-4" />
                         </button>
                     )}
@@ -391,9 +363,10 @@ export default function TransactionsPage() {
                 <div className="relative">
                     <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle pointer-events-none" />
                     <select
+                        aria-label="Tipo de transacción"
                         value={filterType}
                         onChange={e => setFilterType(e.target.value)}
-                        className="pl-9 pr-8 py-2 bg-white border border-line-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none cursor-pointer text-ink"
+                        className={`${adminInput()} pl-9`}
                     >
                         <option value="all">Todos los tipos</option>
                         <option value="RECHARGE">Recargas</option>
@@ -406,9 +379,10 @@ export default function TransactionsPage() {
 
                 {/* Status */}
                 <select
+                    aria-label="Estado de transacción"
                     value={filterStatus}
                     onChange={e => setFilterStatus(e.target.value)}
-                    className="px-3 py-2 bg-white border border-line-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none cursor-pointer text-ink"
+                    className={`${adminInput()} w-auto`}
                 >
                     <option value="all">Todos los estados</option>
                     <option value="PENDING">Pendientes</option>
@@ -423,8 +397,41 @@ export default function TransactionsPage() {
                 )}
             </div>
 
+            {/* ── Stats ── */}
+            {stats && (
+                <div className="order-3 flex gap-3 overflow-x-auto pb-1 lg:order-none xl:grid xl:grid-cols-4">
+                    <StatCard
+                        icon={<FiClock className="w-5 h-5" />}
+                        label="Pendientes"
+                        value={stats.pendingCount}
+                        sub={<span className={stats.pendingCount > 0 ? 'text-warning-strong font-semibold' : 'text-muted'}>
+                            {fmtAmount(stats.pendingAmount)} por aprobar
+                        </span>}
+                        accent={stats.pendingCount > 0}
+                    />
+                    <StatCard
+                        icon={<FiCheckCircle className="w-5 h-5 text-success-strong" />}
+                        label="Aprobadas hoy"
+                        value={stats.completedTodayCount}
+                        sub={<span className="text-success-strong font-semibold">+{fmtAmount(stats.completedTodayAmount)}</span>}
+                    />
+                    <StatCard
+                        icon={<FiTrendingUp className="w-5 h-5 text-brand-500" />}
+                        label="Esta semana"
+                        value={stats.weekCount}
+                        sub={<span className="text-brand-500 font-semibold">{fmtAmount(stats.weekAmount)}</span>}
+                    />
+                    <StatCard
+                        icon={<FiX className="w-5 h-5 text-deal" />}
+                        label="Rechazadas hoy"
+                        value={stats.cancelledTodayCount}
+                        sub={<span className="text-muted">En el día</span>}
+                    />
+                </div>
+            )}
+
             {/* ── Content ── */}
-            <div className="flex-1 overflow-hidden bg-white rounded-xl border border-line shadow-sm flex flex-col min-h-0">
+            <div className="order-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-sm lg:order-none">
                 {loading ? (
                     <div className="flex-1 flex items-center justify-center">
                         <div className="flex flex-col items-center gap-3">
@@ -449,8 +456,8 @@ export default function TransactionsPage() {
                 ) : (
                     <>
                         {/* Mobile cards */}
-                        <div className="md:hidden divide-y divide-line overflow-auto">
-                            {displayed.map(t => {
+                        <div className="divide-y divide-line xl:hidden">
+                            {[...displayed].sort((a, b) => Number(b.status === 'PENDING') - Number(a.status === 'PENDING')).map(t => {
                                 const typeConf = TYPE_CONFIG[t.type] || TYPE_CONFIG.RECHARGE;
                                 const statusConf = STATUS_CONFIG[t.status] || STATUS_CONFIG.PENDING;
                                 const isCredit = isCreditTransaction(t.type);
@@ -461,7 +468,7 @@ export default function TransactionsPage() {
                                         className={`p-4 transition-all duration-500 ${anim === 'approve' ? 'bg-success-strong/10' : anim === 'reject' ? 'bg-deal-bg opacity-50' : ''}`}
                                     >
                                         {/* Top row */}
-                                        <div className="flex justify-between items-start mb-3">
+                                        <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                                             <div className="flex items-center gap-2">
                                                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold border ${typeConf.cls}`}>
                                                     {typeConf.icon}{typeConf.label}
@@ -490,7 +497,7 @@ export default function TransactionsPage() {
                                         </div>
 
                                         {/* Amount + meta */}
-                                        <div className="bg-surface rounded-lg px-3 py-2.5 flex justify-between items-center mb-3">
+                                        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
                                             <div className="space-y-0.5">
                                                 {t.reference && (
                                                     <p className="text-xs text-muted">
@@ -504,10 +511,12 @@ export default function TransactionsPage() {
                                                     </p>
                                                 )}
                                             </div>
-                                            <span className={`text-lg font-bold ${isCredit ? 'text-success-strong' : 'text-deal'}`}>
-                                                {isCredit ? '+' : '-'}${fmtAmount(Number(t.amount))}
+                                            <span className={`whitespace-nowrap text-lg font-bold tabular-nums ${isCredit ? 'text-success-strong' : 'text-deal'}`}>
+                                                {isCredit ? '+' : '-'}{fmtAmount(Number(t.amount))}
                                             </span>
                                         </div>
+
+                                        {t.description && <p className="mb-3 text-sm text-ink-soft [overflow-wrap:anywhere]">{t.description}</p>}
 
                                         {t.status === 'CANCELLED' && t.rejectionReason && (
                                             <div className="flex items-start gap-1.5 text-xs text-deal mb-3">
@@ -521,7 +530,7 @@ export default function TransactionsPage() {
                                                 <button
                                                     onClick={() => openApproveModal(t)}
                                                     disabled={processingId === t.id}
-                                                    className="flex-1 py-2.5 bg-success-strong hover:bg-success-strong/90 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                                                    className={`${adminSuccessButton} flex-1 px-3`}
                                                 >
                                                     {processingId === t.id ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiCheck className="w-3.5 h-3.5" />}
                                                     Aprobar
@@ -529,7 +538,7 @@ export default function TransactionsPage() {
                                                 <button
                                                     onClick={() => openRejectModal(t)}
                                                     disabled={processingId === t.id}
-                                                    className="flex-1 py-2.5 bg-white border border-deal/40 text-deal hover:bg-deal-bg rounded-lg text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                                                    className={`${adminSecondaryButton} flex-1 px-3 text-deal`}
                                                 >
                                                     <FiX className="w-3.5 h-3.5" />
                                                     Rechazar
@@ -542,7 +551,7 @@ export default function TransactionsPage() {
                         </div>
 
                         {/* Desktop table */}
-                        <div className={adminTableWrap}>
+                        <div className={`${adminTableWrap} hidden xl:block`}>
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr>
@@ -556,7 +565,7 @@ export default function TransactionsPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-line">
-                                    {displayed.map(t => {
+                                    {[...displayed].sort((a, b) => Number(b.status === 'PENDING') - Number(a.status === 'PENDING')).map(t => {
                                         const typeConf = TYPE_CONFIG[t.type] || TYPE_CONFIG.RECHARGE;
                                         const statusConf = STATUS_CONFIG[t.status] || STATUS_CONFIG.PENDING;
                                         const isCredit = isCreditTransaction(t.type);
@@ -578,7 +587,7 @@ export default function TransactionsPage() {
                                                             <p className="font-semibold text-ink truncate max-w-[140px] text-sm">
                                                                 {t.balance.user.name || 'Usuario'}
                                                             </p>
-                                                            <p className="text-[11px] text-muted truncate max-w-[140px]">{t.balance.user.email}</p>
+                                                            <p className="text-xs text-muted truncate max-w-[140px]">{t.balance.user.email}</p>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -589,20 +598,20 @@ export default function TransactionsPage() {
                                                         {typeConf.icon}{typeConf.label}
                                                     </span>
                                                     {t.paymentMethod && (
-                                                        <p className="text-[11px] text-muted mt-1 flex items-center gap-1">
+                                                        <p className="text-xs text-muted mt-1 flex items-center gap-1">
                                                             <PaymentIcon method={t.paymentMethod} className="w-3 h-3 flex-shrink-0" />
                                                             {formatPaymentMethod(t.paymentMethod)}
                                                         </p>
                                                     )}
                                                     {t.description && (
-                                                        <p className="text-xs text-subtle mt-0.5 truncate max-w-[140px]">{t.description}</p>
+                                                        <p className="text-xs text-muted mt-0.5 max-w-[200px] [overflow-wrap:anywhere]">{t.description}</p>
                                                     )}
                                                 </td>
 
                                                 {/* Monto */}
                                                 <td className="px-5 py-3.5 whitespace-nowrap">
                                                     <span className={`text-sm font-bold ${isCredit ? 'text-success-strong' : 'text-deal'}`}>
-                                                        {isCredit ? '+' : '-'}${fmtAmount(Number(t.amount))}
+                                                        {isCredit ? '+' : '-'}{fmtAmount(Number(t.amount))}
                                                     </span>
                                                     <p className="text-xs text-subtle font-medium">USD</p>
                                                 </td>
@@ -620,7 +629,7 @@ export default function TransactionsPage() {
 
                                                 {/* Estado */}
                                                 <td className={adminTd}>
-                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${statusConf.cls}`}>
+                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusConf.cls}`}>
                                                         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusConf.dot}`} />
                                                         {statusConf.label}
                                                     </span>
@@ -637,7 +646,7 @@ export default function TransactionsPage() {
                                                     <p className="text-sm font-medium text-ink">
                                                         {format(new Date(t.createdAt), 'dd MMM yyyy', { locale: es })}
                                                     </p>
-                                                    <p className="text-[11px] text-muted">
+                                                    <p className="text-xs text-muted">
                                                         {format(new Date(t.createdAt), 'HH:mm')}
                                                     </p>
                                                 </td>
@@ -654,7 +663,8 @@ export default function TransactionsPage() {
                                                                 <button
                                                                     onClick={() => openApproveModal(t)}
                                                                     disabled={processingId === t.id}
-                                                                    className="p-2 bg-success-strong hover:bg-success-strong/90 text-white rounded-lg hover:shadow-md transition-all disabled:opacity-50 "
+                                                                    className={`${adminSuccessButton} w-11 px-0`}
+                                                                    aria-label="Aprobar recarga"
                                                                     title="Aprobar recarga"
                                                                 >
                                                                     {processingId === t.id
@@ -664,7 +674,8 @@ export default function TransactionsPage() {
                                                                 <button
                                                                     onClick={() => openRejectModal(t)}
                                                                     disabled={processingId === t.id}
-                                                                    className="p-2 bg-white border border-deal/30 text-deal hover:bg-deal-bg hover:border-deal rounded-lg transition-all disabled:opacity-50 "
+                                                                    className={`${adminSecondaryButton} w-11 px-0 text-deal`}
+                                                                    aria-label="Rechazar recarga"
                                                                     title="Rechazar recarga"
                                                                 >
                                                                     <FiX className="w-4 h-4" />
@@ -708,7 +719,7 @@ export default function TransactionsPage() {
                             {/* Amount highlight */}
                             <div className="bg-success-strong/10 border border-success-strong/20 rounded-xl p-4 text-center">
                                 <p className="text-3xl font-bold text-success-strong">
-                                    +${fmtAmount(Number(approvingTransaction.amount))}
+                                    +{fmtAmount(Number(approvingTransaction.amount))}
                                 </p>
                                 <p className="text-xs text-success-strong mt-1">USD · se acreditará al saldo del cliente</p>
                             </div>
@@ -716,7 +727,7 @@ export default function TransactionsPage() {
                             {/* Details */}
                             <div className="space-y-2.5 text-sm mt-4">
                                 {approvingTransaction.reference && (
-                                    <div className="flex justify-between items-center">
+                                    <div className="flex flex-wrap items-center justify-between gap-2 [overflow-wrap:anywhere]">
                                         <span className="text-muted">Referencia</span>
                                         <span className="font-mono text-xs bg-surface border border-line px-2 py-1 rounded-md">
                                             {approvingTransaction.reference}
@@ -724,7 +735,7 @@ export default function TransactionsPage() {
                                     </div>
                                 )}
                                 {approvingTransaction.paymentMethod && (
-                                    <div className="flex justify-between items-center">
+                                    <div className="flex flex-wrap items-center justify-between gap-2 [overflow-wrap:anywhere]">
                                         <span className="text-muted">Método de pago</span>
                                         <span className="flex items-center gap-1.5 text-ink">
                                             <PaymentIcon method={approvingTransaction.paymentMethod} />
@@ -732,7 +743,7 @@ export default function TransactionsPage() {
                                         </span>
                                     </div>
                                 )}
-                                <div className="flex justify-between items-center">
+                                <div className="flex flex-wrap items-center justify-between gap-2 [overflow-wrap:anywhere]">
                                     <span className="text-muted">Correo</span>
                                     <span className="text-ink text-xs">{approvingTransaction.balance.user.email}</span>
                                 </div>
@@ -779,7 +790,7 @@ export default function TransactionsPage() {
                                 <div>
                                     <h2 className={adminModalTitle}>Rechazar Transacción</h2>
                                     <p className="text-xs text-muted">
-                                        ${fmtAmount(Number(rejectingTransaction.amount))} · {rejectingTransaction.balance.user.name || rejectingTransaction.balance.user.email}
+                                        {fmtAmount(Number(rejectingTransaction.amount))} · {rejectingTransaction.balance.user.name || rejectingTransaction.balance.user.email}
                                     </p>
                                 </div>
                             </div>

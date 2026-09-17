@@ -3,6 +3,11 @@ import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 import {
+  adminPageHeader,
+  adminModalBody,
+  adminModalFooter,
+  adminIconButton,
+  adminTab,
   adminPageTitle,
   adminPageSubtitle,
   adminStatCard,
@@ -263,17 +268,17 @@ export default function CustomersPage() {
     <div className="h-full flex flex-col">
       {/* Epic Header Section */}
       <div className="flex-shrink-0 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className={adminPageHeader}>
           <div className="flex items-center gap-3">
-            <div className={adminIconChip('brand')}>
+            <div className={`${adminIconChip('brand')} hidden sm:flex`}>
               <FiUser className="w-6 h-6 text-brand-600" />
             </div>
             <div>
-              <h1 className={adminPageTitle}>Gestión de Clientes</h1>
-              <p className={adminPageSubtitle}>Administra y analiza tu base de clientes</p>
+              <h1 className={adminPageTitle}>Clientes</h1>
+              <p className={adminPageSubtitle}>Busca un cliente para consultar su cuenta y sus pedidos.</p>
             </div>
           </div>
-          <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Link
               href="/admin/verifications"
               className={`relative flex items-center gap-2 px-3 py-2 border rounded-lg transition-all text-sm font-medium ${pendingVerifications > 0
@@ -292,7 +297,8 @@ export default function CustomersPage() {
             </Link>
             <button
               onClick={() => fetchCustomers()}
-              className="p-2 bg-white border border-line rounded-lg hover:bg-surface transition-colors"
+              className={`${adminSecondaryButton} w-11 px-0`}
+              aria-label="Actualizar clientes"
               title="Actualizar"
             >
               <svg className={`w-5 h-5 text-muted ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,44 +317,7 @@ export default function CustomersPage() {
           </div>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className={adminStatCard}>
-            <span className={adminIconChip('brand')}>
-              <FiUser className="w-5 h-5" />
-            </span>
-            <div>
-              <p className={adminStatValue}>{stats.total}</p>
-              <p className={adminStatLabel}>Total Clientes</p>
-            </div>
-          </div>
-
-          <div className={adminStatCard}>
-            <span className={adminIconChip('success')}>
-              <FiCalendar className="w-5 h-5" />
-            </span>
-            <div>
-              <p className={adminStatValue}>{stats.thisMonth}</p>
-              <p className={adminStatLabel}>Nuevos Este Mes</p>
-            </div>
-          </div>
-
-          <div className={adminStatCard}>
-            <span className={adminIconChip('brand')}>
-              <FiZap className="w-5 h-5" />
-            </span>
-            <div>
-              <p className={adminStatValue}>{stats.active}</p>
-              <p className={adminStatLabel}>Clientes Activos</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Scrollable Table Section */}
-      <div className="flex-1 overflow-y-auto pr-2 mt-4">
-        <div className={adminCardFlush}>
-          <div className="p-4 border-b border-line bg-surface">
+          <div className="rounded-xl border border-line bg-white p-2">
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -358,13 +327,51 @@ export default function CustomersPage() {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar clientes por nombre, email..."
+                  aria-label="Buscar clientes por nombre o correo"
+                  placeholder="Nombre o correo del cliente"
                   className={`${adminInput()} pl-10`}
                 />
               </div>
             </div>
           </div>
 
+        {/* Stats Cards */}
+        <div className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-3">
+          <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+            <span className={`${adminIconChip('brand')} hidden sm:flex`}>
+              <FiUser className="w-5 h-5" />
+            </span>
+            <div>
+              <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.total}</p>
+              <p className={adminStatLabel}>Clientes</p>
+            </div>
+          </div>
+
+          <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+            <span className={`${adminIconChip('success')} hidden sm:flex`}>
+              <FiCalendar className="w-5 h-5" />
+            </span>
+            <div>
+              <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.thisMonth}</p>
+              <p className={adminStatLabel}>Nuevos este mes</p>
+            </div>
+          </div>
+
+          <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+            <span className={`${adminIconChip('brand')} hidden sm:flex`}>
+              <FiZap className="w-5 h-5" />
+            </span>
+            <div>
+              <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.active}</p>
+              <p className={adminStatLabel}>Con órdenes activas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scrollable Table Section */}
+      <div className="mt-4 min-w-0 flex-1">
+        <div className={adminCardFlush}>
           {loading ? (
             <div className="p-8 text-center">
               <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface mb-2">
@@ -388,9 +395,9 @@ export default function CustomersPage() {
           ) : (
             <>
               {/* Mobile Card View */}
-              <div className="grid grid-cols-1 gap-4 md:hidden">
+              <div className="grid grid-cols-1 divide-y divide-line xl:hidden">
                 {customers.map((customer: any) => (
-                  <div key={customer.id} className="bg-white rounded-lg border border-line p-4 shadow-sm">
+                  <div key={customer.id} className="relative bg-white p-4">
                     <div className="flex items-start gap-3 mb-3">
                       {customer.image ? (
                         <div className="relative w-10 h-10 rounded-full overflow-hidden border border-line-strong flex-shrink-0">
@@ -418,7 +425,7 @@ export default function CustomersPage() {
 
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="bg-surface p-2 rounded-lg">
-                        <p className="text-xs text-muted uppercase tracking-wider font-semibold">Órdenes</p>
+                        <p className="text-xs text-muted font-semibold">Órdenes</p>
                         <div className="flex items-baseline gap-1">
                           <span className="text-lg font-bold text-ink">{customer.orderCount}</span>
                           {customer.activeOrders > 0 && (
@@ -427,8 +434,8 @@ export default function CustomersPage() {
                         </div>
                       </div>
                       <div className="bg-surface p-2 rounded-lg">
-                        <p className="text-xs text-muted uppercase tracking-wider font-semibold">Total Gastado</p>
-                        <p className="text-lg font-bold text-brand-600">
+                        <p className="text-xs text-muted font-semibold">Total Gastado</p>
+                        <p className="whitespace-nowrap text-base font-bold tabular-nums text-brand-600 sm:text-lg">
                           {formatUSD(customer.totalSpent)}
                         </p>
                       </div>
@@ -440,7 +447,7 @@ export default function CustomersPage() {
                       </span>
                       <button
                         onClick={() => fetchCustomerDetails(customer.id)}
-                        className="text-brand-600 hover:text-brand-700 text-xs font-bold hover:underline"
+                        className={`${adminSecondaryButton} after:absolute after:inset-0`}
                       >
                         Ver Detalles
                       </button>
@@ -450,7 +457,7 @@ export default function CustomersPage() {
               </div>
 
               {/* Desktop Table View */}
-              <div className={adminTableWrap}>
+              <div className={`${adminTableWrap} hidden xl:block`}>
                 <table className="w-full text-sm">
                   <thead>
                     <tr>
@@ -511,7 +518,7 @@ export default function CustomersPage() {
                         <td className={`${adminTd} text-right`}>
                           <button
                             onClick={() => fetchCustomerDetails(customer.id)}
-                            className="text-brand-600 hover:text-brand-700 text-xs font-medium transition-colors"
+                            className={adminSecondaryButton}
                           >
                             Ver detalles
                           </button>
@@ -540,26 +547,27 @@ export default function CustomersPage() {
         >
           <div
             ref={modalRef}
-            className={`${adminModalPanel} sm:max-w-3xl max-h-[90vh]`}
+            className={`${adminModalPanel} sm:max-w-3xl`}
+            role="dialog" aria-modal="true" aria-label="Detalle del cliente"
           >
             {/* Header */}
-            <div className="bg-brand-600 px-6 pt-6 pb-4 text-white">
-              <div className="flex items-center justify-between mb-4">
+            <div className="border-b border-line px-5 py-4 text-ink">
+              <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3">
                   {selectedCustomer.image ? (
                     <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white">
                       <Image src={selectedCustomer.image} alt={selectedCustomer.name || ''} fill className="object-cover" />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white text-lg font-bold">
+                    <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface text-lg font-bold text-ink sm:flex">
                       {(selectedCustomer.name || selectedCustomer.email).charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div>
-                    <h3 className="text-xl font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-ink">
                       {isEditing ? 'Editar Cliente' : 'Detalles del Cliente'}
                     </h3>
-                    <p className="text-sm text-white/80">{selectedCustomer.email}</p>
+                    <p className="text-sm text-muted [overflow-wrap:anywhere]">{selectedCustomer.email}</p>
                   </div>
                 </div>
                 <button
@@ -569,21 +577,18 @@ export default function CustomersPage() {
                     setIsDeleting(false);
                   }}
                   aria-label="Cerrar"
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  title="Cerrar" className={`${adminIconButton} h-11 w-11 shrink-0`}
                 >
-                  <FiX className="w-5 h-5 text-white" />
+                  <FiX className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Tabs */}
               {!isEditing && !isDeleting && (
-                <div className="flex gap-1 mt-4">
+                <div className="mt-3 flex gap-1 overflow-x-auto">
                   <button
                     onClick={() => setActiveTab('PERSONAL')}
-                    className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'PERSONAL'
-                      ? 'bg-white text-brand-600'
-                      : 'text-white/80 hover:bg-white/10'
-                      }`}
+                    aria-pressed={activeTab === 'PERSONAL'} className={`${adminTab(activeTab === 'PERSONAL')} h-11 shrink-0`}
                   >
                     <div className="flex items-center gap-2">
                       <FiUser className="w-4 h-4" />
@@ -592,10 +597,7 @@ export default function CustomersPage() {
                   </button>
                   <button
                     onClick={() => setActiveTab('COMPANY')}
-                    className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'COMPANY'
-                      ? 'bg-white text-brand-600'
-                      : 'text-white/80 hover:bg-white/10'
-                      }`}
+                    aria-pressed={activeTab === 'COMPANY'} className={`${adminTab(activeTab === 'COMPANY')} h-11 shrink-0`}
                   >
                     <div className="flex items-center gap-2">
                       <FiBriefcase className="w-4 h-4" />
@@ -604,10 +606,7 @@ export default function CustomersPage() {
                   </button>
                   <button
                     onClick={() => setActiveTab('STATS')}
-                    className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === 'STATS'
-                      ? 'bg-white text-brand-600'
-                      : 'text-white/80 hover:bg-white/10'
-                      }`}
+                    aria-pressed={activeTab === 'STATS'} className={`${adminTab(activeTab === 'STATS')} h-11 shrink-0`}
                   >
                     <div className="flex items-center gap-2">
                       <FiBarChart2 className="w-4 h-4" />
@@ -619,7 +618,7 @@ export default function CustomersPage() {
             </div>
 
               {/* Body */}
-              <div className="bg-white px-6 py-6 max-h-[85vh] overflow-y-auto">
+              <div className={`${adminModalBody} [overflow-wrap:anywhere]`}>
                 {isDeleting ? (
                   <div className="text-center py-8">
                     <div className="w-16 h-16 mx-auto mb-4 bg-deal-bg rounded-full flex items-center justify-center">
@@ -649,7 +648,7 @@ export default function CustomersPage() {
                   </div>
                 ) : isEditing ? (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <label className="block text-xs font-semibold text-ink mb-1.5">Nombre</label>
                         <input
@@ -669,7 +668,7 @@ export default function CustomersPage() {
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <label className="block text-xs font-semibold text-ink mb-1.5">Teléfono</label>
                         <input
@@ -701,7 +700,7 @@ export default function CustomersPage() {
                       </select>
                     </div>
                     {formData.customerType === 'COMPANY' && (
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                           <label className="block text-xs font-semibold text-ink mb-1.5">Nombre Empresa</label>
                           <input
@@ -720,7 +719,7 @@ export default function CustomersPage() {
                             className={adminInput()}
                           />
                         </div>
-                        <div className="col-span-2">
+                        <div className="sm:col-span-2">
                           <label className="block text-xs font-semibold text-ink mb-1.5">Estado de Verificación</label>
                           <select
                             value={formData.businessVerificationStatus}
@@ -733,7 +732,7 @@ export default function CustomersPage() {
                             <option value="REJECTED">Rechazado</option>
                           </select>
                         </div>
-                        <div className="col-span-2">
+                        <div className="sm:col-span-2">
                           <label className="block text-xs font-semibold text-ink mb-1.5">Notas de Verificación</label>
                           <textarea
                             value={formData.businessVerificationNotes}
@@ -751,7 +750,7 @@ export default function CustomersPage() {
                     {/* PERSONAL TAB */}
                     {activeTab === 'PERSONAL' && (
                       <div className="space-y-4 animate-fadeIn">
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                           <div>
                             <label className="text-xs font-semibold text-muted mb-1 block">Nombre</label>
                             <p className="text-sm text-ink font-medium">{selectedCustomer.name || 'Sin nombre'}</p>
@@ -806,7 +805,7 @@ export default function CustomersPage() {
 
                         {selectedCustomer.profile?.customerType === 'COMPANY' ? (
                           <>
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                               <div>
                                 <label className="text-xs font-semibold text-muted mb-1 block">Nombre de la Empresa</label>
                                 <p className="text-sm text-ink font-medium">{selectedCustomer.profile?.companyName || 'No registrado'}</p>
@@ -821,7 +820,7 @@ export default function CustomersPage() {
                               <h4 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
                                 <FiFileText className="w-4 h-4" /> Documentos
                               </h4>
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="p-3 border border-line rounded-lg hover:bg-surface transition-colors">
                                   <div className="flex items-center justify-between mb-2">
                                     <span className="text-xs font-medium text-muted">Acta Constitutiva</span>
@@ -889,18 +888,18 @@ export default function CustomersPage() {
                     {/* STATS TAB */}
                     {activeTab === 'STATS' && (
                       <div className="space-y-6 animate-fadeIn">
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="bg-surface rounded-lg p-4 text-center border border-line">
+                        <div className="flex gap-3 overflow-x-auto">
+                          <div className="min-w-max border-r border-line pr-4 last:border-0">
                             <p className="text-xs text-muted mb-1">Total Gastado</p>
                             <p className="text-xl font-bold text-ink">
                               {formatUSD(Number(selectedCustomer.stats?.totalSpent) || 0)}
                             </p>
                           </div>
-                          <div className="bg-surface rounded-lg p-4 text-center border border-line">
+                          <div className="min-w-max border-r border-line pr-4 last:border-0">
                             <p className="text-xs text-muted mb-1">Órdenes Totales</p>
                             <p className="text-xl font-bold text-ink">{selectedCustomer.stats?.orderCount || 0}</p>
                           </div>
-                          <div className="bg-surface rounded-lg p-4 text-center border border-line">
+                          <div className="min-w-max border-r border-line pr-4 last:border-0">
                             <p className="text-xs text-muted mb-1">Órdenes Activas</p>
                             <p className="text-xl font-bold text-ink">{selectedCustomer.stats?.activeOrders || 0}</p>
                           </div>
@@ -951,7 +950,7 @@ export default function CustomersPage() {
               </div>
 
               {/* Footer */}
-              <div className="bg-surface px-6 py-4 flex items-center justify-end gap-3 border-t border-line">
+              <div className={adminModalFooter}>
                 {isEditing ? (
                   <>
                     <button

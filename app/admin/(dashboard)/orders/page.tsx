@@ -4,12 +4,17 @@ import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { FiPrinter, FiBriefcase, FiUser, FiFileText, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiMapPin, FiExternalLink, FiArrowRight, FiCheckCircle, FiLoader, FiMonitor, FiSend } from 'react-icons/fi';
+import { FiPrinter, FiBriefcase, FiUser, FiFileText, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiExternalLink, FiArrowRight, FiCheckCircle, FiLoader, FiMonitor, FiSend } from 'react-icons/fi';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
+import { ETIQUETA_ESTADO } from '@/lib/order-admin';
 import {
+  adminBadge,
+  adminTab,
+  adminModalHeader,
+  adminModalBody,
   adminPageHeader,
   adminPageTitle,
   adminPageSubtitle,
@@ -261,20 +266,6 @@ export default function OrdersPage() {
     }
   };
 
-  const getStatusConfig = (status: string) => {
-    const configs: Record<string, { bg: string; text: string; icon: React.ReactNode; animation?: string }> = {
-      PENDING: { bg: 'bg-warning/15', text: 'text-warning-strong', icon: <FiClock className="w-3.5 h-3.5" /> },
-      CONFIRMED: { bg: 'bg-brand-50', text: 'text-brand-700', icon: <FiCheck className="w-3.5 h-3.5" /> },
-      PAID: { bg: 'bg-success-strong/10', text: 'text-success-strong', icon: <FiDollarSign className="w-3.5 h-3.5" /> },
-      PROCESSING: { bg: 'bg-brand-50', text: 'text-brand-700', icon: <FiPackage className="w-3.5 h-3.5" /> },
-      READY_FOR_PICKUP: { bg: 'bg-brand-50', text: 'text-brand-700', icon: <FiMapPin className="w-3.5 h-3.5" /> },
-      SHIPPED: { bg: 'bg-brand-50', text: 'text-brand-700', icon: <FiTruck className="w-3.5 h-3.5" /> },
-      DELIVERED: { bg: 'bg-success-strong/10', text: 'text-success-strong', icon: <FiCheck className="w-3.5 h-3.5" /> },
-      CANCELLED: { bg: 'bg-deal-bg', text: 'text-deal', icon: <FiX className="w-3.5 h-3.5" /> },
-    };
-    return configs[status] || configs.PENDING;
-  };
-
   const getStatusText = (status: string) => {
     const map: Record<string, string> = {
       PENDING: 'Pendiente', CONFIRMED: 'Confirmado', PAID: 'Pagado', PROCESSING: 'Preparando',
@@ -346,46 +337,6 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className={adminStatCard}>
-          <span className={`${adminIconChip('brand')} max-sm:hidden`}>
-            <FiDollarSign className="w-5 h-5" />
-          </span>
-          <div>
-            <span className={adminStatLabel}>Ingresos</span>
-            <p className={`${adminStatValue} max-sm:text-xl`}>{formatUSD(stats.totalRevenue)}</p>
-          </div>
-        </div>
-        <div className={adminStatCard}>
-          <span className={`${adminIconChip('warning')} max-sm:hidden`}>
-            <FiClock className="w-5 h-5" />
-          </span>
-          <div>
-            <span className={adminStatLabel}>Pendientes</span>
-            <p className={`${adminStatValue} max-sm:text-xl`}>{stats.pendingCount}</p>
-          </div>
-        </div>
-        <div className={adminStatCard}>
-          <span className={`${adminIconChip('brand')} max-sm:hidden`}>
-            <FiPackage className="w-5 h-5" />
-          </span>
-          <div>
-            <span className={adminStatLabel}>En proceso</span>
-            <p className={`${adminStatValue} max-sm:text-xl`}>{stats.processingCount}</p>
-          </div>
-        </div>
-        <div className={adminStatCard}>
-          <span className={`${adminIconChip('success')} max-sm:hidden`}>
-            <FiCheck className="w-5 h-5" />
-          </span>
-          <div>
-            <span className={adminStatLabel}>Completadas</span>
-            <p className={`${adminStatValue} max-sm:text-xl`}>{stats.completedCount}</p>
-          </div>
-        </div>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex w-full items-center gap-3 flex-1 sm:w-auto">
@@ -393,7 +344,8 @@ export default function OrdersPage() {
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
             <input
               type="text"
-              placeholder="Buscar orden o cliente..."
+              aria-label="Buscar orden o cliente"
+              placeholder="Buscar orden o cliente"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`${adminInput()} pl-9`}
@@ -403,7 +355,7 @@ export default function OrdersPage() {
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             aria-label="Estado"
-            className={`${adminInput()} max-w-36 shrink-0 sm:max-w-none sm:w-44`}
+            className={`${adminInput()} hidden shrink-0 lg:block lg:w-44`}
           >
             <option value="all">Todas</option>
             <option value="PENDING">Pendientes</option>
@@ -417,11 +369,65 @@ export default function OrdersPage() {
         <button
           onClick={fetchOrders}
           disabled={loading}
-          className={adminPrimaryButton}
+          className={adminSecondaryButton}
         >
           <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Actualizar
         </button>
+      </div>
+
+      <nav aria-label="Filtrar órdenes por estado" className="overflow-x-auto pb-1 lg:hidden">
+        <div className="flex w-max gap-2">
+          {[
+            ['all', 'Todas'], ['PENDING', 'Pendientes'], ['CONFIRMED', 'Confirmadas'],
+            ['PAID', 'Pagadas'], ['PROCESSING', 'En preparación'], ['SHIPPED', 'Enviadas'], ['DELIVERED', 'Entregadas'],
+          ].map(([value, label]) => (
+            <button key={value} type="button" onClick={() => setFilterStatus(value)} aria-pressed={filterStatus === value} className={`${adminTab(filterStatus === value)} h-11`}>
+              {label}
+              {!loading && (filterStatus === 'all' || filterStatus === value) && <span className="tabular-nums">{value === 'all' ? orders.length : orders.filter((order) => order.status === value).length}</span>}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {/* Stats Cards */}
+      <div className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-4">
+        <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+          <span className={`${adminIconChip('brand')} hidden`}>
+            <FiDollarSign className="w-5 h-5" />
+          </span>
+          <div>
+            <span className={adminStatLabel}>Ingresos</span>
+            <p className={`${adminStatValue} text-lg tabular-nums`}>{formatUSD(stats.totalRevenue)}</p>
+          </div>
+        </div>
+        <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+          <span className={`${adminIconChip('warning')} hidden`}>
+            <FiClock className="w-5 h-5" />
+          </span>
+          <div>
+            <span className={adminStatLabel}>Pendientes</span>
+            <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.pendingCount}</p>
+          </div>
+        </div>
+        <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+          <span className={`${adminIconChip('brand')} hidden`}>
+            <FiPackage className="w-5 h-5" />
+          </span>
+          <div>
+            <span className={adminStatLabel}>En proceso</span>
+            <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.processingCount}</p>
+          </div>
+        </div>
+        <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
+          <span className={`${adminIconChip('success')} hidden`}>
+            <FiCheck className="w-5 h-5" />
+          </span>
+          <div>
+            <span className={adminStatLabel}>Completadas</span>
+            <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.completedCount}</p>
+          </div>
+        </div>
       </div>
 
       {/* Orders List */}
@@ -442,28 +448,21 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-3">
           {filteredOrders.map((order) => {
-            const statusConfig = getStatusConfig(order.status);
             const nextAction = getNextStatusAction(order.status);
             return (
-              <div key={order.id} className="group bg-white rounded-xl border border-line p-4 transition-all duration-300">
+              <div key={order.id} className="relative rounded-2xl border border-line bg-white p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    {/* Order Icon */}
-                    <div className="relative flex-shrink-0">
-                      <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center">
-                        <FiPackage className="w-5 h-5 text-brand-600" />
-                      </div>
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ${statusConfig.bg} border flex items-center justify-center`}>
-                        <span>{statusConfig.icon}</span>
-                      </div>
-                    </div>
-
                     {/* Order Info */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                        <h3 className="font-bold text-ink text-sm">#{order.orderNumber}</h3>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
-                          {getStatusText(order.status)}
+                        <h3 className="font-semibold text-ink text-sm">
+                          <button type="button" onClick={() => { setSelectedOrder(order); setAdminNotes(order.adminNotes || ''); setShowDetailsModal(true); }} className="text-left after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-2 focus-visible:outline-brand-500">
+                            #{order.orderNumber}
+                          </button>
+                        </h3>
+                        <span className={adminBadge(order.status === 'PENDING' ? 'warning' : order.status === 'CANCELLED' ? 'danger' : order.status === 'DELIVERED' ? 'success' : order.status === 'REFUNDED' ? 'neutral' : 'brand')}>
+                          {ETIQUETA_ESTADO[order.status as keyof typeof ETIQUETA_ESTADO] || getStatusText(order.status)}
                         </span>
                         {order.hasDigital && (
                           <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 flex items-center gap-1">
@@ -477,21 +476,20 @@ export default function OrdersPage() {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
                         <span className="font-medium text-ink">{order.user?.name || 'Invitado'}</span>
                         <span>•</span>
                         <span>{getTimeSince(order.createdAt)}</span>
                         <span>•</span>
-                        <span>{order.items?.length || 0} productos</span>
+                        <span>{order.items?.length || 0} {order.items?.length === 1 ? 'producto' : 'productos'}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Price & Quick Actions */}
-                  <div className="flex items-center justify-between gap-3 sm:justify-end">
+                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     <div className="text-left sm:text-right">
                       <p className="text-lg font-bold text-ink">{formatUSD(Number(order.totalUSD) || 0)}</p>
-                      <p className="text-xs text-muted uppercase">USD</p>
                     </div>
 
                     {/* Quick action button */}
@@ -513,7 +511,7 @@ export default function OrdersPage() {
                           }
                         }}
                         disabled={updatingStatus}
-                        className={`hidden sm:flex items-center gap-1 px-3 py-1.5 text-white text-xs font-medium rounded-lg ${order.isOnlyDigital && order.status === 'PROCESSING' ? 'bg-brand-500 hover:bg-brand-600' : nextAction.color} disabled:opacity-50`}
+                        className={`${adminSecondaryButton} relative min-h-11 w-full sm:w-auto`}
                       >
                         {order.isOnlyDigital && order.status === 'PROCESSING' ? (
                           <>
@@ -534,7 +532,7 @@ export default function OrdersPage() {
                       <a
                         href={`/admin/orders/${order.id}/digital`}
                         onClick={(e) => e.stopPropagation()}
-                        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-brand-500 text-white text-xs font-medium rounded-lg hover:bg-brand-600"
+                        className={`${adminSecondaryButton} relative`}
                         title="Enviar códigos digitales"
                       >
                         <FiMonitor className="w-3.5 h-3.5" />
@@ -548,7 +546,7 @@ export default function OrdersPage() {
                         setAdminNotes(order.adminNotes || '');
                         setShowDetailsModal(true);
                       }}
-                      className={adminIconButton}
+                      className={`${adminIconButton} relative h-11 w-11`}
                       aria-label="Ver detalles"
                       title="Ver detalles"
                     >
@@ -565,19 +563,19 @@ export default function OrdersPage() {
       {/* Order Details Modal */}
       {mounted && showDetailsModal && selectedOrder && createPortal(
         <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
-          <div className={`${adminModalPanel} sm:max-w-4xl max-h-[90vh]`}>
+          <div className={`${adminModalPanel} sm:max-w-4xl`} role="dialog" aria-modal="true" aria-label="Detalle de la orden">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-line bg-brand-600 text-white">
-              <div className="flex items-center justify-between">
+            <div className={`${adminModalHeader} flex-wrap text-ink`}>
+              <div className="flex w-full flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-bold">#{selectedOrder.orderNumber}</h3>
                   <p className="text-sm opacity-80">{format(new Date(selectedOrder.createdAt), "d 'de' MMMM, yyyy", { locale: es })}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => toast('Próximamente')} className="flex items-center gap-2 px-3 py-1.5 bg-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/30">
+                  <button onClick={() => toast('Próximamente')} className={adminSecondaryButton}>
                     <FiPrinter className="w-4 h-4" /> Imprimir
                   </button>
-                  <button onClick={closeModal} aria-label="Cerrar" className="p-2 hover:bg-white/20 rounded-lg">
+                  <button onClick={closeModal} aria-label="Cerrar" title="Cerrar" className={`${adminIconButton} h-11 w-11`}>
                     <FiX className="w-5 h-5" />
                   </button>
                 </div>
@@ -585,46 +583,35 @@ export default function OrdersPage() {
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-              {/* Order Flow Progress */}
-              <div className={`mb-6 p-4 rounded-xl ${selectedOrder.isOnlyDigital ? 'bg-brand-50' : 'bg-surface'}`}>
-                <div className="flex items-center gap-2 mb-3">
-                  <h4 className="text-xs font-bold text-muted uppercase">Progreso del Pedido</h4>
-                  {selectedOrder.isOnlyDigital && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-500 text-white flex items-center gap-1">
-                      <FiMonitor className="w-2.5 h-2.5" /> Solo Digital
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center justify-between relative">
-                  {/* Progress bar background */}
-                  <div className="absolute top-4 left-0 right-0 h-1 bg-line mx-8" />
-                  {/* Progress bar fill */}
-                  <div
-                    className="absolute top-4 left-0 h-1 mx-8 transition-all duration-500 bg-brand-500"
-                    style={{
-                      width: `${(getCurrentFlowIndex(selectedOrder.status, selectedOrder.isOnlyDigital) / (getOrderFlow(selectedOrder.isOnlyDigital).length - 1)) * 100}%`
-                    }}
-                  />
-
-                  {getOrderFlow(selectedOrder.isOnlyDigital).map((step, index) => {
-                    const isCompleted = getCurrentFlowIndex(selectedOrder.status, selectedOrder.isOnlyDigital) >= index;
-                    const isCurrent = selectedOrder.status === step.status;
-                    const IconComponent = step.icon;
-                    return (
-                      <div key={step.status} className="relative z-10 flex flex-col items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isCompleted
-                          ? 'bg-brand-500 text-white'
-                          : 'bg-white border-2 border-line text-muted'
-                          } ${isCurrent ? 'ring-4 ring-brand-500/20' : ''}`}>
-                          <IconComponent className="w-4 h-4" />
-                        </div>
-                        <span className={`mt-2 text-xs font-medium ${isCompleted ? 'text-brand-600' : 'text-muted'}`}>
-                          {step.label}
-                        </span>
+            <div className={adminModalBody}>
+              <div className="grid grid-cols-1 gap-4 mb-5 sm:grid-cols-2">
+                {/* Customer Info */}
+                <div>
+                  <h4 className="text-xs font-bold text-ink uppercase mb-3">Cliente</h4>
+                  <div className="space-y-1 [overflow-wrap:anywhere]">
+                    <p className="font-semibold text-ink">{selectedOrder.user?.name || 'Invitado'}</p>
+                    <p className="text-sm text-muted">{selectedOrder.user?.email}</p>
+                    <p className="text-sm text-muted">Pago: {selectedOrder.paymentMethod} · {selectedOrder.paymentStatus || 'Sin estado'}</p>
+                    {selectedOrder.shippingAddress && (
+                      <div className="mt-2 pt-2 border-t border-line">
+                        <p className="text-xs text-muted">Dirección de envío:</p>
+                        <p className="text-sm text-ink">{selectedOrder.shippingAddress}</p>
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
+                </div>
+
+                {/* Admin Notes */}
+                <div>
+                  <h4 className="text-xs font-bold text-ink uppercase mb-3">Notas Admin</h4>
+                  <div className="rounded-xl border border-line p-3">
+                    <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 text-sm text-ink placeholder:text-muted resize-none" rows={3} placeholder="Agregar notas..." />
+                    <div className="flex justify-end">
+                      <button onClick={handleSaveNotes} disabled={savingNotes} className={adminSecondaryButton}>
+                        {savingNotes ? 'Guardando...' : 'Guardar'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -676,74 +663,6 @@ export default function OrdersPage() {
                 )}
               </div>
 
-              {/* Shipping Info (if shipped) */}
-              {selectedOrder.trackingNumber && (
-                <div className="mb-6 p-4 bg-brand-50 rounded-xl border border-brand-200">
-                  <h4 className="text-xs font-bold text-brand-700 uppercase mb-3 flex items-center gap-2">
-                    <FiTruck className="w-4 h-4" /> Información de Envío
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted">Carrier:</span>
-                      <span className="ml-2 font-semibold text-ink">{selectedOrder.shippingCarrier}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted">Guía:</span>
-                      <span className="ml-2 font-semibold text-ink">{selectedOrder.trackingNumber}</span>
-                    </div>
-                    {selectedOrder.trackingUrl && (
-                      <div className="col-span-2">
-                        <a
-                          href={selectedOrder.trackingUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-brand-600 hover:text-brand-700 font-medium"
-                        >
-                          <FiExternalLink className="w-4 h-4" />
-                          Ver seguimiento en {selectedOrder.shippingCarrier}
-                        </a>
-                      </div>
-                    )}
-                    {selectedOrder.shippingNotes && (
-                      <div className="col-span-2">
-                        <span className="text-muted">Notas:</span>
-                        <p className="mt-1 text-ink">{selectedOrder.shippingNotes}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-6 mb-6">
-                {/* Customer Info */}
-                <div>
-                  <h4 className="text-xs font-bold text-ink uppercase mb-3">Cliente</h4>
-                  <div className="bg-surface p-4 rounded-xl">
-                    <p className="font-semibold text-ink">{selectedOrder.user?.name || 'Invitado'}</p>
-                    <p className="text-sm text-muted">{selectedOrder.user?.email}</p>
-                    {selectedOrder.shippingAddress && (
-                      <div className="mt-2 pt-2 border-t border-line">
-                        <p className="text-xs text-muted">Dirección de envío:</p>
-                        <p className="text-sm text-ink">{selectedOrder.shippingAddress}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Admin Notes */}
-                <div>
-                  <h4 className="text-xs font-bold text-ink uppercase mb-3">Notas Admin</h4>
-                  <div className="bg-warning/15 p-4 rounded-xl border border-warning/30">
-                    <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 text-sm text-ink placeholder:text-muted resize-none" rows={3} placeholder="Agregar notas..." />
-                    <div className="flex justify-end">
-                      <button onClick={handleSaveNotes} disabled={savingNotes} className="text-xs font-bold text-warning-strong hover:underline disabled:opacity-50">
-                        {savingNotes ? 'Guardando...' : 'Guardar'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Products */}
               <div>
                 <h4 className="text-xs font-bold text-ink uppercase mb-3">Productos</h4>
@@ -764,8 +683,8 @@ export default function OrdersPage() {
                             <div className="font-medium text-ink">{item.productName || item.product?.name}</div>
                           </td>
                           <td className={`${adminTd} text-center`}>{item.quantity}</td>
-                          <td className={`${adminTd} text-right`}>{formatUSD(Number(item.priceUSD || item.pricePerUnit) || 0)}</td>
-                          <td className={`${adminTd} text-right font-medium`}>{formatUSD(Number(item.totalUSD || item.subtotal) || 0)}</td>
+                          <td className={`${adminTd} whitespace-nowrap text-right`}>{formatUSD(Number(item.priceUSD || item.pricePerUnit) || 0)}</td>
+                          <td className={`${adminTd} whitespace-nowrap text-right font-medium`}>{formatUSD(Number(item.totalUSD || item.subtotal) || 0)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -778,6 +697,86 @@ export default function OrdersPage() {
                   </table>
                 </div>
               </div>
+              {/* Shipping Info (if shipped) */}
+              {selectedOrder.trackingNumber && (
+                <div className="mb-6 p-4 bg-brand-50 rounded-xl border border-brand-200">
+                  <h4 className="text-xs font-bold text-brand-700 uppercase mb-3 flex items-center gap-2">
+                    <FiTruck className="w-4 h-4" /> Información de Envío
+                  </h4>
+                  <div className="grid grid-cols-1 gap-3 text-sm [overflow-wrap:anywhere] sm:grid-cols-2">
+                    <div>
+                      <span className="text-muted">Carrier:</span>
+                      <span className="ml-2 font-semibold text-ink">{selectedOrder.shippingCarrier}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted">Guía:</span>
+                      <span className="ml-2 font-semibold text-ink">{selectedOrder.trackingNumber}</span>
+                    </div>
+                    {selectedOrder.trackingUrl && (
+                      <div className="sm:col-span-2">
+                        <a
+                          href={selectedOrder.trackingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-brand-600 hover:text-brand-700 font-medium"
+                        >
+                          <FiExternalLink className="w-4 h-4" />
+                          Ver seguimiento en {selectedOrder.shippingCarrier}
+                        </a>
+                      </div>
+                    )}
+                    {selectedOrder.shippingNotes && (
+                      <div className="sm:col-span-2">
+                        <span className="text-muted">Notas:</span>
+                        <p className="mt-1 text-ink">{selectedOrder.shippingNotes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Order Flow Progress */}
+              <div className={`mt-5 overflow-x-auto rounded-xl p-4 ${selectedOrder.isOnlyDigital ? 'bg-brand-50' : 'bg-surface'}`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <h4 className="text-xs font-bold text-muted uppercase">Progreso del Pedido</h4>
+                  {selectedOrder.isOnlyDigital && (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-500 text-white flex items-center gap-1">
+                      <FiMonitor className="w-2.5 h-2.5" /> Solo Digital
+                    </span>
+                  )}
+                </div>
+                <div className="relative flex min-w-[440px] items-center justify-between">
+                  {/* Progress bar background */}
+                  <div className="absolute top-4 left-0 right-0 h-1 bg-line mx-8" />
+                  {/* Progress bar fill */}
+                  <div
+                    className="absolute top-4 left-0 h-1 mx-8 transition-all duration-500 bg-brand-500"
+                    style={{
+                      width: `${(getCurrentFlowIndex(selectedOrder.status, selectedOrder.isOnlyDigital) / (getOrderFlow(selectedOrder.isOnlyDigital).length - 1)) * 100}%`
+                    }}
+                  />
+
+                  {getOrderFlow(selectedOrder.isOnlyDigital).map((step, index) => {
+                    const isCompleted = getCurrentFlowIndex(selectedOrder.status, selectedOrder.isOnlyDigital) >= index;
+                    const isCurrent = selectedOrder.status === step.status;
+                    const IconComponent = step.icon;
+                    return (
+                      <div key={step.status} className="relative z-10 flex flex-col items-center">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isCompleted
+                          ? 'bg-brand-500 text-white'
+                          : 'bg-white border-2 border-line text-muted'
+                          } ${isCurrent ? 'ring-4 ring-brand-500/20' : ''}`}>
+                          <IconComponent className="w-4 h-4" />
+                        </div>
+                        <span className={`mt-2 text-xs font-medium ${isCompleted ? 'text-brand-600' : 'text-muted'}`}>
+                          {step.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
             </div>
 
             {/* Footer */}
@@ -794,7 +793,7 @@ export default function OrdersPage() {
         <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setShowShippingModal(false); }}>
           <div className={`${adminModalPanel} sm:max-w-md`}>
             {/* Header */}
-            <div className="px-6 py-4 border-b border-line bg-brand-600 text-white">
+            <div className={`${adminModalHeader} flex-wrap text-ink`}>
               <h3 className="text-lg font-bold flex items-center gap-2 mb-1">
                 <FiTruck className="w-5 h-5" />
                 Información de Envío
@@ -803,7 +802,7 @@ export default function OrdersPage() {
             </div>
 
             {/* Content */}
-            <div className="p-6 flex flex-col gap-4 overflow-y-auto">
+            <div className={`${adminModalBody} flex flex-col gap-4`}>
               <div>
                 <label className={adminLabel}>
                   Empresa de Envío *
@@ -907,7 +906,7 @@ export default function OrdersPage() {
       {mounted && showCancelModal && selectedOrder && createPortal(
         <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setShowCancelModal(false); }}>
           <div className={`${adminModalPanel} sm:max-w-md`}>
-            <div className="px-6 py-4 border-b border-line">
+            <div className={`${adminModalHeader} flex-col items-start`}>
               <h3 className="text-lg font-bold text-ink flex items-center gap-2">
                 <FiX className="w-5 h-5 text-deal" />
                 Cancelar orden
@@ -915,7 +914,7 @@ export default function OrdersPage() {
               <p className="text-sm text-muted mt-1">Orden #{selectedOrder.orderNumber}</p>
             </div>
 
-            <div className="p-6 flex flex-col gap-4 overflow-y-auto">
+            <div className={`${adminModalBody} flex flex-col gap-4`}>
               <div className={adminNotice('warning')}>
                 {selectedOrder.paymentStatus === 'PAID' ? (
                   selectedOrder.paymentMethod === 'WALLET' ? (

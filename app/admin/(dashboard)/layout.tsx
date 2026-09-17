@@ -396,7 +396,7 @@ export default function AdminLayout({
 
         {/* Sin transform ni backdrop-filter en los contenedores: si no, los modales `fixed` de las páginas quedan encerrados aquí */}
         <main className="p-3 sm:p-4 lg:p-6">
-          <div className="mx-auto max-w-[1600px] rounded-2xl border border-line bg-white p-4 md:p-6">
+          <div className="mx-auto min-w-0 max-w-[1600px]">
             {children}
           </div>
         </main>

@@ -3,6 +3,7 @@ import { formatUSD } from '@/lib/currency';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
 import { adminPageHeader, adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 
 type Course = {
@@ -72,7 +73,7 @@ export default function CreatorDashboardPage() {
 
   if (!creator || creator.status !== 'APPROVED') {
     return (
-      <div className="max-w-md mx-auto mt-16 text-center">
+      <div className="mx-auto mt-6 max-w-md rounded-2xl border border-line bg-white p-6 text-center sm:mt-12">
         <h2 className="text-xl font-bold text-ink mb-2">
           {creator?.status === 'PENDING' ? 'Solicitud en revisión' : 'Acceso no autorizado'}
         </h2>
@@ -81,8 +82,8 @@ export default function CreatorDashboardPage() {
             ? 'Tu solicitud está siendo revisada. Te avisaremos cuando sea aprobada.'
             : 'Necesitas ser un creador aprobado para acceder a este panel.'}
         </p>
-        <Link href="/creator" className="text-brand-600 text-sm hover:underline">
-          ← Volver a la página de creadores
+        <Link href="/creator" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:underline">
+          <FiArrowLeft className="h-4 w-4" aria-hidden="true" /> Volver a la página de creadores
         </Link>
       </div>
     );
@@ -97,14 +98,14 @@ export default function CreatorDashboardPage() {
   const activeCourses = courses.filter((c) => c.isActive).length;
 
   const stats = [
-    { label: 'Estudiantes', value: totalStudents.toString(), sub: 'matriculados en total' },
     { label: 'Ingresos', value: formatUSD(creator.totalRevenue), sub: `${creator.commissionRate}% tuyo por venta` },
+    { label: 'Estudiantes', value: totalStudents.toString(), sub: 'matriculados en total' },
     { label: 'Cursos Activos', value: `${activeCourses}/${courses.length}`, sub: 'activos de total' },
     { label: 'Calificación', value: avgRating ? avgRating.toFixed(1) : '—', sub: `${totalReviews} reseñas` },
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
       <div className={adminPageHeader}>
         <div>
@@ -123,10 +124,10 @@ export default function CreatorDashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="bg-white border border-line rounded-2xl p-5">
-            <p className="text-2xl font-bold text-ink">{stat.value}</p>
+          <div key={stat.label} className={`min-w-0 rounded-2xl border border-line bg-white p-4 ${stat.label === 'Ingresos' || stat.label === 'Calificación' ? 'col-span-2 lg:col-span-1' : ''}`}>
+            <p className="whitespace-nowrap text-xl font-bold tabular-nums text-ink sm:text-2xl">{stat.value}</p>
             <p className="text-muted text-xs font-semibold mt-0.5">{stat.label}</p>
             <p className="text-muted text-xs">{stat.sub}</p>
           </div>
@@ -138,7 +139,7 @@ export default function CreatorDashboardPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-ink">Mis Cursos</h2>
           <Link href="/creator/dashboard/cursos" className="text-brand-600 text-sm hover:underline">
-            Ver todos →
+            Ver todos <FiArrowRight className="inline h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
 
@@ -157,7 +158,7 @@ export default function CreatorDashboardPage() {
             {courses.slice(0, 5).map((course) => (
               <div
                 key={course.id}
-                className="bg-white border border-line rounded-2xl p-4 flex items-center gap-4 hover:border-brand-300 transition-colors"
+                className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 transition-colors hover:border-brand-300 sm:flex-row sm:items-center"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -179,7 +180,7 @@ export default function CreatorDashboardPage() {
                 </div>
                 <Link
                   href={`/creator/dashboard/cursos/${course.id}`}
-                  className={`${adminSecondaryButton} flex-shrink-0 text-xs px-4 py-1.5`}
+                  className={`${adminSecondaryButton} w-full shrink-0 text-xs sm:w-auto`}
                 >
                   Editar
                 </Link>

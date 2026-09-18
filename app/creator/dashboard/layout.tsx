@@ -4,172 +4,100 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { FiArrowLeft, FiBookOpen, FiChevronLeft, FiExternalLink, FiHome, FiLogOut, FiMenu, FiUser, FiX } from 'react-icons/fi';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 const NAV_ITEMS = [
-  {
-    href: '/creator/dashboard',
-    label: 'Dashboard',
-    exact: true,
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-      </svg>
-    ),
-  },
-  {
-    href: '/creator/dashboard/cursos',
-    label: 'Mis Cursos',
-    exact: false,
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-      </svg>
-    ),
-  },
-  {
-    href: '/creator/dashboard/perfil',
-    label: 'Mi Perfil',
-    exact: false,
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-    ),
-  },
+  { href: '/creator/dashboard', label: 'Dashboard', exact: true, icon: FiHome },
+  { href: '/creator/dashboard/cursos', label: 'Mis Cursos', exact: false, icon: FiBookOpen },
+  { href: '/creator/dashboard/perfil', label: 'Mi Perfil', exact: false, icon: FiUser },
 ];
 
 export default function CreatorDashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [drawerPath, setDrawerPath] = useState<string | null>(null);
+  const isDrawerOpen = drawerPath === pathname;
+  useBodyScrollLock(isDrawerOpen);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login?redirect=/creator/dashboard');
-    }
+    if (status === 'unauthenticated') router.push('/login?redirect=/creator/dashboard');
   }, [status, router]);
+
+  useEffect(() => {
+    if (!isDrawerOpen) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setDrawerPath(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isDrawerOpen]);
 
   if (status === 'loading') {
     return (
-      <div className="min-h-dvh bg-surface flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-dvh items-center justify-center bg-surface">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
       </div>
     );
   }
-
   if (!session) return null;
 
-  return (
-    <div className="min-h-dvh bg-surface flex">
-      {/* Sidebar */}
-      <aside
-        className={`${sidebarOpen ? 'w-60' : 'w-16'} transition-all duration-300 flex-shrink-0 bg-white border-r border-line flex flex-col sticky top-0 h-dvh`}
-      >
-        {/* Logo */}
-        <div className="px-4 py-5 border-b border-line flex items-center gap-3 flex-shrink-0">
-          <div className="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </div>
-          {sidebarOpen && (
-            <div>
-              <p className="text-ink text-sm font-bold leading-none">Creator Hub</p>
-              <p className="text-muted text-xs mt-0.5">ElectroShop</p>
-            </div>
-          )}
-        </div>
+  const currentTitle = NAV_ITEMS.find((item) => item.exact ? pathname === item.href : pathname.startsWith(item.href))?.label ?? 'Creator Hub';
 
-        {/* Nav */}
-        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+  return (
+    <div className="min-h-dvh bg-surface">
+      {isDrawerOpen && <div className="fixed inset-0 z-[var(--z-drawer)] bg-ink/50 lg:hidden" onClick={() => setDrawerPath(null)} aria-hidden="true" />}
+      <aside id="creator-sidebar" aria-label="Menú del creador"
+        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-72 flex-col border-r border-line bg-white transition-transform duration-200 lg:z-[var(--z-sticky)] ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'} ${isCollapsed ? 'lg:w-16' : 'lg:w-60'} lg:translate-x-0`}>
+        <div className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-4">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white"><FiBookOpen className="h-5 w-5" aria-hidden="true" /></span>
+          <span className={`min-w-0 flex-1 ${isCollapsed ? 'lg:hidden' : ''}`}>
+            <span className="block text-sm font-bold text-ink">Creator Hub</span>
+            <span className="block text-xs text-muted">ElectroShop</span>
+          </span>
+          <button type="button" onClick={() => setDrawerPath(null)} aria-label="Cerrar menú" className="flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:bg-surface lg:hidden"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+        </div>
+        <nav className="flex-1 overflow-y-auto px-2 py-4">
           {NAV_ITEMS.map((item) => {
-            const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'bg-brand-50 text-brand-600 border border-brand-200'
-                    : 'text-ink-soft hover:text-ink hover:bg-surface'
-                }`}
-                title={!sidebarOpen ? item.label : undefined}
-              >
-                <span className="flex-shrink-0">{item.icon}</span>
-                {sidebarOpen && <span>{item.label}</span>}
-              </Link>
-            );
+            const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+            return <Link key={item.href} href={item.href} title={isCollapsed ? item.label : undefined} aria-current={active ? 'page' : undefined}
+              className={`flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium ${active ? 'bg-brand-50 text-brand-700' : 'text-ink-soft hover:bg-surface hover:text-ink'}`}>
+              <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span className={isCollapsed ? 'lg:hidden' : ''}>{item.label}</span>
+            </Link>;
           })}
         </nav>
-
-        {/* Bottom */}
-        <div className="border-t border-line p-3 space-y-1 flex-shrink-0">
-          <Link
-            href="/creator"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-ink-soft hover:text-ink hover:bg-surface transition-all"
-            title={!sidebarOpen ? 'Página de Creadores' : undefined}
-          >
-            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            {sidebarOpen && <span>Página de Creadores</span>}
+        <div className="shrink-0 space-y-1 border-t border-line p-2">
+          <Link href="/creator" title={isCollapsed ? 'Página de Creadores' : undefined} className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-ink-soft hover:bg-surface hover:text-ink">
+            <FiArrowLeft className="h-4 w-4 shrink-0" aria-hidden="true" /><span className={isCollapsed ? 'lg:hidden' : ''}>Página de Creadores</span>
           </Link>
-          <Link
-            href="/customer"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-ink-soft hover:text-ink hover:bg-surface transition-all"
-            title={!sidebarOpen ? 'Mi Panel Cliente' : undefined}
-          >
-            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            {sidebarOpen && <span>Mi Panel Cliente</span>}
+          <Link href="/customer" title={isCollapsed ? 'Mi Panel Cliente' : undefined} className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-ink-soft hover:bg-surface hover:text-ink">
+            <FiHome className="h-4 w-4 shrink-0" aria-hidden="true" /><span className={isCollapsed ? 'lg:hidden' : ''}>Mi Panel Cliente</span>
           </Link>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-ink-soft hover:text-ink hover:bg-surface transition-all"
-          >
-            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarOpen ? 'M11 19l-7-7 7-7m8 14l-7-7 7-7' : 'M13 5l7 7-7 7M5 5l7 7-7 7'} />
-            </svg>
-            {sidebarOpen && <span>Colapsar</span>}
+          <button type="button" onClick={() => setIsCollapsed((value) => !value)} aria-label={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}
+            className="hidden h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-ink-soft hover:bg-surface lg:flex">
+            <FiChevronLeft className={`h-4 w-4 shrink-0 ${isCollapsed ? 'rotate-180' : ''}`} aria-hidden="true" />
+            {!isCollapsed && <span>Colapsar</span>}
           </button>
-          <button
-            onClick={() => signOut({ callbackUrl: '/' })}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-deal hover:bg-deal-bg transition-all"
-          >
-            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            {sidebarOpen && <span>Cerrar Sesión</span>}
+          <button type="button" onClick={() => signOut({ callbackUrl: '/' })} title={isCollapsed ? 'Cerrar Sesión' : undefined}
+            className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-deal hover:bg-deal-bg">
+            <FiLogOut className="h-4 w-4 shrink-0" aria-hidden="true" /><span className={isCollapsed ? 'lg:hidden' : ''}>Cerrar Sesión</span>
           </button>
         </div>
       </aside>
-
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <header className="bg-white border-b border-line px-6 py-3.5 flex items-center justify-between flex-shrink-0 sticky top-0 z-[var(--z-sticky)]">
-          <div className="text-ink text-sm font-semibold">
-            {NAV_ITEMS.find((n) => (n.exact ? pathname === n.href : pathname.startsWith(n.href)))?.label ?? 'Creator Hub'}
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/cursos"
-              target="_blank"
-              className="text-xs text-muted hover:text-brand-600 transition-colors"
-            >
-              Ver catálogo ↗
-            </Link>
-            <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-bold">
-              {session.user.name?.[0]?.toUpperCase() ?? 'C'}
-            </div>
-          </div>
+      <div className={`min-w-0 transition-[padding] duration-200 ${isCollapsed ? 'lg:pl-16' : 'lg:pl-60'}`}>
+        <header className="sticky top-0 z-[var(--z-sticky)] flex h-16 items-center gap-2 border-b border-line bg-white px-3 sm:px-4 lg:px-6">
+          <button type="button" onClick={() => setDrawerPath(pathname)} aria-label="Abrir menú" aria-controls="creator-sidebar" aria-expanded={isDrawerOpen}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-soft hover:bg-surface lg:hidden"><FiMenu className="h-5 w-5" aria-hidden="true" /></button>
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{currentTitle}</span>
+          <Link href="/cursos" target="_blank" className="inline-flex h-10 items-center gap-1 rounded-lg border border-line px-3 text-xs font-medium text-ink-soft hover:bg-surface">
+            <span className="hidden sm:inline">Ver catálogo</span><FiExternalLink className="h-4 w-4" aria-label="Ver catálogo" />
+          </Link>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white" aria-label={session.user.name ?? 'Creador'}>
+            {session.user.name?.[0]?.toUpperCase() ?? 'C'}
+          </span>
         </header>
-
-        <main className="flex-1 overflow-auto p-6">
-          {children}
-        </main>
+        <main className="mx-auto max-w-[1600px] min-w-0 p-3 sm:p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { formatUSD } from '@/lib/currency';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { FiArrowRight } from 'react-icons/fi';
 import { adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import ImageUploadField from '@/components/ui/ImageUploadField';
 
@@ -52,7 +53,7 @@ export default function NuevoCursoPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6 pb-20 lg:pb-0">
       {/* Back */}
       <Link
         href="/creator/dashboard/cursos"
@@ -71,7 +72,7 @@ export default function NuevoCursoPage() {
         </p>
       </div>
 
-      <div className="bg-white border border-line rounded-2xl p-6 space-y-5">
+      <div className="space-y-5 rounded-2xl border border-line bg-white p-4 sm:p-6">
         {error && (
           <div className="p-3 bg-deal-bg border border-deal/30 rounded-lg text-deal text-sm">
             {error}
@@ -107,7 +108,7 @@ export default function NuevoCursoPage() {
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Categoría">
             <select value={form.category} onChange={(e) => update('category', e.target.value)} className={INPUT}>
               <option value="">Sin categoría</option>
@@ -144,14 +145,16 @@ export default function NuevoCursoPage() {
           />
         </Field>
 
+        <div className="min-w-0 rounded-xl bg-brand-950 p-3">
         <ImageUploadField
           label="Miniatura del Curso (Thumbnail)"
           value={form.thumbnail}
           onChange={(url) => update('thumbnail', url)}
           placeholder="https://... o sube una imagen"
         />
+        </div>
 
-        <div className="flex justify-end gap-3 pt-2">
+        <div className="fixed inset-x-0 bottom-0 z-[var(--z-sticky)] flex justify-end gap-3 border-t border-line bg-white p-3 shadow-lg lg:static lg:border-0 lg:p-0 lg:pt-2 lg:shadow-none">
           <Link
             href="/creator/dashboard/cursos"
             className={`${adminSecondaryButton} px-5 py-2.5 rounded-xl text-sm font-semibold`}
@@ -163,7 +166,7 @@ export default function NuevoCursoPage() {
             disabled={saving}
             className={`${adminPrimaryButton} px-6 py-2.5 text-sm font-bold rounded-xl disabled:opacity-50`}
           >
-            {saving ? 'Creando...' : 'Crear Curso →'}
+            {saving ? 'Creando...' : <>Crear Curso <FiArrowRight className="ml-1 inline h-4 w-4" aria-hidden="true" /></>}
           </button>
         </div>
       </div>

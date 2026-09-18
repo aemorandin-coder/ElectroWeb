@@ -59,7 +59,7 @@ export default function CreatorLandingPage() {
   return (
     <div className="min-h-dvh bg-white text-ink flex flex-col justify-between overflow-x-hidden">
       <PublicHeader />
-      
+
       <PageHeader
         breadcrumbs={[{ label: 'Cursos', href: '/cursos' }, { label: 'Enseña aquí' }]}
         icon={<FiTrendingUp />}
@@ -67,57 +67,9 @@ export default function CreatorLandingPage() {
         title="Monetiza tu experiencia y quédate con el 90%"
         description="Crea cursos de reparación, redes, CCTV, gaming o electrónica. Nosotros nos encargamos del cobro y el marketing; tú te llevas la mayor parte."
       />
-      
-      {/* Content wrapper under wave */}
-      <div className="max-w-5xl w-full mx-auto px-4 md:px-8 py-10 lg:py-16 space-y-16 flex-grow">
-        
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { value: '90%', label: 'Comisión Directa', desc: 'El porcentaje más alto para ti por cada estudiante.', icon: FiDollarSign },
-            { value: '10%', label: 'Fee de la Plataforma', desc: 'Cubre procesamiento, hosting y soporte.', icon: FiTrendingUp },
-            { value: 'Ilimitados', label: 'Cursos & Lecciones', desc: 'Sube todo el contenido técnico que desees.', icon: FiBookOpen },
-          ].map((stat, idx) => {
-            const Icon = stat.icon;
-            return (
-              <div key={idx} className="relative group overflow-hidden bg-white rounded-2xl p-6 border border-line hover:border-brand-500/30 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg">
-                <div className="w-10 h-10 rounded-xl bg-brand-500/5 flex items-center justify-center border border-brand-500/10 mb-4 group-hover:bg-brand-500/10 group-hover:border-brand-500/20 transition-all duration-300">
-                  <Icon className="w-5 h-5 text-brand-500" />
-                </div>
-                <h3 className="text-3xl font-bold text-brand-500 leading-none mb-2">{stat.value}</h3>
-                <h4 className="text-sm font-semibold text-ink mb-1">{stat.label}</h4>
-                <p className="text-xs text-muted leading-relaxed">{stat.desc}</p>
-              </div>
-            );
-          })}
-        </div>
 
-        {/* How it works */}
-        <div className="bg-surface rounded-3xl border border-line p-8 md:p-12 shadow-sm">
-          <h2 className="text-2xl md:text-3xl font-bold text-ink text-center mb-12">¿Cómo Funciona el Programa?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            {/* Connecting line for desktop */}
-            <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-[1px] bg-line z-0" />
-            
-            {[
-              { step: '01', title: 'Postúlate en Minutos', desc: 'Llena el formulario abajo con tu perfil y experiencia. Nuestro equipo te revisará en 24/48 horas.', icon: FiSend },
-              { step: '02', title: 'Crea tu Curso Técnico', desc: 'Usa nuestro panel intuitivo para subir lecciones, estructurar módulos y conectar tus videos sin esfuerzo.', icon: FiUploadCloud },
-              { step: '03', title: 'Recibe tus Ganancias', desc: 'Retira tus ingresos de forma simple. Recibe notificaciones instantáneas de cada nueva inscripción.', icon: FiAward },
-            ].map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <div key={idx} className="relative z-10 flex flex-col items-center text-center space-y-3 group">
-                  <div className="relative w-16 h-16 rounded-2xl bg-white flex items-center justify-center border border-line shadow-sm group-hover:border-brand-500/50 group-hover:shadow-[0_0_20px_rgba(42,99,205,0.1)] transition-all duration-300">
-                    <span className="absolute -top-2 -right-2 text-xs font-bold px-2 py-0.5 bg-brand-500 rounded-full text-white">{item.step}</span>
-                    <Icon className="w-6 h-6 text-brand-500" />
-                  </div>
-                  <h3 className="text-lg font-bold text-ink pt-2">{item.title}</h3>
-                  <p className="text-sm text-muted max-w-xs">{item.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      {/* Content wrapper under wave */}
+      <div className="mx-auto w-full max-w-5xl flex-grow space-y-10 px-4 py-8 md:px-8 lg:space-y-16 lg:py-16">
 
         {/* Form & States Section */}
         <div className="max-w-2xl mx-auto w-full">
@@ -127,7 +79,7 @@ export default function CreatorLandingPage() {
               <p className="text-muted text-sm animate-pulse">Consultando tu estado de creador...</p>
             </div>
           ) : creator ? (
-            <div className="bg-white rounded-3xl border border-line p-8 md:p-10 shadow-xl relative overflow-hidden">
+            <div className="relative overflow-hidden rounded-3xl border border-line bg-white p-5 sm:p-8 md:p-10">
               {creator.status === 'APPROVED' ? (
                 <div className="text-center space-y-6">
                   <div className="w-16 h-16 bg-success/10 border border-success/20 rounded-2xl flex items-center justify-center mx-auto">
@@ -175,7 +127,7 @@ export default function CreatorLandingPage() {
             </div>
           ) : session ? (
             /* Application Form */
-            <div className="bg-white rounded-3xl border border-line p-8 md:p-10 shadow-xl relative">
+            <div className="relative rounded-3xl border border-line bg-white p-5 sm:p-8 md:p-10">
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-ink mb-2">Solicitar Acceso de Creador</h2>
                 <p className="text-muted text-sm">Cuéntanos un poco sobre ti y tu experiencia técnica para comenzar.</p>
@@ -199,7 +151,7 @@ export default function CreatorLandingPage() {
                       <span>{error}</span>
                     </div>
                   )}
-                  
+
                   <div>
                     <label className="block text-ink-soft text-xs font-semibold uppercase tracking-wider mb-2">
                       Nombre Artístico / Marca Personal <span className="text-brand-500">*</span>
@@ -262,7 +214,7 @@ export default function CreatorLandingPage() {
             </div>
           ) : (
             /* Not logged in state */
-            <div className="bg-white rounded-3xl border border-line p-8 md:p-10 text-center shadow-xl space-y-6">
+            <div className="space-y-6 rounded-3xl border border-line bg-white p-5 text-center sm:p-8 md:p-10">
               <div className="w-16 h-16 bg-brand-500/10 border border-brand-500/20 rounded-2xl flex items-center justify-center mx-auto">
                 <FiBookOpen className="w-8 h-8 text-brand-500" />
               </div>
@@ -273,14 +225,14 @@ export default function CreatorLandingPage() {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
-                <Link 
-                  href="/login?redirect=/creator" 
+                <Link
+                  href="/login?redirect=/creator"
                   className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 transition-all duration-300 hover:scale-[1.02] inline-flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Iniciar Sesión
                 </Link>
-                <Link 
-                  href="/registro" 
+                <Link
+                  href="/registro"
                   className="px-8 py-3 bg-white border border-line text-ink font-bold rounded-xl hover:bg-surface transition-all duration-300 hover:scale-[1.02] inline-flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Crear Cuenta
@@ -289,8 +241,56 @@ export default function CreatorLandingPage() {
             </div>
           )}
         </div>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6">
+          {[
+            { value: '90%', label: 'Comisión Directa', desc: 'El porcentaje más alto para ti por cada estudiante.', icon: FiDollarSign },
+            { value: '10%', label: 'Fee de la Plataforma', desc: 'Cubre procesamiento, hosting y soporte.', icon: FiTrendingUp },
+            { value: 'Ilimitados', label: 'Cursos & Lecciones', desc: 'Sube todo el contenido técnico que desees.', icon: FiBookOpen },
+          ].map((stat, idx) => {
+            const Icon = stat.icon;
+            return (
+              <div key={idx} className="group relative min-w-0 overflow-hidden rounded-2xl border border-line bg-white p-3 transition-colors hover:border-brand-300 sm:p-6">
+                <div className="w-10 h-10 rounded-xl bg-brand-500/5 flex items-center justify-center border border-brand-500/10 mb-4 group-hover:bg-brand-500/10 group-hover:border-brand-500/20 transition-all duration-300">
+                  <Icon className="w-5 h-5 text-brand-500" />
+                </div>
+                <h3 className="mb-2 text-lg font-bold leading-none text-brand-500 sm:text-3xl">{stat.value}</h3>
+                <h4 className="mb-1 text-xs font-semibold text-ink sm:text-sm">{stat.label}</h4>
+                <p className="hidden text-xs leading-relaxed text-muted sm:block">{stat.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* How it works */}
+        <div className="rounded-3xl border border-line bg-surface p-5 sm:p-8 md:p-12">
+          <h2 className="mb-6 text-center text-xl font-bold text-ink md:mb-12 md:text-3xl">¿Cómo Funciona el Programa?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            {/* Connecting line for desktop */}
+            <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-[1px] bg-line z-0" />
+
+            {[
+              { step: '01', title: 'Postúlate en Minutos', desc: 'Llena el formulario abajo con tu perfil y experiencia. Nuestro equipo te revisará en 24/48 horas.', icon: FiSend },
+              { step: '02', title: 'Crea tu Curso Técnico', desc: 'Usa nuestro panel intuitivo para subir lecciones, estructurar módulos y conectar tus videos sin esfuerzo.', icon: FiUploadCloud },
+              { step: '03', title: 'Recibe tus Ganancias', desc: 'Retira tus ingresos de forma simple. Recibe notificaciones instantáneas de cada nueva inscripción.', icon: FiAward },
+            ].map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <div key={idx} className="relative z-10 flex flex-col items-center text-center space-y-3 group">
+                  <div className="relative w-16 h-16 rounded-2xl bg-white flex items-center justify-center border border-line shadow-sm group-hover:border-brand-500/50 group-hover:shadow-[0_0_20px_rgba(42,99,205,0.1)] transition-all duration-300">
+                    <span className="absolute -top-2 -right-2 text-xs font-bold px-2 py-0.5 bg-brand-500 rounded-full text-white">{item.step}</span>
+                    <Icon className="w-6 h-6 text-brand-500" />
+                  </div>
+                  <h3 className="text-lg font-bold text-ink pt-2">{item.title}</h3>
+                  <p className="text-sm text-muted max-w-xs">{item.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
       </div>
-      
+
       <Footer />
     </div>
   );

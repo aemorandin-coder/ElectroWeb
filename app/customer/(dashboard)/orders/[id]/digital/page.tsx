@@ -97,7 +97,7 @@ export default function DigitalCodesPage() {
         }
     }, [status, orderId]);
 
-    const fetchDigitalCodes = async () => {
+    async function fetchDigitalCodes() {
         try {
             const response = await fetch(`/api/orders/${orderId}/digital?orderId=${orderId}`);
             if (response.ok) {
@@ -118,7 +118,7 @@ export default function DigitalCodesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const copyCode = async (codeId: string, code: string) => {
         try {

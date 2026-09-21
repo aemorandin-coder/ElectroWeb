@@ -221,7 +221,7 @@ export default function PaymentsPage() {
         fetchMethods();
     }, []);
 
-    const fetchMethods = async () => {
+    async function fetchMethods() {
         setLoading(true);
         try {
             const response = await fetch('/api/admin/payments');
@@ -241,7 +241,7 @@ export default function PaymentsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const seedInitialMethods = async () => {
         try {

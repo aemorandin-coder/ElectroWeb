@@ -40,7 +40,7 @@ export default function ProductRequestsPage() {
     fetchRequests();
   }, [filterStatus]);
 
-  const fetchRequests = async () => {
+  async function fetchRequests() {
     try {
       const url = filterStatus === 'all'
         ? '/api/product-requests'
@@ -57,7 +57,7 @@ export default function ProductRequestsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   const handleUpdateStatus = async () => {
     if (!selectedRequest) return;

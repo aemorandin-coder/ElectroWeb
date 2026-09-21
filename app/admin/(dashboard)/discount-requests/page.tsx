@@ -60,7 +60,7 @@ export default function DiscountRequestsPage() {
         fetchRequests();
     }, [filter]);
 
-    const fetchRequests = async () => {
+    async function fetchRequests() {
         try {
             const response = await fetch(`/api/admin/discount-requests?status=${filter}`);
             if (response.ok) {
@@ -74,7 +74,7 @@ export default function DiscountRequestsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const openActionModal = (request: DiscountRequest, action: 'approve' | 'reject') => {
         setSelectedRequest(request);

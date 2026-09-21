@@ -43,7 +43,7 @@ export default function AdminReviewsPage() {
         fetchReviews();
     }, [filter]);
 
-    const fetchReviews = async () => {
+    async function fetchReviews() {
         setLoading(true);
         try {
             const response = await fetch('/api/reviews');
@@ -67,7 +67,7 @@ export default function AdminReviewsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const handleApprove = async (reviewId: string) => {
         const confirmed = await confirm({

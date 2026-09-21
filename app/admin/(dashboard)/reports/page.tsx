@@ -78,7 +78,7 @@ export default function ReportsPage() {
         return () => clearInterval(interval);
     }, []);
 
-    const fetchLiveUsers = async () => {
+    async function fetchLiveUsers() {
         try {
             const response = await fetch('/api/admin/live-users');
             if (response.ok) {
@@ -89,9 +89,9 @@ export default function ReportsPage() {
             console.error('Error fetching live users:', error);
             toast.error('No se pudieron cargar los usuarios en vivo');
         }
-    };
+    }
 
-    const fetchData = async () => {
+    async function fetchData() {
         setLoading(true);
         try {
             const response = await fetch(`/api/admin/reports?period=${period}&type=${activeTab}`);
@@ -109,7 +109,7 @@ export default function ReportsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const exportToCSV = () => {
         let csvContent = "";

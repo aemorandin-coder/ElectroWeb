@@ -83,7 +83,7 @@ export default function InquiriesPage() {
 
     // ============== MESSAGES FUNCTIONS ==============
 
-    const fetchMessages = async () => {
+    async function fetchMessages() {
         try {
             setMessagesLoading(true);
             const response = await fetch('/api/contact');
@@ -96,7 +96,7 @@ export default function InquiriesPage() {
         } finally {
             setMessagesLoading(false);
         }
-    };
+    }
 
     const handleMessageStatusChange = async (id: string, newStatus: string) => {
         try {
@@ -169,7 +169,7 @@ export default function InquiriesPage() {
 
     // ============== REQUESTS FUNCTIONS ==============
 
-    const fetchRequests = async () => {
+    async function fetchRequests() {
         try {
             setRequestsLoading(true);
             const url = requestFilterStatus === 'all'
@@ -187,7 +187,7 @@ export default function InquiriesPage() {
         } finally {
             setRequestsLoading(false);
         }
-    };
+    }
 
     useEffect(() => {
         if (activeTab === 'requests') {

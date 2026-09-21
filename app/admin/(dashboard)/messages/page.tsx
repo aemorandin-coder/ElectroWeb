@@ -31,7 +31,7 @@ export default function MessagesPage() {
         fetchMessages();
     }, []);
 
-    const fetchMessages = async () => {
+    async function fetchMessages() {
         try {
             const response = await fetch('/api/contact');
             if (response.ok) {
@@ -44,7 +44,7 @@ export default function MessagesPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }
 
     const handleStatusChange = async (id: string, newStatus: string) => {
         try {

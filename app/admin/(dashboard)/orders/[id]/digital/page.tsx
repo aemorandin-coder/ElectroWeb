@@ -100,7 +100,7 @@ export default function AdminDigitalCodesPage() {
         }
     }, [status, session]);
 
-    const fetchOrderData = async () => {
+    async function fetchOrderData() {
         try {
             const response = await fetch(`/api/orders/${orderId}/digital?orderId=${orderId}`);
             if (response.ok) {
@@ -125,7 +125,7 @@ export default function AdminDigitalCodesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const sendCode = async (orderItemId: string) => {
         const codeData = newCodes[orderItemId];

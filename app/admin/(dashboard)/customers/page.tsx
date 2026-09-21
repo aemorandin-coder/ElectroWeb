@@ -159,7 +159,7 @@ export default function CustomersPage() {
     }
   }, [showModal]);
 
-  const fetchCustomers = async () => {
+  async function fetchCustomers() {
     try {
       setLoading(true);
       setError('');
@@ -180,7 +180,7 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const fetchCustomerDetails = async (id: string) => {
     try {

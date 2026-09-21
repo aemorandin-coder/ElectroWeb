@@ -39,7 +39,7 @@ export default function VerificationsPage() {
         fetchRequests();
     }, [filter]);
 
-    const fetchRequests = async () => {
+    async function fetchRequests() {
         setLoading(true);
         try {
             const response = await fetch(`/api/admin/verifications?status=${filter}`);
@@ -53,7 +53,7 @@ export default function VerificationsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const handleAction = async (status: 'APPROVED' | 'REJECTED') => {
         if (!selectedRequest) return;

@@ -4,6 +4,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { FiExternalLink } from 'react-icons/fi';
 import { adminPageHeader, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import { useRouter } from 'next/navigation';
 
@@ -83,7 +84,7 @@ export default function CreatorCoursesPage() {
           <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : courses.length === 0 ? (
-        <div className="bg-white border border-line rounded-2xl p-16 text-center">
+        <div className="rounded-2xl border border-line bg-white p-8 text-center sm:p-16">
           <h2 className="text-ink font-bold text-lg mb-2">Sin cursos aún</h2>
           <p className="text-muted text-sm mb-6">Crea tu primer curso y comparte tu conocimiento.</p>
           <Link
@@ -98,9 +99,9 @@ export default function CreatorCoursesPage() {
           {courses.map((course) => (
             <div
               key={course.id}
-              className="bg-white border border-line rounded-2xl p-5 hover:border-brand-300 transition-colors"
+              className="rounded-2xl border border-line bg-white p-4 transition-colors hover:border-brand-300 sm:p-5"
             >
-              <div className="flex items-start gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-2">
                     <h3 className="text-ink font-bold">{course.title}</h3>
@@ -123,31 +124,31 @@ export default function CreatorCoursesPage() {
                     <span>{course.rating?.toFixed(1) ?? '—'} ({course._count.reviews} reseñas)</span>
                     <span>{course.totalLessons} lecciones</span>
                     <span>{course._count.modules} módulos</span>
-                    <span className="text-ink font-bold">{formatUSD(course.priceUSD)}</span>
+                    <span className="whitespace-nowrap text-ink font-bold tabular-nums">{formatUSD(course.priceUSD)}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
                   {course.isActive && (
                     <Link
                       href={`/cursos/${course.slug}`}
                       target="_blank"
-                      className="px-3 py-1.5 bg-surface border border-line text-ink-soft text-xs font-semibold rounded-lg hover:bg-line/50 hover:text-ink transition-colors"
+                      className="inline-flex min-h-10 items-center rounded-lg border border-line bg-surface px-3 text-xs font-semibold text-ink-soft transition-colors hover:bg-line/50 hover:text-ink"
                       title="Ver en catálogo"
                     >
-                      Ver ↗
+                      <FiExternalLink className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" /> Ver
                     </Link>
                   )}
                   <Link
                     href={`/creator/dashboard/cursos/${course.id}`}
-                    className="px-4 py-1.5 bg-brand-500/30 text-brand-600 text-xs font-semibold rounded-lg hover:bg-brand-500/50 transition-colors"
+                    className="inline-flex min-h-10 items-center rounded-lg bg-brand-100 px-4 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-200"
                   >
                     Editar
                   </Link>
                   <button
                     onClick={() => handleDelete(course.id, course.title)}
                     disabled={deleting === course.id}
-                    className="px-3 py-1.5 text-deal hover:bg-deal-bg text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
+                    className="min-h-10 rounded-lg px-3 text-xs font-semibold text-deal transition-colors hover:bg-deal-bg disabled:opacity-50"
                   >
                     {deleting === course.id ? '...' : 'Eliminar'}
                   </button>

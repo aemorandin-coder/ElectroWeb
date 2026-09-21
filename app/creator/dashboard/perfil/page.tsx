@@ -56,7 +56,7 @@ export default function CreatorProfilePage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto space-y-6">
+    <div className="mx-auto max-w-xl space-y-6">
       <div className={adminPageHeader}>
         <div>
           <h1 className={adminPageTitle}>Mi Perfil de Creador</h1>
@@ -69,9 +69,9 @@ export default function CreatorProfilePage() {
         )}
       </div>
 
-      <div className="bg-white border border-line rounded-2xl p-6 space-y-5">
+      <div className="space-y-5 rounded-2xl border border-line bg-white p-4 sm:p-6">
         {/* Avatar preview */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
           <div className="w-16 h-16 rounded-full bg-brand-600 flex items-center justify-center text-white text-xl font-bold overflow-hidden flex-shrink-0">
             {form.avatar ? (
               <Image src={form.avatar} alt="avatar" width={64} height={64} className="w-full h-full object-cover" />
@@ -79,7 +79,7 @@ export default function CreatorProfilePage() {
               form.displayName?.[0]?.toUpperCase() || 'C'
             )}
           </div>
-          <div className="flex-1">
+          <div className="w-full min-w-0 flex-1 rounded-xl bg-brand-950 p-3">
             <ImageUploadField
               label="Foto de Perfil"
               value={form.avatar}
@@ -122,7 +122,7 @@ export default function CreatorProfilePage() {
           />
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pr-16 sm:pr-0">
           <button
             onClick={handleSave}
             disabled={saving || !form.displayName}

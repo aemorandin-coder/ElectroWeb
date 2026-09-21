@@ -7,9 +7,6 @@ export async function sendCourseEnrollmentEmail(
   const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || '';
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
-      <div style="width:70px;height:70px;background:linear-gradient(135deg,#2a63cd 0%,#06b6d4 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
-        
-      </div>
       <h2 style="margin:0 0 6px;color:#212529;font-size:22px;font-weight:700;">¡Inscripción Exitosa!</h2>
       <p style="color:#6a6c6b;font-size:15px;margin:0;">Ya puedes empezar a aprender</p>
     </div>
@@ -50,9 +47,6 @@ export async function sendCourseCertificateEmail(
 
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
-      <div style="width:80px;height:80px;background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(245,158,11,0.3);">
-        
-      </div>
       <h2 style="margin:0 0 6px;color:#212529;font-size:22px;font-weight:700;">¡Felicitaciones, ${data.studentName}!</h2>
       <p style="color:#6a6c6b;font-size:15px;margin:0;">Has completado el curso exitosamente</p>
     </div>
@@ -116,7 +110,7 @@ export async function sendCreatorStatusEmail(
       preheader: 'Tu solicitud de creador ha sido revisada.',
     },
     SUSPENDED: {
-      emoji: '⏸',
+      emoji: '',
       title: 'Cuenta de Creador Suspendida',
       body: `Tu cuenta de creador ha sido suspendida temporalmente. Para más información contáctanos.`,
       cta: { text: 'Contactar Soporte', url: `${appUrl}/contacto` },
@@ -131,7 +125,6 @@ export async function sendCreatorStatusEmail(
 
   const content = `
     <div style="text-align:center;margin-bottom:25px;">
-      <div style="font-size:50px;margin-bottom:15px;">${cfg.emoji}</div>
       <h2 style="margin:0;color:#212529;font-size:22px;font-weight:700;">${cfg.title}</h2>
     </div>
     <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
@@ -152,7 +145,7 @@ export async function sendCreatorStatusEmail(
 
   return sendEmail({
     to: email,
-    subject: `${cfg.emoji} ${cfg.title} - ElectroShop`,
+    subject: `${cfg.title} - ElectroShop`,
     html: await getBaseTemplate(content, cfg.preheader),
   });
 }

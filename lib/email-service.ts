@@ -544,9 +544,6 @@ export const sendOrderPendingPaymentEmail = async (
 
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
-      <div style="width:70px;height:70px;background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
-        <span style="color:white;font-size:28px;">⏳</span>
-      </div>
       <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">Pedido en Revisión</h2>
       <p style="color:#f59e0b;font-size:16px;font-weight:600;">Orden #${orderData.orderNumber}</p>
     </div>
@@ -587,9 +584,6 @@ export const sendOrderShippedEmail = async (
 
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
-      <div style="width:70px;height:70px;background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
-        
-      </div>
       <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Tu Pedido Está en Camino!</h2>
       <p style="color:#3b82f6;font-size:16px;font-weight:600;">Orden #${orderData.orderNumber}</p>
     </div>
@@ -685,9 +679,6 @@ export const sendDigitalCodeEmail = async (
 
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
-      <div style="width:80px;height:80px;background:linear-gradient(135deg,${platformBg} 0%,#4f46e5 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(99,102,241,0.3);">
-        
-      </div>
       <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Tu Código Digital Está Listo!</h2>
       <p style="color:#6366f1;font-size:16px;font-weight:600;margin:0;">Orden #${codeData.orderNumber}</p>
     </div>
@@ -744,9 +735,6 @@ export const sendGiftCardEmail = async (
 
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
-      <div style="width:90px;height:90px;background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 50%,#d97706 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 15px 35px rgba(251,191,36,0.4);">
-        
-      </div>
       <h2 style="margin:0 0 10px;color:#212529;font-size:28px;font-weight:700;">¡Te Han Enviado una Gift Card!</h2>
       <p style="color:#f59e0b;font-size:16px;font-weight:600;margin:0;">De parte de ${giftCardData.senderName}</p>
     </div>

@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
                 data: {
                     userId: order.userId,
                     type: 'ORDER',
-                    title: '🎮 ¡Tu código digital está listo!',
+                    title: '¡Tu código digital está listo!',
                     message: `El código de ${orderItem.product.name} ya está disponible en tu cuenta.`,
                     link: `/customer/orders/${orderId}/digital`,
                 }

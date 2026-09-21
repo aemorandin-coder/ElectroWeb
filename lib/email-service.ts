@@ -666,17 +666,6 @@ export const sendDigitalCodeEmail = async (
 ) => {
   const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
-  const platformColors: Record<string, string> = {
-    STEAM: '#1b2838',
-    PLAYSTATION: '#003791',
-    PSN: '#003791',
-    XBOX: '#107c10',
-    NINTENDO: '#e60012',
-    ROBLOX: '#e31b1b',
-  };
-
-  const platformBg = codeData.platform ? (platformColors[codeData.platform.toUpperCase()] || '#6366f1') : '#6366f1';
-
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
       <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Tu Código Digital Está Listo!</h2>

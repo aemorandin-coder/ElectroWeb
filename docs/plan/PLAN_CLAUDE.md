@@ -176,13 +176,17 @@ Revisar las ramas `gemini/*` pendientes, convertir el reporte G-14 en tarjetas n
 | 8d | **C-91 · Revisar `chatgpt/R1` (GPT-01, GPT-02), super merge y push** | ✅ Hecho el 17/09 (sin editar código). Incidente de clientes borrados auditado. |
 | — | **Descanso de Claude 17/09 → 20/09** | Gemini hace R13-R15 y ChatGPT R1-R3 en ramas encadenadas. Nadie mergea. |
 | 9 | ~~Al volver: revisar `gemini/R13`, `R14`, `R15`~~ ✅ C-93 | Una rama sale de la anterior: mergear `R15` trae las tres. R14 toca APIs de dinero: revisar el `git diff -w` que pegó en cada estado y correr las pruebas de C-74, C-84, C-85, C-87 y C-88. |
-| 10 | **Al volver: revisar `chatgpt/R1` (GPT-02b…GPT-06), `R2` (productos) y `R3`** | Mismo método que C-91: llamadas y cuerpos idénticos, inventario de acciones y navegador a 390/1440. En productos, el cuerpo del `POST` de antes y de después (GPT-10). |
+| 10 | ~~Al volver: revisar `chatgpt/R1`, `R2` y `R3`~~ ✅ C-94 | ChatGPT solo hizo GPT-05 y GPT-06 (aprobadas). R2 y R3 no empezaron: **ChatGPT en pausa desde el 21/09**. |
 | 8e | **C-93 · Revisar Gemini R13-R15 y ChatGPT GPT-03/04, merge y push** | ✅ Hecho el 17/09 (91 de 91 pruebas; ESLint 403→197 errores) |
+| 10b | **C-94 · Revisar Gemini R16 y ChatGPT GPT-05/06, cerrar ChatGPT y plan final de Gemini** | ✅ Hecho el 21/09. Rama `claude/C-94` lista para mergear. |
+| 10c | **C-95 · Home al día tras guardar productos y margen digital recordado** | Retomar el arreglo de ChatGPT (`chatgpt/product-fixes-main`, commit `386e56c`). Conservar `specs.digitalPricing` al editar digitales. El ayudante va en `lib/`. Pruebas: crear, editar, archivar y borrar → el home cambia sin esperar 60 s; el margen vuelve al editar; `__adminPricing` no sale en el HTML ni en `/api/products/public`. |
 | 11 | **C-92 · Clientes: desactivar en vez de borrar** | `AUDITORIA_CLIENTES_BORRADOS.md`. **Decisión 17/09:** "Eliminar" borra de verdad solo si el cliente no tiene órdenes, saldo, transacciones ni gift cards (spam); si tiene algo, se desactiva. Con la salida del diagnóstico de Andrés. Migración de `onDelete` con su OK. |
 | 12 | **C-80 · Login con límite de intentos en el servidor** | Más: cuentas desactivadas (junto con C-92), `GET /api/user/profile` sin DTO, y **`/api/debug/og-metadata` en producción** (revisar si se borra o se protege). |
 | 12b | **Facebook (sobre C-85)** | Cuando Andrés cree la app en Meta. |
 | 13 | **C-60b · Surtido de pedidos digitales** | Campos de proveedor, referencia y costo (F7); aviso de pedido digital por entregar; `orderItemId` sin comprobar. |
-| 14 | **C-40 · Cierre** | README, checklist de `PLAN.md` §6 con Andrés. |
+| 13b | **Revisar Gemini R17-R19 (G-55…G-61)** | Cuando avise. R18 toca pantallas del admin: llamadas y cuerpos idénticos (C-86) y `git diff -w` de G-56 y G-60 solo con pares de líneas `const … =>` → `function`. |
+| 13c | **Pendientes encontrados en C-94** | Reglas de hooks que no son de Gemini: `set-state-in-effect` (41), `purity` (9) y `exhaustive-deps` (18). `any` en `lib/auth.ts` (14) y `app/checkout/page.tsx` (9). `ImageUploadField` sobre fondo claro (pedido de GPT-05). `prompt()` en `verificar-email`. Cajones móviles (admin, cliente, creador) que dejan pasar el foco con Tab estando cerrados (`inert`). |
+| 14 | **C-40 · Cierre** | README, checklist de `PLAN.md` §6 con Andrés, con el inventario G-61. |
 
 Reasignadas el 17/09: **C-51** (productos del admin) → ChatGPT R2 (GPT-07…GPT-11). **C-76** (emojis de correos) → Gemini G-53.
 Reasignadas el 16/09: **C-79** (panel de creadores en móvil) → ChatGPT GPT-05. **C-81** (`components/ui`, Footer, botón de cuenta, carrito del header con estilos viejos) → Gemini G-45 y G-46, solo clases.

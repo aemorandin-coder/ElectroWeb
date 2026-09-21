@@ -250,7 +250,10 @@ docs/plan/estado/G-*.md
 ```
 Desde R12 (2026-09-16), solo para cambiar clases: `components/ui/**`, `components/Footer.tsx`, `components/UserAccountButton.tsx`, `components/CartIcon.tsx` y el resumen de `app/checkout/page.tsx` (ver `PLAN_GEMINI.md`, Ronda R12).
 
-### Carril CHATGPT (desde 2026-09-16) · diseño y jerarquía
+### Carril CHATGPT (desde 2026-09-16) · diseño y jerarquía · **EN PAUSA desde el 21/09**
+ChatGPT está de vacaciones hasta nueva orden de Andrés (ver "Pausa del 21/09" en `PLAN_CHATGPT.md`). Mientras tanto:
+- Gemini R18 (G-57…G-60) hace **solo limpieza mecánica** en las pantallas de R1 y R3 y en `products/page.tsx`.
+- `products/_components/**` queda congelado hasta que Claude termine C-95.
 Reglas en `CHATGPT.md`, rondas en `PLAN_CHATGPT.md`. Reescribe pantallas completas sin cambiar qué hacen (`fetch`, cuerpos, permisos, cálculos y destinos quedan igual).
 ```
 R1: app/admin/(dashboard)/page.tsx   app/admin/(dashboard)/orders/**   app/admin/(dashboard)/customers/**

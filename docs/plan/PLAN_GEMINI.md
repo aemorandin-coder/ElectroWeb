@@ -1308,3 +1308,229 @@ Rama `gemini/R16` desde `main`.
 - `grep -n "border-radius:50%" lib/email-service.ts lib/email-templates/*.ts`: pega la salida y confirma que ninguno quedó vacío.
 - `npx tsc --noEmit` y `npm run build`.
 - Si puedes, abre **Admin → Marketing → Correos de la tienda** y mira las plantillas de envío, código digital, gift card y certificado.
+
+---
+
+## Resultado de R16 (revisión C-94, 21/09)
+**G-54 aprobada.** Emojis: 0 en todo el código (`app`, `components`, `lib` y `contexts`, con el rango completo).
+- También borraste el círculo ámbar de "Pedido en revisión" (quedaba vacío sin el ⏳) y el 🎮 del aviso de código digital: correcto, mismo criterio.
+- Quedaron sin uso `platformColors` y `platformBg` en `sendDigitalCodeEmail` (solo los usaba el círculo). Los borró Claude en C-94.
+- **Lección:** cuando borres un bloque, corre ESLint del archivo y borra lo que quedó sin uso.
+
+---
+
+## Plan final de Gemini (desde 21/09): R17 → R18 → R19 seguidas
+Con estas tres rondas **terminas tu trabajo**. Después de R19 no hay más tarjetas hasta nueva orden de Andrés.
+
+**ChatGPT está en pausa desde el 21/09.** Tomas la limpieza mecánica de las pantallas del admin que quedaron sin dueño y una tarjeta chica de ChatGPT (GPT-02b → G-57). Nada de rediseño: solo lo que dice cada tarjeta.
+
+**Cómo se trabaja:**
+- Ramas encadenadas:
+  - `gemini/R17` desde `claude/C-94`: `git switch -c gemini/R17 claude/C-94`. Esa rama ya trae `main`, tu R16 y la R1 de ChatGPT revisadas.
+  - `gemini/R18` desde `gemini/R17` después de su último commit.
+  - `gemini/R19` desde `gemini/R18`.
+  - Sin `git merge` ni `rebase`: Claude mezcla todo al revisar.
+- Un commit por tarjeta, firmado como Gemini (la configuración del repo ya lo hace), con su `docs/plan/estado/G-XX.md`.
+- Si una tarjeta o una línea se bloquea: `BLOQUEADO — motivo` en el estado y sigues. **No te quedes esperando.**
+- **Verificación de cada tarjeta, pegada en su estado:**
+  1. ESLint por archivo antes y después (el comando de R13).
+  2. `npx tsc --noEmit` (salida real).
+  3. `npm run build`, últimas 5 líneas. Si lo único que falla es el prerender de `/` por una columna que tu base local no tiene, pega el error y sigue: no es tuyo.
+  4. `git diff --stat` contra `git diff -w --stat`: deben dar números parecidos.
+
+---
+
+## Ronda R17 · Cierre de tu carril · G-55 → G-56
+
+### G-55 · Montos, una flecha y el tour en `/creator` · Depende: —
+1. `app/customer/(dashboard)/profile/page.tsx` ~l.1073:
+   - Cambio: `${stats.totalSpent.toFixed(0)}` → `{formatUSD(stats.totalSpent)}`.
+   - El `$` de texto que va delante se borra: `formatUSD` ya lo pone.
+   - Agrega `import { formatUSD } from '@/lib/currency';`.
+2. `app/customer/(dashboard)/wishlist/page.tsx` ~l.323: `${totalValue.toFixed(0)}` → `{formatUSD(totalValue)}` (ya está importado).
+3. `components/modals/RechargeModalV2.tsx` ~l.597: `exchangeRate.toFixed(2)` → `formatVES(exchangeRate)` (ya está importado). Queda "x Bs. 36,50".
+4. `components/pago-movil/VerificarPagoMovilForm.tsx` ~l.133-134, mensaje de soporte (dentro de un texto con comillas invertidas):
+   - `$${montoEsperado.toFixed(2)}` → `${formatUSD(montoEsperado)}`. Se va el `$` de más.
+   - `${montoEnBs.toFixed(2)}` → `${formatVES(montoEnBs)}`.
+5. `components/cursos/CoursePlayer.tsx`:
+   - ~l.416: `Ver Certificado →` → `Ver Certificado <FiArrowRight className="h-4 w-4" aria-hidden="true" />`.
+     - Al `className` de ese `<Link>` súmale `flex items-center justify-center gap-1.5`.
+     - Agrega `FiArrowRight` al import de `react-icons/fi`.
+   - ~l.86: `next.has(id) ? next.delete(id) : next.add(id);` → `if (next.has(id)) next.delete(id); else next.add(id);`. Hace lo mismo y ESLint deja de marcarlo.
+6. `components/onboarding/GuidedTourWrapper.tsx` ~l.22: `pathname?.startsWith('/creator/dashboard')` → `pathname?.startsWith('/creator')`.
+   - Es un pedido de ChatGPT (GPT-05) autorizado por Claude: el recorrido de la tienda tapaba el formulario de solicitud en `/creator`.
+   - Es el único cambio de lógica permitido en R17.
+
+**Verificación:**
+- `grep -n "toFixed" <los 4 archivos de montos>`: solo quedan los que no son dinero (`rating.toFixed(1)`, el tamaño en KB de `DocumentUpload`). Pega la salida.
+- `grep -n "→" components/cursos/CoursePlayer.tsx` → 0.
+
+### G-56 · "Cannot access variable before it is declared" en tu carril (13) · Depende: G-55
+Es la regla `react-hooks/immutability`. Pasa porque un `useEffect` llama a una función que se declara **más abajo** con `const`:
+```tsx
+// Antes
+useEffect(() => { fetchAddresses(); }, []);
+
+const fetchAddresses = async () => {
+  …
+};
+
+// Después: mismo lugar, mismo contenido
+useEffect(() => { fetchAddresses(); }, []);
+
+async function fetchAddresses() {
+  …
+}
+```
+Una `function` se puede usar antes de su línea ("hoisting"). **El código hace exactamente lo mismo y en el mismo momento.**
+
+| Archivo | Líneas que marca ESLint |
+|---|---|
+| `app/customer/(dashboard)/addresses/page.tsx` | 68 |
+| `app/customer/(dashboard)/balance/page.tsx` | 91 |
+| `app/customer/(dashboard)/orders/page.tsx` | 129 |
+| `app/customer/(dashboard)/page.tsx` | 55 |
+| `app/customer/(dashboard)/profile/page.tsx` | 159, 160 |
+| `app/customer/(dashboard)/reviews/page.tsx` | 34 |
+| `app/customer/(dashboard)/settings/page.tsx` | 81 |
+| `app/customer/(dashboard)/warranty/page.tsx` | 74 |
+| `app/customer/(dashboard)/wishlist/page.tsx` | 105, 106 |
+| `components/reviews/ReviewForm.tsx` | 27 |
+| `components/social/ShareEarnModal.tsx` | 53 |
+
+**Reglas:**
+1. Solo cambian dos líneas por función:
+   - La primera: `const nombre = async (params) => {` → `async function nombre(params) {`, o `const nombre = (params) => {` → `function nombre(params) {`. Los parámetros y sus tipos quedan igual.
+   - El cierre: `};` → `}`.
+2. **No muevas nada** y no toques el cuerpo de la función.
+3. Solo si la función está **directamente en el cuerpo del componente** (no dentro de un `if`, de un `useEffect` ni de otra función) y su cuerpo empieza con `{`.
+4. Si lo que marca ESLint no es una función así (un `const` con un valor, un `useCallback`): `BLOQUEADO` para esa línea y sigues.
+5. Las otras reglas de hooks (`set-state-in-effect`, `purity`, `exhaustive-deps`) **no son tuyas**: cambian cuándo corre el código. No las toques ni las cuentes como pendientes.
+
+**Verificación:**
+- `react-hooks/immutability` en 0 en los 11 archivos.
+- Pega el `git diff -w` completo: son unas 26 líneas, pares de apertura y cierre.
+
+---
+
+## Ronda R18 · Pantallas del admin sin dueño (ChatGPT en pausa) · G-57 → G-58 → G-59 → G-60
+**Carril extra de R18, solo para lo que dice cada tarjeta:**
+- `app/admin/(dashboard)/orders/**`, `customers/**`, `transactions/**`, `reports/**`.
+- `app/admin/(dashboard)/payments/**`, `inquiries/**`, `messages/**`, `product-requests/**`, `discount-requests/**`, `reviews/**`, `verifications/**`, `categories/**`, `servicios/**`, `legal/**`.
+- `app/admin/(dashboard)/products/page.tsx` (**solo G-58**).
+- `app/creator/dashboard/cursos/**` y `app/customer/(dashboard)/orders/[id]/digital/**` (solo G-59 y G-60).
+
+**Fuera siempre:**
+- `app/admin/(dashboard)/products/_components/**`: el wizard tiene un arreglo pendiente que retoma Claude (C-95), y `ProductForm.tsx` se borra en GPT-11.
+- `settings/**`, `marketing/**`, `notifications/**`, `cursos/**`, `creators/**` y `layout.tsx` del admin, `components/admin/**`, `app/api/**`, `lib/**` y `prisma/**`.
+
+Reglas del admin (`GEMINI.md` §2): nada de cambiar `fetch`, URLs, cuerpos, permisos, cálculos ni campos.
+
+### G-57 · "Cliente eliminado" en órdenes (antes GPT-02b) · Depende: G-56
+Incidente del 17/09 (`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`): al borrar clientes en la base, sus órdenes quedan sin cliente y el panel las muestra como "Invitado".
+Archivo: `app/admin/(dashboard)/orders/page.tsx`.
+1. **Tipos:** en `interface Order`:
+   - `user: { … }` pasa a `user: { … } | null`.
+   - Agrega `guestName?: string | null;` y `guestEmail?: string | null;`.
+   - La API ya los manda: `GET /api/orders` devuelve todos los campos de la orden. **No la cambies.**
+2. **Tarjeta (~l.480) y detalle (~l.592-593)**, donde hoy dice `user?.name || 'Invitado'`:
+   - Con `user`: igual que hoy.
+   - Sin `user` y con `guestEmail`: "Invitado". En el detalle, el `guestEmail` va debajo, donde hoy va el correo del cliente.
+   - Sin `user` y sin `guestEmail`: `<span className={adminBadge('neutral')}><FiUserX className="h-3.5 w-3.5" aria-hidden="true" /> Cliente eliminado</span>`.
+     - `adminBadge` ya está importado.
+     - `FiUserX` se agrega al import de `react-icons/fi`.
+3. Busca `\.user` en el archivo: si la tabla de escritorio o el modal muestran el cliente en otro lugar, aplica la misma regla.
+4. El filtro de búsqueda (~l.306) no cambia.
+
+**Criterio:**
+- Una orden sin cliente dice "Cliente eliminado" en la tarjeta, la tabla y el detalle.
+- Cancelarla sigue funcionando: el `PATCH` y su cuerpo son idénticos. Pega `grep -n "fetch(\|method:\|body:" <archivo>` antes y después.
+- Si no tienes datos para verlo en el navegador, escribe `QA con datos pendiente`: Claude la repite con la tienda de ejemplo.
+
+### G-58 · Productos: `alert()` y `confirm()` nativos (8) · Depende: G-57
+Archivo: `app/admin/(dashboard)/products/page.tsx` (**solo esto** de `products/**`).
+1. **`alert(texto)`:**
+   - Si es un error → `toast.error(texto)`.
+   - El aviso de "archivado porque tiene órdenes" (~l.253) → `toast.success(texto)`.
+   - El resumen del borrado masivo (~l.540, `parts.join(', ')`) → `toast(parts.join(', '))`.
+   - **El texto no cambia.** Import: `import { toast } from 'react-hot-toast';`.
+2. **`if (!confirm(`…`)) return;`** (~l.512):
+   - En el componente: `const { confirm } = useConfirm();` con `import { useConfirm } from '@/contexts/ConfirmDialogContext';` (como en `reviews/page.tsx`).
+   - La línea pasa a: `const ok = await confirm({ title: 'Eliminar productos', message: <el mismo texto>, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' }); if (!ok) return;`.
+3. Nada más del archivo cambia.
+
+**Criterio:** `grep -nE "(^|[^.a-zA-Z_])(alert|confirm)\(" "app/admin/(dashboard)/products/page.tsx"` → solo el `await confirm({` nuevo. Pega la salida.
+
+### G-59 · Tipos y variables sin uso en el admin sin dueño (102) · Depende: G-58
+Reglas `no-explicit-any`, `no-unused-vars`, `react/no-unescaped-entities` y `prefer-const`, con el método de G-47 y G-48: mismas reglas, mismos prohibidos y **sin `// eslint-disable`**.
+
+| Archivo | sin uso | `any` | comillas | `prefer-const` |
+|---|---|---|---|---|
+| `payments/page.tsx` | 14 | 12 | | |
+| `discount-requests/page.tsx` | 8 | 1 | 2 | |
+| `orders/[id]/digital/page.tsx` (admin) | 7 | 1 | | |
+| `orders/page.tsx` | 3 | 4 | | |
+| `verifications/page.tsx` | 7 | | | |
+| `app/customer/(dashboard)/orders/[id]/digital/page.tsx` | 7 | | | |
+| `inquiries/page.tsx` | 2 | 4 | | |
+| `servicios/page.tsx` | 4 | | 2 | |
+| `customers/page.tsx` | | 5 | | |
+| `messages/page.tsx` | 1 | 3 | | |
+| `reviews/page.tsx` | 4 | | | |
+| `legal/page.tsx` | 3 | | | |
+| `app/creator/dashboard/cursos/[id]/page.tsx` | | 3 | | |
+| `categories/page.tsx`, `product-requests/page.tsx` | | 1 c/u | | |
+| `reports/page.tsx` | | | | 1 |
+| `transactions/page.tsx`, `app/creator/dashboard/cursos/page.tsx` | 1 c/u | | | |
+
+Sin prefijo, las rutas son de `app/admin/(dashboard)/`.
+- Una variable sin uso cuya parte derecha **llama a algo** (`fetch`, un hook, un `set…`) no se borra: va a Notas.
+- `payments/page.tsx` tiene 1.084 líneas: si se hace larga, `[G-59] parte 1/2` y `parte 2/2`, y cada commit compila solo.
+
+**Criterio:** esas cuatro reglas en 0 en los 18 archivos, o la lista de lo que quedó con archivo, línea y motivo.
+
+### G-60 · "Cannot access variable before it is declared" en el admin sin dueño (13) · Depende: G-59
+Misma receta y mismas reglas que G-56.
+
+| Archivo | Líneas |
+|---|---|
+| `customers/page.tsx` | 110 |
+| `discount-requests/page.tsx` | 60 |
+| `inquiries/page.tsx` | 80, 81 |
+| `messages/page.tsx` | 31 |
+| `orders/[id]/digital/page.tsx` (admin) | 100 |
+| `payments/page.tsx` | 222 |
+| `product-requests/page.tsx` | 40 |
+| `reports/page.tsx` | 71, 76 |
+| `reviews/page.tsx` | 43 |
+| `verifications/page.tsx` | 39 |
+| `app/customer/(dashboard)/orders/[id]/digital/page.tsx` | 96 |
+
+Las líneas son de antes de G-59: después de esa tarjeta cambian. Búscalas otra vez con ESLint.
+
+**Criterio:** `react-hooks/immutability` en 0 en esos 12 archivos y el `git diff -w` completo pegado en el estado.
+
+---
+
+## Ronda R19 · Inventario final (solo lectura) · G-61
+### G-61 · Qué queda en todo el proyecto · Depende: G-60
+**No edites código.** Solo `docs/plan/estado/G-61.md`, con cuatro secciones:
+1. **ESLint por carril:** errores y avisos por regla en tu carril, el admin, las APIs y `lib`, y las pantallas de Claude, según `docs/plan/PLAN.md` §4. Usa el comando de conteo de R13 sobre `app components lib contexts`.
+2. **Patrones prohibidos:** `bash docs/plan/scripts/inventario-paneles.sh` completo, más estos greps sobre `app components lib contexts`:
+   - `toFixed(` en montos.
+   - `alert(` / `confirm(` / `prompt(` nativos.
+   - `-[#` en `className`, y `slate-`, `indigo-`, `purple-`, `pink-`.
+   - `<img`.
+   - `text-[10px]` o menos, y `font-black` / `font-extrabold`.
+
+   Para cada uno: total, y los 10 archivos con más casos con su carril.
+3. **Recorrido visual** de tu carril a 360, 768, 1024 y 1440 px, si puedes levantar el servidor (`npm run dev -- -p 3001`):
+   - Tienda: gift cards, canjear, cursos, servicios, contacto, solicitar producto, términos y privacidad.
+   - Panel del cliente, con sesión si tienes datos.
+   - Por página: desborde horizontal (sí o no), textos cortados y botones tapados por la barra inferior.
+   - Si no puedes levantarlo, escribe `QA visual pendiente`.
+4. **Lo que no es tuyo:** las reglas de hooks que dejaste y los `BLOQUEADO` de R17 y R18, con archivo y línea, para que Claude los convierta en tareas.
+
+**Criterio:** el estado existe y ningún archivo de código cambió (`git diff --stat gemini/R18` solo muestra `G-61.md`).
+
+**Prompt de arranque:** ver `docs/plan/SIGUIENTE.md` §5.

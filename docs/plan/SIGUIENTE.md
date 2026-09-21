@@ -1,34 +1,30 @@
-# Punto de partida (actualizado 2026-09-21: C-94…C-98, Gemini terminó su plan, ChatGPT en pausa)
+# Punto de partida (actualizado 2026-09-21: super merge y subida de C-94…C-98, Gemini terminó su plan, ChatGPT en pausa)
 
 Léelo antes de empezar.
 
 ## 1. Estado de las ramas
-- **`main` = `origin/main`** (`d07ca1f`, deploy del 17/09 con Prisma fijado en 6.19.3).
-- **`claude/C-94`**, lista para mergear. Trae:
-  - `gemini/R16`: G-54, correos sin círculos vacíos.
-  - `chatgpt/R1`: GPT-05, panel de creadores en el teléfono, y GPT-06, recuperar contraseña y verificar correo.
-  - La revisión y los documentos de C-94.
-  - Verificada: `tsc` 0, build OK y navegador a 390 y 1440 px.
-- **`claude/C-95`**, sobre `claude/C-94`: el home al día al guardar productos y el margen digital recordado.
-- **`claude/C-80`**, sobre `claude/C-95`: límite de intentos del login en el servidor, cuentas desactivadas y perfil con lista blanca.
-- **`claude/C-60b`**, sobre `claude/C-80`: surtido de pedidos digitales.
-- **`claude/C-96`**, sobre `claude/C-60b`: montos exactos en la base.
-- **`claude/C-97`**, sobre `claude/C-96`: masivos de productos.
-- **`claude/C-98`** = `claude/C-97` + `gemini/R19` (Gemini R17-R19 revisada y aprobada). **Mergear `claude/C-98` trae todo.** Andrés pidió no mergear todavía (21/09).
-- **Gemini** (`../ElectroShopVe-gemini`, en `gemini/R19`): **terminó su plan final** (R17-R19, aprobadas en C-98). Sin ronda abierta hasta nueva orden.
+- **`main` = `origin/main`**: super merge del 21/09. Trae todo lo revisado:
+  - **Claude:** C-94 (revisión y pausa de ChatGPT), C-95 (home al día y margen), C-80 (login con límite de intentos), C-60b (pedidos digitales), C-96 (montos exactos), C-97 (masivos de productos) y C-98 (revisión de Gemini R17-R19).
+  - **Gemini:** R16 (G-54) y R17-R19 (G-55…G-61).
+  - **ChatGPT:** GPT-05 (panel de creadores) y GPT-06 (recuperar contraseña y verificar correo).
+- **Gemini** (`../ElectroShopVe-gemini`, en `gemini/R19`): terminó su plan final. Sin ronda abierta hasta nueva orden.
 - **ChatGPT** (`../ElectroShopVe-chatgpt`): **en pausa desde el 21/09**, hasta nueva orden de Andrés.
-  - Carpeta limpia en `chatgpt/product-fixes-main`, con su arreglo de productos a medias guardado en el commit `386e56c`. Lo terminó Claude en **C-95**.
-  - Queda `stash@{0}`, una versión vieja del mismo arreglo. Se borra cuando C-95 esté en `main`.
+  - Carpeta limpia en `chatgpt/product-fixes-main`. Su arreglo de productos lo terminó Claude en C-95, ya en `main`.
+  - `stash@{0}` y la rama `chatgpt/product-fixes-main` se pueden borrar: C-95 las reemplaza.
 
-## 2. Deploy de C-94…C-98 con Gemini R16-R19 (Andrés, cuando lo decida)
+## 2. Deploy del 21/09 (super merge)
+En el servidor (`/var/www/electroshopve`, PM2 `electroshop-web`):
 ```bash
-# En la carpeta principal:
-git switch main && git merge --no-ff claude/C-98 && git push
-# En el servidor (/var/www/electroshopve, PM2 electroshop-web):
-git pull && npm run build && pm2 restart electroshop-web --update-env
+git pull
+npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script   # debe salir vacío: este deploy no cambia el esquema
+npm run build
+pm2 restart electroshop-web --update-env
 ```
-- **Sin cambios de esquema, dependencias ni variables de entorno.** No hace falta `npm ci` ni `prisma db push`.
-- **Después del deploy, con tu OK:** el SQL de `docs/plan/estado/C-96.md` (primero el diagnóstico, que solo lee; después el `UPDATE` que redondea al centavo los saldos con arrastre binario).
+- **Sin cambios de esquema, dependencias ni variables de entorno.**
+  - No hace falta `npm ci` ni `prisma db push`.
+  - Si el `migrate diff` muestra algo, es de un deploy anterior sin aplicar: no se corre y se revisa con Claude.
+- `next.config.js` cambió: permite las fotos de Google. Se aplica con el build.
+- **Después del deploy, con tu OK:** el SQL de `docs/plan/estado/C-96.md`. Primero el diagnóstico, que solo lee; después el `UPDATE` que redondea al centavo los saldos con arrastre binario.
 
 **Cómo comprobar:**
 - `/recuperar-contrasena` en el teléfono: formulario sin tarjeta, errores bajo el campo.
@@ -95,7 +91,7 @@ Detalle en **`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`**.
 
 ### Claude (siguiente sesión)
 > Continúa el proyecto ElectroShopVe. Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b.
-> - C-94…C-98 están hechas en `claude/C-98` (incluye Gemini R16-R19). No se mergea hasta que Andrés lo diga; lo nuevo sale de `claude/C-98`.
+> - C-94…C-98 ya están en `main` (super merge del 21/09; el deploy lo corre Andrés). Lo nuevo sale de `main`.
 > - Esperan a Andrés: el OK del SQL de C-96, "Duplicar" (C-97) y el diagnóstico para **C-92** (desactivar = `SUSPENDED`, ya respetado por el login). Sin dependencias: fila 13c (cajones con `inert`, `ImageUploadField`, reglas de hooks).
 > - Cuando Gemini avise, revisa R17-R19 con el método de C-86 y C-94.
 > - Busca bugs, seguridad y diseño inconsistente en todo lo que toques. Nada de `git push` sin que yo lo pida.

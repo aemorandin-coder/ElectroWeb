@@ -23,6 +23,7 @@ import {
 import { formatFaceValue, guessLegacyUnit, isDigitalUnit, type DigitalProvider } from '@/lib/digital-catalog';
 
 import { parseProductImages, parseProductTags } from '@/lib/product-utils';
+import { digitalMarginFromSpecs, INTERNAL_SPEC_KEYS } from '@/lib/product-specs';
 import WizardProgress from './wizard/WizardProgress';
 import ImagePanel from './wizard/ImagePanel';
 import StepTypeSelector from './wizard/StepTypeSelector';
@@ -122,11 +123,14 @@ export default function ProductWizard({ productId }: Props) {
 
         let parsedSpecs: Record<string, string> = {};
         let savedDigitalPricing: LegacyPricing[] | null = null;
+        const rawSpecs = product.specs || product.specifications;
+        // Último margen usado en este producto (C-95); si nunca se guardó, el de siempre
+        const savedMarginPercent = digitalMarginFromSpecs(rawSpecs) ?? DEFAULT_WIZARD_DATA.marginPercent;
         try {
-          const raw = product.specs || product.specifications;
-          const parsed = typeof raw === 'string' ? JSON.parse(raw) : (raw ?? {});
+          const parsed = typeof rawSpecs === 'string' ? JSON.parse(rawSpecs) : (rawSpecs ?? {});
           savedDigitalPricing = parsed?.digitalPricing ?? null;
-          const { digitalPricing: _dp, ...cleanSpecs } = parsed ?? {};
+          const cleanSpecs = { ...(parsed ?? {}) };
+          for (const key of INTERNAL_SPEC_KEYS) delete cleanSpecs[key];
           parsedSpecs = cleanSpecs;
         } catch { parsedSpecs = {}; }
 
@@ -171,7 +175,7 @@ export default function ProductWizard({ productId }: Props) {
           digitalRegion: product.digitalRegion || 'GLOBAL',
           deliveryMethod: product.deliveryMethod === 'MANUAL' ? 'MANUAL' : 'INSTANT',
           digitalVariants: toVariantRows(product.digitalVariants, Array.isArray(savedDigitalPricing) ? savedDigitalPricing : null, product.digitalPlatform || ''),
-          marginPercent: 12,
+          marginPercent: savedMarginPercent,
           accountFieldLabel: product.accountFieldLabel || '',
           accountFieldHint: product.accountFieldHint || '',
           redemptionInstructions: product.redemptionInstructions || '',
@@ -272,6 +276,7 @@ export default function ProductWizard({ productId }: Props) {
         payload.redemptionInstructions = data.redemptionInstructions || null;
         payload.accountFieldLabel = data.deliveryMethod === 'MANUAL' ? data.accountFieldLabel.trim() || null : null;
         payload.accountFieldHint = data.deliveryMethod === 'MANUAL' ? data.accountFieldHint.trim() || null : null;
+        payload.digitalMarginPercent = data.marginPercent;
         payload.digitalVariants = data.digitalVariants.map((v) => ({
           id: v.id,
           faceValue: Number.parseFloat(v.faceValue.replace(',', '.')),

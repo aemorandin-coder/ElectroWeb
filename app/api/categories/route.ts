@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
 
 const WITH_COUNT = {
   _count: { select: { products: true } },
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
       include: WITH_COUNT,
     });
 
+    revalidateStorefront();
     return NextResponse.json(category, { status: 201 });
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };
@@ -103,6 +105,7 @@ export async function PATCH(request: NextRequest) {
       include: WITH_COUNT,
     });
 
+    revalidateStorefront();
     return NextResponse.json(category);
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };
@@ -132,6 +135,7 @@ export async function DELETE(request: NextRequest) {
 
     await prisma.category.delete({ where: { id } });
 
+    revalidateStorefront();
     return NextResponse.json({ message: 'Categoría eliminada exitosamente' });
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };

@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type DigitalVariantInput } from '@/lib/digital-variants';
+import { parseDigitalMargin, specsForUpdate } from '@/lib/product-specs';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
 
 // Variantes con costo y proveedor: esta ruta es solo para quien administra productos (C-60)
 const adminVariantsInclude = { orderBy: [{ sortOrder: 'asc' as const }] };
@@ -137,25 +139,18 @@ export async function PATCH(
       }
     }
 
-    // Handle specs: map specifications -> specs and stringify
-    // For digital products, include digitalPricing in specs
-    if (body.specifications !== undefined || body.digitalPricing !== undefined) {
-      const specsToSave: Record<string, unknown> = {};
-
-      // Add regular specifications
-      if (body.specifications && typeof body.specifications === 'object') {
-        Object.assign(specsToSave, body.specifications);
-      }
-
-      // Add digitalPricing for digital products
-      if (body.digitalPricing && Array.isArray(body.digitalPricing)) {
-        specsToSave.digitalPricing = body.digitalPricing;
-      }
-
-      updateData.specs = JSON.stringify(specsToSave);
+    // Handle specs: map specifications -> specs and stringify.
+    // Las claves internas (digitalPricing, margen del wizard) se conservan si no llegan (C-95).
+    const digitalMarginPercent = parseDigitalMargin(body.digitalMarginPercent);
+    if (body.specifications !== undefined || body.digitalPricing !== undefined || digitalMarginPercent !== undefined) {
+      updateData.specs = JSON.stringify(specsForUpdate(oldProduct.specs, {
+        specifications: body.specifications,
+        digitalPricing: body.digitalPricing,
+        digitalMarginPercent,
+      }));
     } else if (body.specs !== undefined) {
       // Fallback if sent as specs
-      updateData.specs = typeof body.specs === 'string' ? body.specs : JSON.stringify(body.specs);
+      updateData.specs = JSON.stringify(specsForUpdate(oldProduct.specs, { specifications: body.specs }));
     }
 
     // Handle status: map isActive -> status
@@ -229,6 +224,8 @@ export async function PATCH(
       return tx.product.findUniqueOrThrow({ where: { id }, include: { category: true, digitalVariants: adminVariantsInclude } });
     });
 
+    revalidateStorefront();
+
     const safeNum = (v: unknown) => v != null ? Number(v) : null;
     const formattedProduct = {
       ...product,
@@ -296,6 +293,7 @@ export async function DELETE(
         where: { id },
         data: { status: 'ARCHIVED' },
       });
+      revalidateStorefront();
       return NextResponse.json({
         message: 'El producto tiene órdenes asociadas. Ha sido archivado en lugar de eliminado.',
         archived: true
@@ -334,6 +332,7 @@ export async function DELETE(
       await tx.product.delete({ where: { id } });
     });
 
+    revalidateStorefront();
     return NextResponse.json({ message: 'Producto eliminado correctamente' });
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };

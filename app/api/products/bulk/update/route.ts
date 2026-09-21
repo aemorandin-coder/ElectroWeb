@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
 
 // POST /api/products/bulk/update - Bulk update products
 export async function POST(request: NextRequest) {
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
                     })
                 );
 
+                if (results.length > 0) revalidateStorefront();
                 return NextResponse.json({
                     message: `${results.length} productos actualizados exitosamente`,
                     count: results.length,
@@ -77,6 +79,7 @@ export async function POST(request: NextRequest) {
                     data: { priceUSD: Math.max(0, Number(p.priceUSD) * (1 + pct / 100)) }
                 }))
             );
+            if (products.length > 0) revalidateStorefront();
             return NextResponse.json({ message: `${products.length} productos actualizados con ${pct > 0 ? '+' : ''}${pct}%`, count: products.length });
         }
 
@@ -105,6 +108,7 @@ export async function POST(request: NextRequest) {
             data: updateData,
         });
 
+        if (result.count > 0) revalidateStorefront();
         return NextResponse.json({
             message: `${result.count} productos actualizados exitosamente`,
             count: result.count,

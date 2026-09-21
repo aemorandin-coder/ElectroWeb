@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
 
 export async function GET() {
     try {
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
             }
         });
 
+        revalidateStorefront();
         return NextResponse.json(method);
     } catch (error) {
         console.error('Error creating payment method:', error);
@@ -83,6 +85,7 @@ export async function PATCH(request: NextRequest) {
             data
         });
 
+        revalidateStorefront();
         return NextResponse.json(method);
     } catch (error) {
         console.error('Error updating payment method:', error);
@@ -108,6 +111,7 @@ export async function DELETE(request: NextRequest) {
             where: { id }
         });
 
+        revalidateStorefront();
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error deleting payment method:', error);

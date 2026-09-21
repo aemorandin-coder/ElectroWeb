@@ -6,6 +6,14 @@ import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type DigitalVariantInput } from '@/lib/digital-variants';
 import { generateShortCode } from '@/lib/short-code';
+import { parseDigitalMargin, specsForUpdate } from '@/lib/product-specs';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
+
+/** specs de un producto nuevo: especificaciones del formulario y, en digitales, el margen del wizard (C-95). */
+function createSpecs(specifications: unknown, digitalMarginPercent: number | undefined): string | null {
+  const specs = specsForUpdate(null, { specifications, digitalMarginPercent });
+  return Object.keys(specs).length > 0 ? JSON.stringify(specs) : null;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -195,7 +203,7 @@ export async function POST(request: NextRequest) {
         brandId: body.brandId || null,
         images: JSON.stringify(imageArray),
         mainImage: imageArray.length > 0 ? imageArray[0] : null,
-        specs: body.specifications ? JSON.stringify(body.specifications) : null,
+        specs: createSpecs(body.specifications, body.productType === 'DIGITAL' ? parseDigitalMargin(body.digitalMarginPercent) : undefined),
         features: body.features ? JSON.stringify(body.features) : null,
         status: body.status || (body.isActive ? 'PUBLISHED' : 'DRAFT'),
         isFeatured: body.isFeatured || false,
@@ -221,6 +229,8 @@ export async function POST(request: NextRequest) {
       if (variants.length > 0) await syncDigitalVariants(tx, created.id, variants);
       return created;
     });
+
+    revalidateStorefront();
 
     // Notifications logic removed as NotificationTemplates is not defined
     // TODO: Implement proper admin notifications
@@ -317,10 +327,16 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
     }
 
+    // specs llega entero: se conservan las claves internas que no trae (C-95)
+    if (filteredData.specs !== undefined) {
+      filteredData.specs = JSON.stringify(specsForUpdate(oldProduct.specs, { specifications: filteredData.specs }));
+    }
+
     const product = await prisma.product.update({
       where: { id },
       data: filteredData,
     });
+    revalidateStorefront();
 
     return NextResponse.json(product);
   } catch (error) {

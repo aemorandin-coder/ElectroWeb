@@ -20,11 +20,12 @@ import { DELIVERY_MODES, DIGITAL_REGIONS, getPlatform } from '@/lib/digital-cata
 import { getActivePaymentMethodKinds, getHomeSettings } from '@/lib/queries/home';
 import { getProductBySlug, getPublicReviews, getRelatedProducts, getReviewSummary } from '@/lib/queries/product';
 import { getPublicSettings } from '@/lib/site-settings';
+import { INTERNAL_SPEC_KEYS } from '@/lib/product-specs';
 
 type PageProps = { params: Promise<{ id: string }> };
 
-// Claves de specs que son datos internos del producto digital, no especificaciones
-const HIDDEN_SPEC_KEYS = new Set(['digitalPricing', 'redemptionInstructions']);
+// Claves de specs que no son especificaciones: datos internos (el DTO ya las quita) e instrucciones viejas
+const HIDDEN_SPEC_KEYS = new Set<string>([...INTERNAL_SPEC_KEYS, 'redemptionInstructions']);
 const regionName = (value: string) => DIGITAL_REGIONS.find((r) => r.value === value)?.label ?? value;
 
 const baseUrl = () => process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';

@@ -1,4 +1,4 @@
-# Punto de partida (actualizado 2026-09-21: C-94, ChatGPT en pausa, plan final de Gemini)
+# Punto de partida (actualizado 2026-09-21: C-94 y C-95, ChatGPT en pausa, plan final de Gemini)
 
 Léelo antes de empezar.
 
@@ -9,15 +9,16 @@ Léelo antes de empezar.
   - `chatgpt/R1`: GPT-05, panel de creadores en el teléfono, y GPT-06, recuperar contraseña y verificar correo.
   - La revisión y los documentos de C-94.
   - Verificada: `tsc` 0, build OK y navegador a 390 y 1440 px.
+- **`claude/C-95`**, sobre `claude/C-94`: el home al día al guardar productos y el margen digital recordado. **Mergear `claude/C-95` trae las dos.** Andrés pidió no mergear todavía (21/09).
 - **Gemini** (`../ElectroShopVe-gemini`, hoy en `gemini/R16`): siguiente, **R17 → R18 → R19** desde `claude/C-94`. Son sus últimas rondas (§5).
 - **ChatGPT** (`../ElectroShopVe-chatgpt`): **en pausa desde el 21/09**, hasta nueva orden de Andrés.
-  - Carpeta limpia en `chatgpt/product-fixes-main`, con su arreglo de productos a medias guardado en el commit `386e56c`. Lo termina Claude en **C-95**.
+  - Carpeta limpia en `chatgpt/product-fixes-main`, con su arreglo de productos a medias guardado en el commit `386e56c`. Lo terminó Claude en **C-95**.
   - Queda `stash@{0}`, una versión vieja del mismo arreglo. Se borra cuando C-95 esté en `main`.
 
-## 2. Deploy de C-94 (Andrés)
+## 2. Deploy de C-94 + C-95 (Andrés, cuando lo decida)
 ```bash
 # En la carpeta principal:
-git switch main && git merge --no-ff claude/C-94 && git push
+git switch main && git merge --no-ff claude/C-95 && git push
 # En el servidor (/var/www/electroshopve, PM2 electroshop-web):
 git pull && npm run build && pm2 restart electroshop-web --update-env
 ```
@@ -26,6 +27,8 @@ git pull && npm run build && pm2 restart electroshop-web --update-env
 **Cómo comprobar:**
 - `/recuperar-contrasena` en el teléfono: formulario sin tarjeta, errores bajo el campo.
 - Enlace de recuperación viejo → "Enlace vencido o inválido" con "Solicitar otro enlace".
+- Editar un producto en el panel y abrir el home: el cambio se ve de inmediato (antes tardaba hasta un minuto).
+- Editar un producto digital: el margen del paso "Montos y precios" es el último que usaste, no 12.
 - `/creator/dashboard` en el teléfono: botón de menú arriba a la izquierda; el menú se cierra con la capa, con Escape y al elegir una sección.
 - Correos de envío, código digital, gift card y certificado sin círculos de color vacíos.
 
@@ -82,8 +85,8 @@ Detalle en **`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`**.
 
 ### Claude (siguiente sesión)
 > Continúa el proyecto ElectroShopVe. Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b.
-> - Si `claude/C-94` ya está en `main`, haz **C-95**: el Home al día y el margen recordado, retomando `chatgpt/product-fixes-main`.
-> - Después **C-92**, con la salida del diagnóstico de clientes borrados, y **C-80**.
+> - C-94 y C-95 están hechas en `claude/C-95`. No se mergea hasta que Andrés lo diga; lo nuevo sale de `claude/C-95`.
+> - Sigue con **C-80**; después **C-92**, con la salida del diagnóstico de clientes borrados, y los masivos de productos (fila 10d).
 > - Cuando Gemini avise, revisa R17-R19 con el método de C-86 y C-94.
 > - Busca bugs, seguridad y diseño inconsistente en todo lo que toques. Nada de `git push` sin que yo lo pida.
 

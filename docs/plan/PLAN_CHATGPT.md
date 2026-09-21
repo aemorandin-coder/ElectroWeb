@@ -274,7 +274,7 @@ Andrés cerró el carril de ChatGPT hasta nueva orden. **No se empieza nada.** A
 
 **Tu arreglo de productos (Home al día y margen digital recordado):**
 - Estaba sin commit en tu carpeta. Quedó guardado en tu rama **`chatgpt/product-fixes-main`** (commit `386e56c`, firmado ChatGPT) con su `GPT-PRODUCT-FIX.md` `EN CURSO`.
-- Toca APIs del carril Claude, así que **lo termina Claude como C-95**. Revisión de Claude, para C-95:
+- Toca APIs del carril Claude, así que **lo terminó Claude en C-95** (21/09, ver `docs/plan/estado/C-95.md`). La revisión que lo guió:
   - El enfoque es correcto: `revalidatePath` después de cada escritura confirmada. `/productos/[id]` y las categorías ya son dinámicas; el único cacheado es `/`, que se regenera cada 60 s.
   - El margen como `specs.__adminPricing` sin migración está bien, y el DTO público lo quita.
   - **Pero** al editar un producto digital ahora se reescribe `specs` entero y se pierde `specs.digitalPricing`. Es el respaldo que usa `lib/order-quote.ts` si el producto no tiene variantes en su tabla. Hay que conservarlo o probar que todos los digitales ya migraron.
@@ -290,7 +290,7 @@ Andrés cerró el carril de ChatGPT hasta nueva orden. **No se empieza nada.** A
 | `alert()`/`confirm()` de `products/page.tsx` (parte de GPT-08) | **Gemini G-58** (R18) | Mismos textos, `toast` y `useConfirm`. |
 | Tipos y variables sin uso de las pantallas de R3 | **Gemini G-59/G-60** (R18) | Sin tocar clases ni estructura: tu rediseño de R3 sigue siendo tuyo. |
 | Pendientes de GPT-02 (tarjeta que abre el detalle, "Actualizar" como ícono, métricas compactas) | ChatGPT al volver | |
-| **R2 completa (GPT-07 a GPT-11)** y **R3 completa (GPT-12 a GPT-16)** | ChatGPT al volver | Sin empezar. `products/_components/**` queda congelado hasta C-95. |
+| **R2 completa (GPT-07 a GPT-11)** y **R3 completa (GPT-12 a GPT-16)** | ChatGPT al volver | Sin empezar. El wizard ya trae C-95: el margen se guarda con `digitalMarginPercent`, no lo quites. |
 | Borrar `GPT-02-preview.html` | Hecho por Claude en C-94 | |
 
 **Al volver:**

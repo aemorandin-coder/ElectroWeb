@@ -19,7 +19,7 @@ export function GuidedTourWrapper() {
   // El tour habla de la tienda (catálogo, carrito): no pinta nada sobre los paneles, el acceso ni el checkout (C-89)
   if (
     pathname?.startsWith('/admin') ||
-    pathname?.startsWith('/creator/dashboard') ||
+    pathname?.startsWith('/creator') ||
     pathname?.startsWith('/customer') ||
     pathname?.startsWith('/checkout') ||
     esRutaDeAcceso(pathname)

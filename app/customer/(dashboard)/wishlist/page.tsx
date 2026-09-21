@@ -320,7 +320,7 @@ export default function WishlistPage() {
         <div className="flex flex-wrap gap-2">
           <div className="px-3 py-1.5 bg-surface rounded-lg border border-line flex items-center gap-1.5">
             <FiDollarSign className="w-3.5 h-3.5 text-brand-500" />
-            <span className="text-xs font-semibold text-ink">${totalValue.toFixed(0)}</span>
+            <span className="text-xs font-semibold text-ink">{formatUSD(totalValue)}</span>
           </div>
           <div className="px-3 py-1.5 bg-surface rounded-lg border border-line flex items-center gap-1.5">
             <FiTrendingUp className="w-3.5 h-3.5 text-success-strong" />

@@ -9,6 +9,7 @@ import { HiMiniBanknotes } from 'react-icons/hi2';
 import DocumentUpload from '@/components/customer/DocumentUpload';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
+import { formatUSD } from '@/lib/currency';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import {
   adminCard,
@@ -1070,7 +1071,7 @@ export default function ProfilePage() {
                       <HiMiniBanknotes className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     </div>
                     <div className="text-right">
-                      <p className="text-xl lg:text-3xl font-bold text-brand-500">${stats.totalSpent.toFixed(0)}</p>
+                      <p className="text-xl lg:text-3xl font-bold text-brand-500">{formatUSD(stats.totalSpent)}</p>
                     </div>
                   </div>
                   <h3 className="font-bold text-xs lg:text-sm text-muted mt-1 lg:mt-2 uppercase tracking-wider">Gastado</h3>

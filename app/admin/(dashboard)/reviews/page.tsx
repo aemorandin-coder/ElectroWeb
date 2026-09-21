@@ -1,6 +1,6 @@
 'use client';
 
-import { adminPageHeader, adminPageTitle, adminTab, adminTableWrap, adminTable, adminTh, adminRowHover } from '@/lib/admin-ui';
+import { adminTableWrap, adminTable, adminRowHover } from '@/lib/admin-ui';
 
 
 import { useState, useEffect } from 'react';

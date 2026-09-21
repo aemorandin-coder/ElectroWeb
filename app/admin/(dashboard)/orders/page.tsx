@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { FiPrinter, FiBriefcase, FiUser, FiUserX, FiFileText, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiExternalLink, FiArrowRight, FiCheckCircle, FiLoader, FiMonitor, FiSend } from 'react-icons/fi';
+import { FiPrinter, FiUserX, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiExternalLink, FiArrowRight, FiCheckCircle, FiLoader, FiMonitor, FiSend } from 'react-icons/fi';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -71,7 +71,19 @@ interface Order {
   paidAt?: string;
   shippedAt?: string;
   deliveredAt?: string;
-  items: Array<{ id: string; product?: { productType?: string } }>;
+  items: Array<{
+    id: string;
+    productName?: string;
+    quantity?: number;
+    priceUSD?: number;
+    pricePerUnit?: number;
+    totalUSD?: number;
+    subtotal?: number;
+    product?: {
+      name?: string;
+      productType?: string;
+    };
+  }>;
   paymentMethod: string;
   adminNotes: string | null;
   hasDigital?: boolean;
@@ -155,8 +167,8 @@ export default function OrdersPage() {
         const result = await response.json();
         // Handle both paginated format { orders: [...] } and legacy array format
         const data = Array.isArray(result) ? result : (result.orders || []);
-        const normalizedOrders = data.map((order: any) => {
-          const digitalCount = order.items?.filter((item: any) => item.product?.productType === 'DIGITAL').length || 0;
+        const normalizedOrders = data.map((order: Order) => {
+          const digitalCount = order.items?.filter((item) => item.product?.productType === 'DIGITAL').length || 0;
           const totalCount = order.items?.length || 0;
           return {
             ...order,
@@ -179,7 +191,7 @@ export default function OrdersPage() {
     fetchOrders();
   }, [filterStatus]);
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string, additionalData?: any) => {
+  const handleStatusUpdate = async (orderId: string, newStatus: string, additionalData?: Record<string, unknown>) => {
     try {
       setUpdatingStatus(true);
       const response = await fetch(`/api/orders?id=${orderId}`, {
@@ -698,7 +710,7 @@ export default function OrdersPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedOrder.items?.map((item: any) => (
+                      {selectedOrder.items?.map((item) => (
                         <tr key={item.id} className={adminRowHover}>
                           <td className={adminTd}>
                             <div className="font-medium text-ink">{item.productName || item.product?.name}</div>

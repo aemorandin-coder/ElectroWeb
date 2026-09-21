@@ -35,6 +35,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FiUser, FiBriefcase, FiBarChart2, FiCheck, FiX, FiFileText, FiDownload, FiShield } from 'react-icons/fi';
 
+interface CustomerOrder {
+  id: string;
+  orderNumber: string;
+  createdAt: string;
+  status: string;
+  totalUSD: number;
+  total?: number | string;
+}
+
 interface Customer {
   id: string;
   name: string | null;
@@ -44,6 +53,15 @@ interface Customer {
   orderCount: number;
   totalSpent: number;
   activeOrders: number;
+  profile?: {
+    customerType?: string | null;
+    companyName?: string | null;
+    taxId?: string | null;
+    phone?: string | null;
+    whatsapp?: string | null;
+    isBusinessAccount?: boolean;
+    businessVerified?: boolean;
+  };
 }
 
 interface CustomerDetails extends Customer {
@@ -53,7 +71,7 @@ interface CustomerDetails extends Customer {
     customerType: string | null;
     companyName: string | null;
     taxId: string | null;
-    addresses: any[];
+    addresses?: unknown[];
     // Business Verification
     isBusinessAccount: boolean;
     businessVerified: boolean;
@@ -63,7 +81,7 @@ interface CustomerDetails extends Customer {
     businessRIFDocument: string | null;
     businessVerificationNotes: string | null;
   };
-  orders: any[];
+  orders: CustomerOrder[];
   stats: {
     totalSpent: number;
     orderCount: number;
@@ -396,7 +414,7 @@ export default function CustomersPage() {
             <>
               {/* Mobile Card View */}
               <div className="grid grid-cols-1 divide-y divide-line xl:hidden">
-                {customers.map((customer: any) => (
+                {customers.map((customer: Customer) => (
                   <div key={customer.id} className="relative bg-white p-4">
                     <div className="flex items-start gap-3 mb-3">
                       {customer.image ? (
@@ -471,7 +489,7 @@ export default function CustomersPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {customers.map((customer: any) => (
+                    {customers.map((customer: Customer) => (
                       <tr key={customer.id} className={adminRowHover}>
                         <td className={adminTd}>
                           <div className="flex items-center gap-2">
@@ -919,7 +937,7 @@ export default function CustomersPage() {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {selectedCustomer.orders.map((order: any) => (
+                                  {selectedCustomer.orders.map((order: CustomerOrder) => (
                                     <tr key={order.id} className={adminRowHover}>
                                       <td className={`${adminTd} font-medium text-brand-600`}>{order.orderNumber}</td>
                                       <td className={`${adminTd} text-muted`}>{formatDate(order.createdAt)}</td>

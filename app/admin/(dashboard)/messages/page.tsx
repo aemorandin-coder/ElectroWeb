@@ -20,7 +20,7 @@ interface ContactMessage {
 
 export default function MessagesPage() {
     const { confirm } = useConfirm();
-    const { data: session } = useSession();
+    useSession();
     const [messages, setMessages] = useState<ContactMessage[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState<'ALL' | 'PENDING' | 'READ' | 'RESPONDED'>('ALL');
@@ -56,10 +56,10 @@ export default function MessagesPage() {
 
             if (response.ok) {
                 setMessages(messages.map(msg =>
-                    msg.id === id ? { ...msg, status: newStatus as any } : msg
+                    msg.id === id ? { ...msg, status: newStatus as ContactMessage['status'] } : msg
                 ));
                 if (selectedMessage?.id === id) {
-                    setSelectedMessage({ ...selectedMessage, status: newStatus as any });
+                    setSelectedMessage({ ...selectedMessage, status: newStatus as ContactMessage['status'] });
                 }
             }
         } catch (error) {
@@ -131,7 +131,7 @@ export default function MessagesPage() {
                 <div className="flex gap-2">
                     <select
                         value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value as any)}
+                        onChange={(e) => setFilterStatus(e.target.value as 'ALL' | 'PENDING' | 'READ' | 'RESPONDED')}
                         className="px-4 py-2 border border-line-strong rounded-lg focus:outline-none focus:border-brand-500 text-sm"
                     >
                         <option value="ALL">Todos</option>

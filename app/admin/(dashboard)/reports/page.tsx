@@ -113,7 +113,7 @@ export default function ReportsPage() {
 
     const exportToCSV = () => {
         let csvContent = "";
-        let fileName = `reporte-${activeTab}-${period}.csv`;
+        const fileName = `reporte-${activeTab}-${period}.csv`;
 
         if (activeTab === 'overview' && overview) {
             csvContent = "Fecha,Ventas (USD),Pedidos,Nuevos Clientes\n" + 

@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 import {
     FiDownload, FiCheck, FiX, FiFilter, FiRefreshCw,
     FiAlertCircle, FiSearch, FiDollarSign, FiClock,
-    FiCheckCircle, FiTrendingUp, FiUser, FiSmartphone,
+    FiCheckCircle, FiTrendingUp, FiSmartphone,
     FiCreditCard, FiGlobe, FiArrowUpCircle, FiArrowDownCircle,
     FiRepeat, FiGift, FiPackage,
 } from 'react-icons/fi';

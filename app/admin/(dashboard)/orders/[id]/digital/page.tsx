@@ -7,8 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
     FiArrowLeft, FiSend, FiCheck, FiPackage, FiClock,
-    FiAlertCircle, FiUser, FiMail, FiPhone, FiMonitor, FiCopy,
-    FiPlus, FiTrash2, FiEdit
+    FiAlertCircle, FiMonitor
 } from 'react-icons/fi';
 import { BsNintendoSwitch } from 'react-icons/bs';
 import { SiSteam, SiPlaystation, SiRoblox } from 'react-icons/si';
@@ -92,8 +91,8 @@ export default function AdminDigitalCodesPage() {
         }
 
         if (status === 'authenticated') {
-            const userRole = (session?.user as any)?.role;
-            if (!['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
+            const userRole = (session?.user as { role?: string })?.role;
+            if (!userRole || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
                 router.push('/');
                 return;
             }

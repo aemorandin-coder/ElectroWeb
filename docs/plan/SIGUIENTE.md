@@ -1,4 +1,4 @@
-# Punto de partida (actualizado 2026-09-21: C-94, C-95 y C-80, ChatGPT en pausa, plan final de Gemini)
+# Punto de partida (actualizado 2026-09-21: C-94, C-95, C-80 y C-60b, ChatGPT en pausa, plan final de Gemini)
 
 Léelo antes de empezar.
 
@@ -10,16 +10,17 @@ Léelo antes de empezar.
   - La revisión y los documentos de C-94.
   - Verificada: `tsc` 0, build OK y navegador a 390 y 1440 px.
 - **`claude/C-95`**, sobre `claude/C-94`: el home al día al guardar productos y el margen digital recordado.
-- **`claude/C-80`**, sobre `claude/C-95`: límite de intentos del login en el servidor, cuentas desactivadas y perfil con lista blanca. **Mergear `claude/C-80` trae las tres.** Andrés pidió no mergear todavía (21/09).
+- **`claude/C-80`**, sobre `claude/C-95`: límite de intentos del login en el servidor, cuentas desactivadas y perfil con lista blanca.
+- **`claude/C-60b`**, sobre `claude/C-80`: surtido de pedidos digitales. **Mergear `claude/C-60b` trae las cuatro.** Andrés pidió no mergear todavía (21/09).
 - **Gemini** (`../ElectroShopVe-gemini`, hoy en `gemini/R16`): siguiente, **R17 → R18 → R19** desde `claude/C-94`. Son sus últimas rondas (§5).
 - **ChatGPT** (`../ElectroShopVe-chatgpt`): **en pausa desde el 21/09**, hasta nueva orden de Andrés.
   - Carpeta limpia en `chatgpt/product-fixes-main`, con su arreglo de productos a medias guardado en el commit `386e56c`. Lo terminó Claude en **C-95**.
   - Queda `stash@{0}`, una versión vieja del mismo arreglo. Se borra cuando C-95 esté en `main`.
 
-## 2. Deploy de C-94 + C-95 + C-80 (Andrés, cuando lo decida)
+## 2. Deploy de C-94 + C-95 + C-80 + C-60b (Andrés, cuando lo decida)
 ```bash
 # En la carpeta principal:
-git switch main && git merge --no-ff claude/C-80 && git push
+git switch main && git merge --no-ff claude/C-60b && git push
 # En el servidor (/var/www/electroshopve, PM2 electroshop-web):
 git pull && npm run build && pm2 restart electroshop-web --update-env
 ```
@@ -32,6 +33,8 @@ git pull && npm run build && pm2 restart electroshop-web --update-env
 - Editar un producto digital: el margen del paso "Montos y precios" es el último que usaste, no 12.
 - Login: 2 claves malas → el tercer intento pide el captcha; 5 → "Demasiados intentos… Espera 1 minuto".
 - Un cliente que desactivó su cuenta en Configuración entra de nuevo y su cuenta queda activa.
+- Pedido digital pagado: llega "Pedido digital por entregar" (panel, correo y Telegram); en el pedido se anotan proveedor, referencia y costo, y un doble clic no manda dos códigos.
+- **Notificaciones → Qué avisar:** revisar el aviso nuevo "Pedido digital por entregar" (sale por los tres canales por defecto).
 - `/creator/dashboard` en el teléfono: botón de menú arriba a la izquierda; el menú se cierra con la capa, con Escape y al elegir una sección.
 - Correos de envío, código digital, gift card y certificado sin círculos de color vacíos.
 
@@ -88,8 +91,8 @@ Detalle en **`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`**.
 
 ### Claude (siguiente sesión)
 > Continúa el proyecto ElectroShopVe. Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b.
-> - C-94, C-95 y C-80 están hechas en `claude/C-80`. No se mergea hasta que Andrés lo diga; lo nuevo sale de `claude/C-80`.
-> - Sigue con **C-60b** (surtido de pedidos digitales) y los masivos de productos (fila 10d); **C-92** cuando Andrés pase el diagnóstico de clientes borrados (desactivar = `SUSPENDED`, ya respetado por el login).
+> - C-94, C-95, C-80 y C-60b están hechas en `claude/C-60b`. No se mergea hasta que Andrés lo diga; lo nuevo sale de `claude/C-60b`.
+> - Sigue con **C-96** (montos exactos en la base: toca dinero, probar el caso normal y el borde de $9,45) y los masivos de productos (fila 10d); **C-92** cuando Andrés pase el diagnóstico de clientes borrados (desactivar = `SUSPENDED`, ya respetado por el login).
 > - Cuando Gemini avise, revisa R17-R19 con el método de C-86 y C-94.
 > - Busca bugs, seguridad y diseño inconsistente en todo lo que toques. Nada de `git push` sin que yo lo pida.
 

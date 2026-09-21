@@ -43,6 +43,7 @@ const on = (panel: boolean, email: boolean, telegram: boolean): ChannelSet => ({
 export const ADMIN_EVENTS = {
   ORDER_CREATED: { category: 'ventas', label: 'Nueva venta', description: 'Un cliente hizo una orden, con total, pago y entrega.', defaults: on(true, true, true) },
   ORDER_PAID: { category: 'ventas', label: 'Pago de orden confirmado', description: 'Un administrador marcó una orden como pagada.', defaults: on(true, false, true) },
+  DIGITAL_ORDER_PENDING: { category: 'ventas', label: 'Pedido digital por entregar', description: 'Una orden pagada trae códigos o recargas que hay que comprar y enviar desde el pedido.', defaults: on(true, true, true) },
   ORDER_CANCELLED: { category: 'ventas', label: 'Orden cancelada', description: 'Una orden pasó a cancelada, con el motivo.', defaults: on(true, false, true) },
 
   RECHARGE_REQUESTED: { category: 'pagos', label: 'Recarga por aprobar', description: 'Un cliente pidió recargar saldo y espera aprobación.', defaults: on(true, true, true) },

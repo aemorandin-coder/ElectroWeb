@@ -39,6 +39,7 @@ import {
   MOTIVO_CANCELACION_MINIMO,
 } from '@/lib/order-admin';
 import { recordPaidOrder, rejectOrderConversions } from '@/lib/influencer-commission';
+import { avisarPedidoDigitalPorEntregar } from '@/lib/digital-delivery';
 
 
 // GET - Get all orders
@@ -607,6 +608,10 @@ export async function POST(request: NextRequest) {
     for (const order of orders) {
       await sendNewOrderNotifications(order, userId, paymentMethod);
     }
+    // Pagada al crearla (saldo o Pago Móvil verificado): si trae digitales, el equipo tiene que enviarlos (C-60b)
+    if (isPaymentConfirmed) {
+      for (const order of orders) void avisarPedidoDigitalPorEntregar(order.id);
+    }
 
     // Stock descontado ya (pago confirmado): aviso si algún producto quedó bajo o agotado
     if (isPaymentConfirmed) {
@@ -830,6 +835,7 @@ export async function PATCH(request: NextRequest) {
     // Pago confirmado: si el cliente llegó por un promotor, nace su comisión pendiente (C-75)
     if (confirmandoPago) {
       recordPaidOrder(order.id).catch((error) => console.error('Error registrando comisión de promotor:', error));
+      void avisarPedidoDigitalPorEntregar(order.id);
     }
 
     // Avisos al cliente (fuera de la transacción: correos y notificaciones no deben bloquear el cambio)

@@ -7,9 +7,11 @@ import {
   FiArrowDown, FiArrowLeft, FiArrowUp, FiEdit3, FiImage, FiLink, FiMail, FiPause, FiPlay, FiPlus, FiSave, FiSearch, FiSend, FiTrash2, FiType, FiUpload, FiUsers, FiX,
 } from 'react-icons/fi';
 import {
-  adminBadge, adminCard, adminCardFlush, adminEmpty, adminHint, adminIconButton, adminInput, adminLabel, adminNotice,
-  adminPrimaryButton, adminSecondaryButton, adminSpinner, adminSuccessButton, type AdminTone,
+  adminBadge, adminCard, adminCardFlush, adminEmpty, adminHint, adminIconButton, adminInput, adminLabel,
+  adminModalBody, adminModalFooter, adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle,
+  adminNotice, adminPrimaryButton, adminSecondaryButton, adminSpinner, adminSuccessButton, type AdminTone,
 } from '@/lib/admin-ui';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useSession } from 'next-auth/react';
 
@@ -531,6 +533,17 @@ function ModalDestinatarios({ abierto, alCerrar }: { abierto: boolean; alCerrar:
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
 
+  useBodyScrollLock(abierto);
+
+  useEffect(() => {
+    if (!abierto) return;
+    const alPresionar = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') alCerrar();
+    };
+    window.addEventListener('keydown', alPresionar);
+    return () => window.removeEventListener('keydown', alPresionar);
+  }, [abierto, alCerrar]);
+
   useEffect(() => {
     if (!abierto) return;
     setCargando(true);
@@ -550,15 +563,15 @@ function ModalDestinatarios({ abierto, alCerrar }: { abierto: boolean; alCerrar:
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={alCerrar} role="dialog" aria-modal="true" aria-labelledby="modal-destinatarios-titulo">
-      <div className={`${adminCard} flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden p-0 shadow-xl`} onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+    <div className={adminModalOverlay} onClick={alCerrar} role="dialog" aria-modal="true" aria-labelledby="modal-destinatarios-titulo">
+      <div className={`${adminModalPanel} sm:max-w-xl`} onClick={(e) => e.stopPropagation()}>
+        <div className={adminModalHeader}>
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
               <FiUsers className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <h2 id="modal-destinatarios-titulo" className="text-base font-bold text-ink">Destinatarios de promociones</h2>
+              <h2 id="modal-destinatarios-titulo" className={adminModalTitle}>Destinatarios de promociones</h2>
               <p className="text-xs text-muted">{destinatarios.length} clientes aceptan promociones por correo</p>
             </div>
           </div>
@@ -583,7 +596,7 @@ function ModalDestinatarios({ abierto, alCerrar }: { abierto: boolean; alCerrar:
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className={adminModalBody}>
           {cargando ? (
             <div className="flex justify-center py-12"><span className={adminSpinner} aria-label="Cargando destinatarios" /></div>
           ) : filtrados.length === 0 ? (
@@ -614,9 +627,8 @@ function ModalDestinatarios({ abierto, alCerrar }: { abierto: boolean; alCerrar:
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-line bg-surface/30 px-5 py-3">
-          <span className="text-xs text-muted">Mostrando {filtrados.length} de {destinatarios.length}</span>
-          <button type="button" onClick={alCerrar} className={`${adminSecondaryButton} h-8 px-3 text-xs`}>
+        <div className={adminModalFooter}>
+          <button type="button" onClick={alCerrar} className={`${adminSecondaryButton} h-9 px-4 text-xs`}>
             Cerrar
           </button>
         </div>

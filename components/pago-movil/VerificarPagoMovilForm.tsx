@@ -130,8 +130,8 @@ DATOS DEL PAGO:
 • Banco: ${banco?.nombre || formData.bancoOrigen}
 • Referencia: ${formData.referencia}
 • Fecha: ${formData.fechaPago}
-• Monto USD: $${montoEsperado.toFixed(2)}
-${montoEnBs ? `• Monto Bs: ${montoEnBs.toFixed(2)}` : ''}
+• Monto USD: ${formatUSD(montoEsperado)}
+${montoEnBs ? `• Monto Bs: ${formatVES(montoEnBs)}` : ''}
 
 ERROR ENCONTRADO:
 ${errorMessage}

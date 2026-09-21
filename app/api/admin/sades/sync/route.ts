@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { sadesClient } from '@/lib/sades';
 import { generateShortCode } from '@/lib/short-code';
 import { authOptions } from '@/lib/auth';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
 
 // Función auxiliar para esperar (Rate Limiting)
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -146,6 +147,7 @@ export async function POST(req: NextRequest) {
             processedCount++;
         }
 
+        if (processedCount > 0) revalidateStorefront();
         return NextResponse.json({
             success: true,
             processed: processedCount,

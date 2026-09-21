@@ -85,7 +85,7 @@ export default function SettingsPage() {
     }
   }, [session]);
 
-  const fetchSettings = async () => {
+  async function fetchSettings() {
     try {
       const response = await fetch('/api/customer/settings');
       if (response.ok) {
@@ -123,7 +123,7 @@ export default function SettingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleSaveSettings = async () => {
     setSaving(true);

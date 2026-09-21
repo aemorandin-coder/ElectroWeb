@@ -6,6 +6,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
+import { escapeHtml } from './html';
 
 // TYPES
 
@@ -544,9 +545,6 @@ export const sendOrderPendingPaymentEmail = async (
 
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
-      <div style="width:70px;height:70px;background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
-        <span style="color:white;font-size:28px;">⏳</span>
-      </div>
       <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">Pedido en Revisión</h2>
       <p style="color:#f59e0b;font-size:16px;font-weight:600;">Orden #${orderData.orderNumber}</p>
     </div>
@@ -587,9 +585,6 @@ export const sendOrderShippedEmail = async (
 
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
-      <div style="width:70px;height:70px;background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
-        
-      </div>
       <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Tu Pedido Está en Camino!</h2>
       <p style="color:#3b82f6;font-size:16px;font-weight:600;">Orden #${orderData.orderNumber}</p>
     </div>
@@ -671,41 +666,36 @@ export const sendDigitalCodeEmail = async (
   }
 ) => {
   const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
-
-  const platformColors: Record<string, string> = {
-    STEAM: '#1b2838',
-    PLAYSTATION: '#003791',
-    PSN: '#003791',
-    XBOX: '#107c10',
-    NINTENDO: '#e60012',
-    ROBLOX: '#e31b1b',
+  // Todo escapado (C-60b): el nombre del producto lleva la cuenta que escribió el cliente y el código lo pega el equipo
+  const e = {
+    orderNumber: escapeHtml(codeData.orderNumber),
+    customerName: escapeHtml(codeData.customerName),
+    productName: escapeHtml(codeData.productName),
+    code: escapeHtml(codeData.code),
+    platform: codeData.platform ? escapeHtml(codeData.platform) : '',
+    redemptionInstructions: codeData.redemptionInstructions ? escapeHtml(codeData.redemptionInstructions).replace(/\n/g, '<br>') : '',
   };
-
-  const platformBg = codeData.platform ? (platformColors[codeData.platform.toUpperCase()] || '#6366f1') : '#6366f1';
 
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
-      <div style="width:80px;height:80px;background:linear-gradient(135deg,${platformBg} 0%,#4f46e5 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(99,102,241,0.3);">
-        
-      </div>
       <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Tu Código Digital Está Listo!</h2>
-      <p style="color:#6366f1;font-size:16px;font-weight:600;margin:0;">Orden #${codeData.orderNumber}</p>
+      <p style="color:#6366f1;font-size:16px;font-weight:600;margin:0;">Orden #${e.orderNumber}</p>
     </div>
     <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 25px;">
-      Hola <strong style="color:#212529;">${codeData.customerName}</strong>,<br><br>
-      Aquí tienes tu código digital para <strong>${codeData.productName}</strong>:
+      Hola <strong style="color:#212529;">${e.customerName}</strong>,<br><br>
+      Aquí tienes tu código digital para <strong>${e.productName}</strong>:
     </p>
     <div style="background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border-radius:16px;padding:25px;margin:25px 0;text-align:center;border:2px dashed #3b82f6;">
       <p style="margin:0 0 8px;color:#6a6c6b;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Tu Código</p>
       <p style="margin:0;color:#1e40af;font-size:28px;font-weight:800;font-family:monospace;letter-spacing:3px;word-break:break-all;">
-        ${codeData.code}
+        ${e.code}
       </p>
-      ${codeData.platform ? `<p style="margin:12px 0 0;color:#6a6c6b;font-size:13px;">Plataforma: <strong>${codeData.platform}</strong></p>` : ''}
+      ${e.platform ? `<p style="margin:12px 0 0;color:#6a6c6b;font-size:13px;">Plataforma: <strong>${e.platform}</strong></p>` : ''}
     </div>
-    ${codeData.redemptionInstructions ? `
+    ${e.redemptionInstructions ? `
     <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:25px 0;border-left:4px solid #6366f1;">
       <p style="margin:0 0 10px;color:#212529;font-size:14px;font-weight:600;">Instrucciones de Canje:</p>
-      <p style="margin:0;color:#6a6c6b;font-size:13px;line-height:1.7;">${codeData.redemptionInstructions}</p>
+      <p style="margin:0;color:#6a6c6b;font-size:13px;line-height:1.7;">${e.redemptionInstructions}</p>
     </div>
     ` : ''}
     <div style="background:#fef3c7;border-radius:12px;padding:15px;margin:25px 0;border:1px solid #f59e0b;">
@@ -744,9 +734,6 @@ export const sendGiftCardEmail = async (
 
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
-      <div style="width:90px;height:90px;background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 50%,#d97706 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 15px 35px rgba(251,191,36,0.4);">
-        
-      </div>
       <h2 style="margin:0 0 10px;color:#212529;font-size:28px;font-weight:700;">¡Te Han Enviado una Gift Card!</h2>
       <p style="color:#f59e0b;font-size:16px;font-weight:600;margin:0;">De parte de ${giftCardData.senderName}</p>
     </div>

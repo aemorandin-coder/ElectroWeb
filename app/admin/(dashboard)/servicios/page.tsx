@@ -1,13 +1,12 @@
 'use client';
 
-import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminModalOverlay } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiVideo, FiToggleLeft, FiToggleRight, FiStar, FiYoutube, FiX, FiSave, FiImage } from 'react-icons/fi';
-import { SiTiktok, SiKick } from 'react-icons/si';
+import { FiPlus, FiEdit2, FiTrash2, FiVideo, FiToggleLeft, FiToggleRight, FiStar, FiX, FiSave, FiImage } from 'react-icons/fi';
 
 const CATEGORIES = [
   { value: 'CCTV', label: 'Sistemas CCTV' },
@@ -201,7 +200,7 @@ export default function AdminServiciosPage() {
         <div className="flex-1 space-y-2">
           <h2 className="font-bold text-ink text-base">¿Cómo funciona y para qué sirve esta sección?</h2>
           <p className="text-xs text-muted leading-relaxed">
-            Aquí gestionas el portafolio visual que los clientes verán en la sección pública de <a href="/servicios" target="_blank" className="text-brand-500 font-bold hover:underline">Servicios</a>. Cada "Trabajo Realizado" publicado ayuda a demostrar la experiencia de la empresa y convencer a nuevos clientes mediante:
+            Aquí gestionas el portafolio visual que los clientes verán en la sección pública de <a href="/servicios" target="_blank" className="text-brand-500 font-bold hover:underline">Servicios</a>. Cada &ldquo;Trabajo Realizado&rdquo; publicado ayuda a demostrar la experiencia de la empresa y convencer a nuevos clientes mediante:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 mt-2">
             <div className="flex gap-2 text-xs text-muted items-start">

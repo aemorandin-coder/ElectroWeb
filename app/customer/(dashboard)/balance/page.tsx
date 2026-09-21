@@ -99,7 +99,7 @@ export default function BalancePage() {
     }
   }, [userBalance, balanceAnimated]);
 
-  const fetchBalance = async () => {
+  async function fetchBalance() {
     try {
       const response = await fetch('/api/customer/balance');
       if (response.ok) {
@@ -121,7 +121,7 @@ export default function BalancePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const getTransactionIcon = (type: string) => {
     return isCreditTransaction(type) ? <FiTrendingUp className="w-4 h-4 lg:w-5 lg:h-5" /> : <FiTrendingDown className="w-4 h-4 lg:w-5 lg:h-5" />;

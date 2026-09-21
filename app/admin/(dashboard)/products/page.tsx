@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -52,6 +54,7 @@ interface Stats {
 
 export default function ProductsPage() {
   const router = useRouter();
+  const { confirm } = useConfirm();
   const [activeTab, setActiveTab] = useState<'local' | 'sades'>('local');
 
   // Local Products State
@@ -250,18 +253,18 @@ export default function ProductsPage() {
               ? { ...p, isActive: false, status: 'ARCHIVED' }
               : p
           ));
-          alert(result.message || 'El producto fue archivado porque tiene órdenes asociadas.');
+          toast.success(result.message || 'El producto fue archivado porque tiene órdenes asociadas.');
         } else {
           setProducts(products.filter(p => p.id !== selectedProduct.id));
         }
         setShowDeleteModal(false);
         setSelectedProduct(null);
       } else {
-        alert(result.error || 'Error al eliminar el producto');
+        toast.error(result.error || 'Error al eliminar el producto');
       }
     } catch (error) {
       console.error('Error deleting product:', error);
-      alert('Error de conexión al intentar eliminar el producto');
+      toast.error('Error de conexión al intentar eliminar el producto');
     } finally {
       setDeleteLoading(false);
     }
@@ -496,11 +499,11 @@ export default function ProductsPage() {
         setBulkEditValue('');
       } else {
         const err = await response.json();
-        alert(err.error || 'Error al aplicar cambios masivos');
+        toast.error(err.error || 'Error al aplicar cambios masivos');
       }
     } catch (error) {
       console.error('Error bulk editing:', error);
-      alert('Error de conexión');
+      toast.error('Error de conexión');
     } finally {
       setBulkEditLoading(false);
     }
@@ -509,7 +512,14 @@ export default function ProductsPage() {
   const handleBulkDelete = async () => {
     if (selectedProducts.length === 0) return;
 
-    if (!confirm(`¿Eliminar ${selectedProducts.length} productos seleccionados? Los que tengan órdenes asociadas serán archivados.`)) return;
+    const ok = await confirm({
+      title: 'Eliminar productos',
+      message: `¿Eliminar ${selectedProducts.length} productos seleccionados? Los que tengan órdenes asociadas serán archivados.`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    });
+    if (!ok) return;
 
     try {
       const results = await Promise.all(
@@ -537,10 +547,10 @@ export default function ProductsPage() {
       if (deleted > 0) parts.push(`${deleted} eliminado${deleted > 1 ? 's' : ''}`);
       if (archived > 0) parts.push(`${archived} archivado${archived > 1 ? 's' : ''} (tienen órdenes)`);
       if (failed > 0) parts.push(`${failed} con error`);
-      if (parts.length > 0) alert(parts.join(', '));
+      if (parts.length > 0) toast(parts.join(', '));
     } catch (error) {
       console.error('Error bulk deleting:', error);
-      alert('Error de conexión al intentar eliminar los productos');
+      toast.error('Error de conexión al intentar eliminar los productos');
     }
   };
 
@@ -558,13 +568,13 @@ export default function ProductsPage() {
   const handleSync = async () => {
     if (isSyncing) return;
 
-    const confirmSync = window.confirm(
-      "¿Estás seguro de iniciar la sincronización?\n\n" +
-      "• Se actualizarán precios y stocks de productos existentes (por SKU).\n" +
-      "• Se crearán nuevos productos como BORRADOR.\n" +
-      "• Se descargarán las imágenes.\n\n" +
-      "Este proceso puede tardar varios minutos."
-    );
+    const confirmSync = await confirm({
+      title: "Iniciar sincronización",
+      message: "¿Estás seguro de iniciar la sincronización?\n\n• Se actualizarán precios y stocks de productos existentes (por SKU).\n• Se crearán nuevos productos como BORRADOR.\n• Se descargarán las imágenes.\n\nEste proceso puede tardar varios minutos.",
+      confirmText: "Sincronizar",
+      cancelText: "Cancelar",
+      type: "warning"
+    });
 
     if (!confirmSync) return;
 

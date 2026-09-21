@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
-
-// Revalidate on stock update? 
-// NextJS app router caches can be tricky. Direct database update is fine, 
-// but we might need to purge cache tags if we use them. For now, DB update is priority.
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
 
 export async function POST(req: NextRequest) {
     try {
@@ -95,6 +92,7 @@ export async function POST(req: NextRequest) {
                 console.warn(`Webhook: Evento no manejado: ${evento}`);
         }
 
+        revalidateStorefront();
         return NextResponse.json({ received: true });
 
     } catch (err: unknown) {

@@ -2,6 +2,8 @@
 
 Lee este archivo COMPLETO antes de cada ronda. Si una instrucción de aquí choca con tu criterio, **gana este archivo**.
 
+> **EN PAUSA desde el 21/09 (vacaciones, orden de Andrés).** No empieces ninguna tarjeta hasta que Andrés dé una orden nueva. Al volver, lee primero "Pausa del 21/09" al final de `docs/plan/PLAN_CHATGPT.md`: dice qué quedó hecho, qué pasó a Gemini y a Claude, y desde qué rama se retoma.
+
 Proyecto: tienda online de Electro Shop Morandin C.A. (Guanare, Venezuela). Next.js 16 (App Router), React 19, Tailwind CSS 4, Prisma 6, NextAuth 4. Interfaz en español de Venezuela. Dueño: Andrés.
 **Tu orden de trabajo:** `docs/plan/PLAN_CHATGPT.md`. **Diseño y tokens:** `docs/plan/PLAN.md` §1 y §6. **Recetas de UI:** `lib/admin-ui.ts`. **Next 16 cambió APIs:** `AGENTS.md`.
 

@@ -594,7 +594,7 @@ interface CompanyPaymentMethod {
                                         <div className="bg-white rounded-lg p-2 lg:p-3 border border-warning/30">
                                             <div className="flex items-center justify-between text-xs mb-1">
                                                 <span className="text-muted">{formatUSD(amount ? parseFloat(amount) : 0)}</span>
-                                                <span className="text-muted">x {exchangeRate > 0 ? exchangeRate.toFixed(2) : '...'}</span>
+                                                <span className="text-muted">x {exchangeRate > 0 ? formatVES(exchangeRate) : '...'}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-xs font-semibold text-ink">Total:</span>

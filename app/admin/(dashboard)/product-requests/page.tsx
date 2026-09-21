@@ -40,7 +40,7 @@ export default function ProductRequestsPage() {
     fetchRequests();
   }, [filterStatus]);
 
-  const fetchRequests = async () => {
+  async function fetchRequests() {
     try {
       const url = filterStatus === 'all'
         ? '/api/product-requests'
@@ -57,7 +57,7 @@ export default function ProductRequestsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   const handleUpdateStatus = async () => {
     if (!selectedRequest) return;
@@ -111,11 +111,11 @@ export default function ProductRequestsPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: any = {
+    const variants: Record<string, { variant: 'warning' | 'info' | 'success' | 'danger'; label: string }> = {
       PENDING: { variant: 'warning', label: 'Pendiente' },
       IN_PROGRESS: { variant: 'info', label: 'En Progreso' },
       FULFILLED: { variant: 'success', label: 'Cumplida' },
-      REJECTED: { variant: 'error', label: 'Rechazada' },
+      REJECTED: { variant: 'danger', label: 'Rechazada' },
     };
 
     const config = variants[status] || variants.PENDING;

@@ -240,3 +240,59 @@ Mismas reglas y método. Cada pantalla sigue `CHATGPT.md` §4.1 (encabezado → 
 **Fuera de R3:** `settings/**`, `marketing/**`, `notifications/**`, `cursos/**`, `creators/**` (Claude) y `layout.tsx`.
 
 **Prompt de arranque:** ver `docs/plan/SIGUIENTE.md` §5.
+
+---
+
+## Resultado de GPT-05 y GPT-06 (revisión C-94, 21/09)
+**Aprobadas.** Van a `main` con `claude/C-94`.
+- **Llamadas, métodos, cuerpos, destinos y permisos idénticos** en los 10 archivos, contados antes y después.
+  - Los únicos enlaces nuevos van a rutas que existen: "Solicitar otro enlace" (`/recuperar-contrasena`) e "Ir al Login" (`/login?verified=true`).
+  - Los que desaparecen de la página pasan al "Volver" de `AuthShell`.
+- La contraseña nueva se valida en el navegador con el mismo `contrasenaSchema` del servidor. Antes pedía 6 caracteres y el servidor exigía otras reglas: es una mejora.
+- `tsc` 0 y `npm run build` OK. ESLint: ningún archivo empeora; recuperar y verificar bajan a 0.
+- **Navegador (tienda de ejemplo):**
+  - Recuperar, restablecer y verificar sin desborde a 390 y 1440 px.
+  - Un token falso muestra "Enlace vencido o inválido".
+  - Panel de creadores a 390 px: el contenido usa los 390 px. El cajón abre, bloquea el scroll, se cierra con Escape y al navegar.
+  - Perfil sin desborde. A 1440 px el menú lateral queda fijo.
+
+**Para la próxima vez:**
+- **Los dos commits salieron firmados "Gemini" otra vez** (van cuatro rondas). Firma con `git -c user.name="ChatGPT" -c user.email="chatgpt@electroshop.local" commit`.
+- El avatar de la barra del creador lleva `aria-label` sobre un `span` sin `role`: ese nombre no se anuncia. Va `role="img"` o el nombre en `sr-only`.
+- `verificar-email` conserva `prompt()` nativo para reenviar el correo. Queda anotado para Claude (C-80).
+
+**Los PEDIDOS de GPT-05:**
+- Excluir `/creator` del recorrido de la tienda: **G-55** (Gemini R17).
+- `ImageUploadField` legible sobre fondos claros: queda para Claude.
+
+---
+
+## Pausa del 21/09 (vacaciones)
+Andrés cerró el carril de ChatGPT hasta nueva orden. **No se empieza nada.** Así quedó:
+
+**Hecho y en `claude/C-94` (pasa a `main` cuando Andrés la mergee):** GPT-01 a GPT-06.
+
+**Tu arreglo de productos (Home al día y margen digital recordado):**
+- Estaba sin commit en tu carpeta. Quedó guardado en tu rama **`chatgpt/product-fixes-main`** (commit `386e56c`, firmado ChatGPT) con su `GPT-PRODUCT-FIX.md` `EN CURSO`.
+- Toca APIs del carril Claude, así que **lo terminó Claude en C-95** (21/09, ver `docs/plan/estado/C-95.md`). La revisión que lo guió:
+  - El enfoque es correcto: `revalidatePath` después de cada escritura confirmada. `/productos/[id]` y las categorías ya son dinámicas; el único cacheado es `/`, que se regenera cada 60 s.
+  - El margen como `specs.__adminPricing` sin migración está bien, y el DTO público lo quita.
+  - **Pero** al editar un producto digital ahora se reescribe `specs` entero y se pierde `specs.digitalPricing`. Es el respaldo que usa `lib/order-quote.ts` si el producto no tiene variantes en su tabla. Hay que conservarlo o probar que todos los digitales ya migraron.
+  - El ayudante va en `lib/`, no en `app/api/products/`.
+  - Faltan `tsc`, build y las pruebas.
+- También queda un `stash@{0}` con una versión vieja del mismo arreglo. Se puede borrar cuando C-95 esté en `main`.
+
+**Qué pasó con lo pendiente:**
+
+| Tarjeta | Pasa a | Nota |
+|---|---|---|
+| GPT-02b "Cliente eliminado" | **Gemini G-57** (R18) | Solo presentación, con la tarjeta tal cual. |
+| `alert()`/`confirm()` de `products/page.tsx` (parte de GPT-08) | **Gemini G-58** (R18) | Mismos textos, `toast` y `useConfirm`. |
+| Tipos y variables sin uso de las pantallas de R3 | **Gemini G-59/G-60** (R18) | Sin tocar clases ni estructura: tu rediseño de R3 sigue siendo tuyo. |
+| Pendientes de GPT-02 (tarjeta que abre el detalle, "Actualizar" como ícono, métricas compactas) | ChatGPT al volver | |
+| **R2 completa (GPT-07 a GPT-11)** y **R3 completa (GPT-12 a GPT-16)** | ChatGPT al volver | Sin empezar. El wizard ya trae C-95: el margen se guarda con `digitalMarginPercent`, no lo quites. |
+| Borrar `GPT-02-preview.html` | Hecho por Claude en C-94 | |
+
+**Al volver:**
+- Rama `chatgpt/R2` **desde `main`** (ya no desde `chatgpt/R1`).
+- Antes, lee lo que Gemini tocó en R18 (`docs/plan/estado/G-57…G-60.md`): son las mismas pantallas y ya traen tipos y avisos.

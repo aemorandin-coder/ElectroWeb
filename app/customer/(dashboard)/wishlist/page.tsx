@@ -106,7 +106,7 @@ export default function WishlistPage() {
     fetchDiscountRequests();
   }, []);
 
-  const fetchWishlist = async () => {
+  async function fetchWishlist() {
     try {
       const response = await fetch('/api/customer/wishlist');
       if (response.ok) {
@@ -146,9 +146,9 @@ export default function WishlistPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const fetchDiscountRequests = async () => {
+  async function fetchDiscountRequests() {
     try {
       const response = await fetch('/api/customer/discount-requests');
       if (response.ok) {
@@ -159,7 +159,7 @@ export default function WishlistPage() {
       console.error('Error fetching discount requests:', error);
       toast.error('No se pudieron cargar las solicitudes de descuento');
     }
-  };
+  }
 
   const removeFromWishlist = async (productId: string) => {
     setRemovingId(productId);
@@ -320,7 +320,7 @@ export default function WishlistPage() {
         <div className="flex flex-wrap gap-2">
           <div className="px-3 py-1.5 bg-surface rounded-lg border border-line flex items-center gap-1.5">
             <FiDollarSign className="w-3.5 h-3.5 text-brand-500" />
-            <span className="text-xs font-semibold text-ink">${totalValue.toFixed(0)}</span>
+            <span className="text-xs font-semibold text-ink">{formatUSD(totalValue)}</span>
           </div>
           <div className="px-3 py-1.5 bg-surface rounded-lg border border-line flex items-center gap-1.5">
             <FiTrendingUp className="w-3.5 h-3.5 text-success-strong" />

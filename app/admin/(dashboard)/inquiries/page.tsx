@@ -1,6 +1,6 @@
 'use client';
 
-import { adminTab, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 
@@ -49,7 +49,7 @@ type Tab = 'messages' | 'requests';
 
 export default function InquiriesPage() {
     const { confirm } = useConfirm();
-    const { data: session } = useSession();
+    useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
     // Las alertas del sistema tienen su propia página desde C-73: los enlaces viejos ?tab=alerts van allá
@@ -83,7 +83,7 @@ export default function InquiriesPage() {
 
     // ============== MESSAGES FUNCTIONS ==============
 
-    const fetchMessages = async () => {
+    async function fetchMessages() {
         try {
             setMessagesLoading(true);
             const response = await fetch('/api/contact');
@@ -96,7 +96,7 @@ export default function InquiriesPage() {
         } finally {
             setMessagesLoading(false);
         }
-    };
+    }
 
     const handleMessageStatusChange = async (id: string, newStatus: string) => {
         try {
@@ -108,10 +108,10 @@ export default function InquiriesPage() {
 
             if (response.ok) {
                 setMessages(messages.map(msg =>
-                    msg.id === id ? { ...msg, status: newStatus as any } : msg
+                    msg.id === id ? { ...msg, status: newStatus as ContactMessage['status'] } : msg
                 ));
                 if (selectedMessage?.id === id) {
-                    setSelectedMessage({ ...selectedMessage, status: newStatus as any });
+                    setSelectedMessage({ ...selectedMessage, status: newStatus as ContactMessage['status'] });
                 }
                 toast.success('Estado actualizado');
                 window.dispatchEvent(new Event('refresh-sidebar-counts'));
@@ -169,7 +169,7 @@ export default function InquiriesPage() {
 
     // ============== REQUESTS FUNCTIONS ==============
 
-    const fetchRequests = async () => {
+    async function fetchRequests() {
         try {
             setRequestsLoading(true);
             const url = requestFilterStatus === 'all'
@@ -187,7 +187,7 @@ export default function InquiriesPage() {
         } finally {
             setRequestsLoading(false);
         }
-    };
+    }
 
     useEffect(() => {
         if (activeTab === 'requests') {
@@ -251,11 +251,11 @@ export default function InquiriesPage() {
     };
 
     const getRequestStatusBadge = (status: string) => {
-        const variants: any = {
+        const variants: Record<string, { variant: 'warning' | 'info' | 'success' | 'danger'; label: string }> = {
             PENDING: { variant: 'warning', label: 'Pendiente' },
             IN_PROGRESS: { variant: 'info', label: 'En Progreso' },
             FULFILLED: { variant: 'success', label: 'Cumplida' },
-            REJECTED: { variant: 'error', label: 'Rechazada' },
+            REJECTED: { variant: 'danger', label: 'Rechazada' },
         };
 
         const config = variants[status] || variants.PENDING;
@@ -333,7 +333,7 @@ export default function InquiriesPage() {
                             <div className="flex gap-2">
                                 <select
                                     value={messageFilterStatus}
-                                    onChange={(e) => setMessageFilterStatus(e.target.value as any)}
+                                    onChange={(e) => setMessageFilterStatus(e.target.value as 'ALL' | 'PENDING' | 'READ' | 'RESPONDED')}
                                     className="px-4 py-2 border border-line rounded-lg focus:outline-none focus:border-brand-500 text-sm bg-white"
                                 >
                                     <option value="ALL">Todos ({messages.length})</option>

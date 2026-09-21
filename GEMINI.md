@@ -3,7 +3,7 @@
 Lee este archivo COMPLETO antes de cada tarea. Si una instrucción de aquí choca con tu criterio, **gana este archivo**.
 
 Proyecto: tienda online (Next.js 16 App Router, React 19, Tailwind CSS 4, Prisma, NextAuth). Idioma de la interfaz: español de Venezuela.
-**Tu orden de trabajo (rondas, prompts y tarjetas G-09 a G-14): `docs/plan/PLAN_GEMINI.md`.**
+**Tu orden de trabajo (rondas, prompts y tarjetas desde G-09): `docs/plan/PLAN_GEMINI.md`. Las últimas rondas (R17-R19) están al final, en "Plan final de Gemini".**
 Contexto: `docs/plan/PLAN.md` (diseño) y `docs/plan/AUDITORIA.md` (problemas). Lo que hace Claude en paralelo: `docs/plan/PLAN_CLAUDE.md`.
 
 ---
@@ -44,6 +44,13 @@ docs/plan/estado/G-*.md      (solo archivos que empiecen con G-)
 # R13 (17/09): solo tu carril, sin app/customer/(dashboard)/orders/[id]/digital/** (lo rediseñó ChatGPT)
 # R14: app/api/** y lib/** SOLO TIPOS (sin lib/auth.ts ni app/api/customers/[id]/route.ts)
 # R15: scripts/** (G-52), emojis de correos y APIs y tildes (G-53)
+# R17-R19 (desde 21/09, ChatGPT en pausa): lista exacta en PLAN_GEMINI.md, "Plan final de Gemini".
+#   R17: tu carril + una línea de components/onboarding/GuidedTourWrapper.tsx (G-55)
+#   R18: pantallas del admin sin dueño (orders, customers, transactions, reports, payments, inquiries,
+#        messages, product-requests, discount-requests, reviews, verifications, categories, servicios, legal),
+#        app/admin/(dashboard)/products/page.tsx (solo G-58), app/creator/dashboard/cursos/** y
+#        app/customer/(dashboard)/orders/[id]/digital/** (solo G-59 y G-60)
+#   R19: solo docs/plan/estado/G-61.md
 # Solo en R12 y solo para cambiar clases (ver PLAN_GEMINI.md, "Reglas de R12"):
 #   app/checkout/page.tsx   components/checkout/CheckoutPagoMovilForm.tsx   components/pago-movil/VerificarPagoMovilForm.tsx
 #   components/ui/**   components/Footer.tsx   components/UserAccountButton.tsx   components/CartIcon.tsx
@@ -65,6 +72,7 @@ Excepciones puntuales (solo cuando la tarea lo dice):
     - Tocar cálculos de precios, costos, saldos o stock, o agregar o quitar campos de formularios.
     - Mover lógica entre archivos o crear componentes nuevos.
   - **Fuera de límites hasta nuevo aviso:** `app/admin/(dashboard)/settings/**` (Claude) y `app/admin/(dashboard)/products/**` (ChatGPT R2 desde el 17/09).
+    En R18 se abre solo `products/page.tsx` para G-58; `products/_components/**` sigue fuera.
     Únicas excepciones: los 6 archivos de **G-29** (solo `className`). En **R9 (G-31…G-34)** se rehace el resto del admin con `lib/admin-ui.ts`, pero `layout.tsx`, `settings/**` y `products/**` siguen fuera.
   - **`components/modals/RechargeModalV2.tsx` (G-38):** la tasa se lee de `/api/settings/public` (`exchangeRateVES`) desde C-72. No volver a `/api/exchange-rates`: el servidor aprueba la recarga con la tasa de la tienda.
   - **`components/notifications/**`, `lib/admin-events/**`, `lib/telegram/**` y `app/admin/(dashboard)/notifications/**` son carril Claude (C-73).** Para íconos de notificaciones usa `notificationMeta` y `timeAgo` de `@/components/notifications/notification-meta`.

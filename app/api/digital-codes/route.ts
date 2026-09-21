@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
 
 // GET - Get digital codes for a product (admin only)
 export async function GET(request: Request) {
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
                 stock: { increment: uniqueCodes.length }
             }
         });
+        revalidateStorefront();
 
         return NextResponse.json({
             success: true,
@@ -178,6 +180,7 @@ export async function DELETE(request: Request) {
                 stock: { decrement: 1 }
             }
         });
+        revalidateStorefront();
 
         return NextResponse.json({
             success: true,

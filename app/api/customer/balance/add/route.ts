@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { montoDecimal } from '@/lib/pricing';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
@@ -109,9 +110,10 @@ export async function POST(request: NextRequest) {
         const [updatedBalance, transaction] = await prisma.$transaction([
             prisma.userBalance.update({
                 where: { userId },
+                // increment (C-96): antes se escribía el saldo leído + el monto, y dos ajustes a la vez se pisaban
                 data: {
-                    balance: newBalance,
-                    totalRecharges: { increment: amount },
+                    balance: { increment: montoDecimal(amount) },
+                    totalRecharges: { increment: montoDecimal(amount) },
                 }
             }),
             prisma.transaction.create({
@@ -119,7 +121,7 @@ export async function POST(request: NextRequest) {
                     balanceId: userBalance.id,
                     type: 'DEPOSIT',
                     status: 'COMPLETED',
-                    amount: amount,
+                    amount: montoDecimal(amount),
                     currency: 'USD',
                     description: description || `Ajuste manual por admin: ${reason || 'Sin razón especificada'}`,
                 }

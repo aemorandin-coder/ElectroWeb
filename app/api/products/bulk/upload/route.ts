@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { generateShortCode } from '@/lib/short-code';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
 
 interface ProductRow {
   nombre: string;
@@ -133,6 +134,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (results.success > 0) revalidateStorefront();
     return NextResponse.json({
       message: 'Carga masiva completada',
       results,

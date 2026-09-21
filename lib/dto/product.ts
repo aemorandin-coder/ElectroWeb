@@ -5,6 +5,7 @@
 import type { Brand, Category, DigitalVariant, Prisma, Product, ProductType } from '@prisma/client';
 import { formatFaceValue, guessLegacyUnit, isDigitalUnit, type DigitalUnit } from '@/lib/digital-catalog';
 import { parseProductImages } from '@/lib/product-utils';
+import { INTERNAL_SPEC_KEYS } from '@/lib/product-specs';
 
 // category es obligatoria en el esquema: consultar siempre con publicProductInclude
 export type ProductWithPublicRelations = Product & {
@@ -81,7 +82,7 @@ function toPublicSpecs(specs: string | null): Record<string, unknown> | null {
   const parsed = parseSpecs(specs);
   if (!parsed) return null;
   const rest = { ...parsed };
-  delete rest.digitalPricing;
+  for (const key of INTERNAL_SPEC_KEYS) delete rest[key];
   return rest;
 }
 

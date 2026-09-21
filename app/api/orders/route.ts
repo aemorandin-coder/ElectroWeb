@@ -25,7 +25,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { parseDeliveryMethod, parseOrderItems, quoteOrder, OrderInputError, type QuotedLine } from '@/lib/order-quote';
-import { roundMoney, type OrderGroupTotals } from '@/lib/pricing';
+import { montoDecimal, type OrderGroupTotals } from '@/lib/pricing';
 import {
   orderPatchSchema,
   transicionPermitida,
@@ -39,6 +39,7 @@ import {
   MOTIVO_CANCELACION_MINIMO,
 } from '@/lib/order-admin';
 import { recordPaidOrder, rejectOrderConversions } from '@/lib/influencer-commission';
+import { avisarPedidoDigitalPorEntregar } from '@/lib/digital-delivery';
 
 
 // GET - Get all orders
@@ -440,10 +441,11 @@ export async function POST(request: NextRequest) {
 
         const debited = userBalance
           ? await tx.userBalance.updateMany({
-            where: { id: userBalance.id, balance: { gte: calculation.totalUSD } },
+            // Montos como texto exacto (C-96): con number, un total de 9,45 llegaba como 9.449999999999999
+            where: { id: userBalance.id, balance: { gte: montoDecimal(calculation.totalUSD) } },
             data: {
-              balance: { decrement: calculation.totalUSD },
-              totalSpent: { increment: calculation.totalUSD },
+              balance: { decrement: montoDecimal(calculation.totalUSD) },
+              totalSpent: { increment: montoDecimal(calculation.totalUSD) },
             },
           })
           : { count: 0 };
@@ -466,7 +468,7 @@ export async function POST(request: NextRequest) {
               balanceId,
               type: 'PURCHASE',
               status: 'COMPLETED',
-              amount: totals.totalUSD,
+              amount: montoDecimal(totals.totalUSD),
               currency: 'USD',
               description: `Compra Orden #${orderNumber}`,
               reference: orderNumber,
@@ -481,13 +483,13 @@ export async function POST(request: NextRequest) {
             userId,
             shippingAddress: group.shippingAddress,
             deliveryMethod: group.deliveryMethod,
-            subtotalUSD: totals.subtotalUSD,
-            taxUSD: totals.taxUSD,
-            shippingUSD: totals.shippingUSD,
-            discountUSD: totals.discountUSD,
-            totalUSD: totals.totalUSD,
+            subtotalUSD: montoDecimal(totals.subtotalUSD),
+            taxUSD: montoDecimal(totals.taxUSD),
+            shippingUSD: montoDecimal(totals.shippingUSD),
+            discountUSD: montoDecimal(totals.discountUSD),
+            totalUSD: montoDecimal(totals.totalUSD),
             exchangeRate: 1,
-            totalVES: exchangeRateVES > 0 ? roundMoney(totals.totalUSD * exchangeRateVES) : 0,
+            totalVES: exchangeRateVES > 0 ? montoDecimal(totals.totalUSD * exchangeRateVES) : 0,
             exchangeRateVES: settings?.exchangeRateVES ?? null,
             exchangeRateEUR: settings?.exchangeRateEUR ?? null,
             paymentMethod,
@@ -502,9 +504,9 @@ export async function POST(request: NextRequest) {
                 productName: line.name,
                 productSku: line.productSku,
                 productImage: line.productImage,
-                priceUSD: line.unitPriceUSD,
+                priceUSD: montoDecimal(line.unitPriceUSD),
                 quantity: line.quantity,
-                totalUSD: roundMoney(line.unitPriceUSD * line.quantity),
+                totalUSD: montoDecimal(line.unitPriceUSD * line.quantity),
                 digitalVariantId: line.digitalVariantId,
                 digitalVariantLabel: line.digitalVariantLabel,
                 digitalAccount: line.digitalAccount,
@@ -606,6 +608,10 @@ export async function POST(request: NextRequest) {
     // Notificaciones fuera de la transacción para que un fallo no afecte la compra
     for (const order of orders) {
       await sendNewOrderNotifications(order, userId, paymentMethod);
+    }
+    // Pagada al crearla (saldo o Pago Móvil verificado): si trae digitales, el equipo tiene que enviarlos (C-60b)
+    if (isPaymentConfirmed) {
+      for (const order of orders) void avisarPedidoDigitalPorEntregar(order.id);
     }
 
     // Stock descontado ya (pago confirmado): aviso si algún producto quedó bajo o agotado
@@ -760,8 +766,8 @@ export async function PATCH(request: NextRequest) {
             await tx.userBalance.update({
               where: { id: saldo.id },
               data: {
-                balance: { increment: total },
-                totalSpent: { decrement: total },
+                balance: { increment: montoDecimal(total) },
+                totalSpent: { decrement: montoDecimal(total) },
               },
             });
             await tx.transaction.create({
@@ -769,7 +775,7 @@ export async function PATCH(request: NextRequest) {
                 balanceId: saldo.id,
                 type: 'REFUND',
                 status: 'COMPLETED',
-                amount: total,
+                amount: montoDecimal(total),
                 currency: 'USD',
                 description: `Saldo devuelto por la cancelación de la orden #${orden.orderNumber}`,
                 reference: orden.orderNumber,
@@ -830,6 +836,7 @@ export async function PATCH(request: NextRequest) {
     // Pago confirmado: si el cliente llegó por un promotor, nace su comisión pendiente (C-75)
     if (confirmandoPago) {
       recordPaidOrder(order.id).catch((error) => console.error('Error registrando comisión de promotor:', error));
+      void avisarPedidoDigitalPorEntregar(order.id);
     }
 
     // Avisos al cliente (fuera de la transacción: correos y notificaciones no deben bloquear el cambio)

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { montoDecimal } from '@/lib/pricing';
 import {
     checkRateLimit,
     getClientIP,
@@ -269,8 +270,9 @@ export async function POST(request: NextRequest) {
 
             const updatedUserBalance = await tx.userBalance.upsert({
                 where: { userId },
-                create: { userId, balance: balance, currency: 'USD', totalSpent: 0, totalRecharges: balance },
-                update: { balance: { increment: balance }, totalRecharges: { increment: balance } }
+                // Texto exacto (C-96)
+                create: { userId, balance: montoDecimal(balance), currency: 'USD', totalSpent: 0, totalRecharges: montoDecimal(balance) },
+                update: { balance: { increment: montoDecimal(balance) }, totalRecharges: { increment: montoDecimal(balance) } }
             });
 
             // Create wallet transaction with idempotency key
@@ -279,7 +281,7 @@ export async function POST(request: NextRequest) {
                     balanceId: updatedUserBalance.id,
                     type: 'DEPOSIT',
                     status: 'COMPLETED',
-                    amount: balance,
+                    amount: montoDecimal(balance),
                     currency: 'USD',
                     description: `Canje de Gift Card ****${giftCard.code.slice(-4)}${idempotencyKey ? ` [${idempotencyKey}]` : ''}`,
                     reference: giftCard.id,
@@ -292,8 +294,8 @@ export async function POST(request: NextRequest) {
                 data: {
                     giftCardId: giftCard.id,
                     type: 'REDEMPTION',
-                    amountUSD: balance,
-                    balanceBefore: balance,
+                    amountUSD: montoDecimal(balance),
+                    balanceBefore: montoDecimal(balance),
                     balanceAfter: 0,
                     userId,
                     userEmail: session.user.email,

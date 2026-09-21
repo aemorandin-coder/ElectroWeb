@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import ImageUploadField from '@/components/ui/ImageUploadField';
-import { FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiX } from 'react-icons/fi';
 
 const CATEGORIES = ['Redes', 'CCTV', 'Electrónica', 'Gaming', 'Programación', 'Hardware', 'Software', 'Otro'];
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
@@ -13,6 +13,8 @@ const INPUT = 'w-full px-4 py-2.5 bg-white border border-line rounded-xl text-in
 
 type Lesson = { id?: string; title: string; description: string; videoUrl: string; duration: string; isFree: boolean; order: number };
 type Module = { id?: string; title: string; order: number; lessons: Lesson[] };
+type ApiLesson = { id?: string; title: string; description?: string | null; videoUrl?: string | null; duration?: number | null; isFree?: boolean; order?: number };
+type ApiModule = { id?: string; title: string; order?: number; lessons: ApiLesson[] };
 type Course = {
   id: string; title: string; shortDesc: string | null; description: string; trailerUrl: string | null;
   category: string | null; level: string | null; priceUSD: number; thumbnail: string | null;
@@ -47,9 +49,9 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
             priceUSD: data.priceUSD.toString(),
             thumbnail: data.thumbnail ?? '',
           });
-          setModules(data.modules.map((m: any) => ({
+          setModules(data.modules.map((m: ApiModule) => ({
             id: m.id, title: m.title, order: m.order,
-            lessons: m.lessons.map((l: any) => ({
+            lessons: m.lessons.map((l: ApiLesson) => ({
               id: l.id, title: l.title, description: l.description ?? '', videoUrl: l.videoUrl ?? '',
               duration: l.duration?.toString() ?? '', isFree: l.isFree, order: l.order,
             })),
@@ -102,7 +104,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
       ...m, lessons: [...m.lessons, { title: 'Nueva Lección', description: '', videoUrl: '', duration: '', isFree: false, order: m.lessons.length }],
     }));
   }
-  function updLesson(mIdx: number, lIdx: number, field: string, value: any) {
+  function updLesson(mIdx: number, lIdx: number, field: string, value: string | boolean | number) {
     setModules((p) => p.map((m, i) => i !== mIdx ? m : {
       ...m, lessons: m.lessons.map((l, j) => j !== lIdx ? l : { ...l, [field]: value }),
     }));
@@ -126,21 +128,21 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
       <div className="max-w-md mx-auto mt-16 text-center">
         <p className="text-muted">Curso no encontrado.</p>
         <Link href="/creator/dashboard/cursos" className="text-brand-600 text-sm hover:underline mt-3 block">
-          ← Volver
+          <FiArrowLeft className="mr-1 inline h-4 w-4" aria-hidden="true" /> Volver
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6 pb-20 lg:pb-0">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link href="/creator/dashboard/cursos" className="text-muted hover:text-ink text-sm transition-colors flex items-center gap-1 mb-2">
-            ← Mis Cursos
+            <FiArrowLeft className="h-4 w-4" aria-hidden="true" /> Mis Cursos
           </Link>
-          <h1 className={`${adminPageTitle} line-clamp-1`}>{course.title}</h1>
+          <h1 className={`${adminPageTitle} break-words`}>{course.title}</h1>
           <div className="flex items-center gap-2 mt-1">
             <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
               course.isActive ? 'bg-success/15 text-success-strong' : 'bg-warning/15 text-warning-strong'
@@ -157,12 +159,12 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-surface border border-line rounded-xl w-fit">
+      <div className="flex w-full gap-1 rounded-xl border border-line bg-surface p-1 sm:w-fit">
         {(['info', 'curriculum'] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all ${
+            className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition-all sm:flex-none sm:px-5 ${
               tab === t ? 'bg-brand-600 text-white' : 'text-ink-soft hover:text-ink'
             }`}
           >
@@ -173,7 +175,8 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
 
       {/* Info Tab */}
       {tab === 'info' && (
-        <div className="bg-white border border-line rounded-2xl p-6 space-y-5">
+        <div className="space-y-5 rounded-2xl border border-line bg-white p-4 sm:p-6">
+          <h2 className="text-base font-semibold text-ink">1. Datos del curso</h2>
           <Field label="Título *">
             <input value={form.title} onChange={(e) => upd('title', e.target.value)} className={INPUT} />
           </Field>
@@ -183,7 +186,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
           <Field label="Descripción Completa *">
             <textarea value={form.description} onChange={(e) => upd('description', e.target.value)} rows={4} className={INPUT + ' resize-none'} />
           </Field>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Categoría">
               <select value={form.category} onChange={(e) => upd('category', e.target.value)} className={INPUT}>
                 <option value="">Sin categoría</option>
@@ -196,33 +199,29 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
               </select>
             </Field>
           </div>
+          <h2 className="border-t border-line pt-5 text-base font-semibold text-ink">2. Precio y presentación</h2>
           <Field label="Precio (USD) *">
             <input type="number" min="0" step="0.01" value={form.priceUSD} onChange={(e) => upd('priceUSD', e.target.value)} className={INPUT} />
           </Field>
           <Field label="URL Trailer">
             <input value={form.trailerUrl} onChange={(e) => upd('trailerUrl', e.target.value)} className={INPUT} placeholder="https://youtube.com/watch?v=..." />
           </Field>
+          <div className="min-w-0 rounded-xl bg-brand-950 p-3">
           <ImageUploadField
             label="Miniatura del Curso (Thumbnail)"
             value={form.thumbnail}
             onChange={(url) => upd('thumbnail', url)}
             placeholder="https://... o sube una imagen"
           />
-          <div className="flex justify-end">
-            <button
-              onClick={saveInfo}
-              disabled={saving}
-              className={`${adminPrimaryButton} px-6 py-2.5 text-sm font-bold rounded-xl disabled:opacity-50`}
-            >
-              {saving ? 'Guardando...' : 'Guardar Información'}
-            </button>
           </div>
+
         </div>
       )}
 
       {/* Curriculum Tab */}
       {tab === 'curriculum' && (
         <div className="space-y-4">
+          <h2 className="text-base font-semibold text-ink">3. Contenido del curso</h2>
           <p className="text-muted text-xs">
             Sube tus videos a YouTube (sin listar) o Vimeo, luego pega la URL de la lección aquí.
           </p>
@@ -230,12 +229,12 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
           {modules.map((mod, mIdx) => (
             <div key={mIdx} className="bg-white border border-line rounded-2xl overflow-hidden">
               {/* Module header */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-line bg-surface">
+              <div className="flex min-w-0 items-center gap-2 border-b border-line bg-surface px-3 py-3 sm:gap-3 sm:px-4">
                 <span className="text-muted text-xs font-bold w-6">{mIdx + 1}</span>
                 <input
                   value={mod.title}
                   onChange={(e) => updModule(mIdx, e.target.value)}
-                  className="flex-1 bg-transparent text-ink text-sm font-bold focus:outline-none placeholder-muted"
+                  className="min-w-0 flex-1 bg-transparent text-sm font-bold text-ink placeholder-muted focus:outline-none"
                   placeholder="Título del módulo"
                 />
                 <button
@@ -267,27 +266,27 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                         <FiX className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 pl-7">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:pl-7">
                       <input
                         value={lesson.videoUrl}
                         onChange={(e) => updLesson(mIdx, lIdx, 'videoUrl', e.target.value)}
-                        className="col-span-2 bg-white border border-line rounded-lg px-3 py-1.5 text-ink text-xs focus:outline-none focus:border-brand-500"
+                        className="w-full bg-white border border-line rounded-lg px-3 py-1.5 text-ink text-xs focus:outline-none focus:border-brand-500 sm:col-span-2"
                         placeholder="URL del video (YouTube/Vimeo)"
                       />
                       <input
                         value={lesson.description}
                         onChange={(e) => updLesson(mIdx, lIdx, 'description', e.target.value)}
-                        className="bg-white border border-line rounded-lg px-3 py-1.5 text-ink text-xs focus:outline-none focus:border-brand-500"
+                        className="min-w-0 w-full bg-white border border-line rounded-lg px-3 py-1.5 text-ink text-xs focus:outline-none focus:border-brand-500"
                         placeholder="Descripción breve"
                       />
                       <input
                         type="number"
                         value={lesson.duration}
                         onChange={(e) => updLesson(mIdx, lIdx, 'duration', e.target.value)}
-                        className="bg-white border border-line rounded-lg px-3 py-1.5 text-ink text-xs focus:outline-none focus:border-brand-500"
+                        className="min-w-0 w-full bg-white border border-line rounded-lg px-3 py-1.5 text-ink text-xs focus:outline-none focus:border-brand-500"
                         placeholder="Duración (minutos)"
                       />
-                      <label className="flex items-center gap-2 col-span-2 cursor-pointer group pl-1">
+                      <label className="flex cursor-pointer items-center gap-2 pl-1 sm:col-span-2">
                         <input
                           type="checkbox"
                           checked={lesson.isFree}
@@ -321,17 +320,22 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
             + Agregar Módulo
           </button>
 
-          <div className="flex justify-end">
-            <button
-              onClick={saveCurriculum}
-              disabled={savingCurr}
-              className={`${adminPrimaryButton} px-6 py-2.5 text-sm font-bold rounded-xl disabled:opacity-50`}
-            >
-              {savingCurr ? 'Guardando...' : 'Guardar Currículum'}
-            </button>
-          </div>
+
         </div>
       )}
+      <div className="fixed inset-x-0 bottom-0 z-[var(--z-sticky)] border-t border-line bg-white p-3 shadow-lg lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+        <div className="mx-auto max-w-3xl lg:flex lg:justify-end">
+          {tab === 'info' ? (
+            <button onClick={saveInfo} disabled={saving} className={`${adminPrimaryButton} w-full px-6 py-2.5 text-sm font-bold disabled:opacity-50 lg:w-auto`}>
+              {saving ? 'Guardando...' : 'Guardar Información'}
+            </button>
+          ) : (
+            <button onClick={saveCurriculum} disabled={savingCurr} className={`${adminPrimaryButton} w-full px-6 py-2.5 text-sm font-bold disabled:opacity-50 lg:w-auto`}>
+              {savingCurr ? 'Guardando...' : 'Guardar Currículum'}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

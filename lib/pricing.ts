@@ -71,6 +71,16 @@ export function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+/**
+ * Monto listo para una columna Decimal (C-96): texto con 2 decimales.
+ * Prisma 6 convierte un number de JS con 16 cifras significativas y guarda el arrastre binario
+ * (9.45 → 9.449999999999999). Invisible en pantalla, pero un saldo de $9,45 guardado así no alcanzaba
+ * para un precio exacto de $9,45. Para escribir dinero, y para compararlo en un where, siempre esto.
+ */
+export function montoDecimal(value: number): string {
+  return roundMoney(value).toFixed(2);
+}
+
 function toNumber(value: NumberLike): number {
   if (value === null || value === undefined) return 0;
   const n = typeof value === 'number' ? value : Number(value.toString());

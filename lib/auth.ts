@@ -5,7 +5,9 @@ import { cookies } from 'next/headers';
 import { entrarConProveedor, googleHabilitado } from '@/lib/auth-social';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { prisma } from '@/lib/prisma';
-import { buscarUsuarioPorCorreo } from '@/lib/correo';
+import { buscarUsuarioPorCorreo, normalizarCorreo } from '@/lib/correo';
+import { verifyCaptcha } from '@/lib/captcha';
+import { estadoLogin, registrarAcierto, registrarFallo } from '@/lib/login-guard';
 import * as bcrypt from 'bcryptjs';
 import { headers } from 'next/headers';
 
@@ -51,6 +53,32 @@ async function registrarAcceso(userId: string, nombre: string, isAdmin: boolean,
   }
 }
 
+/** IP de quien intenta entrar (misma fuente que el resto de los límites; ver lib/login-guard.ts). */
+async function ipDeLaPeticion(): Promise<string> {
+  try {
+    const reqHeaders = await headers();
+    return reqHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() || reqHeaders.get('x-real-ip') || 'desconocida';
+  } catch {
+    return 'desconocida';
+  }
+}
+
+/**
+ * Estado de la cuenta al entrar, con contraseña o con Google (C-80):
+ * - SUSPENDED: la desactivó la tienda (C-92). No entra.
+ * - DEACTIVATED: la desactivó el propio cliente en Configuración, que le promete "podrás reactivarla
+ *   iniciando sesión". Entrar la reactiva.
+ * - PENDING_DELETION: entra; Configuración le muestra cómo cancelar la eliminación.
+ */
+async function cuentaPuedeEntrar(userId: string): Promise<boolean> {
+  const perfil = await prisma.profile.findUnique({ where: { userId }, select: { accountStatus: true } });
+  if (perfil?.accountStatus === 'SUSPENDED') return false;
+  if (perfil?.accountStatus === 'DEACTIVATED') {
+    await prisma.profile.update({ where: { userId }, data: { accountStatus: 'ACTIVE', deactivatedAt: null } });
+  }
+  return true;
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -60,15 +88,25 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
         userType: { label: 'User Type', type: 'text' }, // Kept for compatibility but ignored logic-wise
+        captchaToken: { label: 'Captcha', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Email and password are required');
         }
 
+        // Límite de intentos en el servidor (C-80): espera progresiva y, tras 2 fallos, captcha obligatorio
+        const correo = normalizarCorreo(credentials.email);
+        const ip = await ipDeLaPeticion();
+        const estado = estadoLogin(correo, ip);
+        if (estado.esperar > 0) throw new Error(`DEMASIADOS_INTENTOS:${estado.esperar}`);
+        if (estado.pideCaptcha && !(await verifyCaptcha(credentials.captchaToken, ip)).ok) {
+          throw new Error('CAPTCHA_REQUERIDO');
+        }
+
         // Unified login: check User table for both admins and customers
         // Sin distinguir mayúsculas ni espacios: el registro guarda el correo en minúsculas (C-83)
-        const user = await buscarUsuarioPorCorreo(credentials.email);
+        const user = await buscarUsuarioPorCorreo(correo);
 
         // Cuenta creada con Google (sin contraseña): decirlo en vez de "incorrectos" (C-85)
         if (user && !user.password) {
@@ -82,6 +120,9 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (isPasswordValid) {
+            registrarAcierto(correo);
+            if (!(await cuentaPuedeEntrar(user.id))) throw new Error('CUENTA_SUSPENDIDA');
+
             const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
 
             // SUPER_ADMIN single session rule: delete all previous sessions
@@ -107,7 +148,8 @@ export const authOptions: NextAuthOptions = {
           }
         }
 
-        throw new Error('Credenciales invalidas');
+        const esperar = registrarFallo(correo, ip);
+        throw new Error(esperar > 0 ? `DEMASIADOS_INTENTOS:${esperar}` : 'Credenciales invalidas');
       },
     }),
     // C-85: solo existe si las dos variables están en el entorno
@@ -157,6 +199,7 @@ export const authOptions: NextAuthOptions = {
         select: { id: true, name: true, email: true, image: true, role: true, emailVerified: true, sessionVersion: true },
       });
       if (!dbUser) return `/login?error=${account.provider}-sin-correo`;
+      if (!(await cuentaPuedeEntrar(dbUser.id))) return '/login?error=cuenta-suspendida';
 
       Object.assign(user, {
         id: dbUser.id,
@@ -182,13 +225,14 @@ export const authOptions: NextAuthOptions = {
         token.emailVerified = (user as any).emailVerified;
         token.sessionVersion = (user as any).sessionVersion;
       } else if (token.id) {
-        // Validate sessionVersion is still valid on subsequent requests
+        // Validate sessionVersion is still valid on subsequent requests.
+        // Una cuenta suspendida por la tienda (C-80/C-92) pierde también la sesión que ya tenía abierta.
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { sessionVersion: true }
+          select: { sessionVersion: true, profile: { select: { accountStatus: true } } }
         });
         const tokenVersion = token.sessionVersion !== undefined ? token.sessionVersion : 0;
-        if (!dbUser || dbUser.sessionVersion !== tokenVersion) {
+        if (!dbUser || dbUser.sessionVersion !== tokenVersion || dbUser.profile?.accountStatus === 'SUSPENDED') {
           return {} as any;
         }
       }

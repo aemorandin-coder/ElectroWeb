@@ -1,12 +1,12 @@
 'use client';
 
-import { adminPageHeader, adminPageTitle, adminTab, adminTableWrap, adminTable, adminTh, adminRowHover, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminTableWrap, adminTable, adminRowHover, adminModalOverlay } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiCheckCircle, FiXCircle, FiClock, FiFileText, FiDownload, FiSearch, FiFilter, FiEye, FiUsers } from 'react-icons/fi';
+import { FiCheckCircle, FiXCircle, FiClock, FiFileText, FiDownload, FiEye, FiUsers } from 'react-icons/fi';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 
@@ -39,7 +39,7 @@ export default function VerificationsPage() {
         fetchRequests();
     }, [filter]);
 
-    const fetchRequests = async () => {
+    async function fetchRequests() {
         setLoading(true);
         try {
             const response = await fetch(`/api/admin/verifications?status=${filter}`);
@@ -53,7 +53,7 @@ export default function VerificationsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const handleAction = async (status: 'APPROVED' | 'REJECTED') => {
         if (!selectedRequest) return;

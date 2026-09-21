@@ -8,12 +8,13 @@ import { leerDocumento, leerTelefono, nombreSchema } from '@/lib/validations/reg
 
 // null se acepta como vacío: la ruta ya lo trataba así
 const texto = (max: number) => z.string().trim().max(max, `Máximo ${max} caracteres`).nullable();
-// Avatar subido a la tienda o foto https (la de Google, por ejemplo). Antes se guardaba cualquier texto.
+// Avatar subido a la tienda o la foto de Google (C-85). Antes se guardaba cualquier texto, y después cualquier
+// https: una foto de otro dominio sale rota en todo next/image (C-80, next.config.js remotePatterns).
 const imagen = z
   .string()
   .trim()
   .max(500)
-  .refine((v) => v === '' || /^\/(api\/)?uploads\/[\w./-]+$/.test(v) && !v.includes('..') || /^https:\/\/[^\s]+$/i.test(v), 'Imagen inválida')
+  .refine((v) => v === '' || /^\/(api\/)?uploads\/[\w./-]+$/.test(v) && !v.includes('..') || /^https:\/\/[a-z0-9-]+\.googleusercontent\.com\/[^\s]+$/i.test(v), 'Imagen inválida')
   .nullable()
   .transform((v) => v || null);
 
@@ -35,12 +36,37 @@ const datosPerfil = z.object({
 
 const perfilSchema = datosPerfil.extend({
   name: z.string().max(120).nullable().optional(),
-  image: imagen.optional(),
+  // La pantalla reenvía siempre la foto actual: solo se valida si cambia (abajo)
+  image: z.string().trim().max(500).nullable().optional(),
   profile: datosPerfil.optional(),
   address: z
     .object({ state: texto(80).optional(), city: texto(80).optional(), street: texto(300).optional(), zipCode: texto(20).optional() })
     .optional(),
 });
+
+const PERFIL_PUBLICO = {
+  avatar: true,
+  idNumber: true,
+  phone: true,
+  whatsapp: true,
+  bio: true,
+  birthdate: true,
+  gender: true,
+  city: true,
+  state: true,
+  country: true,
+  customerType: true,
+  companyName: true,
+  taxId: true,
+  isBusinessAccount: true,
+  businessVerified: true,
+  businessVerificationStatus: true,
+  businessVerificationNotes: true,
+  businessRIF: true,
+  businessConstitutiveAct: true,
+  businessRIFDocument: true,
+  savedAddresses: true,
+} satisfies Prisma.ProfileSelect;
 
 export async function GET() {
   try {
@@ -49,10 +75,16 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    // Lista blanca (C-80): antes salía la fila entera (IP y dispositivo del último acceso, carrito guardado,
+    // motivo de eliminación…). Solo lo que leen el perfil, el checkout, los términos del saldo y el panel.
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      include: {
-        profile: true,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        profile: { select: PERFIL_PUBLICO },
       },
     });
 
@@ -92,7 +124,7 @@ export async function PUT(request: NextRequest) {
 
     const actual = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { name: true, profile: { select: { idNumber: true, phone: true, whatsapp: true } } },
+      select: { name: true, image: true, profile: { select: { idNumber: true, phone: true, whatsapp: true } } },
     });
     if (!actual) {
       return NextResponse.json({ success: false, error: 'Usuario no encontrado' }, { status: 404 });
@@ -107,8 +139,10 @@ export async function PUT(request: NextRequest) {
       if (!nombre.success) return NextResponse.json({ success: false, error: nombre.error.issues[0].message }, { status: 400 });
       userUpdateData.name = nombre.data;
     }
-    if (body.image !== undefined) {
-      userUpdateData.image = body.image;
+    if (body.image !== undefined && (body.image || null) !== actual.image) {
+      const nueva = imagen.safeParse(body.image);
+      if (!nueva.success) return NextResponse.json({ success: false, error: nueva.error.issues[0].message }, { status: 400 });
+      userUpdateData.image = nueva.data;
     }
 
     if (Object.keys(userUpdateData).length > 0) {

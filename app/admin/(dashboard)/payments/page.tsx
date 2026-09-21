@@ -15,13 +15,12 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
 import {
-    adminPageHeader, adminPageTitle, adminPageSubtitle,
-    adminPrimaryButton, adminSecondaryButton,
-    adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle,
-    adminModalBody, adminStatCard, adminStatLabel, adminStatValue,
-    adminIconChip, adminLabel, adminInput, adminEmpty, adminBadge
+    adminPageTitle, adminPageSubtitle,
+    adminModalOverlay, adminModalPanel
 } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+
+type IconLib = Record<string, React.ComponentType<{ className?: string }>>;
 
 const renderCustomIcon = (iconName: string, className = "w-7 h-7") => {
     if (!iconName) return null;
@@ -34,31 +33,31 @@ const renderCustomIcon = (iconName: string, className = "w-7 h-7") => {
         }
     }
     
-    if (name.startsWith('Fi') && (FiIcons as any)[name]) {
-        const IconComponent = (FiIcons as any)[name];
+    if (name.startsWith('Fi') && (FiIcons as IconLib)[name]) {
+        const IconComponent = (FiIcons as IconLib)[name];
         return <IconComponent className={className} />;
     }
-    if (name.startsWith('Fa') && (Fa6Icons as any)[name]) {
-        const IconComponent = (Fa6Icons as any)[name];
+    if (name.startsWith('Fa') && (Fa6Icons as IconLib)[name]) {
+        const IconComponent = (Fa6Icons as IconLib)[name];
         return <IconComponent className={className} />;
     }
-    if (name.startsWith('Fa') && (FaIcons as any)[name]) {
-        const IconComponent = (FaIcons as any)[name];
+    if (name.startsWith('Fa') && (FaIcons as IconLib)[name]) {
+        const IconComponent = (FaIcons as IconLib)[name];
         return <IconComponent className={className} />;
     }
-    if (name.startsWith('Md') && (MdIcons as any)[name]) {
-        const IconComponent = (MdIcons as any)[name];
+    if (name.startsWith('Md') && (MdIcons as IconLib)[name]) {
+        const IconComponent = (MdIcons as IconLib)[name];
         return <IconComponent className={className} />;
     }
-    if (name.startsWith('Bs') && (BsIcons as any)[name]) {
-        const IconComponent = (BsIcons as any)[name];
+    if (name.startsWith('Bs') && (BsIcons as IconLib)[name]) {
+        const IconComponent = (BsIcons as IconLib)[name];
         return <IconComponent className={className} />;
     }
 
-    const allLibs = [FiIcons, Fa6Icons, FaIcons, MdIcons, BsIcons];
+    const allLibs: IconLib[] = [FiIcons as IconLib, Fa6Icons as IconLib, FaIcons as IconLib, MdIcons as IconLib, BsIcons as IconLib];
     for (const lib of allLibs) {
-        if ((lib as any)[name]) {
-            const IconComponent = (lib as any)[name];
+        if (lib[name]) {
+            const IconComponent = lib[name];
             return <IconComponent className={className} />;
         }
     }
@@ -222,7 +221,7 @@ export default function PaymentsPage() {
         fetchMethods();
     }, []);
 
-    const fetchMethods = async () => {
+    async function fetchMethods() {
         setLoading(true);
         try {
             const response = await fetch('/api/admin/payments');
@@ -242,7 +241,7 @@ export default function PaymentsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const seedInitialMethods = async () => {
         try {

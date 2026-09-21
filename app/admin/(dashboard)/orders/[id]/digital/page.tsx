@@ -7,8 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
     FiArrowLeft, FiSend, FiCheck, FiPackage, FiClock,
-    FiAlertCircle, FiUser, FiMail, FiPhone, FiMonitor, FiCopy,
-    FiPlus, FiTrash2, FiEdit
+    FiAlertCircle, FiMonitor
 } from 'react-icons/fi';
 import { BsNintendoSwitch } from 'react-icons/bs';
 import { SiSteam, SiPlaystation, SiRoblox } from 'react-icons/si';
@@ -30,6 +29,8 @@ import {
     adminNotice,
     adminSpinner,
 } from '@/lib/admin-ui';
+import { DIGITAL_PROVIDERS } from '@/lib/digital-catalog';
+import { formatUSD } from '@/lib/currency';
 
 
 interface DigitalCode {
@@ -49,6 +50,24 @@ interface DigitalItem {
     image: string | null;
     quantity: number;
     codes: DigitalCode[];
+    // Compra al proveedor (C-60b): solo llega al equipo
+    supplier?: string | null;
+    supplierOrderRef?: string | null;
+    supplierCostUSD?: number | null;
+}
+
+// Formulario de entrega por artículo. Proveedor, referencia y costo son opcionales (C-60b).
+type EntregaForm = { code: string; notes: string; supplier: string; supplierOrderRef: string; supplierCostUSD: string };
+const FORM_VACIO: EntregaForm = { code: '', notes: '', supplier: '', supplierOrderRef: '', supplierCostUSD: '' };
+
+/** "Eneba · Ref. 123 · Costo $9,00", o null si no se anotó nada. */
+function compraProveedor(item: DigitalItem): string | null {
+    const partes = [
+        item.supplier ? DIGITAL_PROVIDERS.find((p) => p.value === item.supplier)?.label ?? item.supplier : null,
+        item.supplierOrderRef ? `Ref. ${item.supplierOrderRef}` : null,
+        item.supplierCostUSD != null ? `Costo ${formatUSD(item.supplierCostUSD)}` : null,
+    ].filter(Boolean);
+    return partes.length > 0 ? partes.join(' · ') : null;
 }
 
 interface OrderData {
@@ -83,7 +102,7 @@ export default function AdminDigitalCodesPage() {
     const [sending, setSending] = useState<string | null>(null);
 
     // Form state for adding new codes
-    const [newCodes, setNewCodes] = useState<Record<string, { code: string; notes: string }>>({});
+    const [newCodes, setNewCodes] = useState<Record<string, EntregaForm>>({});
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -92,8 +111,8 @@ export default function AdminDigitalCodesPage() {
         }
 
         if (status === 'authenticated') {
-            const userRole = (session?.user as any)?.role;
-            if (!['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
+            const userRole = (session?.user as { role?: string })?.role;
+            if (!userRole || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
                 router.push('/');
                 return;
             }
@@ -101,7 +120,7 @@ export default function AdminDigitalCodesPage() {
         }
     }, [status, session]);
 
-    const fetchOrderData = async () => {
+    async function fetchOrderData() {
         try {
             const response = await fetch(`/api/orders/${orderId}/digital?orderId=${orderId}`);
             if (response.ok) {
@@ -109,10 +128,10 @@ export default function AdminDigitalCodesPage() {
                 setData(result);
 
                 // Initialize newCodes state for items without codes (using orderItemId as key)
-                const initialCodes: Record<string, { code: string; notes: string }> = {};
+                const initialCodes: Record<string, EntregaForm> = {};
                 result.digitalItems.forEach((item: DigitalItem) => {
                     if (item.codes.length < item.quantity) {
-                        initialCodes[item.orderItemId] = { code: '', notes: '' };
+                        initialCodes[item.orderItemId] = FORM_VACIO;
                     }
                 });
                 setNewCodes(initialCodes);
@@ -126,12 +145,19 @@ export default function AdminDigitalCodesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const sendCode = async (orderItemId: string) => {
         const codeData = newCodes[orderItemId];
         if (!codeData?.code.trim()) {
             toast.error('Ingresa un código válido');
+            return;
+        }
+
+        const costoTexto = codeData.supplierCostUSD.trim().replace(',', '.');
+        const costo = costoTexto ? Number(costoTexto) : null;
+        if (costo !== null && !(Number.isFinite(costo) && costo >= 0)) {
+            toast.error('El costo del proveedor debe ser un monto en USD');
             return;
         }
 
@@ -145,6 +171,9 @@ export default function AdminDigitalCodesPage() {
                     orderItemId,
                     code: codeData.code.trim(),
                     notes: codeData.notes.trim() || null,
+                    supplier: codeData.supplier || null,
+                    supplierOrderRef: codeData.supplierOrderRef.trim() || null,
+                    supplierCostUSD: costo,
                 }),
             });
 
@@ -153,7 +182,7 @@ export default function AdminDigitalCodesPage() {
                 // Clear the form and refresh data
                 setNewCodes(prev => ({
                     ...prev,
-                    [orderItemId]: { code: '', notes: '' }
+                    [orderItemId]: FORM_VACIO
                 }));
                 fetchOrderData();
             } else {
@@ -167,6 +196,9 @@ export default function AdminDigitalCodesPage() {
             setSending(null);
         }
     };
+
+    const setCampo = (orderItemId: string, campo: keyof EntregaForm, valor: string) =>
+        setNewCodes(prev => ({ ...prev, [orderItemId]: { ...(prev[orderItemId] ?? FORM_VACIO), [campo]: valor } }));
 
     const getPlatformIcon = (platform: string | null) => {
         if (!platform) return <FaGamepad className="w-5 h-5" />;
@@ -320,6 +352,7 @@ export default function AdminDigitalCodesPage() {
                                             <p className="text-sm text-muted">
                                                 {item.codes.length} de {item.quantity} código(s) enviado(s)
                                             </p>
+                                            {compraProveedor(item) && <p className="text-xs text-muted">{compraProveedor(item)}</p>}
                                         </div>
                                     </div>
                                 </div>
@@ -359,6 +392,49 @@ export default function AdminDigitalCodesPage() {
                                                 className={adminInput()}
                                                 disabled={!isPaid || sending === item.orderItemId}
                                             />
+                                        </div>
+
+                                        {/* Compra al proveedor (C-60b): opcional, solo la ve el equipo */}
+                                        <div className="grid gap-3 sm:grid-cols-3">
+                                            <div>
+                                                <label htmlFor={`proveedor-${item.orderItemId}`} className={adminLabel}>Proveedor</label>
+                                                <select
+                                                    id={`proveedor-${item.orderItemId}`}
+                                                    value={newCodes[item.orderItemId]?.supplier || ''}
+                                                    onChange={(e) => setCampo(item.orderItemId, 'supplier', e.target.value)}
+                                                    className={adminInput()}
+                                                    disabled={!isPaid || sending === item.orderItemId}
+                                                >
+                                                    <option value="">Sin indicar</option>
+                                                    {DIGITAL_PROVIDERS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label htmlFor={`referencia-${item.orderItemId}`} className={adminLabel}>Referencia de compra</label>
+                                                <input
+                                                    id={`referencia-${item.orderItemId}`}
+                                                    type="text"
+                                                    maxLength={120}
+                                                    value={newCodes[item.orderItemId]?.supplierOrderRef || ''}
+                                                    onChange={(e) => setCampo(item.orderItemId, 'supplierOrderRef', e.target.value)}
+                                                    placeholder="N.º de pedido"
+                                                    className={adminInput()}
+                                                    disabled={!isPaid || sending === item.orderItemId}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor={`costo-${item.orderItemId}`} className={adminLabel}>Costo (USD)</label>
+                                                <input
+                                                    id={`costo-${item.orderItemId}`}
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    value={newCodes[item.orderItemId]?.supplierCostUSD || ''}
+                                                    onChange={(e) => setCampo(item.orderItemId, 'supplierCostUSD', e.target.value)}
+                                                    placeholder="0,00"
+                                                    className={adminInput()}
+                                                    disabled={!isPaid || sending === item.orderItemId}
+                                                />
+                                            </div>
                                         </div>
 
                                         <button
@@ -419,6 +495,7 @@ export default function AdminDigitalCodesPage() {
                                                 <span>{item.platform || 'Digital'}</span>
                                             </div>
                                             <h3 className="font-semibold text-ink">{item.productName}</h3>
+                                            {compraProveedor(item) && <p className="text-xs text-muted">{compraProveedor(item)}</p>}
                                         </div>
                                         <div className={adminBadge('success')}>
                                             <FiCheck className="inline h-4 w-4 shrink-0" aria-hidden="true" />Entregado

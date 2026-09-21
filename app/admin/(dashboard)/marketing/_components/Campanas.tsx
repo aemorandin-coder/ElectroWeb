@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
-  FiArrowDown, FiArrowLeft, FiArrowUp, FiEdit3, FiImage, FiLink, FiMail, FiPause, FiPlay, FiPlus, FiSave, FiSend, FiTrash2, FiType, FiUpload, FiUsers,
+  FiArrowDown, FiArrowLeft, FiArrowUp, FiEdit3, FiImage, FiLink, FiMail, FiPause, FiPlay, FiPlus, FiSave, FiSearch, FiSend, FiTrash2, FiType, FiUpload, FiUsers, FiX,
 } from 'react-icons/fi';
 import {
   adminBadge, adminCard, adminCardFlush, adminEmpty, adminHint, adminIconButton, adminInput, adminLabel, adminNotice,
@@ -106,6 +106,7 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
 }) {
   const { confirm } = useConfirm();
   const [ocupada, setOcupada] = useState<string | null>(null);
+  const [verDestinatarios, setVerDestinatarios] = useState(false);
 
   const accion = async (campana: Resumen, tipo: 'enviar' | 'pausar' | 'reanudar') => {
     if (tipo === 'enviar') {
@@ -144,12 +145,23 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
   return (
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className={`${adminCard} flex items-center gap-3 p-4`}>
-          <FiUsers className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
-          <div>
-            <p className="text-xs text-muted">Aceptan promociones</p>
-            <p className="text-lg font-bold text-ink">{datos.destinatarios} clientes</p>
+        <div className={`${adminCard} flex items-center justify-between gap-3 p-4`}>
+          <div className="flex items-center gap-3">
+            <FiUsers className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
+            <div>
+              <p className="text-xs text-muted">Aceptan promociones</p>
+              <p className="text-lg font-bold text-ink">{datos.destinatarios} clientes</p>
+            </div>
           </div>
+          {datos.destinatarios > 0 && (
+            <button
+              type="button"
+              onClick={() => setVerDestinatarios(true)}
+              className={`${adminSecondaryButton} h-8 px-2.5 text-xs`}
+            >
+              Ver correos
+            </button>
+          )}
         </div>
         <div className={`${adminCard} flex items-center gap-3 p-4`}>
           <FiMail className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
@@ -234,6 +246,8 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
           </ul>
         )}
       </div>
+
+      <ModalDestinatarios abierto={verDestinatarios} alCerrar={() => setVerDestinatarios(false)} />
     </div>
   );
 }
@@ -248,6 +262,7 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
   const [guardando, setGuardando] = useState(false);
   const [html, setHtml] = useState('');
   const [errorVista, setErrorVista] = useState<string | null>(null);
+  const [verDestinatarios, setVerDestinatarios] = useState(false);
   // Por defecto, el correo de quien está en el panel (derivado, sin efecto)
   const [correoElegido, setCorreoPrueba] = useState<string | null>(null);
   const correoPrueba = correoElegido ?? session?.user?.email ?? '';
@@ -462,9 +477,20 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
 
         <div className="space-y-4 xl:sticky xl:top-24 xl:self-start">
           <section className={adminCardFlush}>
-            <div className="border-b border-line px-4 py-3">
-              <h3 className="text-sm font-semibold text-ink">Vista previa</h3>
-              <p className="text-xs text-muted">Así llegará a {destinatarios} clientes, con su nombre y el enlace de baja.</p>
+            <div className="flex items-center justify-between border-b border-line px-4 py-3">
+              <div>
+                <h3 className="text-sm font-semibold text-ink">Vista previa</h3>
+                <p className="text-xs text-muted">Así llegará a {destinatarios} clientes, con su nombre y el enlace de baja.</p>
+              </div>
+              {destinatarios > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setVerDestinatarios(true)}
+                  className="text-xs font-semibold text-brand-600 hover:underline"
+                >
+                  Ver destinatarios
+                </button>
+              )}
             </div>
             {errorVista ? (
               <p className={`${adminNotice('warning')} m-4`}>{errorVista}</p>
@@ -483,6 +509,116 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
             </div>
             <p className={adminHint}>Llega solo a esa dirección, marcada como prueba. Revísala en el teléfono antes de enviar la campaña.</p>
           </section>
+        </div>
+      </div>
+
+      <ModalDestinatarios abierto={verDestinatarios} alCerrar={() => setVerDestinatarios(false)} />
+    </div>
+  );
+}
+
+/* ── Modal Destinatarios ─────────────────────────────────────────────────── */
+
+interface DestinatarioInfo {
+  id: string;
+  name: string | null;
+  email: string | null;
+  createdAt: string;
+}
+
+function ModalDestinatarios({ abierto, alCerrar }: { abierto: boolean; alCerrar: () => void }) {
+  const [destinatarios, setDestinatarios] = useState<DestinatarioInfo[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [busqueda, setBusqueda] = useState('');
+
+  useEffect(() => {
+    if (!abierto) return;
+    setCargando(true);
+    fetch('/api/admin/campaigns/recipients')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => setDestinatarios(d.destinatarios || []))
+      .catch(() => toast.error('No se pudo cargar la lista de destinatarios'))
+      .finally(() => setCargando(false));
+  }, [abierto]);
+
+  if (!abierto) return null;
+
+  const filtrados = destinatarios.filter((d) => {
+    const q = busqueda.toLowerCase().trim();
+    if (!q) return true;
+    return (d.name?.toLowerCase().includes(q) || false) || (d.email?.toLowerCase().includes(q) || false);
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={alCerrar} role="dialog" aria-modal="true" aria-labelledby="modal-destinatarios-titulo">
+      <div className={`${adminCard} flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden p-0 shadow-xl`} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+              <FiUsers className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 id="modal-destinatarios-titulo" className="text-base font-bold text-ink">Destinatarios de promociones</h2>
+              <p className="text-xs text-muted">{destinatarios.length} clientes aceptan promociones por correo</p>
+            </div>
+          </div>
+          <button type="button" onClick={alCerrar} className={adminIconButton} aria-label="Cerrar modal">
+            <FiX className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="border-b border-line bg-surface/50 p-4">
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar por nombre o correo..."
+              className={`${adminInput()} pl-9`}
+            />
+          </div>
+          <p className="mt-2 text-[11px] text-muted">
+            Solo incluye clientes con correo verificado que tienen activa la opción de recibir promociones en sus preferencias de notificación.
+          </p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          {cargando ? (
+            <div className="flex justify-center py-12"><span className={adminSpinner} aria-label="Cargando destinatarios" /></div>
+          ) : filtrados.length === 0 ? (
+            <div className="py-12 text-center">
+              <FiMail className="mx-auto mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
+              <p className="font-semibold text-ink">{destinatarios.length === 0 ? 'Sin destinatarios' : 'Sin resultados'}</p>
+              <p className="mt-1 text-xs text-muted">
+                {destinatarios.length === 0
+                  ? 'Ningún cliente ha aceptado promociones aún.'
+                  : `No se encontraron coincidencias para "${busqueda}".`}
+              </p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-line">
+              {filtrados.map((item) => (
+                <li key={item.id} className="flex items-center justify-between rounded-lg px-2 py-2.5 hover:bg-surface">
+                  <div className="min-w-0 pr-3">
+                    <p className="truncate text-sm font-semibold text-ink">{item.name || 'Sin nombre'}</p>
+                    <p className="truncate font-mono text-xs text-brand-600">{item.email}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className="inline-block rounded bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success-strong">Verificado</span>
+                    <p className="mt-0.5 text-[11px] text-muted">Desde {new Date(item.createdAt).toLocaleDateString('es-VE')}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-line bg-surface/30 px-5 py-3">
+          <span className="text-xs text-muted">Mostrando {filtrados.length} de {destinatarios.length}</span>
+          <button type="button" onClick={alCerrar} className={`${adminSecondaryButton} h-8 px-3 text-xs`}>
+            Cerrar
+          </button>
         </div>
       </div>
     </div>

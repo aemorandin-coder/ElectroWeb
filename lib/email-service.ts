@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ELECTRO SHOP - EMAIL SERVICE
  * Servicio centralizado de emails con soporte para SMTP y Resend API
  */
@@ -274,6 +274,7 @@ export const getBaseTemplate = async (content: string, preheader?: string) => {
   const telegram = settings?.telegram || '';
   const tiktok = settings?.tiktok || '';
   const twitter = settings?.twitter || '';
+  const youtube = settings?.youtube || '';
 
   return `
 <!DOCTYPE html>
@@ -290,11 +291,20 @@ export const getBaseTemplate = async (content: string, preheader?: string) => {
       <td align="center">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
           
-          <!-- HEADER - Simple text-based (no images that might not load) -->
+          <!-- HEADER -->
           <tr>
-            <td bgcolor="${primaryColor}" style="background-color:${primaryColor};background-image:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);padding:25px 40px;border-radius:20px 20px 0 0;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">${companyName.toUpperCase()}</h1>
-              <p style="margin:6px 0 0;color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;">${tagline}</p>
+            <td bgcolor="${primaryColor}" style="background-color:${primaryColor};background-image:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);padding:28px 30px;border-radius:20px 20px 0 0;text-align:center;">
+              ${logo ? `
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 14px;border-collapse:collapse;">
+                <tr>
+                  <td style="background-color:#ffffff;padding:8px 16px;border-radius:14px;line-height:0;text-align:center;">
+                    <img src="${logo}" alt="${companyName}" height="48" style="display:inline-block;max-height:48px;max-width:180px;width:auto;height:auto;border:0;outline:none;vertical-align:middle;" />
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1.2;">${companyName.toUpperCase()}</h1>
+              ${tagline ? `<p style="margin:6px 0 0;color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;line-height:1.4;">${tagline}</p>` : ''}
             </td>
           </tr>
           
@@ -312,18 +322,19 @@ export const getBaseTemplate = async (content: string, preheader?: string) => {
               <!-- Company Logo at bottom (optional, won't break if it doesn't load) -->
               ${logo ? `
               <div style="text-align:center;margin-bottom:20px;">
-                <img src="${logo}" alt="${companyName}" height="50" style="max-height:50px;max-width:160px;border-radius:8px;border:0;">
+                <img src="${logo}" alt="${companyName}" height="40" style="max-height:40px;max-width:140px;border-radius:8px;border:0;">
               </div>
               ` : ''}
               
-              <!-- Social Links - All configured networks -->
-              <div style="text-align:center;margin-bottom:15px;">
-                ${instagram ? `<a href="${instagram}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">IG</a>` : ''}
-                ${facebook ? `<a href="${facebook}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#1877f2;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">FB</a>` : ''}
-                ${whatsapp ? `<a href="https://wa.me/${whatsapp.replace(/\D/g, '')}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#25D366;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">WA</a>` : ''}
-                ${telegram ? `<a href="${telegram}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#0088cc;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">TG</a>` : ''}
-                ${tiktok ? `<a href="${tiktok}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#000000;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">TK</a>` : ''}
-                ${twitter ? `<a href="${twitter}" style="display:inline-block;margin:0 5px;width:32px;height:32px;background:#1da1f2;border-radius:8px;text-decoration:none;line-height:32px;color:white;font-size:12px;font-weight:bold;">X</a>` : ''}
+              <!-- Social Links - All configured networks with brand icons -->
+              <div style="text-align:center;margin-bottom:18px;">
+                ${instagram ? `<a href="${instagram}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="Instagram"><img src="${appUrl}/images/social/instagram.png" alt="Instagram" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
+                ${whatsapp ? `<a href="https://wa.me/${whatsapp.replace(/\\D/g, '')}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="WhatsApp"><img src="${appUrl}/images/social/whatsapp.png" alt="WhatsApp" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
+                ${facebook ? `<a href="${facebook}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="Facebook"><img src="${appUrl}/images/social/facebook.png" alt="Facebook" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
+                ${telegram ? `<a href="${telegram}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="Telegram"><img src="${appUrl}/images/social/telegram.png" alt="Telegram" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
+                ${tiktok ? `<a href="${tiktok}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="TikTok"><img src="${appUrl}/images/social/tiktok.png" alt="TikTok" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
+                ${twitter ? `<a href="${twitter}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="X (Twitter)"><img src="${appUrl}/images/social/twitter.png" alt="X" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
+                ${youtube ? `<a href="${youtube}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="YouTube"><img src="${appUrl}/images/social/youtube.png" alt="YouTube" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
               </div>
               
               <!-- Contact Info -->

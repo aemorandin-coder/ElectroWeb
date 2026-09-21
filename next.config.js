@@ -14,6 +14,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'flagcdn.com',
       },
+      // Fotos de perfil de Google (C-85). Sin esto, /_next/image responde 400 y la foto sale rota (C-80).
+      {
+        protocol: 'https',
+        hostname: '*.googleusercontent.com',
+      },
     ],
   },
   async redirects() {

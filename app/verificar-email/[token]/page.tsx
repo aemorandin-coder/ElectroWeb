@@ -1,18 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FiAlertCircle, FiCheckCircle, FiLoader } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import AuthShell from '@/components/auth/AuthShell';
-import { adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminError, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 
 export default function VerifyEmailPage() {
   const params = useParams();
   const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  // Reenviar el enlace: campo en la página en vez del prompt() nativo (C-80)
+  const [reenvio, setReenvio] = useState(false);
+  const [correo, setCorreo] = useState('');
+  const [errorCorreo, setErrorCorreo] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const correoRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const verifyEmail = async () => {
@@ -35,9 +41,16 @@ export default function VerifyEmailPage() {
     if (params.token) verifyEmail();
   }, [params.token, router]);
 
-  const handleResend = async () => {
-    const email = prompt('Ingresa tu email para reenviar la verificacion:');
-    if (email) {
+  const handleResend = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const email = correo.trim();
+    if (!email || !correoRef.current?.checkValidity()) {
+      setErrorCorreo(email ? 'Escribe un correo válido' : 'Escribe tu correo');
+      correoRef.current?.focus();
+      return;
+    }
+    setEnviando(true);
+    try {
       const res = await fetch('/api/auth/resend-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -46,6 +59,10 @@ export default function VerifyEmailPage() {
       const data = await res.json();
       if (res.ok) toast.success(data.message || 'Email reenviado');
       else toast.error(data.error || 'No se pudo reenviar el email');
+    } catch {
+      toast.error('Error de conexión. Intenta de nuevo.');
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -75,8 +92,22 @@ export default function VerifyEmailPage() {
             <p className="mt-2 text-sm leading-relaxed text-muted">{message}</p>
             <div className="mt-6 space-y-3">
               <Link href="/login" className={`${adminPrimaryButton} w-full`}>Ir al Login</Link>
-              <button type="button" onClick={handleResend} className={`${adminSecondaryButton} w-full`}>Reenviar Email</button>
+              {!reenvio && (
+                <button type="button" onClick={() => { setReenvio(true); setTimeout(() => correoRef.current?.focus(), 0); }} className={`${adminSecondaryButton} w-full`}>Reenviar Email</button>
+              )}
             </div>
+            {reenvio && (
+              <form onSubmit={handleResend} className="mt-6 text-left" noValidate>
+                <label htmlFor="correo-reenvio" className={adminLabel}>Tu correo</label>
+                <input id="correo-reenvio" ref={correoRef} type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                  autoComplete="email" required value={correo} onChange={(event) => { setCorreo(event.target.value); setErrorCorreo(''); }}
+                  aria-invalid={Boolean(errorCorreo)} aria-describedby="correo-reenvio-error" className={adminInput(Boolean(errorCorreo))} placeholder="nombre@correo.com" />
+                <p id="correo-reenvio-error" className={`${adminError} min-h-4`} role={errorCorreo ? 'alert' : undefined}>{errorCorreo}</p>
+                <button type="submit" disabled={enviando} className={`${adminSecondaryButton} mt-2 w-full`}>
+                  {enviando ? 'Enviando...' : 'Reenviar enlace'}
+                </button>
+              </form>
+            )}
           </>
         )}
       </div>

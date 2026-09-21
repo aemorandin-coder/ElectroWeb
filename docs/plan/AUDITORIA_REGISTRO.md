@@ -84,7 +84,7 @@ El teclado del teléfono escribió el correo con mayúsculas (`CONTACTO@FRANDING
 
 ## 4. Pendientes que quedan anotados
 
-- El captcha del login solo lo pide el navegador (se guarda en `localStorage`); el servidor no limita intentos de login → **C-80**.
-- El login no mira `accountStatus`: una cuenta desactivada puede entrar → C-80.
-- `GET /api/user/profile` devuelve el perfil completo de Prisma (IP del último acceso, carrito guardado…) al propio cliente. No es de otro usuario, pero va contra la regla de DTOs → C-80.
+- ✅ C-80: el servidor limita los intentos de login y exige el captcha tras 2 fallos (antes solo lo pedía el navegador, con `localStorage`).
+- ✅ C-80: el login mira `accountStatus`. `DEACTIVATED` (el cliente) se reactiva al entrar; `SUSPENDED` (la tienda, C-92) no entra.
+- ✅ C-80: `GET /api/user/profile` con lista blanca.
 - "Recuperar contraseña" y "Verificar correo" siguen con el diseño viejo; conviene pasarlos a `components/auth/AuthShell.tsx` → carril ChatGPT (R1).

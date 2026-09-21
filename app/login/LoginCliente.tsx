@@ -23,9 +23,17 @@ const ERRORES_DE_ACCESO: Record<string, string> = {
   'google-admin': 'Las cuentas de administrador no entran con Google. Usa tu correo y tu contraseña.',
   'google-correo-no-verificado': 'Tu correo de Google no está verificado. Verifícalo en Google o entra con tu correo.',
   'google-sin-correo': 'Google no nos compartió tu correo. Intenta de nuevo o entra con tu correo.',
+  'cuenta-suspendida': 'Esta cuenta está desactivada por la tienda. Escríbenos por WhatsApp o desde Contacto si crees que es un error.',
 };
 const ERROR_ACCESO_GENERICO = 'No pudimos iniciar sesión con Google. Intenta de nuevo o entra con tu correo.';
 const MENSAJE_CUENTA_SOCIAL = 'Esta cuenta no tiene contraseña. Entra con Google o crea una con "¿La olvidaste?".';
+
+/** "DEMASIADOS_INTENTOS:300" (límite del servidor, C-80) → texto con la espera. */
+function mensajeDeEspera(error: string): string {
+  const segundos = Number(error.split(':')[1]) || 60;
+  const minutos = Math.ceil(segundos / 60);
+  return `Demasiados intentos con esta cuenta. Espera ${minutos === 1 ? '1 minuto' : `${minutos} minutos`} o recupera tu contraseña con "¿La olvidaste?".`;
+}
 
 function LoginPageContent({ google }: { google: boolean }) {
   const router = useRouter();
@@ -204,11 +212,25 @@ function LoginPageContent({ google }: { google: boolean }) {
         email,
         password,
         userType,
+        // El servidor lo exige tras 2 fallos con la misma cuenta (C-80)
+        captchaToken: captchaToken ?? '',
         redirect: false,
       });
 
       if (result?.error === 'CUENTA_SOCIAL') {
         setError(MENSAJE_CUENTA_SOCIAL);
+      } else if (result?.error === 'CUENTA_SUSPENDIDA') {
+        setError(ERRORES_DE_ACCESO['cuenta-suspendida']);
+      } else if (result?.error === 'CAPTCHA_REQUERIDO') {
+        setRequiresCaptcha(true);
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
+        setError('Completa la verificación de seguridad para seguir.');
+      } else if (result?.error?.startsWith('DEMASIADOS_INTENTOS')) {
+        setRequiresCaptcha(true);
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
+        setError(mensajeDeEspera(result.error));
       } else if (result?.error) {
         incrementFailedAttempts();
         setError('Correo o contraseña incorrectos. Revisa los datos e intenta de nuevo.');

@@ -76,7 +76,9 @@ export default function CustomerDashboardLayout({
     fetch('/api/user/profile')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (!cancelado && data?.profile?.image) setUserImage(data.profile.image);
+        // La foto que sube el cliente queda en user.image; profile.avatar es de cuentas viejas (C-80: antes leía profile.image, que no existe)
+        const imagen = data?.user?.image || data?.profile?.avatar;
+        if (!cancelado && imagen) setUserImage(imagen);
       })
       .catch(() => { /* la foto es opcional */ });
     return () => { cancelado = true; };

@@ -172,7 +172,7 @@ export default function ProfilePage() {
     localStorage.setItem('hasSeenBusinessTip', 'true');
   };
 
-  const fetchProfile = async () => {
+  async function fetchProfile() {
     try {
       const response = await fetch('/api/user/profile');
       if (response.ok) {
@@ -224,9 +224,9 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const fetchStats = async () => {
+  async function fetchStats() {
     try {
       const response = await fetch('/api/customer/dashboard');
       if (response.ok) {
@@ -241,7 +241,7 @@ export default function ProfilePage() {
       console.error('Error fetching stats:', error);
       toast.error('No se pudieron cargar las estadísticas');
     }
-  };
+  }
 
   const handleSave = async () => {
     // Check if there are any changes

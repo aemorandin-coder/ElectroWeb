@@ -30,7 +30,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
         }
     }, [session, productId]);
 
-    const checkEligibility = async () => {
+    async function checkEligibility() {
         try {
             const response = await fetch(`/api/reviews/check-eligibility?productId=${productId}`);
             const data = await response.json();
@@ -43,7 +43,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
         } finally {
             setCheckingEligibility(false);
         }
-    };
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

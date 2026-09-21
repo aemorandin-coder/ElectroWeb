@@ -135,7 +135,7 @@ export default function OrdersPage() {
 
   useBodyScrollLock(showOrderDetails);
 
-  const fetchOrders = async () => {
+  async function fetchOrders() {
     setLoading(true);
     try {
       const response = await fetch('/api/orders');
@@ -159,7 +159,7 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const getStatusConfig = (status: string) => {
     const configs: Record<string, { bg: string; text: string; border: string; icon: React.ReactNode }> = {

@@ -58,7 +58,7 @@ export default function ShareEarnModal() {
     return () => window.removeEventListener('open-share-modal', handleOpen);
   }, []);
 
-  const fetchReferralInfo = async () => {
+  async function fetchReferralInfo() {
     setLoadingReferral(true);
     try {
       const res = await fetch('/api/customer/referrals');
@@ -75,7 +75,7 @@ export default function ShareEarnModal() {
     } finally {
       setLoadingReferral(false);
     }
-  };
+  }
 
   // Cerrar el modal al presionar Esc o hacer clic afuera
   useEffect(() => {

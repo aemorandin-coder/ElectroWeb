@@ -106,7 +106,7 @@ export default function WishlistPage() {
     fetchDiscountRequests();
   }, []);
 
-  const fetchWishlist = async () => {
+  async function fetchWishlist() {
     try {
       const response = await fetch('/api/customer/wishlist');
       if (response.ok) {
@@ -146,9 +146,9 @@ export default function WishlistPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const fetchDiscountRequests = async () => {
+  async function fetchDiscountRequests() {
     try {
       const response = await fetch('/api/customer/discount-requests');
       if (response.ok) {
@@ -159,7 +159,7 @@ export default function WishlistPage() {
       console.error('Error fetching discount requests:', error);
       toast.error('No se pudieron cargar las solicitudes de descuento');
     }
-  };
+  }
 
   const removeFromWishlist = async (productId: string) => {
     setRemovingId(productId);

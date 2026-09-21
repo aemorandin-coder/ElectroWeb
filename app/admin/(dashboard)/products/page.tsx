@@ -568,13 +568,13 @@ export default function ProductsPage() {
   const handleSync = async () => {
     if (isSyncing) return;
 
-    const confirmSync = window.confirm(
-      "¿Estás seguro de iniciar la sincronización?\n\n" +
-      "• Se actualizarán precios y stocks de productos existentes (por SKU).\n" +
-      "• Se crearán nuevos productos como BORRADOR.\n" +
-      "• Se descargarán las imágenes.\n\n" +
-      "Este proceso puede tardar varios minutos."
-    );
+    const confirmSync = await confirm({
+      title: "Iniciar sincronización",
+      message: "¿Estás seguro de iniciar la sincronización?\n\n• Se actualizarán precios y stocks de productos existentes (por SKU).\n• Se crearán nuevos productos como BORRADOR.\n• Se descargarán las imágenes.\n\nEste proceso puede tardar varios minutos.",
+      confirmText: "Sincronizar",
+      cancelText: "Cancelar",
+      type: "warning"
+    });
 
     if (!confirmSync) return;
 

@@ -1534,3 +1534,15 @@ Las líneas son de antes de G-59: después de esa tarjeta cambian. Búscalas otr
 **Criterio:** el estado existe y ningún archivo de código cambió (`git diff --stat gemini/R18` solo muestra `G-61.md`).
 
 **Prompt de arranque:** ver `docs/plan/SIGUIENTE.md` §5.
+
+---
+
+## Resultado de R17, R18 y R19 (revisión C-98, 21/09)
+**Aprobadas las 7 tarjetas (G-55…G-61).** Es tu mejor ronda:
+- Llamadas y cuerpos idénticos en los 34 archivos, sin reindentar nada, todo dentro del carril.
+- Estados honestos: anotaste lo que no quedó en 0 en vez de taparlo.
+- Encontraste el `window.confirm` de SADES y el badge "Rechazada" sin color.
+
+**Una falta de proceso:** el `git merge gemini/R18` dentro de R19. Para llevar un arreglo a la ronda siguiente se hace el commit en la rama de la ronda actual.
+
+**Con esto terminó tu plan.** No hay ronda abierta hasta nueva orden de Andrés. Lo que quedó anotado para una próxima orden está en `docs/plan/estado/C-98.md`.

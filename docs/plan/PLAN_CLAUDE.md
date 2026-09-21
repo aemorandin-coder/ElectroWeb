@@ -186,7 +186,7 @@ Revisar las ramas `gemini/*` pendientes, convertir el reporte G-14 en tarjetas n
 | 12b | **Facebook (sobre C-85)** | Cuando Andrés cree la app en Meta. |
 | 13 | ✅ **C-60b · Surtido de pedidos digitales** (21/09, rama `claude/C-60b`) | Proveedor, referencia y costo en el pedido; aviso "Pedido digital por entregar"; un código por unidad con bloqueo; `isDelivered` corregido; correo del código escapado. |
 | 13a | ✅ **C-96 · Montos exactos en la base** (21/09, rama `claude/C-96`) | `montoDecimal()` en saldo, órdenes, recargas, Pago Móvil, gift cards, cursos y comisiones. **Falta el OK de Andrés para redondear los saldos que ya existen** (SQL en `estado/C-96.md`). |
-| 13b | **Revisar Gemini R17-R19 (G-55…G-61)** | Cuando avise. R18 toca pantallas del admin: llamadas y cuerpos idénticos (C-86) y `git diff -w` de G-56 y G-60 solo con pares de líneas `const … =>` → `function`. |
+| 13b | ✅ **C-98 · Revisar Gemini R17-R19** (21/09, rama `claude/C-98`) | Aprobadas las 7. ESLint 201 → 144 errores. Hallazgo: las acciones masivas de productos no tienen casillas para seleccionar (se perdieron en febrero) → pantalla de productos. |
 | 13c | **Pendientes encontrados en C-94** | Reglas de hooks que no son de Gemini: `set-state-in-effect` (41), `purity` (9) y `exhaustive-deps` (18). `any` en `lib/auth.ts` (14) y `app/checkout/page.tsx` (9). `ImageUploadField` sobre fondo claro (pedido de GPT-05). `prompt()` en `verificar-email`. Cajones móviles (admin, cliente, creador) que dejan pasar el foco con Tab estando cerrados (`inert`). |
 | 14 | **C-40 · Cierre** | README, checklist de `PLAN.md` §6 con Andrés, con el inventario G-61. |
 

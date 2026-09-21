@@ -2,7 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD } from '@/lib/currency';
-import { roundMoney } from '@/lib/pricing';
+import { montoDecimal, roundMoney } from '@/lib/pricing';
 
 export const REF_COOKIE = 'electroshop_ref';
 
@@ -73,8 +73,8 @@ export async function recordPaidOrder(orderId: string) {
       influencerId: influencer.id,
       referredUserId: order.userId,
       type: 'PURCHASE',
-      grossAmount,
-      commission,
+      grossAmount: montoDecimal(grossAmount),
+      commission: montoDecimal(commission),
       orderId: order.id,
       status: 'PENDING',
     },
@@ -138,13 +138,13 @@ export async function approveConversion(conversionId: string, influencerId: stri
         create: { userId: conversion.influencer.userId, balance: 0, currency: 'USD' },
         update: {},
       });
-      await tx.userBalance.update({ where: { id: balance.id }, data: { balance: { increment: monto } } });
+      await tx.userBalance.update({ where: { id: balance.id }, data: { balance: { increment: montoDecimal(monto) } } });
       await tx.transaction.create({
         data: {
           balanceId: balance.id,
           type: 'DEPOSIT',
           status: 'COMPLETED',
-          amount: monto,
+          amount: montoDecimal(monto),
           currency: 'USD',
           description: 'Comisión de promotor por una compra referida',
           reference: `REF-${conversion.id}`,

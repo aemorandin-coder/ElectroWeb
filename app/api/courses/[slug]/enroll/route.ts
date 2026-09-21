@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { montoDecimal, roundMoney } from '@/lib/pricing';
 import { Prisma } from '@prisma/client';
 import { sendCourseEnrollmentEmail } from '@/lib/email-templates/CourseCertificate';
 import { emitAdminEvent } from '@/lib/admin-events';
@@ -93,7 +94,7 @@ export async function POST(
 
     // ── Paid course ──────────────────────────────────────────────────────────
     const userBalance = await prisma.userBalance.findUnique({ where: { userId } });
-    if (!userBalance || Number(userBalance.balance) < Number(course.priceUSD)) {
+    if (!userBalance || roundMoney(Number(userBalance.balance)) < roundMoney(Number(course.priceUSD))) {
       return NextResponse.json(
         { error: 'Saldo insuficiente. Recarga tu billetera para inscribirte.' },
         { status: 402 }
@@ -112,10 +113,11 @@ export async function POST(
     try {
       enrollment = await prisma.$transaction(async (tx) => {
         const charged = await tx.userBalance.updateMany({
-          where: { userId, balance: { gte: course.priceUSD } },
+          // Texto exacto (C-96): el precio guardado puede traer arrastre binario (9.449999999999999)
+          where: { userId, balance: { gte: montoDecimal(price) } },
           data: {
-            balance: { decrement: course.priceUSD },
-            totalSpent: { increment: course.priceUSD },
+            balance: { decrement: montoDecimal(price) },
+            totalSpent: { increment: montoDecimal(price) },
           },
         });
         if (charged.count === 0) throw new InsufficientBalanceError();
@@ -129,7 +131,7 @@ export async function POST(
             balanceId: userBalance.id,
             type: 'PURCHASE',
             status: 'COMPLETED',
-            amount: course.priceUSD,
+            amount: montoDecimal(price),
             currency: 'USD',
             description: `Inscripción: ${course.title}`,
           },
@@ -143,7 +145,7 @@ export async function POST(
         if (course.creator && creatorCut > 0) {
           await tx.courseCreator.update({
             where: { id: course.creator.id },
-            data: { totalRevenue: { increment: creatorCut } },
+            data: { totalRevenue: { increment: montoDecimal(creatorCut) } },
           });
         }
 

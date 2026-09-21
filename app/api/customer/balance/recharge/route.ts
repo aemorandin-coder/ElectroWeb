@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { montoDecimal } from '@/lib/pricing';
 import { notifyRechargeRequested } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD } from '@/lib/currency';
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
         balanceId: userBalance.id,
         type: 'RECHARGE',
         status: 'PENDING',
-        amount: amount,
+        amount: montoDecimal(amount), // texto exacto (C-96)
         currency: 'USD',
         description: description || `Recarga de saldo - ${formatPaymentMethod(paymentMethod)}`,
         reference: reference || null,

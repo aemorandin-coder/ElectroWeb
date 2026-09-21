@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { montoDecimal } from '@/lib/pricing';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
@@ -106,8 +107,8 @@ export async function POST(request: NextRequest) {
                     balance: userBalance.balance,
                 },
                 data: {
-                    balance: { decrement: amount },
-                    totalSpent: { increment: amount },
+                    balance: { decrement: montoDecimal(amount) },
+                    totalSpent: { increment: montoDecimal(amount) },
                 }
             });
 
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
                     balanceId: userBalance.id,
                     type: 'PURCHASE',
                     status: 'COMPLETED',
-                    amount: amount,
+                    amount: montoDecimal(amount),
                     currency: 'USD',
                     description: description || `Pago de orden ${orderId || 'N/A'}`,
                     reference: idempotencyKey || orderId || undefined,

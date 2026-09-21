@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { montoDecimal } from '@/lib/pricing';
 import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { notifyRechargeApproved, notifyRechargeRejected } from '@/lib/notifications';
@@ -149,9 +150,10 @@ export async function PATCH(request: NextRequest) {
             if (status === 'COMPLETED' && transaction.type === 'RECHARGE') {
                 await tx.userBalance.update({
                     where: { id: transaction.balanceId },
+                    // Texto exacto (C-96): las recargas viejas pueden tener arrastre binario (9.449999999999999)
                     data: {
-                        balance: { increment: transaction.amount },
-                        totalRecharges: { increment: transaction.amount },
+                        balance: { increment: montoDecimal(Number(transaction.amount)) },
+                        totalRecharges: { increment: montoDecimal(Number(transaction.amount)) },
                     },
                 });
             }

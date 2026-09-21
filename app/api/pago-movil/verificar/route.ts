@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { montoDecimal } from '@/lib/pricing';
 import { verificarPagoMovil, interpretarErrorBDV } from '@/lib/pago-movil/verificar-pago';
 import {
     validarTelefonoVenezolano,
@@ -331,9 +332,10 @@ export async function POST(req: NextRequest) {
                         // Actualizar balance del usuario (en USD)
                         await tx.userBalance.update({
                             where: { id: transaction.balanceId },
+                            // Texto exacto (C-96): con number, una recarga de $9,45 quedaba en 9.449999999999999
                             data: {
-                                balance: { increment: montoUsd },
-                                totalRecharges: { increment: montoUsd },
+                                balance: { increment: montoDecimal(montoUsd) },
+                                totalRecharges: { increment: montoDecimal(montoUsd) },
                             },
                         });
                         return true;

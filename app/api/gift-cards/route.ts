@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { montoDecimal } from '@/lib/pricing';
 import { sendGiftCardEmail } from '@/lib/email-service';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD } from '@/lib/currency';
@@ -139,7 +140,7 @@ export async function POST(request: Request) {
                     balance: { userId: session.user.id },
                     type: 'PURCHASE',
                     status: 'COMPLETED',
-                    amount: amountUSD,
+                    amount: montoDecimal(amountUSD),
                     metadata: null,
                     description: { startsWith: 'Gift Card' },
                     createdAt: { gte: new Date(Date.now() - PAYMENT_WINDOW_MS) },
@@ -195,8 +196,8 @@ export async function POST(request: Request) {
                     codeHash,
                     codeLast4: getCodeLastFour(code),
                     pin: hashedPin, // HMAC; solo tarjetas impresas
-                    amountUSD,
-                    balanceUSD: amountUSD,
+                    amountUSD: montoDecimal(amountUSD),
+                    balanceUSD: montoDecimal(amountUSD),
                     status: isPrinted ? 'INACTIVE' : 'ACTIVE',
                     designId: validDesignId,
                     purchasedBy: session.user.id,
@@ -224,8 +225,9 @@ export async function POST(request: Request) {
             } else if (payWithBalance) {
                 // Descuento condicional: solo si alcanza el saldo en este instante (sin lecturas previas que puedan quedar viejas)
                 const charged = await tx.userBalance.updateMany({
-                    where: { userId: session.user.id, balance: { gte: amountUSD } },
-                    data: { balance: { decrement: amountUSD }, totalSpent: { increment: amountUSD } },
+                    // Montos como texto exacto (C-96)
+                    where: { userId: session.user.id, balance: { gte: montoDecimal(amountUSD) } },
+                    data: { balance: { decrement: montoDecimal(amountUSD) }, totalSpent: { increment: montoDecimal(amountUSD) } },
                 });
                 if (charged.count !== 1) throw new InsufficientBalanceError();
                 const wallet = await tx.userBalance.findUniqueOrThrow({ where: { userId: session.user.id }, select: { id: true } });
@@ -234,7 +236,7 @@ export async function POST(request: Request) {
                         balanceId: wallet.id,
                         type: 'PURCHASE',
                         status: 'COMPLETED',
-                        amount: amountUSD,
+                        amount: montoDecimal(amountUSD),
                         currency: 'USD',
                         description: `Gift Card para ${String(recipientName || recipientEmail).slice(0, 80)}`,
                         metadata: JSON.stringify({ giftCardId: created.id }),
@@ -250,9 +252,9 @@ export async function POST(request: Request) {
             data: {
                 giftCardId: giftCard.id,
                 type: 'PURCHASE',
-                amountUSD,
+                amountUSD: montoDecimal(amountUSD),
                 balanceBefore: 0,
-                balanceAfter: amountUSD,
+                balanceAfter: montoDecimal(amountUSD),
                 userId: session?.user?.id || null,
                 userEmail: session?.user?.email || null,
                 description: 'Purchase of gift card'

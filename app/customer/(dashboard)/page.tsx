@@ -55,7 +55,7 @@ export default function CustomerDashboard() {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  async function fetchDashboardData() {
     try {
       const response = await fetch('/api/customer/dashboard');
       if (response.ok) {
@@ -68,7 +68,7 @@ export default function CustomerDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const getStatusConfig = (status: string) => {
     const configs: Record<string, { bg: string; text: string; label: string; icon: IconType }> = {

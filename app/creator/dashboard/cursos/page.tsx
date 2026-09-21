@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FiExternalLink } from 'react-icons/fi';
 import { adminPageHeader, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
-import { useRouter } from 'next/navigation';
 
 type Course = {
   id: string;
@@ -31,7 +30,6 @@ function aNumero(valor: unknown): number {
 
 export default function CreatorCoursesPage() {
   const { confirm } = useConfirm();
-  const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);

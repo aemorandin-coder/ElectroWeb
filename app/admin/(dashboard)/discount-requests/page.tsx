@@ -1,13 +1,13 @@
 'use client';
 
-import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab, adminModalOverlay, adminModalPanel, adminStatCard, adminStatLabel, adminStatValue, adminIconChip } from '@/lib/admin-ui';
+import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab, adminModalOverlay, adminModalPanel, adminIconChip } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { FiPercent, FiCheck, FiX, FiClock, FiUser, FiPackage, FiDollarSign, FiSearch, FiFilter, FiChevronDown, FiAlertCircle } from 'react-icons/fi';
+import { FiPercent, FiCheck, FiX, FiClock, FiUser, FiPackage, FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 
@@ -60,7 +60,7 @@ export default function DiscountRequestsPage() {
         fetchRequests();
     }, [filter]);
 
-    const fetchRequests = async () => {
+    async function fetchRequests() {
         try {
             const response = await fetch(`/api/admin/discount-requests?status=${filter}`);
             if (response.ok) {
@@ -74,7 +74,7 @@ export default function DiscountRequestsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const openActionModal = (request: DiscountRequest, action: 'approve' | 'reject') => {
         setSelectedRequest(request);
@@ -111,7 +111,7 @@ export default function DiscountRequestsPage() {
                 const data = await response.json();
                 toast.error(data.error || 'Error al procesar');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error de conexion');
         } finally {
             setProcessing(false);
@@ -201,7 +201,7 @@ export default function DiscountRequestsPage() {
                         ].map((tab) => (
                             <button
                                 key={tab.value}
-                                onClick={() => setFilter(tab.value as any)}
+                                onClick={() => setFilter(tab.value as 'all' | 'PENDING' | 'APPROVED' | 'REJECTED')}
                                 className={adminTab(filter === tab.value)}
                             >
                                 {tab.label}
@@ -280,7 +280,7 @@ export default function DiscountRequestsPage() {
                                 {/* Customer Message */}
                                 {request.customerMessage && (
                                     <div className="mt-3 ml-13 pl-4 border-l-2 border-warning/20">
-                                        <p className="text-xs text-muted italic">"{request.customerMessage}"</p>
+                                        <p className="text-xs text-muted italic">&ldquo;{request.customerMessage}&rdquo;</p>
                                     </div>
                                 )}
 

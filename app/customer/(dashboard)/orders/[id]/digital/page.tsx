@@ -7,9 +7,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
     FiCopy, FiCheck, FiArrowLeft, FiClock,
-    FiLock, FiShield, FiAlertTriangle, FiPackage, FiChevronDown, FiChevronUp
+    FiShield, FiAlertTriangle, FiChevronDown
 } from 'react-icons/fi';
-import { BsCardList, BsNintendoSwitch } from 'react-icons/bs';
+import { BsNintendoSwitch } from 'react-icons/bs';
 import { SiSteam, SiPlaystation, SiRoblox, SiNetflix, SiSpotify, SiApple } from 'react-icons/si';
 import { FaGamepad } from 'react-icons/fa';
 import toast from 'react-hot-toast';
@@ -81,7 +81,7 @@ export default function DigitalCodesPage() {
             if (stored) {
                 try {
                     setRevealedCodes(JSON.parse(stored));
-                } catch (e) { }
+                } catch { }
             }
         }
     }, [orderId]);
@@ -97,7 +97,7 @@ export default function DigitalCodesPage() {
         }
     }, [status, orderId]);
 
-    const fetchDigitalCodes = async () => {
+    async function fetchDigitalCodes() {
         try {
             const response = await fetch(`/api/orders/${orderId}/digital?orderId=${orderId}`);
             if (response.ok) {
@@ -113,12 +113,12 @@ export default function DigitalCodesPage() {
                 toast.error('Error al cargar los códigos');
                 router.push('/customer/orders');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error de conexión');
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const copyCode = async (codeId: string, code: string) => {
         try {
@@ -138,7 +138,7 @@ export default function DigitalCodesPage() {
             setTimeout(() => {
                 setCopiedCodes(prev => ({ ...prev, [codeId]: false }));
             }, 2000);
-        } catch (error) {
+        } catch {
             toast.error('Error al copiar');
         }
     };

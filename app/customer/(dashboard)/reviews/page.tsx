@@ -34,7 +34,7 @@ export default function MyReviewsPage() {
     fetchMyReviews();
   }, []);
 
-  const fetchMyReviews = async () => {
+  async function fetchMyReviews() {
     try {
       const response = await fetch('/api/reviews');
       if (response.ok) {
@@ -47,7 +47,7 @@ export default function MyReviewsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const filteredReviews = reviews.filter(review => {
     if (filter === 'approved') return review.isApproved && review.isPublished;

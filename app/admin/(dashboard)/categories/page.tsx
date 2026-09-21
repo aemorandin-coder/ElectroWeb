@@ -52,7 +52,7 @@ export default function CategoriesPage() {
   const [importInput, setImportInput] = useState('');
   const [importLoading, setImportLoading] = useState(false);
   const [importError, setImportError] = useState('');
-  const [importPreviewComponent, setImportPreviewComponent] = useState<React.ComponentType<any> | null>(null);
+  const [importPreviewComponent, setImportPreviewComponent] = useState<React.ComponentType<{ className?: string }> | null>(null);
   const [importParsedName, setImportParsedName] = useState('');
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);

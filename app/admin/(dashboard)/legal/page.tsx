@@ -1,6 +1,6 @@
 'use client';
 
-import { adminModalOverlay, adminModalPanel, adminTableWrap, adminTable, adminTh, adminRowHover } from '@/lib/admin-ui';
+import { adminModalOverlay, adminTableWrap, adminTable, adminTh, adminRowHover } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
@@ -12,7 +12,7 @@ import { es } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import {
     FiFileText, FiSearch, FiRefreshCw, FiEye, FiX, FiUser,
-    FiMail, FiPhone, FiMapPin, FiClock, FiDownload, FiPrinter,
+    FiPhone, FiMapPin, FiClock, FiDownload, FiPrinter,
     FiShield, FiCheck
 } from 'react-icons/fi';
 
@@ -472,7 +472,7 @@ export default function LegalDocumentsPage() {
                                                                     const error = await response.json();
                                                                     toast.error(error.error || 'Error al enviar solicitud');
                                                                 }
-                                                            } catch (error) {
+                                                            } catch {
                                                                 toast.error('Error de conexión');
                                                             }
                                                         }

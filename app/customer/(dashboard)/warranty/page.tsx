@@ -74,7 +74,7 @@ export default function WarrantyPage() {
     fetchDeliveredOrders();
   }, []);
 
-  const fetchDeliveredOrders = async () => {
+  async function fetchDeliveredOrders() {
     try {
       const response = await fetch('/api/orders?status=DELIVERED');
       if (response.ok) {
@@ -89,7 +89,7 @@ export default function WarrantyPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const getDaysSinceDelivery = (deliveredAt?: string) => {
     if (!deliveredAt) return null;

@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import Link from 'next/link';
-import { FiEye, FiAward } from 'react-icons/fi';
+import { FiEye, FiAward, FiArrowRight } from 'react-icons/fi';
 
 type Lesson = {
   id: string;
@@ -83,7 +83,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
   function toggleModule(id: string) {
     setOpenModules((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   }
@@ -411,9 +411,9 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                 <Link
                   href={`/certificado/${certificateId}`}
                   target="_blank"
-                  className="flex-1 py-2.5 bg-warning text-ink text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity text-center"
+                  className="flex-1 py-2.5 bg-warning text-ink text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-1.5"
                 >
-                  Ver Certificado →
+                  Ver Certificado <FiArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               )}
               <Link

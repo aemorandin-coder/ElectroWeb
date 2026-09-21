@@ -13,6 +13,8 @@ const INPUT = 'w-full px-4 py-2.5 bg-white border border-line rounded-xl text-in
 
 type Lesson = { id?: string; title: string; description: string; videoUrl: string; duration: string; isFree: boolean; order: number };
 type Module = { id?: string; title: string; order: number; lessons: Lesson[] };
+type ApiLesson = { id?: string; title: string; description?: string | null; videoUrl?: string | null; duration?: number | null; isFree?: boolean; order?: number };
+type ApiModule = { id?: string; title: string; order?: number; lessons: ApiLesson[] };
 type Course = {
   id: string; title: string; shortDesc: string | null; description: string; trailerUrl: string | null;
   category: string | null; level: string | null; priceUSD: number; thumbnail: string | null;
@@ -47,9 +49,9 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
             priceUSD: data.priceUSD.toString(),
             thumbnail: data.thumbnail ?? '',
           });
-          setModules(data.modules.map((m: any) => ({
+          setModules(data.modules.map((m: ApiModule) => ({
             id: m.id, title: m.title, order: m.order,
-            lessons: m.lessons.map((l: any) => ({
+            lessons: m.lessons.map((l: ApiLesson) => ({
               id: l.id, title: l.title, description: l.description ?? '', videoUrl: l.videoUrl ?? '',
               duration: l.duration?.toString() ?? '', isFree: l.isFree, order: l.order,
             })),
@@ -102,7 +104,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
       ...m, lessons: [...m.lessons, { title: 'Nueva Lección', description: '', videoUrl: '', duration: '', isFree: false, order: m.lessons.length }],
     }));
   }
-  function updLesson(mIdx: number, lIdx: number, field: string, value: any) {
+  function updLesson(mIdx: number, lIdx: number, field: string, value: string | boolean | number) {
     setModules((p) => p.map((m, i) => i !== mIdx ? m : {
       ...m, lessons: m.lessons.map((l, j) => j !== lIdx ? l : { ...l, [field]: value }),
     }));

@@ -68,7 +68,7 @@ export default function AddressesPage() {
     fetchAddresses();
   }, []);
 
-  const fetchAddresses = async () => {
+  async function fetchAddresses() {
     try {
       const response = await fetch('/api/customer/addresses');
       if (response.ok) {
@@ -83,7 +83,7 @@ export default function AddressesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleSubmit = async () => {
     if (!formData.addressLine1 || !formData.city || !formData.state) {

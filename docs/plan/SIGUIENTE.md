@@ -26,8 +26,11 @@ cd /var/www/electroshopve
 git pull
 
 # 1. Ver qué va a cambiar en la base (solo lee)
-npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script
-#    Esperado: solo ADD COLUMN y CREATE TABLE "shipment_events". Si aparece un DROP, PARA y avisa.
+#    DATABASE_URL vive en .env y no está exportado en la shell: Prisma toma la URL del propio .env
+npx prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --script
+#    Esperado: ADD COLUMN, CREATE TABLE "shipment_events" y ALTER TYPE "PaymentMethodType" ADD VALUE 'BINANCE_PAY'.
+#    Si aparece un DROP, PARA y avisa. Si salen tablas de deploys viejos (digital_variants, telegram_chats,
+#    email_campaigns), es que un db push anterior no se corrió: sigue siendo solo agregar.
 
 # 2. Aplicarlo
 npx prisma db push          # si pide aceptar pérdida de datos, PARA

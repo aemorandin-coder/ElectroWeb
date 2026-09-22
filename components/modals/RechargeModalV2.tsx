@@ -21,6 +21,11 @@ interface RechargeModalProps {
 
 type Step = 'SELECT_METHOD' | 'PAYMENT_DETAILS' | 'VERIFY_PAYMENT';
 
+/** Referencia provisional mientras el cliente verifica su Pago Móvil. Fuera del componente: `Date.now` no se llama al renderizar. */
+function referenciaTemporal(): string {
+    return 'PM-' + Date.now().toString(36).toUpperCase();
+}
+
 export default function RechargeModalV2({ isOpen, onClose, onSuccess }: RechargeModalProps) {
     const { data: session } = useSession();
     const { confirm } = useConfirm();
@@ -278,7 +283,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                     amount: numAmount,
                     paymentMethod: selectedMethod.type,
                     companyPaymentMethodId: selectedMethod.id,
-                    reference: 'PM-' + Date.now().toString(36).toUpperCase(), // Referencia temporal única
+                    reference: referenciaTemporal(), // Referencia temporal única
                     description: 'Recarga Pago Móvil - Verificación automática',
                 }),
             });

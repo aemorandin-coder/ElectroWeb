@@ -164,6 +164,8 @@ export interface PublicSettings {
     maintenanceMessage: string | null;
     maintenanceStartTime: string | null;
     maintenanceEndTime: string | null;
+    /** C-101: el checkout ofrece Pago Móvil directo solo si la conciliación del BDV está configurada */
+    pagoMovilDirecto: boolean;
     rif: string | null;
     legalName: string | null;
     // El popup (hotAd*) no va aquí: estos settings viajan en el HTML de TODAS las páginas y la imagen
@@ -211,6 +213,7 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     showCategories: true, maxCategoriesDisplay: 6,
     ctaEnabled: false, ctaTitle: null, ctaDescription: null, ctaButtonText: null, ctaButtonLink: null,
     maintenanceMode: false, maintenanceMessage: null, maintenanceStartTime: null, maintenanceEndTime: null,
+    pagoMovilDirecto: false,
     rif: null, legalName: null,
 };
 
@@ -242,6 +245,7 @@ function toPublicSettings(row: PublicSettingsRow): PublicSettings {
         packagingFeeUSD: num(row.packagingFeeUSD, 2.5),
         maintenanceStartTime: row.maintenanceStartTime ? row.maintenanceStartTime.toISOString() : null,
         maintenanceEndTime: row.maintenanceEndTime ? row.maintenanceEndTime.toISOString() : null,
+        pagoMovilDirecto: Boolean(process.env.BDV_API_KEY && process.env.BDV_TELEFONO_COMERCIO),
     };
 }
 

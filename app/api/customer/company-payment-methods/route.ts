@@ -22,6 +22,8 @@ const customerPaymentMethodSelect = {
   minAmount: true,
   maxAmount: true,
   displayNote: true,
+  // El modal de recarga y el checkout filtran por isActive: sin este campo la lista llegaba vacía
+  isActive: true,
 };
 
 export async function GET() {

@@ -317,6 +317,8 @@ export default function CheckoutPage() {
   const shippingBreakdown = orderCalculation.shipping;
   const finalTotal = orderCalculation.totalUSD;
   const hasPhysicalItems = items.some(item => item.productType !== 'DIGITAL');
+  // Pago Móvil directo solo con la conciliación del BDV configurada en el servidor (C-101)
+  const pagoMovilDirecto = companySettings?.pagoMovilDirecto === true;
   const orderItemsBody = useMemo(() => items.map(toOrderItem), [items]);
   const clienteEnvio = useMemo(
     () => ({ nombre: formData.customerName, cedula: formData.customerIdNumber, telefono: formData.customerPhone }),
@@ -784,7 +786,7 @@ export default function CheckoutPage() {
                 )}
 
                 {/* Payment Mode Selection */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className={`grid grid-cols-1 gap-4 mb-6 ${pagoMovilDirecto ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
                   <button
                     type="button"
                     onClick={() => setPaymentMode('WALLET')}
@@ -813,6 +815,7 @@ export default function CheckoutPage() {
                     )}
                   </button>
 
+                  {pagoMovilDirecto && (
                   <button
                     type="button"
                     onClick={() => setPaymentMode('PAGO_MOVIL')}
@@ -831,7 +834,7 @@ export default function CheckoutPage() {
                       <h3 className={`font-bold text-base ${paymentMode === 'PAGO_MOVIL' ? 'text-brand-600' : 'text-ink'}`}>
                         Pago Móvil BDV
                       </h3>
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-success-strong/10 text-success-strong rounded-full">
+                      <span className="px-1.5 py-0.5 text-[11px] font-semibold tracking-wide bg-success-strong/10 text-success-strong rounded-full">
                         Directo
                       </span>
                     </div>
@@ -844,6 +847,7 @@ export default function CheckoutPage() {
                       </div>
                     )}
                   </button>
+                  )}
 
                   <button
                     type="button"
@@ -1380,7 +1384,7 @@ export default function CheckoutPage() {
                     </div>
                     Información de Contacto
                   </h2>
-                  {(session?.user as { emailVerified?: unknown })?.emailVerified && (
+                  {Boolean((session?.user as { emailVerified?: unknown } | undefined)?.emailVerified) && (
                     <div className="flex items-center gap-1.5 px-2 py-1 bg-success/15 border border-success/30 rounded-full">
                       <FiCheckCircle className="w-3 h-3 text-success-strong" />
                       <span className="text-xs font-bold text-success-strong">Verificado</span>

@@ -129,6 +129,9 @@ export default function PaymentsPage() {
     const [submitting, setSubmitting] = useState(false);
     const [uploadingQR, setUploadingQR] = useState(false);
     const qrInputRef = useRef<HTMLInputElement>(null);
+    // Logo propio del método (se había perdido en la reescritura de C-101)
+    const [uploadingLogo, setUploadingLogo] = useState(false);
+    const logoInputRef = useRef<HTMLInputElement>(null);
     useBodyScrollLock(isModalOpen);
 
     const [formData, setFormData] = useState<Partial<AdminPaymentMethod>>(DEFAULT_FORM_DATA);
@@ -163,7 +166,7 @@ export default function PaymentsPage() {
             const response = await fetch('/api/admin/payments/seed', { method: 'POST' });
             const data = await response.json();
             if (data.seeded) {
-                toast.success(`${data.count} métodos predefinidos creados`);
+                toast.success(`${data.count} plantillas creadas e inactivas: completa tus datos y actívalas`);
                 fetchMethods();
             } else if (data.count > 0) {
                 toast('Ya existen métodos de pago configurados', { icon: <FiInfo className="h-5 w-5 text-brand-600" /> });
@@ -173,6 +176,28 @@ export default function PaymentsPage() {
         } catch (error) {
             console.error('Error seeding:', error);
             toast.error('Error de conexión');
+        }
+    };
+
+    const handleLogoUpload = async (file: File) => {
+        setUploadingLogo(true);
+        try {
+            const body = new FormData();
+            body.append('file', file);
+            body.append('folder', 'payment-methods');
+            const res = await fetch('/api/upload', { method: 'POST', body });
+            if (res.ok) {
+                const data = await res.json();
+                setFormData(prev => ({ ...prev, logo: data.url }));
+                toast.success('Logo subido correctamente');
+            } else {
+                toast.error('Error al subir imagen');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            toast.error('Error de conexión al subir imagen');
+        } finally {
+            setUploadingLogo(false);
         }
     };
 
@@ -286,26 +311,24 @@ export default function PaymentsPage() {
         const targetIndex = direction === 'UP' ? currentIndex - 1 : currentIndex + 1;
         if (targetIndex < 0 || targetIndex >= methods.length) return;
 
-        const targetMethod = methods[targetIndex];
-        const newSortOrder = targetMethod.sortOrder ?? targetIndex;
-        const targetNewSortOrder = method.sortOrder ?? currentIndex;
+        // El orden nuevo se guarda por posición: con órdenes repetidos (todos en 0) intercambiarlos no cambiaba nada
+        const reordenados = [...methods];
+        [reordenados[currentIndex], reordenados[targetIndex]] = [reordenados[targetIndex], reordenados[currentIndex]];
+        const cambios = reordenados
+            .map((m, posicion) => ({ id: m.id, sortOrder: posicion + 1, antes: m.sortOrder }))
+            .filter(c => c.sortOrder !== c.antes);
 
         try {
-            await Promise.all([
-                fetch('/api/admin/payments', {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: method.id, sortOrder: newSortOrder }),
-                }),
-                fetch('/api/admin/payments', {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: targetMethod.id, sortOrder: targetNewSortOrder }),
-                }),
-            ]);
+            const respuestas = await Promise.all(cambios.map(c => fetch('/api/admin/payments', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: c.id, sortOrder: c.sortOrder }),
+            })));
+            if (respuestas.some(r => !r.ok)) toast.error('No se pudo guardar el nuevo orden');
             fetchMethods();
         } catch (error) {
             console.error('Error moving method:', error);
+            toast.error('Error de conexión');
         }
     };
 
@@ -437,8 +460,10 @@ export default function PaymentsPage() {
                                     {/* Header: Icon, Name, Active switch */}
                                     <div className="flex items-start justify-between gap-3 mb-3">
                                         <div className="flex items-center gap-2.5 min-w-0">
-                                            <div className="w-10 h-10 rounded-xl bg-surface border border-line flex items-center justify-center shrink-0">
-                                                {meta.icon}
+                                            <div className="w-10 h-10 rounded-xl bg-surface border border-line flex items-center justify-center shrink-0 overflow-hidden">
+                                                {method.logo?.startsWith('/') ? (
+                                                    <Image src={method.logo} alt="" width={32} height={32} className="h-8 w-8 rounded-lg object-contain" />
+                                                ) : meta.icon}
                                             </div>
                                             <div className="min-w-0">
                                                 <h3 className="font-bold text-ink text-base truncate">{method.name}</h3>
@@ -1068,6 +1093,49 @@ export default function PaymentsPage() {
                                     {/* QR Code Upload */}
                                     <div>
                                         <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
+                                            Logo del método (opcional)
+                                        </label>
+                                        <input
+                                            ref={logoInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) handleLogoUpload(file);
+                                            }}
+                                        />
+                                        <div className="mb-4 flex items-center gap-3">
+                                            {formData.logo?.startsWith('/') ? (
+                                                <div className="flex items-center gap-3 p-2 bg-surface rounded-xl border border-line">
+                                                    <Image
+                                                        src={formData.logo}
+                                                        alt="Logo"
+                                                        width={40}
+                                                        height={40}
+                                                        className="rounded-lg object-contain bg-white border border-line"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({ ...prev, logo: null }))}
+                                                        className="text-xs text-deal hover:underline font-semibold"
+                                                    >
+                                                        Quitar logo
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => logoInputRef.current?.click()}
+                                                    disabled={uploadingLogo}
+                                                    className={`inline-flex items-center gap-2 ${adminSecondaryButton}`}
+                                                >
+                                                    <FiUpload className="w-4 h-4" />
+                                                    {uploadingLogo ? 'Subiendo...' : 'Subir logo'}
+                                                </button>
+                                            )}
+                                        </div>
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
                                             Código QR de Pago (Opcional)
                                         </label>
                                         <input
@@ -1226,11 +1294,6 @@ export default function PaymentsPage() {
                                                     <div className="flex items-center justify-between py-0.5 border-b border-line">
                                                         <span className="text-muted">Red:</span>
                                                         <span className="font-medium text-ink">{formData.network}</span>
-                                                    </div>
-                                                )}
-                                                {formData.instructions && (
-                                                    <div className="pt-1 text-muted text-[11px]">
-                                                        {formData.instructions}
                                                     </div>
                                                 )}
                                             </div>

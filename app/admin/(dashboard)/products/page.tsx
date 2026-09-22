@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSpinner';
-import { formatPrice } from '@/lib/currency';
+import { formatPrice, formatUSD } from '@/lib/currency';
 import { FiRefreshCw, FiCheckCircle, FiAlertCircle, FiDatabase, FiBox, FiX, FiExternalLink, FiStar, FiZap, FiPackage } from 'react-icons/fi';
 import { parseProductImages } from '@/lib/product-utils';
 
@@ -1070,7 +1070,7 @@ export default function ProductsPage() {
                     currencySettings.primaryCurrency,
                     currencySettings.exchangeRates
                   )
-                  : `$${parseFloat(String(product.priceUSD)).toFixed(2)}`;
+                  : formatUSD(parseFloat(String(product.priceUSD)));
 
                 return (
                   <div key={product.id} className="bg-white rounded-lg border border-line p-4 shadow-sm">
@@ -1406,7 +1406,7 @@ export default function ProductsPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-surface rounded-xl p-3">
                       <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Precio</p>
-                      <p className="text-base font-bold text-gray-900">${Number(quickViewProduct.priceUSD).toFixed(2)} USD</p>
+                      <p className="text-base font-bold text-gray-900">{formatUSD(Number(quickViewProduct.priceUSD))}</p>
                     </div>
                     <div className="bg-surface rounded-xl p-3">
                       <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Stock</p>

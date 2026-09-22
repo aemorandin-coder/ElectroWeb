@@ -5,7 +5,10 @@ Léelo antes de empezar.
 ## 1. Estado de las ramas
 - **`main` = `origin/main`** (en producción): super merge del 21/09 (C-94…C-98, Gemini R16-R19, GPT-05/06) más **dos commits `[Marketing]` de Gemini** hechos directo en `main` (destinatarios de campañas, logo e íconos de redes en los correos).
   - Claude los revisó en C-99: sin bloqueo. Queda un ajuste para Claude (fila 18 de `PLAN_CLAUDE.md`): la lista de destinatarios devuelve todos los correos sin límite.
-- **`claude/C-99`** (desde `main`, solo documentos): salida de ChatGPT, ronda R20 de Gemini y `AUDITORIA_ENVIOS.md`. Lista para mergear; no se subió.
+- **`claude/C-99`** (desde `main`, solo documentos): salida de ChatGPT, ronda R20 de Gemini y `AUDITORIA_ENVIOS.md`.
+- **`claude/C-100`** (desde C-99): envíos con ZOOM y MRW, fase 1. Compila y pasa ESLint; **falta `db push` y la prueba con datos** (`estado/C-100.md`).
+- **`claude/C-101`** (desde C-100): métodos de pago. Un commit de Gemini tal cual y otro de Claude con la revisión (`estado/C-101.md`): el build estaba roto y la tienda se quedaba sin métodos de pago.
+- **Aviso de proceso (22/09):** Gemini trabajó en la carpeta principal, encima de una tarea de Claude sin terminar, y firmó un commit como "HECHO" sin compilar. Antes de empezar, revisa `git status` y `git log`: lo de Gemini va en `../ElectroShopVe-gemini` y se revisa antes de mergear.
 - **Gemini** (`../ElectroShopVe-gemini`, hoy en `gemini/marketing-correos` = `main`): **R20** lista para empezar desde `claude/C-99` (prompt en §5).
 - **ChatGPT: salió del equipo el 21/09.** No se le manda nada. Todo lo suyo está en `main` o lo reemplazó C-95. Para limpiar (Andrés, cuando quiera; borra la carpeta y las ramas):
   ```bash

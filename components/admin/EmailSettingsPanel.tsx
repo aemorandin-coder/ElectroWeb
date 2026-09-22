@@ -126,7 +126,7 @@ export default function EmailSettingsPanel() {
         setHasChanges(true);
     };
 
-    const handleInputChange = (field: keyof EmailSettingsData, value: any) => {
+    const handleInputChange = (field: keyof EmailSettingsData, value: EmailSettingsData[keyof EmailSettingsData]) => {
         setFormData({ ...formData, [field]: value });
         setHasChanges(true);
     };
@@ -152,7 +152,7 @@ export default function EmailSettingsPanel() {
                 const error = await response.json();
                 toast.error(error.error || 'Error al guardar');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error de conexión');
         } finally {
             setSaving(false);
@@ -175,7 +175,7 @@ export default function EmailSettingsPanel() {
             } else {
                 toast.error(data.error || 'Error en la prueba');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error de conexión');
         } finally {
             setTesting(false);

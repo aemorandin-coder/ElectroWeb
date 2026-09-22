@@ -47,8 +47,8 @@ export default function SadesSearchModal({ onImport, onClose }: Props) {
       if (!res.ok) throw new Error('Error al buscar en SADES');
       const data = await res.json();
       setResults(data.results || []);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al buscar en SADES');
       setResults([]);
     } finally {
       setLoading(false);

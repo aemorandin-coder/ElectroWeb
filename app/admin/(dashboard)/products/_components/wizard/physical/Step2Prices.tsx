@@ -168,7 +168,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
                     step="0.1"
                     min="0"
                     value={data[field]}
-                    onChange={(e) => onChange({ [field]: e.target.value } as any)}
+                    onChange={(e) => onChange({ [field]: e.target.value } as Partial<StepProps['data']>)}
                     placeholder="0"
                     className={`${wizardInput(Boolean(errors.dimensions))} pr-7 px-2.5 text-xs`}
                   />

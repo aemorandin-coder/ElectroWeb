@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { FiAlertTriangle, FiCheck, FiCopy, FiDollarSign, FiEye, FiGift, FiHash, FiPlus, FiPrinter, FiRefreshCw, FiSearch, FiShoppingBag, FiX } from 'react-icons/fi';
 import GiftCard3D from '@/components/gift-card/GiftCard3D';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatUSD } from '@/lib/currency';
 import { formatGiftCardCode } from '@/lib/gift-card-designs';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -121,6 +122,7 @@ function printBatch(cards: PrintedCard[]) {
  * y detalle con la tarjeta 3D. Los PIN solo existen en claro en la respuesta de creación: se imprimen en ese momento.
  */
 export default function GiftCardsAdminPage() {
+  const { confirm } = useConfirm();
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -200,8 +202,17 @@ export default function GiftCardsAdminPage() {
     }
   };
 
-  const closeBatch = () => {
-    if (!batchPrinted && !window.confirm('No imprimiste la hoja. Los PIN no se vuelven a mostrar y esas tarjetas no se podrán canjear. ¿Cerrar de todos modos?')) return;
+  const closeBatch = async () => {
+    if (!batchPrinted) {
+      const ok = await confirm({
+        title: 'Cerrar sin imprimir',
+        message: 'No imprimiste la hoja. Los PIN no se vuelven a mostrar y esas tarjetas no se podrán canjear. ¿Cerrar de todos modos?',
+        confirmText: 'Cerrar de todos modos',
+        cancelText: 'Volver',
+        type: 'danger',
+      });
+      if (!ok) return;
+    }
     setBatch(null);
   };
 

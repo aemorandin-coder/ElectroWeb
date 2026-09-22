@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -28,6 +28,7 @@ import { parseDeliveryMethod, parseOrderItems, quoteOrder, OrderInputError, type
 import { montoDecimal, type OrderGroupTotals } from '@/lib/pricing';
 import {
   orderPatchSchema,
+  problemaTransicion,
   transicionPermitida,
   estadosSiguientes,
   ETIQUETA_ESTADO,
@@ -40,6 +41,10 @@ import {
 } from '@/lib/order-admin';
 import { recordPaidOrder, rejectOrderConversions } from '@/lib/influencer-commission';
 import { avisarPedidoDigitalPorEntregar } from '@/lib/digital-delivery';
+import { DestinoError, leerDestino, type DestinoOrden } from '@/lib/envios/destino';
+import { actualizarRastreoZoom } from '@/lib/envios/seguimiento';
+import { customerOrderSelect } from '@/lib/dto/order';
+import { ETIQUETA_ENTREGA, NOMBRE_EMPRESA, urlRastreo, usaEmpresa, type EmpresaGuia } from '@/lib/envios/empresas';
 
 
 // GET - Get all orders
@@ -53,7 +58,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const userId = searchParams.get('userId');
-    const userRole = (session.user as { role?: string })?.role;
+    // Solo el equipo con MANAGE_ORDERS ve todas las órdenes. Antes bastaba no ser USER (un SUPPORT sin permiso las veía todas).
+    // ?mine=1: el panel del cliente pide solo las propias aunque quien compra sea del equipo
+    const esEquipo = isAuthorized(session, 'MANAGE_ORDERS') && searchParams.get('mine') !== '1';
 
     // PERFORMANCE: Pagination
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
@@ -63,8 +70,8 @@ export async function GET(request: NextRequest) {
 
     const where: Prisma.OrderWhereInput = {};
 
-    // If user is a customer (not admin), only show their orders
-    if (userRole === 'USER') {
+    // Cliente (o cuenta sin permiso de órdenes): solo las suyas
+    if (!esEquipo) {
       where.userId = session.user.id;
     } else if (userId) {
       // Admin can filter by userId
@@ -77,6 +84,31 @@ export async function GET(request: NextRequest) {
 
     // Count total for pagination
     const total = await prisma.order.count({ where });
+
+    // El cliente recibe solo su lista blanca (C-100): sin notas internas ni costos de proveedor
+    if (!esEquipo) {
+      const orders = await prisma.order.findMany({
+        where,
+        select: customerOrderSelect,
+        orderBy: { createdAt: 'desc' },
+        ...(all ? {} : { take: limit, skip }),
+      });
+
+      // Guías ZOOM en camino: se consulta el rastreo después de responder; al volver a abrir ya se ve lo nuevo
+      const enCamino = orders
+        .filter((o) => o.status === 'SHIPPED' && o.shippingCarrier === 'ZOOM' && o.trackingNumber)
+        .map((o) => o.id);
+      if (enCamino.length > 0) {
+        after(() => actualizarRastreoZoom({ orderIds: enCamino, intervaloMs: 30 * 60 * 1000 }).catch((error) => {
+          console.error('Error actualizando el rastreo del cliente:', error);
+        }));
+      }
+
+      return NextResponse.json({
+        orders,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit), hasMore: page * limit < total },
+      });
+    }
 
     const orders = await prisma.order.findMany({
       where,
@@ -108,6 +140,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        shipmentEvents: { orderBy: { occurredAt: 'asc' } },
       },
       orderBy: { createdAt: 'desc' },
       ...(all ? {} : { take: limit, skip }),
@@ -143,7 +176,9 @@ interface OrderGroup {
   totals: OrderGroupTotals;
   lines: QuotedLine[];
   deliveryMethod: string;
-  shippingAddress: string;
+  /** Solo la orden física: destino, destinatario y quién paga el flete (C-100) */
+  destino: DestinoOrden | null;
+  shippingPaidBy: string | null;
   tag: string;
 }
 
@@ -167,13 +202,7 @@ function isOrderNumberConflict(error: unknown): boolean {
     && String(error.meta?.target ?? '').includes('orderNumber');
 }
 
-const DELIVERY_LABELS: Record<string, string> = {
-  HOME_DELIVERY: 'Envío a domicilio',
-  SHIPPING: 'Oficina de courier',
-  PICKUP: 'Retiro en tienda',
-  STORE_PICKUP: 'Retiro en tienda',
-  DIGITAL: 'Digital',
-};
+const DELIVERY_LABELS = ETIQUETA_ENTREGA;
 
 async function sendNewOrderNotifications(order: CreatedOrder, userId: string, paymentMethod: string) {
   await notifyOrderConfirmed(userId, order.orderNumber, order.id);
@@ -226,7 +255,7 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
       total: order.totalUSD.toString(),
       currency: 'USD',
       paymentMethod: order.paymentMethod || 'N/A',
-      deliveryMethod: 'Delivery',
+      deliveryMethod: DELIVERY_LABELS[order.deliveryMethod || ''] || 'Entrega',
       deliveryAddress: order.shippingAddress || undefined,
     });
 
@@ -256,7 +285,9 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
 
 // POST - Create new order
 // Contrato: { items: [{ productId, quantity, digitalVariantId?, digitalAmount?, digitalUsername? }], deliveryMethod,
-//   shippingAddress, paymentMethod, mobilePaymentData?, notes?, expectedTotalUSD? }
+//   shipping?: { carrier, mode, state, cityCode, city, officeCode, address, reference, recipient: { name, idNumber, phone } },
+//   paymentMethod, mobilePaymentData?, notes?, expectedTotalUSD? }
+// C-100: la dirección legible y los datos de la oficina los arma el servidor (lib/envios/destino.ts).
 // Precios, envío, descuentos, total y dueño de la orden se calculan aquí; el resto del body se ignora.
 export async function POST(request: NextRequest) {
   try {
@@ -303,7 +334,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Método de pago inválido' }, { status: 400 });
     }
 
-    const shippingAddress = typeof body.shippingAddress === 'string' ? body.shippingAddress.trim().slice(0, 500) : '';
     const notes = typeof body.notes === 'string' ? body.notes.trim().slice(0, 1000) : '';
 
     const quote = await quoteOrder(userId, items, deliveryMethod);
@@ -320,9 +350,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'El retiro en tienda no está disponible' }, { status: 400 });
     }
 
-    // Envío a domicilio o por courier apagado en Configuración (C-50b): los productos físicos solo se retiran
-    if (deliveryMethod !== 'PICKUP' && calculation.physical && settings?.deliveryEnabled === false) {
-      return NextResponse.json({ error: 'Por ahora no hacemos envíos: elige retiro en tienda' }, { status: 400 });
+    // Envío nacional apagado en Configuración (C-50b): los productos físicos solo se retiran o van por delivery
+    if (deliveryMethod === 'SHIPPING' && calculation.physical && settings?.deliveryEnabled === false) {
+      return NextResponse.json({ error: 'Por ahora no hacemos envíos nacionales: elige otra forma de entrega' }, { status: 400 });
+    }
+    if (deliveryMethod === 'LOCAL_DELIVERY' && calculation.physical && !settings?.localDeliveryEnabled) {
+      return NextResponse.json({ error: 'El delivery en Guanare no está disponible' }, { status: 400 });
+    }
+
+    // C-100: destino y destinatario validados aquí (la oficina sale de la lista de ZOOM o MRW, no del navegador)
+    let destino: DestinoOrden | null = null;
+    if (calculation.physical) {
+      try {
+        destino = await leerDestino(body.shipping, deliveryMethod);
+      } catch (destinoError) {
+        if (destinoError instanceof DestinoError) {
+          return NextResponse.json({ error: destinoError.message, field: destinoError.field }, { status: 400 });
+        }
+        throw destinoError;
+      }
     }
 
     // Min/max de compra con el total calculado en el servidor
@@ -412,7 +458,8 @@ export async function POST(request: NextRequest) {
         totals: calculation.physical,
         lines: quote.lines.filter(line => line.productType !== 'DIGITAL'),
         deliveryMethod,
-        shippingAddress,
+        destino,
+        shippingPaidBy: calculation.shipping.paidBy,
         tag: '[Productos Físicos]',
       });
     }
@@ -421,7 +468,8 @@ export async function POST(request: NextRequest) {
         totals: calculation.digital,
         lines: quote.lines.filter(line => line.productType === 'DIGITAL'),
         deliveryMethod: 'DIGITAL',
-        shippingAddress: '',
+        destino: null,
+        shippingPaidBy: null,
         tag: '[Productos Digitales]',
       });
     }
@@ -481,8 +529,9 @@ export async function POST(request: NextRequest) {
           data: {
             orderNumber,
             userId,
-            shippingAddress: group.shippingAddress,
             deliveryMethod: group.deliveryMethod,
+            ...(group.destino ?? { shippingAddress: '' }),
+            shippingPaidBy: group.shippingPaidBy,
             subtotalUSD: montoDecimal(totals.subtotalUSD),
             taxUSD: montoDecimal(totals.taxUSD),
             shippingUSD: montoDecimal(totals.shippingUSD),
@@ -630,6 +679,31 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/** Lo que queda en el historial del envío cuando el panel cambia el estado (C-100). */
+function descripcionEventoPanel(
+  estado: OrderStatus,
+  orden: { deliveryMethod: string | null; shippingCarrier: string | null; trackingNumber: string | null }
+): string | null {
+  switch (estado) {
+    case OrderStatus.PROCESSING:
+      return 'Estamos preparando tu pedido';
+    case OrderStatus.READY_FOR_PICKUP:
+      return 'Listo para retirar en la tienda';
+    case OrderStatus.SHIPPED: {
+      if (orden.deliveryMethod === 'LOCAL_DELIVERY') return 'Salió a entregar en Guanare';
+      if (!usaEmpresa(orden.deliveryMethod)) return 'Pedido enviado';
+      const empresa = orden.shippingCarrier ? NOMBRE_EMPRESA[orden.shippingCarrier as EmpresaGuia] ?? orden.shippingCarrier : 'la empresa de envíos';
+      return `Entregado a ${empresa}${orden.trackingNumber ? ` con la guía ${orden.trackingNumber}` : ''}`;
+    }
+    case OrderStatus.DELIVERED:
+      return 'Pedido entregado';
+    case OrderStatus.CANCELLED:
+      return 'Pedido cancelado';
+    default:
+      return null;
+  }
+}
+
 // PATCH - El panel cambia el estado de una orden (C-74)
 export async function PATCH(request: NextRequest) {
   try {
@@ -650,8 +724,9 @@ export async function PATCH(request: NextRequest) {
     if (!parseado.success) {
       const problema = parseado.error.issues[0];
       const campo = problema?.path.join('.') || 'body';
+      const campoConocido = ['shippingCarrier', 'trackingNumber', 'trackingUrl', 'notes', 'adminNotes', 'shippingNotes', 'estimatedDelivery'].includes(campo);
       return NextResponse.json(
-        { error: `No se puede cambiar "${campo}" desde el panel.`, detalle: problema?.message },
+        { error: campoConocido && problema?.message ? problema.message : `No se puede cambiar "${campo}" desde el panel.`, detalle: problema?.message },
         { status: 400 }
       );
     }
@@ -684,10 +759,23 @@ export async function PATCH(request: NextRequest) {
 
       const confirmandoPago = pideConfirmarPago(patch) && orden.paymentStatus !== PaymentStatus.PAID;
 
+      // C-100: no se envía sin pago, cada tipo de entrega con sus estados y la guía obligatoria por ZOOM o MRW
+      if (patch.status && patch.status !== orden.status) {
+        const problema = problemaTransicion(orden, patch.status, { pagando: confirmandoPago, guia: patch.trackingNumber });
+        if (problema) return { tipo: 'regla' as const, error: problema };
+      }
+
       const data: Prisma.OrderUncheckedUpdateInput = {};
       if (patch.shippingCarrier !== undefined) data.shippingCarrier = patch.shippingCarrier;
-      if (patch.trackingNumber !== undefined) data.trackingNumber = patch.trackingNumber;
-      if (patch.trackingUrl !== undefined) data.trackingUrl = patch.trackingUrl;
+      if (patch.trackingNumber !== undefined) data.trackingNumber = patch.trackingNumber || null;
+      // El enlace de rastreo lo arma el servidor según la empresa; solo "Otra empresa" acepta uno escrito (https)
+      if (patch.shippingCarrier !== undefined || patch.trackingNumber !== undefined || patch.trackingUrl !== undefined) {
+        const empresa = (patch.shippingCarrier ?? orden.shippingCarrier) as EmpresaGuia | null;
+        const guia = patch.trackingNumber ?? orden.trackingNumber;
+        data.trackingUrl = empresa === 'OTHER'
+          ? (patch.trackingUrl ?? orden.trackingUrl) || null
+          : urlRastreo(empresa, guia);
+      }
       if (patch.shippingNotes !== undefined) data.shippingNotes = patch.shippingNotes;
       if (patch.adminNotes !== undefined) data.adminNotes = patch.adminNotes;
       if (patch.estimatedDelivery !== undefined) {
@@ -794,6 +882,16 @@ export async function PATCH(request: NextRequest) {
         include: { items: true, user: { select: { name: true, email: true } } },
       });
 
+      // Historial del envío que ve el cliente (C-100)
+      const eventoPanel = patch.status && patch.status !== orden.status
+        ? descripcionEventoPanel(patch.status, actualizada)
+        : null;
+      if (eventoPanel) {
+        await tx.shipmentEvent.create({
+          data: { orderId: id, source: 'ADMIN', statusCode: patch.status, description: eventoPanel, occurredAt: new Date() },
+        });
+      }
+
       return {
         tipo: 'ok' as const,
         ordenPrevia: orden,
@@ -819,6 +917,9 @@ export async function PATCH(request: NextRequest) {
         },
         { status: 409 }
       );
+    }
+    if (resultado.tipo === 'regla') {
+      return NextResponse.json({ error: resultado.error }, { status: 409 });
     }
     if (resultado.tipo === 'sin-motivo') {
       return NextResponse.json(
@@ -887,14 +988,19 @@ export async function PATCH(request: NextRequest) {
           break;
 
         case 'SHIPPED': {
-          const carrierInfo = patch.shippingCarrier ? ` vía ${patch.shippingCarrier}` : '';
-          const trackingInfo = patch.trackingNumber ? ` - Guía: ${patch.trackingNumber}` : '';
+          const local = order.deliveryMethod === 'LOCAL_DELIVERY';
+          const empresa = order.shippingCarrier ? NOMBRE_EMPRESA[order.shippingCarrier as EmpresaGuia] ?? order.shippingCarrier : '';
+          const carrierInfo = empresa ? ` por ${empresa}` : '';
+          const trackingInfo = order.trackingNumber ? `. Guía: ${order.trackingNumber}` : '';
+          const cobro = order.shippingPaidBy === 'CUSTOMER' ? '. El flete lo pagas al retirar (cobro a destino)' : '';
           // Una sola notificación (antes salían dos: la genérica y esta con guía y transportista)
           await createNotification({
             userId: oldOrder.userId,
             type: 'ORDER_SHIPPED',
-            title: 'Pedido Enviado',
-            message: `Tu pedido #${oldOrder.orderNumber} ha sido enviado${carrierInfo}${trackingInfo}`,
+            title: local ? 'Tu pedido va en camino' : 'Pedido enviado',
+            message: local
+              ? `Tu pedido #${oldOrder.orderNumber} salió a entregar en Guanare.`
+              : `Tu pedido #${oldOrder.orderNumber} salió${carrierInfo}${trackingInfo}${cobro}.`,
             link: `/customer/orders`,
             icon: 'shipping'
           });
@@ -903,8 +1009,10 @@ export async function PATCH(request: NextRequest) {
               await sendOrderShippedEmail(order.user.email, {
                 orderNumber: oldOrder.orderNumber,
                 customerName: order.user.name || 'Cliente',
-                trackingNumber: patch.trackingNumber || order.trackingNumber || undefined,
-                shippingCarrier: patch.shippingCarrier || order.shippingCarrier || undefined,
+                trackingNumber: order.trackingNumber || undefined,
+                shippingCarrier: order.shippingCarrier ? NOMBRE_EMPRESA[order.shippingCarrier as EmpresaGuia] ?? order.shippingCarrier : undefined,
+                destination: order.shippingAddress || undefined,
+                payOnDelivery: order.shippingPaidBy === 'CUSTOMER',
               });
             } catch (emailError) {
               console.error('Error sending shipped email:', emailError);

@@ -209,6 +209,11 @@ export default function CarritoPage() {
                         <h3 className="text-base font-bold text-ink mb-1.5 line-clamp-2 hover:text-brand-600 transition-colors">
                           {item.name}
                         </h3>
+                        {item.freeShipping && item.productType !== 'DIGITAL' && (
+                          <p className="mb-2 inline-flex items-center gap-1 text-xs font-semibold text-success-strong">
+                            <FiTruck className="h-3.5 w-3.5" aria-hidden="true" /> Envío gratis: todo tu pedido viaja sin costo
+                          </p>
+                        )}
                         {item.digitalUsername && (
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface border border-line rounded-lg text-ink text-xs font-semibold mb-2">
                             <span>Recarga para: {item.digitalUsername}</span>
@@ -394,7 +399,7 @@ export default function CarritoPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-ink">Despacho nacional garantizado</p>
-                      <p className="text-muted">Envíos rápidos y seguros a nivel nacional por ZOOM y MRW.</p>
+                      <p className="text-muted">Por ZOOM y MRW con cobro a destino: el flete lo pagas al retirar. Si algo de tu pedido tiene envío gratis, lo paga la tienda.</p>
                     </div>
                   </div>
 

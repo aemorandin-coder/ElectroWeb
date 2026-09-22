@@ -117,7 +117,9 @@ export default withAuth(
           pathname.startsWith('/api/reviews') ||
           pathname.startsWith('/api/uploads') ||
           pathname.startsWith('/api/analytics') ||
-          pathname.startsWith('/api/webhooks');
+          pathname.startsWith('/api/webhooks') ||
+          // El cron del servidor: se autoriza con CRON_SECRET dentro del handler (C-100)
+          pathname === '/api/cron/envios';
 
         if (isLoginPage || isPublicApiRoute) return true;
 

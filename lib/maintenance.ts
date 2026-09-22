@@ -89,7 +89,8 @@ export function isMaintenanceExemptPath(pathname: string): boolean {
     pathname === '/admin' ||
     pathname.startsWith('/admin/') ||
     pathname.startsWith('/api/auth/') ||
-    pathname.startsWith('/api/webhooks/')
+    pathname.startsWith('/api/webhooks/') ||
+    pathname.startsWith('/api/cron/')
   );
 }
 

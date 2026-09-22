@@ -49,6 +49,7 @@ export default function AddToCartButton({ product, className = '' }: AddToCartBu
       dimensions: product.dimensions ?? undefined,
       isConsolidable: product.isConsolidable !== false,
       shippingCost: product.shippingCost ?? undefined,
+      freeShipping: !isDigital && product.freeShipping === true,
     });
     toast.success('Agregado al carrito');
   };

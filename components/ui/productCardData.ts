@@ -22,6 +22,8 @@ export interface ProductCardData {
   dimensions?: string | null;
   isConsolidable?: boolean;
   shippingCost?: number | null;
+  /** C-100: la tienda paga el envío */
+  freeShipping?: boolean;
 }
 
 /** Los productos digitales con montos o con recarga directa se compran desde su página (se elige monto o cuenta). */

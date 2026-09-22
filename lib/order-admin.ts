@@ -1,5 +1,6 @@
 import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client';
 import { z } from 'zod';
+import { EMPRESAS_GUIA, esRetiro, usaEmpresa } from '@/lib/envios/empresas';
 
 /**
  * Reglas del panel de órdenes (C-74).
@@ -16,9 +17,10 @@ export const orderPatchSchema = z
     paymentStatus: z.nativeEnum(PaymentStatus).optional(),
     notes: z.string().trim().max(1000).optional(),
     adminNotes: z.string().trim().max(2000).optional(),
-    shippingCarrier: z.string().trim().max(120).optional(),
-    trackingNumber: z.string().trim().max(120).optional(),
-    trackingUrl: z.string().trim().max(500).optional(),
+    // C-100: empresa de la lista y guía sin símbolos (va a correos y enlaces); el enlace de rastreo lo arma el servidor
+    shippingCarrier: z.enum(EMPRESAS_GUIA).optional(),
+    trackingNumber: z.string().trim().max(40).regex(/^[A-Za-z0-9 -]*$/, 'La guía solo lleva letras, números y guiones').optional(),
+    trackingUrl: z.string().trim().max(500).regex(/^(https:\/\/\S+)?$/, 'El enlace de rastreo debe empezar con https://').optional(),
     shippingNotes: z.string().trim().max(1000).optional(),
     estimatedDelivery: z.string().datetime({ offset: true }).or(z.string().date()).nullable().optional(),
   })
@@ -52,6 +54,35 @@ export function transicionPermitida(desde: OrderStatus, hasta: OrderStatus): boo
 
 export function estadosSiguientes(desde: OrderStatus): OrderStatus[] {
   return TRANSICIONES[desde] ?? [];
+}
+
+/**
+ * C-100: lo que la tabla de transiciones no ve. Devuelve el motivo para el panel, o `null` si se puede.
+ * - Antes se podía marcar Enviada una orden sin pagar (el stock solo se descuenta al pagar).
+ * - Retiro en tienda no se "envía" y un envío no queda "listo para recoger".
+ * - Por ZOOM o MRW, "Enviada" exige la guía (antes solo lo frenaba el navegador).
+ */
+export function problemaTransicion(
+  orden: { paymentStatus: PaymentStatus; deliveryMethod: string | null; trackingNumber: string | null },
+  hasta: OrderStatus,
+  opciones: { pagando: boolean; guia?: string }
+): string | null {
+  const pagada = orden.paymentStatus === PaymentStatus.PAID || opciones.pagando;
+  const avanza = hasta === OrderStatus.SHIPPED || hasta === OrderStatus.READY_FOR_PICKUP || hasta === OrderStatus.DELIVERED;
+  if (avanza && !pagada) return 'Primero confirma el pago: una orden sin pagar no se entrega ni se envía.';
+
+  const digital = orden.deliveryMethod === 'DIGITAL';
+  if (hasta === OrderStatus.SHIPPED) {
+    if (digital) return 'Un pedido digital no se envía: se entrega con sus códigos.';
+    if (esRetiro(orden.deliveryMethod)) return 'Es un retiro en tienda: márcala "Lista para recoger".';
+    if (usaEmpresa(orden.deliveryMethod) && !(opciones.guia?.trim() || orden.trackingNumber?.trim())) {
+      return 'Escribe el número de guía de la empresa de envíos.';
+    }
+  }
+  if (hasta === OrderStatus.READY_FOR_PICKUP && !esRetiro(orden.deliveryMethod)) {
+    return 'Solo los retiros en tienda quedan "Listos para recoger".';
+  }
+  return null;
 }
 
 /** Etiquetas en español para los mensajes de error del panel. */

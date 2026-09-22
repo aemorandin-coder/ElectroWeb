@@ -101,11 +101,11 @@ export const settingsUpdateSchema = z.object({
   minOrderAmountUSD: optionalMoney(),
   maxOrderAmountUSD: optionalMoney(),
 
-  // Envíos y retiro
+  // Envíos y retiro (C-100: ZOOM/MRW con cobro a destino; ya no hay costo por kilo)
   deliveryEnabled: z.boolean(),
-  shippingCostPerKg: money(1000),
-  minConsolidatedShipping: money(1000),
   packagingFeeUSD: money(1000),
+  localDeliveryEnabled: z.boolean(),
+  deliveryFeeUSD: money(1000),
   freeDeliveryThresholdUSD: optionalMoney(),
   pickupEnabled: z.boolean(),
   pickupAddress: optionalText(250),
@@ -218,6 +218,7 @@ export function fieldErrors(error: z.ZodError): Record<string, string> {
 type MergedRules = {
   deliveryEnabled: boolean;
   pickupEnabled: boolean;
+  localDeliveryEnabled: boolean;
   minOrderAmountUSD: number | null;
   maxOrderAmountUSD: number | null;
   maintenanceStartTime: Date | null;
@@ -227,8 +228,8 @@ type MergedRules = {
 /** Reglas entre campos, con los valores ya combinados (lo guardado + lo que llega). */
 export function crossFieldErrors(merged: MergedRules): Record<string, string> {
   const errors: Record<string, string> = {};
-  if (!merged.deliveryEnabled && !merged.pickupEnabled) {
-    errors.deliveryEnabled = 'Deja activo el envío o el retiro en tienda: sin ninguno no se pueden comprar productos físicos.';
+  if (!merged.deliveryEnabled && !merged.pickupEnabled && !merged.localDeliveryEnabled) {
+    errors.deliveryEnabled = 'Deja activo el envío nacional, el delivery en Guanare o el retiro en tienda: sin ninguno no se pueden comprar productos físicos.';
   }
   if (merged.minOrderAmountUSD !== null && merged.maxOrderAmountUSD !== null && merged.minOrderAmountUSD > merged.maxOrderAmountUSD) {
     errors.maxOrderAmountUSD = 'El máximo debe ser mayor que el mínimo';

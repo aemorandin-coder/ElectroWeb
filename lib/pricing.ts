@@ -2,9 +2,11 @@
 // El servidor lo usa como fuente de verdad (POST /api/orders) y el checkout solo para mostrar.
 // Módulo puro: no importa Prisma ni APIs del navegador.
 
-export type DeliveryMethod = 'HOME_DELIVERY' | 'SHIPPING' | 'PICKUP';
+// C-100: SHIPPING = ZOOM o MRW (oficina o puerta a puerta), LOCAL_DELIVERY = delivery propio en Guanare.
+// Las órdenes viejas pueden decir HOME_DELIVERY o STORE_PICKUP; el checkout ya no los manda.
+export type DeliveryMethod = 'SHIPPING' | 'LOCAL_DELIVERY' | 'PICKUP';
 
-export const DELIVERY_METHODS: readonly DeliveryMethod[] = ['HOME_DELIVERY', 'SHIPPING', 'PICKUP'];
+export const DELIVERY_METHODS: readonly DeliveryMethod[] = ['SHIPPING', 'LOCAL_DELIVERY', 'PICKUP'];
 
 // La tienda no cobra IVA aparte (decisión de Andrés, C-01). El switch del admin se respeta
 // solo cuando esto pase a true.
@@ -18,29 +20,39 @@ export interface PricingLine {
   quantity: number;
   weightKg: number | null;
   dimensions: string | null; // JSON: {length, width, height} en cm
-  isConsolidable: boolean;
-  shippingCostUSD: number; // Envío fijo por unidad (productos no consolidables)
+  isConsolidable: boolean; // Se empaca con otros en la misma caja (si no, va como pieza aparte)
+  shippingCostUSD: number; // Legado de antes de C-100: ya no se cobra (el flete se paga a la empresa)
+  freeShipping: boolean; // C-100: la tienda paga el envío del paquete que lo lleve
   discountPercent: number; // 0 si no hay descuento aprobado
 }
 
 export interface PricingSettings {
   packagingFeeUSD: number;
-  shippingCostPerKg: number;
-  minConsolidatedShipping: number;
+  localDeliveryFeeUSD: number;
   freeDeliveryThresholdUSD: number | null;
   taxEnabled: boolean;
   taxPercent: number;
 }
 
+/**
+ * Envío desde C-100 (decisión de Andrés, 22/09):
+ * - ZOOM o MRW con **cobro a destino**: el cliente le paga el flete a la empresa al recibir; la tienda cobra el embalaje.
+ * - **Envío gratis**: si el paquete lleva un producto con envío gratis, o la compra física llega al monto de
+ *   Configuración, no se cobra nada y la tienda paga la guía.
+ * - Delivery en Guanare: tarifa fija de Configuración (gratis en los mismos casos).
+ */
 export interface ShippingBreakdown {
+  /** Lo que la tienda cobra por el envío en esta compra. */
   total: number;
   packagingFee: number;
-  consolidatedCost: number;
-  bulkyCost: number;
-  totalWeight: number;
+  localDeliveryFee: number;
   isFreeShipping: boolean;
-  consolidableItems: Array<{ name: string; quantity: number; weight: number; volumetricWeight: number; usedWeight: number }>;
-  bulkyItems: Array<{ name: string; quantity: number; cost: number }>;
+  freeReason: 'PRODUCT' | 'THRESHOLD' | null;
+  /** Quién le paga el flete a ZOOM o MRW. `null` si no hay envío por empresa. */
+  paidBy: 'CUSTOMER' | 'STORE' | null;
+  /** Kilos que cobra la empresa (el mayor entre el peso real y el volumétrico), para la tarifa de referencia. */
+  totalWeight: number;
+  pieces: number;
   digitalItems: Array<{ name: string; quantity: number }>;
 }
 
@@ -89,21 +101,22 @@ function toNumber(value: NumberLike): number {
 
 /**
  * Normaliza los ajustes de la empresa (Prisma o /api/settings/public).
- * Conserva los valores por defecto que usaba el checkout: un valor vacío o 0 toma el default.
+ * Sin valor, el embalaje vale $2,50 como antes; un 0 escrito en Configuración ahora sí es 0 (antes subía a 2,50).
  */
 export function toPricingSettings(raw: {
   packagingFeeUSD?: NumberLike;
-  shippingCostPerKg?: NumberLike;
-  minConsolidatedShipping?: NumberLike;
+  deliveryFeeUSD?: NumberLike;
   freeDeliveryThresholdUSD?: NumberLike;
   taxEnabled?: boolean | null;
   taxPercent?: NumberLike;
 } | null | undefined): PricingSettings {
   const s = raw ?? {};
+  const packaging = s.packagingFeeUSD === null || s.packagingFeeUSD === undefined || s.packagingFeeUSD === ''
+    ? 2.5
+    : Math.max(toNumber(s.packagingFeeUSD), 0);
   return {
-    packagingFeeUSD: toNumber(s.packagingFeeUSD) || 2.5,
-    shippingCostPerKg: toNumber(s.shippingCostPerKg) || 2,
-    minConsolidatedShipping: toNumber(s.minConsolidatedShipping) || 3,
+    packagingFeeUSD: packaging,
+    localDeliveryFeeUSD: Math.max(toNumber(s.deliveryFeeUSD), 0),
     freeDeliveryThresholdUSD: toNumber(s.freeDeliveryThresholdUSD) || null,
     taxEnabled: STORE_CHARGES_TAX && Boolean(s.taxEnabled),
     taxPercent: toNumber(s.taxPercent),
@@ -128,12 +141,12 @@ function emptyBreakdown(): ShippingBreakdown {
   return {
     total: 0,
     packagingFee: 0,
-    consolidatedCost: 0,
-    bulkyCost: 0,
-    totalWeight: 0,
+    localDeliveryFee: 0,
     isFreeShipping: false,
-    consolidableItems: [],
-    bulkyItems: [],
+    freeReason: null,
+    paidBy: null,
+    totalWeight: 0,
+    pieces: 0,
     digitalItems: [],
   };
 }
@@ -141,84 +154,47 @@ function emptyBreakdown(): ShippingBreakdown {
 function calculateShipping(
   lines: PricingLine[],
   settings: PricingSettings,
-  deliveryMethod: DeliveryMethod,
-  cartSubtotal: number
+  deliveryMethod: DeliveryMethod
 ): ShippingBreakdown {
   const breakdown = emptyBreakdown();
-
-  if (deliveryMethod === 'PICKUP') return breakdown;
-
-  if (lines.every(line => line.productType === 'DIGITAL')) {
-    lines.forEach(line => breakdown.digitalItems.push({ name: line.name, quantity: line.quantity }));
-    return breakdown;
-  }
-
-  const packagingFee = settings.packagingFeeUSD;
-  breakdown.packagingFee = packagingFee;
-
-  // Envío gratis: solo se cobra el embalaje
-  const freeThreshold = settings.freeDeliveryThresholdUSD;
-  if (freeThreshold && cartSubtotal >= freeThreshold) {
-    breakdown.isFreeShipping = true;
-    breakdown.total = packagingFee;
-    lines.forEach(line => {
-      if (line.productType === 'DIGITAL') {
-        breakdown.digitalItems.push({ name: line.name, quantity: line.quantity });
-      } else if (line.isConsolidable) {
-        breakdown.consolidableItems.push({
-          name: line.name,
-          quantity: line.quantity,
-          weight: (line.weightKg || 0.1) * line.quantity,
-          volumetricWeight: 0,
-          usedWeight: 0,
-        });
-      } else {
-        breakdown.bulkyItems.push({ name: line.name, quantity: line.quantity, cost: 0 });
-      }
-    });
-    return breakdown;
-  }
-
-  let consolidatedWeight = 0;
-  let bulkyItemsShipping = 0;
-
+  const physical = lines.filter(line => line.productType !== 'DIGITAL');
   lines.forEach(line => {
-    if (line.productType === 'DIGITAL') {
-      breakdown.digitalItems.push({ name: line.name, quantity: line.quantity });
-      return;
-    }
-
-    if (line.isConsolidable) {
-      // Consolidable: se cobra el mayor entre peso real y volumétrico
-      const realWeight = (line.weightKg || 0.1) * line.quantity;
-      const volumetricWeight = calculateVolumetricWeight(line.dimensions) * line.quantity;
-      const usedWeight = Math.max(realWeight, volumetricWeight);
-
-      consolidatedWeight += usedWeight;
-      breakdown.consolidableItems.push({
-        name: line.name,
-        quantity: line.quantity,
-        weight: realWeight,
-        volumetricWeight,
-        usedWeight,
-      });
-    } else {
-      // No consolidable (voluminoso): costo fijo por unidad
-      const itemShipping = (line.shippingCostUSD || 0) * line.quantity;
-      bulkyItemsShipping += itemShipping;
-      breakdown.bulkyItems.push({ name: line.name, quantity: line.quantity, cost: itemShipping });
-    }
+    if (line.productType === 'DIGITAL') breakdown.digitalItems.push({ name: line.name, quantity: line.quantity });
   });
 
-  const consolidatedShipping = consolidatedWeight > 0
-    ? Math.max(consolidatedWeight * settings.shippingCostPerKg, settings.minConsolidatedShipping)
-    : 0;
+  if (deliveryMethod === 'PICKUP' || physical.length === 0) return breakdown;
 
-  breakdown.consolidatedCost = roundMoney(consolidatedShipping);
-  breakdown.bulkyCost = roundMoney(bulkyItemsShipping);
-  breakdown.totalWeight = roundMoney(consolidatedWeight);
-  breakdown.total = roundMoney(consolidatedShipping + bulkyItemsShipping + packagingFee);
+  // Kilos y piezas para la tarifa de referencia de la empresa
+  let weight = 0;
+  let loosePieces = 0;
+  physical.forEach(line => {
+    const realWeight = (line.weightKg || 0.1) * line.quantity;
+    const volumetricWeight = calculateVolumetricWeight(line.dimensions) * line.quantity;
+    weight += Math.max(realWeight, volumetricWeight);
+    if (!line.isConsolidable) loosePieces += line.quantity;
+  });
+  breakdown.totalWeight = roundMoney(weight);
+  breakdown.pieces = loosePieces + (physical.some(line => line.isConsolidable) ? 1 : 0);
 
+  // El umbral cuenta solo lo físico: antes una gift card de $50 le daba envío gratis a un cable de $5 (E1)
+  const physicalSubtotal = physical.reduce((sum, line) => {
+    const percent = Math.min(Math.max(line.discountPercent || 0, 0), 100);
+    return sum + line.unitPriceUSD * line.quantity * (1 - percent / 100);
+  }, 0);
+  const threshold = settings.freeDeliveryThresholdUSD;
+  if (physical.some(line => line.freeShipping)) breakdown.freeReason = 'PRODUCT';
+  else if (threshold && roundMoney(physicalSubtotal) >= threshold) breakdown.freeReason = 'THRESHOLD';
+  breakdown.isFreeShipping = breakdown.freeReason !== null;
+
+  if (deliveryMethod === 'LOCAL_DELIVERY') {
+    breakdown.localDeliveryFee = breakdown.isFreeShipping ? 0 : roundMoney(settings.localDeliveryFeeUSD);
+    breakdown.total = breakdown.localDeliveryFee;
+    return breakdown;
+  }
+
+  breakdown.paidBy = breakdown.isFreeShipping ? 'STORE' : 'CUSTOMER';
+  breakdown.packagingFee = breakdown.isFreeShipping ? 0 : roundMoney(settings.packagingFeeUSD);
+  breakdown.total = breakdown.packagingFee;
   return breakdown;
 }
 
@@ -255,8 +231,7 @@ export function calculateOrder(
   settings: PricingSettings,
   deliveryMethod: DeliveryMethod
 ): OrderCalculation {
-  const cartSubtotal = lines.reduce((sum, line) => sum + line.unitPriceUSD * line.quantity, 0);
-  const shipping = calculateShipping(lines, settings, deliveryMethod, cartSubtotal);
+  const shipping = calculateShipping(lines, settings, deliveryMethod);
 
   const physicalLines = lines.filter(line => line.productType !== 'DIGITAL');
   const digitalLines = lines.filter(line => line.productType === 'DIGITAL');

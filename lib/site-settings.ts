@@ -121,6 +121,8 @@ export interface PublicSettings {
     exchangeRateVES: number;
     exchangeRateEUR: number;
     deliveryEnabled: boolean;
+    /** C-100: delivery propio en Guanare y su tarifa fija */
+    localDeliveryEnabled: boolean;
     deliveryFeeUSD: number;
     freeDeliveryThresholdUSD: number | null;
     shippingCostPerKg: number;
@@ -174,7 +176,7 @@ const PUBLIC_SETTINGS_SELECT = {
     instagram: true, facebook: true, twitter: true, youtube: true, telegram: true, tiktok: true,
     socialMedia: true, businessHours: true,
     primaryCurrency: true, exchangeRateVES: true, exchangeRateEUR: true,
-    deliveryEnabled: true, deliveryFeeUSD: true, freeDeliveryThresholdUSD: true, shippingCostPerKg: true,
+    deliveryEnabled: true, localDeliveryEnabled: true, deliveryFeeUSD: true, freeDeliveryThresholdUSD: true, shippingCostPerKg: true,
     minConsolidatedShipping: true, packagingFeeUSD: true,
     pickupEnabled: true, pickupAddress: true, pickupInstructions: true,
     heroVideoEnabled: true, heroVideoUrl: true, heroVideoTitle: true, heroVideoDescription: true,
@@ -198,7 +200,7 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     instagram: null, facebook: null, twitter: null, youtube: null, telegram: null, tiktok: null,
     socialMedia: [], businessHours: null,
     primaryCurrency: 'USD', exchangeRateVES: 36.5, exchangeRateEUR: 0.92,
-    deliveryEnabled: false, deliveryFeeUSD: 0, freeDeliveryThresholdUSD: null, shippingCostPerKg: 2,
+    deliveryEnabled: false, localDeliveryEnabled: false, deliveryFeeUSD: 0, freeDeliveryThresholdUSD: null, shippingCostPerKg: 2,
     minConsolidatedShipping: 3, packagingFeeUSD: 2.5,
     pickupEnabled: false, pickupAddress: null, pickupInstructions: null,
     heroVideoEnabled: false, heroVideoUrl: null, heroVideoTitle: null, heroVideoDescription: null,

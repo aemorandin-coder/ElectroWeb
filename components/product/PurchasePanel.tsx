@@ -115,6 +115,7 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
         dimensions: product.dimensions ?? undefined,
         isConsolidable: product.isConsolidable !== false,
         shippingCost: product.shippingCost ?? undefined,
+        freeShipping: !isDigital && product.freeShipping === true,
         digitalUsername: isManual ? cleanUser : undefined,
         digitalVariantId: selected?.id,
       },

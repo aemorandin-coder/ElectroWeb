@@ -79,6 +79,8 @@ export interface WizardData {
   dimensionHeight: string;
   isConsolidable: boolean;
   shippingCost: string;
+  /** C-100: la tienda paga el envío del paquete que lo lleve */
+  freeShipping: boolean;
   specifications: Record<string, string>;
   // Digital (C-60)
   digitalPlatform: string;
@@ -121,6 +123,7 @@ export const DEFAULT_WIZARD_DATA: WizardData = {
   dimensionHeight: '',
   isConsolidable: true,
   shippingCost: '',
+  freeShipping: false,
   specifications: {},
   digitalPlatform: '',
   digitalRegion: 'GLOBAL',

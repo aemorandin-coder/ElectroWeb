@@ -25,8 +25,9 @@ export interface SettingsForm {
   taxEnabled: boolean; taxPercent: string;
   minOrderAmountUSD: string; maxOrderAmountUSD: string;
 
-  deliveryEnabled: boolean; shippingCostPerKg: string; minConsolidatedShipping: string; packagingFeeUSD: string;
+  deliveryEnabled: boolean; packagingFeeUSD: string;
   freeDeliveryThresholdUSD: string;
+  localDeliveryEnabled: boolean; deliveryFeeUSD: string;
   pickupEnabled: boolean; pickupAddress: string; pickupInstructions: string;
 
   maxFeaturedProducts: string; showCategories: boolean; maxCategoriesDisplay: string;
@@ -70,7 +71,7 @@ export const SECTIONS: { id: SectionId; label: string; description: string; icon
   {
     id: 'envios', label: 'Envíos y retiro', icon: FiTruck,
     description: 'Cómo reciben los clientes sus productos físicos y cuánto cuesta el envío.',
-    fields: ['deliveryEnabled', 'shippingCostPerKg', 'minConsolidatedShipping', 'packagingFeeUSD', 'freeDeliveryThresholdUSD',
+    fields: ['deliveryEnabled', 'packagingFeeUSD', 'freeDeliveryThresholdUSD', 'localDeliveryEnabled', 'deliveryFeeUSD',
       'pickupEnabled', 'pickupAddress', 'pickupInstructions'],
   },
   {
@@ -154,9 +155,9 @@ export function toSettingsForm(data: Record<string, unknown>): SettingsForm {
     taxEnabled: bool(data.taxEnabled, false), taxPercent: num(data.taxPercent, '0'),
     minOrderAmountUSD: num(data.minOrderAmountUSD), maxOrderAmountUSD: num(data.maxOrderAmountUSD),
 
-    deliveryEnabled: bool(data.deliveryEnabled, true), shippingCostPerKg: num(data.shippingCostPerKg, '2'),
-    minConsolidatedShipping: num(data.minConsolidatedShipping, '3'), packagingFeeUSD: num(data.packagingFeeUSD, '2.5'),
+    deliveryEnabled: bool(data.deliveryEnabled, true), packagingFeeUSD: num(data.packagingFeeUSD, '2.5'),
     freeDeliveryThresholdUSD: num(data.freeDeliveryThresholdUSD),
+    localDeliveryEnabled: bool(data.localDeliveryEnabled, false), deliveryFeeUSD: num(data.deliveryFeeUSD, '0'),
     pickupEnabled: bool(data.pickupEnabled, true), pickupAddress: text(data.pickupAddress), pickupInstructions: text(data.pickupInstructions),
 
     maxFeaturedProducts: num(data.maxFeaturedProducts, '8'), showCategories: bool(data.showCategories, true),

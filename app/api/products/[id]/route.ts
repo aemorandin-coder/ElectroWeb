@@ -216,6 +216,8 @@ export async function PATCH(
     if (body.weightKg !== undefined) updateData.weightKg = body.weightKg !== null ? parseFloat(body.weightKg) : null;
     if (body.dimensions !== undefined) updateData.dimensions = body.dimensions;
     if (body.isConsolidable !== undefined) updateData.isConsolidable = body.isConsolidable;
+    // C-100: envío gratis (solo booleano; un digital nunca lo lleva)
+    if (typeof body.freeShipping === 'boolean') updateData.freeShipping = body.freeShipping;
     if (body.shippingCost !== undefined) updateData.shippingCost = body.shippingCost !== null ? parseFloat(body.shippingCost) : null;
 
     const product = await prisma.$transaction(async (tx) => {

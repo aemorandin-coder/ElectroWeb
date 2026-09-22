@@ -2,7 +2,7 @@
 
 import EpicTooltip from '@/components/EpicTooltip';
 import { StepProps } from '../types';
-import { FiCheck, FiInfo } from 'react-icons/fi';
+import { FiCheck, FiInfo, FiTruck } from 'react-icons/fi';
 import { MdOutlineLocalShipping } from 'react-icons/md';
 import { wizardInput, wizardLabel, wizardHint, wizardError, wizardSectionTitle, wizardSectionHelp } from '../ui';
 
@@ -130,7 +130,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
         <div className="p-4 bg-brand-50 rounded-xl border border-line flex gap-3">
           <FiInfo className="w-4 h-4 text-brand-600 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-brand-700">
-            Los envíos son manejados por <strong>ZOOM, MRW y TEALCA</strong>. Solo cobramos <strong>$2.50 de embalaje</strong>.
+            Los envíos van por <strong>ZOOM o MRW con cobro a destino</strong>: el cliente paga el flete al retirar y la tienda cobra solo el embalaje. El peso y las medidas sirven para la tarifa de referencia de ZOOM.
           </p>
         </div>
 
@@ -186,7 +186,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
           <div className="space-y-3">
             {[
               { val: true, title: 'Consolidable (Recomendado)', desc: 'Productos pequeños que se envían junto con otros en la misma caja.', badge: 'green' },
-              { val: false, title: 'Envío individual', desc: 'Para TVs, electrodomésticos grandes. Se envía por separado.', badge: 'amber' },
+              { val: false, title: 'Envío individual', desc: 'Para TVs y electrodomésticos grandes: viaja como un bulto aparte.', badge: 'amber' },
             ].map(({ val, title, desc, badge }) => (
               <div
                 key={String(val)}
@@ -210,28 +210,33 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-ink">{title}</p>
                     <p className="text-xs text-muted mt-0.5">{desc}</p>
-                    {!val && data.isConsolidable === false && (
-                      <div className="mt-3">
-                        <label className="block text-xs font-semibold text-warning-strong mb-1">Costo de envío fijo (USD)</label>
-                        <div className="relative w-36">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-warning-strong">$</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={data.shippingCost}
-                            onChange={(e) => onChange({ shippingCost: e.target.value })}
-                            placeholder="15.00"
-                            onClick={(e) => e.stopPropagation()}
-                            className={`${wizardInput()} pl-7`}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+        {/* C-100: envío gratis por producto (la tienda paga la guía de todo el paquete) */}
+        <div className="pt-4 border-t border-line">
+          <div className="flex items-start justify-between gap-4">
+            <label htmlFor="free-shipping" className="min-w-0 cursor-pointer">
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+                <FiTruck className="h-4 w-4 text-success-strong" aria-hidden="true" /> Envío gratis
+              </span>
+              <span className="mt-0.5 block text-xs text-muted">
+                Para productos de alto precio. La tienda paga el envío de todo el pedido que lo lleve y el producto muestra el badge &quot;Envío gratis&quot;.
+              </span>
+            </label>
+            <button
+              id="free-shipping"
+              type="button"
+              role="switch"
+              aria-checked={data.freeShipping}
+              onClick={() => onChange({ freeShipping: !data.freeShipping })}
+              className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 ${data.freeShipping ? 'bg-success-strong' : 'bg-subtle'}`}
+            >
+              <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${data.freeShipping ? 'translate-x-5.5' : 'translate-x-0.5'}`} />
+            </button>
           </div>
         </div>
       </div>

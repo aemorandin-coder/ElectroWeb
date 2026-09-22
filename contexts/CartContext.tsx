@@ -51,6 +51,7 @@ interface CartItem {
   weightKg?: number;
   isConsolidable?: boolean;
   shippingCost?: number;
+  freeShipping?: boolean; // C-100: el paquete que lo lleve va con envío gratis
   dimensions?: string; // JSON string: {length, width, height} in cm
   digitalUsername?: string;
   // C-60: variante digital elegida (el precio lo vuelve a calcular el servidor)

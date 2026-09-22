@@ -240,6 +240,8 @@ model Product {
   dimensions      String?                    // JSON: {length, width, height} in cm
   isConsolidable  Boolean   @default(true)  // Can be shipped with other products in same box
   shippingCost    Decimal?  @default(0)     // Fixed shipping cost (for non-consolidable items)
+  // C-100: la tienda paga el envío de este producto (y del paquete completo que lo lleve)
+  freeShipping    Boolean   @default(false)
   
   // Pricing extras
   compareAtPriceUSD Decimal? // Strike-through price to show a discount
@@ -536,15 +538,30 @@ model Order {
   exchangeRateEUR Decimal?
 
   // Delivery Method
-  deliveryMethod  String?   // HOME_DELIVERY, STORE_PICKUP
+  deliveryMethod  String?   // SHIPPING (ZOOM/MRW), LOCAL_DELIVERY (Guanare), PICKUP. Antes: HOME_DELIVERY, STORE_PICKUP
 
   // Shipping Info
-  shippingAddress String
+  shippingAddress String    // Texto legible del destino (lo arma el servidor)
   shippingCarrier String?   // ZOOM, MRW, TEALCA, DOMESA, OTHER
   trackingNumber  String?
   trackingUrl     String?   // URL de seguimiento del carrier
   shippingNotes   String?   // Notas adicionales de envío (oficina, agencia, etc.)
   estimatedDelivery DateTime? // Fecha estimada de entrega
+
+  // C-100: destino y destinatario que eligió el cliente en el checkout
+  shippingMode         String?  // OFFICE (retira en oficina) o DOOR (puerta a puerta)
+  shippingPaidBy       String?  // CUSTOMER (cobro a destino) o STORE (envío gratis)
+  shippingState        String?
+  shippingCity         String?
+  courierCityCode      String?  // Código de ciudad de ZOOM
+  courierOfficeCode    String?  // Código de oficina ZOOM o agencia MRW
+  courierOfficeName    String?
+  courierOfficeAddress String?
+  recipientName        String?
+  recipientIdNumber    String?
+  recipientPhone       String?
+  trackingCheckedAt    DateTime? // Última consulta del rastreo a la empresa
+  shipmentEvents       ShipmentEvent[]
 
   notes         String?
   adminNotes    String?     // Notas internas del admin
@@ -563,6 +580,23 @@ model Order {
   updatedAt     DateTime    @updatedAt
 
   @@map("orders")
+}
+
+// C-100: historial del envío (lo que dice ZOOM y lo que marca el panel)
+model ShipmentEvent {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  source      String   // ZOOM, ADMIN
+  statusCode  String?
+  description String
+  location    String?
+  occurredAt  DateTime
+  createdAt   DateTime @default(now())
+
+  @@unique([orderId, source, occurredAt, description])
+  @@index([orderId, occurredAt])
+  @@map("shipment_events")
 }
 
 enum OrderStatus {
@@ -674,7 +708,8 @@ model CompanySettings {
   
   // Shipping & Delivery
   deliveryEnabled Boolean @default(true)
-  deliveryFeeUSD Decimal?                    // Legacy: flat delivery fee (deprecated, use per-product)
+  deliveryFeeUSD Decimal?                    // C-100: tarifa fija del delivery en Guanare
+  localDeliveryEnabled Boolean @default(false) // C-100: ofrecer delivery en Guanare (se prende al poner la tarifa)
   freeDeliveryThresholdUSD Decimal?          // Free shipping if order total >= this amount
   shippingCostPerKg Decimal? @default(2)     // Cost per kg for consolidable products
   minConsolidatedShipping Decimal? @default(3) // Minimum shipping for consolidated items

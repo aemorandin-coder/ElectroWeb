@@ -224,6 +224,8 @@ export async function POST(request: NextRequest) {
         dimensions: body.productType === 'PHYSICAL' ? (body.dimensions || null) : null,
         isConsolidable: body.productType === 'PHYSICAL' ? (body.isConsolidable !== false) : false,
         shippingCost: body.productType === 'PHYSICAL' && !body.isConsolidable ? (body.shippingCost || 0) : 0,
+        // C-100: la tienda paga el envío de este producto (solo físicos)
+        freeShipping: body.productType === 'PHYSICAL' && body.freeShipping === true,
       },
       });
       if (variants.length > 0) await syncDigitalVariants(tx, created.id, variants);
@@ -289,7 +291,7 @@ export async function PATCH(request: NextRequest) {
       'stock', 'minStock', 'categoryId', 'brandId', 'images', 'mainImage',
       'specs', 'features', 'status', 'isFeatured', 'productType',
       'digitalPlatform', 'digitalRegion', 'deliveryMethod',
-      'weightKg', 'dimensions', 'isConsolidable', 'shippingCost', 'tags'
+      'weightKg', 'dimensions', 'isConsolidable', 'shippingCost', 'freeShipping', 'tags'
     ];
 
     // Filter body to only include allowed fields
@@ -315,6 +317,10 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Stock inválido' }, { status: 400 });
       }
       filteredData.stock = stock;
+    }
+
+    if (filteredData.freeShipping !== undefined && typeof filteredData.freeShipping !== 'boolean') {
+      return NextResponse.json({ error: 'Envío gratis inválido' }, { status: 400 });
     }
 
     if (filteredData.minStock !== undefined) {

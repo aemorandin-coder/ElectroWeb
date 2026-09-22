@@ -194,6 +194,7 @@ export default function ProfilePage() {
           companyName: data.profile?.companyName || '',
           taxId: data.profile?.taxId || '',
           businessVerificationStatus: data.profile?.businessVerificationStatus || 'NONE',
+          businessVerificationNotes: data.profile?.businessVerificationNotes || '',
           businessConstitutiveAct: data.profile?.businessConstitutiveAct || '',
           businessRIFDocument: data.profile?.businessRIFDocument || ''
         };

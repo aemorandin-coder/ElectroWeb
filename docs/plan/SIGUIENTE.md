@@ -1,4 +1,4 @@
-# Punto de partida (actualizado 2026-09-21 noche: en producción, ChatGPT fuera del equipo, Gemini R20 y auditoría de envíos)
+# Punto de partida (actualizado 2026-09-22: envíos y métodos de pago en `main`, deploy pendiente)
 
 Léelo antes de empezar.
 
@@ -17,31 +17,52 @@ Léelo antes de empezar.
   git stash drop stash@{0}
   ```
 
-## 2. Deploy del 21/09 (super merge)
-En el servidor (`/var/www/electroshopve`, PM2 `electroshop-web`):
+## 2. Deploy del 22/09 (envíos y métodos de pago) — `acecf42` en `origin/main`
+
+**Este deploy sí cambia el esquema y agrega una variable de entorno.** En el servidor (`/var/www/electroshopve`, PM2 `electroshop-web`):
+
 ```bash
+cd /var/www/electroshopve
 git pull
-npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script   # debe salir vacío: este deploy no cambia el esquema
+
+# 1. Ver qué va a cambiar en la base (solo lee)
+npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script
+#    Esperado: solo ADD COLUMN y CREATE TABLE "shipment_events". Si aparece un DROP, PARA y avisa.
+
+# 2. Aplicarlo
+npx prisma db push          # si pide aceptar pérdida de datos, PARA
+
+# 3. El cliente de Prisma no se regenera solo con el build
+npx prisma generate
+
+# 4. Variable nueva para el rastreo automático (32 caracteres al azar)
+#    Agrega a .env:  CRON_SECRET="<pega aquí el valor>"
+openssl rand -hex 16
+
 npm run build
 pm2 restart electroshop-web --update-env
-```
-- **Sin cambios de esquema, dependencias ni variables de entorno.**
-  - No hace falta `npm ci` ni `prisma db push`.
-  - Si el `migrate diff` muestra algo, es de un deploy anterior sin aplicar: no se corre y se revisa con Claude.
-- `next.config.js` cambió: permite las fotos de Google. Se aplica con el build.
-- **Después del deploy, con tu OK:** el SQL de `docs/plan/estado/C-96.md`. Primero el diagnóstico, que solo lee; después el `UPDATE` que redondea al centavo los saldos con arrastre binario.
 
-**Cómo comprobar:**
-- `/recuperar-contrasena` en el teléfono: formulario sin tarjeta, errores bajo el campo.
-- Enlace de recuperación viejo → "Enlace vencido o inválido" con "Solicitar otro enlace".
-- Editar un producto en el panel y abrir el home: el cambio se ve de inmediato (antes tardaba hasta un minuto).
-- Editar un producto digital: el margen del paso "Montos y precios" es el último que usaste, no 12.
-- Login: 2 claves malas → el tercer intento pide el captcha; 5 → "Demasiados intentos… Espera 1 minuto".
-- Un cliente que desactivó su cuenta en Configuración entra de nuevo y su cuenta queda activa.
-- Pedido digital pagado: llega "Pedido digital por entregar" (panel, correo y Telegram); en el pedido se anotan proveedor, referencia y costo, y un doble clic no manda dos códigos.
-- **Notificaciones → Qué avisar:** revisar el aviso nuevo "Pedido digital por entregar" (sale por los tres canales por defecto).
-- `/creator/dashboard` en el teléfono: botón de menú arriba a la izquierda; el menú se cierra con la capa, con Escape y al elegir una sección.
-- Correos de envío, código digital, gift card y certificado sin círculos de color vacíos.
+# 5. Rastreo de ZOOM cada 2 horas (crontab -e)
+# 0 */2 * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<tu-dominio>/api/cron/envios >/dev/null
+```
+
+**Después del deploy, en el panel (obligatorio):**
+- **Configuración → Envíos:** revisa el embalaje, pon "Envío gratis desde" si quieres, y **el delivery en Guanare viene apagado**: ponle tarifa y actívalo.
+- **Métodos de pago:** edita el que dice "Binance" y cámbiale el tipo a **Binance Pay**; al guardar se limpia el "Banco Mercantil Panamá" que arrastraba. Completa titular y correo donde falten (ahora el servidor los exige).
+- **Productos:** prende "Envío gratis" en los productos caros que quieras (paso "Precios y envío").
+
+**Qué comprobar (en este orden):**
+1. La tienda abre y un producto se agrega al carrito.
+2. **Recargar saldo:** el modal muestra los métodos de pago. Si sale vacío, algo quedó mal: avísame.
+3. Checkout con un producto físico: elige ZOOM → estado → ciudad → oficina (la lista debe traer oficinas reales) y confirma que solo se cobra el embalaje.
+4. Repite con MRW (agencias) y con "A domicilio".
+5. En Órdenes: la orden nueva muestra "Cobro a destino", el destinatario y "Copiar datos para la guía". Márcala enviada con una guía de prueba.
+6. En Mis pedidos del cliente: guía, "Copiar", "Rastrear" y el historial.
+7. Un producto con "Envío gratis": el badge sale en la tarjeta y el checkout cobra $0 de envío.
+
+**Si algo sale mal:** `git reset --hard d1e1cc7 && npx prisma generate && npm run build && pm2 restart electroshop-web`. Las columnas nuevas pueden quedarse: no estorban a la versión anterior.
+
+**Aún sin probar con datos:** C-100 y C-101 se verificaron con `tsc`, `build` y ESLint, y las APIs de ZOOM se probaron de verdad, pero **no se hizo la prueba de compra completa** (el entorno de Claude no pudo tocar la base). Los pasos 2 a 7 son esa prueba.
 
 ## 3. Incidente: clientes borrados con pedidos en curso (sigue abierto)
 Detalle en **`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`**.
@@ -64,42 +85,36 @@ Detalle en **`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`**.
 
 ## 5. Mensajes para empezar
 
-### Gemini · Ronda R20 (G-62 → G-66)
-> Tienes una ronda nueva, la **R20**: limpieza de productos y dos paneles antes de que Claude los rediseñe. Desde hoy el equipo es Claude + Gemini: **ChatGPT salió**. Sus pantallas son de Claude y tú entras solo a lo que nombra cada tarjeta.
+### Gemini · R20 (G-62 → G-66) y luego R21 (G-67)
+> Trabajas en tu carpeta, `../ElectroShopVe-gemini`, **nunca en la principal**: el 22/09 commiteaste ahí, encima de una tarea de Claude sin terminar, y marcaste "HECHO" algo que no compilaba y dejaba la tienda sin métodos de pago. Desde ahora, todo va en tu rama y Claude lo revisa antes del merge.
 >
-> **Antes de empezar**, lee completo `GEMINI.md` y, en `docs/plan/PLAN_GEMINI.md`, "Resultado de R17, R18 y R19" y "Ronda R20". Para tipos, relee G-47 y G-48 ("Ronda R13") y G-59.
+> **Antes de empezar**, lee completo `GEMINI.md` y, en `docs/plan/PLAN_GEMINI.md`, "Ronda R20" y "Ronda R21". Para tipos, relee G-47, G-48 y G-59.
 >
-> **Rama** (en `../ElectroShopVe-gemini`, con `bash`):
-> 1. `git status` → limpio. Estás en `gemini/marketing-correos`: ya está en `main`, no la toques más.
-> 2. `git switch -c gemini/R20 claude/C-99` → **G-62, G-63, G-64, G-65, G-66**, en ese orden.
+> **Ramas** (con `bash`):
+> 1. `git status` → limpio. `git fetch origin && git switch -c gemini/R20 origin/main`.
+> 2. **R20:** G-62, G-63, G-64, G-65 y G-66, en ese orden, un commit por tarjeta.
+> 3. **R21:** `git switch -c gemini/R21 gemini/R20` → **G-67**, que es un informe: **no se toca código**.
 >
 > **Reglas de oro:**
-> - Haz solo lo que dice cada tarjeta, en los archivos que nombra. Fuera en R20: `app/admin/(dashboard)/orders/**`, `components/orders/**`, `app/checkout/**` (Claude rehace los envíos), `app/api/**`, `lib/**` y `prisma/**`.
-> - No cambian `fetch`, URLs, `method`, cuerpos, permisos, cálculos ni textos visibles, salvo lo que la tarjeta pida.
+> - Solo lo que dice cada tarjeta, en los archivos que nombra.
+> - Fuera: `app/api/**`, `lib/**`, `prisma/**`, `app/checkout/**`, `app/admin/(dashboard)/orders/**`, `components/orders/**`, `components/checkout/**` y `app/admin/(dashboard)/payments/**` (Claude los acaba de rehacer).
+> - No cambian `fetch`, URLs, `method`, cuerpos, permisos, cálculos ni textos visibles, salvo lo que pida la tarjeta.
 > - G-63 es la **única** eliminación permitida (`ProductForm.tsx`, con el `git grep` pegado).
 > - En G-65 **no borres** `handleExcelChange`, `handleSelectAll`, `handleSelectProduct` ni `slug`: van a Notas.
+> - Nada de datos de ejemplo que parezcan reales (teléfonos, cuentas, wallets): si una plantilla los necesita, van vacíos e inactivos.
 > - Sin `// eslint-disable`, sin `any` nuevos, sin emojis y sin reindentar archivos.
-> - **Nada directo en `main`.** Los dos commits `[Marketing]` del 21/09 entraron a `main` sin revisión: no se repite. Si Andrés te pide algo fuera de la ronda, va en una rama `gemini/<tema>` y Claude la revisa antes del merge.
 >
-> **En cada tarjeta, antes del commit, pega en `docs/plan/estado/G-XX.md`:**
-> - ESLint por archivo, antes y después.
-> - `npx tsc --noEmit` (salida real).
-> - `npm run build` (últimas 5 líneas).
-> - `git diff --stat` contra `git diff -w --stat`.
-> - Lo que pida la "Verificación" o el "Criterio" de la tarjeta.
+> **En cada tarjeta, antes del commit, pega en `docs/plan/estado/G-XX.md`:** ESLint por archivo antes y después, `npx tsc --noEmit` (salida real), `npm run build` (últimas 5 líneas) y `git diff --stat` contra `git diff -w --stat`. **Si `tsc` o el build fallan, la tarjeta no está hecha:** ponle `BLOQUEADO — motivo` y sigue con la siguiente.
 >
-> Un commit por tarjeta, con el prefijo `[G-XX]`. Si algo no cuadra, pon `BLOQUEADO — motivo` y sigue con la siguiente: no te quedes esperando. No hagas merge, rebase ni push. Al terminar G-66, avisa a Andrés y pega `git log --oneline claude/C-99..gemini/R20`.
-
-### ChatGPT
-**Fuera del equipo desde el 21/09.** No se le manda nada.
+> Un commit por tarjeta con el prefijo `[G-XX]`. No hagas merge, rebase ni push. Al terminar G-67, avisa a Andrés y pega `git log --oneline origin/main..gemini/R21`.
 
 ### Claude (siguiente sesión)
-> Continúa el proyecto ElectroShopVe (en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md`, `docs/plan/PLAN_CLAUDE.md` §4b y `docs/plan/AUDITORIA_ENVIOS.md`.
-> - ChatGPT salió del equipo: sus pantallas son tuyas (filas 15-17). Lo nuevo sale de `main` (o de `claude/C-99` si no se mergeó).
-> - **Prioridad: C-100, envíos con ZOOM y MRW**, cuando Andrés responda D-E1…D-E4. La fase 1 no necesita credenciales.
-> - Esperan a Andrés: el OK del SQL de C-96, "Duplicar" (C-97) y el diagnóstico para **C-92**. Sin dependencias: fila 13c y fila 18.
-> - Cuando Gemini avise, revisa R20 con el método de C-86 y C-98. Después, C-51 (productos).
-> - Busca bugs, seguridad y diseño inconsistente en todo lo que toques. Nada de `git push` sin que yo lo pida.
+> Continúa ElectroShopVe (en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` (§2 el deploy del 22/09), `docs/plan/PLAN_CLAUDE.md` §4b y las auditorías `AUDITORIA_ENVIOS.md` y `AUDITORIA_PAGOS.md`.
+> - **Antes de tocar nada:** `git status`, `git log -3` y `git branch --show-current`. Gemini a veces trabaja en la carpeta principal.
+> - **Primero:** la prueba de punta a punta que quedó pendiente de C-100 y C-101 (compra física con ZOOM y con MRW, envío gratis, delivery en Guanare, recarga de saldo y Binance Pay), en la tienda de ejemplo con `db push`. Si algo falla en producción, eso manda.
+> - **Después, en este orden:** C-105 (IP real, con el nginx del servidor), C-104 (reportes reales), C-102 (descuentos) y C-103 (firma de documentos con física).
+> - Una rama por tarea, commits `[C-XX]` y su `docs/plan/estado/C-XX.md`. Nada de `git push` sin que Andrés lo pida.
+> - Busca bugs, seguridad y diseño inconsistente en todo lo que toques.
 
 ## 6. Datos útiles para Claude
 - **Node:** `export PATH="$HOME/.local/lib/nodejs/node-v20.18.0-linux-x64/bin:$PATH"`.

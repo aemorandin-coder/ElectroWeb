@@ -1628,3 +1628,31 @@ Import: agrega `formatUSD` a `@/lib/currency` en cada archivo (en `products/page
 **Criterio:** `grep -n 'toFixed(2)' "app/admin/(dashboard)/products/page.tsx" "app/admin/(dashboard)/products/_components/wizard/SadesSearchModal.tsx"` → 0, y en `Step2Prices.tsx` solo queda el de `profit` (~l.17).
 
 **Al terminar G-66:** avisa a Andrés y pega `git log --oneline claude/C-99..gemini/R20`.
+
+---
+
+## Ronda R21 · Informe de las pantallas que Claude va a rehacer · G-67
+**R20 sigue pendiente: primero esas cinco tarjetas.** R21 es una sola, de solo lectura.
+
+Andrés pidió cuatro trabajos grandes (descuentos, firma de documentos, reportes reales y captura real de IP). Los hace Claude porque tocan dinero, datos, diseño y el servidor. Lo que sí ayuda, y mucho, es un informe medido de cómo están hoy esas pantallas.
+
+### G-67 · Cómo están hoy descuentos, documentos legales, reportes y la firma · Depende: G-66
+**No edites código.** Solo `docs/plan/estado/G-67.md`. Levanta el servidor con datos (`npm run dev -- -p 3001`); si no puedes, escribe `QA con datos pendiente` y haz lo que sí se pueda leyendo el código.
+
+Pantallas:
+1. `app/admin/(dashboard)/discount-requests/page.tsx` (Descuentos)
+2. `app/admin/(dashboard)/legal/page.tsx` (Documentos legales, con la firma del cliente)
+3. `app/admin/(dashboard)/reports/page.tsx` y lo que devuelve `GET /api/admin/reports?type=…` (Resumen, Productos, Interacciones, Seguridad)
+4. `components/modals/BalanceTermsModal.tsx` (el cliente firma los términos del saldo)
+
+De **cada** una anota:
+- **Primera pantalla a 390 px:** qué se ve sin bajar, cuántos toques hasta la acción principal, y si algo se sale o se corta (mide en px).
+- **A 1440 px:** lo mismo.
+- **Datos vacíos:** qué tarjetas, tablas o gráficos salen en 0, vacíos o con "no configurado", y de qué llamada vienen. Pega la URL y el JSON recortado.
+- **Acciones:** lista de cada botón, filtro y modal, y si funciona (pruébalos).
+- **Textos:** los que no se entienden o están en inglés.
+- **Prohibidos que veas:** `<img>`, hex en `className`, `text-[10px]` o menos, `alert/confirm` nativos, `any`, animaciones infinitas. Con archivo y línea.
+- **En reportes, además:** de cada pestaña, si el número sale de la base o de un valor fijo, siguiendo la llamada hasta `app/api/admin/reports/route.ts`.
+- **En la firma, además:** qué pasa si firmas y borras, si funciona con el dedo en el teléfono, y si el trazo se ve completo al guardarlo.
+
+**No propongas rediseños ni los hagas**: solo lo que hay, medido. Un commit `[G-67]` con el estado y nada más.

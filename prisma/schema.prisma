@@ -155,6 +155,7 @@ model Transaction {
   description     String?
   reference       String?
   paymentMethod   String?
+  companyPaymentMethodId String?
   rejectionReason String?     // Reason for rejection if status is CANCELLED
   metadata        String?     // JSON string
   createdAt       DateTime    @default(now())
@@ -843,6 +844,7 @@ model CompanyPaymentMethod {
 
   // Crypto/Digital
   email         String?
+  payId         String?   // Binance Pay ID
   walletAddress String?
   network       String?
 
@@ -870,6 +872,7 @@ enum PaymentMethodType {
   ZELLE
   ZINLI
   PAYPAL
+  BINANCE_PAY
   CRYPTO
   CASH
   MERCANTIL_PANAMA

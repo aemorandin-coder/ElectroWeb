@@ -6,7 +6,6 @@ import { montoDecimal } from '@/lib/pricing';
 import { notifyRechargeRequested } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD } from '@/lib/currency';
-import { formatPaymentMethod } from '@/lib/format-helpers';
 
 // Crear solicitud de recarga de saldo (requiere aprobación del admin)
 export async function POST(req: NextRequest) {
@@ -22,6 +21,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     const amount = Number(body?.amount);
     const paymentMethod = typeof body?.paymentMethod === 'string' ? body.paymentMethod.slice(0, 40) : '';
+    const companyPaymentMethodId = typeof body?.companyPaymentMethodId === 'string' && body.companyPaymentMethodId.trim()
+      ? body.companyPaymentMethodId.trim()
+      : null;
     const reference = typeof body?.reference === 'string' ? body.reference.trim().slice(0, 60) : null;
     const description = typeof body?.description === 'string' ? body.description.trim().slice(0, 200) : null;
 
@@ -30,9 +32,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Monto inválido (entre $1 y $10.000)' }, { status: 400 });
     }
 
-    if (!paymentMethod) {
+    if (!paymentMethod && !companyPaymentMethodId) {
       return NextResponse.json({ error: 'Método de pago requerido' }, { status: 400 });
     }
+
+    // Verificar método de la empresa si fue proporcionado (C-101)
+    let companyMethod = null;
+    if (companyPaymentMethodId) {
+      companyMethod = await prisma.companyPaymentMethod.findUnique({
+        where: { id: companyPaymentMethodId },
+      });
+
+      if (!companyMethod || !companyMethod.isActive) {
+        return NextResponse.json({ error: 'El método de pago seleccionado no está disponible' }, { status: 400 });
+      }
+
+      if (companyMethod.minAmount !== null && amount < Number(companyMethod.minAmount)) {
+        return NextResponse.json({
+          error: `El monto mínimo para este método es ${formatUSD(Number(companyMethod.minAmount))}`,
+        }, { status: 400 });
+      }
+
+      if (companyMethod.maxAmount !== null && amount > Number(companyMethod.maxAmount)) {
+        return NextResponse.json({
+          error: `El monto máximo para este método es ${formatUSD(Number(companyMethod.maxAmount))}`,
+        }, { status: 400 });
+      }
+    }
+
+    const resolvedMethodName = companyMethod?.name || paymentMethod;
 
     // Get or create user balance
     let userBalance = await prisma.userBalance.findUnique({
@@ -59,11 +87,14 @@ export async function POST(req: NextRequest) {
         status: 'PENDING',
         amount: montoDecimal(amount), // texto exacto (C-96)
         currency: 'USD',
-        description: description || `Recarga de saldo - ${formatPaymentMethod(paymentMethod)}`,
+        description: description || `Recarga de saldo - ${resolvedMethodName}`,
         reference: reference || null,
-        paymentMethod,
+        paymentMethod: companyMethod ? companyMethod.type : paymentMethod,
+        companyPaymentMethodId: companyMethod ? companyMethod.id : null,
         metadata: JSON.stringify({
-          paymentMethod,
+          paymentMethod: companyMethod ? companyMethod.type : paymentMethod,
+          companyPaymentMethodId: companyMethod?.id || null,
+          companyPaymentMethodName: resolvedMethodName,
           reference,
           requestedAt: new Date().toISOString(),
         }),
@@ -81,9 +112,9 @@ export async function POST(req: NextRequest) {
         summary: `${userName} pidió recargar saldo`,
         fields: [
           ['Monto', formatUSD(amount)],
-          ['Método', formatPaymentMethod(paymentMethod)],
-          ['Referencia', reference],
-          ['Correo', session.user.email],
+          ['Método', resolvedMethodName],
+          ['Referencia', reference || 'Sin referencia'],
+          ['Correo', session.user.email || ''],
         ],
         link: '/admin/transactions',
       });

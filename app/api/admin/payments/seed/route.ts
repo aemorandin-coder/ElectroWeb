@@ -3,15 +3,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 // POST - Seed initial payment methods
 export async function POST() {
     try {
         const session = await getServerSession(authOptions);
 
-        // Check if user is admin
-        const userRole = (session?.user as { role?: string } | undefined)?.role;
-        if (!userRole || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
+        if (!isAuthorized(session, 'MANAGE_SETTINGS')) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
@@ -27,74 +26,86 @@ export async function POST() {
         }
 
         // Create initial payment methods
-        // Using 'as any' for type field to support new types before Prisma client regeneration
         const methodsData: Prisma.CompanyPaymentMethodCreateInput[] = [
             {
-                type: 'BANK_TRANSFER',
-                name: 'Transferencia Bancaria',
+                type: 'MOBILE_PAYMENT',
+                name: 'Pago Móvil BDV',
                 bankName: 'Banco de Venezuela',
-                accountNumber: '',
-                accountType: 'Corriente',
-                holderName: 'Electro Shop Morandin C.A.',
-                holderId: 'J-12345678-9',
-                instructions: 'Transferencia bancaria nacional',
-                displayNote: 'Incluir número de orden en el concepto',
+                phone: '0412-1234567',
+                holderId: 'V-12345678',
+                holderName: 'ElectroShop Morandin C.A.',
+                instructions: 'Pago móvil venezolano con conciliación automática',
+                displayNote: 'Verificación automática al instante con el BDV',
                 sortOrder: 1,
                 isActive: true,
             },
             {
-                type: 'MOBILE_PAYMENT',
-                name: 'Pago Móvil',
+                type: 'BANK_TRANSFER',
+                name: 'Transferencia Bancaria',
                 bankName: 'Banco de Venezuela',
-                phone: '0412-1234567',
-                holderId: 'V-12345678',
-                instructions: 'Pago móvil venezolano',
-                displayNote: 'Enviar captura del pago al WhatsApp',
+                accountNumber: '01020123456789012345',
+                accountType: 'Corriente',
+                holderName: 'ElectroShop Morandin C.A.',
+                holderId: 'J-12345678-9',
+                instructions: 'Transferencia bancaria nacional',
+                displayNote: 'Indicar número de orden en el concepto de la transferencia',
                 sortOrder: 2,
                 isActive: true,
             },
             {
+                type: 'BINANCE_PAY',
+                name: 'Binance Pay',
+                email: 'pagos@electroshop.com',
+                payId: '123456789',
+                holderName: 'ElectroShop VE',
+                instructions: 'Binance Pay USDT sin comisión',
+                displayNote: 'Envía USDT vía Binance Pay a nuestro correo o Pay ID',
+                sortOrder: 3,
+                isActive: true,
+            },
+            {
                 type: 'CRYPTO',
-                name: 'Criptomonedas (USDT)',
-                walletAddress: '',
+                name: 'Criptomonedas (USDT-TRC20)',
+                walletAddress: 'TYDzsYUE28N4e5g6h7j8k9l0m1n2o3p4q5',
                 network: 'USDT-TRC20',
                 instructions: 'USDT en red TRC20 (Tron)',
-                displayNote: 'Solo red TRC20. Verificar dirección antes de enviar.',
-                sortOrder: 3,
+                displayNote: 'Solo red TRC20. Verifica la dirección antes de enviar.',
+                sortOrder: 4,
                 isActive: true,
             },
             {
                 type: 'MERCANTIL_PANAMA',
                 name: 'Mercantil Panamá',
                 bankName: 'Banco Mercantil Panamá',
-                accountNumber: '',
+                accountNumber: '0123456789',
                 accountType: 'Corriente',
-                holderName: 'Electro Shop International',
-                email: '',
+                holderName: 'ElectroShop International Inc.',
+                email: 'internacional@electroshop.com',
                 instructions: 'Transferencia internacional a cuenta en Panamá',
-                displayNote: 'Para pagos desde el exterior. Tiempo de acreditación: 24-48h.',
-                sortOrder: 4,
+                displayNote: 'Para clientes en el exterior. Acreditación en 24-48h hábiles.',
+                sortOrder: 5,
                 isActive: true,
             },
             {
                 type: 'ZELLE',
                 name: 'Zelle',
-                email: '',
-                holderName: '',
-                instructions: 'Pago via Zelle (USA)',
+                email: 'zelle@electroshop.com',
+                holderName: 'ElectroShop LLC',
+                instructions: 'Pago vía Zelle (USA)',
                 displayNote: 'Solo para clientes con cuenta bancaria en USA',
-                sortOrder: 5,
-                isActive: false, // Disabled by default
+                sortOrder: 6,
+                isActive: false, // Inactivo por defecto
             },
             {
                 type: 'ZINLI',
                 name: 'Zinli',
-                email: '',
-                holderName: '',
-                instructions: 'Pago via Zinli (Wallet Digital USD)',
-                displayNote: 'Recarga tu wallet Zinli y envía el pago al correo indicado',
-                sortOrder: 6,
-                isActive: false, // Disabled by default
+                email: 'zinli@electroshop.com',
+                phone: '0412-1234567',
+                holderName: 'ElectroShop Zinli',
+                instructions: 'Pago vía Zinli (Billetera Digital USD)',
+                displayNote: 'Envía el pago al correo o teléfono Zinli indicado',
+                sortOrder: 7,
+                isActive: false, // Inactivo por defecto
             },
         ];
 

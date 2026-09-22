@@ -59,7 +59,7 @@ export default function CheckoutPage() {
   const [companySettings, setCompanySettings] = useState<any>(null);
   const [userBalance, setUserBalance] = useState<number>(0);
   const [showRechargeModal, setShowRechargeModal] = useState(false);
-  const [paymentMode, setPaymentMode] = useState<'DIRECT' | 'WALLET' | null>(null);
+  const [paymentMode, setPaymentMode] = useState<'WALLET' | 'PAGO_MOVIL' | 'GIFT_CARD' | 'DIRECT'>('WALLET');
 
   // Dynamic payment methods from database
   const [paymentMethods, setPaymentMethods] = useState<Array<{
@@ -69,9 +69,11 @@ export default function CheckoutPage() {
     bankName?: string;
     phone?: string;
     holderId?: string;
+    holderName?: string;
     email?: string;
     walletAddress?: string;
     network?: string;
+    payId?: string;
     displayNote?: string;
     qrCodeImage?: string;
     isActive: boolean;
@@ -333,7 +335,7 @@ export default function CheckoutPage() {
     }
 
     // Check if email is verified
-    if (!(session.user as any).emailVerified) {
+    if (!(session.user as { emailVerified?: unknown }).emailVerified) {
       setError('Debes verificar tu correo electrónico antes de realizar compras. Revisa tu bandeja de entrada y haz clic en el enlace de verificación.');
       setLoading(false);
       return;
@@ -362,25 +364,25 @@ export default function CheckoutPage() {
       return;
     }
 
-    // If using Gift Card mode (DIRECT), user must have sufficient balance (from redeemed gift cards)
-    // The gift card mode now just adds to wallet, so we use WALLET for payment
-    if (paymentMode === 'DIRECT') {
-      if (userBalance < finalTotal) {
-        setError('Debes canjear una Gift Card para tener saldo suficiente, o usa "Usar Saldo / Recargar"');
-        setLoading(false);
-        return;
-      }
-    }
-
-    // If wallet mode, check balance
-    if (paymentMode === 'WALLET' && userBalance < finalTotal) {
-      setError('Saldo insuficiente. Recarga tu saldo o canjea una Gift Card.');
+    if ((paymentMode === 'DIRECT' || paymentMode === 'GIFT_CARD') && userBalance < finalTotal) {
+      setError('Debes canjear una Gift Card para tener saldo suficiente, o usa "Pagar con Saldo"');
       setLoading(false);
       return;
     }
 
-    // Both modes now use WALLET payment method since gift cards add to wallet balance
-    const finalPaymentMethod = 'WALLET';
+    if (paymentMode === 'WALLET' && userBalance < finalTotal) {
+      setError('Saldo insuficiente. Recarga tu saldo antes de completar el pedido.');
+      setLoading(false);
+      return;
+    }
+
+    if (paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified) {
+      setError('Debes verificar tu Pago Móvil antes de completar el pedido.');
+      setLoading(false);
+      return;
+    }
+
+    const finalPaymentMethod = paymentMode === 'PAGO_MOVIL' ? 'MOBILE_PAYMENT' : 'WALLET';
 
     // Show processing overlay
     setShowProcessingOverlay(true);
@@ -402,7 +404,7 @@ export default function CheckoutPage() {
           deliveryMethod: envio.deliveryMethod,
           shipping: hasPhysicalItems ? envioParaServidor(envio, clienteEnvio) : undefined,
           paymentMethod: finalPaymentMethod,
-          mobilePaymentData: mobilePaymentData || null,
+          mobilePaymentData: paymentMode === 'PAGO_MOVIL' ? mobilePaymentData : null,
           notes: formData.notes,
           expectedTotalUSD: finalTotal,
         }),
@@ -499,7 +501,7 @@ export default function CheckoutPage() {
 
   // Handle Gift Card code input formatting
   const handleGiftCardCodeChange = (value: string) => {
-    let cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     let formatted = '';
     if (cleaned.length > 0) {
       formatted += cleaned.substring(0, 4);
@@ -755,7 +757,7 @@ export default function CheckoutPage() {
                 </h2>
 
                 {/* Email Verification Backdrop */}
-                {session?.user && !(session.user as any).emailVerified && (
+                {session?.user && !(session.user as { emailVerified?: unknown }).emailVerified && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 rounded-lg overflow-auto p-4">
                     <div className="text-center w-full max-w-sm mx-auto">
                       <div className="w-12 h-12 bg-warning-strong rounded-full flex items-center justify-center mx-auto mb-3 text-white shadow-sm">
@@ -782,65 +784,133 @@ export default function CheckoutPage() {
                 )}
 
                 {/* Payment Mode Selection */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <button
                     type="button"
-                    onClick={() => setPaymentMode(paymentMode === 'DIRECT' ? null : 'DIRECT')}
-                    className={`relative p-6 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'DIRECT'
+                    onClick={() => setPaymentMode('WALLET')}
+                    className={`relative p-5 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'WALLET'
                       ? 'border-brand-500 bg-brand-500/5 shadow-sm'
                       : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
                       }`}
                   >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${paymentMode === 'DIRECT'
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-3 transition-colors ${paymentMode === 'WALLET'
                       ? 'bg-brand-500 text-white'
                       : 'bg-brand-500/10 text-brand-600'
-                      }`}>
-                      <FiGift className="w-6 h-6" />
+                      }`}
+                    >
+                      <FontAwesomeIcon icon={faWallet} className="w-5 h-5" />
                     </div>
-                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'DIRECT' ? 'text-brand-600' : 'text-ink'}`}>
-                      Canjear Gift Card
+                    <h3 className={`font-bold text-base mb-1 ${paymentMode === 'WALLET' ? 'text-brand-600' : 'text-ink'}`}>
+                      Pagar con Saldo
                     </h3>
-                    <p className="text-sm text-muted">
-                      Usa una Gift Card para agregar saldo a tu cuenta
+                    <p className="text-xs text-muted leading-relaxed">
+                      Usa tu saldo en cuenta o recarga con Transferencia, Binance o Zelle
                     </p>
-                    {paymentMode === 'DIRECT' && (
-                      <div className="absolute top-4 right-4 w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center">
-                        <FiCheck className="w-4 h-4 text-white" />
+                    {paymentMode === 'WALLET' && (
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-brand-500 rounded-full flex items-center justify-center">
+                        <FiCheck className="w-3.5 h-3.5 text-white" />
                       </div>
                     )}
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setPaymentMode(paymentMode === 'WALLET' ? null : 'WALLET')}
-                    className={`relative p-6 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'WALLET'
+                    onClick={() => setPaymentMode('PAGO_MOVIL')}
+                    className={`relative p-5 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'PAGO_MOVIL'
                       ? 'border-brand-500 bg-brand-500/5 shadow-sm'
                       : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
                       }`}
                   >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${paymentMode === 'WALLET'
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-3 transition-colors ${paymentMode === 'PAGO_MOVIL'
                       ? 'bg-brand-500 text-white'
                       : 'bg-brand-500/10 text-brand-600'
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faWallet} className="w-6 h-6" />
+                      }`}>
+                      <FaMobileScreen className="w-5 h-5" />
                     </div>
-                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'WALLET' ? 'text-brand-600' : 'text-ink'}`}>
-                      Usar Saldo / Recargar
-                    </h3>
-                    <p className="text-sm text-muted">
-                      Paga con tu saldo disponible en la plataforma
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <h3 className={`font-bold text-base ${paymentMode === 'PAGO_MOVIL' ? 'text-brand-600' : 'text-ink'}`}>
+                        Pago Móvil BDV
+                      </h3>
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-success-strong/10 text-success-strong rounded-full">
+                        Directo
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted leading-relaxed">
+                      Verificación automática e instantánea 24/7 con Banco de Venezuela
                     </p>
-                    {paymentMode === 'WALLET' && (
-                      <div className="absolute top-4 right-4 w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center">
-                        <FiCheck className="w-4 h-4 text-white" />
+                    {paymentMode === 'PAGO_MOVIL' && (
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-brand-500 rounded-full flex items-center justify-center">
+                        <FiCheck className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMode('GIFT_CARD')}
+                    className={`relative p-5 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT'
+                      ? 'border-brand-500 bg-brand-500/5 shadow-sm'
+                      : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
+                      }`}
+                  >
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-3 transition-colors ${paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT'
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-brand-500/10 text-brand-600'
+                      }`}>
+                      <FiGift className="w-5 h-5" />
+                    </div>
+                    <h3 className={`font-bold text-base mb-1 ${paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT' ? 'text-brand-600' : 'text-ink'}`}>
+                      Canjear Gift Card
+                    </h3>
+                    <p className="text-xs text-muted leading-relaxed">
+                      Aplica el saldo de una tarjeta de regalo a tu cuenta
+                    </p>
+                    {(paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT') && (
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-brand-500 rounded-full flex items-center justify-center">
+                        <FiCheck className="w-3.5 h-3.5 text-white" />
                       </div>
                     )}
                   </button>
                 </div>
 
+                {/* Direct BDV Pago Movil Form */}
+                {paymentMode === 'PAGO_MOVIL' && (
+                  <div className="bg-surface rounded-2xl p-6 border border-line shadow-sm mb-6">
+                    <div className="mb-4 pb-3 border-b border-line flex items-center justify-between flex-wrap gap-2">
+                      <div>
+                        <h3 className="font-bold text-ink text-base">Verificación Directa de Pago Móvil</h3>
+                        <p className="text-xs text-muted">Transfiere a la cuenta de la tienda y valida tu comprobante</p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-success-strong/10 text-success-strong text-xs font-bold rounded-full">
+                        <FiShield className="w-3.5 h-3.5" />
+                        Conciliación BDV
+                      </span>
+                    </div>
+                    <CheckoutPagoMovilForm
+                      montoEsperado={finalTotal}
+                      montoEnBs={companySettings?.exchangeRateVES ? finalTotal * Number(companySettings.exchangeRateVES) : 0}
+                      datosComercio={{
+                        telefono: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.phone,
+                        cedula: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderId,
+                        banco: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.bankName,
+                        titular: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderName,
+                      }}
+                      onVerified={(data) => {
+                        setMobilePaymentVerified(true);
+                        setMobilePaymentData(data);
+                        toast.success('Pago Móvil verificado exitosamente');
+                      }}
+                      onReset={() => {
+                        setMobilePaymentVerified(false);
+                        setMobilePaymentData(null);
+                      }}
+                      isVerified={mobilePaymentVerified}
+                    />
+                  </div>
+                )}
+
                 {/* Gift Card Redemption Section */}
-                {paymentMode === 'DIRECT' && (
+                {(paymentMode === 'DIRECT' || paymentMode === 'GIFT_CARD') && (
                   <div className="bg-surface rounded-2xl p-6 border border-line shadow-sm overflow-hidden relative">
 
                     <div className="relative">
@@ -1172,6 +1242,14 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                     )}
+                    {/* Notice for manual recharge methods */}
+                    <div className="mt-4 p-3.5 bg-brand-50/70 border border-brand-200 rounded-xl text-xs text-brand-900 flex items-start gap-2.5">
+                      <FiInfo className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
+                      <div className="leading-relaxed">
+                        <span className="font-bold block text-brand-700 mb-0.5">¿Deseas pagar con Transferencia, Binance Pay, Zelle o Zinli?</span>
+                        Por seguridad de la plataforma, estos métodos se procesan recargando saldo a tu cuenta. Haz clic en <strong>Recargar Saldo</strong>, ingresa tu pago y una vez acreditado tu pedido se completará al instante.
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1243,7 +1321,14 @@ export default function CheckoutPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || !acceptedTerms || (paymentMode === 'WALLET' && userBalance < finalTotal) || (paymentMode === 'DIRECT' && formData.paymentMethod === 'MOBILE_PAYMENT' && !mobilePaymentVerified)}
+                disabled={
+                  loading ||
+                  !acceptedTerms ||
+                  !paymentMode ||
+                  (paymentMode === 'WALLET' && userBalance < finalTotal) ||
+                  ((paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT') && userBalance < finalTotal) ||
+                  (paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified)
+                }
                 className={`w-full flex items-center justify-center gap-2 ${adminPrimaryButton} py-3.5 text-base font-bold disabled:opacity-50`}
               >
                 {loading ? (
@@ -1268,10 +1353,16 @@ export default function CheckoutPage() {
                   Debes aceptar los términos y condiciones para continuar
                 </p>
               )}
-              {paymentMode === 'DIRECT' && formData.paymentMethod === 'MOBILE_PAYMENT' && !mobilePaymentVerified && (
+              {paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified && (
                 <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
                   <FiAlertCircle className="w-3 h-3" />
-                  Debes verificar tu pago móvil antes de continuar
+                  Debes verificar tu Pago Móvil antes de completar el pedido
+                </p>
+              )}
+              {paymentMode === 'WALLET' && userBalance < finalTotal && (
+                <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
+                  <FiAlertCircle className="w-3 h-3" />
+                  Saldo insuficiente. Recarga tu saldo para completar el pedido.
                 </p>
               )}
             </form>
@@ -1289,7 +1380,7 @@ export default function CheckoutPage() {
                     </div>
                     Información de Contacto
                   </h2>
-                  {(session?.user as any)?.emailVerified && (
+                  {(session?.user as { emailVerified?: unknown })?.emailVerified && (
                     <div className="flex items-center gap-1.5 px-2 py-1 bg-success/15 border border-success/30 rounded-full">
                       <FiCheckCircle className="w-3 h-3 text-success-strong" />
                       <span className="text-xs font-bold text-success-strong">Verificado</span>

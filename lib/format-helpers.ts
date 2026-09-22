@@ -6,6 +6,7 @@
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {
     MOBILE_PAYMENT: 'Pago Móvil',
     BANK_TRANSFER: 'Transferencia Bancaria',
+    BINANCE_PAY: 'Binance Pay',
     ZELLE: 'Zelle',
     ZINLI: 'Zinli',
     PAYPAL: 'PayPal',

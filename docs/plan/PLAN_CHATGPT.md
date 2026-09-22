@@ -1,5 +1,7 @@
 # PLAN_CHATGPT.md — Rondas de ChatGPT (diseño y jerarquía)
 
+> **Historial.** ChatGPT salió del equipo el 21/09. Lo pendiente lo hace Claude: ver "Salida del 21/09" al final.
+
 Reglas: `CHATGPT.md` (léelo completo primero). Diseño: `docs/plan/PLAN.md` §1 y §6. Recetas: `lib/admin-ui.ts`.
 Hallazgos tomados de capturas reales del 2026-09-16 (tienda de ejemplo, 390 y 1440 px). Los números de línea son aproximados: busca por texto.
 
@@ -293,6 +295,15 @@ Andrés cerró el carril de ChatGPT hasta nueva orden. **No se empieza nada.** A
 | **R2 completa (GPT-07 a GPT-11)** y **R3 completa (GPT-12 a GPT-16)** | ChatGPT al volver | Sin empezar. El wizard ya trae C-95: el margen se guarda con `digitalMarginPercent`, no lo quites. |
 | Borrar `GPT-02-preview.html` | Hecho por Claude en C-94 | |
 
-**Al volver:**
-- Rama `chatgpt/R2` **desde `main`** (ya no desde `chatgpt/R1`).
-- Antes, lee lo que Gemini tocó en R18 (`docs/plan/estado/G-57…G-60.md`): son las mismas pantallas y ya traen tipos y avisos.
+---
+
+## Salida del 21/09
+Andrés sacó a ChatGPT del equipo el mismo 21/09: no vuelve de la pausa. Lo pendiente queda así:
+
+| Pendiente | Pasa a | Nota |
+|---|---|---|
+| Ajustes de GPT-02 (la tarjeta abre el detalle, "Actualizar" como ícono, métricas compactas) | **Claude, dentro de C-100** | Órdenes cambia con los envíos: se rediseña una sola vez. |
+| R2 · productos (GPT-07…GPT-11) | **Claude, C-51** (vuelve a su dueño original) | Primero el mapa (lo que pedía GPT-07). Incluye las casillas perdidas de las acciones masivas (C-98) y "Duplicar". Gemini hace antes la limpieza mecánica (R20: G-63, G-65, G-66). |
+| R3 · resto del panel (GPT-12…GPT-16) | **Claude**, pantalla por pantalla | Con la guía de `CHATGPT.md` §4. |
+| Borrar `ProductForm.tsx` (GPT-11) | **Gemini G-63** | Confirmado sin uso con `git grep`. |
+| Carpeta `../ElectroShopVe-chatgpt`, ramas `chatgpt/*` y `stash@{0}` | **Andrés** | Todo ya está en `main` o reemplazado por C-95. Se pueden borrar (comandos en `SIGUIENTE.md` §1). |

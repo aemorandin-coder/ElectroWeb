@@ -3,7 +3,8 @@
 Lee este archivo COMPLETO antes de cada tarea. Si una instrucción de aquí choca con tu criterio, **gana este archivo**.
 
 Proyecto: tienda online (Next.js 16 App Router, React 19, Tailwind CSS 4, Prisma, NextAuth). Idioma de la interfaz: español de Venezuela.
-**Tu orden de trabajo (rondas, prompts y tarjetas desde G-09): `docs/plan/PLAN_GEMINI.md`. Las últimas rondas (R17-R19) están al final, en "Plan final de Gemini".**
+**Tu orden de trabajo (rondas, prompts y tarjetas desde G-09): `docs/plan/PLAN_GEMINI.md`. La ronda vigente (R20) está al final.**
+**Desde el 21/09 el equipo es Claude + Gemini:** ChatGPT salió. Todo lo que diga "carril ChatGPT" ahora es de Claude.
 Contexto: `docs/plan/PLAN.md` (diseño) y `docs/plan/AUDITORIA.md` (problemas). Lo que hace Claude en paralelo: `docs/plan/PLAN_CLAUDE.md`.
 
 ---
@@ -51,6 +52,12 @@ docs/plan/estado/G-*.md      (solo archivos que empiecen con G-)
 #        app/admin/(dashboard)/products/page.tsx (solo G-58), app/creator/dashboard/cursos/** y
 #        app/customer/(dashboard)/orders/[id]/digital/** (solo G-59 y G-60)
 #   R19: solo docs/plan/estado/G-61.md
+# ChatGPT salió del equipo el 21/09: sus pantallas son de Claude. Solo entras con una tarjeta que las nombre.
+# R20 (desde 21/09): lista exacta en PLAN_GEMINI.md, "Ronda R20". Además de tu carril:
+#   components/modals/ConfirmDialog.tsx (G-62), app/admin/(dashboard)/gift-cards/page.tsx (G-64),
+#   app/admin/(dashboard)/products/** (G-63, G-65, G-66), app/admin/(dashboard)/cursos/page.tsx,
+#   components/admin/EmailSettingsPanel.tsx y components/admin/SocialMediaGenerator.tsx (solo G-65)
+#   Fuera en R20: app/admin/(dashboard)/orders/**, components/orders/**, app/checkout/** (Claude rehace los envíos en C-100)
 # Solo en R12 y solo para cambiar clases (ver PLAN_GEMINI.md, "Reglas de R12"):
 #   app/checkout/page.tsx   components/checkout/CheckoutPagoMovilForm.tsx   components/pago-movil/VerificarPagoMovilForm.tsx
 #   components/ui/**   components/Footer.tsx   components/UserAccountButton.tsx   components/CartIcon.tsx

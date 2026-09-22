@@ -24,6 +24,7 @@ import { formatUSD, formatVES } from '@/lib/currency';
 import { adminCard, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import DatosDelCliente from '@/components/checkout/DatosDelCliente';
+import EntregaEnvio, { ENVIO_INICIAL, ResumenEnvio, envioParaServidor, validarEnvio, type EnvioForm } from '@/components/checkout/EntregaEnvio';
 import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalculation, type PricingLine } from '@/lib/pricing';
 
 type CheckoutCartItem = ReturnType<typeof useCart>['items'][number];
@@ -47,23 +48,6 @@ function toOrderItem(item: CheckoutCartItem) {
   };
 }
 
-function buildShippingAddress(form: {
-  deliveryMethod: DeliveryMethod;
-  isOfficeDelivery: boolean;
-  courierService: string;
-  courierOfficeId: string;
-  shippingAddress: string;
-  shippingCity: string;
-  shippingState: string;
-}): string {
-  if (form.deliveryMethod === 'PICKUP') return 'Retiro en tienda';
-  if (form.isOfficeDelivery) return `Oficina ${form.courierService}: ${form.courierOfficeId}`.trim();
-  return [form.shippingAddress, form.shippingCity, form.shippingState]
-    .map(part => part.trim())
-    .filter(Boolean)
-    .join(', ');
-}
-
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -75,7 +59,7 @@ export default function CheckoutPage() {
   const [companySettings, setCompanySettings] = useState<any>(null);
   const [userBalance, setUserBalance] = useState<number>(0);
   const [showRechargeModal, setShowRechargeModal] = useState(false);
-  const [paymentMode, setPaymentMode] = useState<'DIRECT' | 'WALLET' | null>(null);
+  const [paymentMode, setPaymentMode] = useState<'WALLET' | 'PAGO_MOVIL' | 'GIFT_CARD' | 'DIRECT'>('WALLET');
 
   // Dynamic payment methods from database
   const [paymentMethods, setPaymentMethods] = useState<Array<{
@@ -85,9 +69,11 @@ export default function CheckoutPage() {
     bankName?: string;
     phone?: string;
     holderId?: string;
+    holderName?: string;
     email?: string;
     walletAddress?: string;
     network?: string;
+    payId?: string;
     displayNote?: string;
     qrCodeImage?: string;
     isActive: boolean;
@@ -98,36 +84,19 @@ export default function CheckoutPage() {
     customerEmail: '',
     customerPhone: '',
     customerIdNumber: '',
-    shippingAddress: '',
-    shippingCity: '',
-    shippingState: '',
     notes: '',
     paymentMethod: '' as string, // Dynamic from database
-    deliveryMethod: 'HOME_DELIVERY' as 'PICKUP' | 'HOME_DELIVERY' | 'SHIPPING',
-    courierService: '' as 'ZOOM' | 'MRW' | '',
-    courierOfficeId: '',
-    isOfficeDelivery: false,
   });
 
-  // Refs for auto-focus
-  const shippingAddressRef = useRef<HTMLInputElement>(null);
-  const shippingCityRef = useRef<HTMLInputElement>(null);
-  const shippingStateRef = useRef<HTMLInputElement>(null);
+  // Entrega (C-100): tipo, empresa, oficina o dirección y quién recibe
+  const [envio, setEnvio] = useState<EnvioForm>(ENVIO_INICIAL);
 
-  // State for tooltips
-  const [showShippingWarning, setShowShippingWarning] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   useBodyScrollLock(showTermsModal);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  // Saved addresses
-  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
-  const [showAddressSelector, setShowAddressSelector] = useState(false);
-  const [isNewAddress, setIsNewAddress] = useState(true);
-
-  // Google Maps feature
-  const [showGoogleMapsHelper, setShowGoogleMapsHelper] = useState(false);
-  const [copiedFromMaps, setCopiedFromMaps] = useState(false);
+  // Direcciones guardadas: el bloque de entrega las ofrece para no escribirlas otra vez
+  const [savedAddresses, setSavedAddresses] = useState<Array<{ address: string; city?: string; state?: string }>>([]);
 
   // Tooltip for client data warning
   const [showClientDataTooltip, setShowClientDataTooltip] = useState(false);
@@ -175,10 +144,11 @@ export default function CheckoutPage() {
       .then(res => res.json())
       .then(data => {
         setCompanySettings(data);
-        // Sin envíos (C-50b): el retiro en tienda queda elegido de entrada
-        if (data?.deliveryEnabled === false && data?.pickupEnabled) {
-          setFormData(prev => ({ ...prev, deliveryMethod: 'PICKUP', isOfficeDelivery: false, courierOfficeId: '' }));
-        }
+        // La primera forma de entrega disponible queda elegida de entrada (C-50b, C-100)
+        const primera: DeliveryMethod | null = data?.deliveryEnabled !== false ? 'SHIPPING'
+          : data?.localDeliveryEnabled ? 'LOCAL_DELIVERY'
+            : data?.pickupEnabled ? 'PICKUP' : null;
+        if (primera) setEnvio(prev => ({ ...prev, deliveryMethod: primera }));
       })
       .catch(err => console.error('Error loading settings:', err));
 
@@ -223,20 +193,12 @@ export default function CheckoutPage() {
                 : data.profile.savedAddresses;
 
               if (Array.isArray(addresses)) {
-                setSavedAddresses(addresses);
-                if (addresses.length > 0) {
-                  setShowAddressSelector(true);
-                  setIsNewAddress(false);
-                  // La primera es la predeterminada (C-24). Antes se esparcía el objeto guardado
-                  // y sus claves (address, city…) no coincidían con las del formulario.
-                  const first = addresses[0];
-                  setFormData(prev => ({
-                    ...prev,
-                    shippingAddress: first.address || first.addressLine1 || '',
-                    shippingCity: first.city || '',
-                    shippingState: first.state || '',
-                  }));
-                }
+                // Claves de antes de C-24: address o addressLine1
+                setSavedAddresses(addresses
+                  .map((a: { address?: string; addressLine1?: string; city?: string; state?: string }) => ({
+                    address: a.address || a.addressLine1 || '', city: a.city, state: a.state,
+                  }))
+                  .filter((a: { address: string }) => a.address));
               }
             } catch (e) {
               console.error('Error parsing saved addresses', e);
@@ -271,20 +233,6 @@ export default function CheckoutPage() {
       console.error('Error fetching balance:', error);
     }
   };
-
-  // Auto-focus on shipping address when section becomes visible
-  // C-85: si faltan teléfono o cédula no se enfoca: el salto a la dirección escondía el bloque para completarlos
-  const faltanDatosCliente = !formData.customerPhone || !formData.customerIdNumber;
-  useEffect(() => {
-    if (session?.user && formData.customerName && perfilCargado && !faltanDatosCliente) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        if (!formData.isOfficeDelivery && shippingAddressRef.current) {
-          shippingAddressRef.current.focus();
-        }
-      }, 500);
-    }
-  }, [session, formData.customerName, perfilCargado, faltanDatosCliente]);
 
   // State for redirect animation
   const [showRedirectMessage, setShowRedirectMessage] = useState(false);
@@ -321,20 +269,21 @@ export default function CheckoutPage() {
       dimensions: item.dimensions ?? null,
       isConsolidable: item.isConsolidable !== false,
       shippingCostUSD: item.shippingCost || 0,
+      freeShipping: item.productType !== 'DIGITAL' && item.freeShipping === true,
       discountPercent: activeDiscount ? (activeDiscount.approvedDiscount || activeDiscount.requestedDiscount) : 0,
     };
   }), [items, activeDiscounts]);
 
   const localCalculation = useMemo(
-    () => calculateOrder(pricingLines, toPricingSettings(companySettings), formData.deliveryMethod),
-    [pricingLines, companySettings, formData.deliveryMethod]
+    () => calculateOrder(pricingLines, toPricingSettings(companySettings), envio.deliveryMethod),
+    [pricingLines, companySettings, envio.deliveryMethod]
   );
 
   // Cotización del servidor: es lo que realmente se cobra (precios y pesos actualizados).
   // Se guarda con la clave del carrito para no mostrar una cotización vieja.
   const quoteBody = useMemo(
-    () => JSON.stringify({ items: items.map(toOrderItem), deliveryMethod: formData.deliveryMethod }),
-    [items, formData.deliveryMethod]
+    () => JSON.stringify({ items: items.map(toOrderItem), deliveryMethod: envio.deliveryMethod }),
+    [items, envio.deliveryMethod]
   );
   const [serverQuote, setServerQuote] = useState<{ key: string; calculation: OrderCalculation } | null>(null);
 
@@ -366,11 +315,15 @@ export default function CheckoutPage() {
   const cartSubtotal = orderCalculation.subtotalUSD;
   const cartDiscount = orderCalculation.discountUSD;
   const shippingBreakdown = orderCalculation.shipping;
-  const shippingCost = orderCalculation.shippingUSD;
   const finalTotal = orderCalculation.totalUSD;
-  const deliveryEnabled = companySettings?.deliveryEnabled !== false;
-  const deliveryOptionCount = (deliveryEnabled ? 2 : 0) + (companySettings?.pickupEnabled ? 1 : 0);
-  const deliveryOptionCols = deliveryOptionCount >= 3 ? 'grid-cols-3' : deliveryOptionCount === 2 ? 'grid-cols-2' : 'grid-cols-1';
+  const hasPhysicalItems = items.some(item => item.productType !== 'DIGITAL');
+  // Pago Móvil directo solo con la conciliación del BDV configurada en el servidor (C-101)
+  const pagoMovilDirecto = companySettings?.pagoMovilDirecto === true;
+  const orderItemsBody = useMemo(() => items.map(toOrderItem), [items]);
+  const clienteEnvio = useMemo(
+    () => ({ nombre: formData.customerName, cedula: formData.customerIdNumber, telefono: formData.customerPhone }),
+    [formData.customerName, formData.customerIdNumber, formData.customerPhone]
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -384,7 +337,7 @@ export default function CheckoutPage() {
     }
 
     // Check if email is verified
-    if (!(session.user as any).emailVerified) {
+    if (!(session.user as { emailVerified?: unknown }).emailVerified) {
       setError('Debes verificar tu correo electrónico antes de realizar compras. Revisa tu bandeja de entrada y haz clic en el enlace de verificación.');
       setLoading(false);
       return;
@@ -398,31 +351,40 @@ export default function CheckoutPage() {
       return;
     }
 
+    // C-100: destino y quién recibe (el servidor lo vuelve a validar contra ZOOM y MRW)
+    const problemaEnvio = hasPhysicalItems ? validarEnvio(envio, clienteEnvio) : null;
+    if (problemaEnvio) {
+      setError(problemaEnvio);
+      setLoading(false);
+      document.getElementById('entrega')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
     if (!paymentMode) {
       setError('Debes seleccionar un modo de pago');
       setLoading(false);
       return;
     }
 
-    // If using Gift Card mode (DIRECT), user must have sufficient balance (from redeemed gift cards)
-    // The gift card mode now just adds to wallet, so we use WALLET for payment
-    if (paymentMode === 'DIRECT') {
-      if (userBalance < finalTotal) {
-        setError('Debes canjear una Gift Card para tener saldo suficiente, o usa "Usar Saldo / Recargar"');
-        setLoading(false);
-        return;
-      }
-    }
-
-    // If wallet mode, check balance
-    if (paymentMode === 'WALLET' && userBalance < finalTotal) {
-      setError('Saldo insuficiente. Recarga tu saldo o canjea una Gift Card.');
+    if ((paymentMode === 'DIRECT' || paymentMode === 'GIFT_CARD') && userBalance < finalTotal) {
+      setError('Debes canjear una Gift Card para tener saldo suficiente, o usa "Pagar con Saldo"');
       setLoading(false);
       return;
     }
 
-    // Both modes now use WALLET payment method since gift cards add to wallet balance
-    const finalPaymentMethod = 'WALLET';
+    if (paymentMode === 'WALLET' && userBalance < finalTotal) {
+      setError('Saldo insuficiente. Recarga tu saldo antes de completar el pedido.');
+      setLoading(false);
+      return;
+    }
+
+    if (paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified) {
+      setError('Debes verificar tu Pago Móvil antes de completar el pedido.');
+      setLoading(false);
+      return;
+    }
+
+    const finalPaymentMethod = paymentMode === 'PAGO_MOVIL' ? 'MOBILE_PAYMENT' : 'WALLET';
 
     // Show processing overlay
     setShowProcessingOverlay(true);
@@ -431,15 +393,8 @@ export default function CheckoutPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
-      // Step 1: Processing order
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Los pasos avanzan con la respuesta real: antes el cliente esperaba 8 segundos de pausas simuladas
       setProcessingStep(1);
-
-      const hasPhysical = items.some(item => item.productType !== 'DIGITAL');
-
-      // Step 2: Confirming payment
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setProcessingStep(2);
 
       // Una sola petición: el servidor recalcula precios, envío y total, y separa la orden
       // física de la digital. expectedTotalUSD solo evita cobrar un total distinto al que se ve.
@@ -447,11 +402,11 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: items.map(toOrderItem),
-          deliveryMethod: formData.deliveryMethod,
-          shippingAddress: hasPhysical ? buildShippingAddress(formData) : '',
+          items: orderItemsBody,
+          deliveryMethod: envio.deliveryMethod,
+          shipping: hasPhysicalItems ? envioParaServidor(envio, clienteEnvio) : undefined,
           paymentMethod: finalPaymentMethod,
-          mobilePaymentData: mobilePaymentData || null,
+          mobilePaymentData: paymentMode === 'PAGO_MOVIL' ? mobilePaymentData : null,
           notes: formData.notes,
           expectedTotalUSD: finalTotal,
         }),
@@ -467,25 +422,26 @@ export default function CheckoutPage() {
       }
 
       const createdOrders: Array<{ orderNumber: string }> = orderData.orders || [];
-
-      // Step 3: Preparing order
-      await new Promise(resolve => setTimeout(resolve, 1500));
       setProcessingStep(3);
 
-      // Save address to profile if it's a new address (only if there were physical items)
-      if (hasPhysical && isNewAddress && formData.shippingAddress && formData.shippingCity && formData.shippingState) {
-        await saveAddressToProfile(formData);
+      // Dirección nueva de un envío a domicilio o delivery: se guarda en el perfil para la próxima compra
+      const conDireccion = envio.deliveryMethod === 'LOCAL_DELIVERY' || (envio.deliveryMethod === 'SHIPPING' && envio.mode === 'DOOR');
+      const direccion = envio.address.trim();
+      if (hasPhysicalItems && conDireccion && direccion && !savedAddresses.some(a => a.address.trim() === direccion)) {
+        await saveAddressToProfile({
+          address: direccion,
+          city: envio.deliveryMethod === 'LOCAL_DELIVERY' ? 'Guanare' : envio.city,
+          state: envio.deliveryMethod === 'LOCAL_DELIVERY' ? 'Portuguesa' : envio.state,
+        });
       }
 
-      // Step 4: Order created - show completion
-      await new Promise(resolve => setTimeout(resolve, 1500));
       setProcessingStep(4);
 
       // Mark order as completed BEFORE clearing cart
       setOrderCompleted(true);
 
-      // Wait for user to see the completed state
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Un momento para ver la compra completada antes de ir a la confirmación
+      await new Promise(resolve => setTimeout(resolve, 1200));
 
       // Now clear cart and redirect to success page
       clearCart();
@@ -523,43 +479,16 @@ export default function CheckoutPage() {
   // Mismo formato que el resto de la tienda ("$1.200,00"). Antes: "USD 1.200,00$" (revisión R12)
   const formatPrice = (price: number) => formatUSD(price);
 
-  // Function to paste from clipboard (Google Maps feature)
-  const handlePasteFromGoogleMaps = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        setFormData(prev => ({ ...prev, shippingAddress: text }));
-        setCopiedFromMaps(true);
-        setTimeout(() => setCopiedFromMaps(false), 3000);
-      }
-    } catch (err) {
-      console.error('Error reading clipboard:', err);
-      toast.error('No se pudo leer del portapapeles. Por favor, copia manualmente la dirección.');
-    }
-  };
-
-  // Function to select a saved address
-  const handleSelectSavedAddress = (address: any) => {
-    setFormData(prev => ({
-      ...prev,
-      shippingAddress: address.address,
-      shippingCity: address.city,
-      shippingState: address.state,
-    }));
-    setIsNewAddress(false);
-    setShowAddressSelector(false);
-  };
-
-  // Function to save address to profile
-  const saveAddressToProfile = async (addressData: any) => {
+  // Guarda la dirección en el perfil
+  const saveAddressToProfile = async (addressData: { address: string; city: string; state: string }) => {
     try {
       const response = await fetch('/api/user/profile/address', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          address: addressData.shippingAddress,
-          city: addressData.shippingCity,
-          state: addressData.shippingState,
+          address: addressData.address,
+          city: addressData.city,
+          state: addressData.state,
         }),
       });
 
@@ -574,7 +503,7 @@ export default function CheckoutPage() {
 
   // Handle Gift Card code input formatting
   const handleGiftCardCodeChange = (value: string) => {
-    let cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     let formatted = '';
     if (cleaned.length > 0) {
       formatted += cleaned.substring(0, 4);
@@ -797,401 +726,26 @@ export default function CheckoutPage() {
                 />
               )}
 
-              {/* Shipping Information */}
-              <div className="bg-white rounded-xl shadow-lg border border-line p-6 animate-fadeIn animation-delay-100">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-ink flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
-                      <FiMapPin className="w-4 h-4 text-brand-600" />
-                    </div>
-                    Dirección de Envío
-                  </h2>
-                  {/* Compact Warning Badge with Tooltip */}
-                  <div className="relative group">
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-warning/10 border border-warning/30 rounded-full cursor-help">
-                      <FiAlertCircle className="w-3.5 h-3.5 text-warning-strong" />
-                      <span className="text-xs font-bold text-warning-strong">Recuerda verificar tus datos</span>
-                    </div>
-                    {/* Tooltip on hover */}
-                    <div className="absolute right-0 top-full mt-2 w-72 p-3 bg-surface border border-line rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[var(--z-dropdown)]">
-                      <div className="absolute -top-1.5 right-6 w-3 h-3 bg-surface border-l border-t border-line transform rotate-45"></div>
-                      <p className="text-xs text-ink leading-relaxed">
-                        Los datos de envío serán usados para entregar tus productos. <strong className="font-bold">La empresa no se hace responsable de datos errados.</strong>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── Selector de Tipo de Entrega ── */}
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-ink mb-3">
-                    Tipo de Entrega *
-                  </label>
-                  <div className={`grid gap-3 ${deliveryOptionCols}`}>
-
-                    {/* Envíos: se ocultan si el admin los apagó en Configuración (C-50b) */}
-                    {deliveryEnabled && (<>
-                    {/* Dirección personal */}
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, deliveryMethod: 'HOME_DELIVERY', isOfficeDelivery: false, courierOfficeId: '' })}
-                      className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.deliveryMethod === 'HOME_DELIVERY' && !formData.isOfficeDelivery
-                        ? 'border-brand-500 bg-brand-500/5 shadow-md'
-                        : 'border-line hover:border-brand-500/30'
-                        }`}
-                    >
-                      <FiMapPin className={`w-5 h-5 flex-shrink-0 ${formData.deliveryMethod === 'HOME_DELIVERY' && !formData.isOfficeDelivery ? 'text-brand-500' : 'text-muted'}`} />
-                      <div className="text-left">
-                        <p className={`text-sm font-bold ${formData.deliveryMethod === 'HOME_DELIVERY' && !formData.isOfficeDelivery ? 'text-brand-500' : 'text-ink'}`}>
-                          Dirección Personal
-                        </p>
-                        <p className="text-xs text-muted">Envío a domicilio</p>
-                      </div>
-                    </button>
-
-                    {/* Oficina courier */}
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, deliveryMethod: 'SHIPPING', isOfficeDelivery: true })}
-                      className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.isOfficeDelivery
-                        ? 'border-brand-500 bg-brand-500/5 shadow-md'
-                        : 'border-line hover:border-brand-500/30'
-                        }`}
-                    >
-                      <FiPackage className={`w-5 h-5 flex-shrink-0 ${formData.isOfficeDelivery ? 'text-brand-500' : 'text-muted'}`} />
-                      <div className="text-left">
-                        <p className={`text-sm font-bold ${formData.isOfficeDelivery ? 'text-brand-500' : 'text-ink'}`}>
-                          Oficina Courier
-                        </p>
-                        <p className="text-xs text-muted">ZOOM o MRW</p>
-                      </div>
-                    </button>
-
-                    </>)}
-
-                    {/* Retiro en tienda — solo si pickupEnabled */}
-                    {companySettings?.pickupEnabled && (
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, deliveryMethod: 'PICKUP', isOfficeDelivery: false, courierOfficeId: '' })}
-                        className={`px-3 py-2.5 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.deliveryMethod === 'PICKUP'
-                          ? 'border-success-strong bg-success/5 shadow-sm'
-                          : 'border-line hover:border-success/40'
-                          }`}
-                      >
-                        <FiMapPin className={`w-5 h-5 flex-shrink-0 ${formData.deliveryMethod === 'PICKUP' ? 'text-success-strong' : 'text-muted'}`} />
-                        <div className="text-left">
-                          <p className={`text-sm font-bold ${formData.deliveryMethod === 'PICKUP' ? 'text-success-strong' : 'text-ink'}`}>
-                            Retiro en Tienda
-                          </p>
-                          <p className="text-xs text-muted">Sin costo de envío</p>
-                        </div>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Info card cuando selecciona PICKUP */}
-                  {formData.deliveryMethod === 'PICKUP' && (
-                    <div className="mt-4 p-4 bg-success/5 border border-success/30 rounded-xl">
-                      <div className="flex items-start gap-3">
-                        <div className="w-9 h-9 bg-success/15 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <FiMapPin className="w-5 h-5 text-success-strong" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-bold text-success-strong mb-1">Retiro en nuestra tienda</p>
-                          {companySettings?.pickupAddress && (
-                            <p className="text-xs text-success-strong mb-1 flex items-center gap-1">
-                              <FiMapPin className="w-3 h-3 flex-shrink-0" />
-                              {companySettings.pickupAddress}
-                            </p>
-                          )}
-                          {companySettings?.pickupInstructions && (
-                            <p className="text-xs text-success-strong">{companySettings.pickupInstructions}</p>
-                          )}
-                          <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-success/15 rounded-full">
-                            <FiCheck className="w-3 h-3 text-success-strong" />
-                            <span className="text-[11px] font-bold text-success-strong">Envío gratis · $0.00</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Personal Address Form — oculto si elige PICKUP */}
-                {formData.deliveryMethod !== 'PICKUP' && !formData.isOfficeDelivery && (
-                  <div className="space-y-4 animate-fadeIn">
-                    {/* Saved Addresses Selector */}
-                    {savedAddresses.length > 0 && (
-                      <div className="mb-4">
-                        <button
-                          type="button"
-                          onClick={() => setShowAddressSelector(!showAddressSelector)}
-                          className="w-full p-4 bg-brand-500/5 border border-brand-500/30 rounded-xl hover:border-brand-500 transition-colors flex items-center justify-between group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-brand-500/10 text-brand-600 rounded-xl flex items-center justify-center transition-transform">
-                              <FiMapPin className="w-5 h-5 text-white" />
-                            </div>
-                            <div className="text-left">
-                              <p className="text-sm font-bold text-ink">Direcciones Guardadas</p>
-                              <p className="text-xs text-muted">Tienes {savedAddresses.length} dirección(es) guardada(s)</p>
-                            </div>
-                          </div>
-                          <FiArrowRight className={`w-5 h-5 text-brand-600 transition-transform ${showAddressSelector ? 'rotate-90' : ''}`} />
-                        </button>
-
-                        {showAddressSelector && (
-                          <div className="mt-3 space-y-2 animate-slideDown">
-                            {savedAddresses.map((address, index) => (
-                              <button
-                                key={index}
-                                type="button"
-                                onClick={() => handleSelectSavedAddress(address)}
-                                className="w-full p-4 bg-white border-2 border-line rounded-xl hover:border-brand-500 hover:bg-brand-500/5 transition-all text-left group"
-                              >
-                                <div className="flex items-start gap-3">
-                                  <FiCheckCircle className="w-5 h-5 text-success-strong mt-0.5 flex-shrink-0" />
-                                  <div className="flex-1">
-                                    <p className="text-sm font-semibold text-ink mb-1">{address.address}</p>
-                                    <p className="text-xs text-muted">{address.city}, {address.state}</p>
-                                  </div>
-                                </div>
-                              </button>
-                            ))}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsNewAddress(true);
-                                setShowAddressSelector(false);
-                                setFormData(prev => ({ ...prev, shippingAddress: '', shippingCity: '', shippingState: '' }));
-                              }}
-                              className="w-full p-3 bg-success/5 border-2 border-dashed border-success/30 rounded-xl hover:border-success-strong transition-colors flex items-center justify-center gap-2 group text-success-strong"
-                            >
-                              <FiPlus className="w-4 h-4 text-success-strong transition-transform" />
-                              <span className="text-sm font-bold text-success-strong">Agregar Nueva Dirección</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label htmlFor="shippingAddress" className="block text-sm font-semibold text-ink">
-                          Dirección Completa *
-                        </label>
-                        {/* Google Maps Helper Button */}
-                        <button
-                          type="button"
-                          onClick={() => setShowGoogleMapsHelper(!showGoogleMapsHelper)}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-deal text-white text-xs font-bold rounded-full cursor-pointer"
-                        >
-                          <FiMapPin className="w-3.5 h-3.5" />
-                          Google Maps
-                        </button>
-                      </div>
-
-                      {/* Google Maps Helper Panel */}
-                      {showGoogleMapsHelper && (
-                        <div className="mb-3 p-4 bg-warning/10 border border-warning/30 rounded-xl shadow-sm">
-                          <div className="flex items-start gap-3 mb-3">
-                            <div className="w-10 h-10 bg-warning-strong rounded-xl flex items-center justify-center flex-shrink-0 text-white">
-                              <FiMapPin className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-bold text-ink text-sm mb-1 flex items-center gap-2">
-                                <FiMapPin className="w-4 h-4" />
-                                Ayuda de Google Maps
-                              </h4>
-                              <p className="text-xs text-ink-soft leading-relaxed">
-                                Si no conoces tu dirección exacta o quieres copiarla fácilmente desde Google Maps:
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2 mb-3">
-                            <div className="flex items-start gap-2 text-xs text-ink-soft">
-                              <span className="font-bold text-warning-strong flex-shrink-0">1.</span>
-                              <p>Abre <strong>Google Maps</strong> en otra pestaña</p>
-                            </div>
-                            <div className="flex items-start gap-2 text-xs text-ink-soft">
-                              <span className="font-bold text-warning-strong flex-shrink-0">2.</span>
-                              <p>Busca tu ubicación y haz clic derecho en el mapa</p>
-                            </div>
-                            <div className="flex items-start gap-2 text-xs text-ink-soft">
-                              <span className="font-bold text-warning-strong flex-shrink-0">3.</span>
-                              <p>Copia la dirección que aparece</p>
-                            </div>
-                            <div className="flex items-start gap-2 text-xs text-ink-soft">
-                              <span className="font-bold text-warning-strong flex-shrink-0">4.</span>
-                              <p>Haz clic en el botón de abajo para pegarla automáticamente</p>
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={handlePasteFromGoogleMaps}
-                            className={`w-full ${adminPrimaryButton} py-2.5 text-sm font-bold justify-center gap-2`}
-                          >
-                            {copiedFromMaps ? (
-                              <>
-                                <FiCheckCircle className="w-5 h-5" />
-                                <span>Dirección Pegada!</span>
-                              </>
-                            ) : (
-                              <>
-                                <FiCopy className="w-5 h-5" />
-                                <span>Pegar Desde Portapapeles</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      )}
-
-                      <div className="relative">
-                        <FiMapPin className="absolute left-4 top-3.5 text-muted" />
-                        <input
-                          ref={shippingAddressRef}
-                          type="text"
-                          id="shippingAddress"
-                          name="shippingAddress"
-                          value={formData.shippingAddress}
-                          onChange={(e) => {
-                            handleChange(e);
-                            setIsNewAddress(true);
-                          }}
-                          onFocus={() => setShowShippingWarning(true)}
-                          onBlur={() => setTimeout(() => setShowShippingWarning(false), 200)}
-                          required={!formData.isOfficeDelivery}
-                          className="w-full pl-12 pr-4 py-3 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
-                          placeholder="Av. Principal, Edif. Torre, Piso 5, Apto 5-B"
-                        />
-                      </div>
-                      {showShippingWarning && (
-                        <div className="mt-2 p-2 bg-brand-500/5 border border-brand-500/20 rounded-lg flex items-center gap-2 text-xs text-brand-700">
-                          <FiInfo className="w-4 h-4 flex-shrink-0" />
-                          <span>Incluye puntos de referencia para facilitar la entrega</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="shippingCity" className="block text-sm font-semibold text-ink mb-2">
-                          Ciudad *
-                        </label>
-                        <input
-                          ref={shippingCityRef}
-                          type="text"
-                          id="shippingCity"
-                          name="shippingCity"
-                          value={formData.shippingCity}
-                          onChange={handleChange}
-                          required={!formData.isOfficeDelivery}
-                          className="w-full px-4 py-3 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
-                          placeholder="Guanare"
-                        />
-                      </div>
-
-                      <div>
-                        <label htmlFor="shippingState" className="block text-sm font-semibold text-ink mb-2">
-                          Estado *
-                        </label>
-                        <input
-                          ref={shippingStateRef}
-                          type="text"
-                          id="shippingState"
-                          name="shippingState"
-                          value={formData.shippingState}
-                          onChange={handleChange}
-                          required={!formData.isOfficeDelivery}
-                          className="w-full px-4 py-3 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
-                          placeholder="Portuguesa"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Courier Office Selection — solo si NO es PICKUP */}
-                {formData.deliveryMethod !== 'PICKUP' && formData.isOfficeDelivery && (
-                  <div className="space-y-4 animate-fadeIn">
-                    <div>
-                      <label className="block text-sm font-semibold text-ink mb-3">
-                        Empresa de Encomienda *
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setFormData({ ...formData, courierService: 'ZOOM' })}
-                          className={`p-4 rounded-xl border-2 transition-all ${formData.courierService === 'ZOOM'
-                            ? 'border-brand-500 bg-brand-500/5 shadow-md'
-                            : 'border-line hover:border-brand-500/30'
-                            }`}
-                        >
-                          <FiTruck className={`w-6 h-6 mx-auto mb-2 ${formData.courierService === 'ZOOM' ? 'text-brand-500' : 'text-muted'}`} />
-                          <p className={`text-sm font-bold ${formData.courierService === 'ZOOM' ? 'text-brand-500' : 'text-ink'}`}>
-                            ZOOM
-                          </p>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setFormData({ ...formData, courierService: 'MRW' })}
-                          className={`p-4 rounded-xl border-2 transition-all ${formData.courierService === 'MRW'
-                            ? 'border-brand-500 bg-brand-500/5 shadow-md'
-                            : 'border-line hover:border-brand-500/30'
-                            }`}
-                        >
-                          <FiTruck className={`w-6 h-6 mx-auto mb-2 ${formData.courierService === 'MRW' ? 'text-brand-500' : 'text-muted'}`} />
-                          <p className={`text-sm font-bold ${formData.courierService === 'MRW' ? 'text-brand-500' : 'text-ink'}`}>
-                            MRW
-                          </p>
-                        </button>
-                      </div>
-                    </div>
-
-                    {formData.courierService && (
-                      <div className="animate-fadeIn">
-                        <label htmlFor="courierOfficeId" className="block text-sm font-semibold text-ink mb-2">
-                          Oficina {formData.courierService} / Casillero *
-                        </label>
-                        <div className="relative">
-                          <FiPackage className="absolute left-4 top-3.5 text-muted" />
-                          <input
-                            type="text"
-                            id="courierOfficeId"
-                            name="courierOfficeId"
-                            value={formData.courierOfficeId}
-                            onChange={(e) => setFormData({ ...formData, courierOfficeId: e.target.value })}
-                            required={formData.isOfficeDelivery}
-                            className="w-full pl-12 pr-4 py-3 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
-                            placeholder={`ID de oficina ${formData.courierService} o número de casillero`}
-                          />
-                        </div>
-                        <p className="mt-2 text-xs text-muted flex items-center gap-1">
-                          <FiInfo className="w-3 h-3" />
-                          Ingresa el código de la oficina {formData.courierService} más cercana o tu número de casillero
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Info about courier services */}
-                    <div className="p-4 bg-brand-500/5 border border-brand-500/20 rounded-xl">
-                      <h4 className="font-bold text-sm text-ink mb-2 flex items-center gap-2">
-                        <FiInfo className="w-4 h-4 text-brand-500" />
-                        Sobre las oficinas de encomienda
-                      </h4>
-                      <ul className="text-xs text-muted space-y-1 ml-6 list-disc">
-                        <li>Tu pedido será enviado a la oficina {formData.courierService || 'ZOOM/MRW'} que indiques</li>
-                        <li>Recibirás una notificación cuando tu paquete llegue a la oficina</li>
-                        <li>Debes retirar tu paquete con tu cédula de identidad</li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Entrega (C-100): ZOOM o MRW con cobro a destino, delivery en Guanare o retiro */}
+              {hasPhysicalItems && (
+                <EntregaEnvio
+                  value={envio}
+                  onChange={setEnvio}
+                  opciones={{
+                    nacional: companySettings?.deliveryEnabled !== false,
+                    local: companySettings?.localDeliveryEnabled === true,
+                    retiro: companySettings?.pickupEnabled === true,
+                    tarifaLocal: Number(companySettings?.deliveryFeeUSD) || 0,
+                    retiroDireccion: companySettings?.pickupAddress,
+                    retiroInstrucciones: companySettings?.pickupInstructions,
+                    tasaVES: Number(companySettings?.exchangeRateVES) || 0,
+                  }}
+                  cliente={clienteEnvio}
+                  envio={shippingBreakdown}
+                  items={orderItemsBody}
+                  direcciones={savedAddresses}
+                />
+              )}
 
               {/* Payment Method */}
               <div className="bg-white rounded-lg shadow-md border border-line p-6 relative overflow-hidden">
@@ -1205,7 +759,7 @@ export default function CheckoutPage() {
                 </h2>
 
                 {/* Email Verification Backdrop */}
-                {session?.user && !(session.user as any).emailVerified && (
+                {session?.user && !(session.user as { emailVerified?: unknown }).emailVerified && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 rounded-lg overflow-auto p-4">
                     <div className="text-center w-full max-w-sm mx-auto">
                       <div className="w-12 h-12 bg-warning-strong rounded-full flex items-center justify-center mx-auto mb-3 text-white shadow-sm">
@@ -1232,65 +786,135 @@ export default function CheckoutPage() {
                 )}
 
                 {/* Payment Mode Selection */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className={`grid grid-cols-1 gap-4 mb-6 ${pagoMovilDirecto ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
                   <button
                     type="button"
-                    onClick={() => setPaymentMode(paymentMode === 'DIRECT' ? null : 'DIRECT')}
-                    className={`relative p-6 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'DIRECT'
+                    onClick={() => setPaymentMode('WALLET')}
+                    className={`relative p-5 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'WALLET'
                       ? 'border-brand-500 bg-brand-500/5 shadow-sm'
                       : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
                       }`}
                   >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${paymentMode === 'DIRECT'
-                      ? 'bg-brand-500 text-white'
-                      : 'bg-brand-500/10 text-brand-600'
-                      }`}>
-                      <FiGift className="w-6 h-6" />
-                    </div>
-                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'DIRECT' ? 'text-brand-600' : 'text-ink'}`}>
-                      Canjear Gift Card
-                    </h3>
-                    <p className="text-sm text-muted">
-                      Usa una Gift Card para agregar saldo a tu cuenta
-                    </p>
-                    {paymentMode === 'DIRECT' && (
-                      <div className="absolute top-4 right-4 w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center">
-                        <FiCheck className="w-4 h-4 text-white" />
-                      </div>
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMode(paymentMode === 'WALLET' ? null : 'WALLET')}
-                    className={`relative p-6 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'WALLET'
-                      ? 'border-brand-500 bg-brand-500/5 shadow-sm'
-                      : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
-                      }`}
-                  >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${paymentMode === 'WALLET'
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-3 transition-colors ${paymentMode === 'WALLET'
                       ? 'bg-brand-500 text-white'
                       : 'bg-brand-500/10 text-brand-600'
                       }`}
                     >
-                      <FontAwesomeIcon icon={faWallet} className="w-6 h-6" />
+                      <FontAwesomeIcon icon={faWallet} className="w-5 h-5" />
                     </div>
-                    <h3 className={`font-bold text-lg mb-1 ${paymentMode === 'WALLET' ? 'text-brand-600' : 'text-ink'}`}>
-                      Usar Saldo / Recargar
+                    <h3 className={`font-bold text-base mb-1 ${paymentMode === 'WALLET' ? 'text-brand-600' : 'text-ink'}`}>
+                      Pagar con Saldo
                     </h3>
-                    <p className="text-sm text-muted">
-                      Paga con tu saldo disponible en la plataforma
+                    <p className="text-xs text-muted leading-relaxed">
+                      Usa tu saldo en cuenta o recarga con Transferencia, Binance o Zelle
                     </p>
                     {paymentMode === 'WALLET' && (
-                      <div className="absolute top-4 right-4 w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center">
-                        <FiCheck className="w-4 h-4 text-white" />
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-brand-500 rounded-full flex items-center justify-center">
+                        <FiCheck className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                  </button>
+
+                  {pagoMovilDirecto && (
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMode('PAGO_MOVIL')}
+                    className={`relative p-5 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'PAGO_MOVIL'
+                      ? 'border-brand-500 bg-brand-500/5 shadow-sm'
+                      : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
+                      }`}
+                  >
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-3 transition-colors ${paymentMode === 'PAGO_MOVIL'
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-brand-500/10 text-brand-600'
+                      }`}>
+                      <FaMobileScreen className="w-5 h-5" />
+                    </div>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <h3 className={`font-bold text-base ${paymentMode === 'PAGO_MOVIL' ? 'text-brand-600' : 'text-ink'}`}>
+                        Pago Móvil BDV
+                      </h3>
+                      <span className="px-1.5 py-0.5 text-[11px] font-semibold tracking-wide bg-success-strong/10 text-success-strong rounded-full">
+                        Directo
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted leading-relaxed">
+                      Verificación automática e instantánea 24/7 con Banco de Venezuela
+                    </p>
+                    {paymentMode === 'PAGO_MOVIL' && (
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-brand-500 rounded-full flex items-center justify-center">
+                        <FiCheck className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                  </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMode('GIFT_CARD')}
+                    className={`relative p-5 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT'
+                      ? 'border-brand-500 bg-brand-500/5 shadow-sm'
+                      : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
+                      }`}
+                  >
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-3 transition-colors ${paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT'
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-brand-500/10 text-brand-600'
+                      }`}>
+                      <FiGift className="w-5 h-5" />
+                    </div>
+                    <h3 className={`font-bold text-base mb-1 ${paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT' ? 'text-brand-600' : 'text-ink'}`}>
+                      Canjear Gift Card
+                    </h3>
+                    <p className="text-xs text-muted leading-relaxed">
+                      Aplica el saldo de una tarjeta de regalo a tu cuenta
+                    </p>
+                    {(paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT') && (
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-brand-500 rounded-full flex items-center justify-center">
+                        <FiCheck className="w-3.5 h-3.5 text-white" />
                       </div>
                     )}
                   </button>
                 </div>
 
+                {/* Direct BDV Pago Movil Form */}
+                {paymentMode === 'PAGO_MOVIL' && (
+                  <div className="bg-surface rounded-2xl p-6 border border-line shadow-sm mb-6">
+                    <div className="mb-4 pb-3 border-b border-line flex items-center justify-between flex-wrap gap-2">
+                      <div>
+                        <h3 className="font-bold text-ink text-base">Verificación Directa de Pago Móvil</h3>
+                        <p className="text-xs text-muted">Transfiere a la cuenta de la tienda y valida tu comprobante</p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-success-strong/10 text-success-strong text-xs font-bold rounded-full">
+                        <FiShield className="w-3.5 h-3.5" />
+                        Conciliación BDV
+                      </span>
+                    </div>
+                    <CheckoutPagoMovilForm
+                      montoEsperado={finalTotal}
+                      montoEnBs={companySettings?.exchangeRateVES ? finalTotal * Number(companySettings.exchangeRateVES) : 0}
+                      datosComercio={{
+                        telefono: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.phone,
+                        cedula: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderId,
+                        banco: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.bankName,
+                        titular: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderName,
+                      }}
+                      onVerified={(data) => {
+                        setMobilePaymentVerified(true);
+                        setMobilePaymentData(data);
+                        toast.success('Pago Móvil verificado exitosamente');
+                      }}
+                      onReset={() => {
+                        setMobilePaymentVerified(false);
+                        setMobilePaymentData(null);
+                      }}
+                      isVerified={mobilePaymentVerified}
+                    />
+                  </div>
+                )}
+
                 {/* Gift Card Redemption Section */}
-                {paymentMode === 'DIRECT' && (
+                {(paymentMode === 'DIRECT' || paymentMode === 'GIFT_CARD') && (
                   <div className="bg-surface rounded-2xl p-6 border border-line shadow-sm overflow-hidden relative">
 
                     <div className="relative">
@@ -1622,6 +1246,14 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                     )}
+                    {/* Notice for manual recharge methods */}
+                    <div className="mt-4 p-3.5 bg-brand-50/70 border border-brand-200 rounded-xl text-xs text-brand-900 flex items-start gap-2.5">
+                      <FiInfo className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
+                      <div className="leading-relaxed">
+                        <span className="font-bold block text-brand-700 mb-0.5">¿Deseas pagar con Transferencia, Binance Pay, Zelle o Zinli?</span>
+                        Por seguridad de la plataforma, estos métodos se procesan recargando saldo a tu cuenta. Haz clic en <strong>Recargar Saldo</strong>, ingresa tu pago y una vez acreditado tu pedido se completará al instante.
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1693,7 +1325,14 @@ export default function CheckoutPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || !acceptedTerms || (paymentMode === 'WALLET' && userBalance < finalTotal) || (paymentMode === 'DIRECT' && formData.paymentMethod === 'MOBILE_PAYMENT' && !mobilePaymentVerified)}
+                disabled={
+                  loading ||
+                  !acceptedTerms ||
+                  !paymentMode ||
+                  (paymentMode === 'WALLET' && userBalance < finalTotal) ||
+                  ((paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT') && userBalance < finalTotal) ||
+                  (paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified)
+                }
                 className={`w-full flex items-center justify-center gap-2 ${adminPrimaryButton} py-3.5 text-base font-bold disabled:opacity-50`}
               >
                 {loading ? (
@@ -1718,10 +1357,16 @@ export default function CheckoutPage() {
                   Debes aceptar los términos y condiciones para continuar
                 </p>
               )}
-              {paymentMode === 'DIRECT' && formData.paymentMethod === 'MOBILE_PAYMENT' && !mobilePaymentVerified && (
+              {paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified && (
                 <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
                   <FiAlertCircle className="w-3 h-3" />
-                  Debes verificar tu pago móvil antes de continuar
+                  Debes verificar tu Pago Móvil antes de completar el pedido
+                </p>
+              )}
+              {paymentMode === 'WALLET' && userBalance < finalTotal && (
+                <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
+                  <FiAlertCircle className="w-3 h-3" />
+                  Saldo insuficiente. Recarga tu saldo para completar el pedido.
                 </p>
               )}
             </form>
@@ -1739,7 +1384,7 @@ export default function CheckoutPage() {
                     </div>
                     Información de Contacto
                   </h2>
-                  {(session?.user as any)?.emailVerified && (
+                  {Boolean((session?.user as { emailVerified?: unknown } | undefined)?.emailVerified) && (
                     <div className="flex items-center gap-1.5 px-2 py-1 bg-success/15 border border-success/30 rounded-full">
                       <FiCheckCircle className="w-3 h-3 text-success-strong" />
                       <span className="text-xs font-bold text-success-strong">Verificado</span>
@@ -1905,156 +1550,8 @@ export default function CheckoutPage() {
                       </div>
                     )}
 
-                    {/* Shipping with Detailed Breakdown */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-muted text-sm">Envío:</span>
-                          {/* Info tooltip */}
-                          <div className="group relative">
-                            <FiInfo className="w-3.5 h-3.5 text-muted cursor-help" />
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-ink text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-72 z-[var(--z-dropdown)]">
-                              <div className="font-semibold mb-1 flex items-center gap-1"><FiPackage className="h-3.5 w-3.5" aria-hidden="true" />Sobre el envío</div>
-                              <p className="text-surface leading-relaxed">
-                                Los costos de envío son manejados por las empresas de encomienda (ZOOM, MRW, TEALCA). Solo cobramos <strong className="text-ink">{formatUSD(shippingBreakdown.packagingFee)}</strong> por embalaje.
-                              </p>
-                              {shippingBreakdown.totalWeight > 0 && (
-                                <p className="text-surface mt-1">
-                                  Peso total: <strong className="text-ink">{shippingBreakdown.totalWeight.toFixed(2)} kg</strong>
-                                </p>
-                              )}
-                              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-ink"></div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          {shippingCost > 0 ? (
-                            <>
-                              <span className="text-base font-bold text-ink">{formatUSD(shippingCost)}</span>
-                              {companySettings?.exchangeRateVES && (
-                                <div className="text-xs text-brand-500 font-medium">
-                                  {formatVES(shippingCost * Number(companySettings.exchangeRateVES))}
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <span className="text-sm font-bold text-success-strong">Gratis</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Shipping Breakdown Details (expandable) */}
-                      {shippingCost > 0 && formData.deliveryMethod !== 'PICKUP' && (
-                        <details className="group">
-                          <summary className="text-xs text-brand-500 font-medium cursor-pointer hover:text-brand-600 flex items-center gap-1">
-                            <svg className="w-3 h-3 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                            Ver desglose de envío
-                          </summary>
-                          <div className="mt-2 p-3 bg-surface rounded-lg text-xs space-y-2">
-                            {/* Free shipping badge */}
-                            {shippingBreakdown.isFreeShipping && (
-                              <div className="flex items-center gap-2 text-success-strong bg-success/5 px-2 py-1.5 rounded-lg">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span className="font-semibold">¡Envío gratis por compras mayores!</span>
-                              </div>
-                            )}
-
-                            {/* Digital items */}
-                            {shippingBreakdown.digitalItems.length > 0 && (
-                              <div className="space-y-1">
-                                <div className="font-semibold text-brand-600 flex items-center gap-1">
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                  </svg>
-                                  Digitales (sin envío):
-                                </div>
-                                {shippingBreakdown.digitalItems.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-muted pl-4">
-                                    <span className="truncate max-w-[60%]">{item.name} x{item.quantity}</span>
-                                    <span className="text-success-strong font-medium">$0.00</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Consolidable items */}
-                            {shippingBreakdown.consolidableItems.length > 0 && !shippingBreakdown.isFreeShipping && (
-                              <div className="space-y-1">
-                                <div className="font-semibold text-brand-600 flex items-center gap-1">
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                  </svg>
-                                  Consolidables (por peso):
-                                </div>
-                                {shippingBreakdown.consolidableItems.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-muted pl-4">
-                                    <span className="truncate max-w-[55%]">{item.name} x{item.quantity}</span>
-                                    <span className="text-muted">
-                                      {item.volumetricWeight > item.weight ? (
-                                        <span className="text-warning-strong" title="Se usa peso volumétrico">
-                                          {item.usedWeight.toFixed(2)} kg*
-                                        </span>
-                                      ) : (
-                                        <span>{item.usedWeight.toFixed(2)} kg</span>
-                                      )}
-                                    </span>
-                                  </div>
-                                ))}
-                                <div className="flex justify-between pt-1 border-t border-line font-medium">
-                                  <span className="text-muted">Subtotal ({shippingBreakdown.totalWeight.toFixed(2)} kg × $2/kg):</span>
-                                  <span className="text-brand-600 font-medium">{formatUSD(shippingBreakdown.consolidatedCost)}</span>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Bulky items */}
-                            {shippingBreakdown.bulkyItems.length > 0 && !shippingBreakdown.isFreeShipping && (
-                              <div className="space-y-1">
-                                <div className="font-semibold text-warning-strong flex items-center gap-1">
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                  </svg>
-                                  Productos grandes (envío individual):
-                                </div>
-                                {shippingBreakdown.bulkyItems.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-muted pl-4">
-                                    <span className="truncate max-w-[60%]">{item.name} x{item.quantity}</span>
-                                    <span className="text-warning-strong font-medium">{formatUSD(item.cost)}</span>
-                                  </div>
-                                ))}
-                                <div className="flex justify-between pt-1 border-t border-line font-medium">
-                                  <span className="text-muted">Subtotal envío individual:</span>
-                                  <span className="text-warning-strong font-medium">{formatUSD(shippingBreakdown.bulkyCost)}</span>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Packaging fee */}
-                            <div className="flex justify-between pt-1 border-t border-line text-muted">
-                              <span className="flex items-center gap-1">
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" />
-                                </svg>
-                                Embalaje y preparación:
-                              </span>
-                              <span className="font-medium">{formatUSD(shippingBreakdown.packagingFee)}</span>
-                            </div>
-
-                            {/* Volumetric weight note */}
-                            {shippingBreakdown.consolidableItems.some(item => item.volumetricWeight > item.weight) && (
-                              <div className="text-xs text-warning-strong bg-warning/10 px-2 py-1 rounded flex items-start gap-1">
-                                <span className="font-bold">*</span>
-                                <span>Se usó peso volumétrico (L×A×H÷5000) por ser mayor al peso real.</span>
-                              </div>
-                            )}
-                          </div>
-                        </details>
-                      )}
-                    </div>
+                    {/* Envío (C-100) */}
+                    <ResumenEnvio envio={shippingBreakdown} form={envio} tasaVES={Number(companySettings?.exchangeRateVES) || 0} />
 
                     {/* Total - Premium Style */}
                     <div className="pt-4 border-t-2 border-dashed border-line">

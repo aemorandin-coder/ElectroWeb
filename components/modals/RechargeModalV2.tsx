@@ -21,12 +21,17 @@ interface RechargeModalProps {
 
 type Step = 'SELECT_METHOD' | 'PAYMENT_DETAILS' | 'VERIFY_PAYMENT';
 
+/** Referencia provisional mientras el cliente verifica su Pago Móvil. Fuera del componente: `Date.now` no se llama al renderizar. */
+function referenciaTemporal(): string {
+    return 'PM-' + Date.now().toString(36).toUpperCase();
+}
+
 export default function RechargeModalV2({ isOpen, onClose, onSuccess }: RechargeModalProps) {
     const { data: session } = useSession();
     const { confirm } = useConfirm();
     const [amount, setAmount] = useState('');
     const [reference, setReference] = useState('');
-    const [selectedMethod, setSelectedMethod] = useState('');
+    const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
     const [processing, setProcessing] = useState(false);
     const [exchangeRate, setExchangeRate] = useState<number>(0);
     const [hasAcceptedTerms, setHasAcceptedTerms] = useState<boolean | null>(null);
@@ -37,7 +42,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     const [step, setStep] = useState<Step>('SELECT_METHOD');
     const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
 
-interface CompanyPaymentMethod {
+    interface CompanyPaymentMethod {
         id: string;
         type: string;
         name: string;
@@ -48,6 +53,9 @@ interface CompanyPaymentMethod {
         email?: string;
         walletAddress?: string;
         network?: string;
+        payId?: string;
+        minAmount?: number | null;
+        maxAmount?: number | null;
         displayNote?: string;
         qrCodeImage?: string;
         isActive: boolean;
@@ -80,7 +88,11 @@ interface CompanyPaymentMethod {
                 if (response.ok) {
                     const data = await response.json();
                     if (Array.isArray(data)) {
-                        setCompanyPaymentMethods(data.filter((m: CompanyPaymentMethod) => m.isActive));
+                        const activeMethods = data.filter((m: CompanyPaymentMethod) => m.isActive);
+                        setCompanyPaymentMethods(activeMethods);
+                        if (activeMethods.length > 0) {
+                            setSelectedMethodId(prev => prev || activeMethods[0].id);
+                        }
                     }
                 }
             } catch (error) {
@@ -116,6 +128,11 @@ interface CompanyPaymentMethod {
                     <path d="M9 11h6" />
                     <path d="M12 7v8" />
                     <circle cx="12" cy="11" r="2.5" fill="white" fillOpacity="0.25" />
+                </svg>
+            );
+            case 'BINANCE_PAY': return (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="white">
+                    <path d="m12 2.667 4.14 4.14-4.14 4.14-4.14-4.14L12 2.667ZM2.667 12l4.14-4.14 4.14 4.14-4.14 4.14-4.14-4.14Zm14.526 0 4.14-4.14 4.14 4.14-4.14 4.14-4.14-4.14ZM12 21.333l-4.14-4.14 4.14-4.14 4.14 4.14-4.14 4.14Zm0-6.444-2.889-2.889 2.889-2.889 2.889 2.889-2.889 2.889Z" />
                 </svg>
             );
             case 'ZELLE': return (
@@ -163,16 +180,21 @@ interface CompanyPaymentMethod {
         }
     };
 
-
     // Build details object for display
     const getMethodDetails = (method: Partial<CompanyPaymentMethod>) => {
         const details: Record<string, string> = {};
-        if (method.holderId) details['Cedula/RIF'] = method.holderId;
-        if (method.phone) details['Telefono'] = method.phone;
+        if (method.type === 'BINANCE_PAY') {
+            if (method.email) details['Correo Binance'] = method.email;
+            if (method.payId) details['Binance Pay ID'] = method.payId;
+            if (method.holderName) details['Nombre del titular'] = method.holderName;
+            return details;
+        }
         if (method.bankName) details['Banco'] = method.bankName;
+        if (method.holderId) details['Cédula / RIF'] = method.holderId;
+        if (method.phone) details['Teléfono'] = method.phone;
         if (method.holderName) details['Titular'] = method.holderName;
-        if (method.email) details['Email'] = method.email;
-        if (method.walletAddress) details['Wallet'] = method.walletAddress;
+        if (method.email) details['Correo'] = method.email;
+        if (method.walletAddress) details['Dirección de Wallet'] = method.walletAddress;
         if (method.network) details['Red'] = method.network;
         return details;
     };
@@ -221,21 +243,33 @@ interface CompanyPaymentMethod {
             setStep('SELECT_METHOD');
             setAmount('');
             setReference('');
-            setSelectedMethod('');
+            setSelectedMethodId(null);
             setPendingTransactionId(null);
         }
     }, [isOpen, pendingTransactionId]);
+
+    const selectedMethod = companyPaymentMethods.find(m => m.id === selectedMethodId) || null;
 
     // Calculate Bs amount
     const amountInBs = amount && exchangeRate ? (parseFloat(amount) * exchangeRate) : 0;
 
     // Check if mobile payment is selected
-    const isMobilePayment = selectedMethod === 'MOBILE_PAYMENT';
+    const isMobilePayment = selectedMethod?.type === 'MOBILE_PAYMENT';
 
     // Create pending transaction and proceed to verification
     const handleProceedToVerification = async () => {
         if (!amount || !selectedMethod) {
             toast.error('Por favor selecciona el monto y método de pago');
+            return;
+        }
+
+        const numAmount = parseFloat(amount);
+        if (selectedMethod.minAmount && numAmount < Number(selectedMethod.minAmount)) {
+            toast.error(`El monto mínimo para este método es ${formatUSD(Number(selectedMethod.minAmount))}`);
+            return;
+        }
+        if (selectedMethod.maxAmount && numAmount > Number(selectedMethod.maxAmount)) {
+            toast.error(`El monto máximo para este método es ${formatUSD(Number(selectedMethod.maxAmount))}`);
             return;
         }
 
@@ -246,12 +280,11 @@ interface CompanyPaymentMethod {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    amount: parseFloat(amount),
-                    paymentMethod: selectedMethod,
-                    reference: 'PM-' + Date.now().toString(36).toUpperCase(), // Referencia temporal única
-                    description: selectedMethod === 'MOBILE_PAYMENT'
-                        ? 'Recarga Pago Móvil - Verificación automática'
-                        : `Recarga de saldo`,
+                    amount: numAmount,
+                    paymentMethod: selectedMethod.type,
+                    companyPaymentMethodId: selectedMethod.id,
+                    reference: referenciaTemporal(), // Referencia temporal única
+                    description: 'Recarga Pago Móvil - Verificación automática',
                 }),
             });
 
@@ -273,15 +306,25 @@ interface CompanyPaymentMethod {
 
     // Handle traditional submit (for non-mobile payment methods)
     const handleTraditionalSubmit = async () => {
-        if (!amount || !selectedMethod || !reference) {
+        if (!amount || !selectedMethod || !reference.trim()) {
             toast.error('Por favor completa todos los campos');
+            return;
+        }
+
+        const numAmount = parseFloat(amount);
+        if (selectedMethod.minAmount && numAmount < Number(selectedMethod.minAmount)) {
+            toast.error(`El monto mínimo para este método es ${formatUSD(Number(selectedMethod.minAmount))}`);
+            return;
+        }
+        if (selectedMethod.maxAmount && numAmount > Number(selectedMethod.maxAmount)) {
+            toast.error(`El monto máximo para este método es ${formatUSD(Number(selectedMethod.maxAmount))}`);
             return;
         }
 
         const confirmed = await confirm({
             title: 'Confirmar Recarga',
-            message: `¿Estas seguro de que deseas recargar ${formatUSD(parseFloat(amount))} usando ${companyPaymentMethods.find(m => m.type === selectedMethod)?.name}?`,
-            confirmText: 'Si, Recargar',
+            message: `¿Estás seguro de que deseas recargar ${formatUSD(numAmount)} usando ${selectedMethod.name}?`,
+            confirmText: 'Sí, recargar',
             cancelText: 'Cancelar',
             variant: 'info'
         });
@@ -294,17 +337,18 @@ interface CompanyPaymentMethod {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    amount: parseFloat(amount),
-                    paymentMethod: selectedMethod,
-                    reference: reference,
+                    amount: numAmount,
+                    paymentMethod: selectedMethod.type,
+                    companyPaymentMethodId: selectedMethod.id,
+                    reference: reference.trim(),
                 }),
             });
 
             if (response.ok) {
-                toast.success('Solicitud de recarga enviada. Sera procesada en breve.');
+                toast.success('Solicitud de recarga enviada. Será procesada en breve tras verificar el pago.');
                 setAmount('');
                 setReference('');
-                setSelectedMethod('');
+                setSelectedMethodId(null);
                 onSuccess();
                 onClose();
             } else {
@@ -472,51 +516,67 @@ interface CompanyPaymentMethod {
                                         </div>
                                     ) : (
                                         <div className="space-y-1.5 lg:space-y-2">
-                                            {companyPaymentMethods.map((method) => (
-                                                <button
-                                                    key={method.id}
-                                                    onClick={() => setSelectedMethod(method.type)}
-                                                    className={`w-full p-3 lg:p-4 rounded-lg lg:rounded-xl border transition-all text-left ${selectedMethod === method.type
-                                                        ? 'border-brand-500 bg-brand-50 shadow-sm'
-                                                        : 'border-line hover:border-brand-500/50 hover:bg-surface'
-                                                        }`}
-                                                >
-                                                    <div className="flex items-center gap-2 lg:gap-3">
-                                                        <div className="w-9 h-9 lg:w-12 lg:h-12 rounded-lg lg:rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-                                                            <span className="scale-75 lg:scale-100">{getMethodIcon(method.type)}</span>
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-1.5 lg:gap-2 mb-0.5 flex-wrap">
-                                                                <h3 className="font-bold text-ink text-sm lg:text-base">{method.name}</h3>
-                                                                {method.type === 'MOBILE_PAYMENT' && (
-                                                                    <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-success-strong/10 text-success-strong rounded-full flex items-center gap-0.5">
-                                                                        <FiShield className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
-                                                                        <span className="hidden sm:inline">Verificación</span> Auto
-                                                                    </span>
+                                            {companyPaymentMethods.map((method) => {
+                                                const isSelected = selectedMethodId === method.id;
+                                                return (
+                                                    <button
+                                                        key={method.id}
+                                                        type="button"
+                                                        onClick={() => setSelectedMethodId(method.id)}
+                                                        className={`w-full p-3 lg:p-4 rounded-lg lg:rounded-xl border transition-all text-left ${isSelected
+                                                            ? 'border-brand-500 bg-brand-50 shadow-sm'
+                                                            : 'border-line hover:border-brand-500/50 hover:bg-surface'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center gap-2 lg:gap-3">
+                                                            <div className="w-9 h-9 lg:w-12 lg:h-12 rounded-lg lg:rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                                <span className="scale-75 lg:scale-100">{getMethodIcon(method.type)}</span>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-1.5 lg:gap-2 mb-0.5 flex-wrap">
+                                                                    <h3 className="font-bold text-ink text-sm lg:text-base">{method.name}</h3>
+                                                                    {method.type === 'MOBILE_PAYMENT' && (
+                                                                        <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-success-strong/10 text-success-strong rounded-full flex items-center gap-0.5">
+                                                                            <FiShield className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
+                                                                            <span className="hidden sm:inline">Verificación</span> Auto
+                                                                        </span>
+                                                                    )}
+                                                                    {method.type === 'BINANCE_PAY' && (
+                                                                        <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-warning-strong/10 text-warning-strong rounded-full">
+                                                                            Binance Pay
+                                                                        </span>
+                                                                    )}
+                                                                    {method.type === 'MERCANTIL_PANAMA' && (
+                                                                        <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-brand-50 text-brand-700 rounded-full">
+                                                                            Intl
+                                                                        </span>
+                                                                    )}
+                                                                    {isSelected && (
+                                                                        <div className="w-4 h-4 lg:w-5 lg:h-5 bg-brand-500 rounded-full flex items-center justify-center ml-auto">
+                                                                            <FiCheck className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-white" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                {method.bankName && (
+                                                                    <p className="text-xs text-muted">{method.bankName}</p>
                                                                 )}
-                                                                {method.type === 'MERCANTIL_PANAMA' && (
-                                                                    <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-brand-50 text-brand-700 rounded-full">
-                                                                        Intl
-                                                                    </span>
+                                                                {(method.minAmount || method.maxAmount) && (
+                                                                    <p className="text-[11px] text-muted">
+                                                                        {method.minAmount && `Mín: ${formatUSD(Number(method.minAmount))}`}
+                                                                        {method.minAmount && method.maxAmount && ' · '}
+                                                                        {method.maxAmount && `Máx: ${formatUSD(Number(method.maxAmount))}`}
+                                                                    </p>
                                                                 )}
-                                                                {selectedMethod === method.type && (
-                                                                    <div className="w-4 h-4 lg:w-5 lg:h-5 bg-brand-500 rounded-full flex items-center justify-center">
-                                                                        <FiCheck className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-white" />
-                                                                    </div>
+                                                                {method.displayNote && isSelected && (
+                                                                    <p className="text-xs text-brand-600 mt-1 font-medium truncate">
+                                                                        {method.displayNote}
+                                                                    </p>
                                                                 )}
                                                             </div>
-                                                            {method.bankName && (
-                                                                <p className="text-xs text-muted">{method.bankName}</p>
-                                                            )}
-                                                            {method.displayNote && selectedMethod === method.type && (
-                                                                <p className="text-xs text-brand-600 mt-1 font-medium truncate">
-                                                                    {method.displayNote}
-                                                                </p>
-                                                            )}
                                                         </div>
-                                                    </div>
-                                                </button>
-                                            ))}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
@@ -533,19 +593,24 @@ interface CompanyPaymentMethod {
 
                                     {selectedMethod ? (
                                         <div className="space-y-1.5 lg:space-y-2">
+                                            {selectedMethod.displayNote && (
+                                                <div className="p-2.5 rounded-lg bg-brand-50/70 border border-brand-200 text-xs text-brand-950 mb-2">
+                                                    <span className="font-bold block mb-0.5 text-brand-700">Nota del método:</span>
+                                                    {selectedMethod.displayNote}
+                                                </div>
+                                            )}
                                             {(() => {
-                                                const method = companyPaymentMethods.find(m => m.type === selectedMethod);
-                                                if (!method) return null;
-                                                const details = getMethodDetails(method);
+                                                const details = getMethodDetails(selectedMethod);
                                                 return Object.entries(details).map(([key, value]) => (
                                                     <div key={key} className="flex items-center justify-between py-1 border-b border-line last:border-0">
                                                         <div className="flex flex-col">
                                                             <span className="text-xs text-muted uppercase font-bold tracking-wider">{key}</span>
-                                                            <span className="text-xs lg:text-sm font-medium text-ink">{value}</span>
+                                                            <span className="text-xs lg:text-sm font-medium text-ink break-all">{value}</span>
                                                         </div>
                                                         <button
-                                                            onClick={() => { navigator.clipboard.writeText(value); toast.success('Copiado!'); }}
-                                                            className="text-brand-600 hover:bg-brand-50 px-1.5 lg:px-2 py-0.5 lg:py-1 rounded transition-colors text-xs font-bold"
+                                                            type="button"
+                                                            onClick={() => { navigator.clipboard.writeText(value); toast.success('Copiado'); }}
+                                                            className="text-brand-600 hover:bg-brand-50 px-1.5 lg:px-2 py-0.5 lg:py-1 rounded transition-colors text-xs font-bold shrink-0 ml-2"
                                                         >
                                                             COPIAR
                                                         </button>
@@ -553,24 +618,18 @@ interface CompanyPaymentMethod {
                                                 ));
                                             })()}
                                             {/* QR Code if available */}
-                                            {(() => {
-                                                const method = companyPaymentMethods.find(m => m.type === selectedMethod);
-                                                if (method?.qrCodeImage) {
-                                                    return (
-                                                        <div className="mt-2 lg:mt-3 pt-2 lg:pt-3 border-t border-line">
-                                                            <p className="text-xs text-muted mb-2">Escanea el QR:</p>
-                                                            <Image
-                                                                src={method.qrCodeImage}
-                                                                alt="QR Code"
-                                                                width={100}
-                                                                height={100}
-                                                                className="rounded-lg border border-line w-20 h-20 lg:w-[120px] lg:h-[120px]"
-                                                            />
-                                                        </div>
-                                                    );
-                                                }
-                                                return null;
-                                            })()}
+                                            {selectedMethod.qrCodeImage && (
+                                                <div className="mt-2 lg:mt-3 pt-2 lg:pt-3 border-t border-line">
+                                                    <p className="text-xs text-muted mb-2 font-medium">Escanea el código QR:</p>
+                                                    <Image
+                                                        src={selectedMethod.qrCodeImage}
+                                                        alt={`QR ${selectedMethod.name}`}
+                                                        width={120}
+                                                        height={120}
+                                                        className="rounded-lg border border-line w-24 h-24 lg:w-[120px] lg:h-[120px] object-contain bg-white p-1"
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="text-center py-3 lg:py-4 text-muted">
@@ -583,13 +642,13 @@ interface CompanyPaymentMethod {
                                 </div>
 
                                 {/* Bs Conversion (For Mobile Payment and Bank Transfer) */}
-                                {(selectedMethod === 'MOBILE_PAYMENT' || selectedMethod === 'BANK_TRANSFER') && (
+                                {selectedMethod && (selectedMethod.type === 'MOBILE_PAYMENT' || selectedMethod.type === 'BANK_TRANSFER') && (
                                     <div className="bg-warning/15 rounded-xl p-2.5 lg:p-3 border border-warning/30 shadow-sm">
                                         <div className="flex items-center gap-1.5 lg:gap-2 mb-1.5 lg:mb-2">
                                             <div className="w-5 h-5 lg:w-6 lg:h-6 bg-warning-strong rounded flex items-center justify-center">
                                                 <span className="text-white font-bold text-xs">Bs</span>
                                             </div>
-                                            <span className="font-bold text-xs lg:text-sm text-ink">Monto en Bolivares</span>
+                                            <span className="font-bold text-xs lg:text-sm text-ink">Monto en Bolívares</span>
                                         </div>
                                         <div className="bg-white rounded-lg p-2 lg:p-3 border border-warning/30">
                                             <div className="flex items-center justify-between text-xs mb-1">
@@ -613,7 +672,7 @@ interface CompanyPaymentMethod {
                                 )}
 
                                 {/* Reference Number */}
-                                {selectedMethod && selectedMethod !== 'MOBILE_PAYMENT' && (
+                                {selectedMethod && selectedMethod.type !== 'MOBILE_PAYMENT' && (
                                     <div>
                                         <label className="block text-xs font-bold text-ink mb-1 lg:mb-1.5 uppercase tracking-wider">
                                             Número de Referencia
@@ -622,18 +681,18 @@ interface CompanyPaymentMethod {
                                             type="text"
                                             value={reference}
                                             onChange={(e) => setReference(e.target.value)}
-                                            placeholder="Ej: 123456789"
+                                            placeholder="Ej: 123456789 o ID de pago"
                                             className="w-full px-3 py-2 lg:py-2.5 border border-line rounded-lg lg:rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-xs lg:text-sm bg-white text-ink"
                                         />
                                         <p className="text-xs text-muted mt-1 flex items-center gap-1">
                                             <span className="min-w-5 h-5 px-1 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold">i</span>
-                                            ID de transaccion
+                                            ID de transacción o número de confirmación
                                         </p>
                                     </div>
                                 )}
 
                                 {/* Mobile Payment Info */}
-                                {selectedMethod === 'MOBILE_PAYMENT' && (
+                                {selectedMethod?.type === 'MOBILE_PAYMENT' && (
                                     <div className="bg-success-strong/10 rounded-xl p-3 lg:p-4 border border-success-strong/20">
                                         <div className="flex items-start gap-2 lg:gap-3">
                                             <div className="w-6 h-6 lg:w-8 lg:h-8 bg-success-strong rounded-full flex items-center justify-center flex-shrink-0 text-white">
@@ -669,6 +728,7 @@ interface CompanyPaymentMethod {
                 <div className="p-3 lg:p-6 border-t border-line bg-white flex-shrink-0">
                     <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
                         <button
+                            type="button"
                             onClick={onClose}
                             className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-surface text-ink font-semibold rounded-xl hover:bg-line border border-line transition-all text-sm lg:text-base order-2 sm:order-1"
                         >
@@ -679,6 +739,7 @@ interface CompanyPaymentMethod {
                             <>
                                 {isMobilePayment ? (
                                     <button
+                                        type="button"
                                         onClick={handleProceedToVerification}
                                         disabled={processing || !amount || !selectedMethod || !hasAcceptedTerms}
                                         className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-success-strong hover:bg-success-strong/90 text-white font-semibold rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base order-1 sm:order-2"
@@ -700,8 +761,9 @@ interface CompanyPaymentMethod {
                                     </button>
                                 ) : (
                                     <button
+                                        type="button"
                                         onClick={handleTraditionalSubmit}
-                                        disabled={processing || !amount || !selectedMethod || !reference || !hasAcceptedTerms}
+                                        disabled={processing || !amount || !selectedMethod || !reference.trim() || !hasAcceptedTerms}
                                         className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base order-1 sm:order-2"
                                     >
                                         {processing ? (

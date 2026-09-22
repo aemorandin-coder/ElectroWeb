@@ -2,220 +2,139 @@
 
 import { useState, useEffect, useRef } from 'react';
 import {
-    FiPlus, FiEdit2, FiTrash2, FiCreditCard, FiToggleLeft, FiToggleRight,
-    FiCheck, FiX, FiInfo
+    FiPlus, FiEdit2, FiTrash2, FiCreditCard, FiCheck, FiX,
+    FiArrowUp, FiArrowDown, FiDollarSign, FiShield, FiUpload,
+    FiInfo, FiSmartphone, FiGlobe
 } from 'react-icons/fi';
-import { FaQrcode } from 'react-icons/fa6';
-import * as FiIcons from 'react-icons/fi';
-import * as FaIcons from 'react-icons/fa';
-import * as Fa6Icons from 'react-icons/fa6';
-import * as MdIcons from 'react-icons/md';
-import * as BsIcons from 'react-icons/bs';
+import { SiBinance, SiZelle, SiPaypal } from 'react-icons/si';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
+import PageHeader from '@/components/ui/PageHeader';
 import {
-    adminPageTitle, adminPageSubtitle,
-    adminModalOverlay, adminModalPanel
+    adminCard, adminPrimaryButton, adminSecondaryButton,
+    adminInput, adminModalOverlay, adminModalPanel,
+    adminModalHeader, adminModalTitle, adminModalFooter, adminSpinner
 } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { formatUSD } from '@/lib/currency';
+import { BANCOS_VENEZUELA } from '@/lib/pago-movil/bancos-venezuela';
 
-type IconLib = Record<string, React.ComponentType<{ className?: string }>>;
-
-const renderCustomIcon = (iconName: string, className = "w-7 h-7") => {
-    if (!iconName) return null;
-    
-    let name = iconName.trim();
-    if (name.includes('/') || name.includes('http')) {
-        const match = name.match(/q=([a-zA-Z0-9]+)/) || name.match(/\/([a-zA-Z0-9]+)$/);
-        if (match && match[1]) {
-            name = match[1];
-        }
-    }
-    
-    if (name.startsWith('Fi') && (FiIcons as IconLib)[name]) {
-        const IconComponent = (FiIcons as IconLib)[name];
-        return <IconComponent className={className} />;
-    }
-    if (name.startsWith('Fa') && (Fa6Icons as IconLib)[name]) {
-        const IconComponent = (Fa6Icons as IconLib)[name];
-        return <IconComponent className={className} />;
-    }
-    if (name.startsWith('Fa') && (FaIcons as IconLib)[name]) {
-        const IconComponent = (FaIcons as IconLib)[name];
-        return <IconComponent className={className} />;
-    }
-    if (name.startsWith('Md') && (MdIcons as IconLib)[name]) {
-        const IconComponent = (MdIcons as IconLib)[name];
-        return <IconComponent className={className} />;
-    }
-    if (name.startsWith('Bs') && (BsIcons as IconLib)[name]) {
-        const IconComponent = (BsIcons as IconLib)[name];
-        return <IconComponent className={className} />;
-    }
-
-    const allLibs: IconLib[] = [FiIcons as IconLib, Fa6Icons as IconLib, FaIcons as IconLib, MdIcons as IconLib, BsIcons as IconLib];
-    for (const lib of allLibs) {
-        if (lib[name]) {
-            const IconComponent = lib[name];
-            return <IconComponent className={className} />;
-        }
-    }
-
-    return null;
-};
-
-interface PaymentMethod {
+export interface AdminPaymentMethod {
     id: string;
     type: string;
     name: string;
-    bankName?: string;
-    accountNumber?: string;
-    accountType?: string;
-    holderName?: string;
-    holderId?: string;
-    phone?: string;
-    email?: string;
-    walletAddress?: string;
-    network?: string;
-    instructions?: string;
-    logo?: string;
-    qrCodeImage?: string;
+    bankName?: string | null;
+    accountNumber?: string | null;
+    accountType?: string | null;
+    holderName?: string | null;
+    holderId?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    walletAddress?: string | null;
+    network?: string | null;
+    payId?: string | null;
+    instructions?: string | null;
+    logo?: string | null;
+    qrCodeImage?: string | null;
     sortOrder?: number;
-    minAmount?: number;
-    maxAmount?: number;
-    displayNote?: string;
+    minAmount?: number | null;
+    maxAmount?: number | null;
+    displayNote?: string | null;
     isActive: boolean;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
-const PAYMENT_TYPE_CONFIG: Record<string, { icon: React.ReactNode; label: string; color: string; bgColor: string }> = {
-    BANK_TRANSFER: {
-        icon: (
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="10" width="18" height="11" rx="2" />
-                <path d="M3 6h18L12 2 3 6z" />
-                <line x1="8" y1="14" x2="8" y2="17" />
-                <line x1="12" y1="14" x2="12" y2="17" />
-                <line x1="16" y1="14" x2="16" y2="17" />
-            </svg>
-        ),
-        label: 'Transferencia Bancaria',
-        color: 'text-[#2563EB]',
-        bgColor: 'bg-brand-50 border border-brand-100'
-    },
+const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNode; badgeClass: string }> = {
     MOBILE_PAYMENT: {
-        icon: (
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="5" y="2" width="14" height="20" rx="3" />
-                <path d="M12 18h.01" strokeWidth="3" />
-                <path d="M9 7h6" />
-                <path d="M9 11h6" />
-                <path d="M12 7v8" />
-                <circle cx="12" cy="11" r="2.5" fill="currentColor" fillOpacity="0.15" />
-            </svg>
-        ),
         label: 'Pago Móvil',
-        color: 'text-[#0EA5E9]',
-        bgColor: 'bg-brand-50 border border-brand-100'
+        icon: <FiSmartphone className="w-5 h-5 text-brand-600" />,
+        badgeClass: 'bg-brand-50 text-brand-700 border-brand-200',
+    },
+    BANK_TRANSFER: {
+        label: 'Transferencia',
+        icon: <FiCreditCard className="w-5 h-5 text-brand-600" />,
+        badgeClass: 'bg-brand-50 text-brand-700 border-brand-200',
+    },
+    BINANCE_PAY: {
+        label: 'Binance Pay',
+        icon: <SiBinance className="w-5 h-5 text-warning-strong" />,
+        badgeClass: 'bg-warning/10 text-warning-strong border-warning/30',
     },
     ZELLE: {
-        icon: (
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M13.559 24h-2.841a.483.483 0 0 1-.483-.483v-2.765H5.638a.667.667 0 0 1-.666-.666v-2.234a.67.67 0 0 1 .142-.412l8.139-10.382h-7.25a.667.667 0 0 1-.667-.667V3.914c0-.367.299-.666.666-.666h4.23V.483c0-.266.217-.483.483-.483h2.841c.266 0 .483.217.483.483v2.765h4.323c.367 0 .666.299.666.666v2.137a.67.67 0 0 1-.141.41l-8.19 10.481h7.665c.367 0 .666.299.666.666v2.477a.667.667 0 0 1-.666.667h-4.32v2.765a.483.483 0 0 1-.483.483Z" />
-            </svg>
-        ),
         label: 'Zelle',
-        color: 'text-[#7414CA]',
-        bgColor: 'bg-brand-50 border border-brand-100'
+        icon: <SiZelle className="w-5 h-5 text-purple-600" />,
+        badgeClass: 'bg-purple-50 text-purple-700 border-purple-200',
     },
     ZINLI: {
-        icon: (
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
-                <rect width="24" height="24" rx="6" fill="#FF5E00" />
-                <path d="M7 8h10l-8 8h8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-        ),
         label: 'Zinli',
-        color: 'text-[#FF5E00]',
-        bgColor: 'bg-warning/10 border border-warning/20'
+        icon: <FiCreditCard className="w-5 h-5 text-orange-600" />,
+        badgeClass: 'bg-orange-50 text-orange-700 border-orange-200',
     },
     PAYPAL: {
-        icon: (
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
-                <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.354C5.137 2.129 6.192 1.2 7.436 1.2h7.822c3.967 0 6.027 1.954 5.568 5.617-.468 3.738-2.825 5.922-6.529 5.922h-3.41l-.973 6.182a.64.64 0 0 1-.633.54H7.076z" fill="#003087" />
-                <path d="M12.276 14.863h-4.63a.64.64 0 0 1-.633-.54l-1.077 6.843a.64.64 0 0 0 .633.74h3.69c1.037 0 1.92-.777 2.08-1.802l1.01-6.425a.642.642 0 0 0-.633-.74c1.173.067 2.502.067 3.822 0 3.09 0 5.437-1.464 5.945-4.717.272-1.745-.04-3.155-.91-4.148-1.034 2.91-3.23 4.79-6.31 4.79z" fill="#0079C1" opacity="0.85" />
-            </svg>
-        ),
         label: 'PayPal',
-        color: 'text-[#003087]',
-        bgColor: 'bg-brand-50 border border-brand-100'
-    },
-    CRYPTO: {
-        icon: (
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M23.633 11.238c-1.393-4.777-6.24-7.51-11.026-6.12L11.238 0l-2.73.682.73 2.923c-.718.18-1.442.368-2.164.558L6.34 1.24l-2.73.682.723 2.89C2.793 5.25.753 6.136.753 6.136l-1.393 5.568s1.637-.753 1.602-.718c.895-.41 1.258.106 1.433.568l2.628 10.518c.106.39-.07.893-.768 1.155.034.034-1.602.733-1.602.733L1.08 22.86l4.085 1.023.73-2.923c.753-.18 1.488-.36 2.21-.543l.732 2.927 2.73-.683-.73-2.922c4.664-.882 7.747-2.67 6.822-7.525-.745-3.91-3.52-5.01-6.196-4.668.683-.875 1.205-1.92.934-3.784zm-3.69 7.03c-.848 3.413-5.26 1.572-6.745 1.2l1.373-5.508c1.484.37 6.275 1.102 5.372 4.308zm.934-6.425c-.777 3.12-4.462 1.536-5.7 1.228l1.248-5.006c1.238.307 5.275.877 4.452 3.778z"/>
-            </svg>
-        ),
-        label: 'Criptomonedas',
-        color: 'text-[#F7931A]',
-        bgColor: 'bg-warning/10 border border-warning/20'
-    },
-    CASH: {
-        icon: (
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 8h18M3 12h18" opacity="0.3" />
-                <rect x="2" y="6" width="20" height="12" rx="2" />
-                <circle cx="12" cy="12" r="3" />
-                <path d="M6 12h.01M18 12h.01" strokeWidth="3" />
-            </svg>
-        ),
-        label: 'Efectivo',
-        color: 'text-success',
-        bgColor: 'bg-success/5 border border-success/10'
+        icon: <SiPaypal className="w-5 h-5 text-blue-600" />,
+        badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
     },
     MERCANTIL_PANAMA: {
-        icon: (
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
-                <path d="M4 12c0-4.4 3.6-8 8-8 2.2 0 4.2.9 5.7 2.3L12 12l5.7 5.7c-1.5 1.4-3.5 2.3-5.7 2.3-4.4 0-8-3.6-8-8z" fill="#002D62" />
-                <path d="M12 12l5.7-5.7c1.4 1.5 2.3 3.5 2.3 5.7s-.9 4.2-2.3 5.7L12 12z" fill="#FF6B00" />
-            </svg>
-        ),
         label: 'Mercantil Panamá',
-        color: 'text-[#002D62]',
-        bgColor: 'bg-brand-50 border border-brand-100'
+        icon: <FiGlobe className="w-5 h-5 text-brand-700" />,
+        badgeClass: 'bg-brand-50 text-brand-800 border-brand-200',
+    },
+    CRYPTO: {
+        label: 'Criptomonedas',
+        icon: <SiBinance className="w-5 h-5 text-warning-strong" />,
+        badgeClass: 'bg-warning/10 text-warning-strong border-warning/30',
+    },
+    CASH: {
+        label: 'Efectivo',
+        icon: <FiDollarSign className="w-5 h-5 text-success-strong" />,
+        badgeClass: 'bg-success/10 text-success-strong border-success/30',
     },
     OTHER: {
-        icon: (
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="5" width="20" height="14" rx="2" />
-                <line x1="2" y1="10" x2="22" y2="10" />
-            </svg>
-        ),
         label: 'Otro',
-        color: 'text-[#64748B]',
-        bgColor: 'bg-surface border border-line'
+        icon: <FiCreditCard className="w-5 h-5 text-muted" />,
+        badgeClass: 'bg-surface text-ink border-line',
     },
+};
+
+const DEFAULT_FORM_DATA: Partial<AdminPaymentMethod> = {
+    type: 'MOBILE_PAYMENT',
+    name: '',
+    bankName: 'Banco de Venezuela',
+    accountNumber: '',
+    accountType: 'Corriente',
+    holderName: '',
+    holderId: '',
+    phone: '',
+    email: '',
+    walletAddress: '',
+    network: 'USDT-TRC20',
+    payId: '',
+    instructions: '',
+    qrCodeImage: null,
+    minAmount: null,
+    maxAmount: null,
+    displayNote: '',
+    isActive: true,
 };
 
 export default function PaymentsPage() {
     const { confirm } = useConfirm();
-    const [methods, setMethods] = useState<PaymentMethod[]>([]);
+    const [methods, setMethods] = useState<AdminPaymentMethod[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
+    const [editingMethod, setEditingMethod] = useState<AdminPaymentMethod | null>(null);
+    const [submitting, setSubmitting] = useState(false);
     const [uploadingQR, setUploadingQR] = useState(false);
-    const [uploadingLogo, setUploadingLogo] = useState(false);
-    useBodyScrollLock(isModalOpen);
     const qrInputRef = useRef<HTMLInputElement>(null);
+    // Logo propio del método (se había perdido en la reescritura de C-101)
+    const [uploadingLogo, setUploadingLogo] = useState(false);
     const logoInputRef = useRef<HTMLInputElement>(null);
-    const [logoMode, setLogoMode] = useState<'upload' | 'url' | 'icon'>('upload');
+    useBodyScrollLock(isModalOpen);
 
-    const [formData, setFormData] = useState<Partial<PaymentMethod>>({
-        type: 'BANK_TRANSFER',
-        name: '',
-        isActive: true,
-        sortOrder: 0
-    });
+    const [formData, setFormData] = useState<Partial<AdminPaymentMethod>>(DEFAULT_FORM_DATA);
 
     useEffect(() => {
         fetchMethods();
@@ -227,13 +146,12 @@ export default function PaymentsPage() {
             const response = await fetch('/api/admin/payments');
             if (response.ok) {
                 const data = await response.json();
-                // Sort by sortOrder
-                data.sort((a: PaymentMethod, b: PaymentMethod) => (a.sortOrder || 0) - (b.sortOrder || 0));
-                setMethods(data);
+                if (Array.isArray(data)) {
+                    data.sort((a: AdminPaymentMethod, b: AdminPaymentMethod) => (a.sortOrder || 0) - (b.sortOrder || 0));
+                    setMethods(data);
+                }
             } else {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('API Error:', response.status, errorData);
-                toast.error(errorData.error || 'Error al cargar métodos de pago');
+                toast.error('Error al cargar métodos de pago');
             }
         } catch (error) {
             console.error('Error fetching methods:', error);
@@ -245,13 +163,10 @@ export default function PaymentsPage() {
 
     const seedInitialMethods = async () => {
         try {
-            const response = await fetch('/api/admin/payments/seed', {
-                method: 'POST',
-            });
+            const response = await fetch('/api/admin/payments/seed', { method: 'POST' });
             const data = await response.json();
-
             if (data.seeded) {
-                toast.success(`${data.count} métodos de pago creados exitosamente`);
+                toast.success(`${data.count} plantillas creadas e inactivas: completa tus datos y actívalas`);
                 fetchMethods();
             } else if (data.count > 0) {
                 toast('Ya existen métodos de pago configurados', { icon: <FiInfo className="h-5 w-5 text-brand-600" /> });
@@ -264,109 +179,114 @@ export default function PaymentsPage() {
         }
     };
 
-    const handleImageUpload = async (file: File, field: 'qrCodeImage' | 'logo') => {
-        const setUploading = field === 'qrCodeImage' ? setUploadingQR : setUploadingLogo;
-        setUploading(true);
-
+    const handleLogoUpload = async (file: File) => {
+        setUploadingLogo(true);
         try {
-            const formDataUpload = new FormData();
-            formDataUpload.append('file', file);
-            formDataUpload.append('folder', 'payment-methods');
-
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                body: formDataUpload,
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setFormData(prev => ({ ...prev, [field]: data.url }));
-                toast.success(`${field === 'qrCodeImage' ? 'Código QR' : 'Logo'} subido correctamente`);
+            const body = new FormData();
+            body.append('file', file);
+            body.append('folder', 'payment-methods');
+            const res = await fetch('/api/upload', { method: 'POST', body });
+            if (res.ok) {
+                const data = await res.json();
+                setFormData(prev => ({ ...prev, logo: data.url }));
+                toast.success('Logo subido correctamente');
             } else {
                 toast.error('Error al subir imagen');
             }
         } catch (error) {
-            console.error('Error uploading:', error);
-            toast.error('Error al subir imagen');
+            console.error('Upload error:', error);
+            toast.error('Error de conexión al subir imagen');
         } finally {
-            setUploading(false);
+            setUploadingLogo(false);
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleQRUpload = async (file: File) => {
+        setUploadingQR(true);
         try {
-            const url = '/api/admin/payments';
-            const method = editingMethod ? 'PATCH' : 'POST';
-            const body = editingMethod ? { ...formData, id: editingMethod.id } : formData;
-
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            });
-
-            if (response.ok) {
-                toast.success(editingMethod ? 'Método actualizado' : 'Método creado');
-                closeModal();
-                fetchMethods();
+            const body = new FormData();
+            body.append('file', file);
+            body.append('folder', 'payment-methods');
+            const res = await fetch('/api/upload', { method: 'POST', body });
+            if (res.ok) {
+                const data = await res.json();
+                setFormData(prev => ({ ...prev, qrCodeImage: data.url }));
+                toast.success('Código QR subido correctamente');
             } else {
-                toast.error('Error al guardar');
+                toast.error('Error al subir imagen');
             }
         } catch (error) {
-            console.error('Error saving method:', error);
-            toast.error('Error de conexión');
+            console.error('Upload error:', error);
+            toast.error('Error de conexión al subir imagen');
+        } finally {
+            setUploadingQR(false);
         }
     };
 
-    const handleDelete = async (id: string) => {
-        const confirmed = await confirm({
-            title: 'Eliminar Método de Pago',
-            message: '¿Estás seguro de eliminar este método de pago? Esta acción no se puede deshacer.',
-            confirmText: 'Sí, Eliminar',
-            cancelText: 'Cancelar',
-            type: 'danger'
-        });
-
-        if (!confirmed) return;
-        try {
-            const response = await fetch(`/api/admin/payments?id=${id}`, {
-                method: 'DELETE',
+    const handleOpenModal = (methodToEdit?: AdminPaymentMethod) => {
+        if (methodToEdit) {
+            setEditingMethod(methodToEdit);
+            setFormData({
+                ...methodToEdit,
+                minAmount: methodToEdit.minAmount ? Number(methodToEdit.minAmount) : null,
+                maxAmount: methodToEdit.maxAmount ? Number(methodToEdit.maxAmount) : null,
             });
-            if (response.ok) {
-                toast.success('Método eliminado');
-                fetchMethods();
-            }
-        } catch (error) {
-            console.error('Error deleting method:', error);
-            toast.error('No se pudo eliminar el método de pago');
-        }
-    };
-
-    const handleEdit = (method: PaymentMethod) => {
-        setEditingMethod(method);
-        setFormData(method);
-        const logoVal = method.logo || '';
-        if (logoVal.includes('react-icons.github.io') || (!logoVal.startsWith('/') && !logoVal.startsWith('http') && logoVal.length > 0)) {
-            setLogoMode('icon');
-        } else if (logoVal.includes('/uploads/') || logoVal.includes('/payment-methods/')) {
-            setLogoMode('upload');
-        } else if (logoVal.startsWith('/') || logoVal.startsWith('http')) {
-            setLogoMode('url');
         } else {
-            setLogoMode('upload');
+            setEditingMethod(null);
+            setFormData({
+                ...DEFAULT_FORM_DATA,
+                sortOrder: methods.length + 1,
+            });
         }
         setIsModalOpen(true);
     };
 
-    const closeModal = () => {
+    const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingMethod(null);
-        setFormData({ type: 'BANK_TRANSFER', name: '', isActive: true, sortOrder: 0 });
-        setLogoMode('upload');
+        setFormData(DEFAULT_FORM_DATA);
     };
 
-    const toggleStatus = async (method: PaymentMethod) => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!formData.name?.trim()) {
+            toast.error('El nombre del método es requerido');
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const isEditing = Boolean(editingMethod);
+            const payload = {
+                ...(isEditing ? { id: editingMethod?.id } : {}),
+                ...formData,
+                minAmount: formData.minAmount ? Number(formData.minAmount) : null,
+                maxAmount: formData.maxAmount ? Number(formData.maxAmount) : null,
+            };
+
+            const response = await fetch('/api/admin/payments', {
+                method: isEditing ? 'PATCH' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                toast.success(isEditing ? 'Método actualizado' : 'Método creado exitosamente');
+                handleCloseModal();
+                fetchMethods();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                toast.error(data.error || 'Error al guardar el método');
+            }
+        } catch (error) {
+            console.error('Error saving method:', error);
+            toast.error('Error de conexión');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const toggleStatus = async (method: AdminPaymentMethod) => {
         try {
             const response = await fetch('/api/admin/payments', {
                 method: 'PATCH',
@@ -376,156 +296,201 @@ export default function PaymentsPage() {
             if (response.ok) {
                 toast.success(method.isActive ? 'Método desactivado' : 'Método activado');
                 fetchMethods();
+            } else {
+                toast.error('No se pudo cambiar el estado');
             }
         } catch (error) {
             console.error('Error toggling status:', error);
-            toast.error('No se pudo cambiar el estado del método');
+            toast.error('Error de conexión');
         }
     };
 
-    const getTypeConfig = (type: string) => {
-        return PAYMENT_TYPE_CONFIG[type] || PAYMENT_TYPE_CONFIG.OTHER;
+    const handleMove = async (method: AdminPaymentMethod, direction: 'UP' | 'DOWN') => {
+        const currentIndex = methods.findIndex(m => m.id === method.id);
+        if (currentIndex < 0) return;
+        const targetIndex = direction === 'UP' ? currentIndex - 1 : currentIndex + 1;
+        if (targetIndex < 0 || targetIndex >= methods.length) return;
+
+        // El orden nuevo se guarda por posición: con órdenes repetidos (todos en 0) intercambiarlos no cambiaba nada
+        const reordenados = [...methods];
+        [reordenados[currentIndex], reordenados[targetIndex]] = [reordenados[targetIndex], reordenados[currentIndex]];
+        const cambios = reordenados
+            .map((m, posicion) => ({ id: m.id, sortOrder: posicion + 1, antes: m.sortOrder }))
+            .filter(c => c.sortOrder !== c.antes);
+
+        try {
+            const respuestas = await Promise.all(cambios.map(c => fetch('/api/admin/payments', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: c.id, sortOrder: c.sortOrder }),
+            })));
+            if (respuestas.some(r => !r.ok)) toast.error('No se pudo guardar el nuevo orden');
+            fetchMethods();
+        } catch (error) {
+            console.error('Error moving method:', error);
+            toast.error('Error de conexión');
+        }
     };
 
-    // Count stats
+    const handleDelete = async (method: AdminPaymentMethod) => {
+        const confirmed = await confirm({
+            title: 'Eliminar método de pago',
+            message: `¿Estás seguro de que deseas eliminar "${method.name}"? Los clientes ya no podrán seleccionarlo para recargas ni pagos.`,
+            confirmText: 'Sí, eliminar',
+            cancelText: 'Cancelar',
+            variant: 'danger',
+        });
+
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch(`/api/admin/payments?id=${method.id}`, { method: 'DELETE' });
+            if (response.ok) {
+                toast.success('Método eliminado correctamente');
+                fetchMethods();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                toast.error(data.error || 'No se pudo eliminar el método');
+            }
+        } catch (error) {
+            console.error('Error deleting method:', error);
+            toast.error('Error de conexión');
+        }
+    };
+
     const activeCount = methods.filter(m => m.isActive).length;
-    const inactiveCount = methods.filter(m => !m.isActive).length;
+    const inactiveCount = methods.length - activeCount;
 
     return (
-        <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="flex-shrink-0 space-y-4 mb-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className={adminPageTitle}>Métodos de Pago</h1>
-                        <p className={adminPageSubtitle}>Configura los métodos de pago disponibles para tus clientes</p>
-                    </div>
+        <div className="space-y-6">
+            <PageHeader
+                title="Métodos de Pago"
+                description="Administra las cuentas y métodos para recargas de saldo y pagos directos."
+                actions={
                     <button
-                        onClick={() => {
-                            setEditingMethod(null);
-                            setFormData({ type: 'BANK_TRANSFER', name: '', isActive: true, sortOrder: methods.length });
-                            setIsModalOpen(true);
-                        }}
-                        className="px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl hover:shadow-lg hover:shadow-brand-500/25 transition-all flex items-center gap-2 font-medium"
+                        type="button"
+                        onClick={() => handleOpenModal()}
+                        className={`inline-flex items-center gap-2 ${adminPrimaryButton}`}
                     >
-                        <FiPlus className="w-5 h-5" /> Nuevo Método
+                        <FiPlus className="w-4 h-4" />
+                        Nuevo método
                     </button>
+                }
+            />
+
+            {/* Stats row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className={`${adminCard} p-4 flex items-center gap-3`}>
+                    <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shrink-0">
+                        <FiCreditCard className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-muted font-medium uppercase tracking-wider">Total Métodos</p>
+                        <p className="text-xl font-bold text-ink">{methods.length}</p>
+                    </div>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-white rounded-xl border border-line p-4 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center">
-                                <FiCreditCard className="w-5 h-5 text-brand-600" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-ink">{methods.length}</p>
-                                <p className="text-xs text-muted">Total Métodos</p>
-                            </div>
-                        </div>
+                <div className={`${adminCard} p-4 flex items-center gap-3`}>
+                    <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center text-success-strong shrink-0">
+                        <FiCheck className="w-5 h-5" />
                     </div>
-                    <div className="bg-white rounded-xl border border-line p-4 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
-                                <FiCheck className="w-5 h-5 text-success-strong" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-ink">{activeCount}</p>
-                                <p className="text-xs text-muted">Activos</p>
-                            </div>
-                        </div>
+                    <div>
+                        <p className="text-xs text-muted font-medium uppercase tracking-wider">Activos</p>
+                        <p className="text-xl font-bold text-ink">{activeCount}</p>
                     </div>
-                    <div className="bg-white rounded-xl border border-line p-4 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center">
-                                <FiX className="w-5 h-5 text-muted" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-ink">{inactiveCount}</p>
-                                <p className="text-xs text-muted">Inactivos</p>
-                            </div>
-                        </div>
+                </div>
+
+                <div className={`${adminCard} p-4 flex items-center gap-3`}>
+                    <div className="w-10 h-10 rounded-xl bg-surface border border-line flex items-center justify-center text-muted shrink-0">
+                        <FiX className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-muted font-medium uppercase tracking-wider">Inactivos</p>
+                        <p className="text-xl font-bold text-ink">{inactiveCount}</p>
                     </div>
                 </div>
             </div>
 
-            {/* Methods Grid */}
-            <div className="flex-1 overflow-y-auto">
-                {loading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+            {/* Methods Listing */}
+            {loading ? (
+                <div className={`${adminCard} p-12 flex flex-col items-center justify-center gap-3 text-muted`}>
+                    <div className={adminSpinner} />
+                    <p className="text-sm">Cargando métodos de pago...</p>
+                </div>
+            ) : methods.length === 0 ? (
+                <div className={`${adminCard} p-12 text-center max-w-lg mx-auto`}>
+                    <div className="w-14 h-14 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mx-auto mb-4">
+                        <FiCreditCard className="w-7 h-7" />
                     </div>
-                ) : methods.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-80 bg-white rounded-2xl border border-line">
-                        <div className="w-20 h-20 bg-brand-50 rounded-full flex items-center justify-center mb-6">
-                            <FiCreditCard className="w-10 h-10 text-brand-500" />
-                        </div>
-                        <h3 className="text-xl font-bold text-ink mb-2">No hay métodos de pago</h3>
-                        <p className="text-sm text-muted mb-6 px-6 text-center max-w-md">
-                            Configura los métodos de pago para que tus clientes puedan realizar compras
-                        </p>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={seedInitialMethods}
-                                className="px-5 py-2.5 bg-success-strong text-white rounded-xl hover:shadow-lg transition-all flex items-center gap-2 font-medium"
-                            >
-                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18l6.9 3.45L12 11.08 5.1 7.63 12 4.18z" />
-                                </svg>
-                                Cargar Predefinidos
-                            </button>
-                            <button
-                                onClick={() => setIsModalOpen(true)}
-                                className="px-5 py-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all flex items-center gap-2 font-medium"
-                            >
-                                <FiPlus className="w-5 h-5" /> Crear Manual
-                            </button>
-                        </div>
-                        <p className="text-xs text-subtle mt-4 flex items-center gap-1">
-                            <FiInfo className="w-3 h-3" />
-                            Los predefinidos incluyen: Transferencia, Pago Móvil, Cripto, Mercantil Panamá y Zelle
-                        </p>
+                    <h3 className="text-lg font-bold text-ink mb-1">Sin métodos de pago</h3>
+                    <p className="text-sm text-muted mb-6">
+                        No hay métodos configurados todavía. Puedes cargar los predefinidos para Venezuela o crear uno nuevo.
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                        <button
+                            type="button"
+                            onClick={seedInitialMethods}
+                            className={`inline-flex items-center gap-2 ${adminSecondaryButton}`}
+                        >
+                            <FiPlus className="w-4 h-4" />
+                            Cargar predefinidos
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleOpenModal()}
+                            className={`inline-flex items-center gap-2 ${adminPrimaryButton}`}
+                        >
+                            <FiPlus className="w-4 h-4" />
+                            Crear método
+                        </button>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {methods.map((method) => {
-                            const config = getTypeConfig(method.type);
-                            return (
-                                <div
-                                    key={method.id}
-                                    className={`bg-white rounded-xl border p-5 shadow-sm hover:shadow-md transition-all group relative ${!method.isActive ? 'opacity-60 border-line bg-surface' : 'border-line'
-                                        }`}
-                                >
-                                    {/* Status Badge */}
-                                    <div className="absolute top-3 right-3">
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${method.isActive ? 'bg-success/10 text-success-strong' : 'bg-surface text-muted'
-                                            }`}>
-                                            {method.isActive ? 'Activo' : 'Inactivo'}
-                                        </span>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {methods.map((method, index) => {
+                        const meta = PAYMENT_TYPE_METADATA[method.type] || PAYMENT_TYPE_METADATA.OTHER;
+                        return (
+                            <div
+                                key={method.id}
+                                className={`${adminCard} p-5 flex flex-col justify-between transition-all ${
+                                    !method.isActive ? 'opacity-65 bg-surface/80 border-dashed' : ''
+                                }`}
+                            >
+                                <div>
+                                    {/* Header: Icon, Name, Active switch */}
+                                    <div className="flex items-start justify-between gap-3 mb-3">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="w-10 h-10 rounded-xl bg-surface border border-line flex items-center justify-center shrink-0 overflow-hidden">
+                                                {method.logo?.startsWith('/') ? (
+                                                    <Image src={method.logo} alt="" width={32} height={32} className="h-8 w-8 rounded-lg object-contain" />
+                                                ) : meta.icon}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="font-bold text-ink text-base truncate">{method.name}</h3>
+                                                <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-full border ${meta.badgeClass}`}>
+                                                    {meta.label}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleStatus(method)}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                                method.isActive ? 'bg-success-strong' : 'bg-subtle'
+                                            }`}
+                                            title={method.isActive ? 'Desactivar método' : 'Activar método'}
+                                        >
+                                            <span
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                                    method.isActive ? 'translate-x-5' : 'translate-x-0'
+                                                }`}
+                                            />
+                                        </button>
                                     </div>
 
-                                    {/* Header */}
-                                    <div className="flex items-start gap-4 mb-4">
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-sm ${config.bgColor} ${config.color}`}>
-                                            {method.logo ? (
-                                                (method.logo.startsWith('/') || method.logo.startsWith('http')) && !method.logo.includes('react-icons.github.io') ? (
-                                                    <Image src={method.logo} alt={method.name} width={32} height={32} className="rounded-lg object-cover" />
-                                                ) : (
-                                                    renderCustomIcon(method.logo, "w-6 h-6") || config.icon
-                                                )
-                                            ) : (
-                                                config.icon
-                                            )}
-                                        </div>
-                                        <div className="flex-1 min-w-0 pr-16">
-                                            <h3 className="font-bold text-ink truncate">{method.name}</h3>
-                                            <p className="text-xs text-muted font-medium">{config.label}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Details */}
-                                    <div className="space-y-2 text-sm mb-4">
+                                    {/* Details breakdown */}
+                                    <div className="space-y-1.5 text-xs text-ink-soft py-2 border-t border-b border-line mb-3">
                                         {method.bankName && (
                                             <div className="flex justify-between">
                                                 <span className="text-muted">Banco:</span>
@@ -535,7 +500,7 @@ export default function PaymentsPage() {
                                         {method.accountNumber && (
                                             <div className="flex justify-between">
                                                 <span className="text-muted">Cuenta:</span>
-                                                <span className="font-medium text-ink font-mono text-xs">{method.accountNumber}</span>
+                                                <span className="font-mono text-ink">{method.accountNumber}</span>
                                             </div>
                                         )}
                                         {method.phone && (
@@ -546,535 +511,847 @@ export default function PaymentsPage() {
                                         )}
                                         {method.holderId && (
                                             <div className="flex justify-between">
-                                                <span className="text-muted">Cédula/RIF:</span>
+                                                <span className="text-muted">Cédula / RIF:</span>
                                                 <span className="font-medium text-ink">{method.holderId}</span>
+                                            </div>
+                                        )}
+                                        {method.holderName && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted">Titular:</span>
+                                                <span className="font-medium text-ink truncate ml-2">{method.holderName}</span>
                                             </div>
                                         )}
                                         {method.email && (
                                             <div className="flex justify-between">
-                                                <span className="text-muted">Email:</span>
-                                                <span className="font-medium text-ink truncate max-w-[150px]">{method.email}</span>
+                                                <span className="text-muted">Correo:</span>
+                                                <span className="font-medium text-ink truncate ml-2">{method.email}</span>
+                                            </div>
+                                        )}
+                                        {method.payId && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted">Binance Pay ID:</span>
+                                                <span className="font-mono font-medium text-ink">{method.payId}</span>
+                                            </div>
+                                        )}
+                                        {method.walletAddress && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted">Wallet:</span>
+                                                <span className="font-mono text-ink truncate ml-2 max-w-[160px]">{method.walletAddress}</span>
+                                            </div>
+                                        )}
+                                        {method.network && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted">Red:</span>
+                                                <span className="font-medium text-ink">{method.network}</span>
+                                            </div>
+                                        )}
+
+                                        {/* Limits */}
+                                        {(method.minAmount || method.maxAmount) && (
+                                            <div className="flex justify-between pt-1">
+                                                <span className="text-muted">Límites:</span>
+                                                <span className="font-semibold text-ink">
+                                                    {method.minAmount ? `Mín ${formatUSD(Number(method.minAmount))}` : ''}
+                                                    {method.minAmount && method.maxAmount ? ' · ' : ''}
+                                                    {method.maxAmount ? `Máx ${formatUSD(Number(method.maxAmount))}` : ''}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* QR Code Preview */}
-                                    {method.qrCodeImage && (
-                                        <div className="mb-4 p-2 bg-surface rounded-lg border border-line flex items-center gap-2">
-                                            <FaQrcode className="w-4 h-4 text-subtle" />
-                                            <span className="text-xs text-muted">Código QR disponible</span>
-                                        </div>
-                                    )}
 
                                     {/* Display Note */}
                                     {method.displayNote && (
-                                        <div className="mb-4 p-2 bg-brand-50 rounded-lg border border-brand-100">
-                                            <p className="text-xs text-brand-700">{method.displayNote}</p>
-                                        </div>
+                                        <p className="text-xs text-muted bg-surface p-2 rounded-lg border border-line mb-3 line-clamp-2">
+                                            {method.displayNote}
+                                        </p>
                                     )}
 
-                                    {/* Actions */}
-                                    <div className="flex items-center justify-between pt-4 border-t border-line">
-                                        <button
-                                            onClick={() => toggleStatus(method)}
-                                            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${method.isActive
-                                                ? 'text-muted hover:bg-surface'
-                                                : 'text-success-strong hover:bg-success/5'
-                                                }`}
-                                        >
-                                            {method.isActive ? (
-                                                <>
-                                                    <FiToggleRight className="w-4 h-4" /> Desactivar
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <FiToggleLeft className="w-4 h-4" /> Activar
-                                                </>
-                                            )}
-                                        </button>
-                                        <div className="flex gap-1">
-                                            <button
-                                                onClick={() => handleEdit(method)}
-                                                className="p-2 text-subtle hover:text-brand-500 hover:bg-brand-50 rounded-lg transition-colors"
-                                                title="Editar"
-                                            >
-                                                <FiEdit2 className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(method.id)}
-                                                className="p-2 text-subtle hover:text-deal hover:bg-deal/5 rounded-lg transition-colors"
-                                                title="Eliminar"
-                                            >
-                                                <FiTrash2 className="w-4 h-4" />
-                                            </button>
+                                    {/* QR Code thumbnail */}
+                                    {method.qrCodeImage && (
+                                        <div className="flex items-center gap-2 text-xs text-muted mb-3">
+                                            <Image
+                                                src={method.qrCodeImage}
+                                                alt="QR Thumbnail"
+                                                width={36}
+                                                height={36}
+                                                className="rounded border border-line object-contain bg-white"
+                                            />
+                                            <span>Código QR configurado</span>
                                         </div>
+                                    )}
+                                </div>
+
+                                {/* Footer actions: Reorder, Edit, Delete */}
+                                <div className="flex items-center justify-between pt-2 border-t border-line">
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleMove(method, 'UP')}
+                                            disabled={index === 0}
+                                            className="p-1.5 rounded hover:bg-surface text-muted disabled:opacity-30 disabled:hover:bg-transparent"
+                                            title="Mover arriba"
+                                        >
+                                            <FiArrowUp className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleMove(method, 'DOWN')}
+                                            disabled={index === methods.length - 1}
+                                            className="p-1.5 rounded hover:bg-surface text-muted disabled:opacity-30 disabled:hover:bg-transparent"
+                                            title="Mover abajo"
+                                        >
+                                            <FiArrowDown className="w-4 h-4" />
+                                        </button>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenModal(method)}
+                                            className={`p-1.5 text-xs font-semibold rounded-lg ${adminSecondaryButton}`}
+                                            title="Editar método"
+                                        >
+                                            <FiEdit2 className="w-3.5 h-3.5" />
+                                            <span>Editar</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDelete(method)}
+                                            className="p-2 text-deal hover:bg-deal-bg rounded-lg transition-colors"
+                                            title="Eliminar método"
+                                        >
+                                            <FiTrash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
-            {/* Modal */}
+            {/* Modal: Form + Live Customer Preview */}
             {isModalOpen && (
-                <div
-                    className={adminModalOverlay}
-                    onClick={closeModal}
-                >
-                    <div
-                        className={`${adminModalPanel} sm:max-w-3xl`}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                                {/* Modal Header */}
-                                <div className="sticky top-0 bg-white border-b border-line px-8 py-5 flex items-center justify-between z-10">
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-ink">
-                                            {editingMethod ? 'Editar Método de Pago' : 'Nuevo Método de Pago'}
-                                        </h2>
-                                        <p className="text-sm text-muted mt-1">Configura los detalles del método de pago</p>
-                                    </div>
-                                    <button
-                                        onClick={closeModal}
-                                        className="p-2 hover:bg-surface rounded-lg transition-colors"
-                                    >
-                                        <FiX className="w-6 h-6" />
-                                    </button>
-                                </div>
+                <div className={adminModalOverlay}>
+                    <div className={`${adminModalPanel} max-w-4xl max-h-[92vh] flex flex-col`}>
+                        {/* Modal Header */}
+                        <div className={adminModalHeader}>
+                            <div>
+                                <h2 className={adminModalTitle}>
+                                    {editingMethod ? 'Editar Método de Pago' : 'Nuevo Método de Pago'}
+                                </h2>
+                                <p className="text-xs text-muted mt-0.5">
+                                    Los campos se adaptan al tipo de método seleccionado.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleCloseModal}
+                                className="p-1.5 rounded-lg text-muted hover:text-ink hover:bg-surface"
+                            >
+                                <FiX className="w-5 h-5" />
+                            </button>
+                        </div>
 
-                                <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+                        {/* Modal Body: 2 Columns on Desktop */}
+                        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                                {/* Left column: Dynamic Form (7 cols) */}
+                                <div className="lg:col-span-7 space-y-4">
                                     {/* Type Selection */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-ink mb-3">Tipo de Método</label>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                                            {Object.entries(PAYMENT_TYPE_CONFIG).map(([type, config]) => (
-                                                <button
-                                                    key={type}
-                                                    type="button"
-                                                    onClick={() => setFormData(prev => ({ ...prev, type }))}
-                                                    className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center justify-center min-h-[80px] ${formData.type === type
-                                                        ? 'border-brand-500 bg-brand-50 shadow-md'
-                                                        : 'border-line hover:border-line hover:bg-surface'
-                                                        }`}
-                                                >
-                                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-1.5 ${config.bgColor} ${config.color}`}>
-                                                        {config.icon}
-                                                    </div>
-                                                    <span className={`text-xs font-medium leading-tight text-center line-clamp-2 ${formData.type === type ? 'text-brand-500' : 'text-muted'}`}>
-                                                        {config.label}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
+                                            Tipo de Método
+                                        </label>
+                                        <select
+                                            value={formData.type}
+                                            onChange={(e) => {
+                                                const nextType = e.target.value;
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    type: nextType,
+                                                    name: prev.name ? prev.name : (PAYMENT_TYPE_METADATA[nextType]?.label || ''),
+                                                }));
+                                            }}
+                                            className={adminInput()}
+                                        >
+                                            <option value="MOBILE_PAYMENT">Pago Móvil (Venezuela)</option>
+                                            <option value="BANK_TRANSFER">Transferencia Bancaria (Venezuela)</option>
+                                            <option value="BINANCE_PAY">Binance Pay (Cripto sin comisión)</option>
+                                            <option value="ZELLE">Zelle (Estados Unidos)</option>
+                                            <option value="ZINLI">Zinli (Billetera USD)</option>
+                                            <option value="PAYPAL">PayPal</option>
+                                            <option value="MERCANTIL_PANAMA">Mercantil Panamá</option>
+                                            <option value="CRYPTO">Criptomonedas (USDT-TRC20, etc.)</option>
+                                            <option value="CASH">Efectivo</option>
+                                            <option value="OTHER">Otro método manual</option>
+                                        </select>
                                     </div>
 
-                                    {/* Name */}
+                                    {/* Method Name */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-ink mb-2">Nombre para mostrar *</label>
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
+                                            Nombre Visible <span className="text-deal">*</span>
+                                        </label>
                                         <input
                                             type="text"
+                                            required
                                             value={formData.name || ''}
                                             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                            placeholder="Ej: Banco de Venezuela"
-                                            className="w-full px-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-base"
-                                            required
+                                            placeholder="Ej: Pago Móvil BDV, Binance Pay USDT..."
+                                            className={adminInput()}
                                         />
                                     </div>
 
-                                    {/* Logo Selection / Icon */}
-                                    <div className="bg-surface rounded-xl p-4 border border-line space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-semibold text-ink mb-2">Logo o Icono del Método de Pago</label>
-                                            <p className="text-xs text-muted mb-3">
-                                                Selecciona cómo deseas definir el logo/icono para este método de pago.
-                                            </p>
-                                        </div>
-
-                                        <div className="flex gap-4 border-b border-line pb-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => setLogoMode('upload')}
-                                                className={`text-sm font-medium pb-2 border-b-2 px-1 transition-all ${
-                                                    logoMode === 'upload'
-                                                        ? 'border-brand-500 text-brand-500'
-                                                        : 'border-transparent text-muted hover:text-ink-soft'
-                                                }`}
-                                            >
-                                                Subir desde PC
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setLogoMode('url')}
-                                                className={`text-sm font-medium pb-2 border-b-2 px-1 transition-all ${
-                                                    logoMode === 'url'
-                                                        ? 'border-brand-500 text-brand-500'
-                                                        : 'border-transparent text-muted hover:text-ink-soft'
-                                                }`}
-                                            >
-                                                Imagen por URL
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setLogoMode('icon')}
-                                                className={`text-sm font-medium pb-2 border-b-2 px-1 transition-all ${
-                                                    logoMode === 'icon'
-                                                        ? 'border-brand-500 text-brand-500'
-                                                        : 'border-transparent text-muted hover:text-ink-soft'
-                                                }`}
-                                            >
-                                                Librería React Icons
-                                            </button>
-                                        </div>
-
-                                        {logoMode === 'upload' && (
-                                            <div className="flex items-start gap-4 pt-2">
-                                                {formData.logo && (formData.logo.startsWith('/') || formData.logo.startsWith('http')) && !formData.logo.includes('react-icons.github.io') ? (
-                                                    <div className="relative flex-shrink-0">
-                                                        <Image
-                                                            src={formData.logo}
-                                                            alt="Logo"
-                                                            width={80}
-                                                            height={80}
-                                                            className="rounded-lg border border-line object-cover w-20 h-20"
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setFormData(prev => ({ ...prev, logo: undefined }))}
-                                                            className="absolute -top-2 -right-2 w-6 h-6 bg-deal text-white rounded-full flex items-center justify-center hover:bg-deal/90"
-                                                        >
-                                                            <FiX className="w-3 h-3" />
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <div
-                                                        onClick={() => logoInputRef.current?.click()}
-                                                        className="w-20 h-20 flex-shrink-0 border-2 border-dashed border-line rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-brand-500 hover:bg-brand-50/50 transition-colors"
-                                                    >
-                                                        {uploadingLogo ? (
-                                                            <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-                                                        ) : (
-                                                            <>
-                                                                <FiPlus className="w-6 h-6 text-subtle mb-1" />
-                                                                <span className="text-xs text-muted text-center">Subir Imagen</span>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                )}
-                                                <input
-                                                    ref={logoInputRef}
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'logo')}
-                                                    className="hidden"
-                                                />
-                                                <div className="flex-1">
-                                                    <p className="text-xs text-muted mb-1">
-                                                        Sube una imagen cuadrada de tu banco o pasarela de pago para mostrarla en el checkout.
-                                                    </p>
-                                                    <p className="text-xs text-subtle">Formatos recomendados: PNG, JPG. Máx. 1MB.</p>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {logoMode === 'url' && (
-                                            <div className="space-y-3 pt-2">
-                                                <div>
-                                                    <label className="block text-xs font-semibold text-ink-soft mb-1">Enlace directo a la imagen (URL)</label>
-                                                    <input
-                                                        type="text"
-                                                        value={formData.logo || ''}
-                                                        onChange={(e) => setFormData(prev => ({ ...prev, logo: e.target.value }))}
-                                                        placeholder="Ej: https://mi-sitio.com/imagenes/visa.png"
-                                                        className="w-full px-4 py-2 text-sm border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-                                                    />
-                                                </div>
-                                                {formData.logo && (formData.logo.startsWith('/') || formData.logo.startsWith('http')) && !formData.logo.includes('react-icons.github.io') && (
-                                                    <div className="flex items-center gap-4 p-3 bg-white rounded-lg border border-line">
-                                                        <div className="relative w-12 h-12 flex-shrink-0 border border-line rounded-lg overflow-hidden bg-surface flex items-center justify-center">
-                                                            <img src={formData.logo} alt="Preview URL" className="w-full h-full object-cover" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs font-semibold text-ink-soft">Vista previa de la imagen</p>
-                                                            <p className="text-xs text-subtle">Cargada desde la URL ingresada.</p>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {logoMode === 'icon' && (
-                                            <div className="space-y-3 pt-2">
-                                                <div>
-                                                    <div className="flex justify-between items-center mb-1">
-                                                        <label className="block text-xs font-semibold text-ink-soft">Nombre o Enlace de React Icon</label>
-                                                        <a
-                                                            href="https://react-icons.github.io/react-icons/"
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-xs text-brand-500 hover:underline font-semibold flex items-center gap-1"
-                                                        >
-                                                            <FiInfo className="w-3.5 h-3.5" />
-                                                            Ver catálogo React Icons ↗
-                                                        </a>
-                                                    </div>
-                                                    <input
-                                                        type="text"
-                                                        value={formData.logo || ''}
-                                                        onChange={(e) => setFormData(prev => ({ ...prev, logo: e.target.value }))}
-                                                        placeholder="Ej: FaCcVisa, FiCreditCard, MdPayment o https://react-icons.github.io/react-icons/search/#q=FiCreditCard"
-                                                        className="w-full px-4 py-2 text-sm border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-                                                    />
-                                                </div>
-                                                <div className="flex items-center gap-4 p-3 bg-white rounded-lg border border-line">
-                                                    <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center text-muted">
-                                                        {formData.logo ? (
-                                                            renderCustomIcon(formData.logo, "w-6 h-6") || <FiCreditCard className="w-6 h-6" />
-                                                        ) : (
-                                                            <FiCreditCard className="w-6 h-6" />
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-semibold text-ink-soft">Vista previa del icono</p>
-                                                        <p className="text-xs text-subtle">
-                                                            {formData.logo && renderCustomIcon(formData.logo)
-                                                                ? `Icono "${formData.logo.includes('http') ? formData.logo.split('q=').pop() : formData.logo}" cargado con éxito.`
-                                                                : 'Introduce un nombre válido de la librería React Icons (sujeta a fa, fi, md, bs, fa6).'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Conditional Fields based on Type */}
-                                    {(formData.type === 'BANK_TRANSFER' || formData.type === 'MOBILE_PAYMENT') && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Dynamic Fields per Type */}
+                                    {/* MOBILE_PAYMENT */}
+                                    {formData.type === 'MOBILE_PAYMENT' && (
+                                        <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
+                                            <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider">
+                                                Datos de Pago Móvil
+                                            </h4>
                                             <div>
-                                                <label className="block text-sm font-semibold text-ink mb-2">Banco</label>
-                                                <input
-                                                    type="text"
+                                                <label className="block text-xs font-medium text-ink mb-1">Banco</label>
+                                                <select
                                                     value={formData.bankName || ''}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
-                                                    placeholder="Banco de Venezuela"
-                                                    className="w-full px-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-semibold text-ink mb-2">Cédula / RIF</label>
-                                                <input
-                                                    type="text"
-                                                    value={formData.holderId || ''}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, holderId: e.target.value }))}
-                                                    placeholder="V-12345678"
-                                                    className="w-full px-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {formData.type === 'BANK_TRANSFER' && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-semibold text-ink mb-2">Número de Cuenta</label>
-                                                <input
-                                                    type="text"
-                                                    value={formData.accountNumber || ''}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
-                                                    placeholder="0102-0000-00-0000000000"
-                                                    className="w-full px-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 font-mono"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-semibold text-ink mb-2">Tipo de Cuenta</label>
-                                                <select
-                                                    value={formData.accountType || ''}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, accountType: e.target.value }))}
-                                                    className="w-full px-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                                                    className={adminInput()}
                                                 >
-                                                    <option value="">Seleccionar</option>
-                                                    <option value="Corriente">Corriente</option>
-                                                    <option value="Ahorro">Ahorro</option>
+                                                    <option value="">Selecciona un banco</option>
+                                                    {BANCOS_VENEZUELA.map(b => (
+                                                        <option key={b.codigo} value={b.nombreCorto}>
+                                                            {b.codigo} - {b.nombreCorto}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-ink mb-1">Teléfono</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.phone || ''}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                                                        placeholder="0412-1234567"
+                                                        className={adminInput()}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-ink mb-1">Cédula / RIF</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.holderId || ''}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, holderId: e.target.value }))}
+                                                        placeholder="V-12345678 o J-12345678-9"
+                                                        className={adminInput()}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Titular</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.holderName || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, holderName: e.target.value }))}
+                                                    placeholder="Nombre o Razón Social"
+                                                    className={adminInput()}
+                                                />
+                                            </div>
                                         </div>
                                     )}
 
-                                    {formData.type === 'MOBILE_PAYMENT' && (
-                                        <div className="space-y-4">
+                                    {/* BANK_TRANSFER */}
+                                    {formData.type === 'BANK_TRANSFER' && (
+                                        <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
+                                            <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider">
+                                                Datos de Cuenta Bancaria
+                                            </h4>
                                             <div>
-                                                <label className="block text-sm font-semibold text-ink mb-2">Teléfono (Pago Móvil)</label>
+                                                <label className="block text-xs font-medium text-ink mb-1">Banco</label>
+                                                <select
+                                                    value={formData.bankName || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
+                                                    className={adminInput()}
+                                                >
+                                                    <option value="">Selecciona un banco</option>
+                                                    {BANCOS_VENEZUELA.map(b => (
+                                                        <option key={b.codigo} value={b.nombreCorto}>
+                                                            {b.codigo} - {b.nombreCorto}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Número de Cuenta (20 dígitos)</label>
+                                                <input
+                                                    type="text"
+                                                    maxLength={20}
+                                                    value={formData.accountNumber || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value.replace(/\D/g, '') }))}
+                                                    placeholder="01020123456789012345"
+                                                    className={`${adminInput()} font-mono`}
+                                                />
+                                                {formData.accountNumber && formData.accountNumber.length !== 20 && (
+                                                    <p className="text-[11px] text-warning-strong mt-0.5">
+                                                        Debe tener exactamente 20 dígitos (actual: {formData.accountNumber.length})
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-ink mb-1">Tipo de Cuenta</label>
+                                                    <select
+                                                        value={formData.accountType || 'Corriente'}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, accountType: e.target.value }))}
+                                                        className={adminInput()}
+                                                    >
+                                                        <option value="Corriente">Corriente</option>
+                                                        <option value="Ahorro">Ahorro</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-ink mb-1">Cédula / RIF</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.holderId || ''}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, holderId: e.target.value }))}
+                                                        placeholder="J-12345678-9"
+                                                        className={adminInput()}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Titular</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.holderName || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, holderName: e.target.value }))}
+                                                    placeholder="Nombre o Razón Social"
+                                                    className={adminInput()}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* BINANCE_PAY */}
+                                    {formData.type === 'BINANCE_PAY' && (
+                                        <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
+                                            <h4 className="text-xs font-bold text-warning-strong uppercase tracking-wider">
+                                                Datos de Binance Pay
+                                            </h4>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Correo de la cuenta Binance</label>
+                                                <input
+                                                    type="email"
+                                                    value={formData.email || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                                    placeholder="pagos@ejemplo.com"
+                                                    className={adminInput()}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Binance Pay ID</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.payId || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, payId: e.target.value }))}
+                                                    placeholder="123456789"
+                                                    className={`${adminInput()} font-mono`}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Nombre / Alias en Binance</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.holderName || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, holderName: e.target.value }))}
+                                                    placeholder="ElectroShopVE"
+                                                    className={adminInput()}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ZELLE */}
+                                    {formData.type === 'ZELLE' && (
+                                        <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
+                                            <h4 className="text-xs font-bold text-purple-700 uppercase tracking-wider">
+                                                Datos de Zelle
+                                            </h4>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Correo Zelle</label>
+                                                <input
+                                                    type="email"
+                                                    value={formData.email || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                                    placeholder="zelle@ejemplo.com"
+                                                    className={adminInput()}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Titular de la cuenta</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.holderName || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, holderName: e.target.value }))}
+                                                    placeholder="Nombre y apellido"
+                                                    className={adminInput()}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ZINLI */}
+                                    {formData.type === 'ZINLI' && (
+                                        <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
+                                            <h4 className="text-xs font-bold text-orange-700 uppercase tracking-wider">
+                                                Datos de Zinli
+                                            </h4>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Correo Zinli</label>
+                                                <input
+                                                    type="email"
+                                                    value={formData.email || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                                    placeholder="zinli@ejemplo.com"
+                                                    className={adminInput()}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Teléfono Zinli</label>
                                                 <input
                                                     type="text"
                                                     value={formData.phone || ''}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                                                     placeholder="0412-1234567"
-                                                    className="w-full px-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                                                    className={adminInput()}
                                                 />
                                             </div>
+                                        </div>
+                                    )}
 
-                                            {/* QR Code Upload */}
-                                            <div className="bg-surface rounded-xl p-4 border border-line">
-                                                <label className="block text-sm font-semibold text-ink mb-3">
-                                                    <FaQrcode className="inline w-4 h-4 mr-2" />
-                                                    Código QR (Pago Móvil)
-                                                </label>
-                                                <div className="flex items-start gap-4">
-                                                    {formData.qrCodeImage ? (
-                                                        <div className="relative flex-shrink-0">
-                                                            <Image
-                                                                src={formData.qrCodeImage}
-                                                                alt="QR Code"
-                                                                width={120}
-                                                                height={120}
-                                                                className="rounded-lg border border-line"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setFormData(prev => ({ ...prev, qrCodeImage: undefined }))}
-                                                                className="absolute -top-2 -right-2 w-6 h-6 bg-deal text-white rounded-full flex items-center justify-center hover:bg-deal/90"
-                                                            >
-                                                                <FiX className="w-3 h-3" />
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <div
-                                                            onClick={() => qrInputRef.current?.click()}
-                                                            className="w-32 h-32 flex-shrink-0 border-2 border-dashed border-line rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-brand-500 hover:bg-brand-50/50 transition-colors"
-                                                        >
-                                                            {uploadingQR ? (
-                                                                <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-                                                            ) : (
-                                                                <>
-                                                                    <FaQrcode className="w-8 h-8 text-subtle mb-2" />
-                                                                    <span className="text-xs text-muted">Subir QR</span>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                    {/* PAYPAL */}
+                                    {formData.type === 'PAYPAL' && (
+                                        <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
+                                            <h4 className="text-xs font-bold text-blue-700 uppercase tracking-wider">
+                                                Datos de PayPal
+                                            </h4>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Correo PayPal</label>
+                                                <input
+                                                    type="email"
+                                                    value={formData.email || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                                    placeholder="paypal@ejemplo.com"
+                                                    className={adminInput()}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Nombre de la cuenta</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.holderName || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, holderName: e.target.value }))}
+                                                    placeholder="Nombre del titular"
+                                                    className={adminInput()}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* MERCANTIL_PANAMA */}
+                                    {formData.type === 'MERCANTIL_PANAMA' && (
+                                        <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
+                                            <h4 className="text-xs font-bold text-brand-800 uppercase tracking-wider">
+                                                Datos de Mercantil Panamá
+                                            </h4>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Número de Cuenta</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.accountNumber || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
+                                                    placeholder="0123456789"
+                                                    className={`${adminInput()} font-mono`}
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-ink mb-1">Correo Mony / Panamá</label>
                                                     <input
-                                                        ref={qrInputRef}
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'qrCodeImage')}
-                                                        className="hidden"
+                                                        type="email"
+                                                        value={formData.email || ''}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                                        placeholder="mony@ejemplo.com"
+                                                        className={adminInput()}
                                                     />
-                                                    <div className="flex-1">
-                                                        <p className="text-sm text-muted mb-2">
-                                                            Sube una imagen del código QR de tu Pago Móvil para que los clientes puedan escanearlo directamente.
-                                                        </p>
-                                                        <p className="text-xs text-subtle">Formatos: JPG, PNG. Máximo 2MB.</p>
-                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-ink mb-1">Titular</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.holderName || ''}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, holderName: e.target.value }))}
+                                                        placeholder="Nombre del titular"
+                                                        className={adminInput()}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
                                     )}
 
-                                    {(formData.type === 'ZELLE' || formData.type === 'PAYPAL' || formData.type === 'ZINLI') && (
-                                        <div>
-                                            <label className="block text-sm font-semibold text-ink mb-2">Correo electrónico</label>
-                                            <input
-                                                type="email"
-                                                value={formData.email || ''}
-                                                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                                                placeholder="correo@ejemplo.com"
-                                                className="w-full px-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-                                            />
-                                        </div>
-                                    )}
-
+                                    {/* CRYPTO */}
                                     {formData.type === 'CRYPTO' && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
+                                            <h4 className="text-xs font-bold text-warning-strong uppercase tracking-wider">
+                                                Datos de Billetera Cripto
+                                            </h4>
                                             <div>
-                                                <label className="block text-sm font-semibold text-ink mb-2">Dirección de Wallet</label>
+                                                <label className="block text-xs font-medium text-ink mb-1">Dirección de Wallet</label>
                                                 <input
                                                     type="text"
                                                     value={formData.walletAddress || ''}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, walletAddress: e.target.value }))}
-                                                    placeholder="0x..."
-                                                    className="w-full px-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 font-mono text-sm"
+                                                    placeholder="TYDzsYUE28N4e5g6..."
+                                                    className={`${adminInput()} font-mono`}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-semibold text-ink mb-2">Red</label>
-                                                <select
+                                                <label className="block text-xs font-medium text-ink mb-1">Red / Blockchain</label>
+                                                <input
+                                                    type="text"
                                                     value={formData.network || ''}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, network: e.target.value }))}
-                                                    className="w-full px-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-                                                >
-                                                    <option value="">Seleccionar red</option>
-                                                    <option value="BTC">Bitcoin (BTC)</option>
-                                                    <option value="ETH">Ethereum (ETH)</option>
-                                                    <option value="BSC">Binance Smart Chain (BSC)</option>
-                                                    <option value="USDT-TRC20">USDT (TRC20 - Tron)</option>
-                                                    <option value="USDT-ERC20">USDT (ERC20 - Ethereum)</option>
-                                                </select>
+                                                    placeholder="USDT-TRC20, BEP20, Polygon..."
+                                                    className={adminInput()}
+                                                />
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Instructions */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-ink mb-2">Instrucciones (internas)</label>
-                                        <textarea
-                                            value={formData.instructions || ''}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
-                                            placeholder="Notas internas para el equipo..."
-                                            rows={2}
-                                            className="w-full px-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none"
-                                        />
+                                    {/* CASH or OTHER */}
+                                    {(formData.type === 'CASH' || formData.type === 'OTHER') && (
+                                        <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
+                                            <h4 className="text-xs font-bold text-ink uppercase tracking-wider">
+                                                Instrucciones
+                                            </h4>
+                                            <div>
+                                                <label className="block text-xs font-medium text-ink mb-1">Instrucciones para el cliente</label>
+                                                <textarea
+                                                    rows={3}
+                                                    value={formData.instructions || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
+                                                    placeholder="Indica dónde pagar o entregar..."
+                                                    className={adminInput()}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Limits */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-ink mb-1">Monto Mínimo (USD, opcional)</label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                step="0.01"
+                                                value={formData.minAmount ?? ''}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, minAmount: e.target.value ? Number(e.target.value) : null }))}
+                                                placeholder="Ej: 5.00"
+                                                className={adminInput()}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-ink mb-1">Monto Máximo (USD, opcional)</label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                step="0.01"
+                                                value={formData.maxAmount ?? ''}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, maxAmount: e.target.value ? Number(e.target.value) : null }))}
+                                                placeholder="Ej: 1000.00"
+                                                className={adminInput()}
+                                            />
+                                        </div>
                                     </div>
 
                                     {/* Display Note */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-ink mb-2">
-                                            <FiInfo className="inline w-4 h-4 mr-1" />
-                                            Nota para el cliente
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
+                                            Nota visible para el cliente
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.displayNote || ''}
                                             onChange={(e) => setFormData(prev => ({ ...prev, displayNote: e.target.value }))}
-                                            placeholder="Ej: Incluir número de referencia en el concepto"
-                                            className="w-full px-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                                            placeholder="Ej: Incluir número de referencia sin guiones"
+                                            className={adminInput()}
                                         />
-                                        <p className="text-xs text-subtle mt-1">Este texto será visible para los clientes en el checkout.</p>
                                     </div>
 
-                                    {/* Active Toggle */}
-                                    <div className="flex items-center justify-between p-4 bg-surface rounded-xl border border-line">
+                                    {/* QR Code Upload */}
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
+                                            Logo del método (opcional)
+                                        </label>
+                                        <input
+                                            ref={logoInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) handleLogoUpload(file);
+                                            }}
+                                        />
+                                        <div className="mb-4 flex items-center gap-3">
+                                            {formData.logo?.startsWith('/') ? (
+                                                <div className="flex items-center gap-3 p-2 bg-surface rounded-xl border border-line">
+                                                    <Image
+                                                        src={formData.logo}
+                                                        alt="Logo"
+                                                        width={40}
+                                                        height={40}
+                                                        className="rounded-lg object-contain bg-white border border-line"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({ ...prev, logo: null }))}
+                                                        className="text-xs text-deal hover:underline font-semibold"
+                                                    >
+                                                        Quitar logo
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => logoInputRef.current?.click()}
+                                                    disabled={uploadingLogo}
+                                                    className={`inline-flex items-center gap-2 ${adminSecondaryButton}`}
+                                                >
+                                                    <FiUpload className="w-4 h-4" />
+                                                    {uploadingLogo ? 'Subiendo...' : 'Subir logo'}
+                                                </button>
+                                            )}
+                                        </div>
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
+                                            Código QR de Pago (Opcional)
+                                        </label>
+                                        <input
+                                            ref={qrInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) handleQRUpload(file);
+                                            }}
+                                        />
+                                        <div className="flex items-center gap-3">
+                                            {formData.qrCodeImage ? (
+                                                <div className="flex items-center gap-3 p-2 bg-surface rounded-xl border border-line">
+                                                    <Image
+                                                        src={formData.qrCodeImage}
+                                                        alt="QR Preview"
+                                                        width={48}
+                                                        height={48}
+                                                        className="rounded-lg object-contain bg-white border border-line"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({ ...prev, qrCodeImage: null }))}
+                                                        className="text-xs text-deal hover:underline font-semibold"
+                                                    >
+                                                        Quitar QR
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => qrInputRef.current?.click()}
+                                                    disabled={uploadingQR}
+                                                    className={`inline-flex items-center gap-2 ${adminSecondaryButton}`}
+                                                >
+                                                    <FiUpload className="w-4 h-4" />
+                                                    {uploadingQR ? 'Subiendo...' : 'Subir código QR'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Active Switch */}
+                                    <div className="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-line">
                                         <div>
-                                            <p className="font-semibold text-ink">Estado Activo</p>
-                                            <p className="text-sm text-muted">Este método estará disponible en el checkout</p>
+                                            <span className="text-sm font-bold text-ink block">Método Activo</span>
+                                            <span className="text-xs text-muted">Disponible para que los clientes lo seleccionen</span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, isActive: !prev.isActive }))}
-                                            className={`relative w-14 h-7 rounded-full transition-colors ${formData.isActive ? 'bg-success' : 'bg-line'
-                                                }`}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                                formData.isActive ? 'bg-success-strong' : 'bg-subtle'
+                                            }`}
                                         >
-                                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-all ${formData.isActive ? 'left-8' : 'left-1'
-                                                }`} />
+                                            <span
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                                    formData.isActive ? 'translate-x-5' : 'translate-x-0'
+                                                }`}
+                                            />
                                         </button>
                                     </div>
-                                </form>
-
-                                {/* Actions - Fixed at bottom */}
-                                <div className="sticky bottom-0 bg-white border-t border-line px-8 py-4 flex gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={closeModal}
-                                        className="flex-1 py-3 border border-line text-ink-soft rounded-xl hover:bg-surface font-semibold transition-colors"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        onClick={handleSubmit}
-                                        className="flex-1 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl hover:shadow-lg font-semibold transition-all"
-                                    >
-                                        {editingMethod ? 'Guardar Cambios' : 'Crear Método'}
-                                    </button>
                                 </div>
+
+                                {/* Right column: "Así lo ve el cliente" Live Preview (5 cols) */}
+                                <div className="lg:col-span-5 space-y-3">
+                                    <div className="sticky top-0">
+                                        <div className="flex items-center gap-1.5 mb-2 text-xs font-bold uppercase tracking-wider text-muted">
+                                            <FiShield className="w-3.5 h-3.5 text-brand-600" />
+                                            <span>Así lo ve el cliente</span>
+                                        </div>
+
+                                        {/* Preview Card in customer style */}
+                                        <div className="bg-white rounded-xl border-2 border-brand-500 shadow-md p-4 space-y-3">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shrink-0">
+                                                    {formData.type === 'BINANCE_PAY' ? (
+                                                        <SiBinance className="w-5 h-5 text-white" />
+                                                    ) : formData.type === 'ZELLE' ? (
+                                                        <SiZelle className="w-5 h-5 text-white" />
+                                                    ) : formData.type === 'MOBILE_PAYMENT' ? (
+                                                        <FiSmartphone className="w-5 h-5 text-white" />
+                                                    ) : (
+                                                        <FiCreditCard className="w-5 h-5 text-white" />
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <h4 className="font-bold text-ink text-sm truncate">
+                                                        {formData.name || 'Nombre del Método'}
+                                                    </h4>
+                                                    <p className="text-xs text-muted">
+                                                        {PAYMENT_TYPE_METADATA[formData.type || 'OTHER']?.label}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {formData.displayNote && (
+                                                <div className="p-2 bg-brand-50 border border-brand-200 rounded-lg text-xs text-brand-900 font-medium">
+                                                    {formData.displayNote}
+                                                </div>
+                                            )}
+
+                                            {/* Preview details */}
+                                            <div className="bg-surface rounded-lg p-2.5 border border-line space-y-1.5 text-xs">
+                                                {formData.bankName && (
+                                                    <div className="flex items-center justify-between py-0.5 border-b border-line">
+                                                        <span className="text-muted">Banco:</span>
+                                                        <span className="font-medium text-ink">{formData.bankName}</span>
+                                                    </div>
+                                                )}
+                                                {formData.accountNumber && (
+                                                    <div className="flex items-center justify-between py-0.5 border-b border-line">
+                                                        <span className="text-muted">Cuenta:</span>
+                                                        <span className="font-mono text-ink">{formData.accountNumber}</span>
+                                                    </div>
+                                                )}
+                                                {formData.phone && (
+                                                    <div className="flex items-center justify-between py-0.5 border-b border-line">
+                                                        <span className="text-muted">Teléfono:</span>
+                                                        <span className="font-medium text-ink">{formData.phone}</span>
+                                                    </div>
+                                                )}
+                                                {formData.holderId && (
+                                                    <div className="flex items-center justify-between py-0.5 border-b border-line">
+                                                        <span className="text-muted">Cédula / RIF:</span>
+                                                        <span className="font-medium text-ink">{formData.holderId}</span>
+                                                    </div>
+                                                )}
+                                                {formData.holderName && (
+                                                    <div className="flex items-center justify-between py-0.5 border-b border-line">
+                                                        <span className="text-muted">Titular:</span>
+                                                        <span className="font-medium text-ink truncate ml-2">{formData.holderName}</span>
+                                                    </div>
+                                                )}
+                                                {formData.email && (
+                                                    <div className="flex items-center justify-between py-0.5 border-b border-line">
+                                                        <span className="text-muted">Correo:</span>
+                                                        <span className="font-medium text-ink truncate ml-2">{formData.email}</span>
+                                                    </div>
+                                                )}
+                                                {formData.payId && (
+                                                    <div className="flex items-center justify-between py-0.5 border-b border-line">
+                                                        <span className="text-muted">Pay ID:</span>
+                                                        <span className="font-mono font-medium text-ink">{formData.payId}</span>
+                                                    </div>
+                                                )}
+                                                {formData.walletAddress && (
+                                                    <div className="flex items-center justify-between py-0.5 border-b border-line">
+                                                        <span className="text-muted">Wallet:</span>
+                                                        <span className="font-mono text-ink truncate ml-2 max-w-[130px]">{formData.walletAddress}</span>
+                                                    </div>
+                                                )}
+                                                {formData.network && (
+                                                    <div className="flex items-center justify-between py-0.5 border-b border-line">
+                                                        <span className="text-muted">Red:</span>
+                                                        <span className="font-medium text-ink">{formData.network}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* QR Preview in card */}
+                                            {formData.qrCodeImage && (
+                                                <div className="pt-1 text-center">
+                                                    <p className="text-[11px] text-muted mb-1 font-medium">Escanea el código QR:</p>
+                                                    <Image
+                                                        src={formData.qrCodeImage}
+                                                        alt="QR Preview"
+                                                        width={110}
+                                                        height={110}
+                                                        className="mx-auto rounded-lg border border-line bg-white p-1"
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {(formData.minAmount || formData.maxAmount) && (
+                                                <p className="text-[11px] text-muted text-center pt-1">
+                                                    {formData.minAmount && `Monto mínimo: ${formatUSD(Number(formData.minAmount))}`}
+                                                    {formData.minAmount && formData.maxAmount && ' · '}
+                                                    {formData.maxAmount && `Monto máximo: ${formatUSD(Number(formData.maxAmount))}`}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className={`${adminModalFooter} px-0 pb-0 mt-6`}>
+                                <button
+                                    type="button"
+                                    onClick={handleCloseModal}
+                                    className={adminSecondaryButton}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className={`inline-flex items-center gap-2 ${adminPrimaryButton}`}
+                                >
+                                    {submitting ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <span>Guardando...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FiCheck className="w-4 h-4" />
+                                            <span>{editingMethod ? 'Guardar Cambios' : 'Crear Método'}</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

@@ -7,15 +7,16 @@ Stack: Next.js 16 (App Router, `proxy.ts` como middleware), React 19, Tailwind C
 **Next.js 16 tiene cambios incompatibles** con versiones anteriores (ver `AGENTS.md`, generado por `next dev`). Antes de usar una API de Next (caché, `params`, `proxy`, fuentes, imágenes), consulta `node_modules/next/dist/docs/`.
 
 ## Rol en el equipo
-Hay tres agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en `GEMINI.md`). **ChatGPT** (Astra y Sol 5.3, desde el 2026-09-16) rediseña pantallas completas con foco en diseño y jerarquía, sin cambiar lógica (`GPT-*`, reglas en `CHATGPT.md`, rondas en `docs/plan/PLAN_CHATGPT.md`). **Claude** hace todo lo que requiere criterio: seguridad, dinero, datos, arquitectura, componentes compartidos, header, home y catálogo (`C-*`), y revisa y mergea el trabajo de los otros dos.
+Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en `GEMINI.md`). **Claude** hace todo lo que requiere criterio: seguridad, dinero, datos, arquitectura, componentes compartidos, header, home y catálogo, y desde el 21/09 también el rediseño y la jerarquía de pantallas (`C-*`); revisa y mergea el trabajo de Gemini.
+**ChatGPT salió del equipo el 2026-09-21** (orden de Andrés). No se le asigna nada. Su carril y sus tarjetas pendientes pasaron a Claude (tabla en `docs/plan/PLAN_CHATGPT.md`, "Salida del 21/09"). `CHATGPT.md` y `PLAN_CHATGPT.md` quedan solo como historial.
 
 1. Solo edita archivos del **carril Claude** (`PLAN.md` §4). Los archivos del carril Gemini no se tocan salvo que Andrés lo pida explícitamente.
 2. Una tarea = rama `claude/<ID>` = commits con prefijo `[C-XX]`. No se hace merge a `main`: eso lo hace Andrés.
 3. Al terminar, crea `docs/plan/estado/C-XX.md` con `Estado: HECHO` (o `BLOQUEADO — motivo`) en el mismo commit: qué cambió, cómo se verificó y qué queda pendiente.
 4. Si una tarea C cambia algo que Gemini usa (tokens, `<PublicHeader />`, `Footer`, rutas), mantén la compatibilidad o deja una nota en el estado **y** actualiza `GEMINI.md`.
 5. Si una tarjeta de Gemini queda desactualizada (líneas que se movieron, tokens que cambiaron), actualiza `GEMINI.md` antes de que Gemini la tome.
-6. Antes de mergear, revisa las ramas `gemini/*` y `chatgpt/*`: el diff debe quedar dentro de su carril y los greps de verificación deben dar lo esperado. Para ver solo la lógica que cambió, compara las dos versiones sin `className` ni sangría (C-86). En `chatgpt/*` además: ninguna acción ni dato visible desaparece y ningún `fetch`, cuerpo, permiso o cálculo cambia.
-7. Si una tarea C cambia algo que ChatGPT usa (`lib/admin-ui.ts`, `components/auth/AuthShell.tsx`, rutas), mantén la compatibilidad o actualiza `CHATGPT.md` / `PLAN_CHATGPT.md`.
+6. Antes de mergear, revisa las ramas `gemini/*`: el diff debe quedar dentro de su carril y los greps de verificación deben dar lo esperado. Para ver solo la lógica que cambió, compara las dos versiones sin `className` ni sangría (C-86). Revisa también los commits de Gemini que lleguen a `main` sin rama (como `[Marketing]` del 21/09).
+7. Cuando Claude rediseña una pantalla que era de ChatGPT, aplica el método de `CHATGPT.md` §4 (anatomía, primera pantalla del teléfono, inventario de acciones): ninguna acción ni dato visible desaparece sin que Andrés lo apruebe.
 
 ## Reglas de código (aprendidas en la auditoría)
 - **Nunca pases objetos Prisma crudos a componentes cliente ni a respuestas de API públicas.** Usa DTOs con lista blanca (`lib/dto/*`). `costPerItem`, `adminAlertEmails` y `maintenanceAllowedIPs` jamás salen del servidor.

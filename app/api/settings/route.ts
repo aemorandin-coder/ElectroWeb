@@ -119,6 +119,7 @@ export async function PUT(request: NextRequest) {
     const crossErrors = crossFieldErrors({
       deliveryEnabled: Boolean(pick('deliveryEnabled', true)),
       pickupEnabled: Boolean(pick('pickupEnabled', true)),
+      localDeliveryEnabled: Boolean(pick('localDeliveryEnabled', false)),
       minOrderAmountUSD: decimal(pick('minOrderAmountUSD', null)),
       maxOrderAmountUSD: decimal(pick('maxOrderAmountUSD', null)),
       maintenanceStartTime: (pick('maintenanceStartTime', null) as Date | null) ?? null,

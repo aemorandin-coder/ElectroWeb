@@ -1,16 +1,21 @@
-# Punto de partida (actualizado 2026-09-21: super merge y subida de C-94…C-98, Gemini terminó su plan, ChatGPT en pausa)
+# Punto de partida (actualizado 2026-09-21 noche: en producción, ChatGPT fuera del equipo, Gemini R20 y auditoría de envíos)
 
 Léelo antes de empezar.
 
 ## 1. Estado de las ramas
-- **`main` = `origin/main`**: super merge del 21/09. Trae todo lo revisado:
-  - **Claude:** C-94 (revisión y pausa de ChatGPT), C-95 (home al día y margen), C-80 (login con límite de intentos), C-60b (pedidos digitales), C-96 (montos exactos), C-97 (masivos de productos) y C-98 (revisión de Gemini R17-R19).
-  - **Gemini:** R16 (G-54) y R17-R19 (G-55…G-61).
-  - **ChatGPT:** GPT-05 (panel de creadores) y GPT-06 (recuperar contraseña y verificar correo).
-- **Gemini** (`../ElectroShopVe-gemini`, en `gemini/R19`): terminó su plan final. Sin ronda abierta hasta nueva orden.
-- **ChatGPT** (`../ElectroShopVe-chatgpt`): **en pausa desde el 21/09**, hasta nueva orden de Andrés.
-  - Carpeta limpia en `chatgpt/product-fixes-main`. Su arreglo de productos lo terminó Claude en C-95, ya en `main`.
-  - `stash@{0}` y la rama `chatgpt/product-fixes-main` se pueden borrar: C-95 las reemplaza.
+- **`main` = `origin/main`** (en producción): super merge del 21/09 (C-94…C-98, Gemini R16-R19, GPT-05/06) más **dos commits `[Marketing]` de Gemini** hechos directo en `main` (destinatarios de campañas, logo e íconos de redes en los correos).
+  - Claude los revisó en C-99: sin bloqueo. Queda un ajuste para Claude (fila 18 de `PLAN_CLAUDE.md`): la lista de destinatarios devuelve todos los correos sin límite.
+- **`claude/C-99`** (desde `main`, solo documentos): salida de ChatGPT, ronda R20 de Gemini y `AUDITORIA_ENVIOS.md`.
+- **`claude/C-100`** (desde C-99): envíos con ZOOM y MRW, fase 1. Compila y pasa ESLint; **falta `db push` y la prueba con datos** (`estado/C-100.md`).
+- **`claude/C-101`** (desde C-100): métodos de pago. Un commit de Gemini tal cual y otro de Claude con la revisión (`estado/C-101.md`): el build estaba roto y la tienda se quedaba sin métodos de pago.
+- **Aviso de proceso (22/09):** Gemini trabajó en la carpeta principal, encima de una tarea de Claude sin terminar, y firmó un commit como "HECHO" sin compilar. Antes de empezar, revisa `git status` y `git log`: lo de Gemini va en `../ElectroShopVe-gemini` y se revisa antes de mergear.
+- **Gemini** (`../ElectroShopVe-gemini`, hoy en `gemini/marketing-correos` = `main`): **R20** lista para empezar desde `claude/C-99` (prompt en §5).
+- **ChatGPT: salió del equipo el 21/09.** No se le manda nada. Todo lo suyo está en `main` o lo reemplazó C-95. Para limpiar (Andrés, cuando quiera; borra la carpeta y las ramas):
+  ```bash
+  git worktree remove ../ElectroShopVe-chatgpt
+  git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main
+  git stash drop stash@{0}
+  ```
 
 ## 2. Deploy del 21/09 (super merge)
 En el servidor (`/var/www/electroshopve`, PM2 `electroshop-web`):
@@ -51,30 +56,30 @@ Detalle en **`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`**.
 - **Cédula:** fuera del registro.
 - **Gift card:** solo con saldo, primero se recarga.
 - **Onboarding:** con física.
-- **ChatGPT:** puede rediseñar el raspado del cliente. **En pausa desde el 21/09.**
+- **ChatGPT:** fuera del equipo desde el 21/09. Sus pantallas las rediseña Claude.
+- **Envíos:** se trabaja con ZOOM y MRW. Lo que falta decidir está en `AUDITORIA_ENVIOS.md` §6.
 - **Clientes:** se borran de verdad solo si no tienen órdenes, saldo, transacciones ni gift cards; si no, se desactivan.
 - **Dinero:** nunca sale de la empresa (C-74). Comisiones solo por compras pagadas, como saldo (C-75).
 - **Recorrido de la tienda:** no aparece en `/creator` (G-55, pedido de GPT-05).
 
 ## 5. Mensajes para empezar
 
-### Gemini (plan final R17-R19: hecho y aprobado en C-98; no hay ronda abierta)
-> Tienes trabajo largo sin revisión intermedia. Son tus **tres últimas rondas**: con ellas terminas tu trabajo en el proyecto hasta nueva orden de Andrés.
+### Gemini · Ronda R20 (G-62 → G-66)
+> Tienes una ronda nueva, la **R20**: limpieza de productos y dos paneles antes de que Claude los rediseñe. Desde hoy el equipo es Claude + Gemini: **ChatGPT salió**. Sus pantallas son de Claude y tú entras solo a lo que nombra cada tarjeta.
 >
-> **Antes de empezar**, lee completo `GEMINI.md`. En `docs/plan/PLAN_GEMINI.md` lee las secciones del final: "Resultado de R16", "Plan final de Gemini", "Ronda R17", "Ronda R18" y "Ronda R19". Para tipos y variables sin uso, relee también G-47 y G-48 ("Ronda R13").
+> **Antes de empezar**, lee completo `GEMINI.md` y, en `docs/plan/PLAN_GEMINI.md`, "Resultado de R17, R18 y R19" y "Ronda R20". Para tipos, relee G-47 y G-48 ("Ronda R13") y G-59.
 >
-> **Ramas** (en `../ElectroShopVe-gemini`, con `bash`):
-> 1. `git status` → limpio.
-> 2. `git switch -c gemini/R17 claude/C-94` → **G-55, G-56**.
-> 3. `git switch -c gemini/R18 gemini/R17` → **G-57, G-58, G-59, G-60**.
-> 4. `git switch -c gemini/R19 gemini/R18` → **G-61** (solo el informe, sin tocar código).
+> **Rama** (en `../ElectroShopVe-gemini`, con `bash`):
+> 1. `git status` → limpio. Estás en `gemini/marketing-correos`: ya está en `main`, no la toques más.
+> 2. `git switch -c gemini/R20 claude/C-99` → **G-62, G-63, G-64, G-65, G-66**, en ese orden.
 >
 > **Reglas de oro:**
-> - Haz solo lo que dice cada tarjeta, en los archivos que nombra. ChatGPT está en pausa: en el admin haces limpieza, no rediseño.
+> - Haz solo lo que dice cada tarjeta, en los archivos que nombra. Fuera en R20: `app/admin/(dashboard)/orders/**`, `components/orders/**`, `app/checkout/**` (Claude rehace los envíos), `app/api/**`, `lib/**` y `prisma/**`.
 > - No cambian `fetch`, URLs, `method`, cuerpos, permisos, cálculos ni textos visibles, salvo lo que la tarjeta pida.
-> - En G-56 y G-60 solo cambian dos líneas por función: `const nombre = async (…) => {` pasa a `async function nombre(…) {`, y `};` pasa a `}`. **Nada se mueve.**
-> - Sin `// eslint-disable`, sin `any` nuevos y sin reindentar archivos.
-> - `app/admin/(dashboard)/products/_components/**` no se toca.
+> - G-63 es la **única** eliminación permitida (`ProductForm.tsx`, con el `git grep` pegado).
+> - En G-65 **no borres** `handleExcelChange`, `handleSelectAll`, `handleSelectProduct` ni `slug`: van a Notas.
+> - Sin `// eslint-disable`, sin `any` nuevos, sin emojis y sin reindentar archivos.
+> - **Nada directo en `main`.** Los dos commits `[Marketing]` del 21/09 entraron a `main` sin revisión: no se repite. Si Andrés te pide algo fuera de la ronda, va en una rama `gemini/<tema>` y Claude la revisa antes del merge.
 >
 > **En cada tarjeta, antes del commit, pega en `docs/plan/estado/G-XX.md`:**
 > - ESLint por archivo, antes y después.
@@ -83,17 +88,17 @@ Detalle en **`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`**.
 > - `git diff --stat` contra `git diff -w --stat`.
 > - Lo que pida la "Verificación" o el "Criterio" de la tarjeta.
 >
-> Un commit por tarjeta, con el prefijo `[G-XX]`. Si algo no cuadra, pon `BLOQUEADO — motivo` y sigue con la siguiente: no te quedes esperando. No hagas merge, rebase ni push. Al terminar G-61, avisa a Andrés y pega `git log --oneline claude/C-94..gemini/R19`.
+> Un commit por tarjeta, con el prefijo `[G-XX]`. Si algo no cuadra, pon `BLOQUEADO — motivo` y sigue con la siguiente: no te quedes esperando. No hagas merge, rebase ni push. Al terminar G-66, avisa a Andrés y pega `git log --oneline claude/C-99..gemini/R20`.
 
 ### ChatGPT
-**En pausa. No se le manda nada** hasta que Andrés lo decida. Cuando vuelva:
-> Volviste de la pausa. Lee completo `CHATGPT.md` y, en `docs/plan/PLAN_CHATGPT.md`, "Resultado de GPT-05 y GPT-06" y "Pausa del 21/09". Crea `chatgpt/R2` **desde `main`** (`git switch -c chatgpt/R2 main`) y empieza por **GPT-07** (el mapa de productos, sin código). Antes, revisa `docs/plan/estado/G-57.md` a `G-60.md`: Gemini limpió tipos y diálogos en tus pantallas. Firma cada commit como ChatGPT (`git -c user.name="ChatGPT" -c user.email="chatgpt@electroshop.local" commit …`). No cambies APIs, no hagas merge, rebase ni push. Lo que necesite otro carril va como `PEDIDO:`.
+**Fuera del equipo desde el 21/09.** No se le manda nada.
 
 ### Claude (siguiente sesión)
-> Continúa el proyecto ElectroShopVe. Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b.
-> - C-94…C-98 ya están en `main` (super merge del 21/09; el deploy lo corre Andrés). Lo nuevo sale de `main`.
-> - Esperan a Andrés: el OK del SQL de C-96, "Duplicar" (C-97) y el diagnóstico para **C-92** (desactivar = `SUSPENDED`, ya respetado por el login). Sin dependencias: fila 13c (cajones con `inert`, `ImageUploadField`, reglas de hooks).
-> - Cuando Gemini avise, revisa R17-R19 con el método de C-86 y C-94.
+> Continúa el proyecto ElectroShopVe (en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md`, `docs/plan/PLAN_CLAUDE.md` §4b y `docs/plan/AUDITORIA_ENVIOS.md`.
+> - ChatGPT salió del equipo: sus pantallas son tuyas (filas 15-17). Lo nuevo sale de `main` (o de `claude/C-99` si no se mergeó).
+> - **Prioridad: C-100, envíos con ZOOM y MRW**, cuando Andrés responda D-E1…D-E4. La fase 1 no necesita credenciales.
+> - Esperan a Andrés: el OK del SQL de C-96, "Duplicar" (C-97) y el diagnóstico para **C-92**. Sin dependencias: fila 13c y fila 18.
+> - Cuando Gemini avise, revisa R20 con el método de C-86 y C-98. Después, C-51 (productos).
 > - Busca bugs, seguridad y diseño inconsistente en todo lo que toques. Nada de `git push` sin que yo lo pida.
 
 ## 6. Datos útiles para Claude

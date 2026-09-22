@@ -155,7 +155,7 @@ Revisar las ramas `gemini/*` pendientes, convertir el reporte G-14 en tarjetas n
 
 > Antes de cada tarea, lee `docs/plan/SIGUIENTE.md` (estado de ramas, deploy pendiente y qué esperan Gemini y ChatGPT).
 > Regla vigente de Andrés: **en todo lo que toques o leas, busca bugs, huecos de seguridad, código mal hecho y diseño inconsistente**; arregla lo del carril Claude y anota el resto en el estado.
-> Desde el 16/09 hay un tercer agente, **ChatGPT** (diseño y jerarquía, `CHATGPT.md`, `PLAN_CHATGPT.md`). Claude revisa y mergea sus rondas igual que las de Gemini.
+> Del 16/09 al 21/09 hubo un tercer agente, **ChatGPT** (diseño y jerarquía). **Salió del equipo el 21/09:** su carril y sus tarjetas pendientes son de Claude (filas 15-17).
 
 | Orden | Tarea | Estado |
 |---|---|---|
@@ -188,7 +188,12 @@ Revisar las ramas `gemini/*` pendientes, convertir el reporte G-14 en tarjetas n
 | 13a | ✅ **C-96 · Montos exactos en la base** (21/09, rama `claude/C-96`) | `montoDecimal()` en saldo, órdenes, recargas, Pago Móvil, gift cards, cursos y comisiones. **Falta el OK de Andrés para redondear los saldos que ya existen** (SQL en `estado/C-96.md`). |
 | 13b | ✅ **C-98 · Revisar Gemini R17-R19** (21/09, rama `claude/C-98`) | Aprobadas las 7. ESLint 201 → 144 errores. Hallazgo: las acciones masivas de productos no tienen casillas para seleccionar (se perdieron en febrero) → pantalla de productos. |
 | 13c | **Pendientes encontrados en C-94** | Reglas de hooks que no son de Gemini: `set-state-in-effect` (41), `purity` (9) y `exhaustive-deps` (18). `any` en `lib/auth.ts` (14) y `app/checkout/page.tsx` (9). `ImageUploadField` sobre fondo claro (pedido de GPT-05). `prompt()` en `verificar-email`. Cajones móviles (admin, cliente, creador) que dejan pasar el foco con Tab estando cerrados (`inert`). |
+| 13d | ✅ **C-99 · Salida de ChatGPT, ronda R20 de Gemini y auditoría de envíos** (21/09, rama `claude/C-99`, solo documentos) | `AUDITORIA_ENVIOS.md`: 14 hallazgos (E1-E14) y la API de ZOOM probada. |
 | 14 | **C-40 · Cierre** | README, checklist de `PLAN.md` §6 con Andrés, con el inventario G-61. |
+| 15 | **C-100 · Envíos con ZOOM y MRW** 💰 | `AUDITORIA_ENVIOS.md` §5. **Espera las decisiones D-E1…D-E4 de Andrés** (quién paga el flete, qué es "a domicilio", cuentas corporativas, migración). Fase 1 sin credenciales: oficinas reales, datos del destinatario en la orden, no enviar sin pago, historial y avisos de ZOOM. Incluye los ajustes de órdenes de GPT-02. Prueba final de punta a punta en el navegador (física y digital). |
+| 16 | **C-51 · Productos del admin** (vuelve de ChatGPT R2) | Después de Gemini R20. Mapa primero (lo de GPT-07), luego lista, masivos con sus casillas (se perdieron, C-98), edición rápida (`handleExcelChange` sin campo), "Duplicar" (decisión de Andrés) y wizard. `primaryCurrency` ya no se edita: USD y Bs. |
+| 17 | **Rediseño del resto del panel** (ex R3 de ChatGPT) | `payments`, `inquiries`/`messages`, `product-requests`/`discount-requests`, `reviews`/`verifications`, `categories`/`servicios`/`legal`. Una pantalla por tarea, guía de `CHATGPT.md` §4. |
+| 18 | **Revisar `[Marketing]` de Gemini** (2 commits directos en `main`, 21/09) | Revisados en C-99 sin bloqueo. Falta: `GET /api/admin/campaigns/recipients` devuelve **todos** los correos sin límite a cualquiera con `MANAGE_CONTENT` → paginar y pedir también `MANAGE_USERS` (el permiso de clientes). |
 
 Reasignadas el 17/09: **C-51** (productos del admin) → ChatGPT R2 (GPT-07…GPT-11). **C-76** (emojis de correos) → Gemini G-53.
 Reasignadas el 16/09: **C-79** (panel de creadores en móvil) → ChatGPT GPT-05. **C-81** (`components/ui`, Footer, botón de cuenta, carrito del header con estilos viejos) → Gemini G-45 y G-46, solo clases.

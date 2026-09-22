@@ -20,6 +20,7 @@ import { DELIVERY_MODES, DIGITAL_REGIONS, getPlatform } from '@/lib/digital-cata
 import { getActivePaymentMethodKinds, getHomeSettings } from '@/lib/queries/home';
 import { getProductBySlug, getPublicReviews, getRelatedProducts, getReviewSummary } from '@/lib/queries/product';
 import { getPublicSettings } from '@/lib/site-settings';
+import { formatUSD } from '@/lib/currency';
 import { INTERNAL_SPEC_KEYS } from '@/lib/product-specs';
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -116,8 +117,17 @@ export default async function ProductPage({ params }: PageProps) {
     ...(isDigital
       ? [{ Icon: FiZap, title: deliveryMode.store, text: deliveryMode.storeHelp }]
       : settings.deliveryEnabled
-        ? [{ Icon: FiTruck, title: 'Envíos a toda Venezuela', text: 'El costo se calcula en el checkout según el peso' }]
+        ? [product.freeShipping
+          ? { Icon: FiTruck, title: 'Envío gratis a toda Venezuela', text: 'Por ZOOM o MRW: el envío lo paga la tienda' }
+          : { Icon: FiTruck, title: 'Envíos a toda Venezuela', text: 'Por ZOOM o MRW con cobro a destino: el flete lo pagas al retirar' }]
         : []),
+    ...(!isDigital && settings.localDeliveryEnabled
+      ? [{
+        Icon: FiMapPin,
+        title: 'Delivery en Guanare',
+        text: product.freeShipping || !(settings.deliveryFeeUSD > 0) ? 'Gratis' : `${formatUSD(settings.deliveryFeeUSD)} por pedido`,
+      }]
+      : []),
     ...(!isDigital && settings.pickupEnabled ? [{ Icon: FiMapPin, title: 'Retiro en tienda', text: settings.pickupAddress || 'Coordina el retiro al comprar' }] : []),
     { Icon: FiShield, title: 'Producto 100% original', text: 'Con respaldo de la tienda' },
     ...(paymentKinds.length > 0

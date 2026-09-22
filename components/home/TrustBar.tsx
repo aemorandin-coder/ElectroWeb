@@ -11,10 +11,11 @@ type IconType = ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
 export const PAYMENT_LABELS: Record<PaymentMethodKind, { label: string; Icon: IconType }> = {
   MOBILE_PAYMENT: { label: 'Pago Móvil', Icon: FiSmartphone },
   BANK_TRANSFER: { label: 'Transferencia', Icon: FiCreditCard },
+  BINANCE_PAY: { label: 'Binance Pay', Icon: SiBinance },
   ZELLE: { label: 'Zelle', Icon: SiZelle },
   ZINLI: { label: 'Zinli', Icon: FiCreditCard },
   PAYPAL: { label: 'PayPal', Icon: SiPaypal },
-  CRYPTO: { label: 'Binance / Cripto', Icon: SiBinance },
+  CRYPTO: { label: 'Cripto', Icon: SiBinance },
   CASH: { label: 'Efectivo', Icon: FiDollarSign },
   MERCANTIL_PANAMA: { label: 'Mercantil Panamá', Icon: FiCreditCard },
 };

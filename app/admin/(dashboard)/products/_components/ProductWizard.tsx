@@ -170,6 +170,7 @@ export default function ProductWizard({ productId }: Props) {
           dimensionHeight: dimHeight,
           isConsolidable: product.isConsolidable !== false,
           shippingCost: product.shippingCost?.toString() || '',
+          freeShipping: product.freeShipping === true,
           specifications: parsedSpecs,
           digitalPlatform: product.digitalPlatform || '',
           digitalRegion: product.digitalRegion || 'GLOBAL',
@@ -259,6 +260,7 @@ export default function ProductWizard({ productId }: Props) {
         payload.weightKg = data.weightKg ? parseFloat(data.weightKg) : 0;
         payload.isConsolidable = data.isConsolidable;
         payload.shippingCost = data.isConsolidable ? 0 : (data.shippingCost ? parseFloat(data.shippingCost) : 0);
+        payload.freeShipping = data.freeShipping;
         payload.specifications = Object.keys(data.specifications).length > 0 ? data.specifications : null;
         if (data.dimensionLength || data.dimensionWidth || data.dimensionHeight) {
           payload.dimensions = JSON.stringify({

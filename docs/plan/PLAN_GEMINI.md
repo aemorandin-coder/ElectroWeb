@@ -1546,3 +1546,85 @@ Las líneas son de antes de G-59: después de esa tarjeta cambian. Búscalas otr
 **Una falta de proceso:** el `git merge gemini/R18` dentro de R19. Para llevar un arreglo a la ronda siguiente se hace el commit en la rama de la ronda actual.
 
 **Con esto terminó tu plan.** No hay ronda abierta hasta nueva orden de Andrés. Lo que quedó anotado para una próxima orden está en `docs/plan/estado/C-98.md`.
+
+---
+
+## Ronda R20 · Limpieza antes de rediseñar productos · G-62 → G-66
+**Desde el 21/09 el equipo es Claude + Gemini: ChatGPT salió.** Sus pantallas son de Claude; entras solo a lo que nombra cada tarjeta.
+Claude va a rehacer **productos** (C-51) y los **envíos** (C-100). Esta ronda deja esos archivos limpios antes, sin cambiar lo que hacen.
+
+**Cómo se trabaja** (igual que R17-R19):
+- Rama `gemini/R20` desde `claude/C-99`: `git switch -c gemini/R20 claude/C-99`. Un commit por tarjeta, con su `docs/plan/estado/G-XX.md`. Sin `merge` ni `rebase`.
+- Si algo no cuadra: `BLOQUEADO — motivo` y sigues con la siguiente.
+- En cada estado: ESLint por archivo antes y después, `npx tsc --noEmit` (salida real), `npm run build` (últimas 5 líneas) y `git diff --stat` contra `git diff -w --stat`.
+
+**Fuera en R20:** `app/admin/(dashboard)/orders/**`, `components/orders/**`, `app/checkout/**`, `app/api/**`, `lib/**` y `prisma/**`.
+
+### G-62 · Dos arreglos pendientes de C-98 · Depende: —
+1. `components/modals/ConfirmDialog.tsx` ~l.114, en el `<p>` del mensaje: `whitespace-normal` → `whitespace-pre-line`. Así los mensajes con saltos de línea (el de SADES) se leen en varias líneas.
+2. `app/customer/(dashboard)/profile/page.tsx` ~l.196, en `const profileData = {`, debajo de `businessVerificationStatus: data.profile?.businessVerificationStatus || 'NONE',` agrega:
+   `businessVerificationNotes: data.profile?.businessVerificationNotes || '',`
+   La API ya lo manda (`app/api/user/profile/route.ts:64`). Sin esto, "Motivo del rechazo" (~l.942) nunca aparece.
+
+**Verificación:** `grep -n "whitespace-pre-line" components/modals/ConfirmDialog.tsx` → 1. `grep -n "businessVerificationNotes: data" "app/customer/(dashboard)/profile/page.tsx"` → 1.
+
+### G-63 · Borrar `ProductForm.tsx` (sin uso) · Depende: G-62
+Era la tarjeta GPT-11. El formulario viejo de productos no lo importa nadie: el alta y la edición usan el wizard.
+1. `git grep -n "ProductForm" -- app components lib`: solo deben salir líneas del propio archivo `_components/ProductForm.tsx`. Pega la salida. Si sale otro archivo → `BLOQUEADO`.
+2. `git rm "app/admin/(dashboard)/products/_components/ProductForm.tsx"`. Es la **única** eliminación permitida en R20.
+
+**Criterio:** `tsc` y `build` iguales que antes.
+
+### G-64 · El último `window.confirm` del panel · Depende: G-63
+`app/admin/(dashboard)/gift-cards/page.tsx` ~l.203, `closeBatch`:
+1. Import: `import { useConfirm } from '@/contexts/ConfirmDialogContext';`. Dentro de `GiftCardsAdminPage`, junto a los otros hooks del principio: `const { confirm } = useConfirm();`.
+2. La función queda así (mismo texto en el mensaje):
+   ```tsx
+   const closeBatch = async () => {
+     if (!batchPrinted) {
+       const ok = await confirm({
+         title: 'Cerrar sin imprimir',
+         message: 'No imprimiste la hoja. Los PIN no se vuelven a mostrar y esas tarjetas no se podrán canjear. ¿Cerrar de todos modos?',
+         confirmText: 'Cerrar de todos modos',
+         cancelText: 'Volver',
+         type: 'danger',
+       });
+       if (!ok) return;
+     }
+     setBatch(null);
+   };
+   ```
+3. Nada más del archivo cambia. Los dos botones que llaman a `closeBatch` (~l.445 y ~l.470) quedan igual.
+
+**Criterio:** `grep -rnE "window\.(alert|confirm|prompt)\(" app components` → 0.
+
+### G-65 · Tipos y variables sin uso en productos y dos paneles · Depende: G-64
+Método de G-47, G-48 y G-59: mismas reglas y **sin `// eslint-disable`**. Solo `no-explicit-any`, `no-unused-vars`, `prefer-const` y `react/no-unescaped-entities`.
+
+| Archivo | Qué marca ESLint (líneas del 21/09) |
+|---|---|
+| `app/admin/(dashboard)/products/page.tsx` | `any` 14 (31, 75, 77, 92, 138, 175, 383, 413, 470, 633, 1259, 1422, 1452, 1513) · `prefer-const` 470 · comillas 1233 |
+| `products/_components/ProductWizard.tsx` | `any` 216, 223, 231, 238, 427, 449 |
+| `products/_components/wizard/SadesSearchModal.tsx` | `any` 50 |
+| `products/_components/wizard/physical/Step2Prices.tsx` | `any` 171 |
+| `app/admin/(dashboard)/cursos/page.tsx` | `adminModalPanel` sin uso en el import (l.3) · `any` 155, 159, 248, 264 |
+| `components/admin/EmailSettingsPanel.tsx` | `any` 129 · `catch (error)` sin uso 155 y 178 → `catch {` |
+| `components/admin/SocialMediaGenerator.tsx` | `catch (error)` sin uso 191 → `catch {` |
+
+**No se borran** (van a Notas del estado): `handleExcelChange`, `handleSelectAll` y `handleSelectProduct` de `products/page.tsx`, y `slug` de `SadesSearchModal.tsx`. Son funciones que se quedaron sin su botón o su campo; Claude las vuelve a conectar en C-51.
+- Comillas de ~l.1233: `"{selectedProduct.name}"` → `&quot;{selectedProduct.name}&quot;`. El texto visible no cambia.
+- Tipos: usa los que ya existen (`Product`, `Category`, los de `wizard/types.ts`). Si un `any` necesita un tipo que no existe y no es obvio, `unknown` con la comprobación mínima, o déjalo y anótalo.
+
+**Criterio:** esas cuatro reglas en 0 en los 7 archivos, salvo las 4 variables de arriba, o la lista de lo que quedó con archivo, línea y motivo. Pega `grep -c "fetch(\|method:\|body:" <archivo>` antes y después de cada archivo: debe dar lo mismo.
+
+### G-66 · Montos con `formatUSD` en productos · Depende: G-65
+Import: agrega `formatUSD` a `@/lib/currency` en cada archivo (en `products/page.tsx` ya se importa `formatPrice` de ahí: súmalo a esa línea).
+1. `products/page.tsx` ~l.1071: `` `$${parseFloat(String(product.priceUSD)).toFixed(2)}` `` → `formatUSD(parseFloat(String(product.priceUSD)))`.
+2. `products/page.tsx` ~l.1407: el texto `${Number(quickViewProduct.priceUSD).toFixed(2)} USD` dentro del `<p>` → `{formatUSD(Number(quickViewProduct.priceUSD))}`. Se van el `$` y el "USD" sueltos.
+3. `wizard/SadesSearchModal.tsx` ~l.168: `${product.precioUSD?.toFixed(2)}` → `{product.precioUSD != null ? formatUSD(product.precioUSD) : '—'}`.
+4. `wizard/physical/Step2Prices.tsx` ~l.98: `` {profit ? `$${profit}` : '—'} `` → `{profit ? formatUSD(parseFloat(profit)) : '—'}`. La variable `profit` (~l.15) no cambia.
+
+**No toques** `wizard/digital/Step2Variants.tsx` ~l.44: ese `toFixed(2)` llena un campo del formulario, no es un texto.
+**Criterio:** `grep -n 'toFixed(2)' "app/admin/(dashboard)/products/page.tsx" "app/admin/(dashboard)/products/_components/wizard/SadesSearchModal.tsx"` → 0, y en `Step2Prices.tsx` solo queda el de `profit` (~l.17).
+
+**Al terminar G-66:** avisa a Andrés y pega `git log --oneline claude/C-99..gemini/R20`.

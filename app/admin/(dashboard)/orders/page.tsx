@@ -4,12 +4,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { FiPrinter, FiUserX, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiExternalLink, FiArrowRight, FiCheckCircle, FiLoader, FiMonitor, FiSend } from 'react-icons/fi';
+import { FiPrinter, FiUserX, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiArrowRight, FiCheckCircle, FiLoader, FiMonitor, FiSend } from 'react-icons/fi';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 import { ETIQUETA_ESTADO } from '@/lib/order-admin';
+import { EMPRESAS_GUIA, NOMBRE_EMPRESA, siguientePaso, type PasoOrden } from '@/lib/envios/empresas';
+import EntregaOrden from './_components/EntregaOrden';
 import {
   adminBadge,
   adminTab,
@@ -65,6 +67,18 @@ interface Order {
   trackingUrl?: string;
   shippingNotes?: string;
   estimatedDelivery?: string;
+  // C-100: destino y destinatario del checkout, e historial del envío
+  shippingMode?: string | null;
+  shippingPaidBy?: string | null;
+  shippingState?: string | null;
+  shippingCity?: string | null;
+  courierOfficeCode?: string | null;
+  courierOfficeName?: string | null;
+  courierOfficeAddress?: string | null;
+  recipientName?: string | null;
+  recipientIdNumber?: string | null;
+  recipientPhone?: string | null;
+  shipmentEvents?: Array<{ id: string; source: string; description: string; occurredAt: string }>;
   createdAt: string;
   confirmedAt?: string;
   processingAt?: string;
@@ -90,14 +104,9 @@ interface Order {
   isOnlyDigital?: boolean; // All items are digital (no physical products)
 }
 
-// Shipping carriers with their tracking URL patterns
-const SHIPPING_CARRIERS = [
-  { id: 'ZOOM', name: 'ZOOM', trackingUrl: 'https://www.zoom.red/tracking?guia=' },
-  { id: 'MRW', name: 'MRW', trackingUrl: 'https://www.mrw.com.ve/resultados_ws.aspx?Ession=' },
-  { id: 'TEALCA', name: 'TEALCA', trackingUrl: 'https://tealca.com/rastreo/' },
-  { id: 'DOMESA', name: 'DOMESA', trackingUrl: 'https://www.domesa.com.ve/tracking/' },
-  { id: 'OTHER', name: 'Otro', trackingUrl: '' },
-];
+// Empresas con las que se puede marcar un envío. El enlace de rastreo lo arma el servidor (C-100):
+// el de MRW apuntaba a www.mrw.com.ve, que ya no existe.
+const SHIPPING_CARRIERS = EMPRESAS_GUIA.map((id) => ({ id, name: NOMBRE_EMPRESA[id] }));
 
 // Order flow statuses in sequence - PHYSICAL PRODUCTS
 const ORDER_FLOW = [
@@ -245,14 +254,10 @@ export default function OrdersPage() {
       return;
     }
 
-    const carrier = SHIPPING_CARRIERS.find(c => c.id === shippingForm.carrier);
-    const trackingUrl = shippingForm.trackingUrl ||
-      (carrier && carrier.trackingUrl ? `${carrier.trackingUrl}${shippingForm.trackingNumber}` : '');
-
     handleStatusUpdate(selectedOrder.id, 'SHIPPED', {
       shippingCarrier: shippingForm.carrier,
-      trackingNumber: shippingForm.trackingNumber,
-      trackingUrl: trackingUrl,
+      trackingNumber: shippingForm.trackingNumber.trim(),
+      ...(shippingForm.carrier === 'OTHER' && shippingForm.trackingUrl.trim() ? { trackingUrl: shippingForm.trackingUrl.trim() } : {}),
       shippingNotes: shippingForm.shippingNotes,
       estimatedDelivery: shippingForm.estimatedDelivery || undefined,
     });
@@ -297,22 +302,15 @@ export default function OrdersPage() {
     return format(new Date(dateString), 'dd MMM', { locale: es });
   };
 
-  const getNextStatus = (currentStatus: string): string | null => {
-    const flow = ['PENDING', 'CONFIRMED', 'PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
-    const currentIndex = flow.indexOf(currentStatus);
-    if (currentIndex === -1 || currentIndex >= flow.length - 1) return null;
-    return flow[currentIndex + 1];
-  };
-
-  const getNextStatusAction = (status: string): { label: string; color: string } | null => {
-    const actions: Record<string, { label: string; color: string }> = {
-      PENDING: { label: 'Confirmar Pedido', color: 'bg-brand-500 hover:bg-brand-600' },
-      CONFIRMED: { label: 'Marcar Pagado', color: 'bg-success-strong hover:bg-success-strong/90' },
-      PAID: { label: 'Comenzar Preparación', color: 'bg-brand-500 hover:bg-brand-600' },
-      PROCESSING: { label: 'Marcar Enviado', color: 'bg-brand-500 hover:bg-brand-600' },
-      SHIPPED: { label: 'Marcar Entregado', color: 'bg-success-strong hover:bg-success-strong/90' },
-    };
-    return actions[status] || null;
+  // El paso siguiente depende de cómo se entrega (C-100): retiro → "Lista para recoger", Guanare → "Salió a entregar",
+  // ZOOM o MRW → formulario de la guía. Antes todas iban a "Marcar enviado", también los retiros en tienda.
+  const avanzar = (order: Order, paso: PasoOrden) => {
+    if (paso.pideGuia) {
+      setSelectedOrder(order);
+      openShippingModal(order);
+      return;
+    }
+    handleStatusUpdate(order.id, paso.estado);
   };
 
   const filteredOrders = orders.filter(order => {
@@ -322,13 +320,18 @@ export default function OrdersPage() {
     return matchesSearch;
   });
 
+  const pasoDetalle = selectedOrder
+    ? siguientePaso(selectedOrder.status, selectedOrder.deliveryMethod ?? (selectedOrder.isOnlyDigital ? 'DIGITAL' : null))
+    : null;
+
   const closeModal = () => {
     setShowDetailsModal(false);
     setShowShippingModal(false);
   };
 
-  const openShippingModal = () => {
-    setShippingForm({ carrier: '', trackingNumber: '', trackingUrl: '', shippingNotes: '', estimatedDelivery: '' });
+  const openShippingModal = (order: Order) => {
+    // La empresa que eligió el cliente viene marcada
+    setShippingForm({ carrier: order.shippingCarrier || '', trackingNumber: '', trackingUrl: '', shippingNotes: '', estimatedDelivery: '' });
     setShowShippingModal(true);
   };
 
@@ -462,7 +465,7 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-3">
           {filteredOrders.map((order) => {
-            const nextAction = getNextStatusAction(order.status);
+            const paso = siguientePaso(order.status, order.deliveryMethod ?? (order.isOnlyDigital ? 'DIGITAL' : null));
             return (
               <div key={order.id} className="relative rounded-2xl border border-line bg-white p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -513,37 +516,18 @@ export default function OrdersPage() {
                     </div>
 
                     {/* Quick action button */}
-                    {nextAction && order.status !== 'CANCELLED' && (
+                    {paso && (
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          const nextStatus = getNextStatus(order.status);
-                          if (nextStatus === 'SHIPPED') {
-                            // For digital-only orders, skip shipping and go to DELIVERED
-                            if (order.isOnlyDigital) {
-                              handleStatusUpdate(order.id, 'DELIVERED');
-                            } else {
-                              setSelectedOrder(order);
-                              openShippingModal();
-                            }
-                          } else if (nextStatus) {
-                            handleStatusUpdate(order.id, nextStatus);
-                          }
+                          avanzar(order, paso);
                         }}
                         disabled={updatingStatus}
                         className={`${adminSecondaryButton} relative min-h-11 w-full sm:w-auto`}
                       >
-                        {order.isOnlyDigital && order.status === 'PROCESSING' ? (
-                          <>
-                            <FiMonitor className="w-3 h-3" />
-                            Completar (Digital)
-                          </>
-                        ) : (
-                          <>
-                            <FiArrowRight className="w-3 h-3" />
-                            {nextAction.label}
-                          </>
-                        )}
+                        {paso.pideGuia ? <FiTruck className="w-3 h-3" aria-hidden="true" /> : <FiArrowRight className="w-3 h-3" aria-hidden="true" />}
+                        {paso.accion}
                       </button>
                     )}
 
@@ -625,12 +609,7 @@ export default function OrdersPage() {
                       </p>
                     )}
                     <p className="text-sm text-muted">Pago: {selectedOrder.paymentMethod} · {selectedOrder.paymentStatus || 'Sin estado'}</p>
-                    {selectedOrder.shippingAddress && (
-                      <div className="mt-2 pt-2 border-t border-line">
-                        <p className="text-xs text-muted">Dirección de envío:</p>
-                        <p className="text-sm text-ink">{selectedOrder.shippingAddress}</p>
-                      </div>
-                    )}
+
                   </div>
                 </div>
 
@@ -650,34 +629,13 @@ export default function OrdersPage() {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-2 mb-6">
-                {selectedOrder.status === 'PENDING' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'CONFIRMED')} disabled={updatingStatus} className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50 flex items-center gap-2">
-                    <FiCheck className="w-4 h-4" /> Confirmar Pedido
-                  </button>
-                )}
-                {selectedOrder.status === 'CONFIRMED' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'PAID')} disabled={updatingStatus} className="px-4 py-2 bg-success-strong text-white text-sm font-medium rounded-lg hover:bg-success-strong/90 disabled:opacity-50 flex items-center gap-2">
-                    <FiDollarSign className="w-4 h-4" /> Marcar Pagado
-                  </button>
-                )}
-                {selectedOrder.status === 'PAID' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'PROCESSING')} disabled={updatingStatus} className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50 flex items-center gap-2">
-                    <FiPackage className="w-4 h-4" /> Comenzar Preparación
-                  </button>
-                )}
-                {selectedOrder.status === 'PROCESSING' && !selectedOrder.isOnlyDigital && (
-                  <button onClick={openShippingModal} disabled={updatingStatus} className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50 flex items-center gap-2">
-                    <FiTruck className="w-4 h-4" /> Marcar Enviado
-                  </button>
-                )}
-                {selectedOrder.status === 'PROCESSING' && selectedOrder.isOnlyDigital && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'DELIVERED')} disabled={updatingStatus} className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50 flex items-center gap-2">
-                    <FiCheckCircle className="w-4 h-4" /> Marcar Completado (Digital)
-                  </button>
-                )}
-                {selectedOrder.status === 'SHIPPED' && (
-                  <button onClick={() => handleStatusUpdate(selectedOrder.id, 'DELIVERED')} disabled={updatingStatus} className="px-4 py-2 bg-success-strong text-white text-sm font-medium rounded-lg hover:bg-success-strong/90 disabled:opacity-50 inline-flex items-center gap-1.5">
-                    <FiCheck className="inline h-4 w-4 shrink-0" aria-hidden="true" />Marcar Entregado
+                {pasoDetalle && (
+                  <button type="button" onClick={() => avanzar(selectedOrder, pasoDetalle)} disabled={updatingStatus} className={adminPrimaryButton}>
+                    {pasoDetalle.estado === 'PAID' ? <FiDollarSign className="w-4 h-4" aria-hidden="true" />
+                      : pasoDetalle.pideGuia || pasoDetalle.estado === 'SHIPPED' ? <FiTruck className="w-4 h-4" aria-hidden="true" />
+                        : pasoDetalle.estado === 'DELIVERED' ? <FiCheckCircle className="w-4 h-4" aria-hidden="true" />
+                          : <FiCheck className="w-4 h-4" aria-hidden="true" />}
+                    {pasoDetalle.accion}
                   </button>
                 )}
                 {!['CANCELLED', 'DELIVERED', 'REFUNDED', 'SHIPPED'].includes(selectedOrder.status) && (
@@ -730,41 +688,10 @@ export default function OrdersPage() {
                   </table>
                 </div>
               </div>
-              {/* Shipping Info (if shipped) */}
-              {selectedOrder.trackingNumber && (
-                <div className="mb-6 p-4 bg-brand-50 rounded-xl border border-brand-200">
-                  <h4 className="text-xs font-bold text-brand-700 uppercase mb-3 flex items-center gap-2">
-                    <FiTruck className="w-4 h-4" /> Información de Envío
-                  </h4>
-                  <div className="grid grid-cols-1 gap-3 text-sm [overflow-wrap:anywhere] sm:grid-cols-2">
-                    <div>
-                      <span className="text-muted">Carrier:</span>
-                      <span className="ml-2 font-semibold text-ink">{selectedOrder.shippingCarrier}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted">Guía:</span>
-                      <span className="ml-2 font-semibold text-ink">{selectedOrder.trackingNumber}</span>
-                    </div>
-                    {selectedOrder.trackingUrl && (
-                      <div className="sm:col-span-2">
-                        <a
-                          href={selectedOrder.trackingUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-brand-600 hover:text-brand-700 font-medium"
-                        >
-                          <FiExternalLink className="w-4 h-4" />
-                          Ver seguimiento en {selectedOrder.shippingCarrier}
-                        </a>
-                      </div>
-                    )}
-                    {selectedOrder.shippingNotes && (
-                      <div className="sm:col-span-2">
-                        <span className="text-muted">Notas:</span>
-                        <p className="mt-1 text-ink">{selectedOrder.shippingNotes}</p>
-                      </div>
-                    )}
-                  </div>
+              {/* Entrega (C-100): destino, quién recibe, flete, guía e historial */}
+              {!selectedOrder.isOnlyDigital && (
+                <div className="mt-5">
+                  <EntregaOrden orden={selectedOrder} />
                 </div>
               )}
 
@@ -838,8 +765,13 @@ export default function OrdersPage() {
             <div className={`${adminModalBody} flex flex-col gap-4`}>
               <div>
                 <label className={adminLabel}>
-                  Empresa de Envío *
+                  Empresa de envío *
                 </label>
+                {selectedOrder.shippingCarrier && shippingForm.carrier && shippingForm.carrier !== selectedOrder.shippingCarrier && (
+                  <p className="mb-2 text-xs font-semibold text-warning-strong">
+                    El cliente eligió {NOMBRE_EMPRESA[selectedOrder.shippingCarrier as keyof typeof NOMBRE_EMPRESA] ?? selectedOrder.shippingCarrier}.
+                  </p>
+                )}
                 <select
                   value={shippingForm.carrier}
                   onChange={(e) => setShippingForm({ ...shippingForm, carrier: e.target.value })}
@@ -865,19 +797,21 @@ export default function OrdersPage() {
                 />
               </div>
 
-              <div>
-                <label className={adminLabel}>
-                  URL de Seguimiento (opcional)
-                </label>
-                <input
-                  type="url"
-                  value={shippingForm.trackingUrl}
-                  onChange={(e) => setShippingForm({ ...shippingForm, trackingUrl: e.target.value })}
-                  placeholder="Se genera automáticamente"
-                  className={adminInput()}
-                />
-                <p className="text-xs text-muted mt-1">Se genera automáticamente según el carrier</p>
-              </div>
+              {/* El enlace de ZOOM, MRW, TEALCA y DOMESA lo arma el servidor; solo "Otra empresa" lo pide */}
+              {shippingForm.carrier === 'OTHER' && (
+                <div>
+                  <label className={adminLabel}>
+                    Enlace de rastreo (opcional)
+                  </label>
+                  <input
+                    type="url"
+                    value={shippingForm.trackingUrl}
+                    onChange={(e) => setShippingForm({ ...shippingForm, trackingUrl: e.target.value })}
+                    placeholder="https://…"
+                    className={adminInput()}
+                  />
+                </div>
+              )}
 
               <div>
                 <label className={adminLabel}>
@@ -886,7 +820,7 @@ export default function OrdersPage() {
                 <textarea
                   value={shippingForm.shippingNotes}
                   onChange={(e) => setShippingForm({ ...shippingForm, shippingNotes: e.target.value })}
-                  placeholder="Ej: Oficina Central, Agencia Chacao"
+                  placeholder="Ej: sale mañana en la tarde"
                   rows={2}
                   className={`${adminInput()} h-auto py-2.5 resize-none`}
                 />

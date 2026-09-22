@@ -250,11 +250,9 @@ docs/plan/estado/G-*.md
 ```
 Desde R12 (2026-09-16), solo para cambiar clases: `components/ui/**`, `components/Footer.tsx`, `components/UserAccountButton.tsx`, `components/CartIcon.tsx` y el resumen de `app/checkout/page.tsx` (ver `PLAN_GEMINI.md`, Ronda R12).
 
-### Carril CHATGPT (desde 2026-09-16) · diseño y jerarquía · **EN PAUSA desde el 21/09**
-ChatGPT está de vacaciones hasta nueva orden de Andrés (ver "Pausa del 21/09" en `PLAN_CHATGPT.md`). Mientras tanto:
-- Gemini R18 (G-57…G-60) hace **solo limpieza mecánica** en las pantallas de R1 y R3 y en `products/page.tsx`.
-- `products/_components/**` no lo toca Gemini: es de la R2 de ChatGPT (el wizard ya trae C-95).
-Reglas en `CHATGPT.md`, rondas en `PLAN_CHATGPT.md`. Reescribe pantallas completas sin cambiar qué hacen (`fetch`, cuerpos, permisos, cálculos y destinos quedan igual).
+### Ex carril CHATGPT · **ChatGPT salió del equipo el 21/09**
+Estas pantallas vuelven a **Claude** (rediseño y jerarquía, con la guía de `CHATGPT.md` §4). Gemini solo entra con una tarjeta G que las nombre (R20: limpieza mecánica de `products/**`). Tabla de lo pendiente: "Salida del 21/09" en `PLAN_CHATGPT.md`.
+Lo que era de cada ronda de ChatGPT, como referencia:
 ```
 R1: app/admin/(dashboard)/page.tsx   app/admin/(dashboard)/orders/**   app/admin/(dashboard)/customers/**
     app/admin/(dashboard)/transactions/**   app/admin/(dashboard)/gift-cards/**   app/admin/(dashboard)/reports/**
@@ -265,12 +263,12 @@ R2: app/admin/(dashboard)/products/**   (antes C-51 de Claude; reasignado el 17/
 R3: app/admin/(dashboard)/{payments,inquiries,messages,product-requests,discount-requests,reviews,verifications,categories,servicios,legal}/**
 docs/plan/estado/GPT-*.md
 ```
-Gemini no toca el carril ChatGPT ni ChatGPT el de Gemini. Si una ronda de uno necesita un archivo del otro, Claude lo reasigna en `PLAN.md` antes de empezar.
+Si una ronda de Gemini necesita un archivo de Claude, Claude lo autoriza en la tarjeta antes de empezar.
 
 Borrado de archivos muertos (G-02): **solo** la lista exacta de esa tarea, aunque el archivo esté en el carril de Claude.
 
 ### Protocolo anti-choque
-1. **Worktrees separados.** Claude trabaja en la carpeta principal, en ramas `claude/<id>`. Gemini y ChatGPT trabajan cada uno en su carpeta (`../ElectroShopVe-gemini`, `../ElectroShopVe-chatgpt`, ramas `gemini/RN` y `chatgpt/RN`):
+1. **Worktrees separados.** Claude trabaja en la carpeta principal, en ramas `claude/<id>`. Gemini trabaja en su carpeta (`../ElectroShopVe-gemini`, ramas `gemini/RN`):
    ```bash
    git worktree add "../ElectroShopVe-gemini" -b gemini/base
    ```

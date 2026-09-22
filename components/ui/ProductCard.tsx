@@ -41,7 +41,7 @@ export default function ProductCard({ product, exchangeRateVES, lowStockThreshol
           className="object-contain p-3"
         />
         {badges.length > 0 && (
-          <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+          <div className="absolute left-2 right-12 top-2 flex flex-wrap gap-1">
             {badges.map((badge) => (
               <ProductBadge key={badge.variant} variant={badge.variant}>{badge.label}</ProductBadge>
             ))}

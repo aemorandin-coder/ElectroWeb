@@ -49,6 +49,8 @@ export interface PublicProduct {
   dimensions: string | null;
   isConsolidable: boolean;
   shippingCost: number | null;
+  /** C-100: la tienda paga el envío (badge "Envío gratis") */
+  freeShipping: boolean;
   category: { id: string; name: string; slug: string };
   brand: { name: string; slug: string } | null;
   isFeatured: boolean;
@@ -152,6 +154,7 @@ export function toPublicProduct(product: ProductWithPublicRelations): PublicProd
     dimensions: product.dimensions,
     isConsolidable: product.isConsolidable,
     shippingCost: toNumberOrNull(product.shippingCost),
+    freeShipping: product.productType !== 'DIGITAL' && product.freeShipping,
     category: { id: product.category.id, name: product.category.name, slug: product.category.slug },
     brand: product.brand ? { name: product.brand.name, slug: product.brand.slug } : null,
     isFeatured: product.isFeatured,

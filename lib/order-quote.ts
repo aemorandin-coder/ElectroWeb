@@ -140,6 +140,7 @@ export async function quoteOrder(
         dimensions: true,
         isConsolidable: true,
         shippingCost: true,
+        freeShipping: true,
       },
     }),
     prisma.discountRequest.findMany({
@@ -235,6 +236,7 @@ export async function quoteOrder(
       dimensions: product.dimensions,
       isConsolidable: product.isConsolidable,
       shippingCostUSD: product.shippingCost === null ? 0 : Number(product.shippingCost),
+      freeShipping: !isDigital && product.freeShipping,
       discountPercent: discount ? (discount.approvedDiscount || discount.requestedDiscount) : 0,
     };
 

@@ -121,6 +121,8 @@ export interface PublicSettings {
     exchangeRateVES: number;
     exchangeRateEUR: number;
     deliveryEnabled: boolean;
+    /** C-100: delivery propio en Guanare y su tarifa fija */
+    localDeliveryEnabled: boolean;
     deliveryFeeUSD: number;
     freeDeliveryThresholdUSD: number | null;
     shippingCostPerKg: number;
@@ -162,6 +164,8 @@ export interface PublicSettings {
     maintenanceMessage: string | null;
     maintenanceStartTime: string | null;
     maintenanceEndTime: string | null;
+    /** C-101: el checkout ofrece Pago Móvil directo solo si la conciliación del BDV está configurada */
+    pagoMovilDirecto: boolean;
     rif: string | null;
     legalName: string | null;
     // El popup (hotAd*) no va aquí: estos settings viajan en el HTML de TODAS las páginas y la imagen
@@ -174,7 +178,7 @@ const PUBLIC_SETTINGS_SELECT = {
     instagram: true, facebook: true, twitter: true, youtube: true, telegram: true, tiktok: true,
     socialMedia: true, businessHours: true,
     primaryCurrency: true, exchangeRateVES: true, exchangeRateEUR: true,
-    deliveryEnabled: true, deliveryFeeUSD: true, freeDeliveryThresholdUSD: true, shippingCostPerKg: true,
+    deliveryEnabled: true, localDeliveryEnabled: true, deliveryFeeUSD: true, freeDeliveryThresholdUSD: true, shippingCostPerKg: true,
     minConsolidatedShipping: true, packagingFeeUSD: true,
     pickupEnabled: true, pickupAddress: true, pickupInstructions: true,
     heroVideoEnabled: true, heroVideoUrl: true, heroVideoTitle: true, heroVideoDescription: true,
@@ -198,7 +202,7 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     instagram: null, facebook: null, twitter: null, youtube: null, telegram: null, tiktok: null,
     socialMedia: [], businessHours: null,
     primaryCurrency: 'USD', exchangeRateVES: 36.5, exchangeRateEUR: 0.92,
-    deliveryEnabled: false, deliveryFeeUSD: 0, freeDeliveryThresholdUSD: null, shippingCostPerKg: 2,
+    deliveryEnabled: false, localDeliveryEnabled: false, deliveryFeeUSD: 0, freeDeliveryThresholdUSD: null, shippingCostPerKg: 2,
     minConsolidatedShipping: 3, packagingFeeUSD: 2.5,
     pickupEnabled: false, pickupAddress: null, pickupInstructions: null,
     heroVideoEnabled: false, heroVideoUrl: null, heroVideoTitle: null, heroVideoDescription: null,
@@ -209,6 +213,7 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     showCategories: true, maxCategoriesDisplay: 6,
     ctaEnabled: false, ctaTitle: null, ctaDescription: null, ctaButtonText: null, ctaButtonLink: null,
     maintenanceMode: false, maintenanceMessage: null, maintenanceStartTime: null, maintenanceEndTime: null,
+    pagoMovilDirecto: false,
     rif: null, legalName: null,
 };
 
@@ -240,6 +245,7 @@ function toPublicSettings(row: PublicSettingsRow): PublicSettings {
         packagingFeeUSD: num(row.packagingFeeUSD, 2.5),
         maintenanceStartTime: row.maintenanceStartTime ? row.maintenanceStartTime.toISOString() : null,
         maintenanceEndTime: row.maintenanceEndTime ? row.maintenanceEndTime.toISOString() : null,
+        pagoMovilDirecto: Boolean(process.env.BDV_API_KEY && process.env.BDV_TELEFONO_COMERCIO),
     };
 }
 

@@ -61,6 +61,14 @@ interface Order {
   shippingNotes?: string;
   estimatedDelivery?: string;
   hasDigital?: boolean;
+  // C-100: destino, quién recibe, flete e historial del envío
+  shippingAddress?: string | null;
+  shippingMode?: string | null;
+  shippingPaidBy?: string | null;
+  courierOfficeName?: string | null;
+  courierOfficeAddress?: string | null;
+  recipientName?: string | null;
+  shipmentEvents?: Array<{ id: string; description: string; occurredAt: string }>;
 }
 
 // ============================================
@@ -138,7 +146,7 @@ export default function OrdersPage() {
   async function fetchOrders() {
     setLoading(true);
     try {
-      const response = await fetch('/api/orders');
+      const response = await fetch('/api/orders?mine=1');
       if (response.ok) {
         const result = await response.json();
         const data = Array.isArray(result) ? result : (result.orders || []);
@@ -628,6 +636,13 @@ export default function OrdersPage() {
                     trackingUrl={selectedOrder.trackingUrl}
                     shippingNotes={selectedOrder.shippingNotes}
                     estimatedDelivery={selectedOrder.estimatedDelivery}
+                    shippingAddress={selectedOrder.shippingAddress}
+                    shippingMode={selectedOrder.shippingMode}
+                    shippingPaidBy={selectedOrder.shippingPaidBy}
+                    courierOfficeName={selectedOrder.courierOfficeName}
+                    courierOfficeAddress={selectedOrder.courierOfficeAddress}
+                    recipientName={selectedOrder.recipientName}
+                    shipmentEvents={selectedOrder.shipmentEvents}
                   />
                 </div>
 

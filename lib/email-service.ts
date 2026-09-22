@@ -590,24 +590,38 @@ export const sendOrderPendingPaymentEmail = async (
 // ORDER SHIPPED EMAIL
 export const sendOrderShippedEmail = async (
   email: string,
-  orderData: { orderNumber: string; customerName: string; trackingNumber?: string; shippingCarrier?: string; }
+  orderData: {
+    orderNumber: string;
+    customerName: string;
+    trackingNumber?: string;
+    shippingCarrier?: string;
+    /** C-100: dónde lo retira o recibe, y si el flete se paga al recibir */
+    destination?: string;
+    payOnDelivery?: boolean;
+  }
 ) => {
   const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
   const content = `
     <div style="text-align:center;margin-bottom:30px;">
       <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Tu Pedido Está en Camino!</h2>
-      <p style="color:#3b82f6;font-size:16px;font-weight:600;">Orden #${orderData.orderNumber}</p>
+      <p style="color:#3b82f6;font-size:16px;font-weight:600;">Orden #${escapeHtml(orderData.orderNumber)}</p>
     </div>
     <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
-      Hola <strong style="color:#212529;">${orderData.customerName}</strong>,<br><br>
+      Hola <strong style="color:#212529;">${escapeHtml(orderData.customerName)}</strong>,<br><br>
       ¡Buenas noticias! Tu pedido ha sido enviado y está en camino hacia ti.
     </p>
     ${orderData.trackingNumber ? `
     <div style="background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);border-radius:12px;padding:20px;margin:20px 0;text-align:center;border:1px solid #3b82f6;">
       <p style="margin:0 0 5px;color:#6a6c6b;font-size:13px;">Número de Guía</p>
-      <p style="margin:0;color:#1d4ed8;font-size:22px;font-weight:700;letter-spacing:2px;">${orderData.trackingNumber}</p>
-      ${orderData.shippingCarrier ? `<p style="margin:10px 0 0;color:#6a6c6b;font-size:12px;">Transportista: ${orderData.shippingCarrier}</p>` : ''}
+      <p style="margin:0;color:#1d4ed8;font-size:22px;font-weight:700;letter-spacing:2px;">${escapeHtml(orderData.trackingNumber)}</p>
+      ${orderData.shippingCarrier ? `<p style="margin:10px 0 0;color:#6a6c6b;font-size:12px;">Transportista: ${escapeHtml(orderData.shippingCarrier)}</p>` : ''}
+    </div>
+    ` : ''}
+    ${orderData.destination ? `<p style="color:#6a6c6b;font-size:14px;line-height:1.6;margin:0 0 12px;"><strong style="color:#212529;">Destino:</strong> ${escapeHtml(orderData.destination)}</p>` : ''}
+    ${orderData.payOnDelivery ? `
+    <div style="background:#fffbeb;border-left:4px solid #b45309;padding:14px 18px;margin:16px 0;border-radius:0 8px 8px 0;">
+      <p style="margin:0;color:#b45309;font-size:14px;line-height:1.6;">El envío es con <strong>cobro a destino</strong>: el flete se lo pagas a ${escapeHtml(orderData.shippingCarrier || 'la empresa de envíos')} cuando retires o recibas el paquete. Lleva tu cédula.</p>
     </div>
     ` : ''}
     <div style="text-align:center;margin:30px 0;">
@@ -620,6 +634,34 @@ export const sendOrderShippedEmail = async (
     to: email,
     subject: `¡Tu Pedido Ha Sido Enviado! - ${orderData.orderNumber}`,
     html: await getBaseTemplate(content, 'Tu pedido está en camino'),
+  });
+};
+
+// C-100: novedad del rastreo (el paquete llegó a la oficina)
+export const sendShipmentUpdateEmail = async (
+  email: string,
+  data: { orderNumber: string; customerName: string; title: string; detail: string }
+) => {
+  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const content = `
+    <div style="text-align:center;margin-bottom:24px;">
+      <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">${escapeHtml(data.title)}</h2>
+      <p style="color:#3b82f6;font-size:16px;font-weight:600;">Orden #${escapeHtml(data.orderNumber)}</p>
+    </div>
+    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
+      Hola <strong style="color:#212529;">${escapeHtml(data.customerName)}</strong>,<br><br>
+      ${escapeHtml(data.detail)}
+    </p>
+    <div style="text-align:center;margin:30px 0;">
+      <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
+        Ver mi pedido
+      </a>
+    </div>`;
+
+  return sendEmail({
+    to: email,
+    subject: `${data.title} - ${data.orderNumber}`,
+    html: await getBaseTemplate(content, data.title),
   });
 };
 

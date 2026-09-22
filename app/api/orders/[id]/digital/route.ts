@@ -228,6 +228,27 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
                     },
                 });
             }
+            // C-100 (E13): con el último código del pedido, la orden queda Entregada (antes seguía "En preparación")
+            const articulos = await tx.orderItem.findMany({
+                where: { orderId },
+                select: { id: true, quantity: true, product: { select: { productType: true } } },
+            });
+            const soloDigital = articulos.every((a) => a.product.productType === 'DIGITAL');
+            if (soloDigital) {
+                const conteo = await tx.digitalCode.groupBy({
+                    by: ['orderItemId'],
+                    where: { orderId, status: 'DELIVERED' },
+                    _count: { _all: true },
+                });
+                const entregadosPorArticulo = new Map(conteo.map((c) => [c.orderItemId, c._count._all]));
+                const completo = articulos.every((a) => (entregadosPorArticulo.get(a.id) ?? 0) >= a.quantity);
+                if (completo) {
+                    await tx.order.updateMany({
+                        where: { id: orderId, status: { in: ['PENDING', 'CONFIRMED', 'PAID', 'PROCESSING'] } },
+                        data: { status: 'DELIVERED', deliveredAt: new Date() },
+                    });
+                }
+            }
             return creado;
         });
 

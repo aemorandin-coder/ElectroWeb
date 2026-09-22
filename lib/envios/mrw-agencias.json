@@ -1,0 +1,1502 @@
+[
+ {
+  "codigo": "0200000",
+  "nombre": "PUERTO AYACUCHO",
+  "direccion": "CALLE PRINCIPAL LOCAL S/N BARRIO UNION, ZONA CENTROPUERTO AYACUCHO AMAZONAS ZONA POSTAL.",
+  "estado": "Amazonas"
+ },
+ {
+  "codigo": "0301000",
+  "nombre": "ANACO",
+  "direccion": "AV. JOSé ANTONIO ANZOáTEGUI, CRUCE CON AV. LOS PILONES LOCAL NO. 02 ANACO, EDO. ANZOáTEGUI.",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0300000",
+  "nombre": "BARCELONA",
+  "direccion": "AV. FUERZAS ARMADAS. ESQUINA CALLE EULALIA BUROZ, EDIF AZGAN PISO PB LOCAL 02 SECTOR CENTRO, BARCELONA. GPS: 10.1373363,-64.6829436",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0311000",
+  "nombre": "CLARINES",
+  "direccion": "AV. FERNANDEZ PADILLA, MINI C.C. LOS COCOS. C.C. \"MTC\". LOCAL 5 P.B. CLARINES 9.943983711041437, -65.16311529674937 ...",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0302000",
+  "nombre": "EL TIGRE",
+  "direccion": "AV. FCO. DE MIRANDA CON CALLE 18 SUR. EDIF. LOS GERANIOS # 2 Y 3 FRENTE A LA PANADERIA SIRIA. GPS: 8.8943036,-64.2369862",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0313000",
+  "nombre": "EL TIGRE CENTRO",
+  "direccion": "CARRERA 2 SUR, ENTRE CALLES 2 Y 3, EDIFICIO HANA, PISO 1,. LOCAL Nº 1, SECTOR PUEBLO NUEVO SUR. EL TIGRE-ESTADO ANZOATEGUI. GPS:8.8869825,-64.2571774",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0307000",
+  "nombre": "EL TIGRITO",
+  "direccion": "CENTRO COMERCIAL DECA, PB, LOCAL NRO. 2, AV. FERNáNDEZ PADILLA, MUNICIPIO SAN JOSé DE GUANIPA, ESTADO ANZOáTEGUI.",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0303000",
+  "nombre": "LAS GARZAS",
+  "direccion": "AV JORGE RODRIGUEZ, LOCAL MRW 1, SECTOR LAS GARZAS LECHERIA, ANZOATEGUI. GPS: 10.1815638,-64.6686459",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0312000",
+  "nombre": "LECHERIA",
+  "direccion": "AV. PRINCIPAL DE LECHERÍA, MINI CENTRO PRINCIPAL, LOCAL 02, AL LADO DE PANADERÍA LA PRINCIPAL. LECHERÍA. ESTADO ANZOÁTEGUI. GPS: 10.1828176,-64.6893312",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0310000",
+  "nombre": "NUEVA BARCELONA",
+  "direccion": "CALLE URDANETA CON CARRERA 24, C.C. GOLD COUNTRY, LOCAL P.B. 07, SECTOR NUEVA BARCELONA, ESTADO ANZOáTEGUI",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0308000",
+  "nombre": "PARIAGUAN",
+  "direccion": "CALLE BOLÍVAR CRUCE CON COLOMBIA, SECTOR CENTRO FRENTE COOPERATIVA DE TRANSPORTE PARIAGUAN EXPRESS A POCOS MTS DE FARMACIA CONTINENTAL.8.84156581686022, -64.72001416185448",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0305000",
+  "nombre": "PIRITU",
+  "direccion": "CALLE BOLIVAR, C.C. LOS DELFINES, NIVEL PB, LOCAL 5, SECTOR CENTRO PUERTO PIRITU, ANZOáTEGUI",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0309000",
+  "nombre": "PTO LA CRUZ",
+  "direccion": "CALLE MIRANDA, CRUCE CON CALLE BOLIVAR, EDIF. HOTEL SENADOR, PISO PB, ZONA CENTRO, PUERTO LA CRUZ",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0304000",
+  "nombre": "PUERTO LA CRUZ CENTRO",
+  "direccion": "AV. MUNICIPAL, CON CALLE BOLIVAR DE PUEBLO NUEVO, C.C. MADEIRENSE, PB, LOCAL 24 , MUNICIPIO JUAN ANTONIO SOTILLO, PUERTO LA CRUZ, ESTADO ANZOÁTEGUI",
+  "estado": "Anzoategui"
+ },
+ {
+  "codigo": "0401000",
+  "nombre": "GUASDUALITO",
+  "direccion": "CALLE SUCRE ENTRE CARRERA MARIÑO Y SIMÓN RODRÍGUEZ, A CUADRA Y MEDIA DE LA SANTÍSIMA TRINIDAD, GUASDUALITO ESTADO APURE. 7.244789042820635, -70.72687547535314",
+  "estado": "Apure"
+ },
+ {
+  "codigo": "0400000",
+  "nombre": "SAN FERNANDO",
+  "direccion": "CALLE BOLIVAR ENTRE CALLE PIAR Y GIRARDOT, LOCAL NRO S/N SECTOR CENTRO, SAN FERNANDO DE APURE GPS: 7.887714, -67.475549",
+  "estado": "Apure"
+ },
+ {
+  "codigo": "0402000",
+  "nombre": "SAN FERNANDO CENTRO",
+  "direccion": "AV CARACAS A 50 MTRS DEL PASEO LIBERTADOR, CENTRO EMPRESARIAL GENESIS, PB LOCAL 1, SECTOR CENTRO SAN FERNANDO DE APURE. GPS: 7.8834063,-67.4716484",
+  "estado": "Apure"
+ },
+ {
+  "codigo": "0512000",
+  "nombre": "LA ENCRUCIJADA",
+  "direccion": "AV. PRINCIPAL, C.C. LOS LAURELES, NIVEL P.B, LOCAL 12, SECTOR LA ENCRUCIJADA DE TURMERO. ESTADO ARAGUA. GPS: 10.2025453,-67.4714206",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0503000",
+  "nombre": "LA VICTORIA",
+  "direccion": "URBANIZACIÓN BOLIVAR SUR, AV. VICTORIA # 44-2, LOCAL A-2, LA VICTORIA, ARAGUA. GPS: 10.2265456,-67.3315944",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0518000",
+  "nombre": "LOS CEDROS",
+  "direccion": "CALLE 5 DE JULIO, CRUCE CON CJN \"В\" LOCAL NRO. 116 BARRIO LIBERTAD MARACAY ESTADO ARAGUA",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0504000",
+  "nombre": "MARACAY 5 DE JULIO",
+  "direccion": "CALLE 5 DE JULIO, ENTRE PAEZ Y MIRANDA. EDIF SANTIMONE. P.B.B LOCAL 3, ZONA CENTRO, DIAGONAL A IMGEVE, MARACAY ESTADO ARAGUA. GPS: 10.2497141,-67.5991998",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0513000",
+  "nombre": "MARACAY BASE ARAGUA",
+  "direccion": "AV. LAS DELICIAS C.C. HOTEL PASEO LAS DELICIAS II NIVEL PB LOCAL 12 URB BASE ARAGUA MARACAY. GPS: 10.2557458,-67.5919065",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0500000",
+  "nombre": "MARACAY CENTRO",
+  "direccion": "AVENIDA FUERZAS AéREAS, LOCAL 91-B, SECTOR MARIO BRICEñO IRAGORRY, MARACAY ESTADO ARAGUA",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0514000",
+  "nombre": "MARACAY LA COOPERATIVA",
+  "direccion": "AV. RAFAEL URDANETA, LOCAL NRO. PB-3, URB. ANDRES BELLO, MARACAY, ESTADO ARAGUA.",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0510000",
+  "nombre": "MARACAY LA DEMOCRACIA",
+  "direccion": "AV AYACUCHO NORTE NRO 83, BARRIO LA DEMOCRACIA, MARACAY EDO ARAGUA. GPS: 10.2576291,-67.6096241",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0517000",
+  "nombre": "MARACAY LA ROMANA",
+  "direccion": "CENTRO COMERCIAL TIUNA, AV. BOLÍVAR OESTE NRO. 198, SECTOR LA ROMANA, MUNICIPIO GIRARDOT, ESTADO ARAGUA. GPS: 10.2543384,-67.6136697",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0511100",
+  "nombre": "MARACAY SANTA RITA",
+  "direccion": "AV. GENERALíSIMO FRANCISCO DE MIRANDA, ENTRE PROLONGACIóN Y ANDRéS BELLO, CALLE ANDRéS BELLO, LOCAL NRO. 75, SECTOR GUARUTO, SANTA RITA, ESTADO ARAGUA 10.234873030073881, -67.5923007253661.",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0516000",
+  "nombre": "MARACAY SANTA ROSA",
+  "direccion": "CALLE CARABOBO, Nº 75-A, SECTOR SANTA ROSA. MARACAY, ESTADO ARAGUA. GPS: 10.2466199,-67.6097298",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0501000",
+  "nombre": "MARACAY ZONA IND.",
+  "direccion": "AV BERMUDEZ CC MARACAY PLAZA NIVEL PB LOCAL PB-82F URB CENTRO MARACAY ARAGUA 10.23335936240899, -67.59657221951802.",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0509000",
+  "nombre": "S.SEBASTIAN D LOS REYES",
+  "direccion": "CALLE LA PISTA, LOCAL NRO 03, SECTOR EL POLVERO, SAN SEBASTIAN DE LOS REYES ARAGUA. GPS: 9.9460006,-67.1795018",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0506000",
+  "nombre": "TURMERO",
+  "direccion": "CALLE MARIÑO C/C CALLE PEÑALVER C.C MARIÑO PLAZA P.B LOCAL 02, TURMERO EDO. ARAGUA. GPS: 10.2290922,-67.4778999",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0511000",
+  "nombre": "TURMERO ZONA INDUSTRIAL",
+  "direccion": "AV. INTERCOMUNAL MARACAY-TURMERO, CENTRO COMERCIAL INTERCOMUNAL CENTER, LOCAL NRO. PB 6, SECTOR LA MORITA, TURMERO, ESTADO ARAGUA. 10.231931328877549, -67.54792062508638",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0507000",
+  "nombre": "VILLA DE CURA",
+  "direccion": "CALLE BOLIVAR Y VILLEGAS LOCAL NRO 54/A SECTOR CENTRO VILLA DE CURA, ESTADO ARAGUA 10.033978725869476, -67.48539854649998",
+  "estado": "Aragua"
+ },
+ {
+  "codigo": "0605000",
+  "nombre": "ALTO BARINAS",
+  "direccion": "URB ALTO BARINAS NORTE, AV FRANCIA CON AV PIE DE MONTE Y TACHIRA, LOCAL 135, BARINAS.",
+  "estado": "Barinas"
+ },
+ {
+  "codigo": "0600100",
+  "nombre": "AV SUCRE BARINAS",
+  "direccion": "AV. SUCRE, EDIFICIO RESIDENCIAS KARO, LOCAL N° 1, PB",
+  "estado": "Barinas"
+ },
+ {
+  "codigo": "0600000",
+  "nombre": "BARINAS",
+  "direccion": "CALLE CEDEÐO, C.C. GIAMMA, LOCAL 6. DIAGONAL AL HOSPITAL LUIS RAZZETTI",
+  "estado": "Barinas"
+ },
+ {
+  "codigo": "0606000",
+  "nombre": "BARINAS 23 DE ENERO",
+  "direccion": "AVENIDA 23 DE ENERO, EDIFICIO LA FONTANA, LOCAL N¦ 3. A 50 METROS DEL REGISTRO INMOBILIARIO.",
+  "estado": "Barinas"
+ },
+ {
+  "codigo": "0604000",
+  "nombre": "BARINAS SABANETA",
+  "direccion": "CALLE 1 ENTRE AV. OBISPOS Y AV. ANTONIO MARIA BAYON, SECTOR 9 DE DICIEMBRE. C.C. TRICOLOR, P.B. LOCAL 2.",
+  "estado": "Barinas"
+ },
+ {
+  "codigo": "0602000",
+  "nombre": "BARINAS ZONA IND.",
+  "direccion": "AV ELIAS CORDERO EDIFICIO REY DE REYES PASOS DETR-S DEL TERMINAL DE PASAJEROS DIAGONAL A LA FERRETERIA MECATASO",
+  "estado": "Barinas"
+ },
+ {
+  "codigo": "0605100",
+  "nombre": "FORUM",
+  "direccion": "AV 23 DE ENERO CON AV GUAIPURO, CENTRO COMERCIAL FORUM, PB, LOCAL N¦52. BARINAS.",
+  "estado": "Barinas"
+ },
+ {
+  "codigo": "0601000",
+  "nombre": "SOCOPO",
+  "direccion": "CALLE 1 ENTRE CARRERAS 6 Y 7, BARRIO EL CARMEN, DIAGONAL AL COMERCIAL LA ESTRELLA ORIENTAL DE LOS CHINOS",
+  "estado": "Barinas"
+ },
+ {
+  "codigo": "0603000",
+  "nombre": "STA BARBARA DE BARINAS",
+  "direccion": "CALLE 12 ENTRE CARRERAS 0 Y 00 ( PUNTO DE REFERENCIA 2 CUADRAS Y MEDIA DE CORPOELEC",
+  "estado": "Barinas"
+ },
+ {
+  "codigo": "0701000",
+  "nombre": "ALTA VISTA",
+  "direccion": "C.C. ZULIA, EN LA ENTRADA FRENTE AL SUPERMERCADO RÍO, LOCAL 3 Y 4, ALTA VISTA - PUERTO ORDAZ",
+  "estado": "Bolivar"
+ },
+ {
+  "codigo": "0709000",
+  "nombre": "AV LAS AMERICAS",
+  "direccion": "AV. BRASIL, URB. VILLA BRASIL, MANZANA 142, LOCAL N°2, A 200MTS DEL ABASTO LA ESPAÑOLA, SECTOR VILLA ANTILLANA, PUERTO ORDAZ. GPS 8.312743079567095, -62.73015092522482",
+  "estado": "Bolivar"
+ },
+ {
+  "codigo": "0702000",
+  "nombre": "CAICARA DEL ORINOCO",
+  "direccion": "CARRETERA TRONCAL 19 LOCAL NRO. S/N, SECTOR SAN RAFAEL, CAICARA DEL ORINOCO, ESTADO BOLíVAR",
+  "estado": "Bolivar"
+ },
+ {
+  "codigo": "0708000",
+  "nombre": "CDAD BOLIVAR ZONA IND.",
+  "direccion": "AV. NUEVA GRANADA. EDIF. GRAN SABANA. P.B., LOCAL 1 CIUDAD BOLIVAR. EDO. BOLIVA. GPS: 8.1121051,-63.5426025",
+  "estado": "Bolivar"
+ },
+ {
+  "codigo": "0700000",
+  "nombre": "CIUDAD BOLIVAR",
+  "direccion": "AVENIDA REPUBLICA. EDIF. FRANCO, PB LOCALES 1 Y 2, AL LADO DE BANESCO. CIUDAD BOLIVAR. GPS: 8.1243327,-63.548044",
+  "estado": "Bolivar"
+ },
+ {
+  "codigo": "0711000",
+  "nombre": "PLAZA ATLÁNTICO",
+  "direccion": "AV. ATLANTICO, C.C PLAZA ATLANTICO, NIVEL ATLANTICO, LOCAL PB-12, URB. LOMAS DEL CARONI, CIUDAD GUAYANA, ESTADO BOLÍVAR.",
+  "estado": "Bolivar"
+ },
+ {
+  "codigo": "0704000",
+  "nombre": "SANTA ELENA DE UAIREN",
+  "direccion": "CALLE IKABARÚ, TRONCAL 10. CASCO CENTRAL, LOCAL S/N, A 100 MTRS. DEL HOSPITAL ROSARIO VERA ZURITA, SANTA ELENA DE UAIREN, EDO. BOLIVAR. CÓDIGO POSTAL 8011. GPS: 4.5988806,-61.1098221,17",
+  "estado": "Bolivar"
+ },
+ {
+  "codigo": "0802100",
+  "nombre": "ALIANZA MALL",
+  "direccion": "CARRETERA NACIONAL GUACARA, URB CIUDAD ALIANZA, C.C. CENTRAL GUACARA, LOCAL 27, FRENTE AL SUPERMERCADO CENTRAL MADEIRENSE. VALENCIA. 10.214366295492411, -67.89425738511322 .",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0810100",
+  "nombre": "AV. LAS FERIAS",
+  "direccion": "AV. LAS FERIAS, ENTRE CALLES SILVA Y RANGEL, CC ISORA, LOCAL NA-21. VALENCIA ESTADO CARABOBO.VALENCIA, ESTADO CARABOBO.GPS 10.179644277519218, -68.00105393259143",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0809000",
+  "nombre": "BEJUMA",
+  "direccion": "CALLE URDANETA, C.C. ENMANUEL, PISO PB, LOCAL 5, BEJUMA, ESTADO CARABOBO",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0804000",
+  "nombre": "FLOR AMARILLO",
+  "direccion": "AV. LAS INDUSTRIAS, CRUCE CON AV. PRINCIPAL, URB. PARQUE VALENCIA, C.C. MEGA MERCADO, PB , LOCAL 8C1.VALENCIA EDO CARABOBO. GPS: 10.1549212,-67.9575439",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0802000",
+  "nombre": "GUACARA",
+  "direccion": "CALLE PIAR, CRUCE CON JACINTO LARA, C.C SAN PEDRO, NIVEL PB, LOCAL 8, GUACARA, ESTADO CARABOBO",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0815100",
+  "nombre": "LA ESMERALDA SAN DIEGO",
+  "direccion": "AV. INTERCOMUNAL DON JULIO CENTENO C.C LA ESMERALDA LOCAL 13. 10.231411363382831, -67.96611163115217",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0812000",
+  "nombre": "LA ISABELICA",
+  "direccion": "AV. 04 SECTOR 10, VEREDA 14, LOCAL 01, URB. LA ISABELICA. VALENCIA - CARABOBO. GPS: 10.1609746,-67.9705846",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0802500",
+  "nombre": "LOS GUAYOS ZONA IND.",
+  "direccion": "LOS GUAYOS CALLE NEGRO PRIMERO CC LAS DELICIAS LOCAL. VALENCIA -EDO CARABOBO 10.184388886833883, -67.96016545998904",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0807000",
+  "nombre": "MARIARA",
+  "direccion": "AVENIDA BOLíVAR, SECTOR GUAMACHO NúMERO 51, MARIARA ESTADO CARABOBO",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0803500",
+  "nombre": "MORON",
+  "direccion": "AVDA. YARACUY - Nª 52, FRENTE AL BANCO BANESCO, AL LADO DEL BANCO BOD. MORON ESTADO CARABOBO. GPS: 10,3365,-68,7902",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0806000",
+  "nombre": "NAGUANAGUA",
+  "direccion": "AV. 96-B, C.C. CRSTAL, PB. LOCAL B-06 A DOS LOCALES DEL BANCO BICENTENARIO, POR LA ENTRADA PRINCIPAL. NAGUANAGUA, EDO. CARABOBO 10.242749899854418, -68.00661230788387",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0826000",
+  "nombre": "PARAPARAL",
+  "direccion": "CENTRO COMERCIAL GALERíAS PARAPARAL, LOCAL B-22 . AV. PRINCIPAL DE PARAPARAL, ESTADO CARABOBO.",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0803000",
+  "nombre": "PUERTO CABELLO",
+  "direccion": "CALLE RONDON EDIFICIO EL NARANJAL LOCAL N° 2 FRENTE AL TEMPLO EL REFUGIO, AL LADO DE LA CLINICA SAN AGUSTIN. PUERTO CABELLO EDO. CARABOBO GPS 10.467739247357235, -68.00847609018656",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0818000",
+  "nombre": "SAN DIEGO BOULEVARD CASTILLITO",
+  "direccion": "CENTRO COMERCIAL BOULEVARD CENTER, LOCAL L-03 FRENTE A POLLOS ARTUROS, DIAGONAL A TERMINAL DE PASAJEROS BIG LOW CENTER, SAN DIEGO-EDO. CARABOBO.",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0821000",
+  "nombre": "TOCUYITO",
+  "direccion": "CALLE ARVELO, LOCAL NRO. A-01, SECTOR CASCO CENTRAL DE TOCUYITO, EDIF. SAN JOSE, TOCUYITO, ESTADO CARABOBO.",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0823000",
+  "nombre": "VALENCIA AV. LARA",
+  "direccion": "AV. LARA CON CALLE USLAR, LOCAL 87-107. FRENTE A MOLINARI CACCIA GUERRA, VALENCIA CARABOBO. 10.1794327,-67.994418,17",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0801000",
+  "nombre": "VALENCIA BIG LOW",
+  "direccion": "CALLE 97, C.C. CIUDAD VALENCIA, PB, LOCAL B4. URB. ZONA INDUSTRIAL CASTILLITO. VALENCIA, ESTADO CARABOBO. GPS: 10.1855496,-67.9630739",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0800000",
+  "nombre": "VALENCIA CENTRO",
+  "direccion": "AV. MIRANDA LOCAL 118-31 MRW DIAGONAL A DAMASCO, AV. ROJAS QUEIPO, SECTOR SAN JOSE VALENCIA-CARABOBO. GPS: 10.197811126708984,-68.00529479980469",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0814000",
+  "nombre": "VALENCIA EL PARRAL",
+  "direccion": "LAS 4 AVENIDAS, C.C. PROFESIONAL CERAVICA PB, LOCAL 2, URB. EL PARRAL - EDO. CARABOBO. GPS: 10.206328648925,-68.027472897835,17",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0805000",
+  "nombre": "VALENCIA EL TRIGAL",
+  "direccion": "AV. PRINCIPAL DE MAÑONGO, C.C. PATIO TRIGAL. NIVEL PB LOCAL 208 A URB TRIGAL NORTE, VALENCIA CARABOBO ZONA POSTAL 2001. GPS: 10.2262077,-67.9973322",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0820000",
+  "nombre": "VALENCIA GOBERNACIÓN",
+  "direccion": "CALLE PAEZ ENTRE MONTES DE OCA Y CARABOBO C.C. PAPIN PB LOCAL NRO 1, CENTRO DE VALENCIA ( CERCA DEL CAPITOLIO). EDO CARABOBO. 10.1809602,-68.0084552,17",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0817000",
+  "nombre": "VALENCIA LOS GUAJIROS",
+  "direccion": "CALLE 73, NRO. CIVICO 90-27,, LOCAL S/N, BARRIO LA ISABELA, VALENCIA ESTADO CARABOBO",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0816000",
+  "nombre": "VALENCIA NORTE",
+  "direccion": "AV. BOLIVAR NORTE, SECTOR MAJAY, LOCAL Nº 151-54, , FRENTE A LA TORRE PRINCIAPAL (BANCO BNC). VALENCIA, EDO. CARABOBO. GPS: 10.2208278,-68.0094254",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0810000",
+  "nombre": "VALENCIA PALACIO DE JUSTICIA",
+  "direccion": "AV. ARANZAZU, EDIFICIO VORMA, PISO P.B., LOCAL PB-3, LA CANDELARIA. VALENCIA EDO. CARABOBO. GPS: 10.1735768,-68.0113902",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0815000",
+  "nombre": "VALENCIA SAN DIEGO",
+  "direccion": "AV. DON JULIO CENTENO C.C. METRO PLAZA P.B LOCAL 33 SAN DIEGO EDO. CARABOBO. GPS: 10.207965724456,-67.96278714390199,17",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0808000",
+  "nombre": "VALENCIA SUR",
+  "direccion": "AUTOPISTA VALENCIA - CAMPO CARABOBO. CENTRO COMERCIAL EL PRADO, PLANTA BAJA LOCAL B 6. LOS CAOBOS, VALENCIA-EDO.CARABOBO. GPS:10.1590111,-68.024857",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0811000",
+  "nombre": "VALENCIA ZONA IND.",
+  "direccion": "AV.PROLONGACION MICHELENA C.C. MYCRA LOCAL 10 ZONA INDUSTRIAL VALENCIA. GPS. 10.1744565,-67.9743876",
+  "estado": "Carabobo"
+ },
+ {
+  "codigo": "0900000",
+  "nombre": "SAN CARLOS",
+  "direccion": "AV. RICAURTE, ENTRE AV. SUCRE Y BOLIVAR, SAN CARLOS, ESTADO COJEDES",
+  "estado": "Cojedes"
+ },
+ {
+  "codigo": "0901000",
+  "nombre": "TINAQUILLO",
+  "direccion": "AV. MADARIAGA, ENTRE CALLE CEDEÑO Y CALLE NEGRO PRIMERO, TINAQUILLO - ESTADO COJEDES 9.917399229094885, -68.30170553115445",
+  "estado": "Cojedes"
+ },
+ {
+  "codigo": "1000000",
+  "nombre": "TUCUPITA",
+  "direccion": "CALLE DALLA COSTA # 22, LOCAL 1, EDF. CIARCIA FRENTE A LA PLAZA BOLIVAR, PQ. SAN JOSE, MNCP: TUCUPITA, CD: TUCUPITA EDO: DELTA AMACURO. GPS: 9.0572867,-62.050785",
+  "estado": "Delta Amacuro"
+ },
+ {
+  "codigo": "0115000",
+  "nombre": "ALTAMIRA",
+  "direccion": "AV SAN JUAN BOSCO CON 1ERA TRANSVERSAL EDIFICIO EXCELSIOR PB LOCAL 2 AL LADO DE ORGANIGO. GPS:10.496381, -66.849539",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0143000",
+  "nombre": "ANDRES BELLO",
+  "direccion": "AV ANDR+S BELLO COLEGIO NACIONAL DE PERIODISTA PB LOCAL B- 01 URBANIZACIËN LOS CAOBOS CARACAS",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0146000",
+  "nombre": "ANTIMANO/ LA YAGUARA",
+  "direccion": "CALLE REAL BOULEVARD DE ANTIMANO ENTRE LA JEFATURA Y LA PLAZA BOLIVAR ANTIMANO LOCAL MRW",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0141000",
+  "nombre": "AV. CASANOVA",
+  "direccion": "AV. CASANOVA ENTRE CALLE SAN ANTONIO Y CALLE EL COLEGIO, C.C. DEL ESTE, N¦ 21. DIAGONAL AL HOTEL KURSSAL",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0117000",
+  "nombre": "BARUTA",
+  "direccion": "AV. SAN SEBASTIAN , CENTRO COMERCIAL LOS GONZALEZ , LOCAL MRW , AL LADO DE LA COPA CREMA BARUTA",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0102000",
+  "nombre": "BELLO MONTE",
+  "direccion": "AVENIDA MIGUELANGEL, EDIFICIO OBERON, LOCAL E, FRENTE A LA PASTELER-A LA SABRINA, AL LADO DE PINTA CASA, COLINAS DE BELLO MONTE 10°29'10.3\"N 66°52'23.7\"W",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0127000",
+  "nombre": "BOLEITA",
+  "direccion": "AV. LAS PALMAS, EDIF. TORRE DON LEONARDO, PISO PB, LOCAL 6, URB. BOLEITA SUR, CARACAS (PETARE), ZONA POSTAL 1071",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0109000",
+  "nombre": "CAMPO CLARO",
+  "direccion": "AV.FRANCISCO DE MIRANDA EDF. VALENCIA 1 CAMPO CLARO LOS DOS CAMINOS. GPS: 10.4933241,-66.8308808",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0145000",
+  "nombre": "CAPITOLIO",
+  "direccion": "AV CONDE A PIÐANGO (AV OESTE 0), CASONA N¦ 11, ENTRE AV BARALT Y AV SUR 4, PARROQUIA ALTAGRACIA, AL LADO DE LA JEFATURA CATEDRAL.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0132000",
+  "nombre": "CARICUAO",
+  "direccion": "CENTRO COMERCIAL CARICUAO PLAZA NIVEL MEZANINA LOCAL 8. GPS: 10.434337,-67.0000542",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0128000",
+  "nombre": "CATIA",
+  "direccion": "AV. SUCRE CC. OESTE NIVEL 3 LOCAL 3 SECTOR CATIA, CARACAS, FRENTE A LA CLINICA POPULAR CATIA. GPS: 10.5149652,-66.9332887.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0104000",
+  "nombre": "CENTRO",
+  "direccion": "AV. UNIVERSIDAD, ESQ. DE SOCIEDAD A GRADILLAS, EDIF. HUMBOLT P.B. LOCAL MRW. 10.504785537719727,-66.91412353515625",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0148000",
+  "nombre": "CHACAITO",
+  "direccion": "CENTRO COMERCIAL UNICO PB LOCAL 5 URB EL ROSAL AV PICHINCHA ENTRE LA SALIDA DEL METRO Y AV TAMANACO",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0105000",
+  "nombre": "CHACAO EL MUÑECO",
+  "direccion": "CALLE EL MUÐECO ENTRE AV. LIBERTADOR Y AV FRANCISCO DE MIRANDA EDIF GUAN PB LOCAL 7 10.49131,-66.8581542",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0106000",
+  "nombre": "CHUAO",
+  "direccion": "C.C.C.T, PB. SECTOR EL PUEBLO. LOCAL F. SALIDA AL ESTACIONAMIENTO DE LA TORRE A. CHUAO. GPS: 10.484559,-66.8564348,17",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0131000",
+  "nombre": "EL BOSQUE",
+  "direccion": "CALLE EL EMPALME CON PRINCIPAL DEL BOSQUE QUINTA TORRE DE LA VEGA LOCAL 6 MRW",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0126000",
+  "nombre": "EL CEMENTERIO",
+  "direccion": "CALLE TERCERA TRANSVERSAL SAMANES Y LOS TOTUMOS CASA NRO 3 URB. EL CEMEN TERIO",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0125000",
+  "nombre": "EL HATILLO",
+  "direccion": "CALLE LA PAZ, CASA NRO. 16 DIAGONAL A BNC, EL HATILLO",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0129000",
+  "nombre": "EL JUNQUITO",
+  "direccion": "URBANIZACIÓN EL JUNKO, CARRETERA CARACAS EL JUNQUITO, KILÓMETRO 15, C.C EL JUNKO, NIVEL PLANTA BAJA, LOCAL 04-C, PARROQUIA EL JUNQUITO MUNICIPIO LIBERTADOR, CARACAS, VENEZUELA",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0103000",
+  "nombre": "EL LLANITO",
+  "direccion": "AV. PRINCIPAL TAMANACO, EL LLANITO, QTA. CELIA, FRENTE AL SUPERMERCADO ACUARIO, PISO: MEZZANINA, LOCAL 5 GPS: 10.4716649,-66.8066276",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0107000",
+  "nombre": "EL PARAISO",
+  "direccion": "URBANIZACION EL PARAISO, ENTRE AVENIDA BOLIVAR Y AVENIDAS LAS FUENTES A 20 MTS DE LA PLAZA WASHINGTON, QUINTA FRANCELIS PB LOCAL 1, EL PARAISO CARACAS.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0142000",
+  "nombre": "EL VALLE",
+  "direccion": "AV. INTERVECINAL EL VALLE. RESIDENCIAS DON PEDRO. TORRE B. LOCAL 1. P.B.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0149000",
+  "nombre": "LA CALIFORNIA",
+  "direccion": "AV. FCO. DE MIRANDA CON AV. MADRID C.C. PUERTAS DEL ESTE, LOCAL 5 LA CALIFORNIA NORTE.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0140000",
+  "nombre": "LA CANDELARIA",
+  "direccion": "PUENTE YANEZ A PERICO EDF. SERRANO PB LOCAL 3 LA CANDELARIA. GPS: 10.5038406,-66.9082209.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0147000",
+  "nombre": "LA CASTELLANA",
+  "direccion": "CALLE URDANETA, QUINTA AURANA, P.B. A MEDIA CUADRA DEL RESTAURANT LA ESTANCIA. LA CASTELLANA.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0133000",
+  "nombre": "LA FLORIDA",
+  "direccion": "AV. LOS CHAGUARAMOS. QTA. COROLI. PB. LA FLORIDA. DIAGONAL A HIDROCAPITAL.. GPS. 10.5068807,-66.8732728",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0118000",
+  "nombre": "LA PIRAMIDE",
+  "direccion": "AV R-O PARAGUA EDIF CENTRO COMERCIAL LA PIRAMIDE PISO PB LOCAL 6A URB PRADOS DEL ESTE, SECTOR PARQUE HUMBOLDT, CARACAS 10.4530563,-66.8708792",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0110000",
+  "nombre": "LA TRINIDAD",
+  "direccion": "CALLE DEL ARENAL, CASA LAURA, N¦ 15-14, A DOS CUADRAS DEL FARMATODO DE LA ZONA INDUSTRIAL DE LA TRINIDAD. GPS:10.4363249,-66.8612064",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0120000",
+  "nombre": "LA URBINA",
+  "direccion": "AV. PPAL. LA URBINA. EDIF. APULIA. P.B. CERCA A LA PANADER-A TULIP-N. LA URBINA",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0119000",
+  "nombre": "LAS ACACIAS",
+  "direccion": "AVENIDA PRESIDENTE MEDINA ANGARITA (AV. VICTORIA), EDIFICIO \"BETANIA\", PLANTA BAJA, LOCAL MRW. URB. LAS ACACIAS. PUNTO DE REFERENCIA: FRENTE A REPUESTOS PAMACA DE LA FORD.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0123000",
+  "nombre": "LAS MERCEDES",
+  "direccion": "AV. VERACRUZ. EDIF. MATISCO. P.B. DIAGONAL A CONATEL LAS MERCEDES GPS: 10.4798852,-66.855312",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0138000",
+  "nombre": "LAS MINAS",
+  "direccion": "CARRETERA CARACAS- BARUTA, CENTRO COMERCIAL LAS DANIELAS, DIAGONAL AL AMBULATORIO DE LAS MINAS DE BARUTA O CENTRO ASTURIANO DE CCS, LOCAL 2-3, SECTOR LAS MINAS DE BARUTA.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0113000",
+  "nombre": "LEBRUN PETARE",
+  "direccion": "CALLE LOS NARANJOS EDF. LEBRUN PISO P.B LOCAL 19 , URB LEBRUN.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0135000",
+  "nombre": "LECUNA",
+  "direccion": "CALLE SUR 3, DE ZAMURO A MISERIA, EDIF. INDUCENTRO LOCAL 1 PB, A 20 MTS DE LA AV. LECUNA. SANTA ROSALIA",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0101000",
+  "nombre": "LOS CAOBOS",
+  "direccion": "AV PANAM- AV LIBERTADOR QUINTA MRW, AL LADO DE AUVISIËN C.A. DETRAS DEL RESTAURANT GRAN YEN, SUBIENDO POR LA TORRE POLAR. LOS CAOBOS.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0111000",
+  "nombre": "LOS CHAGUARAMOS",
+  "direccion": "AV. UNIVERSIDAD, URB. LOS CHAGUARAMOS, EDF. MAURICA, PB, LOCAL G, SE ENCUENTRA UBICADO FRENTE A LA IGLESIA SAN PEDRO, CARACAS. GPS: 10.484966,-66.8922411",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0116000",
+  "nombre": "LOS CHORROS",
+  "direccion": "AV. PINCIPAL LA CARLOTA ENTRE AV. FRANCISCO DE MIRANDA Y ROMULO GALLEGOS, EDF. BERTHA, LOCAL 05 PUNTO DE REFERENCIA FRENTE A LA ZONA DE CARGA DEL MILLENIUM, LOS DOS CAMINOS 10.4977255,-66.8265758",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0150000",
+  "nombre": "LOS PALOS GRANDES",
+  "direccion": "AV. ANDES BELLO CON 2¬ TRANSVERSAL, EDIFICIO VISTA HERMOSA, LOCAL C, URBANIZACIËN LOS PALOS GRANDES.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0122000",
+  "nombre": "LOS ROSALES",
+  "direccion": "AV. LOS LAURELES CON AV. ROOSEVELT, RES. TIUNA LOCAL E. PB FRENTE A PLAZA TIUNA LOS ROSALES. GPS: 10.4809693,-66.900801",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0132100",
+  "nombre": "MONTALBAN",
+  "direccion": "MONTALBAN II. 2DA TRANSVERSAL CENTRO COMERCIAL LA VILLA. GPS: 10.473580360412598,-66.95611572265625",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0113200",
+  "nombre": "PALO VERDE",
+  "direccion": "CENTRO COMERCIAL PALO VERDE, NIVEL II, LOCAL N 2-27D, AL LADO DE LA PIÑATERIA BEHIRAS SHOP",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0137000",
+  "nombre": "PANTIN",
+  "direccion": "CALLE PANTIN, GALPON MRW. AL FRENTE DE LA POLICIA DE CHACAO.URBANIZACIËN ESTADO LEAL. CHACAO",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0107100",
+  "nombre": "PARQUE NACIONES UNIDAS",
+  "direccion": "AV. JOSÉ ANTONIO PÁEZ, ENTRE AV. LOS PINOS Y PARQUE NACIONES UNIDAS, RESIDENCIA CITY PARK, PB - EL PARAISO",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0128100",
+  "nombre": "PEREZ BONALDE",
+  "direccion": "CATIA ENTRÉ CALLE COLOMBIA Y ATLÁNTICO EDIFICIO LAZIO PB PÉREZ BONALDEZ CARACAS",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0108000",
+  "nombre": "PLAZA ESTRELLA",
+  "direccion": "PLAZA ESTRELLA A SAN FELIPE, RES. DORABEL, PB LOCAL 3. A MEDIA CUADRA DEL PASAJE ANAUCO. SAN BERNARDINO. GPS: 10.5082611,-66.9029304.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0103100",
+  "nombre": "PLAZA LAS AMERICAS",
+  "direccion": "CENTRO COMERCIAL PLAZA LAS AMERICAS. NIVEL ORO. LOCAL 107-A. EL CAFETAL GPS: 10.458950, -66.828896",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0139000",
+  "nombre": "QUINTA CRESPO",
+  "direccion": "EDIFICIO DOLORES, AVENIDA OESTE 18A, BÁRCENAS, LOCAL NÚMERO 3, PARROQUIA SANTA TERESA, CARACAS, DISTRITO CAPITA",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0114000",
+  "nombre": "SABANA GRANDE",
+  "direccion": "AV. ORINOCO, ENTRE CALLES 2DA Y CARON-, QUINTA ISM+NIA, P.B. SECTOR SABANA GRANDE - BELLO MONTE NORTE. GPS: 10.4889629,-66.8748077",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0134000",
+  "nombre": "SAN MARTIN",
+  "direccion": "AV SAN MARTIN, AV SANTANDER CRUCE CON AV. SAN MARTIN, C.C MARACAIBO NIVEL MEZZ LOCAL NRO 12.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0121000",
+  "nombre": "SANTA FE",
+  "direccion": "AV. JOSÉ MARÍA VARGAS CON CALLE SANTA ISABEL, EDIFICIO RESIDENCIAS CODICA II NO 8 URBANIZACIÓN SAN JUAN SANTA FE NORTE, MUNICIPIO BARUTA DEL ESTADO MIRANDA.",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0130000",
+  "nombre": "SANTA MONICA",
+  "direccion": "AV. ARTURO MICHELENA C/C AGUSIN CODAZZI, LOCAL 5-B MRW URB. SANTA MONICA GPS: 10.4776992,-66.8910918",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0124000",
+  "nombre": "SANTA SOFIA",
+  "direccion": "AV. PRINCIPAL DE SANTA SOFIA, C.C. SANTA SOFIA, LOCAL Z-3. P.B. GPS: 10.47158,-66.84261",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "0144000",
+  "nombre": "SEBUCAN",
+  "direccion": "AV. ROMULO GALLEGOS, ENTRE AV. PRINCIPAL DE SEBUCAN Y AV. SUCRE DE LOS DOS CAMINOS",
+  "estado": "Distrito Capital"
+ },
+ {
+  "codigo": "1103000",
+  "nombre": "CAJA DE AGUA",
+  "direccion": "CALLE MANUELITA SÁENZ ENTRE CALLE COMERCIO Y PROVIDENCIA SECTOR, SECTOR CAJA DE AGUA, DIAGONAL A LA IGLESIA LOS MORMONES, LOCAL NRO. 01, EDO. FALCÓN. GPS 11.7124573,-70.1915814",
+  "estado": "Falcón"
+ },
+ {
+  "codigo": "1100000",
+  "nombre": "CORO",
+  "direccion": "CALLE ZAMORA. ESQUINA CALLEJON LAS FLORES E ITURBE LOCAL S/N SECTOR CHIMPIRE CORO MCIPIO MIRANDA EDO FALCON SANTA ANA DE CORO. GPS: 11.4108253,-69.6709781",
+  "estado": "Falcón"
+ },
+ {
+  "codigo": "1105000",
+  "nombre": "EL CASTILLO",
+  "direccion": "AVENIDA MANAURE, ESQUINA CON CALLE MONZON . C.C. EL CASTILLO DON LEONCIO, PB, LOCAL Nº 10. CORO. GPS: 11.402398864692,-69.6721584",
+  "estado": "Falcón"
+ },
+ {
+  "codigo": "1104000",
+  "nombre": "PUERTA MARAVEN",
+  "direccion": "CALLE SAN ROMÁN ENTRE AV GENERAL PELAYO Y AV. OLLARVIDES, DIAGONAL A RÍAS ALTAS. 10.792441,-68.3196871",
+  "estado": "Falcón"
+ },
+ {
+  "codigo": "1106000",
+  "nombre": "PUNTO FIJO AV.MONAGAS",
+  "direccion": "CALLE MONAGAS ENTRE GARCES Y ZAMORA EDIF. LUCRISCAR PLANTA BAJA, PUNTO FIJO-EDO.FALCON. GPS: 11.6910626,-70.2002248",
+  "estado": "Falcón"
+ },
+ {
+  "codigo": "1101000",
+  "nombre": "PUNTO FIJO CENTRO",
+  "direccion": "AV. COLOMBIA, ENTRE AYACUCHO Y PENINSULAR, C.C. DON JOSE LAY, NIVEL PB, LOCAL 5B, SECTOR CENTRO, PUNTO FIJO FALCON.",
+  "estado": "Falcón"
+ },
+ {
+  "codigo": "1102000",
+  "nombre": "TUCACAS",
+  "direccion": "AV LIBERTADOR DE TUCACAS, DIAGONAL AL HOTEL LA SUERTE , LOCAL NRO #1. EDO. FALCON. GPS 2054. 10.7927387,-68.3213246,17",
+  "estado": "Falcón"
+ },
+ {
+  "codigo": "1205000",
+  "nombre": "ALTAGRACIA DE ORITUCO",
+  "direccion": "CALLE HURTADO ASCANIO CRUCE CON VUELVAN CARA. EDF. RESIDENCIAS LA PAZ, PB, LOCAL 2, SECTOR LAS BRISAS DEL ESTE ALTAGRACIA DE ORITUCO. EDO. GUARICO. GPS: 9.8554654,-66.3795806",
+  "estado": "Guarico"
+ },
+ {
+  "codigo": "1201000",
+  "nombre": "CALABOZO",
+  "direccion": "CARRETERA 13, ENTRE CALLES 13 Y 14, LOCAL NRO S/N, SECTOR CASCO CENTRAL CALABOZO, ESTADO GUÁRICO",
+  "estado": "Guarico"
+ },
+ {
+  "codigo": "1202100",
+  "nombre": "LAS MERCEDES DEL LLANO",
+  "direccion": "CALLE DOÑA BÁRBARA. CENTRO COMERCIAL MERCEDES PLAZA, PB, LOCAL 5A. LAS MERCEDES DEL LLANO - EDO GUÁRICO.",
+  "estado": "Guarico"
+ },
+ {
+  "codigo": "1200000",
+  "nombre": "S. JUAN DE LOS MORROS",
+  "direccion": "CALLE EL CARMEN, EDF. RAUSEO, LOCAL 2 BAJANDO POR LA GOBERNACIÓN, DIAGONAL A LA CANTV. GPS: 9.9151168,-67.3552737",
+  "estado": "Guarico"
+ },
+ {
+  "codigo": "1204000",
+  "nombre": "TUCUPIDO",
+  "direccion": "CALLE SALOM NRO 24 DIAGONAL A LA ALCALDIA, ENTRE SAN PABLO Y ZARAZA, LOCAL MRW PB. GPS: 10.4347,-66.8747",
+  "estado": "Guarico"
+ },
+ {
+  "codigo": "1202000",
+  "nombre": "VALLE DE LA PASCUA",
+  "direccion": "CALLE BOLIVAR ENTRE AV. LIBERTADOR Y CALLE DELEITE, LOCAL N° 58-1 SECTOR CENTRO, DIAGONAL A POLIGUARICO, VALLE DE LA PASCUA.",
+  "estado": "Guarico"
+ },
+ {
+  "codigo": "1207000",
+  "nombre": "VALLE DE LA PASCUA NORTE",
+  "direccion": "CALLE RETUMBO ENTRE CALLE PARAISO Y AV. RÓMULO GALLEGOS, C.C. CENTRO NORTE, LOCAL 1A, AL LADO DE OXILA 5000, ESTADO GUARICO.",
+  "estado": "Guarico"
+ },
+ {
+  "codigo": "1203000",
+  "nombre": "ZARAZA",
+  "direccion": "CALLE BOLIVAR, ENTRE AYACUCHO Y SUCRE , LOCAL MRW, PB, A 100 MTS DEL SAIME, SECTOR CENTRO, ZARAZA, ESTADO GUARICO. GPS: 9.3474244,-65.3244822",
+  "estado": "Guarico"
+ },
+ {
+  "codigo": "2201000",
+  "nombre": "CATIA LA MAR",
+  "direccion": "CALLE ALFARERíA, URB. WEEK-END, FRENTE A TU SALUD VARGAS, AL LADO DE LA UNIDAD DE RADIOLOGíA SAN ANTONIO",
+  "estado": "La Guaira"
+ },
+ {
+  "codigo": "2200000",
+  "nombre": "LA GUAIRA",
+  "direccion": "CALLE LOTE DE TERRENO DE LA MANZANA E LOCAL 94 SECTOR MIRAMAR, AL LADO DEL C.C. BAHIA SUPERMARKET, MAIQUETIA LA GUAIRA ZONA POSTAL 1161",
+  "estado": "La Guaira"
+ },
+ {
+  "codigo": "1303200",
+  "nombre": "ALTAGRACIA",
+  "direccion": "CARRERA 21, ENTRE CALLE 20 Y 21, LOCAL COMERCIAL S/N, EDIFICIO NRO. 20 – 81, BARQUISIMETO .",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1300300",
+  "nombre": "ANDRES BELLO",
+  "direccion": "AV. ANDRES BELLO, ENTRE CARRERA 22 Y 23, EDF. PULCA 2, LOCALES 2 Y 3. BARQUISIMETO. GPS 10.0696841,-69.3132541",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1310100",
+  "nombre": "AV VENEZUELA ESTE",
+  "direccion": "AV. VENEZUELA CON CALLES 8 Y 9, BARQUISIMETO, ESTADO LARA.",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1303100",
+  "nombre": "AV. MORAN",
+  "direccion": "CARRERA 21 CON CALLE 9, BARQUISIMETO, ESTADO LARA GPS 10.0691719,-69.2989034",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1310000",
+  "nombre": "AV. VENEZUELA",
+  "direccion": "AV VENEZUELA CON CALLE 21, EDIFICIO LAZIO, LOCAL NRO. 02, BQTO. EDO. LARA. C GPS 10.0735602,-69.3125445",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1308000",
+  "nombre": "BABILOM",
+  "direccion": "CALLE 19 CON AV LIBERTADOR ZONA INDUSTRIAL I C.C LIBERTADOR LOCAL 13-B. GPS: 10.0638548,-69.3612843",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1307000",
+  "nombre": "BARQUISIMETO NUEVA SEGOVIA",
+  "direccion": "CALLE 3 ENTRE CARRERA 1 Y AV LARA, CASA NRO AL-99 URB NUEVA SEGOVIA BARQUISIMETO EDO LARA GPS: 10.064689636230469,-69.29549407958984",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1303000",
+  "nombre": "BQMETO ESTE",
+  "direccion": "CALLE 15, ENTRE CARRERAS 20 Y 21, LOCAL NO. 5, DIAGONAL A LA CLINICA SAN FRANCISCO. BARQUISIMETO,ESTADO LARA. GPS: 10.068597793579102,-69.30667877197266",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1301000",
+  "nombre": "BQMETO OESTE",
+  "direccion": "AV. FLORENCIO JIMENEZ, C.C. ARCOIRIS, LOCAL 5, P.B., FRENTE AL DECANATO DE LA UCLA, BARQUISIMETO, EDO. LARA. GPS: 10.0709,-69.3556",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1300000",
+  "nombre": "BQTO CENTRO",
+  "direccion": "AV. VENEZUELA ENTRE CALLES 39 Y 40, NÚMERO 39-55, SENTIDO OESTE-ESTE. BARQUISIMETO. GPS: 10.0715248,-69.3309241",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1304000",
+  "nombre": "CABUDARE",
+  "direccion": "AV. SANTA BARBARA, ENTRE CALLES GUILLERMO ALVIZU Y LA CRUZ, C.C. STA. BARBARA, LOCAL 2, DETRAS FERRETERIA TABURE. CÓDIGO POSTAL 3023 GPS: 10.0339,-69.2635",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1309000",
+  "nombre": "CABUDARE SUR",
+  "direccion": "AV EL PLACER LOCAL TRIGALPA NRO 7 URB EL TRIGAL LOS RASTROJOS LARA, GP 10.0340094,-69.2378423",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1300200",
+  "nombre": "CANAIMA",
+  "direccion": "CALLE 55 ENTRE AV. PEDRO LEON TORRES Y CARRERA 19, C.C. CANAIMA, LOCAL F-02. ZONA ESTE BARQUISIMETO. GPS 10.0640084,-69.3466274",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1302000",
+  "nombre": "CARORA",
+  "direccion": "AV FCO DE MIRANDA / CLLS 15A Y 16 CASA NRO 15 SECTOR EGIDIO MONTESINO-CARORA A 50 MTS DE LA PLAZA CHIO ZUBILLAGA. GPS: 10.1731161,-70.0812122",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1308100",
+  "nombre": "EL RECREO",
+  "direccion": "AV. LIBERTADOR. C.C. EL ROSARIO. LOCAL 5. FRENTE AL IPASME GPS 10.0831128,-69.3233322",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1307100",
+  "nombre": "PATARATA",
+  "direccion": "AV. LIBERTADOR ENTRE AV. ARGEMIRO BRACAMONTE Y AV. LOPEZ CONTRERA, SECTOR PATARATA, CENTRO RECREACIONAL PARQUE JARDIN, LOCAL 04, BARQUISIMETO EDO. LARA. GPS 10.0799945,-69.2939417",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1305000",
+  "nombre": "QUIBOR",
+  "direccion": "CALLE 8 ENTRE AVENIDA 8 Y 9 A 200MTS DEL SUPERMERCADO LA PALMA. GPS 9.9275333,-69.6190894",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1306000",
+  "nombre": "VALLE LINDO",
+  "direccion": "AUTOPISTA VIA DUACA KM 10 SECTOR SABANA GRANDE AL LADO DE LA FARMACIA SAN IGNACIO, ZONA NORTE, BQTO. GPS: 10.1691728,-69.3130929",
+  "estado": "Lara"
+ },
+ {
+  "codigo": "1404000",
+  "nombre": "EJIDO",
+  "direccion": "AV. FERNANDEZ PEÑA CASA PLANTA BAJA NRO 133-C SECTOR MONTALBAN, A 100 MTS DEL DIARIO FRONTERA. CENTRO EJIDO MERIDA. GPS: 8.5489483,-71.2383251",
+  "estado": "Merida"
+ },
+ {
+  "codigo": "1402000",
+  "nombre": "EL VIGIA",
+  "direccion": "AV. 11, LOCAL 2, NUMERO 6-21, SECTOR LA IMAGULADA EL VIGÍA EN EL ESTADO MÉRIDA. GPS: 8.616976, -71.645681",
+  "estado": "Merida"
+ },
+ {
+  "codigo": "1406000",
+  "nombre": "MDA LOS PROCERES",
+  "direccion": "AV LOS PROCERES, CALLE LA ORQUÍDEA , MINICENTRO COMERCIAL , DON LUIS, LOCAL 2B O MRW GPS 8.577718,-71.1863891",
+  "estado": "Merida"
+ },
+ {
+  "codigo": "1400000",
+  "nombre": "MERIDA CUBO ROJO",
+  "direccion": "AV GONZALO PICON CON VIADUCTO MIRANDA, CC CUBO ROJO NIVEL PB LOCAL 2,4,6,7,8 SECTOR GLORIAS PATRIAS MERIDA. GPS: 8.5879926,-71.1545853",
+  "estado": "Merida"
+ },
+ {
+  "codigo": "1405000",
+  "nombre": "MERIDA MILLA",
+  "direccion": "AV. DOS LORA, CENTRO PROFESIONAL MOLI-ROD, PB, LOCAL 4, DIAGONAL A LA PLAZA DE MILLACÓN, MÉRIDA.",
+  "estado": "Merida"
+ },
+ {
+  "codigo": "1401000",
+  "nombre": "MERIDA PASEO DE LA FERIA",
+  "direccion": "AV. DON TULIO FEBRES CORDERO, CON CALLE 29, DETRÁS DEL EDF. ADMINISTRATIVO DE LA ULA, EDF. EL PASEO PB, LOCAL ÚNICO. GPS: 8.59251880645752,-71.14743041992188",
+  "estado": "Merida"
+ },
+ {
+  "codigo": "1403000",
+  "nombre": "TOVAR",
+  "direccion": "CARRETERA 4TA. CC EL LLANO NIVEL PB LOCAL 4 SECTOR EL LLANO TOVAR, EDO.MERIDA, GPS: 8.3291184,-71.7561206",
+  "estado": "Merida"
+ },
+ {
+  "codigo": "1407000",
+  "nombre": "TUCANIZON",
+  "direccion": "CARRETERA PANAMERICANA , SECTOR EL CARMEN,GALPON 1, AL LADO DE LA ESTACION DE SERVICIO EL INDIO.TUCANIZON EDO MERIDA. GPS: 8.9661928,-71.2757046",
+  "estado": "Merida"
+ },
+ {
+  "codigo": "1501000",
+  "nombre": "CHARALLAVE",
+  "direccion": "CALLE 9, AVENIDA JOSE GREGORIO HERNANDEZ CON AVENIDA BOLIVAR EDF. LOS SAMANES NRO 03 SECTOR CASCO CENTRAL CHARALLAVE MIRANDA. GPS: 10.2403277,-66.8578658",
+  "estado": "Miranda"
+ },
+ {
+  "codigo": "1509000",
+  "nombre": "CUA",
+  "direccion": "URBANIZACION JARDINES DE SANTA ROSA, C. C. EL COLONIAL, LOCAL 26-A, CÚA, MIRANDA. GPS: 10.1691341,-66.8886829",
+  "estado": "Miranda"
+ },
+ {
+  "codigo": "1503000",
+  "nombre": "GUARENAS",
+  "direccion": "C.C LA CANDELARIA, NIVEL PLANTA BAJA, LOCAL 01, ESTADO MIRANDA. GPS 10.4696896,-66.6216372",
+  "estado": "Miranda"
+ },
+ {
+  "codigo": "1504000",
+  "nombre": "GUATIRE",
+  "direccion": "GUATIRE, CALLE ZAMORA NUMERO 47, LOCAL PB-1, EDIFICIO QUINTA ARELIS. GPS: 10.4759,-66.5454",
+  "estado": "Miranda"
+ },
+ {
+  "codigo": "1510000",
+  "nombre": "GUATIRE OASIS",
+  "direccion": "AV INTERCOMUNAL GUARENAS - GUATIRE , CENTRO COMERCIAL OASIS CENTER, PB LOCAL 24, GPS 10.465076,-66.5711214",
+  "estado": "Miranda"
+ },
+ {
+  "codigo": "1506000",
+  "nombre": "HIGUEROTE",
+  "direccion": "CALLE EL RÍO, CC MARTÍ PLAZA, LOCAL 1, HIGUEROTE EDO. MIRANDA, GPS 10.485067,-66.100898",
+  "estado": "Miranda"
+ },
+ {
+  "codigo": "1500000",
+  "nombre": "LOS TEQUES",
+  "direccion": "CALLE SUCRE NORTE, LOCALES NRO. 2 Y 15-1, SECTOR EL PUEBLO, LOS TEQUES, MIRANDA GPS - 10.349844, -67.043481",
+  "estado": "Miranda"
+ },
+ {
+  "codigo": "1501500",
+  "nombre": "OCUMARE DEL TUY",
+  "direccion": "AVENIDA MIRANDA CON CALLE TORIBIO MOTA, EDIF. TELEVISA, PB. FRENTE A LA PARADA DE PAROSCA.. GPS: 10.117089966358561,-66.77527175651109",
+  "estado": "Miranda"
+ },
+ {
+  "codigo": "1507000",
+  "nombre": "RIO CHICO",
+  "direccion": "CALLE COMERCIO, LOCAL MRW. AL LADO DE LA FARMACIA LAS MERCEDES, RÍO CHICO- MUNICIPIO PÁEZ- EDO. MIRANDA. GPS: 10.3164736,-65.9778191",
+  "estado": "Miranda"
+ },
+ {
+  "codigo": "1505000",
+  "nombre": "SAN ANTONIO DE LOS ALTOS",
+  "direccion": "CARRETA PANAMERICANA, KILOMETRO 16, C.C. LA CASONA II, PISO 1, LOCAL #2-17 AL LADO DE CINEX, GPS 10.3697786,-66.9827115",
+  "estado": "Miranda"
+ },
+ {
+  "codigo": "1508000",
+  "nombre": "STA TERESA DEL TUY",
+  "direccion": "CALLE AYACUCHO EDIF DON GUILLERMO PISO 1 OF 2 ZONA CENTRO SANTA TERESA DEL TUY MIRANDA. GPS: 10.2336028,-66.6645992",
+  "estado": "Miranda"
+ },
+ {
+  "codigo": "1608000",
+  "nombre": "MATURIN AV. RAUL LEONI",
+  "direccion": "AV. RAUL LEONI ENTRE CARRERA 3 (ANTIGUA AV. RIVAS) Y CARRERA 4 (ANTIGUA PROLONGACION CEDEÐO) FRENTE AL POLIDEPORTIVO, MATURIN EDO. MONAGAS",
+  "estado": "Monagas"
+ },
+ {
+  "codigo": "1603000",
+  "nombre": "MATURIN CENTRO",
+  "direccion": "AV ROJAS EDIF BRAVO PISO P.B LOCAL 01 SECTOR CENTRO MATURIN MONAGAS",
+  "estado": "Monagas"
+ },
+ {
+  "codigo": "1609000",
+  "nombre": "MATURIN LA FLORESTA",
+  "direccion": "CR 1 N¦ 4 C.C LA REDOMA NIVEL PB LOCAL 5 SECTOR BRISAS DEL AEROPUETO MATURIN MONAGAS ZONA POSTAL 6201",
+  "estado": "Monagas"
+ },
+ {
+  "codigo": "1606000",
+  "nombre": "MATURIN NORTE",
+  "direccion": "AV. PPAL VIA VIBORAL, CENTRO COMERCIAL LAS COLINAS B, P.B. LOCAL 09",
+  "estado": "Monagas"
+ },
+ {
+  "codigo": "1610000",
+  "nombre": "MATURIN PLAZA EL INDIO",
+  "direccion": "AV. BICENTENARIO EDIF. ZAMORA, P.B. DIAGONAL AL HOSPITAL CENTRAL DE MATURIN",
+  "estado": "Monagas"
+ },
+ {
+  "codigo": "1607000",
+  "nombre": "MATURIN ZONA INDUSTRIAL",
+  "direccion": "AV. PRINCIPAL DE LA CRUZ, C.C MACARENAS, LOCAL # 23 PB",
+  "estado": "Monagas"
+ },
+ {
+  "codigo": "1602000",
+  "nombre": "PUNTA DE MATA",
+  "direccion": "CALLE 5 DE JULIO CRUCE CON CALLE NUEVA, LOCAL MRW, DETR-S DEL BANCO CARONI W3W DESPACHO.ASPIRA.IMPUESTOS",
+  "estado": "Monagas"
+ },
+ {
+  "codigo": "1605000",
+  "nombre": "TEMBLADOR",
+  "direccion": "CALLE BOLIVAR. NO 70-A. DIAGONAL A LA LINEA DE TAXI EJECUTIVO DEL SUR.",
+  "estado": "Monagas"
+ },
+ {
+  "codigo": "1702100",
+  "nombre": "EL ESPINAL",
+  "direccion": "AV. JUAN BAUTISTA ARISMENDI, SECTOR LA ENCRUCIJADA DEL ESPINAL VIA SAN JUAN BAUTISTA. A 100 METROS DE LA REGIONAL. EL ESPINAL",
+  "estado": "Nueva Esparta"
+ },
+ {
+  "codigo": "1704000",
+  "nombre": "JOVITO VILLALBA",
+  "direccion": "AV. JOVITO VILLALBA, LOCAL ESTACION DE SERVICIO MANEIRO, NRO 9493, URB SAN LORENZO, AL LADO DEL SAMBIL. PAMPATAR EDO. NUEVA ESPARTA.",
+  "estado": "Nueva Esparta"
+ },
+ {
+  "codigo": "1702000",
+  "nombre": "JUAN GRIEGO",
+  "direccion": "CALLE GUEVARA, N¦ 12 B, ENTRE CALLES LA MARINA Y MARCANO, DIAGONAL A COMERCIAL JUAN GRIEGO.",
+  "estado": "Nueva Esparta"
+ },
+ {
+  "codigo": "1701000",
+  "nombre": "PORLAMAR",
+  "direccion": "CALLE CEDEñO CRUCE CON CALLE NARVAEZ, EDIFICIO R. AMAYA & CIA , PLANTA BAJA, LOCAL S/N, SECTOR TACHIRA, PORLAMAR, MUNICIPIO MARIÑO DEL ESTADO NUEVA ESPARTA.",
+  "estado": "Nueva Esparta"
+ },
+ {
+  "codigo": "1706000",
+  "nombre": "PORLAMAR CENTRO",
+  "direccion": "CALLE VELAZQUEZ CON ESQUINA FAJARDO, CASA S/N, SECTOR CENTRO PORLAMAR, NUEVA ESPARTA.",
+  "estado": "Nueva Esparta"
+ },
+ {
+  "codigo": "1707000",
+  "nombre": "VILLA ROSA",
+  "direccion": "AV JUAN BAUTISTA ARISMENDI LOCAL GALPON SEVEN-ART NRO PLANTA BAJA SECTOR SAN ANTONIO NORTE VILLA ROSA NUEVA ESPARTA",
+  "estado": "Nueva Esparta"
+ },
+ {
+  "codigo": "1801000",
+  "nombre": "ACARIGUA",
+  "direccion": "CALLE 22. ENTRE AVENIDAS LIBERTADOR Y ALIANZA DIAGONAL A LA PANADERIA TREBOL, ACARIGUA CENTRO. EDO. PORTUGUESA. GPS: 9.5585801,-69.212533",
+  "estado": "Portuguesa"
+ },
+ {
+  "codigo": "1804000",
+  "nombre": "CENTRO LOS LLANOS",
+  "direccion": "CALLE 31 CON AV 28 C.C LOS LLANOS LOCAL 5 PLANTA BAJA. GPS: 9.560776,-69.2045441",
+  "estado": "Portuguesa"
+ },
+ {
+  "codigo": "1800000",
+  "nombre": "GUANARE",
+  "direccion": "AV. PRINCIPAL JOSE MARIA VARGAS CON AV. SIMON BOLIVAR CENTRO COMERCIAL REVICA GALPON N. 4 GPS: 9.0332177,-69.7401574",
+  "estado": "Portuguesa"
+ },
+ {
+  "codigo": "1802000",
+  "nombre": "TUREN",
+  "direccion": "AVENIDA 6, ENTRE CALLE 8 Y 9, TURÉN PORTUGUESA. GPS 9.3329354,-69.1236159",
+  "estado": "Portuguesa"
+ },
+ {
+  "codigo": "1901000",
+  "nombre": "CARUPANO",
+  "direccion": "AV UNIVERSITARIA EDIF PROSSEIN PISO MEZANINA LOCAL B SECTOR LOS MOLINOS CARUPANO SUCRE",
+  "estado": "Sucre"
+ },
+ {
+  "codigo": "1900000",
+  "nombre": "CUMANA",
+  "direccion": "CALLE MARIÑO, EDIF TURIMIQUIRE , FRENTE A LA CRUZ ROJA DE CUMANA.",
+  "estado": "Sucre"
+ },
+ {
+  "codigo": "1902000",
+  "nombre": "CUMANA URDANETA",
+  "direccion": "4TA TRANSVERSAL DE LA AVENIDA GRAN MARISCAL. EDIFICIO CEU, P.B. LOCAL 2 MRW",
+  "estado": "Sucre"
+ },
+ {
+  "codigo": "2008000",
+  "nombre": "BARRIO OBRERO",
+  "direccion": "BARRIO OBRERO, CARRERA 22, ESQUINA CALLE 12, DIAGONAL A LA PLAZA LOS MANGOS, AL LADO DE LA CAPILLA DE LOS AHORCADOS, N° 22-9 SAN CRISTOBAL EDO. TÁCHIRA",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2000000",
+  "nombre": "BARRIO OBRERO CARRERA 20",
+  "direccion": "BARRIO OBRERO CALLE 10 CARRERA 20 NO. 9-108, LOCAL 6 FRENTE LICORER-A 9 CON 19. SAN CRISTËBAL ESTADO TACHIRA",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2006000",
+  "nombre": "EL PIÑAL",
+  "direccion": "CALLE 1 CON CARRERA 3, LOCAL NO. 1. ZONA COMERCIAL EL MIRADOR. VIA LA MORITA. CERCA DE LA E/S EL PIÐAL",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2003000",
+  "nombre": "LA FRIA",
+  "direccion": "CARRERA 11 ENTRE CALLES 4 Y 5 AL LADO DE RAMINI LA FRIA EDO. TACHIRA",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2004000",
+  "nombre": "LA GRITA",
+  "direccion": "AV FCO DE CACERES DIAGONAL AL COLEGIO STA ROSA DE LIMA , LA GRITA EDO. TACHIRA",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2011000",
+  "nombre": "PARAMILLO",
+  "direccion": "BARRIO EL LOBO, CALLE 1 FRENTE A LA MANGA DE COLEO DE ASOGATA, A 100 MTS DE LA AV. LOS AGUSTINOS, RESIDENCIAS MARSEE, PISO PB, SECTOR PARAMILLO.",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2005000",
+  "nombre": "RUBIO",
+  "direccion": "CENTRO COMERCIAL VENEZIA FRENTE A LA PLAZA BOLIVAR DE RUBIO SECTOR CENTR0O LOCALES 6 Y 7, ESTADO TACHIRA.",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2002000",
+  "nombre": "S. ANTONIO DEL TACHIRA",
+  "direccion": "AV VENEZUELA CON CALLE 7 EDIF REAL LOCAL N 7-09 SECTOR CENTRO, A TRES CUADRAS DE LA ADUANA PRINCIPAL.",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2010000",
+  "nombre": "SAN CRISTOBAL CENTRO",
+  "direccion": "7MA AV ENTRE CALLE 5 Y 6 C.C. PARTENËN , NIVEL P.B LOCAL N¦ 3 DIAGONAL A LA TORRE UNIËN, A CUADRA Y MEDIA DE LA PLAZA BOLIVAR, SECTOR CENTRO, SAN CRISTOBAL ESTADO TACHIRA.",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2001000",
+  "nombre": "SAN CRISTOBAL CONCORDIA",
+  "direccion": "CALLE 4 C/C CARRERAS 6 Y 7 EDF. RAM-REZ PB LOCAL 1, DETR-S DEL DIARIO LA NACIËN. LA CONCORDIA. SAN CRISTËBAL, ESTADO TACHIRA..",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2012000",
+  "nombre": "SAN JUAN DE COLON",
+  "direccion": "C. 7 ESQUINA CARRERA 5. NO 4-79. SAN JUAN DE COLON.",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2007000",
+  "nombre": "TARIBA",
+  "direccion": "CALLE 8 CON CARRERA 8 CASA NRO 7-87 LOCAL 3, 4 CUADRAS SUBIENDO DE LA PLAZUELA DE TARIBA. SECTOR TARIBA, TACHIRA",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2009000",
+  "nombre": "UREÑA",
+  "direccion": "CALLE 5 CON ESQUINA CARRERA 6, EDIF. SOFI, LOCAL 106, BARRIO LA GUAJIRA. UREÑA",
+  "estado": "Tachira"
+ },
+ {
+  "codigo": "2103000",
+  "nombre": "BOCONO",
+  "direccion": "AV. MIRANDA C/C C. ANDRES BELLO. LOCAL 2",
+  "estado": "Trujillo"
+ },
+ {
+  "codigo": "2102000",
+  "nombre": "CARACHE",
+  "direccion": "AV. PRINCIPAL CASA S/N SECTOR PALO NEGRO, CARACHE ESTADO TRUJILLO",
+  "estado": "Trujillo"
+ },
+ {
+  "codigo": "2106000",
+  "nombre": "SABANA DE MENDOZA",
+  "direccion": "C.C. SABANA MALL, AV. BOLIVAR CON CALLE BERMUDEZ DE SABANA DE MENDOZA, MUNICIPIO SUCRE, EDO. TRUJILLO,",
+  "estado": "Trujillo"
+ },
+ {
+  "codigo": "2100000",
+  "nombre": "TRUJILLO",
+  "direccion": "AV. INDEPENDENCIA CENTRO COMERCIAL LOS TORRES LOCAL 02, TRUJILLO ESTADO TRUJILLO.",
+  "estado": "Trujillo"
+ },
+ {
+  "codigo": "2101000",
+  "nombre": "VALERA",
+  "direccion": "CALLE 5 ENTRE AV. BOLIVAR Y 9. EDIF. DON PEPE. P.B. AL LADO DE LA ANTIGUA SEDE.",
+  "estado": "Trujillo"
+ },
+ {
+  "codigo": "2105000",
+  "nombre": "VALERA CENTRO",
+  "direccion": "AV. 12 ENTRE CALLES 8 Y 9, EDIF. BEATRIZ, P.B., LOCAL 1, A UNA CUADRA DE LA PLAZA BOL-VAR. GPS: 9.3149416,-70.6091462",
+  "estado": "Trujillo"
+ },
+ {
+  "codigo": "2104000",
+  "nombre": "VALERA LOS LIMONCITOS",
+  "direccion": "AV. BOLIVAR, ENTRE CALLE 22 Y 23, CENTRO COMERCIAL ARICHUNA, NIVEL PB, LOCAL 14, SECTOR LOS LIMONCITOS, MUNICIPIO VALERA, ESTADO TRUJILLO.",
+  "estado": "Trujillo"
+ },
+ {
+  "codigo": "2301000",
+  "nombre": "NIRGUA",
+  "direccion": "AV. 5 ENTRE CALLES 4 Y 5. EDIF. MURCIA, LOCAL 3. DIAGONAL AL BANCO PROVINCIAL, SECTOR PLAZA SUCRE. NIRGUA. GPS: 10.1498921,-68.5658553",
+  "estado": "Yaracuy"
+ },
+ {
+  "codigo": "2300000",
+  "nombre": "SAN FELIPE",
+  "direccion": "CALLE 12, ENTRE AVENIDA 8 Y 9, EDIFICIO DON JORGE, PLANTA BAJA, LOCAL 3, SECTOR CAJA DE AGUA, SAN FELIPE, ESTADO YARACUY. GPS 10.3403525,-68.7384701",
+  "estado": "Yaracuy"
+ },
+ {
+  "codigo": "2303000",
+  "nombre": "YARITAGUA",
+  "direccion": "CALLE 17 ENTRE CARRERAS 7 Y 8 LOCAL S/N, DIAGONAL AL REGISTRO CIVIL. SECTOR CENTRO YARITAGUA - YARACUY. GPS: 10.0783462,-69.1288746",
+  "estado": "Yaracuy"
+ },
+ {
+  "codigo": "2412000",
+  "nombre": "CABIMAS",
+  "direccion": "AV INTERCOMUNAL, ESQUINA CUMANA EDIF INTERCUMANA LOCAL N 02 PB CABIMAS EDO ZULIA.",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2424000",
+  "nombre": "CAJA SECA",
+  "direccion": "CTRA. PANAMERICANA, C.C. SAGRADO CORAZON DE JESUS, NIVEL PB, LOCAL 1, SECTOR EL LATINO. NUEVA BOLIVIA, EDO. MERIDA , ZONA POSTAL 5115.",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2400100",
+  "nombre": "CIRCUNVALACION 2",
+  "direccion": "PARROQUIA CECILIO ACOSTA, MUNICIPIO MARACAIBO, AV. 58 CIRCUNVALACION N° 2 EDIF, CASA SAAS PISO: PB, LOCAL 98E-164 BARRIO ENTRE CALLES 98E Y 99, BARRIO ANDRES ELOY BLANCO",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2404000",
+  "nombre": "CIUDAD OJEDA",
+  "direccion": "AV. INTERCOMUNAL. SECTOR LAS MOROCHAS. FRENTE A LA ESTACION DE SERVICIO CENTRAL SECTOR LAS MOROCHAS",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2417000",
+  "nombre": "CIUDAD OJEDA CENTRO",
+  "direccion": "C.C. BARI, CARRETERA “N”, ENTRE CALLES 34 Y SANTA MONICA, CIUDAD OJEDA, ESTADO ZULIA",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2406200",
+  "nombre": "COROMOTO",
+  "direccion": "URBANIZACIËN COROMOTO, AVENIDA 40, C.C. VILLA MALL, PB. 4.",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2425000",
+  "nombre": "CURVA DE MOLINA",
+  "direccion": "CALLE 79 NRO 92-58 FRENTE AL MODULO LIBERTADOR, AL LADO DE LA FERRETERIA RAYEN.",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2416000",
+  "nombre": "EL VENADO",
+  "direccion": "AV. INDEPENDENCIA, CENTRO COMERCIAL SAN ANTONIO (LOS DUARTES), LOCAL #01, MENE GRANDE; MUNICIPIO BARALT DEL ESTADO ZULIA, CODIGO POSTAL 4015",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2413000",
+  "nombre": "LA CHINITA",
+  "direccion": "AV.19 CON CALLE 93, EDIFICO PADILLA, PB, LOCAL 33, AL LADO DEL CENTRO DE LITERATURA CRISTIANA, CASCO CENTRAL, MARACAIBO",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2400500",
+  "nombre": "LOS OLIVOS",
+  "direccion": "AV 28 LA LIMPIA CON AVENIDA 69A LOCAL #69B-09 SECTOR LOS ACEITUNOS, AL LADO DE LA E/S LOS ACEITUNOS",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2408000",
+  "nombre": "MACHIQUES",
+  "direccion": "CALLE UNION, ENTRE AVENIDAS UDON PEREZ Y VALLE FRIO, CASA S/N, SECTOR VALLE FRIO. MACHIQUES",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2406000",
+  "nombre": "MANZANILLO",
+  "direccion": "CALLE UNION (10A) CON AV. 24, SECTOR MANZANILLO, LOCAL N¦2.",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2400600",
+  "nombre": "MARACAIBO NORTE",
+  "direccion": "AV. PAUL MORENO, ANTIGUA FUERZAS ARMADAS CON CALLE 20, EDIF. MILENIUM FARMACIA YA!, MARCAIBO EDO-ZULIA",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2401000",
+  "nombre": "MBO INDIO MARA",
+  "direccion": "CALLE 78 DR PORTILLO ENTRE AV. 17 Y 18 NO 17-35, C.C. DON JULIO, DIAGONAL AL BANCO PROVINCIAL, SECTOR EL PARAISO.",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2414000",
+  "nombre": "MBO IRAMA",
+  "direccion": "C.C. LA PARAGUA, PLANTA BAJA, LOCAL 5, AL LADO DE AMERICAN IMPORT, EDO. ZULIA.",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2423000",
+  "nombre": "MBO LA LAGO",
+  "direccion": "AV. 3E ENTRE CALLE 72 Y 73 EDIF. ASOCIACIÓN ZULIANA DE CIEGOS, LOCAL 3",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2400000",
+  "nombre": "MBO LA LIMPIA",
+  "direccion": "AV. 28 (LA LIMPIA) N¦ 14-54. EDIF. RODR-GUEZ Y BARBOZA, DIAGONAL AL HOTEL MARACAIBO SUITE. PB",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2415000",
+  "nombre": "SANTA BARBARA DEL ZULIA",
+  "direccion": "AV 8 CASA N¦ 5-117 SECTOR BOLIVAR, SANTA BARBARA ZULIA.",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2420000",
+  "nombre": "TIA JUANA",
+  "direccion": "AVENIDA INTERCOMUNAL DE TIA JUANA, SECTOR EZEQUIEL ZAMORA, LOCAL # 1. FRENTE A PRODATA WIRE - LINE. TIA JUANA",
+  "estado": "Zulia"
+ },
+ {
+  "codigo": "2429000",
+  "nombre": "VILLA DEL ROSARIO",
+  "direccion": "AV. 20 MUNICIPAL CON CALLE 15 PÁEZ, C.C. INNOVACIÓN, LOCAL NO. 8, FRENTE AL CLUB DE MARIACHIS, VILLA DEL ROSARIO, ZULIA.",
+  "estado": "Zulia"
+ }
+]

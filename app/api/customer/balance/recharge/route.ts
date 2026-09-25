@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { firmaPendientePara } from '@/lib/legal-docs';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -25,6 +26,16 @@ export async function POST(req: NextRequest) {
       : null;
     const reference = typeof body?.reference === 'string' ? body.reference.trim().slice(0, 60) : null;
     const description = typeof body?.description === 'string' ? body.description.trim().slice(0, 200) : null;
+
+    // C-103: los términos del saldo se exigen aquí. Antes solo el modal desactivaba el botón:
+    // llamando a la API directo se recargaba sin haber firmado.
+    const pendiente = await firmaPendientePara(userId, 'RECHARGE');
+    if (pendiente) {
+      return NextResponse.json(
+        { error: `Antes de recargar, firma "${pendiente.title}".`, code: 'FIRMA_REQUERIDA', slug: pendiente.slug },
+        { status: 403 }
+      );
+    }
 
     // Validate amount (C-73: antes "abc" o 1e9 llegaban a la base de datos)
     if (!Number.isFinite(amount) || amount < 1 || amount > 10000) {

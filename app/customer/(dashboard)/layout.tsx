@@ -19,6 +19,7 @@ import {
   FiGift,
   FiBook,
   FiExternalLink,
+  FiFileText,
 } from 'react-icons/fi';
 import { FaMoneyCheckAlt } from 'react-icons/fa';
 import { PiListHeartBold } from 'react-icons/pi';
@@ -33,6 +34,7 @@ const MENU = [
   { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Lista de Deseos' },
   { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },
   { href: '/customer/warranty', icon: FiShield, label: 'Garantía' },
+  { href: '/customer/documentos', icon: FiFileText, label: 'Mis documentos' },
   { href: '/customer/mis-cursos', icon: FiBook, label: 'Mis Cursos' },
   { href: '/customer/referrals', icon: FiGift, label: 'Programa de Referidos' },
   { href: '/customer/profile', icon: FiUser, label: 'Mi Perfil' },

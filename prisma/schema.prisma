@@ -183,6 +183,60 @@ model BalanceTermsAcceptance {
   @@map("balance_terms_acceptances")
 }
 
+// ============================================
+// DOCUMENTOS LEGALES Y FIRMAS (C-103)
+// ============================================
+// Cada versión de un documento es una fila: el texto firmado nunca cambia. Una firma guarda la huella del
+// texto (SHA-256), la imagen del trazo y el PDF generado en el servidor. Las firmas no se borran: pedir una
+// firma nueva la marca como revocada. BalanceTermsAcceptance queda como historial de antes de C-103.
+
+model LegalDocument {
+  id          String   @id @default(cuid())
+  slug        String   // "terminos-saldo"
+  version     Int
+  title       String
+  content     String   // Texto: "## " títulos, "- " viñetas, "!! " aviso destacado, líneas en blanco entre párrafos
+  contentHash String   // SHA-256 de título + contenido
+  requiredFor String?  // "RECHARGE": sin la firma vigente no se recarga saldo
+  isCurrent   Boolean  @default(true)
+  publishedAt DateTime @default(now())
+  createdById String?
+
+  signatures DocumentSignature[]
+
+  @@unique([slug, version])
+  @@index([slug, isCurrent])
+  @@map("legal_documents")
+}
+
+model DocumentSignature {
+  id            String        @id @default(cuid())
+  documentId    String
+  document      LegalDocument @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  // Sin relación con User a propósito: la constancia se conserva aunque la cuenta cambie o se borre
+  userId        String
+  userName      String
+  userEmail     String
+  idNumber      String
+  phone         String?
+  address       String?
+  contentHash   String
+  signaturePath String        // private-uploads/signatures/...png
+  pdfPath       String        // private-uploads/signatures/...pdf
+  pdfHash       String
+  ipAddress     String?
+  userAgent     String?
+  signedAt      DateTime      @default(now())
+  revokedAt     DateTime?
+  revokedReason String?
+  revokedById   String?
+  legacyAcceptanceId String?  @unique // Firma pasada desde balance_terms_acceptances
+
+  @@index([userId])
+  @@index([documentId, userId])
+  @@map("document_signatures")
+}
+
 model Address {
   id           String   @id @default(cuid())
   userId       String

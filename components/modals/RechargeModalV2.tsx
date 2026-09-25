@@ -9,7 +9,7 @@ import {
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
-import BalanceTermsModal from './BalanceTermsModal';
+import SignDocumentModal from '@/components/legal/SignDocumentModal';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import VerificarPagoMovilForm from '@/components/pago-movil/VerificarPagoMovilForm';
 
@@ -204,11 +204,12 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         const checkTerms = async () => {
             if (!isOpen || !session?.user) return;
             try {
-                const response = await fetch('/api/customer/balance/terms');
+                // C-103: términos del saldo como documento firmable (el servidor también los exige al recargar)
+                const response = await fetch('/api/legal/documentos/terminos-saldo');
                 if (response.ok) {
                     const data = await response.json();
-                    setHasAcceptedTerms(data.hasAccepted);
-                    if (!data.hasAccepted) {
+                    setHasAcceptedTerms(data.signed);
+                    if (!data.signed) {
                         setShowTermsModal(true);
                     }
                 }
@@ -789,7 +790,8 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             </div>
 
             {/* Balance Terms Modal */}
-            <BalanceTermsModal
+            <SignDocumentModal
+                slug="terminos-saldo"
                 isOpen={showTermsModal}
                 onClose={() => {
                     setShowTermsModal(false);
@@ -797,7 +799,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                         onClose();
                     }
                 }}
-                onAccept={() => {
+                onSigned={() => {
                     setHasAcceptedTerms(true);
                     setShowTermsModal(false);
                 }}

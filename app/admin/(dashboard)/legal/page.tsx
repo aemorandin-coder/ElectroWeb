@@ -1,666 +1,391 @@
 'use client';
 
-import { adminModalOverlay, adminTableWrap, adminTable, adminTh, adminRowHover } from '@/lib/admin-ui';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
-
-import { useConfirm } from '@/contexts/ConfirmDialogContext';
-
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
+import { FiAlertTriangle, FiDownload, FiEdit3, FiEye, FiFileText, FiPlus, FiRefreshCw, FiSearch, FiShield, FiX } from 'react-icons/fi';
 import {
-    FiFileText, FiSearch, FiRefreshCw, FiEye, FiX, FiUser,
-    FiPhone, FiMapPin, FiClock, FiDownload, FiPrinter,
-    FiShield, FiCheck
-} from 'react-icons/fi';
+  adminBadge, adminChoice, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
+  adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeader, adminPageSubtitle,
+  adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
+} from '@/lib/admin-ui';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { TextoDocumento } from '@/components/legal/SignDocumentModal';
 
-interface TermsAcceptance {
-    id: string;
-    userId: string;
-    userName: string;
-    userEmail: string;
-    userIdNumber: string | null;
-    userPhone: string | null;
-    userAddress: string | null;
-    ipAddress: string | null;
-    userAgent: string | null;
-    termsVersion: string;
-    signatureData: string | null;
-    acceptedAt: string;
+// Legal (C-103): firmas de los clientes con su constancia en PDF, y los documentos con sus versiones.
+// Antes: una sola lista de "términos del saldo", la firma en base64 en cada fila, "Reenviar términos" que BORRABA
+// la prueba legal y una descarga en HTML armada en el navegador.
+
+interface Firma {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  idNumber: string;
+  phone: string | null;
+  address: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  signedAt: string;
+  revokedAt: string | null;
+  revokedReason: string | null;
+  contentHash: string;
+  pdfHash: string;
+  document: { id: string; slug: string; title: string; version: number; isCurrent: boolean };
+}
+interface Documento {
+  id: string;
+  slug: string;
+  version: number;
+  title: string;
+  content: string;
+  contentHash: string;
+  requiredFor: string | null;
+  isCurrent: boolean;
+  publishedAt: string;
+  signatures: number;
 }
 
-interface Pagination {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-}
+const fechaHora = (iso: string) => new Date(iso).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Caracas' });
+const csv = (v: string | number | null | undefined) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
-export default function LegalDocumentsPage() {
-    const { confirm } = useConfirm();
-    const [acceptances, setAcceptances] = useState<TermsAcceptance[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
-    const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0 });
+export default function LegalPage() {
+  const [tab, setTab] = useState<'firmas' | 'documentos'>('firmas');
 
-    // Document viewer modal
-    const [viewingDocument, setViewingDocument] = useState<TermsAcceptance | null>(null);
-    useBodyScrollLock(Boolean(viewingDocument));
+  // Firmas
+  const [firmas, setFirmas] = useState<Firma[]>([]);
+  const [pagina, setPagina] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [buscar, setBuscar] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [estado, setEstado] = useState<'' | 'vigentes' | 'revocadas'>('');
+  const [cargando, setCargando] = useState(true);
+  const [recargas, setRecargas] = useState(0);
+  const [viendo, setViendo] = useState<Firma | null>(null);
+  const [motivo, setMotivo] = useState('');
+  const [pidiendo, setPidiendo] = useState(false);
 
-    const fetchAcceptances = async (page = 1) => {
-        try {
-            setLoading(true);
-            const response = await fetch(`/api/admin/legal/terms-acceptances?page=${page}&search=${encodeURIComponent(search)}`);
-            if (response.ok) {
-                const data = await response.json();
-                setAcceptances(data.acceptances);
-                setPagination(data.pagination);
-            }
-        } catch (error) {
-            console.error('Error fetching acceptances:', error);
-            toast.error('Error al cargar documentos');
-        } finally {
-            setLoading(false);
-        }
-    };
+  // Documentos
+  const [documentos, setDocumentos] = useState<Documento[]>([]);
+  const [legado, setLegado] = useState(0);
+  const [opciones, setOpciones] = useState<Record<string, string>>({});
+  const [editor, setEditor] = useState<{ slug: string; title: string; content: string; requiredFor: string } | null>(null);
+  const [vistaPrevia, setVistaPrevia] = useState(false);
+  const [errores, setErrores] = useState<Record<string, string>>({});
+  const [publicando, setPublicando] = useState(false);
 
-    useEffect(() => {
-        fetchAcceptances();
-    }, []);
+  useBodyScrollLock(viendo !== null || editor !== null);
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        fetchAcceptances(1);
-    };
+  useEffect(() => {
+    let vigente = true;
+    const params = new URLSearchParams({ page: String(pagina.page), search: busqueda, ...(estado ? { estado } : {}) });
+    fetch(`/api/admin/legal/firmas?${params}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then((data) => {
+        if (!vigente) return;
+        setFirmas(data.signatures);
+        setPagina((p) => ({ ...p, totalPages: data.pagination.totalPages, total: data.pagination.total }));
+      })
+      .catch(() => { if (vigente) toast.error('No se pudieron cargar las firmas'); })
+      .finally(() => { if (vigente) setCargando(false); });
+    return () => { vigente = false; };
+  }, [pagina.page, busqueda, estado, recargas]);
 
-    const printDocument = () => {
-        if (!viewingDocument) return;
-        window.print();
-    };
+  useEffect(() => {
+    let vigente = true;
+    fetch('/api/admin/legal/documentos')
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then((data) => {
+        if (!vigente) return;
+        setDocumentos(data.documents);
+        setLegado(data.legacyPending);
+        setOpciones(data.requiredOptions ?? {});
+      })
+      .catch(() => { if (vigente) toast.error('No se pudieron cargar los documentos'); });
+    return () => { vigente = false; };
+  }, [recargas]);
 
-    const downloadDocument = () => {
-        if (!viewingDocument) return;
+  const vigentes = documentos.filter((d) => d.isCurrent);
 
-        // Create a simple HTML document for download
-        const htmlContent = generateDocumentHtml(viewingDocument);
-        const blob = new Blob([htmlContent], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `terminos_aceptados_${viewingDocument.userIdNumber || viewingDocument.userId}_${format(new Date(viewingDocument.acceptedAt), 'yyyy-MM-dd')}.html`;
-        link.click();
-        URL.revokeObjectURL(url);
-        toast.success('Documento descargado');
-    };
+  const exportarCSV = async () => {
+    toast.loading('Generando CSV…', { id: 'csv' });
+    try {
+      const filas: Firma[] = [];
+      for (let page = 1; page <= 50; page++) {
+        const r = await fetch(`/api/admin/legal/firmas?${new URLSearchParams({ page: String(page), limit: '200', search: busqueda, ...(estado ? { estado } : {}) })}`);
+        if (!r.ok) throw new Error();
+        const data = await r.json();
+        filas.push(...data.signatures);
+        if (page >= data.pagination.totalPages) break;
+      }
+      if (filas.length === 0) { toast.error('No hay firmas para exportar', { id: 'csv' }); return; }
+      const lineas = [
+        'Constancia,Documento,Versión,Nombre,Correo,Cédula,Teléfono,Dirección,IP,Navegador,Fecha,Estado,Motivo,Huella del texto,Huella del PDF',
+        ...filas.map((f) => [f.id, f.document.title, f.document.version, f.userName, f.userEmail, f.idNumber, f.phone, f.address, f.ipAddress, f.userAgent,
+          fechaHora(f.signedAt), f.revokedAt ? 'Pedida de nuevo' : 'Vigente', f.revokedReason, f.contentHash, f.pdfHash].map(csv).join(',')),
+      ];
+      const url = URL.createObjectURL(new Blob(['﻿' + lineas.join('\n')], { type: 'text/csv;charset=utf-8;' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `registro-legal-firmas-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success(`${filas.length} firmas exportadas`, { id: 'csv' });
+    } catch {
+      toast.error('No se pudo exportar', { id: 'csv' });
+    }
+  };
 
-    const exportLegalCSV = async () => {
-        try {
-            toast.loading('Generando CSV...', { id: 'csv-export' });
-            const response = await fetch(`/api/admin/legal/terms-acceptances?limit=10000&search=${encodeURIComponent(search)}`);
-            if (!response.ok) throw new Error('Error al descargar');
-            
-            const data = await response.json();
-            const acceptancesToExport = data.acceptances || [];
-            
-            if (acceptancesToExport.length === 0) {
-                toast.error('No hay datos para exportar', { id: 'csv-export' });
-                return;
-            }
-            
-            // Header columns
-            const headers = [
-                'ID Registro',
-                'ID Usuario',
-                'Nombre',
-                'Email',
-                'Cédula / ID',
-                'Teléfono',
-                'Dirección',
-                'IP',
-                'Navegador',
-                'Versión',
-                'Fecha Aceptación'
-            ];
-            
-            const csvRows = [
-                headers.join(','),
-                ...acceptancesToExport.map((row: TermsAcceptance) => {
-                    const escape = (val: string | null | undefined) => {
-                        if (val === null || val === undefined) return '""';
-                        return `"${val.toString().replace(/"/g, '""')}"`;
-                    };
-                    
-                    return [
-                        escape(row.id),
-                        escape(row.userId),
-                        escape(row.userName),
-                        escape(row.userEmail),
-                        escape(row.userIdNumber),
-                        escape(row.userPhone),
-                        escape(row.userAddress),
-                        escape(row.ipAddress),
-                        escape(row.userAgent),
-                        escape(row.termsVersion),
-                        escape(row.acceptedAt ? format(new Date(row.acceptedAt), 'yyyy-MM-dd HH:mm:ss') : '')
-                    ].join(',');
-                })
-            ];
-            
-            const csvContent = csvRows.join('\n');
-            // Add BOM (\uFEFF) for Excel compatibility with UTF-8
-            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `registro_legal_terminos_${format(new Date(), 'yyyy-MM-dd')}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            toast.success('CSV exportado correctamente', { id: 'csv-export' });
-        } catch (error) {
-            console.error('Error exporting legal CSV:', error);
-            toast.error('Error al exportar CSV', { id: 'csv-export' });
-        }
-    };
+  const pedirDeNuevo = async () => {
+    if (!viendo) return;
+    setPidiendo(true);
+    try {
+      const r = await fetch(`/api/admin/legal/firmas/${viendo.id}/revocar`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ motivo }) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) { toast.error(data.error || 'No se pudo'); return; }
+      toast.success('Listo: se le avisó al cliente. La firma anterior queda como historial.');
+      setViendo(null);
+      setMotivo('');
+      setRecargas((n) => n + 1);
+    } finally {
+      setPidiendo(false);
+    }
+  };
 
-    const generateDocumentHtml = (doc: TermsAcceptance) => {
-        return `
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Aceptación de Términos y Condiciones - ${doc.userName}</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #333; }
-        .header { text-align: center; border-bottom: 2px solid #2a63cd; padding-bottom: 20px; margin-bottom: 30px; }
-        .header h1 { color: #2a63cd; margin: 0; }
-        .header p { color: #666; margin: 10px 0 0 0; }
-        .section { margin-bottom: 25px; }
-        .section h2 { color: #2a63cd; font-size: 16px; border-bottom: 1px solid #e9ecef; padding-bottom: 8px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .info-item { background: #f8f9fa; padding: 12px; border-radius: 8px; }
-        .info-item label { font-size: 11px; color: #666; text-transform: uppercase; display: block; margin-bottom: 4px; }
-        .info-item span { font-size: 14px; font-weight: 500; }
-        .terms-box { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #2a63cd; }
-        .terms-box p { margin: 10px 0; font-size: 13px; line-height: 1.6; }
-        .signature-section { margin-top: 40px; border-top: 2px solid #e9ecef; padding-top: 20px; }
-        .signature-box { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; }
-        .signature-box img { max-width: 300px; border: 1px solid #e9ecef; border-radius: 8px; }
-        .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #666; border-top: 1px solid #e9ecef; padding-top: 20px; }
-        .legal-notice { background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 12px; }
-        @media print { body { padding: 20px; } }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>CONSTANCIA DE ACEPTACIÓN</h1>
-        <p>Términos y Condiciones de Recarga de Saldo</p>
-    </div>
+  const publicar = async () => {
+    if (!editor) return;
+    setPublicando(true);
+    setErrores({});
+    try {
+      const r = await fetch('/api/admin/legal/documentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: editor.slug || undefined, title: editor.title, content: editor.content, requiredFor: editor.requiredFor || null }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) { setErrores(data.fields ?? {}); toast.error(data.error || 'No se pudo publicar'); return; }
+      toast.success(`Publicada la versión ${data.document.version}`);
+      setEditor(null);
+      setRecargas((n) => n + 1);
+    } finally {
+      setPublicando(false);
+    }
+  };
 
-    <div class="section">
-        <h2>Datos del Usuario</h2>
-        <div class="info-grid">
-            <div class="info-item">
-                <label>Nombre Completo</label>
-                <span>${doc.userName}</span>
-            </div>
-            <div class="info-item">
-                <label>Correo Electrónico</label>
-                <span>${doc.userEmail}</span>
-            </div>
-            <div class="info-item">
-                <label>Cédula de Identidad</label>
-                <span>${doc.userIdNumber || 'No proporcionado'}</span>
-            </div>
-            <div class="info-item">
-                <label>Teléfono</label>
-                <span>${doc.userPhone || 'No proporcionado'}</span>
-            </div>
-            <div class="info-item" style="grid-column: span 2;">
-                <label>Dirección</label>
-                <span>${doc.userAddress || 'No proporcionada'}</span>
-            </div>
+  return (
+    <div className="min-w-0 space-y-4">
+      <div className={adminPageHeader}>
+        <div>
+          <h1 className={adminPageTitle}>Legal</h1>
+          <p className={adminPageSubtitle}>Documentos que firman los clientes y sus constancias</p>
         </div>
-    </div>
+      </div>
 
-    <div class="section">
-        <h2>Detalles de la Aceptación</h2>
-        <div class="info-grid">
-            <div class="info-item">
-                <label>Fecha y Hora de Aceptación</label>
-                <span>${format(new Date(doc.acceptedAt), "dd 'de' MMMM 'de' yyyy, HH:mm:ss", { locale: es })}</span>
+      <div className="flex gap-1 border-b border-line pb-2" role="tablist" aria-label="Secciones de legal">
+        <button type="button" role="tab" aria-selected={tab === 'firmas'} onClick={() => setTab('firmas')} className={adminTab(tab === 'firmas')}>
+          <FiShield className="h-4 w-4" aria-hidden="true" /> Firmas
+        </button>
+        <button type="button" role="tab" aria-selected={tab === 'documentos'} onClick={() => setTab('documentos')} className={adminTab(tab === 'documentos')}>
+          <FiFileText className="h-4 w-4" aria-hidden="true" /> Documentos
+        </button>
+      </div>
+
+      {legado > 0 && (
+        <p className={adminNotice('warning')}>
+          {legado} {legado === 1 ? 'firma de antes todavía no tiene' : 'firmas de antes todavía no tienen'} constancia en PDF. Siguen valiendo;
+          para verlas aquí, corre en el servidor <code className="font-mono">npx tsx scripts/migrar-firmas-saldo.ts --apply</code>.
+        </p>
+      )}
+
+      {tab === 'firmas' ? (
+        <div className="space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <form className="relative flex-1" onSubmit={(e) => { e.preventDefault(); setCargando(true); setPagina((p) => ({ ...p, page: 1 })); setBusqueda(buscar.trim()); }}>
+              <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+              <input type="search" aria-label="Buscar firmas" value={buscar} onChange={(e) => setBuscar(e.target.value)} placeholder="Nombre, correo o cédula" className={`${adminInput()} pl-9`} />
+            </form>
+            <div className="flex flex-wrap gap-2">
+              {([['', 'Todas'], ['vigentes', 'Vigentes'], ['revocadas', 'Pedidas de nuevo']] as const).map(([v, l]) => (
+                <button key={v} type="button" aria-pressed={estado === v} onClick={() => { setCargando(true); setEstado(v); setPagina((p) => ({ ...p, page: 1 })); }}
+                  className={`${adminChoice(estado === v)} min-h-11 px-3 text-sm`}>{l}</button>
+              ))}
+              <button type="button" onClick={exportarCSV} className={adminSecondaryButton}><FiDownload className="h-4 w-4" aria-hidden="true" /> CSV</button>
+              <button type="button" onClick={() => { setCargando(true); setRecargas((n) => n + 1); }} className={`${adminIconButton} h-11 w-11 border border-line bg-white`} aria-label="Actualizar">
+                <FiRefreshCw className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
+              </button>
             </div>
-            <div class="info-item">
-                <label>Versión de Términos</label>
-                <span>${doc.termsVersion}</span>
+          </div>
+
+          {cargando && firmas.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted">Cargando…</p>
+          ) : firmas.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-line px-6 py-12 text-center text-sm text-muted">No hay firmas {busqueda ? `para "${busqueda}"` : 'todavía'}.</div>
+          ) : (
+            <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
+              {firmas.map((f) => (
+                <li key={f.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center">
+                  <div className="min-w-0 flex-1">
+                    <p className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-ink">{f.userName}</span>
+                      <span className="font-mono text-sm text-muted">{f.idNumber}</span>
+                      {f.revokedAt ? <span className={adminBadge('warning')}>Pedida de nuevo</span>
+                        : f.document.isCurrent ? <span className={adminBadge('success')}>Vigente</span>
+                          : <span className={adminBadge('neutral')}>Versión anterior</span>}
+                    </p>
+                    <p className="truncate text-sm text-muted">{f.document.title} · v{f.document.version} · {fechaHora(f.signedAt)} · {f.userEmail}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => { setViendo(f); setMotivo(''); }} className={adminSecondaryButton}><FiEye className="h-4 w-4" aria-hidden="true" /> Ver</button>
+                    <a href={`/api/legal/firmas/${f.id}/pdf`} className={adminSecondaryButton} aria-label={`Descargar la constancia de ${f.userName}`}><FiDownload className="h-4 w-4" aria-hidden="true" /> PDF</a>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {pagina.totalPages > 1 && (
+            <div className="flex items-center justify-between text-sm text-muted">
+              <span>{pagina.total} firmas</span>
+              <div className="flex gap-2">
+                <button type="button" disabled={pagina.page <= 1} onClick={() => setPagina((p) => ({ ...p, page: p.page - 1 }))} className={adminSecondaryButton}>Anterior</button>
+                <span className="self-center">{pagina.page} / {pagina.totalPages}</span>
+                <button type="button" disabled={pagina.page >= pagina.totalPages} onClick={() => setPagina((p) => ({ ...p, page: p.page + 1 }))} className={adminSecondaryButton}>Siguiente</button>
+              </div>
             </div>
-            <div class="info-item">
-                <label>Dirección IP</label>
-                <span>${doc.ipAddress || 'No registrada'}</span>
-            </div>
-            <div class="info-item">
-                <label>ID de Documento</label>
-                <span>${doc.id}</span>
-            </div>
+          )}
         </div>
-    </div>
-
-    <div class="section">
-        <h2>Términos Aceptados</h2>
-        <div class="terms-box">
-            <p><strong>El usuario declara que:</strong></p>
-            <p>1. Los fondos utilizados para recargar saldo provienen de actividades lícitas y legales.</p>
-            <p>2. Acepta la política de no reembolso - el saldo recargado no es reembolsable bajo ninguna circunstancia.</p>
-            <p>3. Proporcionará información veraz, exacta y actualizada en todas sus transacciones.</p>
-            <p>4. Acepta que las transacciones pueden ser rechazadas por información incorrecta o sospechosa.</p>
-            <p>5. Acepta la verificación de identidad y auditoría por parte de la empresa.</p>
-            <p>6. Asume total responsabilidad legal por cualquier violación de estos términos.</p>
+      ) : (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-muted">Publicar una versión nueva pide la firma otra vez a todos. Las firmas anteriores se conservan.</p>
+            <button type="button" onClick={() => { setErrores({}); setVistaPrevia(false); setEditor({ slug: '', title: '', content: '', requiredFor: '' }); }} className={adminPrimaryButton}>
+              <FiPlus className="h-4 w-4" aria-hidden="true" /> Nuevo documento
+            </button>
+          </div>
+          <ul className="space-y-3">
+            {vigentes.map((d) => {
+              const anteriores = documentos.filter((x) => x.slug === d.slug && !x.isCurrent);
+              return (
+                <li key={d.id} className="rounded-2xl border border-line bg-white p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                    <div className="min-w-0 flex-1">
+                      <p className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-ink">{d.title}</span>
+                        <span className={adminBadge('brand')}>Versión {d.version}</span>
+                        {d.requiredFor && <span className={adminBadge('warning')}>Necesario para: {opciones[d.requiredFor] ?? d.requiredFor}</span>}
+                      </p>
+                      <p className="text-sm text-muted">Publicada {fechaHora(d.publishedAt)} · {d.signatures} {d.signatures === 1 ? 'firma' : 'firmas'} · Huella {d.contentHash.slice(0, 12)}…</p>
+                    </div>
+                    <button type="button" onClick={() => { setErrores({}); setVistaPrevia(false); setEditor({ slug: d.slug, title: d.title, content: d.content, requiredFor: d.requiredFor ?? '' }); }} className={adminSecondaryButton}>
+                      <FiEdit3 className="h-4 w-4" aria-hidden="true" /> Nueva versión
+                    </button>
+                  </div>
+                  {anteriores.length > 0 && (
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-sm font-medium text-brand-600">Versiones anteriores ({anteriores.length})</summary>
+                      <ul className="mt-2 space-y-1 text-sm text-muted">
+                        {anteriores.map((a) => <li key={a.id}>v{a.version} · {fechaHora(a.publishedAt)} · {a.signatures} {a.signatures === 1 ? 'firma' : 'firmas'}</li>)}
+                      </ul>
+                    </details>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </div>
-    </div>
+      )}
 
-    <div class="signature-section">
-        <h2>Firma Digital del Usuario</h2>
-        <div class="signature-box">
-            ${doc.signatureData ? `<img src="${doc.signatureData}" alt="Firma Digital" />` : '<p>Firma no disponible</p>'}
-            <p style="margin-top: 15px; font-size: 12px; color: #666;">
-                <strong>${doc.userName}</strong><br>
-                C.I.: ${doc.userIdNumber || 'N/A'}
-            </p>
-        </div>
-    </div>
+      {viendo && createPortal(
+        <div className={adminModalOverlay} role="dialog" aria-modal="true" aria-labelledby="firma-titulo" onKeyDown={(e) => { if (e.key === 'Escape') setViendo(null); }}>
+          <div className={`${adminModalPanel} max-w-xl`}>
+            <div className={adminModalHeader}>
+              <h2 id="firma-titulo" className={adminModalTitle}>Constancia de firma</h2>
+              <button type="button" onClick={() => setViendo(null)} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+            </div>
+            <div className={`${adminModalBody} space-y-4`}>
+              <div className="rounded-xl border border-line bg-surface p-3">
+                {/* eslint-disable-next-line @next/next/no-img-element -- imagen privada servida por la API con sesión */}
+                <img src={`/api/legal/firmas/${viendo.id}/imagen`} alt={`Firma de ${viendo.userName}`} className="mx-auto max-h-40 w-auto" />
+              </div>
+              <dl className="grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
+                {([
+                  ['Cliente', viendo.userName], ['Cédula', viendo.idNumber], ['Correo', viendo.userEmail], ['Teléfono', viendo.phone],
+                  ['Dirección', viendo.address], ['Documento', `${viendo.document.title} · v${viendo.document.version}`],
+                  ['Fecha', fechaHora(viendo.signedAt)], ['IP', viendo.ipAddress],
+                ] as const).map(([k, v]) => (
+                  <div key={k} className="min-w-0"><dt className="text-xs text-muted">{k}</dt><dd className="break-words text-ink">{v || '—'}</dd></div>
+                ))}
+              </dl>
+              <p className="break-all text-xs text-muted">Huella del texto: {viendo.contentHash}<br />Huella del PDF: {viendo.pdfHash}</p>
+              {viendo.revokedAt ? (
+                <p className={adminNotice('warning')}>Pedida de nuevo el {fechaHora(viendo.revokedAt)}: {viendo.revokedReason}</p>
+              ) : (
+                <div className="space-y-2 rounded-xl border border-line p-3">
+                  <label htmlFor="motivo" className={adminLabel}>Pedirle que firme de nuevo</label>
+                  <input id="motivo" className={adminInput()} value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={300} placeholder="Ej.: la cédula no coincide con el pago" />
+                  <p className={adminHint}>El cliente recibe el aviso con este motivo. Esta firma se conserva como historial.</p>
+                  <button type="button" onClick={pedirDeNuevo} disabled={pidiendo || motivo.trim().length < 5} className={adminSecondaryButton}>
+                    <FiAlertTriangle className="h-4 w-4" aria-hidden="true" /> {pidiendo ? 'Enviando…' : 'Pedir firma de nuevo'}
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className={adminModalFooter}>
+              <button type="button" onClick={() => setViendo(null)} className={adminSecondaryButton}>Cerrar</button>
+              <a href={`/api/legal/firmas/${viendo.id}/pdf`} className={adminPrimaryButton}><FiDownload className="h-4 w-4" aria-hidden="true" /> Descargar PDF</a>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
-    <div class="legal-notice">
-        <strong>AVISO LEGAL:</strong> Este documento constituye prueba de la aceptación voluntaria de los términos y 
-        condiciones por parte del usuario. La firma digital tiene validez legal según la legislación vigente. 
-        Este documento puede ser utilizado como evidencia en procedimientos legales.
-    </div>
-
-    <div class="footer">
-        <p>Documento generado automáticamente el ${format(new Date(), "dd/MM/yyyy 'a las' HH:mm", { locale: es })}</p>
-        <p>ID de Usuario: ${doc.userId} | ID de Documento: ${doc.id}</p>
-    </div>
-</body>
-</html>`;
-    };
-
-    return (
-        <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      {editor && createPortal(
+        <div className={adminModalOverlay} role="dialog" aria-modal="true" aria-labelledby="doc-titulo" onKeyDown={(e) => { if (e.key === 'Escape' && !publicando) setEditor(null); }}>
+          <div className={`${adminModalPanel} max-w-3xl`}>
+            <div className={adminModalHeader}>
+              <h2 id="doc-titulo" className={adminModalTitle}>{editor.slug ? 'Nueva versión' : 'Nuevo documento'}</h2>
+              <button type="button" onClick={() => setEditor(null)} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+            </div>
+            <div className={`${adminModalBody} space-y-4`}>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_16rem]">
                 <div>
-                    <h1 className="text-2xl font-bold text-ink flex items-center gap-3">
-                        <FiShield className="w-7 h-7 text-brand-500" />
-                        Documentos Legales
-                    </h1>
-                    <p className="text-muted text-sm">Términos y condiciones aceptados por clientes</p>
+                  <label htmlFor="doc-title" className={adminLabel}>Título</label>
+                  <input id="doc-title" className={adminInput(Boolean(errores.title))} value={editor.title} onChange={(e) => setEditor({ ...editor, title: e.target.value })} maxLength={150} />
+                  {errores.title && <p className={adminError}>{errores.title}</p>}
                 </div>
-
-                <div className="flex flex-wrap gap-2">
-                    {/* Search */}
-                    <form onSubmit={handleSearch} className="relative">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Buscar por nombre, email o cédula..."
-                            className="pl-9 pr-4 py-2 bg-white border border-line-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-64"
-                        />
-                    </form>
-
-                    {/* Export CSV */}
-                    <button
-                        onClick={exportLegalCSV}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-line-strong rounded-lg hover:bg-surface transition-all hover:scale-105 active:scale-95 text-sm text-muted font-medium"
-                        title="Exportar a CSV"
-                    >
-                        <FiDownload className="w-4 h-4 text-brand-500" />
-                        <span className="hidden sm:inline">Exportar CSV</span>
-                    </button>
-
-                    {/* Refresh */}
-                    <button
-                        onClick={() => fetchAcceptances(pagination.page)}
-                        className="p-2 bg-white border border-line-strong rounded-lg hover:bg-surface transition-all hover:scale-105 active:scale-95"
-                        title="Actualizar"
-                    >
-                        <FiRefreshCw className={`w-5 h-5 text-muted ${loading ? 'animate-spin' : ''}`} />
-                    </button>
+                <div>
+                  <label htmlFor="doc-req" className={adminLabel}>Se exige para</label>
+                  <select id="doc-req" className={adminInput()} value={editor.requiredFor} onChange={(e) => setEditor({ ...editor, requiredFor: e.target.value })}>
+                    <option value="">Nada (solo constancia)</option>
+                    {Object.entries(opciones).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  </select>
                 </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-brand-500 text-white rounded-xl p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                            <FiFileText className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-white/80">Total Documentos</p>
-                            <p className="text-2xl font-bold">{pagination.total}</p>
-                        </div>
-                    </div>
+              </div>
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label htmlFor="doc-content" className={adminLabel}>Texto</label>
+                  <button type="button" onClick={() => setVistaPrevia((v) => !v)} className="min-h-11 px-2 text-sm font-semibold text-brand-600">{vistaPrevia ? 'Editar' : 'Vista previa'}</button>
                 </div>
-                <div className="bg-success text-white rounded-xl p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                            <FiCheck className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-white/80">Usuarios Verificados</p>
-                            <p className="text-2xl font-bold">{pagination.total}</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-brand-700 text-white rounded-xl p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                            <FiShield className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-white/80">Protección Legal</p>
-                            <p className="text-2xl font-bold">Activa</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-hidden bg-white rounded-xl border border-line shadow-sm flex flex-col">
-                {loading ? (
-                    <div className="flex-1 flex items-center justify-center">
-                        <div className="flex flex-col items-center gap-3">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500"></div>
-                            <span className="text-sm text-muted">Cargando documentos...</span>
-                        </div>
-                    </div>
-                ) : acceptances.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-muted">
-                        <FiFileText className="w-16 h-16 mb-4 text-line-strong" />
-                        <p className="text-lg font-medium">No hay documentos legales</p>
-                        <p className="text-sm">Los clientes aún no han aceptado términos</p>
-                    </div>
+                {vistaPrevia ? (
+                  <div className="max-h-96 overflow-y-auto rounded-lg border border-line p-4"><TextoDocumento content={editor.content} /></div>
                 ) : (
-                    <div className={`${adminTableWrap} flex-1`}>
-                        <table className={adminTable}>
-                            <thead className="bg-surface border-b border-line sticky top-0 z-10">
-                                <tr>
-                                    <th className={adminTh}>Usuario</th>
-                                    <th className={adminTh}>Cédula</th>
-                                    <th className={adminTh}>Contacto</th>
-                                    <th className={adminTh}>Versión</th>
-                                    <th className={adminTh}>Fecha Aceptación</th>
-                                    <th className={`${adminTh} text-right`}>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-line">
-                                {acceptances.map((acceptance) => (
-                                    <tr key={acceptance.id} className={adminRowHover}>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-brand-500 rounded-full flex items-center justify-center text-white font-bold">
-                                                    {acceptance.userName.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-ink">{acceptance.userName}</p>
-                                                    <p className="text-xs text-muted">{acceptance.userEmail}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-sm font-mono text-ink">
-                                                {acceptance.userIdNumber || '-'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col gap-1">
-                                                {acceptance.userPhone && (
-                                                    <span className="text-xs text-muted flex items-center gap-1">
-                                                        <FiPhone className="w-3 h-3" />
-                                                        {acceptance.userPhone}
-                                                    </span>
-                                                )}
-                                                {acceptance.userAddress && (
-                                                    <span className="text-xs text-muted flex items-center gap-1">
-                                                        <FiMapPin className="w-3 h-3" />
-                                                        {acceptance.userAddress.substring(0, 30)}...
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="px-2 py-1 bg-brand-50 text-brand-700 text-xs font-medium rounded">
-                                                v{acceptance.termsVersion}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm text-ink">
-                                                    {format(new Date(acceptance.acceptedAt), 'dd MMM yyyy', { locale: es })}
-                                                </span>
-                                                <span className="text-xs text-muted">
-                                                    {format(new Date(acceptance.acceptedAt), 'HH:mm:ss')}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => setViewingDocument(acceptance)}
-                                                    className="p-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all"
-                                                    title="Ver Documento"
-                                                >
-                                                    <FiEye className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={async () => {
-                                                        const confirmed = await confirm({ title: 'Solicitar nueva aceptación', message: `¿Solicitar que ${acceptance.userName} vuelva a aceptar los términos? Esto invalidará el documento actual y enviará un correo al usuario.`, confirmText: 'Solicitar', cancelText: 'Cancelar', type: 'warning' });
-                                                        if (confirmed) {
-                                                            try {
-                                                                const response = await fetch(`/api/admin/legal/resend-terms`, {
-                                                                    method: 'POST',
-                                                                    headers: { 'Content-Type': 'application/json' },
-                                                                    body: JSON.stringify({ userId: acceptance.userId, acceptanceId: acceptance.id })
-                                                                });
-                                                                if (response.ok) {
-                                                                    toast.success(`Solicitud enviada a ${acceptance.userEmail}`);
-                                                                } else {
-                                                                    const error = await response.json();
-                                                                    toast.error(error.error || 'Error al enviar solicitud');
-                                                                }
-                                                            } catch {
-                                                                toast.error('Error de conexión');
-                                                            }
-                                                        }
-                                                    }}
-                                                    className="p-2 bg-warning text-white rounded-lg hover:bg-warning-strong transition-all"
-                                                    title="Solicitar Reaceptación"
-                                                >
-                                                    <FiRefreshCw className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                  <textarea id="doc-content" rows={16} className={`${adminInput(Boolean(errores.content))} h-auto py-2 font-mono text-xs`} value={editor.content} onChange={(e) => setEditor({ ...editor, content: e.target.value })} />
                 )}
-
-                {/* Pagination */}
-                {pagination.totalPages > 1 && (
-                    <div className="p-4 border-t border-line flex items-center justify-between">
-                        <span className="text-sm text-muted">
-                            Mostrando {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total}
-                        </span>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => fetchAcceptances(pagination.page - 1)}
-                                disabled={pagination.page === 1}
-                                className="px-3 py-1 border border-line-strong rounded-lg text-sm disabled:opacity-50 hover:bg-surface"
-                            >
-                                Anterior
-                            </button>
-                            <button
-                                onClick={() => fetchAcceptances(pagination.page + 1)}
-                                disabled={pagination.page === pagination.totalPages}
-                                className="px-3 py-1 border border-line-strong rounded-lg text-sm disabled:opacity-50 hover:bg-surface"
-                            >
-                                Siguiente
-                            </button>
-                        </div>
-                    </div>
+                {errores.content ? <p className={adminError}>{errores.content}</p> : (
+                  <p className={adminHint}>&quot;## &quot; al inicio = título · &quot;- &quot; = viñeta · &quot;!! &quot; = aviso en rojo · línea en blanco = párrafo nuevo.</p>
                 )}
+              </div>
+              {editor.slug && <p className={adminNotice('warning')}>Al publicar, todos los clientes tendrán que firmar esta versión{editor.requiredFor ? ` antes de ${(opciones[editor.requiredFor] ?? '').toLowerCase()}` : ''}.</p>}
             </div>
-
-            {/* Document Viewer Modal - Using Portal */}
-            {viewingDocument && typeof document !== 'undefined' && createPortal(
-                <div className={adminModalOverlay} onClick={() => setViewingDocument(null)}>
-                    <div className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden flex flex-col print:max-w-none print:max-h-none print:rounded-none print:shadow-none">
-                        {/* Header */}
-                        <div className="bg-brand-600 text-white px-6 py-4 flex items-center justify-between print:hidden">
-                            <div className="flex items-center gap-3">
-                                <FiFileText className="w-6 h-6" />
-                                <div>
-                                    <h2 className="text-lg font-bold">Constancia de Aceptación</h2>
-                                    <p className="text-sm text-white/80">{viewingDocument.userName}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={printDocument}
-                                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                                    title="Imprimir"
-                                >
-                                    <FiPrinter className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={downloadDocument}
-                                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                                    title="Descargar"
-                                >
-                                    <FiDownload className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => setViewingDocument(null)}
-                                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                                >
-                                    <FiX className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Document Content */}
-                        <div className="p-6 overflow-y-auto flex-1 space-y-6">
-                            {/* User Info */}
-                            <div>
-                                <h3 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
-                                    <FiUser className="w-4 h-4 text-brand-500" />
-                                    Datos del Usuario
-                                </h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-surface rounded-lg p-3">
-                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Nombre</span>
-                                        <p className="text-sm font-medium text-ink">{viewingDocument.userName}</p>
-                                    </div>
-                                    <div className="bg-surface rounded-lg p-3">
-                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Correo</span>
-                                        <p className="text-sm font-medium text-ink">{viewingDocument.userEmail}</p>
-                                    </div>
-                                    <div className="bg-surface rounded-lg p-3">
-                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Cédula</span>
-                                        <p className="text-sm font-medium text-ink">{viewingDocument.userIdNumber || 'No proporcionada'}</p>
-                                    </div>
-                                    <div className="bg-surface rounded-lg p-3">
-                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Teléfono</span>
-                                        <p className="text-sm font-medium text-ink">{viewingDocument.userPhone || 'No proporcionado'}</p>
-                                    </div>
-                                    <div className="bg-surface rounded-lg p-3 col-span-2">
-                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Dirección</span>
-                                        <p className="text-sm font-medium text-ink">{viewingDocument.userAddress || 'No proporcionada'}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Acceptance Details */}
-                            <div>
-                                <h3 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
-                                    <FiClock className="w-4 h-4 text-brand-500" />
-                                    Detalles de Aceptación
-                                </h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-surface rounded-lg p-3">
-                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Fecha y Hora</span>
-                                        <p className="text-sm font-medium text-ink">
-                                            {format(new Date(viewingDocument.acceptedAt), "dd 'de' MMMM 'de' yyyy, HH:mm:ss", { locale: es })}
-                                        </p>
-                                    </div>
-                                    <div className="bg-surface rounded-lg p-3">
-                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Versión</span>
-                                        <p className="text-sm font-medium text-ink">v{viewingDocument.termsVersion}</p>
-                                    </div>
-                                    <div className="bg-surface rounded-lg p-3">
-                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">Dirección IP</span>
-                                        <p className="text-sm font-medium text-ink font-mono">{viewingDocument.ipAddress || 'No registrada'}</p>
-                                    </div>
-                                    <div className="bg-surface rounded-lg p-3">
-                                        <span className="text-xs text-muted uppercase font-bold tracking-wider">ID Documento</span>
-                                        <p className="text-xs font-medium text-ink font-mono">{viewingDocument.id}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Terms Summary */}
-                            <div className="bg-brand-50 border border-brand-200 rounded-xl p-4">
-                                <h3 className="text-sm font-bold text-brand-700 mb-2 flex items-center gap-2">
-                                    <FiShield className="w-4 h-4" />
-                                    Términos Aceptados
-                                </h3>
-                                <ul className="text-xs text-brand-700 space-y-1">
-                                    <li>• Fondos de origen lícito y legal</li>
-                                    <li>• Política de no reembolso aceptada</li>
-                                    <li>• Compromiso de información veraz</li>
-                                    <li>• Aceptación de verificación de identidad</li>
-                                    <li>• Responsabilidad legal asumida</li>
-                                </ul>
-                            </div>
-
-                            {/* Signature */}
-                            <div>
-                                <h3 className="text-sm font-bold text-ink mb-3">Firma Digital</h3>
-                                <div className="bg-surface rounded-xl p-4 text-center border-2 border-dashed border-brand-500">
-                                    {viewingDocument.signatureData ? (
-                                        <>
-                                            <img
-                                                src={viewingDocument.signatureData}
-                                                alt="Firma Digital"
-                                                className="max-w-[300px] mx-auto rounded-lg"
-                                            />
-                                            <p className="text-sm font-medium text-ink mt-3">{viewingDocument.userName}</p>
-                                            <p className="text-xs text-muted">C.I.: {viewingDocument.userIdNumber || 'N/A'}</p>
-                                        </>
-                                    ) : (
-                                        <p className="text-sm text-muted">Firma no disponible</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Legal Notice */}
-                            <div className="bg-warning/10 border border-warning/20 rounded-xl p-4 text-xs text-warning-strong">
-                                <strong>AVISO LEGAL:</strong> Este documento constituye prueba de la aceptación voluntaria
-                                de los términos y condiciones por parte del usuario. La firma digital tiene validez legal
-                                según la legislación vigente. Este documento puede ser utilizado como evidencia en
-                                procedimientos legales.
-                            </div>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-        </div>
-    );
+            <div className={adminModalFooter}>
+              <button type="button" onClick={() => setEditor(null)} disabled={publicando} className={adminSecondaryButton}>Cancelar</button>
+              <button type="button" onClick={publicar} disabled={publicando} className={adminPrimaryButton}>{publicando ? 'Publicando…' : 'Publicar'}</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
 }

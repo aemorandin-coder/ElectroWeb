@@ -1,71 +1,76 @@
-# Punto de partida (actualizado 2026-09-22: envíos y métodos de pago en `main`, deploy pendiente)
+# Punto de partida (actualizado 2026-09-24: super merge de C-106, C-108 y Gemini R20-R22)
 
 Léelo antes de empezar.
 
 ## 1. Estado de las ramas
-- **`main` = `origin/main`** (en producción): super merge del 21/09 (C-94…C-98, Gemini R16-R19, GPT-05/06) más **dos commits `[Marketing]` de Gemini** hechos directo en `main` (destinatarios de campañas, logo e íconos de redes en los correos).
-  - Claude los revisó en C-99: sin bloqueo. Queda un ajuste para Claude (fila 18 de `PLAN_CLAUDE.md`): la lista de destinatarios devuelve todos los correos sin límite.
-- **`claude/C-99`** (desde `main`, solo documentos): salida de ChatGPT, ronda R20 de Gemini y `AUDITORIA_ENVIOS.md`.
-- **`claude/C-100`** (desde C-99): envíos con ZOOM y MRW, fase 1. Compila y pasa ESLint; **falta `db push` y la prueba con datos** (`estado/C-100.md`).
-- **`claude/C-101`** (desde C-100): métodos de pago. Un commit de Gemini tal cual y otro de Claude con la revisión (`estado/C-101.md`): el build estaba roto y la tienda se quedaba sin métodos de pago.
-- **Aviso de proceso (22/09):** Gemini trabajó en la carpeta principal, encima de una tarea de Claude sin terminar, y firmó un commit como "HECHO" sin compilar. Antes de empezar, revisa `git status` y `git log`: lo de Gemini va en `../ElectroShopVe-gemini` y se revisa antes de mergear.
-- **Gemini** (`../ElectroShopVe-gemini`, hoy en `gemini/marketing-correos` = `main`): **R20** lista para empezar desde `claude/C-99` (prompt en §5).
-- **ChatGPT: salió del equipo el 21/09.** No se le manda nada. Todo lo suyo está en `main` o lo reemplazó C-95. Para limpiar (Andrés, cuando quiera; borra la carpeta y las ramas):
+- **`main` = `origin/main`** (24/09): todo lo revisado está mergeado.
+  - C-106: cobro de envío transparente y logos de ZOOM y MRW.
+  - C-108: revisión de Gemini.
+  - Gemini R20 (G-62…G-66), R21 (G-67) y R22 (G-68).
+  - Sigue ahí también lo del 22/09: C-100 (envíos) y C-101 (métodos de pago).
+- **Sin mergear a propósito:** `chatgpt/product-fixes-main` (ChatGPT salió; C-95 lo reemplazó).
+- **Gemini:** sin ronda abierta. Su carril quedó limpio. **G-67 se rechazó** (citó 21 textos que no existen): no se usa como fuente.
+- **Aviso de proceso:** Gemini a veces trabaja en la carpeta principal. Antes de empezar, `git status` y `git log -3`.
+- ChatGPT (limpieza opcional, cuando Andrés quiera):
   ```bash
   git worktree remove ../ElectroShopVe-chatgpt
   git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main
   git stash drop stash@{0}
   ```
 
-## 2. Deploy del 22/09 (envíos y métodos de pago) — `acecf42` en `origin/main`
+## 2. Deploy del 24/09 (incluye el del 22/09 si no se hizo)
 
-**Este deploy sí cambia el esquema y agrega una variable de entorno.** En el servidor (`/var/www/electroshopve`, PM2 `electroshop-web`):
+**Este merge no cambia el esquema.** Pero si el deploy del 22/09 (envíos y métodos de pago) no se corrió en el servidor, el paso 2 lo aplica. En el servidor (`/var/www/electroshopve`, PM2 `electroshop-web`):
 
 ```bash
 cd /var/www/electroshopve
 git pull
 
-# 1. Ver qué va a cambiar en la base (solo lee)
-#    DATABASE_URL vive en .env y no está exportado en la shell: Prisma toma la URL del propio .env
+# 1. ¿Falta algo en la base? (solo lee)
 npx prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --script
-#    Esperado: ADD COLUMN, CREATE TABLE "shipment_events" y ALTER TYPE "PaymentMethodType" ADD VALUE 'BINANCE_PAY'.
-#    Si aparece un DROP, PARA y avisa. Si salen tablas de deploys viejos (digital_variants, telegram_chats,
-#    email_campaigns), es que un db push anterior no se corrió: sigue siendo solo agregar.
+#    - Sale vacío (o solo comentarios): el 22/09 ya se aplicó → salta al paso 3.
+#    - Sale ADD COLUMN, CREATE TABLE "shipment_events" y ADD VALUE 'BINANCE_PAY' → sigue con el paso 2.
+#    - Si aparece un DROP: PARA y avisa a Claude.
 
-# 2. Aplicarlo
+# 2. Solo si el paso 1 mostró cambios
 npx prisma db push          # si pide aceptar pérdida de datos, PARA
 
-# 3. El cliente de Prisma no se regenera solo con el build
+# 3. Siempre
 npx prisma generate
 
-# 4. Variable nueva para el rastreo automático (32 caracteres al azar)
-#    Agrega a .env:  CRON_SECRET="<pega aquí el valor>"
-openssl rand -hex 16
+# 4. Variable del rastreo automático (solo si no existe)
+grep -c '^CRON_SECRET' .env   # 0 → agrega CRON_SECRET="<valor de: openssl rand -hex 16>" al .env
 
 npm run build
 pm2 restart electroshop-web --update-env
-
-# 5. Rastreo de ZOOM cada 2 horas (crontab -e)
-# 0 */2 * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<tu-dominio>/api/cron/envios >/dev/null
 ```
 
-**Después del deploy, en el panel (obligatorio):**
-- **Configuración → Envíos:** revisa el embalaje, pon "Envío gratis desde" si quieres, y **el delivery en Guanare viene apagado**: ponle tarifa y actívalo.
-- **Métodos de pago:** edita el que dice "Binance" y cámbiale el tipo a **Binance Pay**; al guardar se limpia el "Banco Mercantil Panamá" que arrastraba. Completa titular y correo donde falten (ahora el servidor los exige).
-- **Productos:** prende "Envío gratis" en los productos caros que quieras (paso "Precios y envío").
+**Cron del rastreo de ZOOM** (si no lo pusiste el 22/09; `crontab -e`):
+```
+0 */2 * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<tu-dominio>/api/cron/envios >/dev/null
+```
 
-**Qué comprobar (en este orden):**
-1. La tienda abre y un producto se agrega al carrito.
-2. **Recargar saldo:** el modal muestra los métodos de pago. Si sale vacío, algo quedó mal: avísame.
-3. Checkout con un producto físico: elige ZOOM → estado → ciudad → oficina (la lista debe traer oficinas reales) y confirma que solo se cobra el embalaje.
-4. Repite con MRW (agencias) y con "A domicilio".
-5. En Órdenes: la orden nueva muestra "Cobro a destino", el destinatario y "Copiar datos para la guía". Márcala enviada con una guía de prueba.
-6. En Mis pedidos del cliente: guía, "Copiar", "Rastrear" y el historial.
-7. Un producto con "Envío gratis": el badge sale en la tarjeta y el checkout cobra $0 de envío.
+**Redondeo de saldos (C-96, autorizado por Andrés el 24/09):** pasos en `estado/C-96.md` y en el resumen del 24/09 (conteo → respaldo con `pg_dump -t user_balances` → `UPDATE`).
 
-**Si algo sale mal:** `git reset --hard d1e1cc7 && npx prisma generate && npm run build && pm2 restart electroshop-web`. Las columnas nuevas pueden quedarse: no estorban a la versión anterior.
+**En el panel, si no se hizo el 22/09:**
+- Configuración → Envíos: embalaje, "Envío gratis desde" y la tarifa del delivery en Guanare (viene apagado).
+- Métodos de pago: el de Binance pasa a tipo **Binance Pay**; completa titular y correo.
+- Productos: el Cable HDMI y la Mini consola quedaron **Inactivos** al intentar borrarlos. Si se venden, ponlos en Activo.
+- Órdenes: cancela las de "Cliente eliminado" con el motivo "Prueba: cliente eliminado".
 
-**Aún sin probar con datos:** C-100 y C-101 se verificaron con `tsc`, `build` y ESLint, y las APIs de ZOOM se probaron de verdad, pero **no se hizo la prueba de compra completa** (el entorno de Claude no pudo tocar la base). Los pasos 2 a 7 son esa prueba.
+**Qué comprobar:**
+1. La tienda abre y un producto se agrega al carrito. Debajo del total, el carrito explica la entrega.
+2. Checkout con un producto físico:
+   - La tarjeta "Envío nacional" dice "embalaje $X + flete al retirar".
+   - Los botones de empresa muestran los logos de ZOOM y MRW.
+   - El resumen dice "Embalaje y empaquetado" y "Flete (ZOOM): Al retirar", y el total, "Total a pagar hoy".
+3. ZOOM: estado → ciudad → oficina real. MRW: agencia. "A domicilio" pide dirección.
+4. Retiro en tienda (si está activo): el resumen dice "Retiro en tienda: Gratis" (antes decía "Productos digitales").
+5. Recargar saldo: el modal muestra los métodos de pago.
+6. Órdenes: la nueva dice "Cobro a destino". Márcala enviada con guía y revisa Mis pedidos del cliente.
+7. Gift cards del admin: cerrar la hoja sin imprimir abre el diálogo de confirmación (G-64).
+
+**Si algo sale mal:** `git reset --hard 23dbfa9 && npx prisma generate && npm run build && pm2 restart electroshop-web`. Ese es el `main` anterior a este merge (ya incluye el 22/09).
 
 ## 3. Incidente: clientes borrados con pedidos en curso (sigue abierto)
 Detalle en **`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`**.
@@ -88,34 +93,22 @@ Detalle en **`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`**.
 
 ## 5. Mensajes para empezar
 
-### Gemini · R20 (G-62 → G-66) y luego R21 (G-67)
-> Trabajas en tu carpeta, `../ElectroShopVe-gemini`, **nunca en la principal**: el 22/09 commiteaste ahí, encima de una tarea de Claude sin terminar, y marcaste "HECHO" algo que no compilaba y dejaba la tienda sin métodos de pago. Desde ahora, todo va en tu rama y Claude lo revisa antes del merge.
->
-> **Antes de empezar**, lee completo `GEMINI.md` y, en `docs/plan/PLAN_GEMINI.md`, "Ronda R20" y "Ronda R21". Para tipos, relee G-47, G-48 y G-59.
->
-> **Ramas** (con `bash`):
-> 1. `git status` → limpio. `git fetch origin && git switch -c gemini/R20 origin/main`.
-> 2. **R20:** G-62, G-63, G-64, G-65 y G-66, en ese orden, un commit por tarjeta.
-> 3. **R21:** `git switch -c gemini/R21 gemini/R20` → **G-67**, que es un informe: **no se toca código**.
->
-> **Reglas de oro:**
-> - Solo lo que dice cada tarjeta, en los archivos que nombra.
-> - Fuera: `app/api/**`, `lib/**`, `prisma/**`, `app/checkout/**`, `app/admin/(dashboard)/orders/**`, `components/orders/**`, `components/checkout/**` y `app/admin/(dashboard)/payments/**` (Claude los acaba de rehacer).
-> - No cambian `fetch`, URLs, `method`, cuerpos, permisos, cálculos ni textos visibles, salvo lo que pida la tarjeta.
-> - G-63 es la **única** eliminación permitida (`ProductForm.tsx`, con el `git grep` pegado).
-> - En G-65 **no borres** `handleExcelChange`, `handleSelectAll`, `handleSelectProduct` ni `slug`: van a Notas.
-> - Nada de datos de ejemplo que parezcan reales (teléfonos, cuentas, wallets): si una plantilla los necesita, van vacíos e inactivos.
-> - Sin `// eslint-disable`, sin `any` nuevos, sin emojis y sin reindentar archivos.
->
-> **En cada tarjeta, antes del commit, pega en `docs/plan/estado/G-XX.md`:** ESLint por archivo antes y después, `npx tsc --noEmit` (salida real), `npm run build` (últimas 5 líneas) y `git diff --stat` contra `git diff -w --stat`. **Si `tsc` o el build fallan, la tarjeta no está hecha:** ponle `BLOQUEADO — motivo` y sigue con la siguiente.
->
-> Un commit por tarjeta con el prefijo `[G-XX]`. No hagas merge, rebase ni push. Al terminar G-67, avisa a Andrés y pega `git log --oneline origin/main..gemini/R21`.
+### Gemini
+Sin ronda abierta desde el 24/09: terminó R20-R22 y su carril quedó limpio. No se le manda nada hasta que Claude escriba una ronda nueva en `PLAN_GEMINI.md`.
 
 ### Claude (siguiente sesión)
-> Continúa ElectroShopVe (en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` (§2 el deploy del 22/09), `docs/plan/PLAN_CLAUDE.md` §4b y las auditorías `AUDITORIA_ENVIOS.md` y `AUDITORIA_PAGOS.md`.
+> Continúa ElectroShopVe (en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b.
 > - **Antes de tocar nada:** `git status`, `git log -3` y `git branch --show-current`. Gemini a veces trabaja en la carpeta principal.
-> - **Primero:** la prueba de punta a punta que quedó pendiente de C-100 y C-101 (compra física con ZOOM y con MRW, envío gratis, delivery en Guanare, recarga de saldo y Binance Pay), en la tienda de ejemplo con `db push`. Si algo falla en producción, eso manda.
-> - **Después, en este orden:** C-105 (IP real, con el nginx del servidor), C-104 (reportes reales), C-102 (descuentos) y C-103 (firma de documentos con física).
+> - **Primero:** pregúntale a Andrés cómo le fue con el deploy del 24/09 (§2). Si algo falla en producción, eso manda.
+> - **Después, en este orden:**
+>   1. Fila 18: destinatarios de campañas sin límite (seguridad).
+>   2. C-105 (IP real, con el nginx del servidor).
+>   3. C-104 (reportes reales).
+>   4. C-102 (descuentos).
+>   5. C-103 (firma de documentos).
+>   6. C-51 (productos, con "Duplicar" en el servidor).
+>   7. C-107 (seguro a elección del cliente; espera los costos de ZOOM y MRW y el OK de la migración).
+> - **No uses `G-67` como fuente:** tiene citas inventadas. Lee esas pantallas de primera mano.
 > - Una rama por tarea, commits `[C-XX]` y su `docs/plan/estado/C-XX.md`. Nada de `git push` sin que Andrés lo pida.
 > - Busca bugs, seguridad y diseño inconsistente en todo lo que toques.
 

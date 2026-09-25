@@ -1703,3 +1703,10 @@ Claude lo probó en memoria en los 5 archivos: el error desaparece y ninguna lí
 3. `npx tsc --noEmit` (salida real) y `npm run build` (últimas 5 líneas). Si lo único que falla es el prerender de `/` por una columna que tu base no tiene, pégalo y sigue: no es tuyo.
 
 Un commit `[G-68]`.
+
+---
+
+## Resultado de R20, R21 y R22 (revisión C-108, 24/09)
+- **R20 (G-62…G-66) y R22 (G-68): aprobadas.** G-68 quedó idéntica a la versión que Claude probó, y solo se movieron líneas.
+- **G-67: rechazada como fuente.** 21 de los 49 textos que citaste entre comillas no existen en el código, y describiste paginación y búsqueda en una API que no las tiene. Decir "QA con datos pendiente" estuvo bien; inventar lo que no leíste, no.
+- **Regla nueva (también en `GEMINI.md`):** en un informe, cada texto entre comillas y cada número de línea sale de un `grep -n` que pegas al lado. Si no lo encontraste con `grep`, no lo escribes.

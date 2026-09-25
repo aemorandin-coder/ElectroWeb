@@ -26,6 +26,8 @@ Contexto: `docs/plan/PLAN.md` (diseño) y `docs/plan/AUDITORIA.md` (problemas). 
 
 ---
 
+**Regla de informes (desde 24/09, G-67):** en un informe o estado, cada texto que cites entre comillas y cada número de línea sale de un `grep -n` que pegas al lado. Si no lo encontraste con `grep`, no lo escribes. G-67 inventó 21 de 49 citas y se rechazó.
+
 ## 2. Tu carril (lo único que puedes editar)
 
 ```

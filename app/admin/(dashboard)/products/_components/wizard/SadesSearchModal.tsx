@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { FiX, FiSearch, FiDownload, FiPackage } from 'react-icons/fi';
 import { WizardData } from './types';
+import { formatUSD } from '@/lib/currency';
 
 interface SadesResult {
   sku: string;
@@ -47,8 +48,8 @@ export default function SadesSearchModal({ onImport, onClose }: Props) {
       if (!res.ok) throw new Error('Error al buscar en SADES');
       const data = await res.json();
       setResults(data.results || []);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al buscar en SADES');
       setResults([]);
     } finally {
       setLoading(false);
@@ -165,7 +166,7 @@ export default function SadesSearchModal({ onImport, onClose }: Props) {
 
               {/* Price & stock */}
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-bold text-ink">${product.precioUSD?.toFixed(2)}</p>
+                <p className="text-sm font-bold text-ink">{product.precioUSD != null ? formatUSD(product.precioUSD) : '—'}</p>
                 <p className={`text-xs mt-0.5 ${product.stock > 0 ? 'text-success-strong' : 'text-deal'}`}>
                   Stock: {product.stock}
                 </p>

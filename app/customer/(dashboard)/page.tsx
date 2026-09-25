@@ -47,14 +47,6 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [greeting, setGreeting] = useState('');
 
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Buenos días');
-    else if (hour < 18) setGreeting('Buenas tardes');
-    else setGreeting('Buenas noches');
-    fetchDashboardData();
-  }, []);
-
   async function fetchDashboardData() {
     try {
       const response = await fetch('/api/customer/dashboard');
@@ -69,6 +61,14 @@ export default function CustomerDashboard() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Buenos días');
+    else if (hour < 18) setGreeting('Buenas tardes');
+    else setGreeting('Buenas noches');
+    fetchDashboardData();
+  }, []);
 
   const getStatusConfig = (status: string) => {
     const configs: Record<string, { bg: string; text: string; label: string; icon: IconType }> = {

@@ -84,7 +84,8 @@ export default function ProductWizard({ productId }: Props) {
   const router = useRouter();
   const isEditing = !!productId;
 
-  const [step, setStep] = useState<-1 | 0 | 1 | 2 | 3 | 4>(-1); // -1 = type selector
+  type WizardStep = -1 | 0 | 1 | 2 | 3 | 4;
+  const [step, setStep] = useState<WizardStep>(-1); // -1 = type selector
   const [data, setData] = useState<WizardData>(DEFAULT_WIZARD_DATA);
   const [categories, setCategories] = useState<Category[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -214,14 +215,14 @@ export default function ProductWizard({ productId }: Props) {
 
   const handleNext = () => {
     if (!validate(step)) return;
-    setStep((prev) => (prev + 1) as any);
+    setStep((prev) => (prev + 1) as WizardStep);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
     setErrors({});
     if (step === 0) { setStep(-1); return; }
-    setStep((prev) => (prev - 1) as any);
+    setStep((prev) => (prev - 1) as WizardStep);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -229,14 +230,14 @@ export default function ProductWizard({ productId }: Props) {
   const handleSubmit = async (publishStatus: 'PUBLISHED' | 'DRAFT') => {
     // Al editar se puede saltar pasos desde la barra: si alguno quedó incompleto, se vuelve a él
     for (let s = 0; s < PUBLISH_STEP; s++) {
-      if (!validate(s)) { setStep(s as any); return; }
+      if (!validate(s)) { setStep(s as WizardStep); return; }
     }
     if (!validate(PUBLISH_STEP)) return;
     setIsLoading(true);
     setErrors({});
 
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         name: data.name.trim(),
         sku: data.sku.trim(),
         description: data.description.trim(),
@@ -426,7 +427,7 @@ export default function ProductWizard({ productId }: Props) {
                 <WizardProgress
                   steps={steps}
                   current={step}
-                  onStepClick={(i) => { setErrors({}); setStep(i as any); }}
+                  onStepClick={(i) => { setErrors({}); setStep(i as WizardStep); }}
                   freeNavigation={isEditing}
                 />
               </div>
@@ -448,7 +449,7 @@ export default function ProductWizard({ productId }: Props) {
               <WizardProgress
                 steps={steps}
                 current={step}
-                onStepClick={(i) => { setErrors({}); setStep(i as any); }}
+                onStepClick={(i) => { setErrors({}); setStep(i as WizardStep); }}
                 freeNavigation={isEditing}
               />
             </div>

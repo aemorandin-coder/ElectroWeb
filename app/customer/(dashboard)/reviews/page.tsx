@@ -30,10 +30,6 @@ export default function MyReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'approved' | 'pending'>('all');
 
-  useEffect(() => {
-    fetchMyReviews();
-  }, []);
-
   async function fetchMyReviews() {
     try {
       const response = await fetch('/api/reviews');
@@ -48,6 +44,10 @@ export default function MyReviewsPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchMyReviews();
+  }, []);
 
   const filteredReviews = reviews.filter(review => {
     if (filter === 'approved') return review.isApproved && review.isPublished;

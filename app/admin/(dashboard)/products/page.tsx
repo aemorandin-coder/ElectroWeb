@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSpinner';
-import { formatPrice } from '@/lib/currency';
+import { formatPrice, formatUSD } from '@/lib/currency';
 import { FiRefreshCw, FiCheckCircle, FiAlertCircle, FiDatabase, FiBox, FiX, FiExternalLink, FiStar, FiZap, FiPackage } from 'react-icons/fi';
 import { parseProductImages } from '@/lib/product-utils';
 
@@ -28,13 +28,14 @@ interface Product {
   isNew?: boolean;
   hasDiscount?: boolean;
   discountPercent?: number;
-  specifications?: Record<string, any>;
+  specifications?: Record<string, unknown>;
   shortCode?: string | null;
   slug?: string;
   category?: {
     name: string;
   };
   status?: string;
+  productType?: 'PHYSICAL' | 'DIGITAL' | string | null;
 }
 
 interface Category {
@@ -72,9 +73,9 @@ export default function ProductsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
-  const [bulkUploadData, setBulkUploadData] = useState<any[]>([]);
+  const [bulkUploadData, setBulkUploadData] = useState<Record<string, unknown>[]>([]);
   const [bulkUploadLoading, setbulkUploadLoading] = useState(false);
-  const [bulkUploadResults, setBulkUploadResults] = useState<any>(null);
+  const [bulkUploadResults, setBulkUploadResults] = useState<{ error?: boolean | string; message?: string; details?: string } | null>(null);
   const [showQuickViewModal, setShowQuickViewModal] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [quickViewLoading, setQuickViewLoading] = useState(false);
@@ -89,7 +90,7 @@ export default function ProductsPage() {
 
   // Excel Mode State
   const [isExcelMode, setIsExcelMode] = useState(false);
-  const [excelUpdates, setExcelUpdates] = useState<Record<string, any>>({});
+  const [excelUpdates, setExcelUpdates] = useState<Record<string, Record<string, unknown>>>({});
   const [excelSaving, setExcelSaving] = useState(false);
 
   // Status filter state
@@ -135,7 +136,7 @@ export default function ProductsPage() {
       if (productsRes.ok) {
         const productsData = await productsRes.json();
         // Parse images if they are strings
-        const parsedProducts = productsData.map((p: any) => ({
+        const parsedProducts = productsData.map((p: Product) => ({
           ...p,
           images: parseProductImages(p.images),
           priceUSD: Number(p.priceUSD),
@@ -172,7 +173,7 @@ export default function ProductsPage() {
   };
 
 
-  const handleExcelChange = (id: string, field: string, value: any) => {
+  const handleExcelChange = (id: string, field: string, value: unknown) => {
     setExcelUpdates(prev => ({
       ...prev,
       [id]: {
@@ -380,7 +381,7 @@ export default function ProductsPage() {
 
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-      const row: any = {};
+      const row: Record<string, string> = {};
 
       headers.forEach((header, index) => {
         row[header] = values[index] || '';
@@ -410,7 +411,7 @@ export default function ProductsPage() {
         const productsRes = await fetch('/api/products?all=true');
         if (productsRes.ok) {
           const productsData = await productsRes.json();
-          setProducts(productsData.map((p: any) => ({
+          setProducts(productsData.map((p: Product) => ({
             ...p,
             images: parseProductImages(p.images),
             priceUSD: Number(p.priceUSD),
@@ -467,7 +468,7 @@ export default function ProductsPage() {
 
     setBulkEditLoading(true);
     try {
-      let payload: any = { productIds: selectedProducts };
+      const payload: { productIds: string[]; field?: string; value?: string | number } = { productIds: selectedProducts };
 
       if (bulkEditField === 'status') {
         payload.field = 'status';
@@ -630,9 +631,10 @@ export default function ProductsPage() {
 
       fetchData();
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Sync error:', error);
-      addSyncLog(`Error crítico: ${error.message}`);
+      const msg = error instanceof Error ? error.message : 'Error desconocido';
+      addSyncLog(`Error crítico: ${msg}`);
       setSyncProgress(prev => ({ ...prev, status: 'error' }));
     } finally {
       setIsSyncing(false);
@@ -1068,7 +1070,7 @@ export default function ProductsPage() {
                     currencySettings.primaryCurrency,
                     currencySettings.exchangeRates
                   )
-                  : `$${parseFloat(String(product.priceUSD)).toFixed(2)}`;
+                  : formatUSD(parseFloat(String(product.priceUSD)));
 
                 return (
                   <div key={product.id} className="bg-white rounded-lg border border-line p-4 shadow-sm">
@@ -1230,7 +1232,7 @@ export default function ProductsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
             <h3 className="text-lg font-bold mb-2">Eliminar Producto</h3>
-            <p className="text-gray-600 mb-6">¿Estás seguro de que deseas eliminar "{selectedProduct.name}"? Esta acción no se puede deshacer.</p>
+            <p className="text-gray-600 mb-6">¿Estás seguro de que deseas eliminar &quot;{selectedProduct.name}&quot;? Esta acción no se puede deshacer.</p>
             <div className="flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setShowDeleteModal(false)}>Cancelar</Button>
               <Button variant="primary" onClick={handleDelete} isLoading={deleteLoading} className="bg-red-600 hover:bg-red-700 focus:ring-red-500">Eliminar</Button>
@@ -1256,7 +1258,7 @@ export default function ProductsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Operación</label>
                 <select
                   value={bulkEditField}
-                  onChange={(e) => { setBulkEditField(e.target.value as any); setBulkEditValue(''); }}
+                  onChange={(e) => { setBulkEditField(e.target.value as 'price' | 'stock' | 'category' | 'status' | 'pricePercent'); setBulkEditValue(''); }}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
                 >
                   <option value="status">Cambiar estado (activar/desactivar)</option>
@@ -1404,7 +1406,7 @@ export default function ProductsPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-surface rounded-xl p-3">
                       <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Precio</p>
-                      <p className="text-base font-bold text-gray-900">${Number(quickViewProduct.priceUSD).toFixed(2)} USD</p>
+                      <p className="text-base font-bold text-gray-900">{formatUSD(Number(quickViewProduct.priceUSD))}</p>
                     </div>
                     <div className="bg-surface rounded-xl p-3">
                       <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Stock</p>
@@ -1419,7 +1421,7 @@ export default function ProductsPage() {
                     <div className="bg-surface rounded-xl p-3">
                       <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Tipo</p>
                       <p className="flex items-center gap-1 text-sm font-semibold text-gray-900">
-                        {(quickViewProduct as any).productType === 'DIGITAL' ? <><FiZap className="h-3.5 w-3.5" aria-hidden="true" />Digital</> : <><FiPackage className="h-3.5 w-3.5" aria-hidden="true" />Físico</>}
+                        {quickViewProduct.productType === 'DIGITAL' ? <><FiZap className="h-3.5 w-3.5" aria-hidden="true" />Digital</> : <><FiPackage className="h-3.5 w-3.5" aria-hidden="true" />Físico</>}
                       </p>
                     </div>
                   </div>
@@ -1449,7 +1451,7 @@ export default function ProductsPage() {
                 </button>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => window.open(`/productos/${(quickViewProduct as any).slug || quickViewProduct.id}`, '_blank')}
+                    onClick={() => window.open(`/productos/${quickViewProduct.slug || quickViewProduct.id}`, '_blank')}
                     className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-gray-200 rounded-lg hover:bg-white transition-colors"
                   >
                     <FiExternalLink className="w-3.5 h-3.5" />
@@ -1510,7 +1512,7 @@ export default function ProductsPage() {
                         <tbody className="divide-y">
                           {bulkUploadData.slice(0, 5).map((row, i) => (
                             <tr key={i}>
-                              {Object.values(row).slice(0, 5).map((v: any, j) => <td key={j} className="px-3 py-2">{v}</td>)}
+                              {Object.values(row).slice(0, 5).map((v: unknown, j) => <td key={j} className="px-3 py-2">{String(v)}</td>)}
                             </tr>
                           ))}
                         </tbody>

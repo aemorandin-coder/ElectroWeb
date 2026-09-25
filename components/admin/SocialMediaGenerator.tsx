@@ -188,7 +188,7 @@ export default function SocialMediaGenerator() {
             link.click();
 
             toast.success('Descargado en HD');
-        } catch (error) {
+        } catch {
             toast.error('Error al generar');
         } finally {
             setGenerating(false);

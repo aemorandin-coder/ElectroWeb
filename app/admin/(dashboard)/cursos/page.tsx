@@ -1,6 +1,6 @@
 'use client';
 
-import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminModalOverlay } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 
@@ -152,11 +152,11 @@ export default function AdminCursosPage() {
       if (res.ok) {
         const data = await res.json();
         setCurriculum(
-          (data.modules || []).map((mod: any) => ({
+          (data.modules || []).map((mod: { id?: string; title: string; order: number; lessons?: Array<{ id?: string; title: string; videoUrl?: string | null; duration?: number | string | null; isFree: boolean; order: number }> }) => ({
             id: mod.id,
             title: mod.title,
             order: mod.order,
-            lessons: (mod.lessons || []).map((l: any) => ({
+            lessons: (mod.lessons || []).map((l: { id?: string; title: string; videoUrl?: string | null; duration?: number | string | null; isFree: boolean; order: number }) => ({
               id: l.id,
               title: l.title,
               videoUrl: l.videoUrl || '',
@@ -245,7 +245,7 @@ export default function AdminCursosPage() {
     ]);
   }
 
-  function updateModule(idx: number, field: string, value: any) {
+  function updateModule(idx: number, field: string, value: string | number) {
     setCurriculum((prev) => prev.map((m, i) => (i === idx ? { ...m, [field]: value } : m)));
   }
 
@@ -261,7 +261,7 @@ export default function AdminCursosPage() {
     );
   }
 
-  function updateLesson(modIdx: number, lIdx: number, field: string, value: any) {
+  function updateLesson(modIdx: number, lIdx: number, field: string, value: string | number | boolean) {
     setCurriculum((prev) =>
       prev.map((m, i) =>
         i === modIdx

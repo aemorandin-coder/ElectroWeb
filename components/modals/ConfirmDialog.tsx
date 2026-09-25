@@ -111,7 +111,7 @@ export default function ConfirmDialog({
 
                 {/* Message */}
                 <div id="confirm-dialog-message" className="mb-6">
-                    <p className="text-sm text-muted leading-relaxed whitespace-normal break-words">
+                    <p className="text-sm text-muted leading-relaxed whitespace-pre-line break-words">
                         {message}
                     </p>
                 </div>

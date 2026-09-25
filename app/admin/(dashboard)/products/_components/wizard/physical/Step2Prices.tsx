@@ -2,6 +2,7 @@
 
 import EpicTooltip from '@/components/EpicTooltip';
 import { StepProps } from '../types';
+import { formatUSD } from '@/lib/currency';
 import { FiCheck, FiInfo, FiTruck } from 'react-icons/fi';
 import { MdOutlineLocalShipping } from 'react-icons/md';
 import { wizardInput, wizardLabel, wizardHint, wizardError, wizardSectionTitle, wizardSectionHelp } from '../ui';
@@ -95,7 +96,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
             <div>
               <span className="block text-xs text-muted mb-0.5">Ganancia por unidad</span>
               <span className={`text-xl font-bold ${profit && parseFloat(profit) > 0 ? 'text-success-strong' : 'text-muted'}`}>
-                {profit ? `$${profit}` : '—'}
+                {profit ? formatUSD(parseFloat(profit)) : '—'}
               </span>
             </div>
           </div>
@@ -168,7 +169,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
                     step="0.1"
                     min="0"
                     value={data[field]}
-                    onChange={(e) => onChange({ [field]: e.target.value } as any)}
+                    onChange={(e) => onChange({ [field]: e.target.value } as Partial<StepProps['data']>)}
                     placeholder="0"
                     className={`${wizardInput(Boolean(errors.dimensions))} pr-7 px-2.5 text-xs`}
                   />

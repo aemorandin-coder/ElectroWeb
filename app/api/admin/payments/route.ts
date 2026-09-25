@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { validateAndSanitizePaymentMethod } from '@/lib/validations/payment-methods';
+import { registrarAccionAdmin } from '@/lib/audit-log';
 
 export async function GET() {
   try {
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
     });
 
     revalidateStorefront();
+    await registrarAccionAdmin(session, 'PAYMENT_METHOD_CHANGED', { type: 'PAYMENT_METHOD', id: method.id }, { cambio: 'Creado', metodo: method.name, tipo: method.type }, request);
     return NextResponse.json(method, { status: 201 });
   } catch (error) {
     console.error('Error creating payment method:', error);
@@ -77,6 +79,7 @@ export async function PATCH(request: NextRequest) {
         data: { isActive: data.isActive }
       });
       revalidateStorefront();
+      await registrarAccionAdmin(session, 'PAYMENT_METHOD_CHANGED', { type: 'PAYMENT_METHOD', id }, { cambio: data.isActive ? 'Activado' : 'Desactivado', metodo: updated.name }, request);
       return NextResponse.json(updated);
     }
 
@@ -96,12 +99,20 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
+    const antes = await prisma.companyPaymentMethod.findUnique({ where: { id } });
     const updated = await prisma.companyPaymentMethod.update({
       where: { id },
       data: validation.data
     });
 
     revalidateStorefront();
+    // Cambiar la cuenta o el teléfono de un método desvía los pagos: se anota qué campos cambiaron
+    const camposCambiados = antes
+      ? Object.keys(validation.data).filter((k) => JSON.stringify((antes as Record<string, unknown>)[k]) !== JSON.stringify((updated as Record<string, unknown>)[k]))
+      : [];
+    if (camposCambiados.length > 0) {
+      await registrarAccionAdmin(session, 'PAYMENT_METHOD_CHANGED', { type: 'PAYMENT_METHOD', id }, { cambio: 'Editado', metodo: updated.name, campos: camposCambiados }, request);
+    }
     return NextResponse.json(updated);
   } catch (error) {
     console.error('Error updating payment method:', error);
@@ -123,11 +134,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
     }
 
-    await prisma.companyPaymentMethod.delete({
+    const borrado = await prisma.companyPaymentMethod.delete({
       where: { id }
     });
 
     revalidateStorefront();
+    await registrarAccionAdmin(session, 'PAYMENT_METHOD_CHANGED', { type: 'PAYMENT_METHOD', id }, { cambio: 'Eliminado', metodo: borrado.name, tipo: borrado.type }, request);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting payment method:', error);

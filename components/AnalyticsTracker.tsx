@@ -146,29 +146,20 @@ export default function AnalyticsTracker() {
             // Don't track admin panel clicks
             if (window.location.pathname.startsWith('/admin')) return;
 
-            const target = e.target as HTMLElement;
+            const target = e.target instanceof Element ? e.target : null;
+            if (!target) return;
 
-            // Track button clicks
-            if (target.tagName === 'BUTTON' || target.closest('button')) {
-                const button = target.closest('button') || target;
-                const label = button.getAttribute('aria-label') ||
-                    button.textContent?.slice(0, 50) || 'button';
-                trackClick(label, 'button');
-            }
-
-            // Track link clicks
-            if (target.tagName === 'A' || target.closest('a')) {
-                const link = target.closest('a') || target;
-                const href = (link as HTMLAnchorElement).href;
-                const label = link.textContent?.slice(0, 50) || href;
-                trackClick(label, 'navigation');
-            }
-
-            // Track product card clicks
-            if (target.closest('[data-product-id]')) {
-                const productCard = target.closest('[data-product-id]');
-                const productId = productCard?.getAttribute('data-product-id');
-                trackClick(`product_${productId}`, 'product');
+            // Un clic = un evento (C-104). Antes un botón dentro de un enlace de una tarjeta contaba tres veces.
+            const productCard = target.closest('[data-product-id]');
+            const link = target.closest('a');
+            const button = target.closest('button');
+            // Un botón dentro de la tarjeta ("Agregar") cuenta como botón; el resto de la tarjeta, como producto
+            if (button) {
+                trackClick(button.getAttribute('aria-label') || button.textContent?.trim().slice(0, 50) || 'button', 'button');
+            } else if (productCard) {
+                trackClick(`product_${productCard.getAttribute('data-product-id')}`, 'product');
+            } else if (link) {
+                trackClick(link.textContent?.trim().slice(0, 50) || link.getAttribute('href') || 'link', 'navigation');
             }
         };
 

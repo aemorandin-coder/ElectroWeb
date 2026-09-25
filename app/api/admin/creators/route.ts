@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
+import { registrarAccionAdmin } from '@/lib/audit-log';
 import { sendCreatorStatusEmail } from '@/lib/email-templates/CourseCertificate';
 
 export async function GET() {
@@ -48,6 +49,12 @@ export async function PATCH(request: NextRequest) {
       data: { status, notes: notes || null },
       include: { user: { select: { email: true } } },
     });
+
+    await registrarAccionAdmin(session, 'CREATOR_STATUS_CHANGED', { type: 'CREATOR', id }, {
+      creador: creator.displayName,
+      estado: status,
+      ...(notes ? { notas: String(notes).slice(0, 300) } : {}),
+    }, request);
 
     // Send email notification to creator asynchronously
     if (status === 'APPROVED' || status === 'REJECTED' || status === 'SUSPENDED') {

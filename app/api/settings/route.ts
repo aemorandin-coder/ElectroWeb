@@ -8,6 +8,7 @@ import { crossFieldErrors, fieldErrors, HOT_AD_FIELDS, settingsPatchSchema } fro
 import { clearSettingsCache } from '@/lib/site-settings';
 import { refreshExchangeRate } from '@/lib/exchange-rate';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { registrarAccionAdmin } from '@/lib/audit-log';
 import { revalidatePath } from 'next/cache';
 
 // Campos que solo ve quien administra la configuración (CLAUDE.md: nunca salen del servidor hacia otros)
@@ -159,6 +160,9 @@ export async function PUT(request: NextRequest) {
         link: '/admin/settings#sistema',
       });
     }
+
+    // Bitácora (C-104): qué campos se guardaron, sin sus valores (algunos son claves o correos)
+    await registrarAccionAdmin(session, 'SETTINGS_UPDATED', { type: 'SETTINGS', id: 'default' }, { campos: fields }, request);
 
     await clearSettingsCache();
     // Los settings públicos van en el HTML de todas las páginas (layout): regenerarlas ya

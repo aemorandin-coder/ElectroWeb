@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { contrasenaSchema } from '@/lib/validations/registro';
+import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 
 export async function POST(request: NextRequest) {
     try {
@@ -70,6 +71,15 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
+
+        await createAuditLog({
+            action: 'AUTH_PASSWORD_RESET',
+            userId: resetToken.userId,
+            targetType: 'USER',
+            targetId: resetToken.userId,
+            ...getRequestMetadata(request),
+            severity: 'WARNING',
+        });
 
         return NextResponse.json(
             { message: 'Contraseña actualizada exitosamente' },

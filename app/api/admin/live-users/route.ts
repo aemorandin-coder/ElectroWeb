@@ -2,15 +2,14 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 // GET - Get count of users currently active on the site (last 5 minutes)
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        const userRole = session?.user?.role;
-
-        if (!session || (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        if (!isAuthorized(session, 'VIEW_REPORTS')) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: session ? 403 : 401 });
         }
 
         // Get users active in the last 5 minutes (based on analytics events)
@@ -34,10 +33,9 @@ export async function GET() {
             },
         });
 
-        // Get device breakdown for live users
+        // Dispositivos por visitante (C-104): antes contaba eventos, y quien hacía 20 clics pesaba 20 veces
         const deviceBreakdown = await prisma.analyticsEvent.groupBy({
-            by: ['deviceType'],
-            _count: true,
+            by: ['deviceType', 'sessionId'],
             where: {
                 createdAt: { gte: fiveMinutesAgo },
                 sessionId: { not: null },
@@ -61,7 +59,7 @@ export async function GET() {
             liveCount: liveVisitors.length,
             authenticatedCount: authenticatedUsers.length,
             devices: deviceBreakdown.reduce((acc, d) => {
-                acc[d.deviceType || 'unknown'] = d._count;
+                acc[d.deviceType || 'unknown'] = (acc[d.deviceType || 'unknown'] ?? 0) + 1;
                 return acc;
             }, {} as Record<string, number>),
             topPages: currentPages.map(p => ({

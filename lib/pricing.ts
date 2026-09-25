@@ -93,6 +93,12 @@ export function montoDecimal(value: number): string {
   return roundMoney(value).toFixed(2);
 }
 
+/** Precio escrito en el panel ("12,5", 12.5): número entre 0 y 1.000.000, o null si no sirve (C-97, C-104). */
+export function precioValido(valor: unknown): number | null {
+  const n = typeof valor === 'number' ? valor : Number.parseFloat(String(valor).replace(',', '.'));
+  return Number.isFinite(n) && n >= 0 && n <= 1_000_000 ? n : null;
+}
+
 function toNumber(value: NumberLike): number {
   if (value === null || value === undefined) return 0;
   const n = typeof value === 'number' ? value : Number(value.toString());

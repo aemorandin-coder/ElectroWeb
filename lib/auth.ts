@@ -11,9 +11,35 @@ import { estadoLogin, registrarAcierto, registrarFallo } from '@/lib/login-guard
 import * as bcrypt from 'bcryptjs';
 import { headers } from 'next/headers';
 import { ipParaRegistro } from '@/lib/ip';
+import { createAuditLog, getSeverityForAction, type AuditAction } from '@/lib/audit-log';
+
+/** Inicios de sesión en la bitácora (C-104): Reportes → Seguridad cuenta aciertos, fallos y bloqueos por IP. */
+async function registrarEnBitacora(action: AuditAction, datos: { userId?: string; email?: string | null; details?: Record<string, unknown> }) {
+  let ipAddress = 'desconocida';
+  let userAgent = 'Desconocido';
+  try {
+    const reqHeaders = await headers();
+    ipAddress = ipParaRegistro(reqHeaders);
+    userAgent = reqHeaders.get('user-agent') || userAgent;
+  } catch {
+    // Fuera de una petición (pruebas)
+  }
+  await createAuditLog({
+    action,
+    userId: datos.userId,
+    userEmail: datos.email ?? undefined,
+    targetType: 'USER',
+    targetId: datos.userId,
+    details: datos.details,
+    ipAddress,
+    userAgent,
+    severity: getSeverityForAction(action),
+  });
+}
 
 /** Último acceso (dispositivo e IP) y aviso al equipo si entra un admin. Lo usan el login con correo y el de Google. */
-async function registrarAcceso(userId: string, nombre: string, isAdmin: boolean, role: string) {
+async function registrarAcceso(userId: string, nombre: string, isAdmin: boolean, role: string, email: string | null, metodo: 'contraseña' | 'google') {
+  await registrarEnBitacora('AUTH_LOGIN_SUCCESS', { userId, email, details: { metodo, panel: isAdmin } });
   try {
     const reqHeaders = await headers();
     const userAgent = reqHeaders.get('user-agent') || 'Desconocido';
@@ -122,7 +148,10 @@ export const authOptions: NextAuthOptions = {
 
           if (isPasswordValid) {
             registrarAcierto(correo);
-            if (!(await cuentaPuedeEntrar(user.id))) throw new Error('CUENTA_SUSPENDIDA');
+            if (!(await cuentaPuedeEntrar(user.id))) {
+              await registrarEnBitacora('SECURITY_ACCESS_DENIED', { userId: user.id, email: user.email, details: { motivo: 'Cuenta suspendida' } });
+              throw new Error('CUENTA_SUSPENDIDA');
+            }
 
             const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
 
@@ -133,7 +162,7 @@ export const authOptions: NextAuthOptions = {
               });
             }
 
-            await registrarAcceso(user.id, user.name || user.email || '', isAdmin, user.role);
+            await registrarAcceso(user.id, user.name || user.email || '', isAdmin, user.role, user.email, 'contraseña');
 
             return {
               id: user.id,
@@ -150,6 +179,12 @@ export const authOptions: NextAuthOptions = {
         }
 
         const esperar = registrarFallo(correo, ip);
+        // Una fila por fallo; el bloqueo se anota una vez (los intentos durante la espera se cortan arriba, sin fila)
+        await registrarEnBitacora(esperar > 0 ? 'AUTH_LOGIN_BLOCKED' : 'AUTH_LOGIN_FAILED', {
+          userId: user?.id,
+          email: correo,
+          details: { cuentaExiste: Boolean(user), ...(esperar > 0 ? { esperaSegundos: esperar } : {}) },
+        });
         throw new Error(esperar > 0 ? `DEMASIADOS_INTENTOS:${esperar}` : 'Credenciales invalidas');
       },
     }),
@@ -200,7 +235,10 @@ export const authOptions: NextAuthOptions = {
         select: { id: true, name: true, email: true, image: true, role: true, emailVerified: true, sessionVersion: true },
       });
       if (!dbUser) return `/login?error=${account.provider}-sin-correo`;
-      if (!(await cuentaPuedeEntrar(dbUser.id))) return '/login?error=cuenta-suspendida';
+      if (!(await cuentaPuedeEntrar(dbUser.id))) {
+        await registrarEnBitacora('SECURITY_ACCESS_DENIED', { userId: dbUser.id, email: dbUser.email, details: { motivo: 'Cuenta suspendida', metodo: 'google' } });
+        return '/login?error=cuenta-suspendida';
+      }
 
       Object.assign(user, {
         id: dbUser.id,
@@ -213,7 +251,7 @@ export const authOptions: NextAuthOptions = {
         permissions: [],
         sessionVersion: dbUser.sessionVersion,
       });
-      await registrarAcceso(dbUser.id, dbUser.name || dbUser.email || '', false, dbUser.role);
+      await registrarAcceso(dbUser.id, dbUser.name || dbUser.email || '', false, dbUser.role, dbUser.email, 'google');
       return true;
     },
     async jwt({ token, user, trigger }) {

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
+import { registrarAccionAdmin } from '@/lib/audit-log';
 
 // GET - List all discount requests for admin
 export async function GET(request: NextRequest) {
@@ -124,6 +125,15 @@ export async function PATCH(request: NextRequest) {
             where: { id: requestId },
             data: updateData,
         });
+
+        if (updated.status === 'APPROVED' || updated.status === 'REJECTED') {
+            await registrarAccionAdmin(session, updated.status === 'APPROVED' ? 'DISCOUNT_REQUEST_APPROVED' : 'DISCOUNT_REQUEST_REJECTED', { type: 'DISCOUNT_REQUEST', id: requestId }, {
+                producto: discountRequest.productName,
+                cliente: discountRequest.user.email,
+                precio: Number(discountRequest.originalPrice),
+                ...(updated.status === 'APPROVED' ? { descuento: Number(updated.approvedDiscount), vence: updated.expiresAt } : {}),
+            }, request);
+        }
 
         return NextResponse.json({
             success: true,

@@ -4,14 +4,11 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
-import { montoDecimal } from '@/lib/pricing';
+import { montoDecimal, precioValido } from '@/lib/pricing';
+import { registrarAccionAdmin } from '@/lib/audit-log';
 
 // C-97: valores de la edición rápida y de los masivos. Antes "abc" daba 500 y se aceptaban negativos.
 const ESTADOS = ['PUBLISHED', 'DRAFT', 'ARCHIVED'];
-function precioValido(valor: unknown): number | null {
-    const n = typeof valor === 'number' ? valor : Number.parseFloat(String(valor).replace(',', '.'));
-    return Number.isFinite(n) && n >= 0 && n <= 1_000_000 ? n : null;
-}
 function stockValido(valor: unknown): number | null {
     const n = typeof valor === 'number' ? valor : Number.parseInt(String(valor), 10);
     return Number.isInteger(n) && n >= 0 && n <= 1_000_000 ? n : null;
@@ -41,14 +38,15 @@ export async function POST(request: NextRequest) {
                 const filas = updates as Fila[];
                 const tipos = new Map((await prisma.product.findMany({
                     where: { id: { in: filas.map((u) => String(u.id)) } },
-                    select: { id: true, productType: true },
-                })).map((p) => [p.id, p.productType]));
+                    select: { id: true, productType: true, name: true, priceUSD: true },
+                })).map((p) => [p.id, p]));
 
                 let digitalesSinPrecio = 0;
                 const cambios: { id: string; data: Record<string, unknown> }[] = [];
                 for (const [i, update] of filas.entries()) {
-                    const tipo = tipos.get(String(update.id));
-                    if (!tipo) return NextResponse.json({ error: `Fila ${i + 1}: el producto no existe` }, { status: 400 });
+                    const producto = tipos.get(String(update.id));
+                    const tipo = producto?.productType;
+                    if (!producto) return NextResponse.json({ error: `Fila ${i + 1}: el producto no existe` }, { status: 400 });
                     const data: Record<string, unknown> = {};
                     if (update.priceUSD !== undefined) {
                         const precio = precioValido(update.priceUSD);
@@ -74,6 +72,15 @@ export async function POST(request: NextRequest) {
                 );
 
                 if (results.length > 0) revalidateStorefront();
+                // Bitácora (C-104): solo los precios que de verdad cambiaron
+                const preciosCambiados = cambios
+                    .filter(({ id, data }) => data.priceUSD !== undefined && Number(data.priceUSD) !== Number(tipos.get(id)?.priceUSD))
+                    .map(({ id, data }) => ({ id, producto: tipos.get(id)?.name, antes: Number(tipos.get(id)?.priceUSD), despues: Number(data.priceUSD) }));
+                if (preciosCambiados.length > 0) {
+                    await registrarAccionAdmin(session, 'PRODUCT_PRICE_CHANGED', { type: 'PRODUCT', id: preciosCambiados.length === 1 ? preciosCambiados[0].id : undefined }, {
+                        origen: 'Edición rápida', productos: preciosCambiados.length, cambios: preciosCambiados.slice(0, 30),
+                    }, request);
+                }
                 return NextResponse.json({
                     message: `${results.length} productos actualizados exitosamente.${avisoDigitales(digitalesSinPrecio)}`,
                     count: results.length,
@@ -111,7 +118,7 @@ export async function POST(request: NextRequest) {
             if (isNaN(pct) || pct <= -100 || pct > 1000) return NextResponse.json({ error: 'Porcentaje inválido' }, { status: 400 });
 
             // Solo físicos: el precio de un digital sale de sus montos (C-97)
-            const products = await prisma.product.findMany({ where: { id: { in: productIds }, productType: 'PHYSICAL' }, select: { id: true, priceUSD: true } });
+            const products = await prisma.product.findMany({ where: { id: { in: productIds }, productType: 'PHYSICAL' }, select: { id: true, name: true, priceUSD: true } });
             const digitales = await prisma.product.count({ where: { id: { in: productIds }, productType: 'DIGITAL' } });
             await prisma.$transaction(
                 products.map(p => prisma.product.update({
@@ -119,7 +126,13 @@ export async function POST(request: NextRequest) {
                     data: { priceUSD: montoDecimal(Math.max(0, Number(p.priceUSD) * (1 + pct / 100))) }
                 }))
             );
-            if (products.length > 0) revalidateStorefront();
+            if (products.length > 0) {
+                revalidateStorefront();
+                await registrarAccionAdmin(session, 'PRODUCT_PRICE_CHANGED', { type: 'PRODUCT' }, {
+                    origen: 'Masivo por porcentaje', porcentaje: pct, productos: products.length,
+                    cambios: products.slice(0, 30).map((p) => ({ id: p.id, producto: p.name, antes: Number(p.priceUSD), despues: Number(montoDecimal(Math.max(0, Number(p.priceUSD) * (1 + pct / 100)))) })),
+                }, request);
+            }
             return NextResponse.json({ message: `${products.length} productos actualizados con ${pct > 0 ? '+' : ''}${pct}%.${avisoDigitales(digitales)}`, count: products.length });
         }
 
@@ -145,6 +158,9 @@ export async function POST(request: NextRequest) {
 
         // El precio fijo tampoco toca a los digitales (C-97)
         const soloFisicos = field === 'price';
+        const preciosAntes = soloFisicos
+            ? await prisma.product.findMany({ where: { id: { in: productIds }, productType: 'PHYSICAL' }, select: { id: true, name: true, priceUSD: true }, take: 30 })
+            : [];
         const result = await prisma.product.updateMany({
             where: { id: { in: productIds }, ...(soloFisicos ? { productType: 'PHYSICAL' as const } : {}) },
             data: updateData,
@@ -152,6 +168,12 @@ export async function POST(request: NextRequest) {
         const digitales = soloFisicos ? await prisma.product.count({ where: { id: { in: productIds }, productType: 'DIGITAL' } }) : 0;
 
         if (result.count > 0) revalidateStorefront();
+        if (soloFisicos && result.count > 0) {
+            await registrarAccionAdmin(session, 'PRODUCT_PRICE_CHANGED', { type: 'PRODUCT' }, {
+                origen: 'Masivo con precio fijo', productos: result.count,
+                cambios: preciosAntes.map((p) => ({ id: p.id, producto: p.name, antes: Number(p.priceUSD), despues: Number(updateData.priceUSD) })),
+            }, request);
+        }
         return NextResponse.json({
             message: `${result.count} productos actualizados exitosamente.${avisoDigitales(digitales)}`,
             count: result.count,

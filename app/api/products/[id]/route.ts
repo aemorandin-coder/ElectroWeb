@@ -6,6 +6,8 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type DigitalVariantInput } from '@/lib/digital-variants';
 import { parseDigitalMargin, specsForUpdate } from '@/lib/product-specs';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
+import { precioValido } from '@/lib/pricing';
+import { registrarAccionAdmin } from '@/lib/audit-log';
 
 // Variantes con costo y proveedor: esta ruta es solo para quien administra productos (C-60)
 const adminVariantsInclude = { orderBy: [{ sortOrder: 'asc' as const }] };
@@ -121,7 +123,12 @@ export async function PATCH(
     // Only update fields that are provided and exist in schema
     if (body.name !== undefined) updateData.name = body.name;
     if (body.description !== undefined) updateData.description = body.description;
-    if (body.priceUSD !== undefined) updateData.priceUSD = parseFloat(body.priceUSD);
+    // Antes parseFloat sin más: "-5" guardaba un precio negativo y "" rompía con un 500 (C-104)
+    if (body.priceUSD !== undefined) {
+      const precio = precioValido(body.priceUSD);
+      if (precio === null) return NextResponse.json({ error: 'Precio inválido' }, { status: 400 });
+      updateData.priceUSD = precio;
+    }
     if (body.stock !== undefined) updateData.stock = parseInt(body.stock);
     if (body.sku !== undefined) updateData.sku = body.sku;
     if (body.categoryId !== undefined) updateData.categoryId = body.categoryId;
@@ -163,7 +170,11 @@ export async function PATCH(
     if (body.isFeatured !== undefined) updateData.isFeatured = body.isFeatured;
 
     // Pricing extras
-    if (body.compareAtPriceUSD !== undefined) updateData.compareAtPriceUSD = body.compareAtPriceUSD ? parseFloat(body.compareAtPriceUSD) : null;
+    if (body.compareAtPriceUSD !== undefined) {
+      const antes = body.compareAtPriceUSD ? precioValido(body.compareAtPriceUSD) : null;
+      if (body.compareAtPriceUSD && antes === null) return NextResponse.json({ error: 'Precio anterior inválido' }, { status: 400 });
+      updateData.compareAtPriceUSD = antes;
+    }
     if (body.costPerItem !== undefined) updateData.costPerItem = body.costPerItem ? parseFloat(body.costPerItem) : null;
 
     // Inventory extras
@@ -227,6 +238,21 @@ export async function PATCH(
     });
 
     revalidateStorefront();
+
+    // Bitácora (C-104): cambios de precio con el valor anterior y el nuevo
+    const precioAntes = Number(oldProduct.priceUSD);
+    const precioDespues = Number(product.priceUSD);
+    const tachadoAntes = oldProduct.compareAtPriceUSD != null ? Number(oldProduct.compareAtPriceUSD) : null;
+    const tachadoDespues = product.compareAtPriceUSD != null ? Number(product.compareAtPriceUSD) : null;
+    if (precioAntes !== precioDespues || tachadoAntes !== tachadoDespues) {
+      await registrarAccionAdmin(session, 'PRODUCT_PRICE_CHANGED', { type: 'PRODUCT', id }, {
+        origen: 'Edición del producto',
+        producto: product.name,
+        antes: precioAntes,
+        despues: precioDespues,
+        ...(tachadoAntes !== tachadoDespues ? { tachadoAntes, tachadoDespues } : {}),
+      }, request);
+    }
 
     const safeNum = (v: unknown) => v != null ? Number(v) : null;
     const formattedProduct = {
@@ -335,6 +361,7 @@ export async function DELETE(
     });
 
     revalidateStorefront();
+    await registrarAccionAdmin(session, 'PRODUCT_DELETED', { type: 'PRODUCT', id }, { producto: product.name, precio: Number(product.priceUSD) }, request);
     return NextResponse.json({ message: 'Producto eliminado correctamente' });
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };

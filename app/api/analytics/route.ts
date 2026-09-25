@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
 import { ipParaRegistro } from '@/lib/ip';
+import { getToken } from 'next-auth/jwt';
+
+// Buscadores y monitores: no son visitas de personas (C-104)
+const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|monitor|curl|wget|python|axios|node-fetch/i;
 
 // Rate limit for analytics endpoint - prevent DoS
 const ANALYTICS_RATE_LIMIT = {
@@ -57,13 +61,37 @@ export async function POST(request: NextRequest) {
         // Get IP and user agent from headers
         const ipAddress = ipParaRegistro(request.headers);
         const userAgent = request.headers.get('user-agent') || 'unknown';
+        if (userAgent === 'unknown' || BOT_UA.test(userAgent)) {
+            return NextResponse.json({ success: true, ignored: 'bot' });
+        }
+        // El panel no se mide (el rastreador ya lo salta; esto cubre llamadas directas)
+        if (typeof data.page === 'string' && data.page.startsWith('/admin')) {
+            return NextResponse.json({ success: true, ignored: 'admin' });
+        }
+        // Quién es sale del token de sesión, nunca del body: antes cualquiera podía anotar eventos a nombre de otro (C-104)
+        const token = await getToken({ req: request }).catch(() => null);
+        const userId = typeof token?.id === 'string' ? token.id : null;
 
         // Parse device info from user agent
-        const deviceType = /Mobile|Android|iPhone|iPad/i.test(userAgent) ?
-            (/iPad|Tablet/i.test(userAgent) ? 'tablet' : 'mobile') : 'desktop';
+        // Tableta: iPad o Android sin "Mobile" (así se anuncian las tabletas Android)
+        const deviceType = /iPad|Tablet/i.test(userAgent) || (/Android/i.test(userAgent) && !/Mobile/i.test(userAgent))
+            ? 'tablet'
+            : /Mobile|Android|iPhone/i.test(userAgent) ? 'mobile' : 'desktop';
 
-        const browser = userAgent.match(/(Chrome|Firefox|Safari|Edge|Opera|MSIE|Trident)/i)?.[0] || 'unknown';
-        const os = userAgent.match(/(Windows|Mac OS|Linux|Android|iOS)/i)?.[0] || 'unknown';
+        // El orden importa: Edge y Opera también dicen "Chrome", Chrome también dice "Safari",
+        // y un iPhone dice "like Mac OS X" (antes contaba como Mac)
+        const browser = /Edg\//.test(userAgent) ? 'Edge'
+            : /OPR\/|Opera/.test(userAgent) ? 'Opera'
+            : /Firefox|FxiOS/.test(userAgent) ? 'Firefox'
+            : /Chrome|CriOS/.test(userAgent) ? 'Chrome'
+            : /Safari/.test(userAgent) ? 'Safari'
+            : 'unknown';
+        const os = /iPhone|iPad|iPod/.test(userAgent) ? 'iOS'
+            : /Android/.test(userAgent) ? 'Android'
+            : /Windows/.test(userAgent) ? 'Windows'
+            : /Mac OS/.test(userAgent) ? 'macOS'
+            : /Linux/.test(userAgent) ? 'Linux'
+            : 'unknown';
 
         // Sanitize optional string fields
         const sanitizeString = (val: unknown, maxLen: number = 255): string | null => {
@@ -89,8 +117,7 @@ export async function POST(request: NextRequest) {
                 eventValue,
                 page: sanitizeString(data.page, 500),
                 referrer: sanitizeString(data.referrer, 500),
-                userId: sanitizeString(data.userId, 50),
-                userEmail: sanitizeString(data.userEmail, 255),
+                userId,
                 sessionId: sanitizeString(data.sessionId, 100),
                 deviceType,
                 browser,
@@ -98,9 +125,7 @@ export async function POST(request: NextRequest) {
                 ipAddress,
                 country: sanitizeString(data.country, 50),
                 city: sanitizeString(data.city, 100),
-                isSuspicious: Boolean(data.isSuspicious),
-                threatLevel: sanitizeString(data.threatLevel, 20),
-                threatDetails: sanitizeString(data.threatDetails, 500),
+                // isSuspicious/threatLevel ya no se aceptan del navegador: la seguridad sale de la bitácora del servidor (C-104)
                 metadata: data.metadata ? JSON.stringify(data.metadata).substring(0, 2000) : undefined,
             },
         });

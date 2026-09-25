@@ -9,6 +9,7 @@ import {
   notifyOrderDelivered,
 } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { registrarAccionAdmin } from '@/lib/audit-log';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { formatPaymentMethod } from '@/lib/format-helpers';
 import { notifyStockCrossings } from '@/lib/stock-alerts';
@@ -1152,6 +1153,23 @@ export async function PATCH(request: NextRequest) {
           break;
         }
       }
+    }
+
+    // Bitácora (C-104): quién confirmó el pago, canceló o movió la orden
+    if (confirmandoPago || cancelando || oldOrder.status !== order.status) {
+      await registrarAccionAdmin(
+        session,
+        cancelando ? 'ORDER_CANCELLED' : confirmandoPago ? 'ORDER_PAYMENT_UPDATED' : 'ORDER_STATUS_CHANGED',
+        { type: 'ORDER', id: order.id },
+        {
+          orden: oldOrder.orderNumber,
+          total: Number(oldOrder.totalUSD),
+          estadoAntes: oldOrder.status,
+          estadoDespues: order.status,
+          ...(cancelando ? { motivo: motivo.slice(0, 300), saldoDevuelto: reintegro } : {}),
+        },
+        request
+      );
     }
 
     // Avisos al equipo (C-73): quién confirmó el pago o canceló, para que el resto lo sepa

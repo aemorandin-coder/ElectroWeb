@@ -30,7 +30,7 @@ export default function ProductCard({ product, exchangeRateVES, lowStockThreshol
   const stockLabel = getStockLabel(product, lowStockThreshold);
 
   return (
-    <article className="relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-white transition-shadow lg:hover:shadow-md">
+    <article data-product-id={product.id} className="relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-white transition-shadow lg:hover:shadow-md">
       <div className="relative aspect-square bg-white">
         <Image
           src={image}

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
+import type { Session } from 'next-auth';
 import { ipParaRegistro } from '@/lib/ip';
 
 /**
@@ -9,6 +10,7 @@ export type AuditAction =
     // Auth actions
     | 'AUTH_LOGIN_SUCCESS'
     | 'AUTH_LOGIN_FAILED'
+    | 'AUTH_LOGIN_BLOCKED'
     | 'AUTH_LOGOUT'
     | 'AUTH_PASSWORD_RESET'
     | 'AUTH_PASSWORD_CHANGED'
@@ -23,6 +25,7 @@ export type AuditAction =
     | 'PRODUCT_UPDATED'
     | 'PRODUCT_DELETED'
     | 'PRODUCT_STOCK_CHANGED'
+    | 'PRODUCT_PRICE_CHANGED'
     // Order management
     | 'ORDER_CREATED'
     | 'ORDER_STATUS_CHANGED'
@@ -37,6 +40,12 @@ export type AuditAction =
     // Settings
     | 'SETTINGS_UPDATED'
     | 'PAYMENT_METHOD_CHANGED'
+    // Aprobaciones del panel (C-104)
+    | 'DISCOUNT_REQUEST_APPROVED'
+    | 'DISCOUNT_REQUEST_REJECTED'
+    | 'DISCOUNT_CHANGED'
+    | 'CREATOR_STATUS_CHANGED'
+    | 'VERIFICATION_REVIEWED'
     // Security
     | 'SECURITY_RATE_LIMIT_HIT'
     | 'SECURITY_SUSPICIOUS_ACTIVITY'
@@ -82,12 +91,13 @@ export async function createAuditLog(params: AuditLogParams): Promise<void> {
             data: {
                 action,
                 userId,
-                userEmail,
+                // Topes de largo: estos campos pueden venir de quien ataca (correo tecleado, navegador)
+                userEmail: userEmail?.slice(0, 255),
                 targetType,
                 targetId,
-                details: details ? JSON.stringify(details) : null,
+                details: details ? JSON.stringify(details).slice(0, 4000) : null,
                 ipAddress,
-                userAgent,
+                userAgent: userAgent?.slice(0, 300),
                 severity,
                 createdAt: new Date(),
             },
@@ -137,25 +147,52 @@ export async function logAdminAction(
 }
 
 /**
+ * Acción hecha desde el panel (C-104): quién la hizo sale de la sesión, nunca del body.
+ * No lanza: la bitácora nunca rompe la acción que registra.
+ */
+export async function registrarAccionAdmin(
+    session: Session | null,
+    action: AuditAction,
+    target: { type: string; id?: string },
+    details: Record<string, unknown> = {},
+    request?: Request
+): Promise<void> {
+    const user = session?.user as { id?: string; email?: string | null } | undefined;
+    await createAuditLog({
+        action,
+        userId: user?.id,
+        userEmail: user?.email ?? undefined,
+        targetType: target.type,
+        targetId: target.id,
+        details,
+        ...(request ? getRequestMetadata(request) : {}),
+        severity: getSeverityForAction(action),
+    });
+}
+
+/**
  * Determine severity based on action type
  */
-function getSeverityForAction(action: AuditAction): AuditSeverity {
+export function getSeverityForAction(action: AuditAction): AuditSeverity {
+    // "Crítica" es lo que alguien debe mirar hoy. Guardar la configuración o cargar saldo a mano es trabajo
+    // normal del panel: queda en la bitácora sin encender la alarma (C-104).
     const criticalActions: AuditAction[] = [
         'USER_DELETED',
         'USER_ROLE_CHANGED',
-        'USER_BALANCE_MODIFIED',
         'ORDER_REFUNDED',
-        'SETTINGS_UPDATED',
         'SECURITY_SUSPICIOUS_ACTIVITY',
         'SECURITY_DUPLICATE_PAYMENT_REFERENCE',
     ];
 
     const warningActions: AuditAction[] = [
         'AUTH_LOGIN_FAILED',
+        'AUTH_LOGIN_BLOCKED',
         'AUTH_PASSWORD_RESET',
+        'USER_BALANCE_MODIFIED',
         'ORDER_CANCELLED',
         'PRODUCT_DELETED',
         'SECURITY_RATE_LIMIT_HIT',
+        'SECURITY_ACCESS_DENIED',
     ];
 
     if (criticalActions.includes(action)) return 'CRITICAL';

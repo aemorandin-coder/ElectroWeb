@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { montoDecimal } from '@/lib/pricing';
 import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { registrarAccionAdmin } from '@/lib/audit-log';
 import { notifyRechargeApproved, notifyRechargeRejected } from '@/lib/notifications';
 
 // GET - Get all transactions
@@ -164,6 +165,13 @@ export async function PATCH(request: NextRequest) {
         if (!result) {
             return NextResponse.json({ error: 'La transacción ya fue procesada' }, { status: 409 });
         }
+
+        await registrarAccionAdmin(session, status === 'COMPLETED' ? 'BALANCE_RECHARGE_APPROVED' : 'BALANCE_RECHARGE_REJECTED', { type: 'TRANSACTION', id }, {
+            tipo: transaction.type,
+            monto: Number(transaction.amount),
+            cliente: transaction.balance.user.id,
+            ...(status === 'CANCELLED' && typeof rejectionReason === 'string' ? { motivo: rejectionReason.slice(0, 300) } : {}),
+        }, request);
 
         // Send notification to customer
         try {

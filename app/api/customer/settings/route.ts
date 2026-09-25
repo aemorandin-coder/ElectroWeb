@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
 import { contrasenaSchema } from '@/lib/validations/registro';
+import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 
 export async function GET() {
     try {
@@ -300,6 +301,14 @@ export async function POST(request: NextRequest) {
         await prisma.user.update({
             where: { id: userId },
             data: { password: hashedPassword },
+        });
+        await createAuditLog({
+            action: 'AUTH_PASSWORD_CHANGED',
+            userId,
+            userEmail: session.user.email ?? undefined,
+            targetType: 'USER',
+            targetId: userId,
+            ...getRequestMetadata(request),
         });
 
         return NextResponse.json({ message: 'Contraseña actualizada exitosamente' });

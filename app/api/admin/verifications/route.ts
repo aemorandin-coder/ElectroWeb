@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { registrarAccionAdmin } from '@/lib/audit-log';
 
 export async function GET(request: NextRequest) {
     try {
@@ -68,6 +69,10 @@ export async function PATCH(request: NextRequest) {
         if (!profileId || !status) {
             return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 });
         }
+        // Antes se guardaba cualquier texto como estado (C-104)
+        if (!['PENDING', 'APPROVED', 'REJECTED'].includes(status)) {
+            return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
+        }
 
         const updatedProfile = await prisma.profile.update({
             where: { id: profileId },
@@ -86,6 +91,12 @@ export async function PATCH(request: NextRequest) {
                 }
             }
         });
+
+        await registrarAccionAdmin(session, 'VERIFICATION_REVIEWED', { type: 'USER', id: updatedProfile.userId }, {
+            cliente: updatedProfile.user.email,
+            estado: status,
+            ...(notes ? { notas: String(notes).slice(0, 300) } : {}),
+        }, request);
 
         // TODO: Send email notification to user about status change
 

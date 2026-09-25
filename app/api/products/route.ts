@@ -61,6 +61,8 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         category: true,
+        // C-51: la lista marca "desde" y no deja editar el precio de los digitales con montos
+        _count: { select: { digitalVariants: { where: { isActive: true } } } },
       },
       orderBy: { createdAt: 'desc' },
       // Only apply pagination if not requesting all
@@ -256,98 +258,5 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH - Update product
-export async function PATCH(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
-    }
-
-    const body = await request.json();
-    const oldProduct = await prisma.product.findUnique({ where: { id } });
-
-    if (!oldProduct) {
-      return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
-    }
-
-    // Validar imágenes si se están actualizando
-    if (body.images && Array.isArray(body.images) && body.images.length > 4) {
-      return NextResponse.json({
-        error: 'Máximo 4 imágenes permitidas por producto'
-      }, { status: 400 });
-    }
-
-    // SECURITY: Whitelist of allowed fields to prevent mass assignment
-    const allowedFields = [
-      'name', 'description', 'sku', 'slug', 'priceUSD', 'priceVES',
-      'stock', 'minStock', 'categoryId', 'brandId', 'images', 'mainImage',
-      'specs', 'features', 'status', 'isFeatured', 'productType',
-      'digitalPlatform', 'digitalRegion', 'deliveryMethod',
-      'weightKg', 'dimensions', 'isConsolidable', 'shippingCost', 'freeShipping', 'tags'
-    ];
-
-    // Filter body to only include allowed fields
-    const filteredData: Record<string, unknown> = {};
-    for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        filteredData[field] = body[field];
-      }
-    }
-
-    // Parse numeric fields safely
-    if (filteredData.priceUSD !== undefined) {
-      const price = parseFloat(String(filteredData.priceUSD));
-      if (isNaN(price) || price < 0) {
-        return NextResponse.json({ error: 'Precio inválido' }, { status: 400 });
-      }
-      filteredData.priceUSD = price;
-    }
-
-    if (filteredData.stock !== undefined) {
-      const stock = parseInt(String(filteredData.stock), 10);
-      if (isNaN(stock) || stock < 0) {
-        return NextResponse.json({ error: 'Stock inválido' }, { status: 400 });
-      }
-      filteredData.stock = stock;
-    }
-
-    if (filteredData.freeShipping !== undefined && typeof filteredData.freeShipping !== 'boolean') {
-      return NextResponse.json({ error: 'Envío gratis inválido' }, { status: 400 });
-    }
-
-    if (filteredData.minStock !== undefined) {
-      const minStock = parseInt(String(filteredData.minStock), 10);
-      filteredData.minStock = (isNaN(minStock) || minStock < 0) ? 0 : minStock;
-    }
-
-    // Validate status if provided
-    if (filteredData.status && !['PUBLISHED', 'DRAFT', 'ARCHIVED'].includes(String(filteredData.status))) {
-      return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
-    }
-
-    // specs llega entero: se conservan las claves internas que no trae (C-95)
-    if (filteredData.specs !== undefined) {
-      filteredData.specs = JSON.stringify(specsForUpdate(oldProduct.specs, { specifications: filteredData.specs }));
-    }
-
-    const product = await prisma.product.update({
-      where: { id },
-      data: filteredData,
-    });
-    revalidateStorefront();
-
-    return NextResponse.json(product);
-  } catch (error) {
-    console.error('Error updating product:', error);
-    return NextResponse.json({ error: 'Error al actualizar producto' }, { status: 500 });
-  }
-}
-
+// PATCH ?id= se quitó en C-51: solo lo usaba el botón de estado de la lista, que no funcionaba (mandaba isActive,
+// que no estaba en su lista blanca). La lista usa PATCH /api/products/[id], que valida y registra los precios.

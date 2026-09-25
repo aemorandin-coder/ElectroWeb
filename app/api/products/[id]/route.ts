@@ -164,6 +164,10 @@ export async function PATCH(
     if (body.isActive !== undefined) {
       updateData.status = body.isActive ? 'PUBLISHED' : 'DRAFT';
     } else if (body.status !== undefined) {
+      // Antes cualquier texto llegaba a Prisma y daba 500 (C-51)
+      if (!['PUBLISHED', 'DRAFT', 'ARCHIVED'].includes(body.status)) {
+        return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
+      }
       updateData.status = body.status;
     }
 

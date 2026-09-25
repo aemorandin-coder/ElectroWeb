@@ -14,6 +14,7 @@ function stockValido(valor: unknown): number | null {
     return Number.isInteger(n) && n >= 0 && n <= 1_000_000 ? n : null;
 }
 // El precio de un digital es el "desde" de sus montos (C-60): cambiarlo aquí lo separaba de lo que se cobra
+const productosActualizados = (n: number) => `${n} ${n === 1 ? 'producto actualizado' : 'productos actualizados'}.`;
 const avisoDigitales = (n: number) => n > 0 ? ` ${n} ${n === 1 ? 'digital no cambió de precio' : 'digitales no cambiaron de precio'}: su precio sale de sus montos.` : '';
 
 // POST /api/products/bulk/update - Bulk update products
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
                     }, request);
                 }
                 return NextResponse.json({
-                    message: `${results.length} productos actualizados exitosamente.${avisoDigitales(digitalesSinPrecio)}`,
+                    message: `${productosActualizados(results.length)}${avisoDigitales(digitalesSinPrecio)}`,
                     count: results.length,
                 });
             } catch (error) {
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
                     cambios: products.slice(0, 30).map((p) => ({ id: p.id, producto: p.name, antes: Number(p.priceUSD), despues: Number(montoDecimal(Math.max(0, Number(p.priceUSD) * (1 + pct / 100)))) })),
                 }, request);
             }
-            return NextResponse.json({ message: `${products.length} productos actualizados con ${pct > 0 ? '+' : ''}${pct}%.${avisoDigitales(digitales)}`, count: products.length });
+            return NextResponse.json({ message: `${products.length} ${products.length === 1 ? 'producto actualizado' : 'productos actualizados'} con ${pct > 0 ? '+' : ''}${pct}%.${avisoDigitales(digitales)}`, count: products.length });
         }
 
         // Build update data for uniform field operations
@@ -175,7 +176,7 @@ export async function POST(request: NextRequest) {
             }, request);
         }
         return NextResponse.json({
-            message: `${result.count} productos actualizados exitosamente.${avisoDigitales(digitales)}`,
+            message: `${productosActualizados(result.count)}${avisoDigitales(digitales)}`,
             count: result.count,
         });
     } catch (error: unknown) {

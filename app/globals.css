@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* La documentación no genera clases (C-109): un ejemplo de capa con asterisco escrito en los .md creaba
+   una regla inválida, que era un aviso en el build y rompía el CSS en `next dev`. */
+@source not "../docs";
+@source not "../*.md";
 
 /* ============================================
    ELECTRO SHOP MORANDIN C.A. - DESIGN SYSTEM

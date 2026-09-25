@@ -26,10 +26,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const data = await request.json();
+        // Cuerpo vacío o cortado (el navegador corta la petición al cambiar de página): 400, no error del servidor (C-109)
+        const data = await request.json().catch(() => null);
 
         // Validate required fields
-        if (!data.eventType || typeof data.eventType !== 'string') {
+        if (!data || typeof data !== 'object' || !data.eventType || typeof data.eventType !== 'string') {
             return NextResponse.json(
                 { error: 'eventType is required and must be a string' },
                 { status: 400 }

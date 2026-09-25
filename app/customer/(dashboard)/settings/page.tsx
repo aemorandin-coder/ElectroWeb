@@ -77,14 +77,6 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
 
-  useEffect(() => {
-    fetchSettings();
-    // Check email verification status from session
-    if (session?.user) {
-      setEmailVerified(Boolean((session.user as { emailVerified?: boolean }).emailVerified));
-    }
-  }, [session]);
-
   async function fetchSettings() {
     try {
       const response = await fetch('/api/customer/settings');
@@ -124,6 +116,14 @@ export default function SettingsPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchSettings();
+    // Check email verification status from session
+    if (session?.user) {
+      setEmailVerified(Boolean((session.user as { emailVerified?: boolean }).emailVerified));
+    }
+  }, [session]);
 
   const handleSaveSettings = async () => {
     setSaving(true);

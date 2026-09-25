@@ -70,10 +70,6 @@ export default function WarrantyPage() {
 
   useBodyScrollLock(showFormModal);
 
-  useEffect(() => {
-    fetchDeliveredOrders();
-  }, []);
-
   async function fetchDeliveredOrders() {
     try {
       const response = await fetch('/api/orders?status=DELIVERED');
@@ -90,6 +86,10 @@ export default function WarrantyPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchDeliveredOrders();
+  }, []);
 
   const getDaysSinceDelivery = (deliveredAt?: string) => {
     if (!deliveredAt) return null;

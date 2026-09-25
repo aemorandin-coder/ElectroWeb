@@ -155,18 +155,6 @@ export default function ProfilePage() {
   useBodyScrollLock(showBusinessTip);
   const [isMounted, setIsMounted] = useState(false);
 
-  useEffect(() => {
-    setIsMounted(true);
-    fetchProfile();
-    fetchStats();
-
-    // Check if user has seen the business tip
-    const hasSeenTip = localStorage.getItem('hasSeenBusinessTip');
-    if (!hasSeenTip) {
-      setTimeout(() => setShowBusinessTip(true), 2500);
-    }
-  }, []);
-
   const dismissBusinessTip = () => {
     setShowBusinessTip(false);
     localStorage.setItem('hasSeenBusinessTip', 'true');
@@ -243,6 +231,18 @@ export default function ProfilePage() {
       toast.error('No se pudieron cargar las estadísticas');
     }
   }
+
+  useEffect(() => {
+    setIsMounted(true);
+    fetchProfile();
+    fetchStats();
+
+    // Check if user has seen the business tip
+    const hasSeenTip = localStorage.getItem('hasSeenBusinessTip');
+    if (!hasSeenTip) {
+      setTimeout(() => setShowBusinessTip(true), 2500);
+    }
+  }, []);
 
   const handleSave = async () => {
     // Check if there are any changes

@@ -1,8 +1,14 @@
-# Punto de partida (actualizado 2026-09-24: super merge de C-106, C-108 y Gemini R20-R22)
+# Punto de partida (actualizado 2026-09-25: C-105 y C-109 en `main`; nginx con la IP real)
 
 Léelo antes de empezar.
 
 ## 1. Estado de las ramas
+- **25/09:** `main` suma C-109 (destinatarios de campañas con límite) y C-105 (IP real del cliente, `lib/ip.ts`).
+  - **nginx ya pasa la IP real** (Andrés, 25/09): `X-Real-IP`, `X-Forwarded-For` y `X-Forwarded-Proto` en `/etc/nginx/sites-available/electroshopve`. Respaldo en `~/electroshopve.nginx.bak`.
+  - Sin Cloudflare: el dominio apunta directo al servidor (86.48.25.174).
+  - **Deploy del 25/09:** no cambia la base. `git pull && npm run build && pm2 restart electroshop-web --update-env`.
+  - **Comprobar:** el aviso "Acceso de administrador" muestra la misma IP que https://ifconfig.me en ese dispositivo.
+  - **Pendiente en el servidor:** "System restart required" (`pm2 save`, `sudo reboot`, `pm2 status`).
 - **`main` = `origin/main`** (24/09): todo lo revisado está mergeado.
   - C-106: cobro de envío transparente y logos de ZOOM y MRW.
   - C-108: revisión de Gemini.

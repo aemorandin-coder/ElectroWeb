@@ -8,7 +8,8 @@ export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user || !isAuthorized(session, 'MANAGE_CUSTOMERS')) {
+        // MANAGE_USERS es el permiso de Clientes en todo el panel; aquí decía MANAGE_CUSTOMERS, que no existe en ningún otro lado (C-109)
+        if (!session?.user || !isAuthorized(session, 'MANAGE_USERS')) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 

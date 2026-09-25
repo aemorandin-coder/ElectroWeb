@@ -10,13 +10,14 @@ import { verifyCaptcha } from '@/lib/captcha';
 import { estadoLogin, registrarAcierto, registrarFallo } from '@/lib/login-guard';
 import * as bcrypt from 'bcryptjs';
 import { headers } from 'next/headers';
+import { ipParaRegistro } from '@/lib/ip';
 
 /** Último acceso (dispositivo e IP) y aviso al equipo si entra un admin. Lo usan el login con correo y el de Google. */
 async function registrarAcceso(userId: string, nombre: string, isAdmin: boolean, role: string) {
   try {
     const reqHeaders = await headers();
     const userAgent = reqHeaders.get('user-agent') || 'Desconocido';
-    const ip = reqHeaders.get('x-forwarded-for')?.split(',')[0] || reqHeaders.get('x-real-ip') || '127.0.0.1';
+    const ip = ipParaRegistro(reqHeaders);
 
     let device = 'Desconocido';
     if (userAgent.includes('Windows')) device = 'Windows';
@@ -57,7 +58,7 @@ async function registrarAcceso(userId: string, nombre: string, isAdmin: boolean,
 async function ipDeLaPeticion(): Promise<string> {
   try {
     const reqHeaders = await headers();
-    return reqHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() || reqHeaders.get('x-real-ip') || 'desconocida';
+    return ipParaRegistro(reqHeaders);
   } catch {
     return 'desconocida';
   }

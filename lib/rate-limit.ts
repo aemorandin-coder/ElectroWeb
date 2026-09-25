@@ -1,3 +1,5 @@
+import { ipParaRegistro } from '@/lib/ip';
+
 /**
  * Simple in-memory rate limiter for API routes
  * For production, consider using Redis-based solution like @upstash/ratelimit
@@ -100,22 +102,11 @@ export const RATE_LIMITS = {
 };
 
 /**
- * Get client IP from request
+ * IP del cliente para los límites de intentos (C-105: lib/ip.ts). Antes tomaba el primer valor de
+ * x-forwarded-for, que escribe el cliente: cambiándolo en cada intento se saltaba cualquier límite.
  */
 export function getClientIP(request: Request): string {
-    // Check various headers for IP
-    const forwarded = request.headers.get('x-forwarded-for');
-    if (forwarded) {
-        return forwarded.split(',')[0].trim();
-    }
-
-    const realIP = request.headers.get('x-real-ip');
-    if (realIP) {
-        return realIP;
-    }
-
-    // Fallback
-    return 'unknown';
+    return ipParaRegistro(request.headers);
 }
 
 /**

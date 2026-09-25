@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
+import { ipParaRegistro } from '@/lib/ip';
 
 // Rate limit for analytics endpoint - prevent DoS
 const ANALYTICS_RATE_LIMIT = {
@@ -26,10 +27,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const data = await request.json();
+        // Cuerpo vacío o cortado (el navegador corta la petición al cambiar de página): 400, no error del servidor (C-109)
+        const data = await request.json().catch(() => null);
 
         // Validate required fields
-        if (!data.eventType || typeof data.eventType !== 'string') {
+        if (!data || typeof data !== 'object' || !data.eventType || typeof data.eventType !== 'string') {
             return NextResponse.json(
                 { error: 'eventType is required and must be a string' },
                 { status: 400 }
@@ -53,9 +55,7 @@ export async function POST(request: NextRequest) {
             : 'interaction';
 
         // Get IP and user agent from headers
-        const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] ||
-            request.headers.get('x-real-ip') ||
-            'unknown';
+        const ipAddress = ipParaRegistro(request.headers);
         const userAgent = request.headers.get('user-agent') || 'unknown';
 
         // Parse device info from user agent

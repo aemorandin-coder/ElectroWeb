@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
+import { ipParaRegistro } from '@/lib/ip';
 
 /**
  * Tipos de acciones que se registran en el audit log
@@ -101,11 +102,8 @@ export async function createAuditLog(params: AuditLogParams): Promise<void> {
  * Helper to extract request metadata for audit logs
  */
 export function getRequestMetadata(request: Request) {
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const realIp = request.headers.get('x-real-ip');
-
     return {
-        ipAddress: forwardedFor?.split(',')[0].trim() || realIp || 'unknown',
+        ipAddress: ipParaRegistro(request.headers),
         userAgent: request.headers.get('user-agent') || 'unknown',
     };
 }

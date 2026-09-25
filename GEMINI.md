@@ -58,6 +58,7 @@ docs/plan/estado/G-*.md      (solo archivos que empiecen con G-)
 #   app/admin/(dashboard)/products/** (G-63, G-65, G-66), app/admin/(dashboard)/cursos/page.tsx,
 #   components/admin/EmailSettingsPanel.tsx y components/admin/SocialMediaGenerator.tsx (solo G-65)
 #   Fuera en R20: app/admin/(dashboard)/orders/**, components/orders/**, app/checkout/** (Claude rehace los envíos en C-100)
+# R22 (desde 24/09): solo G-68, los 5 archivos de app/customer/(dashboard)/ que nombra la tarjeta.
 # Solo en R12 y solo para cambiar clases (ver PLAN_GEMINI.md, "Reglas de R12"):
 #   app/checkout/page.tsx   components/checkout/CheckoutPagoMovilForm.tsx   components/pago-movil/VerificarPagoMovilForm.tsx
 #   components/ui/**   components/Footer.tsx   components/UserAccountButton.tsx   components/CartIcon.tsx

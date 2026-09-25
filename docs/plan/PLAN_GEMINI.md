@@ -1656,3 +1656,50 @@ De **cada** una anota:
 - **En la firma, además:** qué pasa si firmas y borras, si funciona con el dedo en el teléfono, y si el trazo se ve completo al guardarlo.
 
 **No propongas rediseños ni los hagas**: solo lo que hay, medido. Un commit `[G-67]` con el estado y nada más.
+
+---
+
+## Ronda R22 · El último "Cannot access variable before it is declared" de tu carril · G-68
+Tu carril quedó limpio (medido el 24/09 sobre `gemini/R21`): sin `alert`, hex, `<img>`, `any`, colores viejos ni emojis. Lo único mecánico que queda es esto.
+**Rama:** `gemini/R22` desde `gemini/R21` (G-62 tocó `profile/page.tsx`). Sin `merge` ni `rebase`.
+
+### G-68 · Mover el `useEffect` debajo de la función que llama · Depende: G-67
+**Por qué quedó de G-56:** la receta de G-56 (pasar `const f = async () =>` a `async function f()`) era de Claude y no bastó. La regla `react-hooks/immutability` sigue marcando cuando el efecto está **arriba** de la función, aunque sea `function`. Hay que ponerlo **debajo**.
+Claude lo probó en memoria en los 5 archivos: el error desaparece y ninguna línea cambia, solo se mueve el bloque.
+
+**Regla (la única):** se corta el bloque completo del `useEffect`, desde `useEffect(() => {` hasta su `}, [...]);`, y se pega **justo después** de la `}` que cierra la función. Si son dos funciones, va después de la segunda. Deja una línea en blanco antes. **No se cambia ni un carácter del efecto ni de la función.**
+
+| Archivo | Efecto (línea en `gemini/R21`) | Pégalo después de |
+|---|---|---|
+| `app/customer/(dashboard)/page.tsx` | 50 (el del saludo) | `async function fetchDashboardData()` |
+| `app/customer/(dashboard)/reviews/page.tsx` | 33 | `async function fetchMyReviews()` |
+| `app/customer/(dashboard)/settings/page.tsx` | 80 (el de `[session]`) | `async function fetchSettings()` |
+| `app/customer/(dashboard)/warranty/page.tsx` | 73 | `async function fetchDeliveredOrders()` |
+| `app/customer/(dashboard)/profile/page.tsx` | 158 (el de `setIsMounted(true)`) | `async function fetchStats()` (va después de `fetchProfile` y `fetchStats`) |
+
+**Si entre el efecto y la función hay otro `useState`, `useEffect`, `useMemo`, `useCallback`, `useRef` o `useBodyScrollLock`:** no lo muevas. Pon `BLOQUEADO` en ese archivo y sigue (Claude comprobó que hoy no pasa en ninguno).
+
+**Fuera:** `app/customer/(dashboard)/orders/[id]/digital/page.tsx` (es de Claude), y los errores `set-state-in-effect` y `purity`. No son mecánicos: no los toques aunque ESLint los muestre.
+
+**Lo que tiene que dar ESLint (medido por Claude):**
+
+| Archivo | Antes | Después |
+|---|---|---|
+| `page.tsx` | set-state-in-effect + immutability | **solo** set-state-in-effect |
+| `reviews/page.tsx` | immutability | **set-state-in-effect** (sale uno nuevo: estaba tapado. Es lo esperado) |
+| `settings/page.tsx` | immutability + set-state-in-effect | **solo** set-state-in-effect |
+| `warranty/page.tsx` | immutability + purity | **set-state-in-effect** + purity (igual que reviews) |
+| `profile/page.tsx` | set-state-in-effect + 2 immutability | **solo** set-state-in-effect |
+
+`react-hooks/immutability` tiene que quedar en **0** en los 5. Si da otra cosa, algo se movió mal: `git checkout -- <archivo>` y repite.
+
+**Pruebas que pega en `docs/plan/estado/G-68.md`:**
+1. ESLint por archivo antes y después, con el nombre de cada regla.
+2. `git diff --stat` y, **por archivo**, que las líneas quitadas y agregadas son las mismas:
+   ```bash
+   for f in <los 5>; do diff <(git show gemini/R21:"$f" | sort) <(sort "$f") && echo "$f: solo se movieron líneas"; done
+   ```
+   Tiene que decir "solo se movieron líneas" en los 5. Si `diff` muestra algo, cambiaste un carácter.
+3. `npx tsc --noEmit` (salida real) y `npm run build` (últimas 5 líneas). Si lo único que falla es el prerender de `/` por una columna que tu base no tiene, pégalo y sigue: no es tuyo.
+
+Un commit `[G-68]`.

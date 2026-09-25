@@ -7,6 +7,7 @@ import { adminCard, adminChoice, adminError, adminHint, adminInput, adminLabel, 
 import { formatUSD, formatVES } from '@/lib/currency';
 import { leerDocumento, leerTelefono, nombreSchema } from '@/lib/validations/registro';
 import { etiquetaModo, type Empresa, type ModoEnvio } from '@/lib/envios/empresas';
+import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import type { DeliveryMethod, ShippingBreakdown } from '@/lib/pricing';
 
 /**
@@ -152,6 +153,8 @@ export default function EntregaEnvio({
     local: boolean;
     retiro: boolean;
     tarifaLocal: number;
+    /** Embalaje de Configuración: lo único que cobra la tienda en un envío por ZOOM o MRW */
+    embalaje: number;
     retiroDireccion?: string | null;
     retiroInstrucciones?: string | null;
     tasaVES: number;
@@ -268,7 +271,17 @@ export default function EntregaEnvio({
   }
 
   const metodos: Array<{ id: DeliveryMethod; titulo: string; detalle: string; Icono: typeof FiTruck }> = [
-    ...(opciones.nacional ? [{ id: 'SHIPPING' as const, titulo: 'Envío nacional', detalle: 'ZOOM o MRW, a oficina o a domicilio', Icono: FiTruck }] : []),
+    ...(opciones.nacional
+      ? [{
+        id: 'SHIPPING' as const,
+        titulo: 'Envío nacional',
+        // C-106: el monto a la vista desde la tarjeta, como en la de Guanare
+        detalle: envio.isFreeShipping || !(opciones.embalaje > 0)
+          ? 'ZOOM o MRW · gratis en este pedido'
+          : `ZOOM o MRW · embalaje ${formatUSD(opciones.embalaje)} + flete al retirar`,
+        Icono: FiTruck,
+      }]
+      : []),
     ...(opciones.local
       ? [{
         id: 'LOCAL_DELIVERY' as const,
@@ -300,7 +313,7 @@ export default function EntregaEnvio({
       </div>
 
       {metodos.length > 1 && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="group" aria-label="Tipo de entrega">
+        <div className={`grid grid-cols-1 gap-3 ${metodos.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`} role="group" aria-label="Tipo de entrega">
           {metodos.map(({ id, titulo, detalle, Icono }) => (
             <button
               key={id}
@@ -349,9 +362,9 @@ export default function EntregaEnvio({
                   type="button"
                   aria-pressed={value.carrier === empresa}
                   onClick={() => void elegirEmpresa(empresa)}
-                  className={`${adminChoice(value.carrier === empresa)} h-12 text-center text-sm font-bold text-ink`}
+                  className={`${adminChoice(value.carrier === empresa)} flex h-14 items-center justify-center px-3`}
                 >
-                  {empresa}
+                  <LogoEmpresa empresa={empresa} className={empresa === 'MRW' ? 'h-5' : 'h-6'} />
                 </button>
               ))}
             </div>
@@ -555,39 +568,77 @@ export default function EntregaEnvio({
   );
 }
 
-/** Fila "Envío" del resumen, con lo que paga el cliente aquí y lo que paga al recibir. */
+/** Fila de un monto del resumen, en dólares y bolívares. */
+function FilaMonto({ etiqueta, monto, tasaVES }: { etiqueta: string; monto: number; tasaVES: number }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-sm text-muted">{etiqueta}</span>
+      {monto > 0 ? (
+        <div className="text-right">
+          <span className="text-base font-bold text-ink">{formatUSD(monto)}</span>
+          {tasaVES > 0 && <div className="text-xs font-medium text-brand-500">{formatVES(monto * tasaVES)}</div>}
+        </div>
+      ) : (
+        <span className="text-sm font-bold text-success-strong">Gratis</span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Filas de entrega del resumen (C-106). Con ZOOM o MRW la tienda cobra solo el embalaje y el flete es cobro a destino:
+ * por eso van en dos filas y el flete dice cuándo se paga, en vez de un "Envío: $2,50" que parecía el envío completo.
+ */
 export function ResumenEnvio({
   envio,
   form,
   tasaVES,
+  hayFisicos,
 }: {
   envio: ShippingBreakdown;
   form: EnvioForm;
   tasaVES: number;
+  /** Sin esto no se distingue "solo digitales" de "retiro en tienda": en los dos el peso queda en 0. */
+  hayFisicos: boolean;
 }) {
-  const monto = envio.total;
-  const soloDigital = envio.totalWeight === 0;
-  let detalle = '';
-  if (soloDigital) detalle = 'Productos digitales: sin envío';
-  else if (form.deliveryMethod === 'PICKUP') detalle = 'Retiro en tienda';
-  else if (envio.isFreeShipping) detalle = 'Envío gratis: lo paga la tienda';
-  else if (form.deliveryMethod === 'LOCAL_DELIVERY') detalle = 'Delivery en Guanare';
-  else detalle = `Embalaje. El flete lo pagas${form.carrier ? ` a ${form.carrier}` : ''} al recibir (cobro a destino)`;
-
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted">Envío:</span>
-        {monto > 0 ? (
-          <div className="text-right">
-            <span className="text-base font-bold text-ink">{formatUSD(monto)}</span>
-            {tasaVES > 0 && <div className="text-xs font-medium text-brand-500">{formatVES(monto * tasaVES)}</div>}
-          </div>
-        ) : (
-          <span className="text-sm font-bold text-success-strong">Gratis</span>
-        )}
+  if (!hayFisicos) {
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted">Entrega:</span>
+          <span className="text-sm font-bold text-success-strong">Sin costo</span>
+        </div>
+        <p className="text-xs text-muted">Productos digitales: sin envío</p>
       </div>
-      {detalle && <p className="text-xs text-muted">{detalle}</p>}
+    );
+  }
+
+  if (form.deliveryMethod === 'PICKUP') return <FilaMonto etiqueta="Retiro en tienda:" monto={0} tasaVES={tasaVES} />;
+
+  if (form.deliveryMethod === 'LOCAL_DELIVERY') {
+    return <FilaMonto etiqueta="Delivery en Guanare:" monto={envio.total} tasaVES={tasaVES} />;
+  }
+
+  if (envio.isFreeShipping) {
+    return (
+      <div className="space-y-1">
+        <FilaMonto etiqueta="Envío:" monto={0} tasaVES={tasaVES} />
+        <p className="text-xs text-muted">Lo paga la tienda: embalaje y flete.</p>
+      </div>
+    );
+  }
+
+  const empresa = form.carrier || '';
+  return (
+    <div className="space-y-2">
+      <FilaMonto etiqueta="Embalaje y empaquetado:" monto={envio.total} tasaVES={tasaVES} />
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm text-muted">Flete{empresa ? ` (${empresa})` : ''}:</span>
+        <span className="text-sm font-semibold text-ink-soft">{form.mode === 'DOOR' ? 'Al recibir' : 'Al retirar'}</span>
+      </div>
+      <p className="text-xs text-muted">
+        Cobro a destino: el flete se lo pagas a {empresa || 'la empresa de envíos'}, no a la tienda.
+      </p>
     </div>
   );
 }

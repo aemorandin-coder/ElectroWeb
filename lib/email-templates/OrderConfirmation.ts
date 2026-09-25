@@ -1,4 +1,5 @@
 import { getEmailStyles, getEmailHeader, getEmailFooter } from './base';
+import { ETIQUETA_ENTREGA } from '@/lib/envios/empresas';
 
 interface OrderConfirmationData {
   companyName: string;
@@ -49,6 +50,12 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
       default: return method;
     }
   };
+
+  // C-106: en ZOOM/MRW la tienda cobra solo el embalaje; el flete es cobro a destino y no va en este total.
+  // `deliveryMethod` llega ya traducido con ETIQUETA_ENTREGA (app/api/orders/route.ts).
+  const etiquetaEnvio = deliveryMethod === ETIQUETA_ENTREGA.SHIPPING
+    ? 'Embalaje (el flete se paga al retirar):'
+    : deliveryMethod === ETIQUETA_ENTREGA.LOCAL_DELIVERY ? 'Delivery en Guanare:' : 'Envío:';
 
   return `
     <!DOCTYPE html>
@@ -112,7 +119,7 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
               </tr>
               ${shipping && shipping !== '0' && shipping !== '0.00' ? `
               <tr>
-                <td style="padding: 4px 0; color: #6c757d;">Envío / Delivery:</td>
+                <td style="padding: 4px 0; color: #6c757d;">${etiquetaEnvio}</td>
                 <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #495057;">${shipping} ${currency}</td>
               </tr>
               ` : ''}

@@ -14,7 +14,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import RechargeModal from '@/components/modals/RechargeModalV2';
 import CheckoutPagoMovilForm from '@/components/checkout/CheckoutPagoMovilForm';
 import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverlay';
-import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiTruck, FiInfo, FiCopy, FiCheckCircle, FiGift, FiShield } from 'react-icons/fi';
+import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiInfo, FiCopy, FiCheckCircle, FiGift, FiShield } from 'react-icons/fi';
 import { FaMobileScreen } from 'react-icons/fa6';
 import { FaCheck } from 'react-icons/fa';
 import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
@@ -25,6 +25,7 @@ import { adminCard, adminPrimaryButton, adminSecondaryButton, adminModalOverlay,
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import DatosDelCliente from '@/components/checkout/DatosDelCliente';
 import EntregaEnvio, { ENVIO_INICIAL, ResumenEnvio, envioParaServidor, validarEnvio, type EnvioForm } from '@/components/checkout/EntregaEnvio';
+import { ConfianzaEnvio } from '@/components/envios/ConfianzaEnvio';
 import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalculation, type PricingLine } from '@/lib/pricing';
 
 type CheckoutCartItem = ReturnType<typeof useCart>['items'][number];
@@ -317,6 +318,8 @@ export default function CheckoutPage() {
   const shippingBreakdown = orderCalculation.shipping;
   const finalTotal = orderCalculation.totalUSD;
   const hasPhysicalItems = items.some(item => item.productType !== 'DIGITAL');
+  // C-106: con ZOOM o MRW (cobro a destino) el total es lo que se paga hoy; el flete va aparte
+  const fleteAparte = hasPhysicalItems && envio.deliveryMethod === 'SHIPPING' && !shippingBreakdown.isFreeShipping;
   // Pago Móvil directo solo con la conciliación del BDV configurada en el servidor (C-101)
   const pagoMovilDirecto = companySettings?.pagoMovilDirecto === true;
   const orderItemsBody = useMemo(() => items.map(toOrderItem), [items]);
@@ -736,6 +739,7 @@ export default function CheckoutPage() {
                     local: companySettings?.localDeliveryEnabled === true,
                     retiro: companySettings?.pickupEnabled === true,
                     tarifaLocal: Number(companySettings?.deliveryFeeUSD) || 0,
+                    embalaje: toPricingSettings(companySettings).packagingFeeUSD,
                     retiroDireccion: companySettings?.pickupAddress,
                     retiroInstrucciones: companySettings?.pickupInstructions,
                     tasaVES: Number(companySettings?.exchangeRateVES) || 0,
@@ -1532,7 +1536,7 @@ export default function CheckoutPage() {
 
                     {/* Discount */}
                     {cartDiscount > 0 && (
-                      <div className="flex justify-between items-center animate-pulse">
+                      <div className="flex justify-between items-center">
                         <span className="text-success-strong flex items-center gap-1 text-sm font-medium">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
@@ -1551,12 +1555,12 @@ export default function CheckoutPage() {
                     )}
 
                     {/* Envío (C-100) */}
-                    <ResumenEnvio envio={shippingBreakdown} form={envio} tasaVES={Number(companySettings?.exchangeRateVES) || 0} />
+                    <ResumenEnvio envio={shippingBreakdown} form={envio} tasaVES={Number(companySettings?.exchangeRateVES) || 0} hayFisicos={hasPhysicalItems} />
 
                     {/* Total - Premium Style */}
                     <div className="pt-4 border-t-2 border-dashed border-line">
                       <div className="flex justify-between items-start">
-                        <span className="text-lg font-bold text-ink">Total:</span>
+                        <span className="text-lg font-bold text-ink">{fleteAparte ? 'Total a pagar hoy:' : 'Total:'}</span>
                         <div className="text-right">
                           <span className="text-3xl font-bold text-ink">{formatUSD(finalTotal)}</span>
                           {companySettings?.exchangeRateVES && (
@@ -1568,6 +1572,11 @@ export default function CheckoutPage() {
                           )}
                         </div>
                       </div>
+                      {fleteAparte && (
+                        <p className="mt-2 text-right text-xs text-muted">
+                          No incluye el flete: se lo pagas a {envio.carrier || 'la empresa de envíos'} al {envio.mode === 'DOOR' ? 'recibir' : 'retirar'}.
+                        </p>
+                      )}
                     </div>
 
                     {/* Exchange Rate Note */}
@@ -1593,37 +1602,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Trust Badges */}
-              <div className={`${adminCard} shadow-sm p-5 space-y-4`}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Envíos Asegurados</h3>
-                  <div className="flex gap-2">
-                    <span className="px-2 py-0.5 bg-warning/10 text-warning-strong border border-warning/20 rounded text-[11px] font-bold">ZOOM</span>
-                    <span className="px-2 py-0.5 bg-deal-bg text-deal border border-deal/20 rounded text-[11px] font-bold">MRW</span>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 text-xs text-muted">
-                    <div className="w-7 h-7 bg-brand-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <FiTruck className="w-3.5 h-3.5 text-brand-500" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-ink">Despacho Nacional Garantizado</p>
-                      <p className="text-muted">Envíos Rápidos y Seguros a nivel nacional por ZOOM y MRW.</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3 text-xs text-muted">
-                    <div className="w-7 h-7 bg-success/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <FiShield className="w-3.5 h-3.5 text-success-strong" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-ink">Protección del Comprador</p>
-                      <p className="text-muted">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ConfianzaEnvio />
             </div>
           </div>
         </div>
@@ -1684,7 +1663,7 @@ export default function CheckoutPage() {
                 <ul className="list-disc ml-6 space-y-2 text-ink-soft">
                   <li>Es responsabilidad del cliente proporcionar una dirección de envío completa y correcta.</li>
                   <li>Los datos de contacto (nombre, email, teléfono) provienen de su registro y son verificados.</li>
-                  <li>Si selecciona envío a oficina de encomienda (ZOOM o MRW), debe proporcionar el código correcto de la oficina o casillero.</li>
+                  <li>Si selecciona envío a oficina de encomienda (ZOOM o MRW), debe elegir la oficina o agencia correcta de la lista.</li>
                   <li>La empresa NO corregirá datos errados después de que el pedido haya sido procesado.</li>
                 </ul>
               </div>
@@ -1693,7 +1672,8 @@ export default function CheckoutPage() {
                 <h3 className="font-bold text-base mb-2">3. Envíos mediante ZOOM y MRW</h3>
                 <ul className="list-disc ml-6 space-y-2 text-ink-soft">
                   <li>Los pedidos se envían mediante las empresas certificadas ZOOM o MRW según la selección del cliente.</li>
-                  <li>El cliente debe proporcionar un código de oficina válido o número de casillero.</li>
+                  <li>El flete es con cobro a destino: el cliente se lo paga a ZOOM o MRW al retirar o recibir el paquete. La tienda cobra solo el embalaje, salvo en los pedidos con envío gratis, donde paga todo.</li>
+                  <li>El cliente elige la oficina o agencia de la lista, o indica una dirección completa si el envío es a domicilio.</li>
                   <li>Para retirar el paquete, debe presentar cédula de identidad.</li>
                   <li>El tiempo de entrega depende de la empresa de encomienda seleccionada.</li>
                 </ul>

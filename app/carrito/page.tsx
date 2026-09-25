@@ -9,7 +9,8 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import CheckoutSteps from '@/components/ui/CheckoutSteps';
 import PageHeader from '@/components/ui/PageHeader';
-import { FiMinus, FiPlus, FiShoppingCart, FiTruck, FiShield } from 'react-icons/fi';
+import { FiMinus, FiPlus, FiShoppingCart, FiTruck } from 'react-icons/fi';
+import { ConfianzaEnvio } from '@/components/envios/ConfianzaEnvio';
 import Footer from '@/components/Footer';
 import { toast } from 'react-hot-toast';
 import { HiTrash } from 'react-icons/hi';
@@ -79,6 +80,9 @@ export default function CarritoPage() {
   const total = getTotalPrice();
   const subtotal = total;
   const tax = 0; // Exento para saldos y códigos digitales
+  // C-106: el total aún no lleva la entrega; se avisa aquí para que el embalaje del checkout no sorprenda
+  const hasPhysical = items.some(item => item.productType !== 'DIGITAL');
+  const envioGratis = items.some(item => item.freeShipping && item.productType !== 'DIGITAL');
 
   return (
     <div className="min-h-dvh flex flex-col bg-surface">
@@ -360,6 +364,13 @@ export default function CarritoPage() {
                         )}
                       </div>
                     </div>
+                    {hasPhysical && (
+                      <p className="mt-2 text-xs text-muted">
+                        {envioGratis
+                          ? 'Tu pedido tiene envío gratis: la tienda paga el embalaje y el flete.'
+                          : 'Aún sin la entrega: la eliges en el pago. Por ZOOM o MRW pagas aquí solo el embalaje, y el flete se lo pagas a la empresa al retirar.'}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -383,37 +394,7 @@ export default function CarritoPage() {
                 </div>
               </div>
 
-              {/* Trust Badges */}
-              <div className={`${adminCard} space-y-4`}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Envíos asegurados</h3>
-                  <div className="flex gap-2">
-                    <span className="px-2 py-0.5 bg-warning/10 text-warning-strong border border-warning/20 rounded text-[11px] font-bold">ZOOM</span>
-                    <span className="px-2 py-0.5 bg-deal-bg text-deal border border-deal/20 rounded text-[11px] font-bold">MRW</span>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 text-xs text-ink-soft">
-                    <div className="w-7 h-7 bg-brand-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <FiTruck className="w-3.5 h-3.5 text-brand-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-ink">Despacho nacional garantizado</p>
-                      <p className="text-muted">Por ZOOM y MRW con cobro a destino: el flete lo pagas al retirar. Si algo de tu pedido tiene envío gratis, lo paga la tienda.</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 text-xs text-ink-soft">
-                    <div className="w-7 h-7 bg-success/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <FiShield className="w-3.5 h-3.5 text-success-strong" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-ink">Protección del comprador</p>
-                      <p className="text-muted">Tu compra viaja 100% asegurada y embalada con materiales de alta resistencia.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ConfianzaEnvio />
             </div>
           </div>
         )}

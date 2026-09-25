@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
+import { ipParaRegistro } from '@/lib/ip';
 
 // Rate limit for analytics endpoint - prevent DoS
 const ANALYTICS_RATE_LIMIT = {
@@ -54,9 +55,7 @@ export async function POST(request: NextRequest) {
             : 'interaction';
 
         // Get IP and user agent from headers
-        const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] ||
-            request.headers.get('x-real-ip') ||
-            'unknown';
+        const ipAddress = ipParaRegistro(request.headers);
         const userAgent = request.headers.get('user-agent') || 'unknown';
 
         // Parse device info from user agent

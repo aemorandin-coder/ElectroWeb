@@ -5,7 +5,7 @@
 // - Por cuenta (el correo normalizado, exista o no): desde el 2.º fallo pide captcha y desde el 5.º
 //   espera progresiva de 1, 5, 15 y 60 minutos (lib/rate-limit). Entrar bien lo limpia.
 // - Por IP: 10 fallos en 15 minutos piden captcha para cualquier cuenta y 30 bloquean 15 minutos.
-//   Es una segunda capa: la IP sale de x-forwarded-for y solo es fiable si nginx la reescribe.
+//   Es una segunda capa: la IP sale de lib/ip.ts (x-real-ip de nginx o el último x-forwarded-for) y es fiable con el nginx de C-105.
 // En memoria: vale para un proceso (PM2 en modo fork) y se reinicia con el servidor.
 import { isBlocked, recordFailedAttempt, resetFailedAttempts } from '@/lib/rate-limit';
 

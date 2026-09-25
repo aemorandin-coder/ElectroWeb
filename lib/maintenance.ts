@@ -3,6 +3,7 @@
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { ipDelCliente, normalizarIP } from '@/lib/ip';
 
 // El proxy corre en cada petición: se lee la base de datos como mucho cada 15 s.
 // Al activarlo o desactivarlo en el admin, el cambio tarda hasta 15 s en aplicarse.
@@ -54,7 +55,8 @@ async function readRow(now: number): Promise<MaintenanceRow> {
 
 export function parseAllowedIPs(value: string | null): string[] {
   if (!value) return [];
-  return value.split(/[,\s]+/).map((ip) => ip.trim()).filter(Boolean);
+  // Normalizadas igual que la del cliente ("::ffff:1.2.3.4" = "1.2.3.4"); lo que no es una IP se ignora
+  return value.split(/[,\s]+/).map((ip) => normalizarIP(ip)).filter((ip): ip is string => ip !== null);
 }
 
 export async function getMaintenanceState(now: Date = new Date()): Promise<MaintenanceState> {
@@ -94,10 +96,9 @@ export function isMaintenanceExemptPath(pathname: string): boolean {
   );
 }
 
+/** IP pública del cliente (C-105). Antes el primer valor de x-forwarded-for: con esa cabecera falsa se saltaba el mantenimiento. */
 export function getRequestIP(headers: Headers): string | null {
-  const forwarded = headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim() || null;
-  return headers.get('x-real-ip');
+  return ipDelCliente(headers);
 }
 
 function escapeHtml(value: string): string {

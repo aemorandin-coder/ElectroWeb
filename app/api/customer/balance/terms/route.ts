@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { ipParaRegistro } from '@/lib/ip';
 
 // GET - Check if user has accepted terms
 export async function GET() {
@@ -59,9 +60,8 @@ export async function POST(req: NextRequest) {
         }
 
         // Get IP and User Agent
-        const ipAddress = req.headers.get('x-forwarded-for') ||
-            req.headers.get('x-real-ip') ||
-            'unknown';
+        // C-105: antes guardaba la cadena entera de x-forwarded-for ("a, b, c"), escrita en parte por el cliente
+        const ipAddress = ipParaRegistro(req.headers);
         const userAgent = req.headers.get('user-agent') || 'unknown';
 
         // Check if already accepted

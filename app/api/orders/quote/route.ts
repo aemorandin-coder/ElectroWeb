@@ -25,9 +25,10 @@ export async function POST(request: NextRequest) {
     const items = parseOrderItems(body?.items);
     const deliveryMethod = parseDeliveryMethod(body?.deliveryMethod);
 
-    const { calculation, errors } = await quoteOrder(session.user.id, items, deliveryMethod);
+    const couponCode = typeof body?.couponCode === 'string' && body.couponCode.trim() ? body.couponCode.trim().slice(0, 40) : null;
+    const { calculation, errors, coupon } = await quoteOrder(session.user.id, items, deliveryMethod, couponCode);
 
-    return NextResponse.json({ calculation, errors });
+    return NextResponse.json({ calculation, errors, coupon });
   } catch (error) {
     if (error instanceof OrderInputError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

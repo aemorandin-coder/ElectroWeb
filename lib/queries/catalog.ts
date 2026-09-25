@@ -5,6 +5,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { publicProductInclude, toPublicProduct, type PublicProduct } from '@/lib/dto/product';
+import { conOfertas, filtroEnOferta } from '@/lib/promotions';
 import { visibleProducts } from '@/lib/queries/home';
 
 export const CATALOG_PAGE_SIZE = 24;
@@ -94,7 +95,7 @@ export function hasActiveFilters(params: CatalogParams): boolean {
   return Boolean(params.search || params.category || params.min !== null || params.max !== null || params.offers || params.inStock || params.type);
 }
 
-function filterConditions(params: CatalogParams, { withCategory }: { withCategory: boolean }): Prisma.ProductWhereInput[] {
+function filterConditions(params: CatalogParams, { withCategory, ofertas }: { withCategory: boolean; ofertas: Prisma.ProductWhereInput }): Prisma.ProductWhereInput[] {
   const conditions: Prisma.ProductWhereInput[] = [];
   // Cada palabra debe aparecer en el nombre, la descripción, la marca o la categoría ("teclado aoas")
   for (const term of params.search.split(/\s+/).filter(Boolean).slice(0, 6)) {
@@ -110,7 +111,7 @@ function filterConditions(params: CatalogParams, { withCategory }: { withCategor
   if (withCategory && params.category) conditions.push({ category: { slug: params.category } });
   if (params.min !== null) conditions.push({ priceUSD: { gte: params.min } });
   if (params.max !== null) conditions.push({ priceUSD: { lte: params.max } });
-  if (params.offers) conditions.push({ compareAtPriceUSD: { gt: prisma.product.fields.priceUSD } });
+  if (params.offers) conditions.push(ofertas);
   if (params.inStock) conditions.push({ OR: [{ productType: 'DIGITAL' }, { stock: { gt: 0 } }] });
   if (params.type) conditions.push({ productType: params.type === 'digital' ? 'DIGITAL' : 'PHYSICAL' });
   return conditions;
@@ -149,8 +150,10 @@ export interface CatalogResult {
 }
 
 export async function getCatalog(params: CatalogParams): Promise<CatalogResult> {
-  const where = await visibleProducts({ AND: filterConditions(params, { withCategory: true }) });
-  const whereWithoutCategory = await visibleProducts({ AND: filterConditions(params, { withCategory: false }) });
+  // "Solo ofertas" incluye las ofertas de la tienda vigentes (C-102), no solo el precio anterior
+  const ofertas = params.offers ? await filtroEnOferta() : {};
+  const where = await visibleProducts({ AND: filterConditions(params, { withCategory: true, ofertas }) });
+  const whereWithoutCategory = await visibleProducts({ AND: filterConditions(params, { withCategory: false, ofertas }) });
 
   const [total, counts] = await Promise.all([
     prisma.product.count({ where }),
@@ -183,7 +186,7 @@ export async function getCatalog(params: CatalogParams): Promise<CatalogResult> 
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'es'));
 
   return {
-    products: rows.map(toPublicProduct),
+    products: await conOfertas(rows.map(toPublicProduct)),
     total,
     page,
     totalPages,

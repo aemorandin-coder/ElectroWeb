@@ -1,3 +1,5 @@
+import type { PublicOffer } from '@/lib/dto/product';
+
 // Datos que necesitan ProductCard y AddToCartButton. Coincide con un subconjunto de
 // PublicProduct (lib/dto/product.ts): se puede pasar el DTO directamente.
 export interface ProductCardData {
@@ -24,6 +26,8 @@ export interface ProductCardData {
   shippingCost?: number | null;
   /** C-100: la tienda paga el envío */
   freeShipping?: boolean;
+  /** C-102: oferta de la tienda vigente (priceUSD ya viene rebajado) */
+  oferta?: PublicOffer | null;
 }
 
 /** Los productos digitales con montos o con recarga directa se compran desde su página (se elige monto o cuenta). */

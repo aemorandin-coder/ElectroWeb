@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
+import { conOfertas } from '@/lib/promotions';
 
 // GET /api/products/public - Get all active products (public endpoint)
 export async function GET(request: NextRequest) {
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
     });
 
     // SEGURIDAD: solo campos públicos del DTO (sin costos internos)
-    return NextResponse.json(products.map(toPublicProduct));
+    return NextResponse.json(await conOfertas(products.map(toPublicProduct)));
   } catch (error) {
     console.error('Error fetching public products:', error);
     return NextResponse.json(

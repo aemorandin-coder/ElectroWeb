@@ -42,6 +42,7 @@ export default function AddToCartButton({ product, className = '' }: AddToCartBu
       id: product.id,
       name: product.name,
       price: product.priceUSD,
+      listPrice: product.compareAtPriceUSD && product.compareAtPriceUSD > product.priceUSD ? product.compareAtPriceUSD : undefined,
       imageUrl: product.mainImage || product.images?.[0] || undefined,
       stock: isDigital ? 999 : product.stock,
       productType: isDigital ? 'DIGITAL' : 'PHYSICAL',

@@ -576,6 +576,7 @@ model Order {
   cancelledAt   DateTime?
 
   items         OrderItem[]
+  promotionRedemptions PromotionRedemption[]
 
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -1226,6 +1227,8 @@ model WishlistItem {
   wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
   productId  String
   product    Product  @relation(fields: [productId], references: [id])
+  // C-102: precio (con oferta) cuando se guardó; Favoritos avisa "Bajó de precio"
+  priceAtSaveUSD Decimal?
   createdAt  DateTime @default(now())
   
   @@unique([wishlistId, productId])
@@ -1295,6 +1298,68 @@ model DiscountRequest {
   @@index([productId])
   @@index([status])
   @@map("discount_requests")
+}
+
+// ============================================
+// OFERTAS Y CUPONES DE LA TIENDA (C-102)
+// ============================================
+// AUTOMATIC: se aplica sola y la tienda la muestra con precio tachado.
+// COUPON: se aplica con un código; si es público, la ficha del producto ofrece "Aplicar cupón".
+// Nunca aplican a productos digitales. Si un producto tiene varios descuentos, gana el mayor (no se suman).
+
+enum PromotionKind {
+  AUTOMATIC
+  COUPON
+}
+
+enum PromotionScope {
+  ALL
+  CATEGORY
+  PRODUCT
+}
+
+model Promotion {
+  id             String         @id @default(cuid())
+  name           String         // Nombre interno para el panel
+  label          String?        // Texto público corto ("Semana Tech")
+  kind           PromotionKind
+  code           String?        @unique // Cupones: en mayúsculas
+  isPublic       Boolean        @default(false) // Cupón visible en la ficha y el carrito
+  percentOff     Int?           // 1 a 90
+  amountOffUSD   Decimal?       // Automática: por unidad. Cupón: por compra
+  scope          PromotionScope @default(ALL)
+  productIds     String[]
+  categoryIds    String[]
+  minSubtotalUSD Decimal?       // Solo cupones: compra mínima de productos que aplican
+  startsAt       DateTime       @default(now())
+  endsAt         DateTime?
+  maxUses        Int?           // Compras con la promoción, en total
+  maxUsesPerUser Int?
+  usesCount      Int            @default(0)
+  isActive       Boolean        @default(true)
+  createdById    String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  redemptions PromotionRedemption[]
+
+  @@index([kind, isActive])
+  @@map("promotions")
+}
+
+model PromotionRedemption {
+  id          String    @id @default(cuid())
+  promotionId String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Restrict)
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId      String
+  amountUSD   Decimal
+  createdAt   DateTime  @default(now())
+
+  @@unique([promotionId, orderId])
+  @@index([promotionId, userId])
+  @@map("promotion_redemptions")
 }
 
 // ============================================

@@ -23,6 +23,15 @@ export interface PublicDigitalVariant {
   priceUSD: number;
 }
 
+/** Oferta automática vigente (C-102). Con oferta, priceUSD ya es el precio rebajado y compareAtPriceUSD el anterior. */
+export interface PublicOffer {
+  /** Texto público ("Semana Tech") */
+  label: string | null;
+  /** Ahorro en %, para la etiqueta "-15%" */
+  percent: number;
+  endsAt: string | null;
+}
+
 export interface PublicProduct {
   id: string;
   name: string;
@@ -60,6 +69,8 @@ export interface PublicProduct {
   seoTitle: string | null;
   seoDescription: string | null;
   seoImage: string | null;
+  /** C-102: lo llena lib/promotions.ts (conOfertas); null sin oferta */
+  oferta: PublicOffer | null;
 }
 
 function toNumberOrNull(value: { toString(): string } | null | undefined): number | null {
@@ -164,6 +175,7 @@ export function toPublicProduct(product: ProductWithPublicRelations): PublicProd
     seoTitle: product.seoTitle,
     seoDescription: product.seoDescription,
     seoImage: product.seoImage,
+    oferta: null,
   };
 }
 

@@ -7,6 +7,7 @@ import { cache } from 'react';
 import type { PaymentMethodType, Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { publicProductInclude, toPublicProduct, type PublicProduct } from '@/lib/dto/product';
+import { conOfertas, filtroEnOferta } from '@/lib/promotions';
 
 const MAX_LIMIT = 50;
 const clampLimit = (value: number) => Math.min(MAX_LIMIT, Math.max(1, Math.floor(value) || 1));
@@ -59,13 +60,13 @@ export const getFeatured = cache(async (max?: number): Promise<PublicProduct[]> 
     orderBy: { createdAt: 'desc' },
     take: limit,
   });
-  return rows.map(toPublicProduct);
+  return conOfertas(rows.map(toPublicProduct));
 });
 
-/** Ofertas: precio de comparación mayor al precio, ordenadas por % de ahorro. */
+/** Ofertas: precio anterior mayor al precio o una oferta de la tienda vigente (C-102), ordenadas por % de ahorro. */
 export const getDeals = cache(async (max = 12): Promise<PublicProduct[]> => {
   const rows = await prisma.product.findMany({
-    where: await visibleProducts({ compareAtPriceUSD: { gt: prisma.product.fields.priceUSD } }),
+    where: await visibleProducts(await filtroEnOferta()),
     include: publicProductInclude,
     orderBy: { updatedAt: 'desc' },
     take: 200,
@@ -73,8 +74,7 @@ export const getDeals = cache(async (max = 12): Promise<PublicProduct[]> => {
   const savingsPercent = (p: PublicProduct) =>
     p.compareAtPriceUSD ? (p.compareAtPriceUSD - p.priceUSD) / p.compareAtPriceUSD : 0;
 
-  return rows
-    .map(toPublicProduct)
+  return (await conOfertas(rows.map(toPublicProduct)))
     .sort((a, b) => savingsPercent(b) - savingsPercent(a))
     .slice(0, clampLimit(max));
 });
@@ -100,11 +100,11 @@ export const getBestSellers = cache(async (days = 90, max = 12): Promise<PublicP
   });
   const byId = new Map(rows.map((row) => [row.id, row]));
 
-  return sales
+  return conOfertas(sales
     .map((s) => byId.get(s.productId))
     .filter((row): row is NonNullable<typeof row> => Boolean(row))
     .slice(0, limit)
-    .map(toPublicProduct);
+    .map(toPublicProduct));
 });
 
 /** Recién llegados. */
@@ -115,7 +115,7 @@ export const getNewArrivals = cache(async (max = 12): Promise<PublicProduct[]> =
     orderBy: { createdAt: 'desc' },
     take: clampLimit(max),
   });
-  return rows.map(toPublicProduct);
+  return conOfertas(rows.map(toPublicProduct));
 });
 
 export interface HomeCategory {
@@ -169,7 +169,7 @@ export const getTopCategoriesWithProducts = cache(
           orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
           take: clampLimit(perCategory),
         });
-        return { category, products: rows.map(toPublicProduct) };
+        return { category, products: await conOfertas(rows.map(toPublicProduct)) };
       })
     );
   }

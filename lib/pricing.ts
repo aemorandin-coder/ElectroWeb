@@ -24,6 +24,17 @@ export interface PricingLine {
   shippingCostUSD: number; // Legado de antes de C-100: ya no se cobra (el flete se paga a la empresa)
   freeShipping: boolean; // C-100: la tienda paga el envío del paquete que lo lleve
   discountPercent: number; // 0 si no hay descuento aprobado
+  /** C-102: descuento de la línea en USD (oferta o cupón), ya elegido por el servidor. Gana el mayor con discountPercent. */
+  discountUSD?: number;
+}
+
+/** Descuento de una línea: el mayor entre el porcentaje aprobado y el monto de oferta o cupón, sin pasar del total. */
+export function lineDiscountUSD(line: Pick<PricingLine, 'unitPriceUSD' | 'quantity' | 'discountPercent' | 'discountUSD'>): number {
+  const lineTotal = line.unitPriceUSD * line.quantity;
+  const percent = Math.min(Math.max(line.discountPercent || 0, 0), 100);
+  const byPercent = lineTotal * (percent / 100);
+  const byAmount = Math.max(line.discountUSD || 0, 0);
+  return Math.min(Math.max(byPercent, byAmount), lineTotal);
 }
 
 export interface PricingSettings {
@@ -183,10 +194,7 @@ function calculateShipping(
   breakdown.pieces = loosePieces + (physical.some(line => line.isConsolidable) ? 1 : 0);
 
   // El umbral cuenta solo lo físico: antes una gift card de $50 le daba envío gratis a un cable de $5 (E1)
-  const physicalSubtotal = physical.reduce((sum, line) => {
-    const percent = Math.min(Math.max(line.discountPercent || 0, 0), 100);
-    return sum + line.unitPriceUSD * line.quantity * (1 - percent / 100);
-  }, 0);
+  const physicalSubtotal = physical.reduce((sum, line) => sum + line.unitPriceUSD * line.quantity - lineDiscountUSD(line), 0);
   const threshold = settings.freeDeliveryThresholdUSD;
   if (physical.some(line => line.freeShipping)) breakdown.freeReason = 'PRODUCT';
   else if (threshold && roundMoney(physicalSubtotal) >= threshold) breakdown.freeReason = 'THRESHOLD';
@@ -210,10 +218,8 @@ function calculateGroup(lines: PricingLine[], shippingUSD: number, settings: Pri
   let subtotal = 0;
   let discount = 0;
   lines.forEach(line => {
-    const lineTotal = line.unitPriceUSD * line.quantity;
-    subtotal += lineTotal;
-    const percent = Math.min(Math.max(line.discountPercent || 0, 0), 100);
-    discount += lineTotal * (percent / 100);
+    subtotal += line.unitPriceUSD * line.quantity;
+    discount += lineDiscountUSD(line);
   });
 
   const subtotalUSD = roundMoney(subtotal);

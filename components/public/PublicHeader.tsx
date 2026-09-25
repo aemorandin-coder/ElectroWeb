@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiMenu } from 'react-icons/fi';
+import { FiMenu, FiTag } from 'react-icons/fi';
 import CartIcon from '@/components/CartIcon';
 import UserAccountButton from '@/components/UserAccountButton';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -106,6 +106,10 @@ function PublicHeader() {
           {/* id="nav-productos": objetivo del tour guiado */}
           <Link href="/productos" id="nav-productos" data-tour="catalogo" className={navLinkClass('/productos')} aria-current={isActive('/productos') ? 'page' : undefined}>
             Productos
+          </Link>
+          {/* C-102: ofertas a la vista (el catálogo filtrado; no se marca activo porque comparte ruta con Productos) */}
+          <Link href="/productos?oferta=1" className={navLinkClass('/ofertas')}>
+            <FiTag className="mr-1 h-4 w-4" aria-hidden="true" /> Ofertas
           </Link>
           <Link href="/gift-cards" className={navLinkClass('/gift-cards')} aria-current={isActive('/gift-cards') ? 'page' : undefined}>
             Gift Cards

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
+import { conOfertas } from '@/lib/promotions';
 
 export async function GET(
   request: NextRequest,
@@ -25,7 +26,7 @@ export async function GET(
     }
 
     // SEGURIDAD: solo campos públicos del DTO (sin costos internos)
-    return NextResponse.json(toPublicProduct(product));
+    return NextResponse.json((await conOfertas([toPublicProduct(product)]))[0]);
   } catch (error) {
     console.error('Error fetching product:', error);
     return NextResponse.json(

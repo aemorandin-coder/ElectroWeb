@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { publicProductInclude, toPublicProduct } from '@/lib/dto/product';
+import { conOfertas } from '@/lib/promotions';
+import { montoDecimal } from '@/lib/pricing';
 
 // Get user wishlist
 export async function GET() {
@@ -14,43 +17,26 @@ export async function GET() {
 
     const userId = (session.user as { id: string }).id;
 
-    // Get or create wishlist with items
-    let wishlist = await prisma.wishlist.findUnique({
+    // SEGURIDAD (C-102): antes devolvía el producto crudo de Prisma, con costPerItem. Ahora el DTO público con ofertas.
+    const wishlist = await prisma.wishlist.upsert({
       where: { userId },
+      update: {},
+      create: { userId },
       include: {
         items: {
-          include: {
-            product: {
-              include: {
-                category: true,
-              },
-            },
-          },
+          orderBy: { createdAt: 'desc' },
+          include: { product: { include: publicProductInclude } },
         },
       },
     });
 
-    if (!wishlist) {
-      wishlist = await prisma.wishlist.create({
-        data: {
-          userId,
-        },
-        include: {
-          items: {
-            include: {
-              product: {
-                include: {
-                  category: true,
-                },
-              },
-            },
-          },
-        },
-      });
-    }
-
-    // Extract products from wishlist items
-    const products = wishlist.items.map(item => item.product);
+    const visibles = wishlist.items.filter((item) => item.product.status === 'PUBLISHED');
+    const conOferta = await conOfertas(visibles.map((item) => toPublicProduct(item.product)));
+    const products = conOferta.map((product, i) => ({
+      ...product,
+      savedPriceUSD: visibles[i].priceAtSaveUSD === null ? null : Number(visibles[i].priceAtSaveUSD),
+      savedAt: visibles[i].createdAt.toISOString(),
+    }));
 
     return NextResponse.json({
       wishlist: {
@@ -108,10 +94,17 @@ export async function POST(req: NextRequest) {
       });
 
       if (!existingItem) {
+        // Solo productos publicados (antes un id inventado daba 500 y se podían guardar borradores)
+        const row = typeof productId === 'string'
+          ? await prisma.product.findFirst({ where: { id: productId, status: 'PUBLISHED' }, include: publicProductInclude })
+          : null;
+        if (!row) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+        const [actual] = await conOfertas([toPublicProduct(row)]);
         await prisma.wishlistItem.create({
           data: {
             wishlistId: wishlist.id,
-            productId: productId,
+            productId,
+            priceAtSaveUSD: montoDecimal(actual.priceUSD),
           },
         });
       }

@@ -8,6 +8,9 @@ import { PAYMENT_LABELS } from '@/components/home/TrustBar';
 import ProductGallery from '@/components/product/ProductGallery';
 import ProductReviews from '@/components/product/ProductReviews';
 import PurchasePanel from '@/components/product/PurchasePanel';
+import CouponOffers from '@/components/product/CouponOffers';
+import OfferNote from '@/components/ui/OfferNote';
+import { cuponesParaProducto } from '@/lib/promotions';
 import WishlistButton from '@/components/product/WishlistButton';
 import PublicHeader from '@/components/public/PublicHeader';
 import Container from '@/components/ui/Container';
@@ -74,13 +77,14 @@ export default async function ProductPage({ params }: PageProps) {
   const product = await getProductBySlug(id);
   if (!product) notFound();
 
-  const [settings, homeSettings, summary, reviews, related, paymentKinds] = await Promise.all([
+  const [settings, homeSettings, summary, reviews, related, paymentKinds, coupons] = await Promise.all([
     getPublicSettings(),
     getHomeSettings(),
     getReviewSummary(product.id),
     getPublicReviews(product.id),
     getRelatedProducts(product, 8),
     getActivePaymentMethodKinds(),
+    cuponesParaProducto(product),
   ]);
 
   const isDigital = product.productType === 'DIGITAL';
@@ -207,7 +211,18 @@ export default async function ProductPage({ params }: PageProps) {
                 )}
 
                 <div className="mt-4 border-t border-line pt-4 lg:mt-5 lg:pt-5">
-                  <PurchasePanel product={product} exchangeRateVES={settings.exchangeRateVES} lowStockThreshold={homeSettings.lowStockThreshold} />
+                  <PurchasePanel
+                    product={product}
+                    exchangeRateVES={settings.exchangeRateVES}
+                    lowStockThreshold={homeSettings.lowStockThreshold}
+                    afterPrice={(product.oferta || coupons.length > 0) && (
+                      // C-102: oferta de la tienda y cupones que sirven para este producto, debajo del precio
+                      <div className="space-y-2">
+                        <OfferNote oferta={product.oferta} size="lg" />
+                        <CouponOffers coupons={coupons} />
+                      </div>
+                    )}
+                  />
                 </div>
 
                 <ul className="mt-5 space-y-3 border-t border-line pt-5">

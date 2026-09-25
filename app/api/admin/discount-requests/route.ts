@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { registrarAccionAdmin } from '@/lib/audit-log';
+import { formatUSD } from '@/lib/currency';
 
 // GET - List all discount requests for admin
 export async function GET(request: NextRequest) {
@@ -82,49 +83,64 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: 'Esta solicitud ya fue procesada' }, { status: 400 });
         }
 
-        const updateData: Prisma.DiscountRequestUpdateInput = {
-            adminResponse,
-        };
+        if (action !== 'approve' && action !== 'reject') {
+            return NextResponse.json({ error: 'Acción inválida' }, { status: 400 });
+        }
+        const respuesta = typeof adminResponse === 'string' ? adminResponse.trim().slice(0, 500) || null : null;
 
+        // C-102: valores acotados. Antes se aceptaba cualquier número (un 150% dejaba el producto gratis)
+        const updateData: Prisma.DiscountRequestUpdateInput = { adminResponse: respuesta };
+        let hours = 24;
         if (action === 'approve') {
-            const hours = expirationHours || 24; // Default 24 hours
-            const discountVal = Number(approvedDiscount || discountRequest.requestedDiscount);
+            const discountVal = Number(approvedDiscount ?? discountRequest.requestedDiscount);
+            hours = expirationHours === undefined || expirationHours === null ? 24 : Number(expirationHours);
+            if (!Number.isInteger(discountVal) || discountVal < 1 || discountVal > 50) {
+                return NextResponse.json({ error: 'El descuento aprobado debe ser un entero entre 1% y 50%' }, { status: 400 });
+            }
+            if (!Number.isFinite(hours) || hours < 1 || hours > 720) {
+                return NextResponse.json({ error: 'La vigencia va de 1 hora a 30 días' }, { status: 400 });
+            }
             updateData.status = 'APPROVED';
             updateData.approvedDiscount = discountVal;
             updateData.expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
+        } else {
+            updateData.status = 'REJECTED';
+        }
 
-            // Notify customer of approval
-            const discountAmount = (Number(discountRequest.originalPrice) * discountVal / 100).toFixed(2);
+        // Cambio condicional: dos clics (o dos admins a la vez) ya no la aprueban dos veces ni mandan dos avisos
+        const claimed = await prisma.discountRequest.updateMany({
+            where: { id: requestId, status: 'PENDING' },
+            data: updateData as Prisma.DiscountRequestUpdateManyMutationInput,
+        });
+        if (claimed.count !== 1) {
+            return NextResponse.json({ error: 'Esta solicitud ya fue procesada' }, { status: 409 });
+        }
+        const updated = await prisma.discountRequest.findUniqueOrThrow({ where: { id: requestId } });
+
+        if (updated.status === 'APPROVED') {
+            const discountAmount = Number(discountRequest.originalPrice) * Number(updated.approvedDiscount) / 100;
             await prisma.notification.create({
                 data: {
                     userId: discountRequest.userId,
                     type: 'DISCOUNT_APPROVED',
-                    title: '¡Descuento Aprobado!',
-                    message: `Tu descuento de ${updateData.approvedDiscount}% ($${discountAmount}) para "${discountRequest.productName}" ha sido aprobado. Tienes ${hours} horas para usarlo.`,
+                    title: 'Descuento aprobado',
+                    message: `Tu descuento de ${updated.approvedDiscount}% (${formatUSD(discountAmount)}) para "${discountRequest.productName}" fue aprobado. Tienes ${hours} horas para usarlo.`,
                     link: `/productos/${discountRequest.productId}`,
                     icon: 'FiCheckCircle',
                 },
             });
-        } else if (action === 'reject') {
-            updateData.status = 'REJECTED';
-
-            // Notify customer of rejection
+        } else {
             await prisma.notification.create({
                 data: {
                     userId: discountRequest.userId,
                     type: 'DISCOUNT_REJECTED',
-                    title: 'Solicitud de Descuento',
-                    message: `Tu solicitud de descuento para "${discountRequest.productName}" no pudo ser aprobada${adminResponse ? `: ${adminResponse}` : '.'}`,
+                    title: 'Solicitud de descuento',
+                    message: `Tu solicitud de descuento para "${discountRequest.productName}" no pudo ser aprobada${respuesta ? `: ${respuesta}` : '.'}`,
                     link: '/customer/wishlist',
                     icon: 'FiXCircle',
                 },
             });
         }
-
-        const updated = await prisma.discountRequest.update({
-            where: { id: requestId },
-            data: updateData,
-        });
 
         if (updated.status === 'APPROVED' || updated.status === 'REJECTED') {
             await registrarAccionAdmin(session, updated.status === 'APPROVED' ? 'DISCOUNT_REQUEST_APPROVED' : 'DISCOUNT_REQUEST_REJECTED', { type: 'DISCOUNT_REQUEST', id: requestId }, {

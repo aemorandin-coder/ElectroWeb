@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import AddToCartButton from './AddToCartButton';
+import OfferNote from './OfferNote';
 import Price from './Price';
 import ProductBadge, { getProductBadges } from './ProductBadge';
 import ShareButton from './ShareButton';
@@ -63,6 +64,7 @@ export default function ProductCard({ product, exchangeRateVES, lowStockThreshol
           </Link>
         </h3>
         <Price priceUSD={product.priceUSD} compareAtPriceUSD={product.compareAtPriceUSD} exchangeRateVES={exchangeRateVES} from={hasPriceRange(product)} />
+        <OfferNote oferta={product.oferta} />
         {stockLabel && <p className={`text-xs font-medium ${stockLabel.className}`}>{stockLabel.text}</p>}
         <div className="mt-auto pt-1">
           <AddToCartButton product={product} />

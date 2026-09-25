@@ -337,7 +337,9 @@ export async function POST(request: NextRequest) {
 
     const notes = typeof body.notes === 'string' ? body.notes.trim().slice(0, 1000) : '';
 
-    const quote = await quoteOrder(userId, items, deliveryMethod);
+    // C-102: cupón escrito o elegido en la ficha; el servidor lo valida de nuevo al cobrar
+    const couponCode = typeof body.couponCode === 'string' && body.couponCode.trim() ? body.couponCode.trim().slice(0, 40) : null;
+    const quote = await quoteOrder(userId, items, deliveryMethod, couponCode);
     const { calculation, settings } = quote;
 
     if (quote.errors.length > 0) {
@@ -392,8 +394,11 @@ export async function POST(request: NextRequest) {
     if (typeof body.expectedTotalUSD === 'number' && Math.abs(body.expectedTotalUSD - calculation.totalUSD) > 0.01) {
       return NextResponse.json(
         {
-          error: 'El total de tu compra cambió. Revisa el resumen actualizado y confirma de nuevo.',
+          error: quote.coupon && !quote.coupon.applied && quote.coupon.message
+            ? `${quote.coupon.message} Revisa el resumen actualizado y confirma de nuevo.`
+            : 'El total de tu compra cambió. Revisa el resumen actualizado y confirma de nuevo.',
           calculation,
+          coupon: quote.coupon,
         },
         { status: 409 }
       );
@@ -619,6 +624,36 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Ofertas y cupones usados (C-102): una fila por promoción y orden con lo que ahorró el cliente.
+      // Los topes (total y por cliente) se revisan aquí, dentro de la transacción: dos compras a la vez no pasan del tope.
+      for (const [index, group] of groups.entries()) {
+        const usos = new Map<string, number>();
+        for (const line of group.lines) {
+          if (line.promotionId && line.promotionSavingsUSD > 0) usos.set(line.promotionId, (usos.get(line.promotionId) ?? 0) + line.promotionSavingsUSD);
+        }
+        for (const [promotionId, amountUSD] of usos) {
+          const promo = await tx.promotion.findUnique({
+            where: { id: promotionId },
+            select: { isActive: true, endsAt: true, maxUses: true, maxUsesPerUser: true },
+          });
+          if (!promo || !promo.isActive || (promo.endsAt && promo.endsAt <= new Date())) {
+            throw new OrderInputError('Una oferta de tu carrito acaba de terminar. Revisa el resumen y confirma de nuevo.');
+          }
+          if (promo.maxUsesPerUser !== null) {
+            const usados = await tx.promotionRedemption.count({ where: { promotionId, userId } });
+            if (usados >= promo.maxUsesPerUser) throw new OrderInputError('Ya usaste este cupón en otra compra.');
+          }
+          const sumado = await tx.promotion.updateMany({
+            where: { id: promotionId, ...(promo.maxUses !== null ? { usesCount: { lt: promo.maxUses } } : {}) },
+            data: { usesCount: { increment: 1 } },
+          });
+          if (sumado.count === 0) throw new OrderInputError('Una oferta de tu carrito se agotó. Revisa el resumen y confirma de nuevo.');
+          await tx.promotionRedemption.create({
+            data: { promotionId, orderId: orders[index].id, userId, amountUSD: montoDecimal(amountUSD) },
+          });
+        }
+      }
+
       // SEGURIDAD: Vincular la verificación de pago móvil con la orden para prevenir reutilización
       if (mobilePaymentVerificationId) {
         const linked = await tx.pagoMovilVerificacion.updateMany({
@@ -841,6 +876,13 @@ export async function PATCH(request: NextRequest) {
 
         // La comisión pendiente del promotor por esta orden se rechaza (C-75)
         await rejectOrderConversions(orden.id, tx);
+
+        // Ofertas y cupones de esta orden vuelven a estar disponibles (C-102): el cliente puede usar su cupón otra vez
+        const usos = await tx.promotionRedemption.findMany({ where: { orderId: orden.id }, select: { id: true, promotionId: true } });
+        for (const uso of usos) {
+          await tx.promotion.updateMany({ where: { id: uso.promotionId, usesCount: { gt: 0 } }, data: { usesCount: { decrement: 1 } } });
+        }
+        if (usos.length > 0) await tx.promotionRedemption.deleteMany({ where: { orderId: orden.id } });
 
         // Pago con saldo: el total vuelve al saldo de la tienda (nunca sale dinero de la empresa).
         // Decisión de Andrés (2026-09-15): es crédito para comprar aquí, no un reembolso.

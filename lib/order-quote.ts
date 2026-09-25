@@ -5,7 +5,11 @@ import type { CompanySettings } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { legacyDigitalVariants } from '@/lib/dto/product';
 import { parseProductImages } from '@/lib/product-utils';
+import { buscarCupon, getOfertasVigentes, toRule } from '@/lib/promotions';
+import { mejorOferta, repartirCupon, type LineaParaCupon } from '@/lib/promotions-core';
+import { formatUSD } from '@/lib/currency';
 import {
+  roundMoney,
   calculateOrder,
   toPricingSettings,
   DELIVERY_METHODS,
@@ -43,9 +47,23 @@ export interface QuotedLine extends PricingLine {
   productSku: string;
   productImage: string | null;
   discountRequestId: string | null;
+  /** C-102: oferta o cupón que ganó en esta línea (null si ganó un descuento aprobado o no hay) */
+  promotionId: string | null;
+  /** C-102: cuánto ahorró el cliente con esa oferta o cupón (para promotion_redemptions) */
+  promotionSavingsUSD: number;
   digitalVariantId: string | null;
   digitalVariantLabel: string | null;
   digitalAccount: string | null;
+}
+
+/** Estado del cupón que escribió el cliente (C-102) */
+export interface CouponQuote {
+  code: string;
+  applied: boolean;
+  /** Ahorro que aporta el cupón (0 si otra oferta del mismo producto era mejor) */
+  savingsUSD: number;
+  message: string;
+  promotionId: string | null;
 }
 
 export interface OrderQuote {
@@ -53,6 +71,7 @@ export interface OrderQuote {
   lines: QuotedLine[];
   errors: string[];
   settings: CompanySettings | null;
+  coupon: CouponQuote | null;
 }
 
 /** Valida `items` del body. Solo se aceptan productId, quantity, digitalVariantId, digitalAmount y digitalUsername. */
@@ -111,11 +130,12 @@ export function parseDeliveryMethod(raw: unknown): DeliveryMethod {
 export async function quoteOrder(
   userId: string,
   items: OrderItemInput[],
-  deliveryMethod: DeliveryMethod
+  deliveryMethod: DeliveryMethod,
+  couponCode?: string | null
 ): Promise<OrderQuote> {
   const productIds = [...new Set(items.map((item) => item.productId))];
 
-  const [settings, products, discounts] = await Promise.all([
+  const [settings, products, discounts, ofertas, cupon] = await Promise.all([
     prisma.companySettings.findUnique({ where: { id: 'default' } }),
     prisma.product.findMany({
       where: { id: { in: productIds } },
@@ -125,6 +145,7 @@ export async function quoteOrder(
         sku: true,
         status: true,
         productType: true,
+        categoryId: true,
         priceUSD: true,
         stock: true,
         mainImage: true,
@@ -153,6 +174,8 @@ export async function quoteOrder(
       orderBy: { createdAt: 'desc' },
       select: { id: true, productId: true, approvedDiscount: true, requestedDiscount: true },
     }),
+    getOfertasVigentes(),
+    couponCode ? buscarCupon(couponCode, userId) : Promise.resolve(null),
   ]);
 
   const productMap = new Map(products.map((p) => [p.id, p]));
@@ -165,6 +188,8 @@ export async function quoteOrder(
   const pricingLines: PricingLine[] = [];
   const lines: QuotedLine[] = [];
   const physicalQuantities = new Map<string, number>();
+  // Candidatos de descuento por línea: se elige el mayor al final, cuando se conoce el cupón
+  const candidatos: Array<{ oferta: { id: string; usd: number } | null; ofertaUnit: number | null; solicitud: { id: string; usd: number } | null; categoryId: string }> = [];
 
   for (const item of items) {
     const product = productMap.get(item.productId);
@@ -226,6 +251,16 @@ export async function quoteOrder(
     }
 
     const discount = discountMap.get(product.id);
+    const lineTotal = unitPriceUSD * item.quantity;
+    const productoOferta = { id: product.id, categoryId: product.categoryId, productType: product.productType };
+    const oferta = mejorOferta(ofertas, productoOferta, unitPriceUSD);
+    const percentSolicitud = discount ? (discount.approvedDiscount || discount.requestedDiscount) : 0;
+    candidatos.push({
+      oferta: oferta ? { id: oferta.promotionId, usd: roundMoney(oferta.unitDiscountUSD * item.quantity) } : null,
+      ofertaUnit: oferta ? oferta.unitDiscountUSD : null,
+      solicitud: discount && percentSolicitud > 0 ? { id: discount.id, usd: roundMoney(lineTotal * Math.min(percentSolicitud, 100) / 100) } : null,
+      categoryId: product.categoryId,
+    });
     const pricingLine: PricingLine = {
       productId: product.id,
       name,
@@ -237,7 +272,9 @@ export async function quoteOrder(
       isConsolidable: product.isConsolidable,
       shippingCostUSD: product.shippingCost === null ? 0 : Number(product.shippingCost),
       freeShipping: !isDigital && product.freeShipping,
-      discountPercent: discount ? (discount.approvedDiscount || discount.requestedDiscount) : 0,
+      // Se fija abajo con el mayor descuento (oferta, cupón o solicitud aprobada)
+      discountPercent: 0,
+      discountUSD: 0,
     };
 
     pricingLines.push(pricingLine);
@@ -245,7 +282,9 @@ export async function quoteOrder(
       ...pricingLine,
       productSku: product.sku,
       productImage: product.mainImage || parseProductImages(product.images)[0] || null,
-      discountRequestId: discount?.id ?? null,
+      discountRequestId: null,
+      promotionId: null,
+      promotionSavingsUSD: 0,
       digitalVariantId,
       digitalVariantLabel,
       digitalAccount,
@@ -259,10 +298,89 @@ export async function quoteOrder(
     }
   }
 
+  // Cupón: cuánto aportaría en cada línea
+  let coupon: CouponQuote | null = null;
+  let partesCupon = new Map<string, number>();
+  if (couponCode) {
+    const code = String(couponCode).trim().toUpperCase();
+    if (!cupon || !cupon.ok) {
+      coupon = { code, applied: false, savingsUSD: 0, message: cupon && !cupon.ok ? cupon.mensaje : 'Ese código no es válido.', promotionId: null };
+    } else {
+      const regla = toRule(cupon.promo);
+      const lineasCupon: LineaParaCupon[] = lines.map((l, i) => ({
+        key: String(i),
+        producto: { id: l.productId, categoryId: candidatos[i].categoryId, productType: l.productType },
+        lineTotalUSD: l.unitPriceUSD * l.quantity,
+      }));
+      let reparto = repartirCupon(regla, lineasCupon);
+      // Monto fijo: primero sobre los productos sin otra rebaja (como Best Buy); si todos tienen una, compite con ellas.
+      // Así un cupón de $15 no se diluye en productos donde la oferta ya gana. La compra mínima se revisó con todos.
+      if (reparto.ok && regla.amountOffUSD && !regla.percentOff) {
+        const sinRebaja = lineasCupon.filter((_, i) => !candidatos[i].oferta && !candidatos[i].solicitud);
+        const soloSinRebaja = repartirCupon({ ...regla, minSubtotalUSD: null }, sinRebaja);
+        if (soloSinRebaja.ok) reparto = soloSinRebaja;
+      }
+      if (!reparto.ok) {
+        coupon = {
+          code: cupon.promo.code ?? code,
+          applied: false,
+          savingsUSD: 0,
+          message: reparto.motivo === 'MINIMO'
+            ? `Te faltan ${formatUSD(reparto.faltaUSD ?? 0)} en productos que aplican para usar este cupón.`
+            : 'Este cupón no aplica a los productos de tu carrito (los digitales no llevan cupones).',
+          promotionId: cupon.promo.id,
+        };
+      } else {
+        partesCupon = reparto.porLinea;
+        coupon = { code: cupon.promo.code ?? code, applied: false, savingsUSD: 0, message: '', promotionId: cupon.promo.id };
+      }
+    }
+  }
+
+  // Por línea gana el mayor descuento; no se suman (decisión de Andrés, 25/09)
+  let ahorroCupon = 0;
+  lines.forEach((line, i) => {
+    const c = candidatos[i];
+    const opciones = [
+      c.oferta ? { tipo: 'oferta' as const, id: c.oferta.id, usd: c.oferta.usd } : null,
+      c.solicitud ? { tipo: 'solicitud' as const, id: c.solicitud.id, usd: c.solicitud.usd } : null,
+      partesCupon.has(String(i)) && coupon?.promotionId
+        ? { tipo: 'cupon' as const, id: coupon.promotionId, usd: partesCupon.get(String(i)) ?? 0 }
+        : null,
+    ].filter((o): o is NonNullable<typeof o> => o !== null && o.usd > 0);
+    const mejor = opciones.sort((a, b) => b.usd - a.usd)[0];
+    if (!mejor) return;
+    const usd = Math.min(mejor.usd, roundMoney(line.unitPriceUSD * line.quantity));
+    if (mejor.tipo === 'oferta') {
+      // La oferta automática es el precio (como en la tienda, que lo muestra rebajado); no es una línea de descuento
+      const unit = roundMoney(line.unitPriceUSD - (c.ofertaUnit ?? 0));
+      pricingLines[i].unitPriceUSD = unit;
+      line.unitPriceUSD = unit;
+    } else {
+      pricingLines[i].discountUSD = usd;
+      line.discountUSD = usd;
+    }
+    if (mejor.tipo === 'solicitud') line.discountRequestId = mejor.id;
+    else {
+      line.promotionId = mejor.id;
+      line.promotionSavingsUSD = usd;
+    }
+    if (mejor.tipo === 'cupon') ahorroCupon = roundMoney(ahorroCupon + usd);
+  });
+
+  if (coupon && partesCupon.size > 0) {
+    coupon.applied = ahorroCupon > 0;
+    coupon.savingsUSD = ahorroCupon;
+    coupon.message = coupon.applied
+      ? `Cupón ${coupon.code} aplicado: ahorras ${formatUSD(ahorroCupon)}.`
+      : 'Tus productos ya tienen un descuento mayor que este cupón.';
+  }
+
   return {
     calculation: calculateOrder(pricingLines, toPricingSettings(settings), deliveryMethod),
     lines,
     errors,
     settings,
+    coupon,
   };
 }

@@ -5,6 +5,7 @@ import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { publicProductInclude, toPublicProduct, type PublicProduct } from '@/lib/dto/product';
 import { visibleProducts } from '@/lib/queries/home';
+import { conOfertas } from '@/lib/promotions';
 
 /** Producto publicado por slug (o id, para enlaces viejos). null si no existe o no está publicado. */
 export const getProductBySlug = cache(async (slugOrId: string): Promise<PublicProduct | null> => {
@@ -13,7 +14,7 @@ export const getProductBySlug = cache(async (slugOrId: string): Promise<PublicPr
     where: { status: 'PUBLISHED', OR: [{ slug: value }, { id: value }] },
     include: publicProductInclude,
   });
-  return row ? toPublicProduct(row) : null;
+  return row ? (await conOfertas([toPublicProduct(row)]))[0] : null;
 });
 
 export interface ReviewSummary {
@@ -81,7 +82,7 @@ export async function getRelatedProducts(product: PublicProduct, max = 8): Promi
     orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
     take: max,
   });
-  if (sameCategory.length >= max) return sameCategory.map(toPublicProduct);
+  if (sameCategory.length >= max) return conOfertas(sameCategory.map(toPublicProduct));
 
   const others = await prisma.product.findMany({
     where: await visibleProducts({ categoryId: { not: product.category.id }, id: { not: product.id } }),
@@ -89,5 +90,5 @@ export async function getRelatedProducts(product: PublicProduct, max = 8): Promi
     orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
     take: max - sameCategory.length,
   });
-  return [...sameCategory, ...others].map(toPublicProduct);
+  return conOfertas([...sameCategory, ...others].map(toPublicProduct));
 }

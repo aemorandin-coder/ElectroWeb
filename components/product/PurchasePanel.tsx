@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
@@ -16,6 +16,8 @@ interface PurchasePanelProps {
   product: PublicProduct;
   exchangeRateVES?: number | null;
   lowStockThreshold: number;
+  /** C-102: oferta y cupones, debajo del precio */
+  afterPrice?: ReactNode;
 }
 
 const MAX_DIGITAL_QUANTITY = 10;
@@ -28,7 +30,7 @@ const MAX_DIGITAL_QUANTITY = 10;
  * - En móvil, mientras los botones no están a la vista aparece una barra fija encima de la barra inferior.
  * El precio real lo vuelve a calcular el servidor al crear la orden (C-01).
  */
-export default function PurchasePanel({ product, exchangeRateVES, lowStockThreshold }: PurchasePanelProps) {
+export default function PurchasePanel({ product, exchangeRateVES, lowStockThreshold, afterPrice }: PurchasePanelProps) {
   const { addItem, items } = useCart();
   const { data: session } = useSession();
   const router = useRouter();
@@ -108,6 +110,7 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
         id: isDigital && !selected && !isManual ? product.id : cartId,
         name: selected ? `${product.name} (${selected.label})` : product.name,
         price: unitPrice,
+        listPrice: !selected && product.compareAtPriceUSD && product.compareAtPriceUSD > unitPrice ? product.compareAtPriceUSD : undefined,
         imageUrl: product.mainImage || product.images[0] || undefined,
         stock: isDigital ? 999 : product.stock,
         productType: isDigital ? 'DIGITAL' : 'PHYSICAL',
@@ -148,6 +151,8 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
           <p className="mt-2 text-sm font-semibold text-deal">● Agotado</p>
         )}
       </div>
+
+      {afterPrice}
 
       {variants.length > 0 && (
         <fieldset>

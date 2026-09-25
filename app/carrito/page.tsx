@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -18,6 +19,8 @@ import { adminCard, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin
 import { formatUSD, formatVES } from '@/lib/currency';
 import { getGiftCardDesign } from '@/lib/gift-card-designs';
 import { useSettings } from '@/contexts/SettingsContext';
+import CouponBox from '@/components/cart/CouponBox';
+import { toOrderItem } from '@/lib/cart-items';
 
 // Diseño de una gift card del carrito: el id es "gift-card-<diseño>-<fecha>" (app/gift-cards).
 // Antes se leía un campo `design` que el carrito no guarda y todas salían con el mismo diseño (revisión R11).
@@ -27,7 +30,8 @@ function disenoDeGiftCard(itemId: string) {
 
 export default function CarritoPage() {
   const router = useRouter();
-  const { items, removeItem, updateQuantity, clearCart, getTotalPrice } = useCart();
+  const { items, removeItem, updateQuantity, clearCart, getTotalPrice, couponCode, setCouponCode } = useCart();
+  const { status } = useSession();
   const { confirm } = useConfirm();
   const [removing, setRemoving] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -69,16 +73,46 @@ export default function CarritoPage() {
     setIsCheckingOut(true);
     try {
       router.push('/checkout');
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-      toast.error(error.message || 'No se pudo iniciar el checkout');
+    } catch (error) {
+      toast.error(error instanceof Error && error.message ? error.message : 'No se pudo iniciar el checkout');
     } finally {
       setIsCheckingOut(false);
     }
   };
 
-  const total = getTotalPrice();
-  const subtotal = total;
+  // C-102: con sesión, el servidor cotiza los productos con ofertas y cupón (la entrega se elige en el pago).
+  // Las gift cards se compran aparte y no pasan por aquí: con una en el carrito se muestra el cálculo local.
+  const quoteBody = useMemo(
+    () => items.some((item) => item.id.startsWith('gift-card-'))
+      ? null
+      : JSON.stringify({ items: items.map(toOrderItem), deliveryMethod: 'PICKUP', couponCode }),
+    [items, couponCode]
+  );
+  const [quote, setQuote] = useState<{ key: string; subtotalUSD: number; discountUSD: number; totalUSD: number; coupon: { applied: boolean; message: string } | null } | null>(null);
+  useEffect(() => {
+    if (status !== 'authenticated' || !quoteBody || items.length === 0) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetch('/api/orders/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: quoteBody, signal: controller.signal })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data?.calculation) return;
+          const c = data.calculation;
+          // Sin la entrega: el total de productos es subtotal menos descuentos
+          setQuote({ key: quoteBody, subtotalUSD: c.subtotalUSD, discountUSD: c.discountUSD, totalUSD: Math.round((c.subtotalUSD - c.discountUSD) * 100) / 100, coupon: data.coupon });
+        })
+        .catch(() => { });
+    }, 300);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [quoteBody, status, items.length]);
+  const server = quote && quote.key === quoteBody ? quote : null;
+
+  const localTotal = getTotalPrice();
+  // "Ahorras": diferencia con el precio de antes de la oferta, solo para mostrar
+  const localSavings = items.reduce((sum, item) => sum + (item.listPrice && item.listPrice > item.price ? (item.listPrice - item.price) * item.quantity : 0), 0);
+  const subtotal = server ? server.subtotalUSD : localTotal;
+  const discount = server ? server.discountUSD : 0;
+  const total = server ? server.totalUSD : localTotal;
   const tax = 0; // Exento para saldos y códigos digitales
   // C-106: el total aún no lleva la entrega; se avisa aquí para que el embalaje del checkout no sorprenda
   const hasPhysical = items.some(item => item.productType !== 'DIGITAL');
@@ -230,6 +264,9 @@ export default function CarritoPage() {
                               {formatUSD(item.price)}
                             </span>
                             <span className="text-xs text-muted">c/u</span>
+                            {item.listPrice && item.listPrice > item.price && (
+                              <span className="text-xs text-muted line-through">{formatUSD(item.listPrice)}</span>
+                            )}
                           </div>
                           {settings?.exchangeRateVES && (
                             <div className="flex items-baseline gap-1.5">
@@ -340,6 +377,21 @@ export default function CarritoPage() {
                     </div>
                   </div>
 
+                  {discount > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted">Descuentos:</span>
+                      <span className="font-bold text-success-strong">-{formatUSD(discount)}</span>
+                    </div>
+                  )}
+
+                  <CouponBox
+                    code={couponCode}
+                    onApply={(code) => setCouponCode(code)}
+                    onRemove={() => setCouponCode(null)}
+                    status={server?.coupon ? { applied: server.coupon.applied, message: server.coupon.message } : null}
+                    pendingText={status !== 'authenticated' ? 'Se verifica cuando inicies sesión para pagar.' : quoteBody ? 'Verificando…' : 'Se verifica al pagar.'}
+                  />
+
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted">Impuestos (Exento):</span>
                     <div className="text-right">
@@ -364,6 +416,9 @@ export default function CarritoPage() {
                         )}
                       </div>
                     </div>
+                    {localSavings > 0.004 && (
+                      <p className="mt-2 text-sm font-semibold text-success-strong">Ahorras {formatUSD(localSavings)} con las ofertas de hoy</p>
+                    )}
                     {hasPhysical && (
                       <p className="mt-2 text-xs text-muted">
                         {envioGratis

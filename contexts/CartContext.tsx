@@ -6,6 +6,8 @@ import { useSession } from 'next-auth/react';
 const CART_KEY = 'cart';
 // Dueño del carrito guardado en localStorage: el userId que lo sincronizó, o 'guest'
 const CART_OWNER_KEY = 'cart-owner';
+// C-102: cupón elegido en la ficha o escrito en el carrito; el servidor lo valida al cotizar y al cobrar
+const COUPON_KEY = 'cart-coupon';
 const GUEST_OWNER = 'guest';
 // sessionStorage: marca que esta pestaña ya reconcilió el carrito con la BD para ese usuario
 const DB_SYNC_KEY_PREFIX = 'cart-db-synced:';
@@ -56,6 +58,8 @@ interface CartItem {
   digitalUsername?: string;
   // C-60: variante digital elegida (el precio lo vuelve a calcular el servidor)
   digitalVariantId?: string;
+  // C-102: precio antes de la oferta, solo para mostrar "Ahorras" (el servidor recalcula todo)
+  listPrice?: number;
 }
 
 interface CartContextType {
@@ -68,6 +72,9 @@ interface CartContextType {
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+  /** C-102: código de cupón guardado (null sin cupón) */
+  couponCode: string | null;
+  setCouponCode: (code: string | null) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -98,6 +105,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [dbSynced, setDbSynced] = useState(false);
+  const [couponCode, setCouponState] = useState<string | null>(null);
   const { data: session, status } = useSession();
   const userId = session?.user?.id;
   // true cuando el usuario tocó el carrito en esta carga de página (no al leerlo de localStorage)
@@ -105,6 +113,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Load cart from localStorage on mount
   useEffect(() => {
+    const savedCoupon = readStorage('local', COUPON_KEY);
+    if (savedCoupon) setCouponState(savedCoupon);
     const savedCart = readStorage('local', CART_KEY);
     if (savedCart) {
       try {
@@ -212,10 +222,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const existingItem = currentItems.find((i) => i.id === item.id);
 
       if (existingItem) {
-        // Update quantity if item already exists
+        // Ya estaba: suma la cantidad y toma el precio y el stock de ahora (una oferta pudo empezar o terminar)
         return currentItems.map((i) =>
           i.id === item.id
-            ? { ...i, quantity: Math.min(i.quantity + requested, item.stock) }
+            ? { ...i, price: item.price, listPrice: item.listPrice, stock: item.stock, quantity: Math.min(i.quantity + requested, item.stock) }
             : i
         );
       }
@@ -243,9 +253,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const setCouponCode = (code: string | null) => {
+    const clean = code ? code.trim().toUpperCase().replace(/\s+/g, '').slice(0, 30) : '';
+    setCouponState(clean || null);
+    try {
+      if (clean) localStorage.setItem(COUPON_KEY, clean);
+      else localStorage.removeItem(COUPON_KEY);
+    } catch {
+      // Sin almacenamiento: el cupón dura mientras la página esté abierta
+    }
+  };
+
   const clearCart = () => {
     changedByUser.current = true;
     setItems([]);
+    setCouponCode(null);
   };
 
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
@@ -267,6 +289,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         getTotalItems,
         getTotalPrice,
+        couponCode,
+        setCouponCode,
       }}
     >
       {children}
@@ -296,6 +320,8 @@ export function useCartSafe(): CartContextType {
       clearCart: () => { },
       getTotalItems: () => 0,
       getTotalPrice: () => 0,
+      couponCode: null,
+      setCouponCode: () => { },
     };
   }
   return context;

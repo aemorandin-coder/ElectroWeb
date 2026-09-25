@@ -1,771 +1,312 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import {
-  FiShoppingCart,
-  FiTrash2,
-  FiPackage,
-  FiExternalLink,
-  FiSearch,
-  FiGrid,
-  FiList,
-  FiFilter,
-  FiTrendingUp,
-  FiDollarSign,
-  FiPercent,
-  FiX,
-  FiSend,
-  FiGift,
-} from 'react-icons/fi';
-import { PiListHeartBold, PiHeartBreakBold, PiSparkle } from 'react-icons/pi';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useCart } from '@/contexts/CartContext';
 import toast from 'react-hot-toast';
+import { FiArrowDown, FiFilter, FiGift, FiGrid, FiList, FiPackage, FiSearch, FiShoppingCart, FiTag, FiTrash2, FiTrendingUp } from 'react-icons/fi';
+import { PiHeartBreakBold, PiListHeartBold, PiSparkle } from 'react-icons/pi';
+import { useCart } from '@/contexts/CartContext';
 import { formatUSD } from '@/lib/currency';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
-import {
-  adminCard,
-  adminPrimaryButton,
-  adminBadge,
-  adminLabel,
-  adminModalOverlay,
-  adminModalPanel,
-} from '@/lib/admin-ui';
+import { adminCard, adminPrimaryButton } from '@/lib/admin-ui';
+import { needsProductPage } from '@/components/ui/productCardData';
+import OfferNote from '@/components/ui/OfferNote';
+import type { PublicProduct } from '@/lib/dto/product';
 
-type SortOption = 'recent' | 'price-asc' | 'price-desc' | 'name';
+// Favoritos (C-102). Como Amazon y Best Buy: se ve si el producto está en oferta o si bajó de precio desde que
+// se guardó. Ya no se "pide" descuento (decisión de Andrés, 25/09); los aprobados antes se muestran hasta que venzan.
 
-interface WishlistProduct {
-  id: string;
-  name: string;
-  priceUSD: number | string;
-  stock: number;
-  createdAt: string;
-  mainImage?: string | null;
-  images?: string | string[] | null;
-  [key: string]: unknown;
+type SortOption = 'recent' | 'price-asc' | 'price-desc' | 'name' | 'drop';
+
+type Favorito = PublicProduct & { savedPriceUSD: number | null; savedAt: string };
+
+interface DescuentoAprobado {
+    productId: string;
+    approvedDiscount: number | null;
+    requestedDiscount: number;
+    expiresAt: string | null;
 }
 
-interface WishlistItem {
-  id: string;
-  productId: string;
-  productName: string;
-  price: number;
-  imageUrl?: string;
-  inStock: boolean;
-  createdAt: string;
-}
-
-interface DiscountRequest {
-  id: string;
-  productId: string;
-  productName: string;
-  originalPrice: number;
-  requestedDiscount: number;
-  approvedDiscount?: number;
-  status: string;
-  expiresAt?: string;
-  createdAt: string;
+/** % que bajó desde que se guardó (0 si no bajó o no se sabe) */
+function bajada(p: Favorito): number {
+    if (!p.savedPriceUSD || p.savedPriceUSD <= p.priceUSD) return 0;
+    return Math.round((1 - p.priceUSD / p.savedPriceUSD) * 100);
 }
 
 export default function WishlistPage() {
-  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
-  const [discountRequests, setDiscountRequests] = useState<DiscountRequest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState<'recent' | 'price-asc' | 'price-desc' | 'name'>('recent');
-  const [removingId, setRemovingId] = useState<string | null>(null);
-  const { addItem } = useCart();
+    const [favoritos, setFavoritos] = useState<Favorito[]>([]);
+    const [aprobados, setAprobados] = useState<DescuentoAprobado[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [sortBy, setSortBy] = useState<SortOption>('recent');
+    const [removingId, setRemovingId] = useState<string | null>(null);
+    const { addItem } = useCart();
 
-  // Discount request modal state
-  const [showDiscountModal, setShowDiscountModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<WishlistItem | null>(null);
-  const [discountPercent, setDiscountPercent] = useState(3);
-  const [discountMessage, setDiscountMessage] = useState('');
-  const [requestingDiscount, setRequestingDiscount] = useState(false);
-  const [showInfoBanner, setShowInfoBanner] = useState(true);
-
-  useBodyScrollLock(showDiscountModal);
-
-  useEffect(() => {
-    const bannerDismissed = localStorage.getItem('wishlist-info-dismissed');
-    if (bannerDismissed === 'true') {
-      setShowInfoBanner(false);
-    }
-  }, []);
-
-  const dismissInfoBanner = () => {
-    setShowInfoBanner(false);
-    localStorage.setItem('wishlist-info-dismissed', 'true');
-  };
-
-  useEffect(() => {
-    fetchWishlist();
-    fetchDiscountRequests();
-  }, []);
-
-  async function fetchWishlist() {
-    try {
-      const response = await fetch('/api/customer/wishlist');
-      if (response.ok) {
-        const data = await response.json();
-        // Map products to WishlistItem format
-        const items: WishlistItem[] = (data.products || []).map((product: WishlistProduct) => {
-          let images: string[] = [];
-          if (product.images) {
-            if (typeof product.images === 'string') {
-              try {
-                images = JSON.parse(product.images);
-              } catch {
-                images = [];
-              }
-            } else if (Array.isArray(product.images)) {
-              images = product.images;
-            }
-          }
-
-          const imageUrl = product.mainImage || (images.length > 0 ? images[0] : undefined);
-
-          return {
-            id: product.id,
-            productId: product.id,
-            productName: product.name,
-            price: Number(product.priceUSD),
-            imageUrl: imageUrl,
-            inStock: product.stock > 0,
-            createdAt: product.createdAt,
-          };
+    useEffect(() => {
+        let vigente = true;
+        Promise.all([
+            fetch('/api/customer/wishlist').then((r) => (r.ok ? r.json() : null)),
+            fetch('/api/customer/discount-requests').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        ]).then(([lista, descuentos]) => {
+            if (!vigente) return;
+            if (!lista) toast.error('No se pudo cargar la lista de favoritos');
+            setFavoritos(lista?.products ?? []);
+            setAprobados(descuentos?.activeDiscounts ?? []);
+            setLoading(false);
         });
-        setWishlist(items);
-      }
-    } catch (error) {
-      console.error('Error fetching wishlist:', error);
-      toast.error('No se pudo cargar la lista de favoritos');
-    } finally {
-      setLoading(false);
-    }
-  }
+        return () => { vigente = false; };
+    }, []);
 
-  async function fetchDiscountRequests() {
-    try {
-      const response = await fetch('/api/customer/discount-requests');
-      if (response.ok) {
-        const data = await response.json();
-        setDiscountRequests(data.requests || []);
-      }
-    } catch (error) {
-      console.error('Error fetching discount requests:', error);
-      toast.error('No se pudieron cargar las solicitudes de descuento');
-    }
-  }
+    const removeFromWishlist = async (productId: string) => {
+        setRemovingId(productId);
+        try {
+            const response = await fetch('/api/customer/wishlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId, action: 'remove' }),
+            });
+            if (!response.ok) throw new Error();
+            setFavoritos((actual) => actual.filter((item) => item.id !== productId));
+            toast.success('Producto eliminado de favoritos');
+        } catch {
+            toast.error('No se pudo eliminar');
+        } finally {
+            setRemovingId(null);
+        }
+    };
 
-  const removeFromWishlist = async (productId: string) => {
-    setRemovingId(productId);
-    try {
-      const response = await fetch('/api/customer/wishlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, action: 'remove' }),
-      });
-      if (response.ok) {
-        setWishlist(wishlist.filter(item => item.productId !== productId));
-        toast.success('Producto eliminado de favoritos');
-      }
-    } catch (error) {
-      console.error('Error removing from wishlist:', error);
-      toast.error('Error al eliminar');
-    } finally {
-      setRemovingId(null);
-    }
-  };
+    // Mismo carrito que la tarjeta de la tienda (antes los digitales entraban como físicos con stock 999)
+    const handleAddToCart = (p: Favorito) => {
+        const isDigital = p.productType === 'DIGITAL';
+        addItem({
+            id: p.id,
+            name: p.name,
+            price: p.priceUSD,
+            listPrice: p.compareAtPriceUSD && p.compareAtPriceUSD > p.priceUSD ? p.compareAtPriceUSD : undefined,
+            imageUrl: p.mainImage || p.images[0] || undefined,
+            stock: isDigital ? 999 : p.stock,
+            productType: isDigital ? 'DIGITAL' : 'PHYSICAL',
+            weightKg: p.weightKg ?? undefined,
+            dimensions: p.dimensions ?? undefined,
+            isConsolidable: p.isConsolidable !== false,
+            shippingCost: p.shippingCost ?? undefined,
+            freeShipping: !isDigital && p.freeShipping === true,
+        }, 1);
+        toast.success('Agregado al carrito');
+    };
 
-  const handleAddToCart = (item: WishlistItem) => {
-    if (!item.inStock) return;
-    addItem({
-      id: item.productId,
-      name: item.productName,
-      price: item.price,
-      imageUrl: item.imageUrl || '',
-      stock: 999,
-      productType: 'PHYSICAL',
-      weightKg: 0.1,
-      isConsolidable: true,
-      shippingCost: 0,
-    }, 1);
-    toast.success('Agregado al carrito');
-  };
+    const aprobadoDe = (productId: string) => aprobados.find((d) => d.productId === productId && d.expiresAt && new Date(d.expiresAt) > new Date());
 
-  const openDiscountModal = (item: WishlistItem) => {
-    setSelectedItem(item);
-    setDiscountPercent(3);
-    setDiscountMessage('');
-    setShowDiscountModal(true);
-  };
+    const visibles = favoritos
+        .filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        .sort((a, b) => {
+            switch (sortBy) {
+                case 'price-asc': return a.priceUSD - b.priceUSD;
+                case 'price-desc': return b.priceUSD - a.priceUSD;
+                case 'name': return a.name.localeCompare(b.name, 'es');
+                case 'drop': return (bajada(b) + (b.oferta?.percent ?? 0)) - (bajada(a) + (a.oferta?.percent ?? 0));
+                default: return new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime();
+            }
+        });
 
-  const getDiscountStatus = (productId: string) => {
-    const request = discountRequests.find(r => r.productId === productId);
-    if (!request) return null;
+    const disponibles = favoritos.filter((p) => p.productType === 'DIGITAL' || p.stock > 0);
+    const totalValue = disponibles.reduce((sum, p) => sum + p.priceUSD, 0);
+    const enOferta = favoritos.filter((p) => p.oferta || bajada(p) > 0).length;
 
-    if (request.status === 'APPROVED' && request.expiresAt) {
-      const isExpired = new Date(request.expiresAt) < new Date();
-      if (isExpired) return { ...request, status: 'EXPIRED' };
-    }
-    return request;
-  };
-
-  const handleRequestDiscount = async () => {
-    if (!selectedItem) return;
-
-    setRequestingDiscount(true);
-    try {
-      const response = await fetch('/api/customer/discount-requests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: selectedItem.productId,
-          productName: selectedItem.productName,
-          originalPrice: selectedItem.price,
-          requestedDiscount: discountPercent,
-          customerMessage: discountMessage || undefined,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Solicitud enviada exitosamente');
-        setShowDiscountModal(false);
-        fetchDiscountRequests();
-      } else {
-        toast.error(data.error || 'Error al enviar solicitud');
-      }
-    } catch {
-      toast.error('Error de conexion');
-    } finally {
-      setRequestingDiscount(false);
-    }
-  };
-
-  // Filter and sort logic
-  const filteredAndSortedWishlist = wishlist
-    .filter(item => item.productName.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'price-asc':
-          return a.price - b.price;
-        case 'price-desc':
-          return b.price - a.price;
-        case 'name':
-          return a.productName.localeCompare(b.productName);
-        default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-    });
-
-  const totalValue = wishlist.reduce((sum, item) => sum + item.price, 0);
-  const inStockCount = wishlist.filter(item => item.inStock).length;
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-4 border-brand-500/20"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-brand-500 animate-spin"></div>
-          <PiListHeartBold className="absolute inset-0 m-auto w-6 h-6 text-brand-500" />
-        </div>
-      </div>
-    );
-  }
-
-  const getStatusBadge = (status: string, expiresAt?: string) => {
-    const now = new Date();
-    if (status === 'APPROVED' && expiresAt) {
-      const expires = new Date(expiresAt);
-      const hoursLeft = Math.max(0, Math.floor((expires.getTime() - now.getTime()) / (1000 * 60 * 60)));
-      if (hoursLeft <= 0) {
-        return <span className={adminBadge('neutral')}>Expirado</span>;
-      }
-      return <span className={adminBadge('success')}>{hoursLeft}h restantes</span>;
-    }
-    switch (status) {
-      case 'PENDING':
-        return <span className={adminBadge('warning')}>Pendiente</span>;
-      case 'REJECTED':
-        return <span className={adminBadge('danger')}>Rechazado</span>;
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className="space-y-4 lg:space-y-6">
-      {/* Header */}
-      <div className={`${adminCard} p-4 lg:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-brand-50 text-brand-500 flex items-center justify-center flex-shrink-0">
-            <PiListHeartBold className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-lg lg:text-2xl font-bold text-ink tracking-tight">Favoritos</h1>
-            <p className="text-xs lg:text-sm text-muted flex items-center gap-1">
-              <PiSparkle className="w-3.5 h-3.5 text-brand-500" />
-              {wishlist.length} producto{wishlist.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-        </div>
-
-        {/* Stats Pills */}
-        <div className="flex flex-wrap gap-2">
-          <div className="px-3 py-1.5 bg-surface rounded-lg border border-line flex items-center gap-1.5">
-            <FiDollarSign className="w-3.5 h-3.5 text-brand-500" />
-            <span className="text-xs font-semibold text-ink">{formatUSD(totalValue)}</span>
-          </div>
-          <div className="px-3 py-1.5 bg-surface rounded-lg border border-line flex items-center gap-1.5">
-            <FiTrendingUp className="w-3.5 h-3.5 text-success-strong" />
-            <span className="text-xs font-semibold text-ink">{inStockCount} en stock</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Info Tooltip - Discount Feature Explanation */}
-      {showInfoBanner && (
-        <div className="relative bg-surface rounded-xl border border-line p-3 lg:p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-brand-50 text-brand-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <FiPercent className="w-4 h-4" />
+    if (loading) {
+        return (
+            <div className="flex h-64 items-center justify-center" role="status" aria-label="Cargando favoritos">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-brand-500/20 border-t-brand-500" />
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-ink text-xs lg:text-sm mb-0 flex items-center gap-1.5">
-                <span className="truncate">¡Solicita descuentos exclusivos!</span>
-                <span className="px-1.5 py-0.5 bg-brand-500 text-white text-[11px] font-bold rounded-full">NUEVO</span>
-              </h3>
-              <p className="text-xs text-muted truncate">
-                Guarda productos y pide precio especial.
-              </p>
+        );
+    }
+
+    const Estado = ({ p }: { p: Favorito }) => {
+        const pct = bajada(p);
+        const aprobado = aprobadoDe(p.id);
+        return (
+            <div className="space-y-1">
+                <OfferNote oferta={p.oferta} />
+                {pct > 0 && (
+                    <p className="flex items-center gap-1 text-xs font-semibold text-success-strong">
+                        <FiArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+                        Bajó {pct}% desde que lo guardaste
+                    </p>
+                )}
+                {aprobado && (
+                    <p className="flex items-center gap-1 text-xs font-semibold text-success-strong">
+                        <FiGift className="h-3.5 w-3.5" aria-hidden="true" />
+                        Tienes {aprobado.approvedDiscount || aprobado.requestedDiscount}% aprobado al pagar
+                    </p>
+                )}
             </div>
-            <button
-              type="button"
-              onClick={dismissInfoBanner}
-              className="flex-shrink-0 p-1.5 text-muted hover:text-ink hover:bg-line/50 rounded-lg transition-colors"
-              aria-label="Cerrar"
-            >
-              <FiX className="w-4 h-4" />
+        );
+    };
+
+    const Accion = ({ p, compact = false }: { p: Favorito; compact?: boolean }) => {
+        const agotado = p.productType !== 'DIGITAL' && p.stock <= 0;
+        if (needsProductPage(p)) {
+            return (
+                <Link href={`/productos/${p.slug}`} className={`${adminPrimaryButton} ${compact ? 'h-11 px-3' : 'w-full px-2'}`}>
+                    <FiShoppingCart className="h-4 w-4 shrink-0" aria-hidden="true" /> {compact ? <span className="sr-only">Elegir monto</span> : 'Elegir monto'}
+                </Link>
+            );
+        }
+        return (
+            <button type="button" onClick={() => handleAddToCart(p)} disabled={agotado} className={`${adminPrimaryButton} ${compact ? 'h-11 px-3' : 'w-full px-2'}`}
+                aria-label={compact ? `Agregar ${p.name} al carrito` : undefined}>
+                <FiShoppingCart className="h-4 w-4" aria-hidden="true" /> {!compact && (agotado ? 'Agotado' : 'Agregar')}
             </button>
-          </div>
-        </div>
-      )}
+        );
+    };
 
-      {/* Toolbar */}
-      {wishlist.length > 0 && (
-        <div className={`${adminCard} p-4`}>
-          <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-            <div className="relative flex-1 w-full md:max-w-md">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-              <input
-                type="text"
-                placeholder="Buscar en tu lista..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-surface border border-line rounded-xl text-sm text-ink placeholder:text-subtle focus:border-brand-500 outline-none transition-all"
-              />
-            </div>
+    const imagen = (p: Favorito) => p.mainImage || p.images[0] || null;
 
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 bg-surface rounded-xl p-1 border border-line">
-                <FiFilter className="w-4 h-4 text-muted ml-2" />
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="bg-transparent text-sm text-ink font-medium focus:outline-none pr-2 py-1.5"
-                >
-                  <option value="recent">Recientes</option>
-                  <option value="price-asc">Menor precio</option>
-                  <option value="price-desc">Mayor precio</option>
-                  <option value="name">Nombre</option>
-                </select>
-              </div>
-
-              <div className="flex items-center bg-surface rounded-xl p-1 border border-line">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow text-brand-500' : 'text-muted hover:text-ink'}`}
-                  aria-label="Vista cuadrícula"
-                >
-                  <FiGrid className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow text-brand-500' : 'text-muted hover:text-ink'}`}
-                  aria-label="Vista lista"
-                >
-                  <FiList className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Wishlist Content */}
-      {filteredAndSortedWishlist.length > 0 ? (
-        viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {filteredAndSortedWishlist.map((item, index) => {
-              const discountStatus = getDiscountStatus(item.productId);
-              const hasActiveDiscount = discountStatus?.status === 'APPROVED' && discountStatus.expiresAt && new Date(discountStatus.expiresAt) > new Date();
-
-              return (
-                <div
-                  key={item.id}
-                  className={`${adminCard} overflow-hidden group relative transition-all duration-300 hover:border-brand-500/40 ${
-                    hasActiveDiscount ? 'border-success-strong/40' : ''
-                  } ${removingId === item.id ? 'opacity-50' : ''}`}
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  {/* Active discount badge */}
-                  {hasActiveDiscount && (
-                    <div className="absolute top-0 left-0 right-0 bg-success-strong text-white text-center py-0.5 text-xs font-bold z-10">
-                      <FiGift className="inline w-2.5 h-2.5 mr-0.5" />
-                      {discountStatus?.approvedDiscount}% OFF
+    return (
+        <div className="space-y-4 lg:space-y-6">
+            <div className="flex flex-col justify-between gap-4 rounded-2xl border border-line bg-white p-4 sm:flex-row sm:items-center lg:p-6">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-500 lg:h-12 lg:w-12">
+                        <PiListHeartBold className="h-6 w-6" aria-hidden="true" />
                     </div>
-                  )}
-
-                  <div className={`relative aspect-square bg-surface ${hasActiveDiscount ? 'mt-4' : ''}`}>
-                    {item.imageUrl ? (
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.productName}
-                        fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <FiPackage className="w-10 h-10 text-subtle" />
-                      </div>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => removeFromWishlist(item.productId)}
-                      disabled={removingId === item.productId}
-                      className="absolute top-2 right-2 p-1.5 bg-white rounded-lg shadow text-deal hover:bg-deal-bg transition-all lg:opacity-0 lg:group-hover:opacity-100"
-                      aria-label="Eliminar de favoritos"
-                    >
-                      <FiTrash2 className="w-3.5 h-3.5" />
-                    </button>
-
-                    {!item.inStock && (
-                      <div className="absolute inset-0 bg-ink/60 flex items-center justify-center">
-                        <span className="px-2 py-1 bg-deal text-white text-xs font-bold rounded-lg">Agotado</span>
-                      </div>
-                    )}
-
-                    {/* Discount status badge */}
-                    {discountStatus && discountStatus.status !== 'APPROVED' && (
-                      <div className="absolute bottom-2 left-2">
-                        {getStatusBadge(discountStatus.status)}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-2.5">
-                    <h3 className="text-xs font-bold text-ink mb-1.5 line-clamp-2 leading-tight">{item.productName}</h3>
-
-                    <div className="flex items-center gap-1.5 mb-2">
-                      {hasActiveDiscount ? (
-                        <>
-                          <span className="text-xs text-muted line-through">{formatUSD(item.price)}</span>
-                          <span className="text-base font-bold text-success-strong">
-                            {formatUSD(item.price * (1 - (discountStatus?.approvedDiscount || 0) / 100))}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-base font-bold text-brand-500">{formatUSD(item.price)}</span>
-                      )}
+                    <div>
+                        <h1 className="text-lg font-bold tracking-tight text-ink lg:text-2xl">Favoritos</h1>
+                        <p className="text-sm text-muted">{favoritos.length} producto{favoritos.length !== 1 ? 's' : ''}</p>
                     </div>
-
-                    {/* Action buttons */}
-                    <div className="flex gap-1.5 mb-1.5">
-                      <Link
-                        href={`/productos/${item.productId}`}
-                        className="flex-1 px-2 py-1.5 bg-surface text-ink text-xs font-semibold rounded-lg hover:bg-line text-center flex items-center justify-center gap-1"
-                      >
-                        <FiExternalLink className="w-3 h-3" />
-                        Ver
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => handleAddToCart(item)}
-                        disabled={!item.inStock}
-                        className={`flex-1 px-2 py-1.5 ${adminPrimaryButton} text-xs py-1.5 px-2 flex items-center justify-center gap-1`}
-                      >
-                        <FiShoppingCart className="w-3 h-3" />
-                        Añadir
-                      </button>
-                    </div>
-
-                    {/* Request discount button */}
-                    {item.inStock && !discountStatus && (
-                      <button
-                        type="button"
-                        onClick={() => openDiscountModal(item)}
-                        className="w-full px-2 py-1.5 bg-brand-50 text-brand-600 border border-brand-200 text-xs font-semibold rounded-lg hover:bg-brand-100 transition-all flex items-center justify-center gap-1"
-                      >
-                        <FiPercent className="w-3 h-3" />
-                        Pedir Descuento
-                      </button>
-                    )}
-
-                    {/* Show discount status */}
-                    {discountStatus && (
-                      <div className="mt-1 text-center">
-                        {getStatusBadge(discountStatus.status, discountStatus.expiresAt)}
-                      </div>
-                    )}
-                  </div>
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          /* List View */
-          <div className={`${adminCard} overflow-hidden divide-y divide-line`}>
-            {filteredAndSortedWishlist.map((item) => {
-              const discountStatus = getDiscountStatus(item.productId);
-              return (
-                <div key={item.id} className="flex items-center gap-4 p-4 hover:bg-surface transition-colors">
-                  <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-surface flex-shrink-0">
-                    {item.imageUrl ? (
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.productName}
-                        fill sizes="80px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <FiPackage className="w-8 h-8 text-subtle" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-ink truncate text-sm lg:text-base">{item.productName}</h3>
-                    <p className="text-lg lg:text-xl font-bold text-brand-500">{formatUSD(item.price)}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {discountStatus && getStatusBadge(discountStatus.status, discountStatus.expiresAt)}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {item.inStock && !discountStatus && (
-                      <button
-                        type="button"
-                        onClick={() => openDiscountModal(item)}
-                        className="p-2.5 bg-brand-50 text-brand-600 border border-brand-200 rounded-xl hover:bg-brand-100 transition-all"
-                        title="Solicitar descuento"
-                      >
-                        <FiPercent className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleAddToCart(item)}
-                      disabled={!item.inStock}
-                      className={`p-2.5 ${adminPrimaryButton}`}
-                      aria-label="Añadir al carrito"
-                    >
-                      <FiShoppingCart className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeFromWishlist(item.id)}
-                      className="p-2.5 bg-surface text-deal rounded-xl hover:bg-deal-bg transition-all"
-                      aria-label="Eliminar"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )
-      ) : searchTerm ? (
-        <div className={`${adminCard} p-12 text-center`}>
-          <FiSearch className="w-16 h-16 text-subtle mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-ink mb-2">Sin resultados para &ldquo;{searchTerm}&rdquo;</h3>
-          <button
-            type="button"
-            onClick={() => setSearchTerm('')}
-            className="px-4 py-2 text-brand-500 font-semibold hover:underline"
-          >
-            Limpiar busqueda
-          </button>
-        </div>
-      ) : (
-        <div className={`${adminCard} p-12 text-center relative overflow-hidden`}>
-          <div className="relative">
-            <div className="w-20 h-20 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <PiHeartBreakBold className="w-10 h-10 text-brand-500" />
-            </div>
-            <h3 className="text-xl font-bold text-ink mb-2">Tu lista de deseos está vacía</h3>
-            <p className="text-muted mb-6 text-sm">
-              Guarda favoritos y pide descuentos exclusivos
-            </p>
-            <Link
-              href="/"
-              className={`${adminPrimaryButton} inline-flex items-center gap-2 px-6 py-3`}
-            >
-              <PiSparkle className="w-5 h-5" />
-              Ver Ofertas de Hoy
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Discount Request Modal - Using Portal to escape overflow:hidden */}
-      {showDiscountModal && selectedItem && typeof document !== 'undefined' && createPortal(
-        <div
-          onClick={() => setShowDiscountModal(false)}
-          className={adminModalOverlay}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className={`${adminModalPanel} w-full max-w-[512px] max-h-[95dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden`}
-          >
-            {/* Modal Header */}
-            <div className="bg-surface border-b border-line p-4 sm:p-5 flex-shrink-0 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-500 flex items-center justify-center">
-                  <FiPercent className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base sm:text-lg font-bold text-ink">Solicitar Descuento</h2>
-                  <p className="text-xs sm:text-sm text-muted">Producto de tu lista de deseos</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowDiscountModal(false)}
-                className="p-2 text-muted hover:bg-line/50 rounded-lg transition-all"
-                aria-label="Cerrar modal"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Scrollable Content */}
-            <div className="overflow-y-auto flex-1 pb-6 sm:pb-0">
-              {/* Product Info */}
-              <div className="p-5 border-b border-line">
-                <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-surface rounded-xl overflow-hidden flex-shrink-0 border border-line">
-                    {selectedItem.imageUrl ? (
-                      <Image
-                        src={selectedItem.imageUrl}
-                        alt={selectedItem.productName}
-                        width={80}
-                        height={80}
-                        className="object-cover w-full h-full"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <FiPackage className="w-8 h-8 text-subtle" />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-ink line-clamp-2 text-sm lg:text-base">{selectedItem.productName}</h3>
-                    <p className="text-xl font-bold text-brand-500 mt-1">{formatUSD(selectedItem.price)}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Discount Selector */}
-              <div className="p-5 space-y-5">
-                <div>
-                  <label className={adminLabel}>Descuento solicitado</label>
-                  <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5].map((percent) => (
-                      <button
-                        key={percent}
-                        type="button"
-                        onClick={() => setDiscountPercent(percent)}
-                        className={`flex-1 py-3 rounded-xl font-bold text-base transition-all ${
-                          discountPercent === percent
-                            ? adminPrimaryButton
-                            : 'bg-surface text-ink hover:bg-line border border-line'
-                        }`}
-                      >
-                        {percent}%
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Price Preview */}
-                <div className="bg-surface rounded-xl border border-line p-4 space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted">Precio original:</span>
-                    <span className="font-semibold text-ink">{formatUSD(selectedItem.price)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted">Descuento ({discountPercent}%):</span>
-                    <span className="font-semibold text-brand-600">-{formatUSD(selectedItem.price * discountPercent / 100)}</span>
-                  </div>
-                  <div className="border-t border-line pt-2 flex justify-between items-center">
-                    <span className="font-bold text-ink">Precio final:</span>
-                    <span className="text-xl font-bold text-success-strong">
-                      {formatUSD(selectedItem.price * (1 - discountPercent / 100))}
+                <div className="flex flex-wrap gap-2 text-xs font-semibold text-ink">
+                    <span className="rounded-lg border border-line bg-surface px-3 py-1.5">Disponibles: {formatUSD(totalValue)}</span>
+                    <span className="flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5">
+                        <FiTrendingUp className="h-3.5 w-3.5 text-success-strong" aria-hidden="true" />{disponibles.length} disponibles
                     </span>
-                  </div>
+                    {enOferta > 0 && (
+                        <span className="flex items-center gap-1.5 rounded-lg bg-deal px-3 py-1.5 text-white">
+                            <FiTag className="h-3.5 w-3.5" aria-hidden="true" />{enOferta} con precio rebajado
+                        </span>
+                    )}
                 </div>
-
-                {/* Message */}
-                <div>
-                  <label className={adminLabel}>Mensaje (opcional)</label>
-                  <textarea
-                    value={discountMessage}
-                    onChange={(e) => setDiscountMessage(e.target.value)}
-                    placeholder="Ejemplo: Tengo $95 disponibles, sería posible un pequeño descuento?"
-                    className="w-full px-3.5 py-2.5 bg-surface border border-line focus:border-brand-500 focus:bg-white rounded-xl outline-none transition-all resize-none text-ink text-sm placeholder:text-subtle"
-                    rows={3}
-                  />
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="button"
-                  onClick={handleRequestDiscount}
-                  disabled={requestingDiscount}
-                  className={`${adminPrimaryButton} w-full py-3.5 flex items-center justify-center gap-2`}
-                >
-                  {requestingDiscount ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <FiSend className="w-5 h-5" />
-                      Enviar Solicitud
-                    </>
-                  )}
-                </button>
-
-                <p className="text-xs text-center text-muted">
-                  El administrador revisará tu solicitud y te notificará cuando sea aprobada.
-                  Los descuentos aprobados tienen tiempo limitado.
-                </p>
-              </div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
-    </div>
-  );
+
+            {favoritos.length > 0 && (
+                <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-3 sm:flex-row sm:items-center">
+                    <div className="relative flex-1">
+                        <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+                        <input type="search" aria-label="Buscar en favoritos" placeholder="Buscar en tu lista…" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                            className="h-11 w-full rounded-lg border border-line bg-white pl-9 pr-3 text-sm text-ink focus-visible:outline-2 focus-visible:outline-brand-500" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <label className="relative flex items-center">
+                            <FiFilter className="pointer-events-none absolute left-3 h-4 w-4 text-muted" aria-hidden="true" />
+                            <span className="sr-only">Ordenar</span>
+                            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                className="h-11 rounded-lg border border-line bg-white pl-9 pr-3 text-sm text-ink">
+                                <option value="recent">Recientes</option>
+                                <option value="drop">Mayor rebaja</option>
+                                <option value="price-asc">Menor precio</option>
+                                <option value="price-desc">Mayor precio</option>
+                                <option value="name">Nombre</option>
+                            </select>
+                        </label>
+                        <div className="flex overflow-hidden rounded-lg border border-line" role="group" aria-label="Vista">
+                            <button type="button" onClick={() => setViewMode('grid')} aria-pressed={viewMode === 'grid'} aria-label="Vista cuadrícula"
+                                className={`flex h-11 w-11 items-center justify-center ${viewMode === 'grid' ? 'bg-brand-500 text-white' : 'bg-white text-muted'}`}>
+                                <FiGrid className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                            <button type="button" onClick={() => setViewMode('list')} aria-pressed={viewMode === 'list'} aria-label="Vista lista"
+                                className={`flex h-11 w-11 items-center justify-center ${viewMode === 'list' ? 'bg-brand-500 text-white' : 'bg-white text-muted'}`}>
+                                <FiList className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {visibles.length > 0 ? (
+                viewMode === 'grid' ? (
+                    <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+                        {visibles.map((p) => {
+                            const agotado = p.productType !== 'DIGITAL' && p.stock <= 0;
+                            const src = imagen(p);
+                            return (
+                                <li key={p.id} className={`flex flex-col overflow-hidden rounded-2xl border border-line bg-white ${removingId === p.id ? 'opacity-50' : ''}`}>
+                                    <div className="relative aspect-square bg-white">
+                                        {src ? <Image src={src} alt={p.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-contain p-3" /> : (
+                                            <div className="flex h-full items-center justify-center text-subtle"><FiPackage className="h-10 w-10" aria-hidden="true" /></div>
+                                        )}
+                                        {p.compareAtPriceUSD && p.compareAtPriceUSD > p.priceUSD && (
+                                            <span className="absolute left-2 top-2 rounded bg-deal px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                                                -{Math.round((1 - p.priceUSD / p.compareAtPriceUSD) * 100)}%
+                                            </span>
+                                        )}
+                                        {agotado && <span className="absolute inset-x-2 bottom-2 rounded bg-ink/80 px-2 py-1 text-center text-xs font-semibold text-white">Agotado</span>}
+                                        <button type="button" onClick={() => removeFromWishlist(p.id)} disabled={removingId === p.id} aria-label={`Quitar ${p.name} de favoritos`}
+                                            className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-muted shadow-sm hover:text-deal">
+                                            <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                                        </button>
+                                    </div>
+                                    <div className="flex flex-1 flex-col gap-2 p-3">
+                                        <Link href={`/productos/${p.slug}`} className="line-clamp-2 text-sm font-medium text-ink hover:text-brand-600">{p.name}</Link>
+                                        <div className="flex flex-wrap items-baseline gap-x-2">
+                                            <span className="text-lg font-bold text-ink">{formatUSD(p.priceUSD)}</span>
+                                            {p.compareAtPriceUSD && p.compareAtPriceUSD > p.priceUSD && <span className="text-xs text-muted line-through">{formatUSD(p.compareAtPriceUSD)}</span>}
+                                        </div>
+                                        <Estado p={p} />
+                                        <div className="mt-auto flex pt-1">
+                                            <Accion p={p} />
+                                        </div>
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                ) : (
+                    <ul className="space-y-2">
+                        {visibles.map((p) => {
+                            const src = imagen(p);
+                            return (
+                                <li key={p.id} className={`flex items-center gap-3 rounded-2xl border border-line bg-white p-3 ${removingId === p.id ? 'opacity-50' : ''}`}>
+                                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-white">
+                                        {src ? <Image src={src} alt={p.name} fill sizes="80px" className="object-contain p-1" /> : (
+                                            <div className="flex h-full items-center justify-center text-subtle"><FiPackage className="h-6 w-6" aria-hidden="true" /></div>
+                                        )}
+                                    </div>
+                                    <div className="min-w-0 flex-1 space-y-1">
+                                        <Link href={`/productos/${p.slug}`} className="line-clamp-1 text-sm font-medium text-ink hover:text-brand-600">{p.name}</Link>
+                                        <p className="flex flex-wrap items-baseline gap-x-2">
+                                            <span className="font-bold text-ink">{formatUSD(p.priceUSD)}</span>
+                                            {p.compareAtPriceUSD && p.compareAtPriceUSD > p.priceUSD && <span className="text-xs text-muted line-through">{formatUSD(p.compareAtPriceUSD)}</span>}
+                                        </p>
+                                        <Estado p={p} />
+                                    </div>
+                                    <div className="flex shrink-0 gap-1">
+                                        <Accion p={p} compact />
+                                        <button type="button" onClick={() => removeFromWishlist(p.id)} disabled={removingId === p.id} aria-label={`Quitar ${p.name} de favoritos`}
+                                            className="flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-deal">
+                                            <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                                        </button>
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )
+            ) : searchTerm ? (
+                <div className={`${adminCard} py-10 text-center`}>
+                    <FiSearch className="mx-auto mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
+                    <p className="font-semibold text-ink">Sin resultados para &ldquo;{searchTerm}&rdquo;</p>
+                    <button type="button" onClick={() => setSearchTerm('')} className="mt-2 min-h-11 text-sm font-semibold text-brand-600">Limpiar búsqueda</button>
+                </div>
+            ) : (
+                <div className={`${adminCard} py-12 text-center`}>
+                    <PiHeartBreakBold className="mx-auto mb-3 h-10 w-10 text-subtle" aria-hidden="true" />
+                    <p className="font-semibold text-ink">Tu lista de favoritos está vacía</p>
+                    <p className="mt-1 text-sm text-muted">Guarda productos y te mostramos aquí cuando entren en oferta o bajen de precio.</p>
+                    <Link href="/productos?oferta=1" className={`${adminPrimaryButton} mt-4`}>
+                        <PiSparkle className="h-4 w-4" aria-hidden="true" /> Ver ofertas de hoy
+                    </Link>
+                </div>
+            )}
+        </div>
+    );
 }

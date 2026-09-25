@@ -13,6 +13,7 @@ import {
   FiMoreHorizontal,
   FiPackage,
   FiShoppingCart,
+  FiTag,
   FiTool,
   FiX,
 } from 'react-icons/fi';
@@ -30,6 +31,8 @@ const MAIN_ITEMS: Array<{ href: string; label: string; Icon: IconType }> = [
 ];
 
 const DRAWER_ITEMS: Array<{ href: string; label: string; Icon: IconType }> = [
+  // C-102: ofertas de la tienda a la vista, como el "Deals" de Best Buy
+  { href: '/productos?oferta=1', label: 'Ofertas', Icon: FiTag },
   { href: '/gift-cards', label: 'Gift Cards', Icon: FiGift },
   { href: '/servicios', label: 'Servicios', Icon: FiTool },
   { href: '/cursos', label: 'Cursos', Icon: FiBookOpen },

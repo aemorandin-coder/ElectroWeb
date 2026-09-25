@@ -28,31 +28,13 @@ import EntregaEnvio, { ENVIO_INICIAL, ResumenEnvio, envioParaServidor, validarEn
 import { ConfianzaEnvio } from '@/components/envios/ConfianzaEnvio';
 import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalculation, type PricingLine } from '@/lib/pricing';
 
-type CheckoutCartItem = ReturnType<typeof useCart>['items'][number];
-
-// Los productos digitales usan ids de carrito "productId-variante[-cuenta]" (C-60) o, en carritos
-// guardados antes, "productId-monto[-usuario]": el servidor acepta ambos
-function parseCartItemId(item: CheckoutCartItem): { productId: string; digitalAmount?: number; digitalVariantId?: string } {
-  if (item.productType !== 'DIGITAL' || !item.id.includes('-')) return { productId: item.id };
-  const [productId, amount] = item.id.split('-');
-  if (item.digitalVariantId) return { productId, digitalVariantId: item.digitalVariantId };
-  const digitalAmount = Number(amount);
-  return Number.isFinite(digitalAmount) && digitalAmount > 0 ? { productId, digitalAmount } : { productId };
-}
-
-// Lo único que se envía al servidor por producto: el precio lo pone el servidor
-function toOrderItem(item: CheckoutCartItem) {
-  return {
-    ...parseCartItemId(item),
-    quantity: item.quantity,
-    digitalUsername: item.digitalUsername,
-  };
-}
+import { parseCartItemId, toOrderItem } from '@/lib/cart-items';
+import CouponBox from '@/components/cart/CouponBox';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { items, getTotalPrice, clearCart } = useCart();
+  const { items, getTotalPrice, clearCart, couponCode, setCouponCode } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   // C-85: el formulario de teléfono y cédula espera al perfil para no aparecer y desaparecer
@@ -283,10 +265,11 @@ export default function CheckoutPage() {
   // Cotización del servidor: es lo que realmente se cobra (precios y pesos actualizados).
   // Se guarda con la clave del carrito para no mostrar una cotización vieja.
   const quoteBody = useMemo(
-    () => JSON.stringify({ items: items.map(toOrderItem), deliveryMethod: envio.deliveryMethod }),
-    [items, envio.deliveryMethod]
+    () => JSON.stringify({ items: items.map(toOrderItem), deliveryMethod: envio.deliveryMethod, couponCode }),
+    [items, envio.deliveryMethod, couponCode]
   );
-  const [serverQuote, setServerQuote] = useState<{ key: string; calculation: OrderCalculation } | null>(null);
+  type CuponCotizado = { code: string; applied: boolean; message: string; savingsUSD: number };
+  const [serverQuote, setServerQuote] = useState<{ key: string; calculation: OrderCalculation; coupon: CuponCotizado | null } | null>(null);
 
   useEffect(() => {
     if (status !== 'authenticated' || items.length === 0) return;
@@ -301,7 +284,7 @@ export default function CheckoutPage() {
       })
         .then(res => (res.ok ? res.json() : null))
         .then(data => {
-          if (data?.calculation) setServerQuote({ key: quoteBody, calculation: data.calculation });
+          if (data?.calculation) setServerQuote({ key: quoteBody, calculation: data.calculation, coupon: data.coupon ?? null });
         })
         .catch(() => { });
     }, 400);
@@ -313,6 +296,7 @@ export default function CheckoutPage() {
   }, [quoteBody, status, items.length]);
 
   const orderCalculation = serverQuote?.key === quoteBody ? serverQuote.calculation : localCalculation;
+  const couponQuote = serverQuote?.key === quoteBody ? serverQuote.coupon : null;
   const cartSubtotal = orderCalculation.subtotalUSD;
   const cartDiscount = orderCalculation.discountUSD;
   const shippingBreakdown = orderCalculation.shipping;
@@ -411,6 +395,7 @@ export default function CheckoutPage() {
           paymentMethod: finalPaymentMethod,
           mobilePaymentData: paymentMode === 'PAGO_MOVIL' ? mobilePaymentData : null,
           notes: formData.notes,
+          couponCode,
           expectedTotalUSD: finalTotal,
         }),
       });
@@ -419,7 +404,7 @@ export default function CheckoutPage() {
 
       if (!orderResponse.ok) {
         if (orderResponse.status === 409 && orderData.calculation) {
-          setServerQuote({ key: quoteBody, calculation: orderData.calculation });
+          setServerQuote({ key: quoteBody, calculation: orderData.calculation, coupon: orderData.coupon ?? null });
         }
         throw new Error(orderData.details?.join(' ') || orderData.error || 'Error al crear la orden');
       }
@@ -1505,6 +1490,12 @@ export default function CheckoutPage() {
                                     <span className="text-xs text-subtle line-through">{formatPrice(originalTotal)}</span>
                                     <span className="text-sm font-bold text-success-strong">{formatPrice(finalItemTotal)}</span>
                                   </div>
+                                ) : item.listPrice && item.listPrice > item.price ? (
+                                  // C-102: en oferta, el precio de antes tachado
+                                  <div className="flex flex-col items-end">
+                                    <span className="text-xs text-subtle line-through">{formatPrice(item.listPrice * item.quantity)}</span>
+                                    <span className="text-sm font-bold text-ink">{formatPrice(originalTotal)}</span>
+                                  </div>
                                 ) : (
                                   <span className="text-sm font-bold text-ink">{formatPrice(originalTotal)}</span>
                                 )}
@@ -1541,7 +1532,7 @@ export default function CheckoutPage() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
                           </svg>
-                          Descuento:
+                          {couponQuote?.applied ? `Descuento (cupón ${couponQuote.code}):` : 'Descuento:'}
                         </span>
                         <div className="text-right">
                           <span className="text-base font-bold text-success-strong">-{formatUSD(cartDiscount)}</span>
@@ -1553,6 +1544,15 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Cupón (C-102) */}
+                    <CouponBox
+                      code={couponCode}
+                      onApply={(code) => setCouponCode(code)}
+                      onRemove={() => setCouponCode(null)}
+                      status={couponQuote ? { applied: couponQuote.applied, message: couponQuote.message } : null}
+                      pendingText="Verificando…"
+                    />
 
                     {/* Envío (C-100) */}
                     <ResumenEnvio envio={shippingBreakdown} form={envio} tasaVES={Number(companySettings?.exchangeRateVES) || 0} hayFisicos={hasPhysicalItems} />

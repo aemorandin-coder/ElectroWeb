@@ -1,138 +1,119 @@
-# Punto de partida (actualizado 2026-09-25: C-105 y C-109 en `main`; nginx con la IP real)
+# Punto de partida (actualizado 2026-09-26: C-104, C-102, C-103, C-51, C-110, C-111 y C-40 listos para mergear)
 
 Léelo antes de empezar.
 
-## 1. Estado de las ramas
-- **25/09:** `main` suma C-109 (destinatarios de campañas con límite) y C-105 (IP real del cliente, `lib/ip.ts`).
-  - **nginx ya pasa la IP real** (Andrés, 25/09): `X-Real-IP`, `X-Forwarded-For` y `X-Forwarded-Proto` en `/etc/nginx/sites-available/electroshopve`. Respaldo en `~/electroshopve.nginx.bak`.
-  - Sin Cloudflare: el dominio apunta directo al servidor (86.48.25.174).
-  - **Deploy del 25/09:** no cambia la base. `git pull && npm run build && pm2 restart electroshop-web --update-env`.
-  - **Comprobar:** el aviso "Acceso de administrador" muestra la misma IP que https://ifconfig.me en ese dispositivo.
-  - **Pendiente en el servidor:** "System restart required" (`pm2 save`, `sudo reboot`, `pm2 status`).
-- **`main` = `origin/main`** (24/09): todo lo revisado está mergeado.
-  - C-106: cobro de envío transparente y logos de ZOOM y MRW.
-  - C-108: revisión de Gemini.
-  - Gemini R20 (G-62…G-66), R21 (G-67) y R22 (G-68).
-  - Sigue ahí también lo del 22/09: C-100 (envíos) y C-101 (métodos de pago).
-- **Sin mergear a propósito:** `chatgpt/product-fixes-main` (ChatGPT salió; C-95 lo reemplazó).
-- **Gemini:** sin ronda abierta. Su carril quedó limpio. **G-67 se rechazó** (citó 21 textos que no existen): no se usa como fuente.
-- **Aviso de proceso:** Gemini a veces trabaja en la carpeta principal. Antes de empezar, `git status` y `git log -3`.
-- ChatGPT (limpieza opcional, cuando Andrés quiera):
-  ```bash
-  git worktree remove ../ElectroShopVe-chatgpt
-  git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main
-  git stash drop stash@{0}
-  ```
+## 0. URGENTE: dos credenciales quedaron públicas (el repositorio de GitHub es público)
+Encontrado en C-40. Ya se quitaron del código, pero **siguen en el historial de git**: hay que cambiarlas.
+1. **`SADES_WEBHOOK_SECRET`.** `scripts/test-webhook.js` tenía escrito un secreto `whsec_…`, con el comentario "CONFIGURACIÓN CON TU CLAVE REAL".
+   - Con él, cualquiera puede cambiar el precio y el stock de cualquier producto por SKU.
+   - **Si el `.env` del servidor tiene ese mismo valor:** genera otro (`openssl rand -hex 24`), ponlo en el `.env` del servidor y en SADES, y reinicia.
+   - Desde C-40 esos cambios quedan en Reportes → Seguridad ("SADES (webhook)").
+2. **Cuenta `masteradmin@electroshopve.com`.** `scripts/create-master-admin.ts` tenía su contraseña escrita.
+   - **Si existe en producción**, cámbiale la contraseña o bórrala. Revisa también en Reportes → Seguridad si alguien entró con ella.
+   - Lo mismo para `cliente@electroshop.com` (`create-customer.ts`), si se creó en producción.
+3. Recomendado: **poner el repositorio en privado** (GitHub → Settings → Change visibility).
 
-## 2. Deploy del 24/09 (incluye el del 22/09 si no se hizo)
+## 1. Ramas
+- **Encadenadas:** `main` → C-104 → C-102 → C-103 → C-51 → C-110 → C-111 → C-40. **Mergear `claude/C-40` trae todo.** Cada una tiene su `docs/plan/estado/C-XX.md`.
+- **Resumen:**
+  - **C-104:** reportes reales y bitácora conectada (logins, precios y aprobaciones).
+  - **C-102:** ofertas con precio tachado y cupones. Favoritos al estilo Amazon: se quitó "pedir descuento" (decisión de Andrés).
+  - **C-103:** firma de documentos con versión, PDF guardado y firma exigida al recargar.
+  - **C-51:** productos del admin (casillas, precios, "Destacado", edición rápida y "Duplicar").
+  - **C-110:** resto del panel (reseñas verificadas, categorías sin ciclos, pagos sin plantillas vacías, solicitudes con aviso al cliente).
+  - **C-111:** ESLint de 88 errores a 0 y cajones accesibles.
+  - **C-40:** README, `.env.example`, guiones sin credenciales y webhook de SADES validado.
+- **Gemini:** sin ronda abierta. Lo que cambió y le afecta está en `GEMINI.md` §7.
+- **ChatGPT:** fuera del equipo desde el 21/09. Limpieza opcional: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
 
-**Este merge no cambia el esquema.** Pero si el deploy del 22/09 (envíos y métodos de pago) no se corrió en el servidor, el paso 2 lo aplica. En el servidor (`/var/www/electroshopve`, PM2 `electroshop-web`):
+## 2. Deploy (servidor `/var/www/electroshopve`, PM2 `electroshop-web`)
+**Este merge agrega cosas a la base: no borra ni cambia columnas.**
 
 ```bash
 cd /var/www/electroshopve
 git pull
 
-# 1. ¿Falta algo en la base? (solo lee)
+# 1. Ver qué falta en la base (solo lee)
 npx prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --script
-#    - Sale vacío (o solo comentarios): el 22/09 ya se aplicó → salta al paso 3.
-#    - Sale ADD COLUMN, CREATE TABLE "shipment_events" y ADD VALUE 'BINANCE_PAY' → sigue con el paso 2.
-#    - Si aparece un DROP: PARA y avisa a Claude.
+#    Lo esperado:
+#      CREATE TYPE "PromotionKind", "PromotionScope"
+#      CREATE TABLE "promotions", "promotion_redemptions", "legal_documents", "document_signatures"
+#      ALTER TABLE "wishlist_items" ADD COLUMN "priceAtSaveUSD"
+#    Si aparece un DROP o un ALTER ... TYPE: PARA y avisa a Claude.
 
-# 2. Solo si el paso 1 mostró cambios
+# 2. Aplicar
 npx prisma db push          # si pide aceptar pérdida de datos, PARA
-
-# 3. Siempre
 npx prisma generate
-
-# 4. Variable del rastreo automático (solo si no existe)
-grep -c '^CRON_SECRET' .env   # 0 → agrega CRON_SECRET="<valor de: openssl rand -hex 16>" al .env
-
 npm run build
 pm2 restart electroshop-web --update-env
+
+# 3. Pasar las firmas de los términos del saldo a la tabla nueva, con su PDF (no borra nada)
+npx tsx scripts/migrar-firmas-saldo.ts           # en seco: dice cuántas
+npx tsx scripts/migrar-firmas-saldo.ts --apply
 ```
 
-**Cron del rastreo de ZOOM** (si no lo pusiste el 22/09; `crontab -e`):
-```
-0 */2 * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<tu-dominio>/api/cron/envios >/dev/null
-```
+- **Respaldo:** agrega `private-uploads/signatures/` a las copias del servidor. Ahí quedan las constancias firmadas.
+- **Si algo sale mal:** `git reset --hard 41d5594 && npx prisma generate && npm run build && pm2 restart electroshop-web`.
+  - Ese es el `main` anterior. Las tablas nuevas pueden quedarse: el código viejo no las usa.
 
-**Redondeo de saldos (C-96, autorizado por Andrés el 24/09):** pasos en `estado/C-96.md` y en el resumen del 24/09 (conteo → respaldo con `pg_dump -t user_balances` → `UPDATE`).
+**Después del deploy, en el panel:**
+- **Descuentos → Ofertas y cupones:** crea tu primera oferta o cupón. Las solicitudes viejas quedan en su pestaña.
+- **Legal → Documentos:** revisa el texto de los términos del saldo (versión 1, igual al del modal viejo). Para cambiarlo, "Nueva versión": todos vuelven a firmar.
 
-**En el panel, si no se hizo el 22/09:**
-- Configuración → Envíos: embalaje, "Envío gratis desde" y la tarifa del delivery en Guanare (viene apagado).
-- Métodos de pago: el de Binance pasa a tipo **Binance Pay**; completa titular y correo.
-- Productos: el Cable HDMI y la Mini consola quedaron **Inactivos** al intentar borrarlos. Si se venden, ponlos en Activo.
-- Órdenes: cancela las de "Cliente eliminado" con el motivo "Prueba: cliente eliminado".
-
-**Qué comprobar:**
-1. La tienda abre y un producto se agrega al carrito. Debajo del total, el carrito explica la entrega.
-2. Checkout con un producto físico:
-   - La tarjeta "Envío nacional" dice "embalaje $X + flete al retirar".
-   - Los botones de empresa muestran los logos de ZOOM y MRW.
-   - El resumen dice "Embalaje y empaquetado" y "Flete (ZOOM): Al retirar", y el total, "Total a pagar hoy".
-3. ZOOM: estado → ciudad → oficina real. MRW: agencia. "A domicilio" pide dirección.
-4. Retiro en tienda (si está activo): el resumen dice "Retiro en tienda: Gratis" (antes decía "Productos digitales").
-5. Recargar saldo: el modal muestra los métodos de pago.
-6. Órdenes: la nueva dice "Cobro a destino". Márcala enviada con guía y revisa Mis pedidos del cliente.
-7. Gift cards del admin: cerrar la hoja sin imprimir abre el diálogo de confirmación (G-64).
-
-**Si algo sale mal:** `git reset --hard 23dbfa9 && npx prisma generate && npm run build && pm2 restart electroshop-web`. Ese es el `main` anterior a este merge (ya incluye el 22/09).
+**Qué comprobar:** la lista completa por ancho de pantalla está en `docs/plan/REVISION_FINAL.md`. Lo mínimo:
+1. Una compra con cupón.
+2. Firmar los términos desde "Recargar saldo".
+3. Reportes → Seguridad muestra tu inicio de sesión con tu IP real.
 
 ## 3. Incidente: clientes borrados con pedidos en curso (sigue abierto)
-Detalle en **`docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`**.
-- **Falta de Andrés:** correr las 4 consultas de diagnóstico (solo leen) y pasarle la salida a Claude. Cancelar esas órdenes desde **Admin → Órdenes** con el motivo "Prueba: cliente eliminado".
-- **No borres clientes en la base.**
-- **Tareas:**
-  - G-57 (Gemini R18, antes GPT-02b): "Cliente eliminado" en el panel.
-  - C-92 (Claude): desactivar en vez de borrar, y la migración de `onDelete` con tu OK.
+Detalle en `docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`.
+- **Falta de Andrés:** correr las 4 consultas de diagnóstico y cancelar esas órdenes con el motivo "Prueba: cliente eliminado".
+- **Tareas:** G-57 ("Cliente eliminado" en el panel) y C-92 (desactivar en vez de borrar, migración de `onDelete` con OK).
 
-## 4. Decisiones ya tomadas (no volver a preguntar)
-- **Google:** vincular por correo; teléfono y cédula en la primera compra; **admins nunca con Google**.
+## 4. Decisiones tomadas (no volver a preguntar)
+- **Google:** vincular por correo; teléfono y cédula en la primera compra; admins nunca con Google.
 - **Cédula:** fuera del registro.
-- **Gift card:** solo con saldo, primero se recarga.
+- **Gift card:** solo con saldo.
 - **Onboarding:** con física.
-- **ChatGPT:** fuera del equipo desde el 21/09. Sus pantallas las rediseña Claude.
-- **Envíos:** se trabaja con ZOOM y MRW. Lo que falta decidir está en `AUDITORIA_ENVIOS.md` §6.
-- **Clientes:** se borran de verdad solo si no tienen órdenes, saldo, transacciones ni gift cards; si no, se desactivan.
-- **Dinero:** nunca sale de la empresa (C-74). Comisiones solo por compras pagadas, como saldo (C-75).
-- **Recorrido de la tienda:** no aparece en `/creator` (G-55, pedido de GPT-05).
+- **ChatGPT:** fuera del equipo.
+- **Envíos:** ZOOM y MRW con cobro a destino.
+- **Clientes:** se borran solo si no tienen nada; si tienen, se desactivan.
+- **Dinero:** nunca sale de la empresa. Comisiones solo por compras pagadas.
+- **Descuentos (25/09):**
+  - Si hay varios, gana el mayor.
+  - Los digitales, fuera.
+  - Precio tachado.
+  - "Pedir descuento" reemplazado por ofertas y cupones.
+  - El cupón de monto fijo va primero a los productos sin oferta.
+- **Duplicar producto:** opción A (el servidor copia todo). La copia nace en borrador y sin stock.
+- **Reseñas:** solo con una orden entregada del producto.
 
-## 5. Mensajes para empezar
-
-### Gemini
-Sin ronda abierta desde el 24/09: terminó R20-R22 y su carril quedó limpio. No se le manda nada hasta que Claude escriba una ronda nueva en `PLAN_GEMINI.md`.
-
-### Claude (siguiente sesión)
-> Continúa ElectroShopVe (en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md` §4b.
-> - **Antes de tocar nada:** `git status`, `git log -3` y `git branch --show-current`. Gemini a veces trabaja en la carpeta principal.
-> - **Primero:** pregúntale a Andrés cómo le fue con el deploy del 24/09 (§2). Si algo falla en producción, eso manda.
-> - **Después, en este orden:**
->   1. Fila 18: destinatarios de campañas sin límite (seguridad).
->   2. C-105 (IP real, con el nginx del servidor).
->   3. C-104 (reportes reales).
->   4. C-102 (descuentos).
->   5. C-103 (firma de documentos).
->   6. C-51 (productos, con "Duplicar" en el servidor).
->   7. C-107 (seguro a elección del cliente; espera los costos de ZOOM y MRW y el OK de la migración).
-> - **No uses `G-67` como fuente:** tiene citas inventadas. Lee esas pantallas de primera mano.
-> - Una rama por tarea, commits `[C-XX]` y su `docs/plan/estado/C-XX.md`. Nada de `git push` sin que Andrés lo pida.
-> - Busca bugs, seguridad y diseño inconsistente en todo lo que toques.
+## 5. Pendientes para la próxima sesión (Claude)
+1. **Revisión final con Andrés** (`REVISION_FINAL.md`) y lo que salga de ella.
+2. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
+3. **C-92:** desactivar clientes en vez de borrarlos (con el diagnóstico del §3).
+4. **Wizard de producto** (crear y editar): rediseño paso a paso (lo que quedó de C-51).
+5. **Menores:**
+   - Aviso cuando un favorito entra en oferta.
+   - Ordenar el catálogo por el precio de oferta.
+   - Ocultar el formulario de reseña a quien no puede reseñar.
+   - `/terminos` y `/privacidad` como documentos editables.
+   - Conservar el slug al renombrar una categoría.
+6. **Al cerrar el ciclo:** borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` de la máquina local.
 
 ## 6. Datos útiles para Claude
 - **Node:** `export PATH="$HOME/.local/lib/nodejs/node-v20.18.0-linux-x64/bin:$PATH"`.
-- **Tienda de ejemplo:** esquema `rev10_demo` (en `DATABASE_URL`, cambiar `schema=public` por `schema=rev10_demo`).
-  - Tiene productos, órdenes, cliente, admin y una creadora en `PENDING`.
-  - Build con esa URL y `next start -p 3100` con `SMTP_HOST= EMAIL_PROVIDER= RESEND_API_KEY= HCAPTCHA_SECRET=test NODE_OPTIONS="--require ./scripts/e2e/fetch-mock.cjs"`.
-  - Tiene las tablas de C-75.
-  - **Borrarlo al cerrar el ciclo** (`DROP SCHEMA "rev10_demo" CASCADE` con `prisma db execute --url`).
-- **Navegador:** Firefox headless con `--remote-debugging-port 9333` + WebDriver BiDi (`ws://127.0.0.1:9333/session`).
-  - Reiniciar Firefox antes de cada script ("Maximum number of active sessions").
-  - Borrar las cookies al empezar: el perfil guarda la sesión de la corrida anterior.
-- **Sesión sin login:** JWT firmado con `encode` de `next-auth/jwt` en la cookie `next-auth.session-token` (con `id`, `role` y `sessionVersion` de la base).
-- **Carrito en pruebas con sesión:** escribir `localStorage.cart` estando en `/carrito`, con `cart-owner = 'guest'`, y recargar.
-- **Revisar ramas de otros agentes:**
-  - Comparar contra `git merge-base`, no contra `main`: si `main` avanzó, la comparación directa mezcla cambios ajenos.
-  - Contar `fetch`, `method`, `router` y `href` antes y después.
-  - Comparar sin `className` ni sangría para ver solo la lógica (script de C-86).
-  - ESLint por archivo contra `main`.
+- **Tienda de ejemplo:** esquema `rev10_demo`, con el esquema del 26/09 aplicado. Tiene productos de prueba de C-102 y C-51 (audífonos, teclado, gift card y Robux con montos) y ofertas y cupones de ejemplo.
+- **Servidor de prueba:** build con `DATABASE_URL` de `rev10_demo` y `next start -p 3100` con `SMTP_HOST= EMAIL_PROVIDER= RESEND_API_KEY= HCAPTCHA_SECRET=test NODE_OPTIONS="--require ./scripts/e2e/fetch-mock.cjs"`. Para el webhook de SADES, además `SADES_WEBHOOK_SECRET=…`.
+- **Pruebas:** HTTP con Node y el JWT firmado con `encode` de `next-auth/jwt`. Navegador con Firefox headless y WebDriver BiDi:
+  - Toques de dedo: `input.performActions` con `pointerType: 'touch'`.
+  - Teclado: acciones `key`.
+  - Los objetos que devuelve `script.evaluate` vienen serializados: devolver `JSON.stringify`.
+- **ESLint:** 0 errores. Comparar cada archivo contra la rama base antes de commitear.
 - **Commits de Claude:** `git -c user.name="Claude" -c user.email="claude@electroshop.local" commit …`.
+
+## 7. Mensaje para empezar (próxima sesión de Claude)
+> Continúa ElectroShopVe (en producción). Lee `CLAUDE.md` y `docs/plan/SIGUIENTE.md`.
+> - Antes de tocar nada: `git status`, `git log -3` y `git branch --show-current` (Gemini a veces trabaja en la carpeta principal).
+> - Primero pregúntale a Andrés si rotó el secreto de SADES y revisó la cuenta `masteradmin` (§0), y cómo le fue con el deploy del 26/09.
+> - Después: la revisión final (`REVISION_FINAL.md`), y en orden C-107, C-92 y el wizard de productos.

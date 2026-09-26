@@ -1,171 +1,92 @@
-# Electro Shop Morandin C.A.
+# ElectroShopVe · Electro Shop Morandin C.A.
 
-Plataforma de e-commerce premium para tienda de tecnología especializada en gaming, laptops, consolas y servicios técnicos.
+Tienda en línea de tecnología de Electro Shop Morandin C.A. (Guanare, Venezuela): productos físicos con envío por ZOOM y MRW, delivery en Guanare y retiro en tienda; productos digitales (recargas y gift cards); saldo propio, Pago Móvil BDV verificado, cupones y ofertas, cursos, creadores y promotores.
 
-## 🎯 Stack Tecnológico
+## Stack
 
-- **Framework**: Next.js 14+ (App Router)
-- **Lenguaje**: TypeScript
-- **Base de Datos**: PostgreSQL
-- **ORM**: Prisma
-- **Estilos**: Tailwind CSS 4
-- **Autenticación**: NextAuth.js
-- **State Management**: Zustand
-- **Tipografía**: Inter (Google Fonts)
+| Pieza | Versión | Notas |
+|---|---|---|
+| Next.js | 16 (App Router) | `proxy.ts` hace de middleware. Next 16 cambia APIs: ver `AGENTS.md` y `node_modules/next/dist/docs/` |
+| React | 19 | React Compiler lint (`react-hooks/*`) activo |
+| Tailwind CSS | 4 | Tokens en `@theme` de `app/globals.css` (colores, `--z-*`, fuentes). Sin hex en `className` |
+| Prisma | 6 + PostgreSQL | `prisma/schema.prisma`. Cambios de esquema con `npx prisma db push` (no hay carpeta de migraciones) |
+| NextAuth | 4 | Correo y contraseña (con límite de intentos y captcha) y Google opcional. Sesión JWT |
+| Correo | SMTP o Resend | `lib/email-service.ts` |
+| Notificaciones | Telegram | Bot del equipo (`lib/telegram`) y avisos del panel (`lib/admin-events`) |
 
-## 🎨 Diseño
-
-### Paleta de Colores
-- **Primario**: `#2a63cd` (Azul)
-- **Secundario**: `#6a6c6b` (Gris)
-- **Fondo**: `#ffffff` / `#f8f9fa`
-- **Acentos**: Verde (#10b981), Amarillo (#f59e0b), Rojo (#ef4444)
-
-### Filosofía de Diseño
-- **Mobile-first**: Optimizado para dispositivos móviles
-- **Compacto**: Uso eficiente del espacio sin sentirse apretado
-- **Premium**: Experiencia moderna y de alta calidad
-- **Inspiración**: Amazon y MercadoLibre
-
-## 📋 Estado del Proyecto - FASE 1 COMPLETADA
-
-### ✅ Completado
-
-1. **Inicialización del Proyecto**
-   - Next.js 14+ configurado
-   - TypeScript habilitado
-   - Tailwind CSS 4 configurado
-   - Todas las dependencias instaladas
-
-2. **Base de Datos (Schema Prisma)**
-   - ✅ Modelos de Autenticación (`User`, `AdminUser`, `Profile`, `Address`)
-   - ✅ Catálogo de Productos (`Product`, `Category`)
-   - ✅ Sistema de Pedidos (`Order`, `OrderItem`)
-   - ✅ Gestión de Contenido (`TechServiceVideo`, `Course`)
-   - ✅ Configuración de la Empresa (`CompanySettings`)
-   - ✅ Soporte multi-moneda (USD, VES, EUR)
-   - ✅ Sistema de permisos para empleados
-
-3. **Configuración del Sistema de Diseño**
-   - ✅ Tipografía Inter configurada
-   - ✅ Paleta de colores implementada
-   - ✅ Variables CSS personalizadas
-   - ✅ Scrollbar estilizada
-   - ✅ Estados de focus y selection
-
-## 🚀 Configuración Inicial
-
-### 1. Instalar PostgreSQL
-
-Antes de continuar, necesitas tener PostgreSQL instalado y corriendo:
-
-**Windows:**
-```bash
-# Descarga PostgreSQL desde https://www.postgresql.org/download/windows/
-# Durante la instalación, recuerda la contraseña del usuario 'postgres'
-```
-
-**Verificar instalación:**
-```bash
-psql --version
-```
-
-### 2. Crear la Base de Datos
+## Puesta en marcha (desarrollo)
 
 ```bash
-# Conectar a PostgreSQL
-psql -U postgres
-
-# Crear la base de datos
-CREATE DATABASE electroshop;
-
-# Salir
-\q
+npm install                 # también corre `prisma generate`
+cp .env.example .env        # y completa los valores (ver la sección de variables)
+npx prisma db push          # crea las tablas en la base vacía
+npm run dev                 # http://localhost:3000
 ```
 
-### 3. Configurar Variables de Entorno
+Crear el primer administrador: `npx tsx scripts/create-master-admin.ts`.
 
-Edita el archivo `.env` y actualiza con tus credenciales:
+## Comandos
 
-```env
-DATABASE_URL="postgresql://postgres:TU_PASSWORD@localhost:5432/electroshop?schema=public"
-NEXTAUTH_SECRET="genera-un-secret-aleatorio-aqui"
+| Comando | Para qué |
+|---|---|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` / `npm start` | Compilar y servir en producción |
+| `npm run lint` | ESLint (0 errores al 26/09/2026) |
+| `npx tsc --noEmit` | Tipos |
+| `npx prisma studio` | Ver la base |
+
+Guiones de mantenimiento (`scripts/`, se corren con `npx tsx`; los que escriben piden `--apply`):
+
+| Guion | Qué hace |
+|---|---|
+| `create-master-admin.ts` | Primer super admin |
+| `migrate-digital-variants.ts` | Montos digitales viejos (specs) a la tabla `digital_variants` (C-60) |
+| `migrar-firmas-saldo.ts` | Firmas de los términos del saldo de antes de C-103 a `document_signatures`, con su PDF |
+| `backfill-short-codes.ts` | Códigos cortos de productos para `/p/<código>` |
+| `move-business-documents.ts` | Documentos de empresas a `private-uploads/` |
+
+## Estructura
+
+```
+app/                  Rutas (tienda, /customer, /admin, /creator) y APIs en app/api
+components/           UI compartida (components/ui: ProductCard, Price, OfferNote…)
+contexts/             Carrito, ajustes públicos, diálogo de confirmación
+lib/                  Lógica del servidor y reglas puras
+  pricing.ts          Cálculo único de la orden (servidor = verdad; el checkout solo muestra)
+  order-quote.ts      Cotización con precios, stock, ofertas y cupones desde la base
+  promotions*.ts      Ofertas y cupones (C-102)
+  legal-docs*.ts      Documentos legales, firmas y constancias en PDF (C-103)
+  audit-log.ts        Bitácora de seguridad (C-104)
+  ip.ts               IP real del cliente detrás de nginx (C-105)
+  dto/                Lo único que sale hacia la tienda (lista blanca)
+  hooks/              useBodyScrollLock, useMontado, useCargarAlMontar, useCajonAccesible
+prisma/schema.prisma  Modelos
+private-uploads/      Archivos que no se sirven públicamente (fuera de git; respaldarlo)
+docs/plan/            Plan, auditorías y estado de cada tarea
 ```
 
-Para generar un `NEXTAUTH_SECRET`:
+## Reglas del proyecto
+
+Las reglas completas están en `CLAUDE.md` y `docs/plan/PLAN.md`. Las que más importan:
+
+- **El dinero lo calcula el servidor:** precios, descuentos, envío, total y dueño de la orden. Nunca se confía en lo que manda el navegador.
+- **Nada de objetos Prisma crudos hacia el cliente:** siempre un DTO (`lib/dto/*`). `costPerItem` nunca sale del servidor.
+- **Colores, capas y tipografía solo con los tokens.** Móvil y escritorio se separan en `lg`. Sin emojis en la web ni en el código.
+- **Toda acción sensible del panel queda en la bitácora** (Reportes → Seguridad).
+
+## Variables de entorno
+
+Ver `.env.example`. Las imprescindibles: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `GIFT_CARD_PIN_SECRET` y el correo (SMTP o Resend). El resto activa funciones opcionales: Google, hCaptcha, BDV, ZOOM, SADES, Telegram y analítica.
+
+## Producción
+
+Servidor con nginx y PM2 (`electroshop-web`) en `/var/www/electroshopve`. Pasos de cada deploy, qué cambia en la base y qué revisar después: `docs/plan/SIGUIENTE.md`.
+
 ```bash
-openssl rand -base64 32
+git pull
+npx prisma db push      # solo si el deploy trae cambios de esquema (lo dice SIGUIENTE.md)
+npm run build
+pm2 restart electroshop-web --update-env
 ```
 
-### 4. Ejecutar Migraciones de Prisma
-
-```bash
-# Generar el cliente de Prisma
-npx prisma generate
-
-# Crear las tablas en la base de datos
-npx prisma migrate dev --name init
-
-# (Opcional) Ver la base de datos con Prisma Studio
-npx prisma studio
-```
-
-### 5. Iniciar el Servidor de Desarrollo
-
-```bash
-npm run dev
-```
-
-Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
-
-## 📁 Estructura del Proyecto
-
-```
-electro-shop/
-├── app/                    # Next.js App Router
-│   ├── globals.css        # Estilos globales + Sistema de diseño
-│   ├── layout.tsx         # Layout principal
-│   └── page.tsx           # Página de inicio
-├── prisma/
-│   └── schema.prisma      # Schema de base de datos completo
-├── .env                   # Variables de entorno (NO COMMITEAR)
-└── package.json
-```
-
-## 🗂️ Modelos de Base de Datos
-
-### Autenticación
-- `User` - Clientes
-- `AdminUser` - Empleados/Administradores (con sistema de roles y permisos)
-- `Profile` - Perfil extendido del cliente
-- `Address` - Direcciones de envío
-
-### Catálogo
-- `Category` - Categorías anidadas de productos
-- `Product` - Productos con especificaciones JSON, multi-imagen, SKU
-
-### Pedidos
-- `Order` - Pedidos con multi-moneda y tasas de cambio
-- `OrderItem` - Items del pedido con snapshot del producto
-
-### Contenido
-- `TechServiceVideo` - Testimonios en video del servicio técnico
-- `Course` - Cursos online/presenciales
-
-### Configuración
-- `CompanySettings` - Configuración global (tasas de cambio, delivery, etc.)
-
-## 🎯 Próximos Pasos - FASE 2
-
-Cuando estés listo para continuar:
-
-1. **Crear Seed Script** - Poblar la base de datos con datos de prueba
-2. **Configurar NextAuth** - Sistema de autenticación completo
-3. **Panel de Administrador** - CRUD para productos, categorías, usuarios
-4. **Frontend Público** - Tienda, carrito, checkout
-
-## 📞 Contacto
-
-**Empresa**: Electro Shop Morandin C.A.
-**Ubicación**: Guanare, Estado Portuguesa, Venezuela
-**Director del Proyecto**: Andres
+nginx debe pasar la IP real (`X-Real-IP` y `X-Forwarded-For`): los límites de intentos y la bitácora dependen de ella.

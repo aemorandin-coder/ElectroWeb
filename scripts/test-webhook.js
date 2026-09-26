@@ -1,8 +1,13 @@
 const crypto = require('crypto');
 
-// CONFIGURACIÓN CON TU CLAVE REAL
-const SECRET = 'whsec_7d4ab8471e518fd210f191d167116f6ce0314d6c6d1d3a3e';
-const URL = 'http://localhost:3000/api/webhooks/sades';
+// Prueba del webhook de SADES en local:  node --env-file=.env scripts/test-webhook.js
+// C-40: el secreto sale del .env. Antes estaba escrito aquí y el repositorio es público: ROTARLO en producción.
+const SECRET = process.env.SADES_WEBHOOK_SECRET;
+const URL = process.env.WEBHOOK_URL || 'http://localhost:3000/api/webhooks/sades';
+if (!SECRET) {
+    console.error('Falta SADES_WEBHOOK_SECRET en el entorno (usa node --env-file=.env).');
+    process.exit(1);
+}
 
 // DATOS DE PRUEBA
 const payload = {
@@ -21,8 +26,8 @@ const signature = crypto
     .update(JSON.stringify(payload))
     .digest('hex');
 
-console.log('🚀 Enviando Webhook de prueba...');
-console.log('📦 Payload:', JSON.stringify(payload, null, 2));
+console.log('Enviando Webhook de prueba...');
+console.log('Payload:', JSON.stringify(payload, null, 2));
 
 // ENVIAR PETICIÓN
 fetch(URL, {
@@ -39,11 +44,11 @@ fetch(URL, {
         console.log('RESPUESTA:', data);
 
         if (res.ok) {
-            console.log('\n✅ ¡ÉXITO! Tu servidor validó la firma correctamente.');
+            console.log('\n¡ÉXITO! Tu servidor validó la firma correctamente.');
         } else if (res.status === 401) {
-            console.log('\n❌ ERROR: Firma rechazada. Verifica el secreto en tu .env');
+            console.log('\nERROR: Firma rechazada. Verifica el secreto en tu .env');
         } else {
-            console.log('\n⚠️ ADVERTENCIA: Firma aceptada, pero hubo otro error (ej: SKU no encontrado).');
+            console.log('\nADVERTENCIA: Firma aceptada, pero hubo otro error (ej: SKU no encontrado).');
         }
     })
-    .catch(err => console.error('\n❌ ERROR DE CONEXIÓN:', err.message));
+    .catch(err => console.error('\nERROR DE CONEXIÓN:', err.message));

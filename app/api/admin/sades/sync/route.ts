@@ -5,6 +5,7 @@ import { sadesClient } from '@/lib/sades';
 import { generateShortCode } from '@/lib/short-code';
 import { authOptions } from '@/lib/auth';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
+import { registrarAccionAdmin } from '@/lib/audit-log';
 
 // Función auxiliar para esperar (Rate Limiting)
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
         let processedCount = 0;
         let createdCount = 0;
         let updatedCount = 0;
+        const preciosCambiados: Array<{ id: string; producto: string; antes: number; despues: number }> = [];
 
         // 4. Procesar productos
         for (const remoteProd of products) {
@@ -119,6 +121,9 @@ export async function POST(req: NextRequest) {
             };
 
             if (existingProd) {
+                if (Number(existingProd.priceUSD) !== Number(remoteProd.precioUSD)) {
+                    preciosCambiados.push({ id: existingProd.id, producto: existingProd.name, antes: Number(existingProd.priceUSD), despues: Number(remoteProd.precioUSD) });
+                }
                 await prisma.product.update({
                     where: { id: existingProd.id },
                     data: {
@@ -148,6 +153,12 @@ export async function POST(req: NextRequest) {
         }
 
         if (processedCount > 0) revalidateStorefront();
+        // Bitácora (C-40): los precios que trajo SADES en este lote, como en la edición rápida
+        if (preciosCambiados.length > 0) {
+            await registrarAccionAdmin(session, 'PRODUCT_PRICE_CHANGED', { type: 'PRODUCT' }, {
+                origen: 'Sincronización SADES', productos: preciosCambiados.length, cambios: preciosCambiados.slice(0, 30),
+            }, req);
+        }
         return NextResponse.json({
             success: true,
             processed: processedCount,

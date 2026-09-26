@@ -380,3 +380,16 @@ Verificación: `grep -rn "lg:group-hover:opacity-100" app/customer app/cursos co
 | Necesitas un componente, token o endpoint | Escribe `PEDIDO: …` en tu estado. Claude lo resuelve. |
 | Un archivo de tu carril tiene cambios de Claude sin mergear | No lo toques; espera a que esté en `main`. |
 | El sed cambió algo que no debía | `git checkout -- <archivo>` y repite con cuidado, o marca `BLOQUEADO`. |
+
+## 7. Cambios de Claude del 25-26/09 que te afectan (C-102 a C-111, C-40)
+
+- **ESLint quedó en 0 errores** (C-111). Una tarea tuya no puede agregar ninguno: compara con `main` antes de marcar HECHO.
+- **Hooks nuevos en `lib/hooks/`**. Úsalos en vez de repetir estos patrones:
+  - `useMontado()`: en vez de `const [mounted, setMounted] = useState(false)` + efecto, para `createPortal`.
+  - `useDelNavegador(() => window.location.origin, '')`: valores que solo existen en el navegador.
+  - `useCargarAlMontar(cargar, deps)`: cargar datos al montar. Nunca `useEffect(() => { fetchX(); }, [])`.
+  - `useCajonAccesible(abierto, idCajon, cerrar)`: cajones del menú (foco, Tab atrapado, Escape).
+- **`PublicProduct` tiene `oferta`** (C-102): con oferta, `priceUSD` ya viene rebajado y `compareAtPriceUSD` es el precio anterior. `ProductCard` muestra `OfferNote`. No recalcules precios en la tienda.
+- **`CartContext` tiene `couponCode` y `setCouponCode`**, y los ítems, `listPrice` opcional.
+- **Pantallas movidas:** `/admin/messages` y `/admin/product-requests` redirigen a `/admin/inquiries` (C-110). Descuentos vive en `/admin/discount-requests`, con pestañas. Legal se rehízo (C-103). Productos está en `products/_components/lista/` (C-51).
+- **Carril:** `lib/promotions*`, `lib/legal-docs*`, `lib/pdf-simple.ts`, `lib/audit-*` y `lib/hooks/*` son de Claude.

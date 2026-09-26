@@ -26,7 +26,7 @@ Encontrado en C-40. Ya se quitaron del código, pero **siguen en el historial de
 - **Gemini:** sin ronda abierta. Lo que cambió y le afecta está en `GEMINI.md` §7.
 - **ChatGPT:** fuera del equipo desde el 21/09. Limpieza opcional: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
 
-## 2. Deploy (servidor `/var/www/electroshopve`, PM2 `electroshop-web`)
+## 2. Deploy (servidor `/var/www/electroshopve`, PM2 `electroshop`)
 **Este merge agrega cosas a la base: no borra ni cambia columnas.**
 
 ```bash
@@ -45,7 +45,7 @@ npx prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schem
 npx prisma db push          # si pide aceptar pérdida de datos, PARA
 npx prisma generate
 npm run build
-pm2 restart electroshop-web --update-env
+pm2 restart electroshop --update-env
 
 # 3. Pasar las firmas de los términos del saldo a la tabla nueva, con su PDF (no borra nada)
 npx tsx scripts/migrar-firmas-saldo.ts           # en seco: dice cuántas
@@ -53,7 +53,7 @@ npx tsx scripts/migrar-firmas-saldo.ts --apply
 ```
 
 - **Respaldo:** agrega `private-uploads/signatures/` a las copias del servidor. Ahí quedan las constancias firmadas.
-- **Si algo sale mal:** `git reset --hard 41d5594 && npx prisma generate && npm run build && pm2 restart electroshop-web`.
+- **Si algo sale mal:** `git reset --hard 41d5594 && npx prisma generate && npm run build && pm2 restart electroshop`.
   - Ese es el `main` anterior. Las tablas nuevas pueden quedarse: el código viejo no las usa.
 
 **Después del deploy, en el panel:**

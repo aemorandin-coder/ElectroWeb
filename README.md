@@ -80,13 +80,15 @@ Ver `.env.example`. Las imprescindibles: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAU
 
 ## Producción
 
-Servidor con nginx y PM2 (`electroshop-web`) en `/var/www/electroshopve`. Pasos de cada deploy, qué cambia en la base y qué revisar después: `docs/plan/SIGUIENTE.md`.
+Servidor con nginx y PM2 (proceso `electroshop`) en `/var/www/electroshopve`. Pasos de cada deploy, qué cambia en la base y qué revisar después: `docs/plan/SIGUIENTE.md`.
 
 ```bash
 git pull
 npx prisma db push      # solo si el deploy trae cambios de esquema (lo dice SIGUIENTE.md)
 npm run build
-pm2 restart electroshop-web --update-env
+pm2 restart electroshop --update-env
 ```
+
+`ecosystem.config.js` está desactualizado (nombre `electroshop-web` y otra carpeta): no lo uses con `pm2 start`, porque levantaría un segundo proceso en el puerto 3000.
 
 nginx debe pasar la IP real (`X-Real-IP` y `X-Forwarded-For`): los límites de intentos y la bitácora dependen de ella.

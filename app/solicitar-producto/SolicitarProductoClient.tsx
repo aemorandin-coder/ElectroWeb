@@ -10,6 +10,7 @@ import { IoMdPricetags } from 'react-icons/io';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import { adminPrimaryButton } from '@/lib/admin-ui';
 import PageHeader, { PageHeaderChip } from '@/components/ui/PageHeader';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 const categories = [
   'Gaming',
@@ -60,7 +61,7 @@ export default function SolicitarProductoClient() {
   }, []);
 
   // Precargar nombre y email si hay sesion
-  useEffect(() => {
+  useCargarAlMontar(() => {
     if (session?.user) {
       setFormData(prev => ({
         ...prev,

@@ -7,6 +7,7 @@ import { adminModalOverlay, adminModalPanel, adminModalHeader, adminLabel, admin
 import Image from 'next/image';
 import { FiX, FiCopy, FiCheck, FiGift, FiInfo, FiExternalLink } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { useDelNavegador } from '@/lib/hooks/useMontado';
 
 interface ShareItem {
   url: string;
@@ -32,31 +33,12 @@ export default function ShareEarnModal() {
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
   const [, setLoadingReferral] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [siteUrl, setSiteUrl] = useState('');
+  const siteUrl = useDelNavegador(() => window.location.origin, '');
   const modalRef = useRef<HTMLDivElement>(null);
   useBodyScrollLock(isOpen);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setSiteUrl(window.location.origin);
-    }
-  }, []);
 
   // Escuchar el evento personalizado para abrir el modal
-  useEffect(() => {
-    const handleOpen = (e: Event) => {
-      const customEvent = e as CustomEvent<ShareItem>;
-      if (customEvent.detail) {
-        setItem(customEvent.detail);
-        setIsOpen(true);
-        // Si no tenemos datos de referidos cargados, o si el modal se abre por primera vez
-        fetchReferralInfo();
-      }
-    };
-
-    window.addEventListener('open-share-modal', handleOpen);
-    return () => window.removeEventListener('open-share-modal', handleOpen);
-  }, []);
 
   async function fetchReferralInfo() {
     setLoadingReferral(true);
@@ -76,6 +58,21 @@ export default function ShareEarnModal() {
       setLoadingReferral(false);
     }
   }
+
+  useEffect(() => {
+    const handleOpen = (e: Event) => {
+      const customEvent = e as CustomEvent<ShareItem>;
+      if (customEvent.detail) {
+        setItem(customEvent.detail);
+        setIsOpen(true);
+        // Si no tenemos datos de referidos cargados, o si el modal se abre por primera vez
+        fetchReferralInfo();
+      }
+    };
+
+    window.addEventListener('open-share-modal', handleOpen);
+    return () => window.removeEventListener('open-share-modal', handleOpen);
+  }, []);
 
   // Cerrar el modal al presionar Esc o hacer clic afuera
   useEffect(() => {

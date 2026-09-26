@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { FiAlertTriangle, FiCheck, FiCopy, FiDollarSign, FiEye, FiGift, FiHash, FiPlus, FiPrinter, FiRefreshCw, FiSearch, FiShoppingBag, FiX } from 'react-icons/fi';
 import GiftCard3D from '@/components/gift-card/GiftCard3D';
@@ -14,6 +14,7 @@ import {
   adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminRowHover, adminSecondaryButton, adminSpinner, adminStatCard,
   adminStatLabel, adminStatValue, adminSuccessButton, adminTable, adminTableWrap, adminTd, adminTh, type AdminTone,
 } from '@/lib/admin-ui';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface GiftCard {
   id: string;
@@ -159,9 +160,7 @@ export default function GiftCardsAdminPage() {
     }
   }, []);
 
-  useEffect(() => {
-    void fetchGiftCards();
-  }, [fetchGiftCards]);
+  useCargarAlMontar(fetchGiftCards, [fetchGiftCards]);
 
   const stats = {
     total: giftCards.length,

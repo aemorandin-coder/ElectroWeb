@@ -89,6 +89,7 @@ export default function ProductWizard({ productId }: Props) {
   const [data, setData] = useState<WizardData>(DEFAULT_WIZARD_DATA);
   const [categories, setCategories] = useState<Category[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // En edición arranca cargando (C-111: antes se ponía en true dentro del efecto)
   const [isFetching, setIsFetching] = useState(isEditing);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -111,7 +112,6 @@ export default function ProductWizard({ productId }: Props) {
   // ─── Load product in edit mode ─────────────────────────────────────────────
   useEffect(() => {
     if (!isEditing) return;
-    setIsFetching(true);
 
     fetch(`/api/products/${productId}`)
       .then((r) => {
@@ -191,7 +191,7 @@ export default function ProductWizard({ productId }: Props) {
         setTimeout(() => router.push('/admin/products'), 2000);
       })
       .finally(() => setIsFetching(false));
-  }, [productId]);
+  }, [productId, isEditing, router]);
 
   // ─── Step validation ───────────────────────────────────────────────────────
   const validate = (s: number): boolean => {

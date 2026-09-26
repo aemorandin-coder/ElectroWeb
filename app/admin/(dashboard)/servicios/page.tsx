@@ -6,8 +6,9 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiVideo, FiToggleLeft, FiToggleRight, FiStar, FiX, FiSave, FiImage } from 'react-icons/fi';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 const CATEGORIES = [
   { value: 'CCTV', label: 'Sistemas CCTV' },
@@ -96,7 +97,7 @@ export default function AdminServiciosPage() {
     setLoading(false);
   };
 
-  useEffect(() => { loadVideos(); }, []);
+  useCargarAlMontar(loadVideos);
 
   const openCreate = () => {
     setForm({ ...EMPTY_FORM });

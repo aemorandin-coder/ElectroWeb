@@ -4,11 +4,13 @@ import { toast } from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FiShoppingBag, FiDollarSign, FiHeart, FiTrendingUp, FiPackage, FiClock, FiActivity, FiArrowUp, FiArrowDown, FiChevronRight, FiTag, FiCheck, FiTruck, FiUser, FiLogIn } from 'react-icons/fi';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import CustomerOnboarding from '@/components/customer/CustomerOnboarding';
 import { adminPrimaryButton } from '@/lib/admin-ui';
 
 import type { IconType } from 'react-icons';
+import { useDelNavegador } from '@/lib/hooks/useMontado';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface RecentOrder {
   id: string;
@@ -45,7 +47,11 @@ export default function CustomerDashboard() {
   const { data: session } = useSession();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [greeting, setGreeting] = useState('');
+  // Saludo según la hora del navegador (en el HTML del servidor, "Hola"): C-111
+  const greeting = useDelNavegador(() => {
+    const hour = new Date().getHours();
+    return hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches';
+  }, 'Hola');
 
   async function fetchDashboardData() {
     try {
@@ -62,12 +68,8 @@ export default function CustomerDashboard() {
     }
   }
 
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Buenos días');
-    else if (hour < 18) setGreeting('Buenas tardes');
-    else setGreeting('Buenas noches');
-    fetchDashboardData();
+  useCargarAlMontar(() => {
+    void fetchDashboardData();
   }, []);
 
   const getStatusConfig = (status: string) => {

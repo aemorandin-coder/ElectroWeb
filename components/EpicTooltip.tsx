@@ -17,30 +17,33 @@ export default function EpicTooltip({
     autoHideDelay = 3000,
     onHide
 }: EpicTooltipProps) {
-    const [isVisible, setIsVisible] = useState(false);
-    const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+    // C-111: la visibilidad sale de las props (antes un efecto las copiaba a un estado). Los temporizadores solo
+    // anotan qué mensaje ya se ocultó y cuál está saliendo; si el error se va y vuelve, se muestra otra vez.
+    const [oculto, setOculto] = useState<string | null>(null);
+    const [saliendo, setSaliendo] = useState<string | null>(null);
+    if (!visible && (oculto !== null || saliendo !== null)) {
+        setOculto(null);
+        setSaliendo(null);
+    }
+    const isVisible = visible && Boolean(message) && oculto !== message;
+    const isAnimatingOut = isVisible && saliendo === message;
 
     useEffect(() => {
-        if (visible && message) {
-            setIsVisible(true);
-            setIsAnimatingOut(false);
-
-            // Auto-hide after delay
-            const timer = setTimeout(() => {
-                setIsAnimatingOut(true);
-                // Wait for animation to complete before fully hiding
-                setTimeout(() => {
-                    setIsVisible(false);
-                    setIsAnimatingOut(false);
-                    onHide?.();
-                }, 300);
-            }, autoHideDelay);
-
-            return () => clearTimeout(timer);
-        } else {
-            setIsVisible(false);
-        }
-    }, [visible, message, autoHideDelay, onHide]);
+        if (!visible || !message || oculto === message) return;
+        let fin: ReturnType<typeof setTimeout> | undefined;
+        const salida = setTimeout(() => {
+            setSaliendo(message);
+            // Espera la animación de salida antes de ocultarlo del todo
+            fin = setTimeout(() => {
+                setOculto(message);
+                onHide?.();
+            }, 300);
+        }, autoHideDelay);
+        return () => {
+            clearTimeout(salida);
+            clearTimeout(fin);
+        };
+    }, [visible, message, oculto, autoHideDelay, onHide]);
 
     if (!isVisible) return null;
 

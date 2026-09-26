@@ -25,6 +25,7 @@ import {
   adminPrimaryButton,
   adminBadge,
 } from '@/lib/admin-ui';
+import { useDelNavegador } from '@/lib/hooks/useMontado';
 
 interface Influencer {
   id: string;
@@ -276,11 +277,8 @@ export default function ReferralsPage() {
   const [data, setData] = useState<ReferralData | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [siteUrl, setSiteUrl] = useState('');
+  const siteUrl = useDelNavegador(() => window.location.origin, '');
 
-  useEffect(() => {
-    setSiteUrl(window.location.origin);
-  }, []);
 
   useEffect(() => {
     const fetchData = async () => {

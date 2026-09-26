@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import {
@@ -10,6 +10,7 @@ import {
     FiStar, FiTrendingUp, FiClock, FiAward, FiTag,
     FiLayout, FiBox, FiUsers
 } from 'react-icons/fi';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface Product {
     id: string;
@@ -71,10 +72,15 @@ const FORMATS = [
 
 export default function SocialMediaGenerator() {
     const [products, setProducts] = useState<Product[]>([]);
-    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [settings, setSettings] = useState<CompanySettings | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    // Productos que coinciden con la búsqueda: derivado (C-111)
+    const filteredProducts = useMemo(() => {
+        const q = searchQuery.toLowerCase();
+        if (!q) return products;
+        return products.filter(p => p.name.toLowerCase().includes(q) || p.category?.name?.toLowerCase().includes(q));
+    }, [searchQuery, products]);
 
     // Generator state
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -97,23 +103,7 @@ export default function SocialMediaGenerator() {
 
     const canvasRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        fetchData();
-        // Sin IA desde C-75: la clave de Gemini se guardaba en el navegador. Se borra la que haya quedado.
-        try { localStorage.removeItem('gemini_api_key'); } catch { /* sin almacenamiento */ }
-    }, []);
 
-    useEffect(() => {
-        if (searchQuery) {
-            const filtered = products.filter(p =>
-                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                p.category?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-            setFilteredProducts(filtered);
-        } else {
-            setFilteredProducts(products);
-        }
-    }, [searchQuery, products]);
 
     const fetchData = async () => {
         try {
@@ -127,7 +117,6 @@ export default function SocialMediaGenerator() {
                 const data = await productsRes.json();
                 const productList = Array.isArray(data) ? data : (data.products || []);
                 setProducts(productList);
-                setFilteredProducts(productList);
             }
 
             if (settingsRes.ok) {
@@ -141,6 +130,12 @@ export default function SocialMediaGenerator() {
             setLoading(false);
         }
     };
+
+    useCargarAlMontar(() => {
+        void fetchData();
+        // Sin IA desde C-75: la clave de Gemini se guardaba en el navegador. Se borra la que haya quedado.
+        try { localStorage.removeItem('gemini_api_key'); } catch { /* sin almacenamiento */ }
+    }, []);
 
     const getProductImage = (product: Product): string => {
         if (product.mainImage) return product.mainImage;

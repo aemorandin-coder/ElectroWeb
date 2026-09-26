@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import {
   FiSettings, FiBell, FiEye, FiEyeOff, FiSave, FiUser, FiLock,
@@ -12,6 +12,7 @@ import { toast } from 'react-hot-toast';
 import { signOut } from 'next-auth/react';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { adminCard, adminPrimaryButton, adminLabel } from '@/lib/admin-ui';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 // Toggle Switch Component
 const ToggleSwitch = ({ checked, onChange, disabled = false }: { checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }) => (
@@ -117,12 +118,10 @@ export default function SettingsPage() {
     }
   }
 
-  useEffect(() => {
-    fetchSettings();
+  useCargarAlMontar(() => {
+    void fetchSettings();
     // Check email verification status from session
-    if (session?.user) {
-      setEmailVerified(Boolean((session.user as { emailVerified?: boolean }).emailVerified));
-    }
+    if (session?.user) setEmailVerified(Boolean(session.user.emailVerified));
   }, [session]);
 
   const handleSaveSettings = async () => {

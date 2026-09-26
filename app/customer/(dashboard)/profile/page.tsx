@@ -20,6 +20,8 @@ import {
   adminModalOverlay,
   adminModalPanel,
 } from '@/lib/admin-ui';
+import { useMontado } from '@/lib/hooks/useMontado';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface Profile {
   name: string;
@@ -153,7 +155,7 @@ export default function ProfilePage() {
   // Tutorial for business account
   const [showBusinessTip, setShowBusinessTip] = useState(false);
   useBodyScrollLock(showBusinessTip);
-  const [isMounted, setIsMounted] = useState(false);
+  const isMounted = useMontado();
 
   const dismissBusinessTip = () => {
     setShowBusinessTip(false);
@@ -232,10 +234,9 @@ export default function ProfilePage() {
     }
   }
 
-  useEffect(() => {
-    setIsMounted(true);
-    fetchProfile();
-    fetchStats();
+  useCargarAlMontar(() => {
+    void fetchProfile();
+    void fetchStats();
 
     // Check if user has seen the business tip
     const hasSeenTip = localStorage.getItem('hasSeenBusinessTip');

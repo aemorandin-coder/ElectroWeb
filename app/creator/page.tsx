@@ -32,8 +32,6 @@ export default function CreatorLandingPage() {
           if (data?.id) setCreator(data);
         })
         .finally(() => setLoading(false));
-    } else if (status !== 'loading') {
-      setLoading(false);
     }
   }, [status]);
 
@@ -73,7 +71,7 @@ export default function CreatorLandingPage() {
 
         {/* Form & States Section */}
         <div className="max-w-2xl mx-auto w-full">
-          {loading ? (
+          {status === 'loading' || (status === 'authenticated' && loading) ? (
             <div className="flex flex-col items-center justify-center py-16 space-y-4">
               <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
               <p className="text-muted text-sm animate-pulse">Consultando tu estado de creador...</p>

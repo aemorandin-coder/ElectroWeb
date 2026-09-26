@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { normalizarCorreo } from '@/lib/correo';
 import { isAuthorized } from '@/lib/auth-helpers';
 
@@ -156,9 +157,9 @@ export async function PUT(
     }
 
     return NextResponse.json({ message: 'Cliente actualizado exitosamente', user: updatedUser });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating customer:', error);
-    if (error.code === 'P2002') {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return NextResponse.json({ error: 'El email ya está en uso' }, { status: 400 });
     }
     return NextResponse.json({ error: 'Error al actualizar cliente' }, { status: 500 });

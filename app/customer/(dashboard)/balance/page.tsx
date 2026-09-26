@@ -7,6 +7,7 @@ import RechargeModal from '@/components/modals/RechargeModalV2';
 import { formatPaymentMethod, formatTransactionStatus, isCreditTransaction } from '@/lib/format-helpers';
 import { formatUSD } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
+import { useMontado } from '@/lib/hooks/useMontado';
 
 interface RawTransaction {
   id: string;
@@ -83,11 +84,10 @@ export default function BalancePage() {
   const [loading, setLoading] = useState(true);
   const [showRechargeModal, setShowRechargeModal] = useState(false);
   const [filterType, setFilterType] = useState<string>('ALL');
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMontado();
   const [balanceAnimated, setBalanceAnimated] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     fetchBalance();
   }, []);
 

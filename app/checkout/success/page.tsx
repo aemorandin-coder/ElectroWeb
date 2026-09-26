@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import PublicHeader from '@/components/public/PublicHeader';
 import { formatUSD } from '@/lib/currency';
+import { lanzarConfeti } from '@/lib/motion/confeti';
 import { adminCard, adminPrimaryButton, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
 
 /**
@@ -16,49 +17,6 @@ import { adminCard, adminPrimaryButton, adminSecondaryButton, adminSpinner } fro
  *   - total:  monto total del pedido en USD (ej: "125.50")
  */
 
-/* ─── Confetti CSS-only ─── */
-const CONFETTI_COLORS = [
-  '#2a63cd', '#10b981', '#f59e0b', '#dc2626', '#8b5cf6', '#06b6d4',
-];
-const PIECES = 60;
-
-function Confetti() {
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-[var(--z-modal)]" aria-hidden="true">
-      {Array.from({ length: PIECES }).map((_, i) => {
-        const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
-        const left = `${Math.random() * 100}%`;
-        const delay = `${Math.random() * 3}s`;
-        const duration = `${2.5 + Math.random() * 2}s`;
-        const size = `${6 + Math.floor(Math.random() * 8)}px`;
-        const rotate = `${Math.random() * 720}deg`;
-        return (
-          <div
-            key={i}
-            style={{
-              position: 'absolute',
-              top: '-20px',
-              left,
-              width: size,
-              height: size,
-              backgroundColor: color,
-              borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-              animation: `confettiFall ${duration} ${delay} ease-in forwards`,
-              transform: `rotate(${rotate})`,
-              opacity: 0.9,
-            }}
-          />
-        );
-      })}
-      <style>{`
-        @keyframes confettiFall {
-          0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-        }
-      `}</style>
-    </div>
-  );
-}
 
 /* ─── Check Icon Animated ─── */
 function AnimatedCheck() {
@@ -108,13 +66,12 @@ function CheckoutSuccessContent() {
   const orderNumbers = ordersParam ? decodeURIComponent(ordersParam).split(',').filter(Boolean) : [];
   const total = parseFloat(totalParam) || 0;
 
-  const [showConfetti, setShowConfetti] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // Apagar confetti después de 4.5s
+  // Confeti con física de C-89, una vez al llegar (C-111): antes eran 60 piezas con Math.random() en cada render,
+  // colores hex y un <style> dentro del JSX. lanzarConfeti respeta "menos movimiento" y borra su canvas al terminar.
   useEffect(() => {
-    const t = setTimeout(() => setShowConfetti(false), 4500);
-    return () => clearTimeout(t);
+    lanzarConfeti({ x: window.innerWidth / 2, y: window.innerHeight * 0.3 });
   }, []);
 
   const copyOrder = (num: string) => {
@@ -125,7 +82,6 @@ function CheckoutSuccessContent() {
 
   return (
     <>
-      {showConfetti && <Confetti />}
 
       <div className="min-h-dvh bg-surface flex flex-col">
         <PublicHeader />

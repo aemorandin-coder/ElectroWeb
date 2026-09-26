@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, forwardRef, useImperativeHandle, useRef, ComponentProps } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
+import type HCaptchaType from '@hcaptcha/react-hcaptcha';
 
 // Define the HCaptcha component type for external use
 export interface HCaptchaRefMethods {
@@ -25,8 +25,8 @@ interface HCaptchaWrapperProps {
 // Wrapper component that handles client-side only rendering with ref forwarding
 const HCaptchaWrapper = forwardRef<HCaptchaRefMethods, HCaptchaWrapperProps>((props, ref) => {
     const [mounted, setMounted] = useState(false);
-    const [HCaptchaComponent, setHCaptchaComponent] = useState<any>(null);
-    const internalRef = useRef<any>(null);
+    const [HCaptchaComponent, setHCaptchaComponent] = useState<typeof HCaptchaType | null>(null);
+    const internalRef = useRef<HCaptchaType>(null);
 
     useEffect(() => {
         setMounted(true);

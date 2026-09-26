@@ -19,6 +19,7 @@ import { adminModalOverlay, adminModalPanel, adminNotice } from '@/lib/admin-ui'
 
 import { FiGift, FiCheck, FiAlertCircle, FiMail, FiArrowRight, FiClock, FiPlusCircle, FiLogIn, FiCreditCard, FiLock, FiCalendar, FiEye, FiUser, FiStar } from 'react-icons/fi';
 import { AiOutlineDeliveredProcedure } from 'react-icons/ai';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 // Predefined amounts
 const PRESET_AMOUNTS = [25, 50, 100, 200];
@@ -84,7 +85,7 @@ export default function GiftCardsPage() {
     const finalAmountBs = exchangeRate ? finalAmount * exchangeRate : null;
 
     // NEW: Handle "for myself" checkbox
-    useEffect(() => {
+    useCargarAlMontar(() => {
         if (isForMyself && session?.user) {
             setRecipientName(session.user.name || '');
             setRecipientEmail(session.user.email || '');

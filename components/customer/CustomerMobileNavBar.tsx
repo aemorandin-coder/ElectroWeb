@@ -8,6 +8,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useMontado } from '@/lib/hooks/useMontado';
 
 // [MOBILE ONLY] Premium SVG Icons with BLUE theme (same as homepage)
 const PremiumDashboardIcon = ({ active }: { active: boolean }) => (
@@ -66,14 +67,9 @@ const customerNavItems = [
 export default function CustomerMobileNavBar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeItem, setActiveItem] = useState<string | null>(null);
-    const [mounted, setMounted] = useState(false);
+    const mounted = useMontado();
     const pathname = usePathname();
     const navRef = useRef<HTMLElement>(null);
-
-    // Mount state for portal
-    useEffect(() => {
-        setMounted(true);
-    }, []);
 
     // Scroll detection
     const handleScroll = useCallback(() => {
@@ -82,8 +78,12 @@ export default function CustomerMobileNavBar() {
 
     useEffect(() => {
         window.addEventListener('scroll', handleScroll, { passive: true });
-        handleScroll();
-        return () => window.removeEventListener('scroll', handleScroll);
+        // Posición inicial fuera del cuerpo del efecto (C-111): la página pudo abrirse ya desplazada
+        const inicial = requestAnimationFrame(handleScroll);
+        return () => {
+            cancelAnimationFrame(inicial);
+            window.removeEventListener('scroll', handleScroll);
+        };
     }, [handleScroll]);
 
     const isActive = (href: string) => {

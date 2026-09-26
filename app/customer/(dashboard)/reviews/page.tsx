@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { FiStar, FiPackage, FiClock, FiCheck } from 'react-icons/fi';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
@@ -10,6 +10,7 @@ import {
   adminTab,
   adminBadge,
 } from '@/lib/admin-ui';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface Review {
   id: string;
@@ -45,9 +46,7 @@ export default function MyReviewsPage() {
     }
   }
 
-  useEffect(() => {
-    fetchMyReviews();
-  }, []);
+  useCargarAlMontar(fetchMyReviews);
 
   const filteredReviews = reviews.filter(review => {
     if (filter === 'approved') return review.isApproved && review.isPublished;

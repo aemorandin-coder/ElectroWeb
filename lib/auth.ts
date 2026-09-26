@@ -1,4 +1,5 @@
-import { NextAuthOptions } from 'next-auth';
+import type { NextAuthOptions, Session } from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { cookies } from 'next/headers';
@@ -257,12 +258,12 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
-        token.image = (user as any).image;
-        token.role = (user as any).role;
-        token.permissions = (user as any).permissions;
-        token.userType = (user as any).userType;
-        token.emailVerified = (user as any).emailVerified;
-        token.sessionVersion = (user as any).sessionVersion;
+        token.image = user.image;
+        token.role = user.role;
+        token.permissions = user.permissions;
+        token.userType = user.userType;
+        token.emailVerified = Boolean(user.emailVerified);
+        token.sessionVersion = user.sessionVersion;
       } else if (token.id) {
         // Validate sessionVersion is still valid on subsequent requests.
         // Una cuenta suspendida por la tienda (C-80/C-92) pierde también la sesión que ya tenía abierta.
@@ -272,7 +273,8 @@ export const authOptions: NextAuthOptions = {
         });
         const tokenVersion = token.sessionVersion !== undefined ? token.sessionVersion : 0;
         if (!dbUser || dbUser.sessionVersion !== tokenVersion || dbUser.profile?.accountStatus === 'SUSPENDED') {
-          return {} as any;
+          // Token vacío = sesión inválida: NextAuth la cierra en el próximo pedido
+          return {} as unknown as JWT;
         }
       }
 
@@ -306,15 +308,16 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (!token || !token.id) {
-        return null as any;
+        // Sin token no hay sesión; NextAuth acepta null aunque su tipo no lo diga
+        return null as unknown as Session;
       }
       if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
-        (session.user as any).permissions = token.permissions;
-        (session.user as any).userType = token.userType;
-        (session.user as any).image = token.image;
-        (session.user as any).emailVerified = token.emailVerified;
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.permissions = token.permissions;
+        session.user.userType = token.userType;
+        session.user.image = token.image;
+        session.user.emailVerified = token.emailVerified;
       }
       return session;
     },

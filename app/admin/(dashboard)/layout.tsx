@@ -11,6 +11,8 @@ import {
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { MdAdminPanelSettings } from 'react-icons/md';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 
 interface NavigationItem {
   name: string;
@@ -60,19 +62,15 @@ export default function AdminLayout({
     if (status === 'unauthenticated') {
       router.push('/login?redirect=admin');
     } else if (status === 'authenticated' && session) {
-      const userType = (session.user as any)?.userType;
+      const userType = session.user?.userType;
       if (userType !== 'admin') {
         router.push('/login?redirect=admin&error=admin_required');
       }
     }
   }, [status, session, router]);
 
-  useEffect(() => {
-    if (!isDrawerOpen) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setDrawerPath(null); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isDrawerOpen]);
+  const cerrarCajon = useCallback(() => setDrawerPath(null), []);
+  useCajonAccesible(isDrawerOpen, 'admin-sidebar', cerrarCajon);
 
   // Fetch sidebar badge counts — poll every 30 seconds
   const fetchSidebarCounts = useCallback(async () => {
@@ -88,10 +86,8 @@ export default function AdminLayout({
   }, []);
 
   // Fetch sidebar counts when pathname changes (navigating refreshes counts immediately)
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchSidebarCounts();
-    }
+  useCargarAlMontar(() => {
+    if (status === 'authenticated') void fetchSidebarCounts();
   }, [status, pathname, fetchSidebarCounts]);
 
   // Listen to custom refresh events and run polling
@@ -264,7 +260,7 @@ export default function AdminLayout({
     }
     // Grant full access to ADMIN and SUPER_ADMIN roles
     if (session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') return true;
-    return session.user.permissions?.includes(permission as any);
+    return session.user.permissions?.includes(permission);
   };
 
   const filteredNavigation = navigation.filter((item) =>
@@ -301,9 +297,10 @@ export default function AdminLayout({
       <aside
         id="admin-sidebar"
         aria-label="Menú del panel"
-        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-72 flex-col border-r border-line bg-white transition-transform duration-200 lg:z-[var(--z-sticky)] lg:w-64 ${
-          isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
-        } ${isCollapsed ? 'lg:-translate-x-full' : 'lg:translate-x-0'}`}
+        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-72 flex-col border-r border-line bg-white transition-[transform,visibility] duration-200 lg:z-[var(--z-sticky)] lg:w-64 ${
+          // Cerrado queda invisible: el foco con Tab ya no entra a un menú que no se ve (C-111)
+          isDrawerOpen ? 'visible translate-x-0' : '-translate-x-full max-lg:invisible'
+        } ${isCollapsed ? 'lg:invisible lg:-translate-x-full' : 'lg:visible lg:translate-x-0'}`}
       >
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-5">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500 text-white">

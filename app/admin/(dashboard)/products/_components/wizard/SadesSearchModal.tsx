@@ -29,16 +29,7 @@ export default function SadesSearchModal({ onImport, onClose }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  useEffect(() => {
-    inputRef.current?.focus();
-    doSearch('');
-  }, []);
 
-  useEffect(() => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => doSearch(query), 400);
-    return () => clearTimeout(debounceRef.current);
-  }, [query]);
 
   const doSearch = async (q: string) => {
     setLoading(true);
@@ -56,17 +47,20 @@ export default function SadesSearchModal({ onImport, onClose }: Props) {
     }
   };
 
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    // Vacío (al abrir o al borrar) busca al instante; escribiendo, espera 400 ms. Antes al abrir se buscaba dos veces (C-111)
+    debounceRef.current = setTimeout(() => doSearch(query), query ? 400 : 0);
+    return () => clearTimeout(debounceRef.current);
+  }, [query]);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
   const handleImport = async (product: SadesResult) => {
     setImporting(product.sku);
     try {
-      // Build a slug from the name
-      const slug = product.nombre
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-
       const updates: Partial<WizardData> = {
         name: product.nombre,
         sku: product.sku,

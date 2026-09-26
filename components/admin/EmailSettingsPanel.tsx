@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
     FiMail, FiLock, FiServer, FiCheck, FiX, FiRefreshCw,
@@ -9,6 +9,7 @@ import {
     FiGlobe, FiCloud, FiInbox, FiMessageSquare, FiTarget,
     FiAtSign
 } from 'react-icons/fi';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface EmailSettingsData {
     provider: string;
@@ -88,9 +89,6 @@ export default function EmailSettingsPanel() {
     const [formData, setFormData] = useState<Partial<EmailSettingsData>>({});
     const [hasChanges, setHasChanges] = useState(false);
 
-    useEffect(() => {
-        fetchSettings();
-    }, []);
 
     const fetchSettings = async () => {
         try {
@@ -109,6 +107,8 @@ export default function EmailSettingsPanel() {
             setLoading(false);
         }
     };
+
+    useCargarAlMontar(fetchSettings);
 
     const handleProviderChange = (provider: string) => {
         const preset = presets[provider];

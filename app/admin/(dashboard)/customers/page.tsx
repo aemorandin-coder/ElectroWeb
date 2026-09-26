@@ -34,6 +34,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FiUser, FiBriefcase, FiBarChart2, FiCheck, FiX, FiFileText, FiDownload, FiShield } from 'react-icons/fi';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface CustomerOrder {
   id: string;
@@ -124,9 +125,7 @@ export default function CustomersPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchCustomers();
-  }, [search]);
+  useCargarAlMontar(fetchCustomers, [search]);
 
   useEffect(() => {
     // Fetch pending verifications count

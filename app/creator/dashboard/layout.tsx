@@ -2,10 +2,11 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { FiArrowLeft, FiBookOpen, FiChevronLeft, FiExternalLink, FiHome, FiLogOut, FiMenu, FiUser, FiX } from 'react-icons/fi';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 
 const NAV_ITEMS = [
   { href: '/creator/dashboard', label: 'Dashboard', exact: true, icon: FiHome },
@@ -26,12 +27,8 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
     if (status === 'unauthenticated') router.push('/login?redirect=/creator/dashboard');
   }, [status, router]);
 
-  useEffect(() => {
-    if (!isDrawerOpen) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setDrawerPath(null); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isDrawerOpen]);
+  const cerrarCajon = useCallback(() => setDrawerPath(null), []);
+  useCajonAccesible(isDrawerOpen, 'creator-sidebar', cerrarCajon);
 
   if (status === 'loading') {
     return (
@@ -48,7 +45,7 @@ export default function CreatorDashboardLayout({ children }: { children: React.R
     <div className="min-h-dvh bg-surface">
       {isDrawerOpen && <div className="fixed inset-0 z-[var(--z-drawer)] bg-ink/50 lg:hidden" onClick={() => setDrawerPath(null)} aria-hidden="true" />}
       <aside id="creator-sidebar" aria-label="Menú del creador"
-        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-72 flex-col border-r border-line bg-white transition-transform duration-200 lg:z-[var(--z-sticky)] ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'} ${isCollapsed ? 'lg:w-16' : 'lg:w-60'} lg:translate-x-0`}>
+        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-72 flex-col border-r border-line bg-white transition-[transform,visibility] duration-200 lg:z-[var(--z-sticky)] ${isDrawerOpen ? 'visible translate-x-0' : '-translate-x-full max-lg:invisible'} ${isCollapsed ? 'lg:w-16' : 'lg:w-60'} lg:visible lg:translate-x-0`}>
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-4">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white"><FiBookOpen className="h-5 w-5" aria-hidden="true" /></span>
           <span className={`min-w-0 flex-1 ${isCollapsed ? 'lg:hidden' : ''}`}>

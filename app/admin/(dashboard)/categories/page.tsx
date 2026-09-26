@@ -5,7 +5,7 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 import { toast } from 'react-hot-toast';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, createElement } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
@@ -15,6 +15,7 @@ import {
   getCategoryIcon, getCategoryColor, getAutoIcon,
   parseImportStatement, loadIconDynamic,
 } from '@/lib/category-icons';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface Category {
   id: string;
@@ -78,7 +79,7 @@ export default function CategoriesPage() {
     }
   };
 
-  useEffect(() => { fetchCategories(); }, []);
+  useCargarAlMontar(fetchCategories);
 
   const categoryTree = useMemo(() => {
     const categoryMap = new Map<string, Category>();
@@ -377,7 +378,8 @@ export default function CategoriesPage() {
                       {formData.image ? (
                         <Image src={formData.image} alt="Icono" width={48} height={48} className="w-full h-full object-contain p-1" />
                       ) : (
-                        <PreviewIcon className="w-8 h-8 text-white drop-shadow" />
+                        // createElement: el ícono se elige en cada render (C-111, regla static-components)
+                        createElement(PreviewIcon, { className: 'w-8 h-8 text-white drop-shadow' })
                       )}
                     </div>
                     <div>

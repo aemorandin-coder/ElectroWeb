@@ -3,10 +3,11 @@
 import { adminTableWrap, adminTable, adminRowHover } from '@/lib/admin-ui';
 
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { FiCheck } from 'react-icons/fi';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface Review {
     id: string;
@@ -39,9 +40,7 @@ export default function AdminReviewsPage() {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
-    useEffect(() => {
-        fetchReviews();
-    }, [filter]);
+    useCargarAlMontar(fetchReviews, [filter]);
 
     async function fetchReviews() {
         setLoading(true);

@@ -6,6 +6,7 @@ import type { HCaptchaRefMethods } from '@/components/HCaptchaWrapper';
 import { FiSend } from 'react-icons/fi';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import { adminPrimaryButton, adminLabel } from '@/lib/admin-ui';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface ValidationErrors {
     name?: string;
@@ -35,7 +36,7 @@ export default function ContactForm() {
     const [hasPrefilledData, setHasPrefilledData] = useState(false);
 
     // Precargar datos desde URL params (ej: mensaje de soporte de pago móvil)
-    useEffect(() => {
+    useCargarAlMontar(() => {
         const nombre = searchParams.get('nombre');
         const email = searchParams.get('email');
         const asunto = searchParams.get('asunto');

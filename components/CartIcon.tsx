@@ -208,7 +208,7 @@ export default function CartIcon() {
                               if (Array.isArray(parsed) && parsed.length > 0) {
                                 imageUrl = parsed[0];
                               }
-                            } catch (e) {
+                            } catch {
                               // If parse fails, try simple cleanup if it looks like a stringified array
                               if (imageUrl && imageUrl.startsWith('["') && imageUrl.endsWith('"]')) {
                                 imageUrl = imageUrl.slice(2, -2);

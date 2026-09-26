@@ -98,13 +98,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
         }
 
-        // "Opiniones verificadas" (lo promete la ficha): solo quien compró y pagó el producto. Antes cualquier cuenta podía (C-110)
+        // "Opiniones verificadas" (lo promete la ficha): la misma regla que /api/reviews/check-eligibility, que el
+        // formulario consulta antes de mostrarse. Antes solo la revisaba el navegador (C-110, C-111).
         const compra = await prisma.orderItem.findFirst({
-            where: { productId, order: { userId: session.user.id, paymentStatus: 'PAID', status: { notIn: ['CANCELLED', 'REFUNDED'] } } },
+            where: { productId, order: { userId: session.user.id, status: 'DELIVERED' } },
             select: { id: true },
         });
         if (!compra) {
-            return NextResponse.json({ error: 'Solo puedes opinar sobre productos que compraste' }, { status: 403 });
+            return NextResponse.json({ error: 'Solo puedes dejar reseñas de productos que hayas comprado y recibido' }, { status: 403 });
         }
 
         const existingReview = await prisma.review.findFirst({

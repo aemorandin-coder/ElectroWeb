@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 const CART_KEY = 'cart';
 // Dueño del carrito guardado en localStorage: el userId que lo sincronizó, o 'guest'
@@ -112,7 +113,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const changedByUser = useRef(false);
 
   // Load cart from localStorage on mount
-  useEffect(() => {
+  useCargarAlMontar(() => {
     const savedCoupon = readStorage('local', COUPON_KEY);
     if (savedCoupon) setCouponState(savedCoupon);
     const savedCart = readStorage('local', CART_KEY);
@@ -175,7 +176,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [status, userId, isLoaded, dbSynced]);
 
   // Al cerrar sesión: el próximo login vuelve a reconciliar y el carrito de la cuenta no queda a la vista
-  useEffect(() => {
+  useCargarAlMontar(() => {
     if (status !== 'unauthenticated') return;
 
     clearDbSyncFlags();

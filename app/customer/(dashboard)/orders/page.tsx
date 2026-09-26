@@ -11,6 +11,7 @@ import Image from 'next/image';
 import OrderTracking from '@/components/orders/OrderTracking';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatPaymentMethod } from '@/lib/format-helpers';
+import { useMontado } from '@/lib/hooks/useMontado';
 
 interface RawOrderItem {
   id?: string;
@@ -118,7 +119,7 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMontado();
 
   const stats = useMemo(() => {
     const totalSpent = orders.reduce((sum, o) => o.status !== 'CANCELLED' ? sum + o.totalUSD : sum, 0);
@@ -128,7 +129,6 @@ export default function OrdersPage() {
     return { totalSpent, completedOrders, pendingOrders, totalItems };
   }, [orders]);
 
-  useEffect(() => { setMounted(true); }, []);
 
   const handleEscapeKey = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape' && showOrderDetails) setShowOrderDetails(false);

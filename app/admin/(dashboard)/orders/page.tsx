@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -40,6 +40,8 @@ import {
   adminNotice,
   adminDangerButton,
 } from '@/lib/admin-ui';
+import { useMontado } from '@/lib/hooks/useMontado';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 
 interface Order {
@@ -129,6 +131,8 @@ const DIGITAL_ORDER_FLOW = [
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  // Hora de referencia para "hace N días": una vez por carga, no en cada render (C-111)
+  const [ahora] = useState(Date.now);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -140,7 +144,7 @@ export default function OrdersPage() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMontado();
 
   // Shipping form state
   const [shippingForm, setShippingForm] = useState({
@@ -154,10 +158,6 @@ export default function OrdersPage() {
   useBodyScrollLock(showDetailsModal);
   useBodyScrollLock(showShippingModal);
   useBodyScrollLock(showCancelModal);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const stats = useMemo(() => {
     const totalRevenue = orders.reduce((sum, o) => o.status !== 'CANCELLED' ? sum + (Number(o.totalUSD) || 0) : sum, 0);
@@ -196,9 +196,7 @@ export default function OrdersPage() {
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, [filterStatus]);
+  useCargarAlMontar(fetchOrders, [filterStatus]);
 
   const handleStatusUpdate = async (orderId: string, newStatus: string, additionalData?: Record<string, unknown>) => {
     try {
@@ -294,7 +292,7 @@ export default function OrdersPage() {
   };
 
   const getTimeSince = (dateString: string) => {
-    const diff = Date.now() - new Date(dateString).getTime();
+    const diff = ahora - new Date(dateString).getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     if (days === 0) return 'Hoy';
     if (days === 1) return 'Ayer';

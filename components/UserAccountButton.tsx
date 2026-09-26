@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
@@ -16,7 +16,6 @@ interface UserAccountButtonProps {
 export default function UserAccountButton({ useBlueHeader = false }: UserAccountButtonProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const pathname = usePathname();
   const { clearCart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -87,10 +86,9 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
   const user = session.user;
   const userName = user?.name || user?.email?.split('@')[0] || 'Usuario';
   const userEmail = user?.email || '';
-  const userImage = (user as any)?.image || null;
-  const isVerified = (session.user as any)?.emailVerified;
-  const isCustomer = (session.user as any)?.userType === 'customer';
-  const isAdmin = (session.user as any)?.userType === 'admin';
+  const userImage = user?.image || null;
+  const isVerified = session.user?.emailVerified;
+  const isAdmin = session.user?.userType === 'admin';
 
   return (
     <div className="relative" ref={dropdownRef}>

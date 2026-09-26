@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { formatUSD } from '@/lib/currency';
 import { createPortal } from 'react-dom';
-import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiCreditCard, FiUpload, FiImage, FiX, FiShield } from 'react-icons/fi';
+import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiCreditCard, FiUpload, FiX, FiShield } from 'react-icons/fi';
 import { HiOutlineQrcode } from 'react-icons/hi';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { BANCOS_VENEZUELA, type BancoVenezuela } from '@/lib/pago-movil/bancos-venezuela';
 import { adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody } from '@/lib/admin-ui';
+import { useMontado } from '@/lib/hooks/useMontado';
 
 interface CheckoutPagoMovilFormProps {
     /** Monto esperado del pago */
@@ -70,37 +71,26 @@ export default function CheckoutPagoMovilForm({
     const [verificando, setVerificando] = useState(false);
     const [resultado, setResultado] = useState<VerificacionResult | null>(null);
     const [showBankDropdown, setShowBankDropdown] = useState(false);
-    const [filteredBancos, setFilteredBancos] = useState<BancoVenezuela[]>(BANCOS_VENEZUELA);
-    const [bankSearchTerm, setBankSearchTerm] = useState('');
+        const [bankSearchTerm, setBankSearchTerm] = useState('');
+    // Bancos que coinciden con la búsqueda: derivado, no un estado aparte sincronizado con un efecto (C-111)
+    const filteredBancos = useMemo<BancoVenezuela[]>(() => {
+        const term = bankSearchTerm.toLowerCase();
+        if (!term) return BANCOS_VENEZUELA;
+        return BANCOS_VENEZUELA.filter(
+            banco =>
+                banco.nombre.toLowerCase().includes(term) ||
+                banco.nombreCorto.toLowerCase().includes(term) ||
+                banco.codigo.includes(term)
+        );
+    }, [bankSearchTerm]);
 
     // Image upload state
     const [comprobante, setComprobante] = useState<string | null>(null);
     const [uploadingImage, setUploadingImage] = useState(false);
     const [showQRModal, setShowQRModal] = useState(false);
-    const [mounted, setMounted] = useState(false);
+    const mounted = useMontado();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // For portal
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    // Filtrar bancos por término de búsqueda
-    useEffect(() => {
-        if (!bankSearchTerm) {
-            setFilteredBancos(BANCOS_VENEZUELA);
-        } else {
-            const term = bankSearchTerm.toLowerCase();
-            setFilteredBancos(
-                BANCOS_VENEZUELA.filter(
-                    banco =>
-                        banco.nombre.toLowerCase().includes(term) ||
-                        banco.nombreCorto.toLowerCase().includes(term) ||
-                        banco.codigo.includes(term)
-                )
-            );
-        }
-    }, [bankSearchTerm]);
 
     // Obtener banco seleccionado
     const bancoSeleccionado = BANCOS_VENEZUELA.find(b => b.codigo === formData.bancoOrigen);
@@ -236,7 +226,7 @@ export default function CheckoutPagoMovilForm({
                     comprobante: comprobante || undefined,
                 });
             }
-        } catch (error) {
+        } catch {
             const message = 'Error de conexion. Por favor, intenta nuevamente.';
             setResultado({
                 success: false,

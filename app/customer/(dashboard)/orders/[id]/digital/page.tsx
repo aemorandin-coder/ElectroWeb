@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ import { SiSteam, SiPlaystation, SiRoblox, SiNetflix, SiSpotify, SiApple } from 
 import { FaGamepad } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import PlatformScratchCard from './_components/PlatformScratchCard';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface DigitalCode {
     id: string;
@@ -75,27 +76,16 @@ export default function DigitalCodesPage() {
     const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
     // Load persistence
-    useEffect(() => {
-        if (typeof window !== 'undefined' && orderId) {
+    useCargarAlMontar(() => {
+        if (!orderId) return;
+        try {
             const stored = localStorage.getItem(`revealed_order_${orderId}`);
-            if (stored) {
-                try {
-                    setRevealedCodes(JSON.parse(stored));
-                } catch { }
-            }
+            if (stored) setRevealedCodes(JSON.parse(stored));
+        } catch {
+            // Sin almacenamiento o dato corrupto: los códigos se muestran ocultos
         }
     }, [orderId]);
 
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login');
-            return;
-        }
-
-        if (status === 'authenticated' && orderId) {
-            fetchDigitalCodes();
-        }
-    }, [status, orderId]);
 
     async function fetchDigitalCodes() {
         try {
@@ -119,6 +109,14 @@ export default function DigitalCodesPage() {
             setLoading(false);
         }
     }
+
+    useCargarAlMontar(() => {
+        if (status === 'unauthenticated') {
+            router.push('/login');
+            return;
+        }
+        if (status === 'authenticated' && orderId) void fetchDigitalCodes();
+    }, [status, orderId]);
 
     const copyCode = async (codeId: string, code: string) => {
         try {

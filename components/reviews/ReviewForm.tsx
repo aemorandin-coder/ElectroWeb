@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import { FiLock } from 'react-icons/fi';
 import StarRating from './StarRating';
 import { Button } from '@/components/ui/Button';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface ReviewFormProps {
     productId: string;
@@ -22,13 +23,6 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
     const [eligibilityMessage, setEligibilityMessage] = useState('');
     const [checkingEligibility, setCheckingEligibility] = useState(true);
 
-    useEffect(() => {
-        if (session && productId) {
-            checkEligibility();
-        } else {
-            setCheckingEligibility(false);
-        }
-    }, [session, productId]);
 
     async function checkEligibility() {
         try {
@@ -44,6 +38,11 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
             setCheckingEligibility(false);
         }
     }
+
+    useCargarAlMontar(() => {
+        if (session && productId) void checkEligibility();
+        else setCheckingEligibility(false);
+    }, [session, productId]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

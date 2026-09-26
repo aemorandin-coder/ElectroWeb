@@ -7,9 +7,10 @@ import Link from 'next/link';
 import { FiAlertCircle, FiEye, FiEyeOff, FiShield } from 'react-icons/fi';
 import AuthShell from '@/components/auth/AuthShell';
 import BotonGoogle from '@/components/auth/BotonGoogle';
-import HCaptchaWrapper from '@/components/HCaptchaWrapper';
+import HCaptchaWrapper, { type HCaptchaRefMethods } from '@/components/HCaptchaWrapper';
 import { adminError, adminInput, adminLabel, adminNotice, adminPrimaryButton } from '@/lib/admin-ui';
 import { rutaInternaSegura } from '@/lib/rutas';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 // Constants for failed attempts
 const FAILED_ATTEMPTS_KEY = 'login_failed_attempts';
@@ -49,7 +50,7 @@ function LoginPageContent({ google }: { google: boolean }) {
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   // Captcha state
-  const captchaRef = useRef<any>(null);
+  const captchaRef = useRef<HCaptchaRefMethods>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [requiresCaptcha, setRequiresCaptcha] = useState(false);
@@ -61,12 +62,9 @@ function LoginPageContent({ google }: { google: boolean }) {
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    if (status !== 'loading') setForceShowForm(true);
-  }, [status]);
 
   // Load failed attempts from localStorage
-  useEffect(() => {
+  useCargarAlMontar(() => {
     if (typeof window !== 'undefined') {
       const storedAttempts = localStorage.getItem(FAILED_ATTEMPTS_KEY);
       const expiry = localStorage.getItem(FAILED_ATTEMPTS_EXPIRY_KEY);
@@ -123,7 +121,7 @@ function LoginPageContent({ google }: { google: boolean }) {
 
 
   // Check if redirect is for admin and handle errors
-  useEffect(() => {
+  useCargarAlMontar(() => {
     const redirect = searchParams.get('redirect');
     const error = searchParams.get('error');
     // Also check callbackUrl to see if we should default to admin tab (e.g. if trying to access /admin)
@@ -141,7 +139,7 @@ function LoginPageContent({ google }: { google: boolean }) {
   // Redirect if already authenticated
   useEffect(() => {
     if (status === 'authenticated' && session) {
-      const userType = (session.user as any)?.userType || 'customer';
+      const userType = session.user?.userType || 'customer';
       if (userType === 'admin') {
         router.push('/admin');
       } else {
@@ -266,6 +264,7 @@ function LoginPageContent({ google }: { google: boolean }) {
   };
 
   // Mostrar spinner solo si la sesión está cargando Y no ha pasado el timeout
+  // Con la sesión resuelta el formulario se ve siempre; si tarda, a los 800 ms igual (C-111: derivado, sin efecto)
   if (status === 'loading' && !forceShowForm) {
     return (
       <div className="min-h-dvh bg-surface flex items-center justify-center">

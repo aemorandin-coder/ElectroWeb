@@ -6,10 +6,11 @@ import { formatUSD } from '@/lib/currency';
 
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { FiBookOpen, FiStar } from 'react-icons/fi';
 import { FaStar } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 const CATEGORIES = [
   { value: 'DESARROLLO', label: 'Desarrollo' },
@@ -120,7 +121,7 @@ export default function AdminCursosPage() {
     }
   }
 
-  useEffect(() => { loadCourses(); }, []);
+  useCargarAlMontar(loadCourses);
 
   function openCreate() {
     setEditingId(null);

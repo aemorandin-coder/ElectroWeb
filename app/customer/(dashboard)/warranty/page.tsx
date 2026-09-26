@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   FiShield,
   FiPackage,
@@ -27,6 +27,7 @@ import {
   adminModalOverlay,
   adminModalPanel,
 } from '@/lib/admin-ui';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface Order {
   id: string;
@@ -55,6 +56,8 @@ interface WarrantyRequest {
 
 export default function WarrantyPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  // Hora de referencia para la garantía: una vez por carga, no en cada render (C-111)
+  const [ahora] = useState(Date.now);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'info' | 'requests' | 'new'>('info');
   const { settings } = useSettings();
@@ -87,13 +90,11 @@ export default function WarrantyPage() {
     }
   }
 
-  useEffect(() => {
-    fetchDeliveredOrders();
-  }, []);
+  useCargarAlMontar(fetchDeliveredOrders);
 
   const getDaysSinceDelivery = (deliveredAt?: string) => {
     if (!deliveredAt) return null;
-    const diff = Date.now() - new Date(deliveredAt).getTime();
+    const diff = ahora - new Date(deliveredAt).getTime();
     return Math.floor(diff / (1000 * 60 * 60 * 24));
   };
 

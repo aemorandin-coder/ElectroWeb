@@ -5,11 +5,12 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FiPercent, FiCheck, FiX, FiClock, FiUser, FiPackage, FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface DiscountRequest {
     id: string;
@@ -56,9 +57,7 @@ export default function Solicitudes() {
     const [adminResponse, setAdminResponse] = useState('');
     const [processing, setProcessing] = useState(false);
 
-    useEffect(() => {
-        fetchRequests();
-    }, [filter]);
+    useCargarAlMontar(fetchRequests, [filter]);
 
     async function fetchRequests() {
         try {

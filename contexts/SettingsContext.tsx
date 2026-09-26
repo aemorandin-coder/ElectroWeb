@@ -43,10 +43,10 @@ export function SettingsProvider({
             const text = await response.text();
             if (!text || text.trim() === '') { setIsLoading(false); return; }
 
-            let data: any;
+            let data: unknown;
             try { data = JSON.parse(text); } catch { setIsLoading(false); return; }
 
-            setSettings(data);
+            setSettings(data as PublicSettings);
             setError(null);
         } catch (err) {
             console.error('Error fetching settings:', err);

@@ -1,7 +1,7 @@
 'use client';
 import { formatUSD, formatVES } from '@/lib/currency';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiMessageCircle, FiUser } from 'react-icons/fi';
 import { BANCOS_VENEZUELA, type BancoVenezuela } from '@/lib/pago-movil/bancos-venezuela';
@@ -74,26 +74,20 @@ export default function VerificarPagoMovilForm({
     const [verificationState, setVerificationState] = useState<VerificationState>('idle');
     const [resultado, setResultado] = useState<VerificacionResult | null>(null);
     const [showBankDropdown, setShowBankDropdown] = useState(false);
-    const [filteredBancos, setFilteredBancos] = useState<BancoVenezuela[]>(BANCOS_VENEZUELA);
-    const [bankSearchTerm, setBankSearchTerm] = useState('');
+        const [bankSearchTerm, setBankSearchTerm] = useState('');
+    // Bancos que coinciden con la búsqueda: derivado, no un estado aparte sincronizado con un efecto (C-111)
+    const filteredBancos = useMemo<BancoVenezuela[]>(() => {
+        const term = bankSearchTerm.toLowerCase();
+        if (!term) return BANCOS_VENEZUELA;
+        return BANCOS_VENEZUELA.filter(
+            banco =>
+                banco.nombre.toLowerCase().includes(term) ||
+                banco.nombreCorto.toLowerCase().includes(term) ||
+                banco.codigo.includes(term)
+        );
+    }, [bankSearchTerm]);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-    // Filtrar bancos por término de búsqueda
-    useEffect(() => {
-        if (!bankSearchTerm) {
-            setFilteredBancos(BANCOS_VENEZUELA);
-        } else {
-            const term = bankSearchTerm.toLowerCase();
-            setFilteredBancos(
-                BANCOS_VENEZUELA.filter(
-                    banco =>
-                        banco.nombre.toLowerCase().includes(term) ||
-                        banco.nombreCorto.toLowerCase().includes(term) ||
-                        banco.codigo.includes(term)
-                )
-            );
-        }
-    }, [bankSearchTerm]);
 
     // Obtener banco seleccionado
     const bancoSeleccionado = BANCOS_VENEZUELA.find(b => b.codigo === formData.bancoOrigen);

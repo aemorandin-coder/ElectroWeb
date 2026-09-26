@@ -12,6 +12,7 @@ import Image from 'next/image';
 import SignDocumentModal from '@/components/legal/SignDocumentModal';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import VerificarPagoMovilForm from '@/components/pago-movil/VerificarPagoMovilForm';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface RechargeModalProps {
     isOpen: boolean;
@@ -235,7 +236,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     };
 
     // Reset state when modal closes - also cancel pending transaction
-    useEffect(() => {
+    useCargarAlMontar(() => {
         if (!isOpen && pendingTransactionId) {
             // Cancel the pending transaction if modal is closed without completion
             cancelPendingTransaction(pendingTransactionId);

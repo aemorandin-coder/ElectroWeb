@@ -15,6 +15,7 @@ import { FiMessageSquare, FiPackage, FiMail, FiPhone, FiUser, FiCalendar, FiTras
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { toast } from 'react-hot-toast';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 // ============== TYPES ==============
 
@@ -76,10 +77,10 @@ export default function InquiriesPage() {
     const [newStatus, setNewStatus] = useState('');
 
     // Fetch data on mount
-    useEffect(() => {
-        fetchMessages();
-        fetchRequests();
-    }, []);
+    useCargarAlMontar(() => {
+        void fetchMessages();
+        void fetchRequests();
+    });
 
     // ============== MESSAGES FUNCTIONS ==============
 
@@ -189,10 +190,8 @@ export default function InquiriesPage() {
         }
     }
 
-    useEffect(() => {
-        if (activeTab === 'requests') {
-            fetchRequests();
-        }
+    useCargarAlMontar(() => {
+        if (activeTab === 'requests') void fetchRequests();
     }, [requestFilterStatus]);
 
     const handleUpdateRequestStatus = async () => {

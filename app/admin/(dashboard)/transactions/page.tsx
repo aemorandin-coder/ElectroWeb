@@ -41,6 +41,7 @@ import {
     adminLabel,
     adminBadge,
     } from '@/lib/admin-ui';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 
 // ─── Payment method icons (react-icons, no emojis) ──────────────────────────
@@ -184,9 +185,9 @@ export default function TransactionsPage() {
         }
     }, [filterStatus, filterType]);
 
-    useEffect(() => {
-        fetchTransactions();
-        fetchStats();
+    useCargarAlMontar(() => {
+        void fetchTransactions();
+        void fetchStats();
     }, [fetchTransactions, fetchStats]);
 
     useEffect(() => {

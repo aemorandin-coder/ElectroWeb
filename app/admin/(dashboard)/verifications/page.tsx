@@ -4,11 +4,12 @@ import { adminTableWrap, adminTable, adminRowHover, adminModalOverlay } from '@/
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { FiCheckCircle, FiXCircle, FiClock, FiFileText, FiDownload, FiEye, FiUsers } from 'react-icons/fi';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface VerificationRequest {
     id: string;
@@ -35,9 +36,7 @@ export default function VerificationsPage() {
     const [actionNote, setActionNote] = useState('');
     const [processing, setProcessing] = useState(false);
 
-    useEffect(() => {
-        fetchRequests();
-    }, [filter]);
+    useCargarAlMontar(fetchRequests, [filter]);
 
     async function fetchRequests() {
         setLoading(true);

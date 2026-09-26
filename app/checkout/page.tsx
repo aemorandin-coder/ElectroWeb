@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import Footer from '@/components/Footer';
@@ -14,7 +14,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import RechargeModal from '@/components/modals/RechargeModalV2';
 import CheckoutPagoMovilForm from '@/components/checkout/CheckoutPagoMovilForm';
 import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverlay';
-import { FiCreditCard, FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiMapPin, FiPackage, FiInfo, FiCopy, FiCheckCircle, FiGift, FiShield } from 'react-icons/fi';
+import { FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiPackage, FiInfo, FiCheckCircle, FiGift, FiShield } from 'react-icons/fi';
 import { FaMobileScreen } from 'react-icons/fa6';
 import { FaCheck } from 'react-icons/fa';
 import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
@@ -30,16 +30,19 @@ import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalcu
 
 import { parseCartItemId, toOrderItem } from '@/lib/cart-items';
 import CouponBox from '@/components/cart/CouponBox';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { useSettings } from '@/contexts/SettingsContext';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { items, getTotalPrice, clearCart, couponCode, setCouponCode } = useCart();
+  const { items, clearCart, couponCode, setCouponCode } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   // C-85: el formulario de teléfono y cédula espera al perfil para no aparecer y desaparecer
   const [perfilCargado, setPerfilCargado] = useState(false);
-  const [companySettings, setCompanySettings] = useState<any>(null);
+  // Ajustes públicos del contexto (vienen del servidor en el layout): antes se volvían a pedir a /api/settings/public (C-111)
+  const { settings: companySettings } = useSettings();
   const [userBalance, setUserBalance] = useState<number>(0);
   const [showRechargeModal, setShowRechargeModal] = useState(false);
   const [paymentMode, setPaymentMode] = useState<'WALLET' | 'PAGO_MOVIL' | 'GIFT_CARD' | 'DIRECT'>('WALLET');
@@ -82,7 +85,6 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState<Array<{ address: string; city?: string; state?: string }>>([]);
 
   // Tooltip for client data warning
-  const [showClientDataTooltip, setShowClientDataTooltip] = useState(false);
 
   // Notes section collapsible
   const [showNotesSection, setShowNotesSection] = useState(false);
@@ -96,7 +98,8 @@ export default function CheckoutPage() {
   const [processingError, setProcessingError] = useState<string | null>(null);
 
   // Active Discounts
-  const [activeDiscounts, setActiveDiscounts] = useState<any[]>([]);
+  // Descuentos aprobados de antes de C-102 que siguen vigentes (lo que devuelve /api/customer/discount-requests)
+  const [activeDiscounts, setActiveDiscounts] = useState<Array<{ productId: string; status: string; expiresAt: string | null; approvedDiscount: number | null; requestedDiscount: number }>>([]);
 
   // Mobile Payment Verification State
   const [mobilePaymentVerified, setMobilePaymentVerified] = useState(false);
@@ -121,33 +124,43 @@ export default function CheckoutPage() {
     requiresPin: boolean;
   } | null>(null);
 
-  // Load company settings for exchange rates
+  // La primera forma de entrega disponible queda elegida de entrada (C-50b, C-100)
+  useCargarAlMontar(() => {
+    if (!companySettings) return;
+    const primera: DeliveryMethod | null = companySettings.deliveryEnabled !== false ? 'SHIPPING'
+      : companySettings.localDeliveryEnabled ? 'LOCAL_DELIVERY'
+        : companySettings.pickupEnabled ? 'PICKUP' : null;
+    if (primera) setEnvio(prev => ({ ...prev, deliveryMethod: primera }));
+  }, [companySettings]);
+
   useEffect(() => {
-    fetch('/api/settings/public')
-      .then(res => res.json())
-      .then(data => {
-        setCompanySettings(data);
-        // La primera forma de entrega disponible queda elegida de entrada (C-50b, C-100)
-        const primera: DeliveryMethod | null = data?.deliveryEnabled !== false ? 'SHIPPING'
-          : data?.localDeliveryEnabled ? 'LOCAL_DELIVERY'
-            : data?.pickupEnabled ? 'PICKUP' : null;
-        if (primera) setEnvio(prev => ({ ...prev, deliveryMethod: primera }));
-      })
-      .catch(err => console.error('Error loading settings:', err));
 
     // Load payment methods from database
     fetch('/api/customer/company-payment-methods')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setPaymentMethods(data.filter((m: any) => m.isActive));
+          setPaymentMethods(data.filter((m: { isActive?: boolean }) => m.isActive));
         }
       })
       .catch(err => console.error('Error loading payment methods:', err));
   }, []);
 
   // Load user data if logged in
-  useEffect(() => {
+
+  const fetchBalance = async () => {
+    try {
+      const response = await fetch('/api/customer/balance');
+      if (response.ok) {
+        const data = await response.json();
+        setUserBalance(Number(data.balance));
+      }
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+    }
+  };
+
+  useCargarAlMontar(() => {
     if (session?.user) {
       setFormData(prev => ({
         ...prev,
@@ -205,25 +218,13 @@ export default function CheckoutPage() {
     }
   }, [session]);
 
-  const fetchBalance = async () => {
-    try {
-      const response = await fetch('/api/customer/balance');
-      if (response.ok) {
-        const data = await response.json();
-        setUserBalance(Number(data.balance));
-      }
-    } catch (error) {
-      console.error('Error fetching balance:', error);
-    }
-  };
-
   // State for redirect animation
-  const [showRedirectMessage, setShowRedirectMessage] = useState(false);
+  // Sin sesión se muestra el aviso y se redirige a los 3 s (C-111: el aviso se deriva, no es un estado aparte)
+  const showRedirectMessage = status === 'unauthenticated';
 
   // Redirect if not authenticated with animation
   useEffect(() => {
     if (status === 'unauthenticated') {
-      setShowRedirectMessage(true);
       // Redirect after showing the message
       const timer = setTimeout(() => {
         router.push('/registro?callbackUrl=%2Fcheckout');
@@ -541,7 +542,7 @@ export default function CheckoutPage() {
           requiresPin: Boolean(data.requiresPin)
         });
       }
-    } catch (err) {
+    } catch {
       setGiftCardError('Error al verificar la Gift Card');
     } finally {
       setGiftCardLoading(false);
@@ -577,7 +578,7 @@ export default function CheckoutPage() {
         setGiftCardPin('');
         setGiftCardInfo(null);
       }
-    } catch (err) {
+    } catch {
       setGiftCardError('Error al canjear la Gift Card');
     } finally {
       setGiftCardLoading(false);

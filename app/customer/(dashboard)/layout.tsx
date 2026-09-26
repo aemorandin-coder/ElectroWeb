@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useRouter, usePathname } from 'next/navigation';
@@ -26,6 +26,7 @@ import { PiListHeartBold } from 'react-icons/pi';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import CustomerMobileNavBar from '@/components/customer/CustomerMobileNavBar';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 
 const MENU = [
   { href: '/customer', icon: FiHome, label: 'Inicio' },
@@ -65,12 +66,8 @@ export default function CustomerDashboardLayout({
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (!isDrawerOpen) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setDrawerPath(null); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isDrawerOpen]);
+  const cerrarCajon = useCallback(() => setDrawerPath(null), []);
+  useCajonAccesible(isDrawerOpen, 'customer-sidebar', cerrarCajon);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -136,9 +133,10 @@ export default function CustomerDashboardLayout({
       <aside
         id="customer-sidebar"
         aria-label="Menú de mi panel"
-        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-72 flex-col border-r border-line bg-white transition-transform duration-200 lg:z-[var(--z-sticky)] lg:w-64 ${
-          isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
-        } ${isCollapsed ? 'lg:-translate-x-full' : 'lg:translate-x-0'}`}
+        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-72 flex-col border-r border-line bg-white transition-[transform,visibility] duration-200 lg:z-[var(--z-sticky)] lg:w-64 ${
+          // Cerrado queda invisible: el foco con Tab ya no entra a un menú que no se ve (C-111)
+          isDrawerOpen ? 'visible translate-x-0' : '-translate-x-full max-lg:invisible'
+        } ${isCollapsed ? 'lg:invisible lg:-translate-x-full' : 'lg:visible lg:translate-x-0'}`}
       >
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-5">
           <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-brand-500 text-white">

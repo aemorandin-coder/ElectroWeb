@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -31,6 +31,7 @@ import {
 } from '@/lib/admin-ui';
 import { DIGITAL_PROVIDERS } from '@/lib/digital-catalog';
 import { formatUSD } from '@/lib/currency';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 
 interface DigitalCode {
@@ -104,7 +105,7 @@ export default function AdminDigitalCodesPage() {
     // Form state for adding new codes
     const [newCodes, setNewCodes] = useState<Record<string, EntregaForm>>({});
 
-    useEffect(() => {
+    useCargarAlMontar(() => {
         if (status === 'unauthenticated') {
             router.push('/login?redirect=admin');
             return;

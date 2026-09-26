@@ -83,11 +83,12 @@ Ver `.env.example`. Las imprescindibles: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAU
 Servidor con nginx y PM2 (proceso `electroshop`) en `/var/www/electroshopve`. Pasos de cada deploy, qué cambia en la base y qué revisar después: `docs/plan/SIGUIENTE.md`.
 
 ```bash
-git pull
-npx prisma db push      # solo si el deploy trae cambios de esquema (lo dice SIGUIENTE.md)
-npm run build
-pm2 restart electroshop --update-env
+bash scripts/deploy.sh
 ```
+
+El guion hace `git pull`, compila en la carpeta que no se está sirviendo (`.next-a` o `.next-b`) y solo entonces reinicia PM2 con esa carpeta. Si la tienda no responde, vuelve a la anterior.
+- **Si el deploy cambia la base, el guion para** y muestra el SQL. Se revisa, se aplica con `npx prisma db push` y se corre de nuevo.
+- **No uses `npm run build` a mano con la tienda corriendo:** borra la carpeta que se está sirviendo y PM2 entra en un ciclo de reinicios. Hasta el 26/09/2026 pasó 55.910 veces.
 
 `ecosystem.config.js` está desactualizado (nombre `electroshop-web` y otra carpeta): no lo uses con `pm2 start`, porque levantaría un segundo proceso en el puerto 3000.
 

@@ -9,6 +9,9 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    // Carpetas de build que alterna scripts/deploy.sh
+    ".next-a/**",
+    ".next-b/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

@@ -26,35 +26,27 @@ Encontrado en C-40. Ya se quitaron del código, pero **siguen en el historial de
 - **Gemini:** sin ronda abierta. Lo que cambió y le afecta está en `GEMINI.md` §7.
 - **ChatGPT:** fuera del equipo desde el 21/09. Limpieza opcional: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
 
-## 2. Deploy (servidor `/var/www/electroshopve`, PM2 `electroshop`)
-**Este merge agrega cosas a la base: no borra ni cambia columnas.**
+## 2. Deploy
+Servidor `/var/www/electroshopve`, proceso de PM2 `electroshop` (no `electroshop-web`: `ecosystem.config.js` está desactualizado y no se usa).
 
+**Hecho el 26/09/2026** (`main` en 8d4c14f, desde 41d5594):
+- `db push` solo agregó: 2 tipos, 4 tablas y `wishlist_items."priceAtSaveUSD"`.
+- Respaldo de la base: `~/respaldo-antes-deploy-26-09.dump`.
+- Firmas del saldo pasadas: 11 de 11, con su PDF. Respaldo: `~/firmas-2026-09-26.tgz`.
+- **Se encontró un problema:** 55.910 "Could not find a production build" en el log de PM2. `npm run build` borraba `.next` con la tienda corriendo, y PM2 la reiniciaba sin parar mientras duraba el build. El contador de reinicios se puso en 0 el 26/09.
+
+**Desde ahora, cada deploy:**
 ```bash
 cd /var/www/electroshopve
-git pull
-
-# 1. Ver qué falta en la base (solo lee)
-npx prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --script
-#    Lo esperado:
-#      CREATE TYPE "PromotionKind", "PromotionScope"
-#      CREATE TABLE "promotions", "promotion_redemptions", "legal_documents", "document_signatures"
-#      ALTER TABLE "wishlist_items" ADD COLUMN "priceAtSaveUSD"
-#    Si aparece un DROP o un ALTER ... TYPE: PARA y avisa a Claude.
-
-# 2. Aplicar
-npx prisma db push          # si pide aceptar pérdida de datos, PARA
-npx prisma generate
-npm run build
-pm2 restart electroshop --update-env
-
-# 3. Pasar las firmas de los términos del saldo a la tabla nueva, con su PDF (no borra nada)
-npx tsx scripts/migrar-firmas-saldo.ts           # en seco: dice cuántas
-npx tsx scripts/migrar-firmas-saldo.ts --apply
+bash scripts/deploy.sh
 ```
+- Compila en `.next-a` o `.next-b` (la que no se sirve) y solo entonces reinicia. La tienda no se cae durante el build.
+- Si el build falla, o la tienda no responde con la carpeta nueva, sigue la anterior.
+- **Si el deploy cambia la base, el guion para y muestra el SQL.** Si hay un DROP o un `ALTER ... TYPE`, avisa a Claude; si no, `npx prisma db push` y se corre de nuevo.
+- La primera vez pasa de `.next` a `.next-a` y borra `.next`.
 
 - **Respaldo:** agrega `private-uploads/signatures/` a las copias del servidor. Ahí quedan las constancias firmadas.
-- **Si algo sale mal:** `git reset --hard 41d5594 && npx prisma generate && npm run build && pm2 restart electroshop`.
-  - Ese es el `main` anterior. Las tablas nuevas pueden quedarse: el código viejo no las usa.
+- **Volver a una versión anterior:** `git reset --hard <commit> && bash scripts/deploy.sh --sin-pull`. Si esa versión tenía otras dependencias, antes `npm install`. Solo sirve para versiones que ya traen este guion. El próximo deploy normal vuelve a traer lo último.
 
 **Después del deploy, en el panel:**
 - **Descuentos → Ofertas y cupones:** crea tu primera oferta o cupón. Las solicitudes viejas quedan en su pestaña.

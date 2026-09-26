@@ -34,6 +34,9 @@ const nextConfig = {
       { source: '/mi-cuenta', destination: '/customer', permanent: true },
       { source: '/customer/wallet', destination: '/customer/balance', permanent: true },
       { source: '/comparar', destination: '/productos', permanent: true },
+      // Pantallas duplicadas del panel (C-110): todo vive en Consultas
+      { source: '/admin/messages', destination: '/admin/inquiries', permanent: false },
+      { source: '/admin/product-requests', destination: '/admin/inquiries?tab=requests', permanent: false },
     ];
   },
   async rewrites() {

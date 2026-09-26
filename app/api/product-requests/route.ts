@@ -157,15 +157,38 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
     }
 
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
+    // C-110: estado de una lista cerrada (antes cualquier texto) y nota con tope
+    const ESTADOS = ['PENDING', 'IN_PROGRESS', 'FULFILLED', 'REJECTED'];
+    if (body?.status !== undefined && !ESTADOS.includes(body.status)) {
+      return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
+    }
+    const antes = await prisma.productRequest.findUnique({ where: { id }, select: { status: true } });
+    if (!antes) return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
 
     const productRequest = await prisma.productRequest.update({
       where: { id },
       data: {
-        status: body.status,
-        adminNotes: body.adminNotes,
+        ...(body?.status !== undefined ? { status: body.status } : {}),
+        ...(body?.adminNotes !== undefined ? { adminNotes: typeof body.adminNotes === 'string' ? body.adminNotes.trim().slice(0, 1000) || null : null } : {}),
       },
     });
+
+    // El cliente se entera cuando su pedido se consigue o se descarta (antes nunca sabía nada)
+    if (productRequest.userId && body?.status && body.status !== antes.status && (body.status === 'FULFILLED' || body.status === 'REJECTED')) {
+      await prisma.notification.create({
+        data: {
+          userId: productRequest.userId,
+          type: 'SYSTEM',
+          title: body.status === 'FULFILLED' ? 'Conseguimos tu producto' : 'Sobre tu solicitud de producto',
+          message: body.status === 'FULFILLED'
+            ? `Ya tenemos "${productRequest.productName}". Búscalo en la tienda o escríbenos para apartarlo.`
+            : `No pudimos conseguir "${productRequest.productName}".${productRequest.adminNotes ? ` ${productRequest.adminNotes}` : ''}`,
+          link: body.status === 'FULFILLED' ? `/productos?search=${encodeURIComponent(productRequest.productName.slice(0, 60))}` : '/solicitar-producto',
+          icon: 'FiPackage',
+        },
+      }).catch(() => null);
+    }
 
     return NextResponse.json(productRequest);
   } catch (error) {

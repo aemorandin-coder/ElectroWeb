@@ -9,6 +9,17 @@ const WITH_COUNT = {
   _count: { select: { products: true } },
 } as const;
 
+/** ¿`candidato` es `id` o cuelga de él? Evita ciclos al elegir la categoría padre (C-110) */
+async function esDescendiente(id: string, candidato: string): Promise<boolean> {
+  let actual: string | null = candidato;
+  for (let i = 0; actual && i < 50; i++) {
+    if (actual === id) return true;
+    const fila: { parentId: string | null } | null = await prisma.category.findUnique({ where: { id: actual }, select: { parentId: true } });
+    actual = fila?.parentId ?? null;
+  }
+  return false;
+}
+
 function toSlug(name: string) {
   return name
     .toLowerCase()
@@ -90,8 +101,16 @@ export async function PATCH(request: NextRequest) {
     const updateData: Record<string, unknown> = {};
 
     if (name !== undefined) {
-      updateData.name = name.trim();
-      updateData.slug = toSlug(name.trim());
+      const limpio = typeof name === 'string' ? name.trim() : '';
+      if (limpio.length < 2 || limpio.length > 60 || !toSlug(limpio)) {
+        return NextResponse.json({ error: 'El nombre debe tener entre 2 y 60 caracteres' }, { status: 400 });
+      }
+      updateData.name = limpio;
+      updateData.slug = toSlug(limpio);
+    }
+    // Una categoría no puede ser su propia madre ni colgar de una de sus hijas: el árbol quedaba en ciclo
+    if (parentId && await esDescendiente(id, parentId)) {
+      return NextResponse.json({ error: 'Esa categoría no puede ser la principal de sí misma ni de una de sus subcategorías' }, { status: 400 });
     }
     if (description !== undefined) updateData.description = description?.trim() || null;
     if (image !== undefined)       updateData.image = image || null;
@@ -133,6 +152,15 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID es requerido' }, { status: 400 });
     }
 
+    // Con productos o subcategorías, decirlo (antes: 500 genérico por la llave foránea)
+    const cat = await prisma.category.findUnique({ where: { id }, select: { _count: { select: { products: true, children: true } } } });
+    if (!cat) return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
+    if (cat._count.products > 0) {
+      return NextResponse.json({ error: `Tiene ${cat._count.products} producto${cat._count.products === 1 ? '' : 's'}: muévelos a otra categoría antes de eliminarla` }, { status: 409 });
+    }
+    if (cat._count.children > 0) {
+      return NextResponse.json({ error: 'Tiene subcategorías: muévelas o elimínalas antes' }, { status: 409 });
+    }
     await prisma.category.delete({ where: { id } });
 
     revalidateStorefront();

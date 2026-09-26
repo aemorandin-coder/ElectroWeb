@@ -16,6 +16,18 @@ import { getPublicReviews, getReviewSummary } from '@/lib/queries/product';
  * - Sin productId, cliente logueado: solo las suyas ("Mis reseñas").
  * Antes era pública, devolvía el email de cada cliente y, sin `publishedOnly`, también las no aprobadas.
  */
+// C-110: nota entera de 1 a 5 y comentario con tope. Antes se aceptaba 3,7 al crear y cualquier número al editar
+// (un 999 movía el promedio del producto).
+function notaValida(v: unknown): number | null {
+    const n = typeof v === 'number' ? v : Number(v);
+    return Number.isInteger(n) && n >= 1 && n <= 5 ? n : null;
+}
+function comentarioValido(v: unknown): string | null {
+    if (typeof v !== 'string') return null;
+    const t = v.trim();
+    return t.length >= 3 && t.length <= 2000 ? t : null;
+}
+
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
@@ -68,11 +80,14 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (rating < 1 || rating > 5) {
+        if (notaValida(rating) === null) {
             return NextResponse.json(
-                { error: 'La calificación debe estar entre 1 y 5' },
+                { error: 'La calificación debe ser de 1 a 5 estrellas' },
                 { status: 400 }
             );
+        }
+        if (comentarioValido(comment) === null) {
+            return NextResponse.json({ error: 'El comentario debe tener entre 3 y 2.000 caracteres' }, { status: 400 });
         }
 
         const product = await prisma.product.findUnique({
@@ -81,6 +96,15 @@ export async function POST(request: NextRequest) {
 
         if (!product) {
             return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+        }
+
+        // "Opiniones verificadas" (lo promete la ficha): solo quien compró y pagó el producto. Antes cualquier cuenta podía (C-110)
+        const compra = await prisma.orderItem.findFirst({
+            where: { productId, order: { userId: session.user.id, paymentStatus: 'PAID', status: { notIn: ['CANCELLED', 'REFUNDED'] } } },
+            select: { id: true },
+        });
+        if (!compra) {
+            return NextResponse.json({ error: 'Solo puedes opinar sobre productos que compraste' }, { status: 403 });
         }
 
         const existingReview = await prisma.review.findFirst({
@@ -101,8 +125,8 @@ export async function POST(request: NextRequest) {
             data: {
                 productId,
                 userId: session.user.id,
-                rating,
-                comment,
+                rating: notaValida(rating) as number,
+                comment: comentarioValido(comment) as string,
                 isApproved: false,
             },
             include: { product: { select: { name: true } } },
@@ -157,8 +181,18 @@ export async function PATCH(request: NextRequest) {
         const updateData: Record<string, unknown> = {};
 
         if (isOwner && !isAdmin) {
-            if (rating !== undefined) updateData.rating = rating;
-            if (comment !== undefined) updateData.comment = comment;
+            if (rating !== undefined) {
+                const nota = notaValida(rating);
+                if (nota === null) return NextResponse.json({ error: 'La calificación debe ser de 1 a 5 estrellas' }, { status: 400 });
+                updateData.rating = nota;
+            }
+            if (comment !== undefined) {
+                const texto = comentarioValido(comment);
+                if (texto === null) return NextResponse.json({ error: 'El comentario debe tener entre 3 y 2.000 caracteres' }, { status: 400 });
+                updateData.comment = texto;
+            }
+            // Editada vuelve a moderación: antes el texto nuevo de una reseña aprobada salía publicado sin revisión
+            if (Object.keys(updateData).length > 0) updateData.isApproved = false;
         }
 
         if (isAdmin) {

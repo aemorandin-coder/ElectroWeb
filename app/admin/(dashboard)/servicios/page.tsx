@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from 'react-hot-toast';
 import { adminModalOverlay } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
@@ -139,6 +140,11 @@ export default function AdminServiciosPage() {
     if (res.ok) {
       setShowModal(false);
       loadVideos();
+      toast.success(editingId ? 'Trabajo actualizado' : 'Trabajo agregado');
+    } else {
+      // Antes un error del servidor dejaba el modal abierto sin decir nada (C-110)
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.error || 'No se pudo guardar');
     }
     setSaving(false);
   };

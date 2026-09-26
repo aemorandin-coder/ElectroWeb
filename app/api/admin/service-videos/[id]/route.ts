@@ -16,6 +16,10 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
+    // C-110: la tienda enlaza esta URL tal cual cuando no puede incrustarla: solo http o https
+    if (body.videoUrl !== undefined && !/^https?:\/\/[^\s]+$/i.test(String(body.videoUrl))) {
+      return NextResponse.json({ error: 'La URL del video debe empezar con https://' }, { status: 400 });
+    }
 
     const video = await prisma.techServiceVideo.update({
       where: { id },

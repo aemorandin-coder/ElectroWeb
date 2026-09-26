@@ -281,7 +281,7 @@ export default function AdminDashboard() {
       title: 'Solicitudes Especiales',
       description: `${pendingActions.productRequests || 0} solicitudes`,
       icon: <FiLayers className="w-4 h-4" />,
-      href: '/admin/product-requests',
+      href: '/admin/inquiries?tab=requests',
       bgColor: 'bg-white border-line text-ink hover:bg-surface',
       iconBg: 'bg-brand-500 text-white',
       hoverColor: 'hover:border-brand-500',

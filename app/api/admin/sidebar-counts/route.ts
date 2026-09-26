@@ -31,6 +31,7 @@ export async function GET() {
       pendingDiscounts,
       pendingCreators,
       pendingCourses,
+      pendingReviews,
     ] = await Promise.all([
       // Órdenes pendientes
       prisma.order.count({ where: { status: 'PENDING' } }),
@@ -55,6 +56,9 @@ export async function GET() {
 
       // Cursos de creadores que esperan aprobación (menú Cursos, C-82)
       prisma.course.count({ where: { isActive: false, creatorId: { not: null } } }),
+
+      // Reseñas por moderar (menú Reseñas, C-110)
+      prisma.review.count({ where: { isApproved: false } }),
     ]);
 
     // Mensajes y Solicitudes = mensajes + solicitudes de producto (las notificaciones tienen su propio menú desde C-73)
@@ -67,6 +71,7 @@ export async function GET() {
       pendingDiscounts,
       pendingCreators,
       pendingCourses,
+      pendingReviews,
       unreadNotifications,
     });
   } catch (error) {

@@ -74,6 +74,19 @@ export async function PATCH(request: NextRequest) {
 
     // Caso 1: Toggle rápido de activación/desactivación
     if (Object.keys(data).length === 1 && typeof data.isActive === 'boolean') {
+      // Activar pasa por las mismas reglas que editar (C-110): antes se podía activar una plantilla vacía
+      // y el cliente veía "Pago Móvil" sin teléfono ni titular.
+      if (data.isActive) {
+        const actual = await prisma.companyPaymentMethod.findUnique({ where: { id } });
+        if (!actual) return NextResponse.json({ error: 'Método no encontrado' }, { status: 404 });
+        const revision = validateAndSanitizePaymentMethod({
+          ...Object.fromEntries(Object.entries(actual).map(([k, v]) => [k, v === null ? undefined : typeof v === 'object' && v && 'toNumber' in v ? Number(v) : v])),
+          isActive: true,
+        });
+        if (!revision.success) {
+          return NextResponse.json({ error: `Completa los datos antes de activarlo: ${revision.error}` }, { status: 400 });
+        }
+      }
       const updated = await prisma.companyPaymentMethod.update({
         where: { id },
         data: { isActive: data.isActive }

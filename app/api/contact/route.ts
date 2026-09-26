@@ -124,6 +124,10 @@ export async function PATCH(request: NextRequest) {
         { status: 400 }
       );
     }
+    // C-110: estados conocidos (antes cualquier texto)
+    if (!['PENDING', 'READ', 'RESPONDED', 'ARCHIVED'].includes(status)) {
+      return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
+    }
 
     const updatedMessage = await prisma.contactMessage.update({
       where: { id },

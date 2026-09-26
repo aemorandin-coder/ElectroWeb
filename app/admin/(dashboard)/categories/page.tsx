@@ -142,12 +142,16 @@ export default function CategoriesPage() {
         body: JSON.stringify(body),
       });
 
+      const data = await response.json().catch(() => ({}));
       if (response.ok) {
         await fetchCategories();
         setIsCreating(false);
         setIsEditing(false);
-        const updated = await response.json();
-        setSelectedCategory(updated);
+        setSelectedCategory(data);
+        toast.success('Categoría guardada');
+      } else {
+        // Antes un rechazo del servidor (nombre repetido, categoría en ciclo) no decía nada (C-110)
+        toast.error(data.error || 'No se pudo guardar la categoría');
       }
     } catch (error) {
       console.error('Error saving category:', error);
@@ -167,6 +171,11 @@ export default function CategoriesPage() {
         setSelectedCategory(null);
         setShowDeleteModal(false);
         setIsEditing(false);
+        toast.success('Categoría eliminada');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        toast.error(data.error || 'No se pudo eliminar la categoría');
+        setShowDeleteModal(false);
       }
     } catch (error) {
       console.error('Error deleting category:', error);
@@ -319,7 +328,7 @@ export default function CategoriesPage() {
       <div className="flex-1 flex flex-col overflow-hidden bg-white">
         <div className="flex-1 overflow-y-auto p-4 lg:p-8">
           {/* Analytics */}
-          <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-2 gap-3 mb-8 sm:grid-cols-3 sm:gap-6">
             <div className="bg-surface p-5 rounded-xl border border-brand-200 shadow-sm">
               <div className="text-sm text-brand-600 font-medium mb-1">Total Categorías</div>
               <div className="text-3xl font-bold text-ink">{totalCategories}</div>
@@ -328,7 +337,7 @@ export default function CategoriesPage() {
               <div className="text-sm text-brand-600 font-medium mb-1">Total Productos</div>
               <div className="text-3xl font-bold text-ink">{totalProducts}</div>
             </div>
-            <div className="bg-surface p-5 rounded-xl border border-success/20 shadow-sm">
+            <div className="col-span-2 bg-surface p-5 rounded-xl border border-success/20 shadow-sm sm:col-span-1">
               <div className="text-sm text-success-strong font-medium mb-1">Categoría Top</div>
               <div className="text-lg font-bold text-ink truncate">{topCategory?.name || '-'}</div>
               <div className="text-xs text-success-strong/80 mt-1">{topCategory?._count?.products || 0} productos</div>
@@ -699,7 +708,7 @@ export default function CategoriesPage() {
                     <div className="space-y-3">
                       <button
                         onClick={() => handleCreate(selectedCategory.id)}
-                        className="w-full flex items-center gap-4 p-4 bg-white border border-line rounded-2xl hover:border-brand-500 hover:shadow-md hover:shadow-blue-500/5 transition-all group text-left"
+                        className="w-full flex items-center gap-4 p-4 bg-white border border-line rounded-2xl hover:border-brand-500 hover:shadow-md transition-all group text-left"
                       >
                         <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600 group-hover:bg-brand-500 group-hover:text-white transition-colors">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -741,7 +750,7 @@ export default function CategoriesPage() {
                 <h3 className="text-xl font-bold text-ink mb-4">Selecciona una categoría</h3>
                 <Button
                   variant="primary"
-                  className="px-8 py-3 bg-brand-500 hover:bg-brand-500 text-white shadow-lg shadow-blue-600/20"
+                  className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white"
                   onClick={() => handleCreate(null)}
                 >
                   Crear Categoría Raíz

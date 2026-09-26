@@ -43,6 +43,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    if (!body?.title || !body?.videoUrl) return NextResponse.json({ error: 'Título y URL del video son requeridos' }, { status: 400 });
+    // C-110: la tienda enlaza esta URL tal cual cuando no puede incrustarla: solo http o https
+    if (body.videoUrl !== undefined && !/^https?:\/\/[^\s]+$/i.test(String(body.videoUrl))) {
+      return NextResponse.json({ error: 'La URL del video debe empezar con https://' }, { status: 400 });
+    }
 
     const video = await prisma.techServiceVideo.create({
       data: {

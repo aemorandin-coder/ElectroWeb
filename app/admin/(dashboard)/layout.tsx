@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   FiBarChart2, FiBox, FiClipboard, FiCreditCard, FiDollarSign, FiExternalLink, FiGift, FiGrid, FiLogOut,
-  FiBell, FiBookOpen, FiMenu, FiMessageSquare, FiPercent, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUsers, FiX,
+  FiBell, FiBookOpen, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUsers, FiX,
 } from 'react-icons/fi';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { MdAdminPanelSettings } from 'react-icons/md';
@@ -24,6 +24,7 @@ interface SidebarCounts {
   pendingOrders: number;
   pendingTransactions: number;
   pendingInquiries: number;
+  pendingReviews: number;
   pendingDiscounts: number;
   pendingCreators: number;
   pendingCourses: number;
@@ -48,6 +49,7 @@ export default function AdminLayout({
     pendingOrders: 0,
     pendingTransactions: 0,
     pendingInquiries: 0,
+    pendingReviews: 0,
     pendingDiscounts: 0,
     pendingCreators: 0,
     pendingCourses: 0,
@@ -191,6 +193,14 @@ export default function AdminLayout({
       icon: <FiMessageSquare className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_CONTENT',
       countKey: 'pendingInquiries',
+    },
+    {
+      // C-110: antes solo se llegaba desde el Dashboard
+      name: 'Reseñas',
+      href: '/admin/reviews',
+      icon: <FiStar className="h-5 w-5" aria-hidden="true" />,
+      permission: 'MANAGE_CONTENT',
+      countKey: 'pendingReviews',
     },
     {
       name: 'Marketing y Contenido',

@@ -64,18 +64,18 @@ const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNo
     },
     ZELLE: {
         label: 'Zelle',
-        icon: <SiZelle className="w-5 h-5 text-purple-600" />,
-        badgeClass: 'bg-purple-50 text-purple-700 border-purple-200',
+        icon: <SiZelle className="w-5 h-5 text-brand-600" />,
+        badgeClass: 'bg-brand-50 text-brand-700 border-brand-200',
     },
     ZINLI: {
         label: 'Zinli',
-        icon: <FiCreditCard className="w-5 h-5 text-orange-600" />,
-        badgeClass: 'bg-orange-50 text-orange-700 border-orange-200',
+        icon: <FiCreditCard className="w-5 h-5 text-warning-strong" />,
+        badgeClass: 'bg-warning/10 text-warning-strong border-warning/30',
     },
     PAYPAL: {
         label: 'PayPal',
-        icon: <SiPaypal className="w-5 h-5 text-blue-600" />,
-        badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
+        icon: <SiPaypal className="w-5 h-5 text-brand-600" />,
+        badgeClass: 'bg-brand-50 text-brand-700 border-brand-200',
     },
     MERCANTIL_PANAMA: {
         label: 'Mercantil Panamá',
@@ -297,7 +297,9 @@ export default function PaymentsPage() {
                 toast.success(method.isActive ? 'Método desactivado' : 'Método activado');
                 fetchMethods();
             } else {
-                toast.error('No se pudo cambiar el estado');
+                // El servidor dice qué falta (C-110): activar una plantilla vacía ya no se permite
+                const data = await response.json().catch(() => ({}));
+                toast.error(data.error || 'No se pudo cambiar el estado');
             }
         } catch (error) {
             console.error('Error toggling status:', error);
@@ -875,7 +877,7 @@ export default function PaymentsPage() {
                                     {/* ZELLE */}
                                     {formData.type === 'ZELLE' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
-                                            <h4 className="text-xs font-bold text-purple-700 uppercase tracking-wider">
+                                            <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider">
                                                 Datos de Zelle
                                             </h4>
                                             <div>
@@ -904,7 +906,7 @@ export default function PaymentsPage() {
                                     {/* ZINLI */}
                                     {formData.type === 'ZINLI' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
-                                            <h4 className="text-xs font-bold text-orange-700 uppercase tracking-wider">
+                                            <h4 className="text-xs font-bold text-warning-strong uppercase tracking-wider">
                                                 Datos de Zinli
                                             </h4>
                                             <div>
@@ -933,7 +935,7 @@ export default function PaymentsPage() {
                                     {/* PAYPAL */}
                                     {formData.type === 'PAYPAL' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
-                                            <h4 className="text-xs font-bold text-blue-700 uppercase tracking-wider">
+                                            <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider">
                                                 Datos de PayPal
                                             </h4>
                                             <div>

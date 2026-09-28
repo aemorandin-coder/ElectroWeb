@@ -1,24 +1,26 @@
 'use client';
 
-import { FiCheckCircle, FiClock, FiCopy, FiDownload, FiFilm, FiShare2, FiZap } from 'react-icons/fi';
+import { FiAlertTriangle, FiCheckCircle, FiClock, FiCopy, FiDownload, FiFilm, FiShare2, FiZap } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { buildCaption } from '@/lib/studio/caption';
+import type { FlyerCheck } from '@/lib/studio/checks';
 import { qrUrlFor } from '@/lib/studio/engine';
 import { FiLink } from 'react-icons/fi';
-import { sectionSummary, smallButton, smallDangerButton } from './ui';
+import { sectionSummary, smallButton } from './ui';
 import type { Studio } from './useStudio';
 
-export interface PublishCheck {
-  ok: boolean;
-  text: string;
-  step?: number;
-}
+// C-116: cómo se ve cada revisión. Lo que impide descargar, en rojo; los avisos, en ámbar
+const CHECK_STYLE: Record<FlyerCheck['level'], string> = {
+  ok: 'border-line bg-surface text-success-strong',
+  warn: 'border-warning/30 bg-warning/10 text-warning-strong',
+  block: 'border-deal/30 bg-deal-bg text-deal',
+};
 
 interface Props {
   studio: Studio;
-  checks: PublishCheck[];
+  checks: FlyerCheck[];
   busy: boolean;
   canShare: boolean;
   onPng: () => void;
@@ -28,7 +30,7 @@ interface Props {
 }
 
 export default function StepPublish({ studio, checks, busy, canShare, onPng, onVideo, onShare, goStep }: Props) {
-  const { current, update, brand, flyers, duplicate, remove, currentCode } = studio;
+  const { current, update, brand, flyers, currentCode } = studio;
   const { confirm } = useConfirm();
   if (!current) return null;
   const batches = [...new Set(flyers.map((f) => f.batch).filter(Boolean))];
@@ -57,19 +59,20 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
   };
   const copy = () => copyText(current.caption, 'Texto copiado');
 
-  const askRemove = async () => {
-    const ok = await confirm({ title: 'Eliminar historia', message: `¿Eliminar "${current.name}"? No se puede deshacer.`, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
-    if (ok) await remove();
-  };
-
   return (
     <div className="flex flex-col gap-4">
       <ul className="flex flex-col gap-1.5">
         {checks.map((c) => (
-          <li key={c.text} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${c.ok ? 'border-line bg-surface text-success-strong' : 'border-warning/30 bg-warning/10 text-warning-strong'}`}>
-            {c.ok ? <FiCheckCircle className="h-4 w-4 shrink-0" aria-hidden="true" /> : <FiClock className="h-4 w-4 shrink-0" aria-hidden="true" />}
+          <li key={c.text} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${CHECK_STYLE[c.level]}`}>
+            {c.level === 'ok' ? (
+              <FiCheckCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+            ) : c.level === 'block' ? (
+              <FiAlertTriangle className="h-4 w-4 shrink-0" aria-label="Impide descargar" />
+            ) : (
+              <FiClock className="h-4 w-4 shrink-0" aria-hidden="true" />
+            )}
             <span className="flex-1">{c.text}</span>
-            {!c.ok && c.step && (
+            {c.level !== 'ok' && c.step && c.step !== 4 && (
               <button type="button" onClick={() => goStep(c.step as number)} className={smallButton}>
                 Ir
               </button>
@@ -168,14 +171,6 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
         </div>
       </details>
 
-      <div className="flex flex-wrap gap-2 border-t border-line pt-3">
-        <button type="button" onClick={() => void duplicate()} className={smallButton}>
-          Duplicar
-        </button>
-        <button type="button" onClick={() => void askRemove()} className={smallDangerButton}>
-          Eliminar
-        </button>
-      </div>
     </div>
   );
 }

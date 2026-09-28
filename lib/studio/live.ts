@@ -161,6 +161,8 @@ export interface StaleWarning {
   text: string;
   /** "danger": no conviene publicarla así; "warning": revisar */
   tone: 'danger' | 'warning';
+  /** C-116: qué pasó, para decidir si impide descargar (cupón) o solo avisa */
+  kind: 'gone' | 'soldout' | 'price' | 'offer' | 'coupon' | 'rate';
 }
 
 /**
@@ -181,18 +183,19 @@ export function staleWarnings(
       const p = slot.productId ? live[slot.productId] : undefined;
       if (!p) return;
       const who = f.products.length > 1 && f.template !== 'resena' ? ` (${slot.title || `producto ${i + 1}`})` : '';
-      if (!p.published) out.push({ text: `Ya no está en la tienda${who}`, tone: 'danger' });
-      else if (!p.inStock) out.push({ text: `Agotado${who}`, tone: 'danger' });
+      if (!p.published) out.push({ text: `Ya no está en la tienda${who}`, tone: 'danger', kind: 'gone' });
+      else if (!p.inStock) out.push({ text: `Agotado${who}`, tone: 'danger', kind: 'soldout' });
       // Contra el precio actual de la tienda, no el guardado en la historia (las de la lista no se abren)
       const before = f.exported.prices[i];
-      if (f.exported.at && before !== undefined && before !== p.priceUSD) out.push({ text: `El precio cambió desde la descarga${who}`, tone: 'warning' });
+      if (f.exported.at && before !== undefined && before !== p.priceUSD) out.push({ text: `El precio cambió desde la descarga${who}`, tone: 'warning', kind: 'price' });
     });
   }
   const ends = Date.parse(f.offerEnds);
-  if (f.offerEnds && Number.isFinite(ends) && ends < now) out.push({ text: f.template === 'cupon' ? 'El cupón venció' : 'La oferta terminó', tone: 'danger' });
-  else if (f.template === 'cupon' && f.coupon.code && coupons && !coupons[f.coupon.code]) out.push({ text: 'El cupón ya no está vigente', tone: 'danger' });
+  if (f.offerEnds && Number.isFinite(ends) && ends < now) {
+    out.push(f.template === 'cupon' ? { text: 'El cupón venció', tone: 'danger', kind: 'coupon' } : { text: 'La oferta terminó', tone: 'danger', kind: 'offer' });
+  } else if (f.template === 'cupon' && f.coupon.code && coupons && !coupons[f.coupon.code]) out.push({ text: 'El cupón ya no está vigente', tone: 'danger', kind: 'coupon' });
   if (f.template === 'tasa' && f.exported.at && store && f.exported.rate && f.exported.rate !== store.rateVES) {
-    out.push({ text: 'La tasa cambió desde la descarga', tone: 'warning' });
+    out.push({ text: 'La tasa cambió desde la descarga', tone: 'warning', kind: 'rate' });
   }
   return out;
 }

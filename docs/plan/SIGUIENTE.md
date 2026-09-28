@@ -53,17 +53,16 @@ bash scripts/deploy.sh
    - Firmar los términos desde "Recargar saldo".
    - Reportes → Seguridad con la IP real.
    - ElectroStudio ya lo probó Andrés el 28/09: "muy bien". Sus pedidos de mejora son C-116.
-3. **C-115:** hecha el 28/09 en la rama `claude/C-115`. Falta el OK de Andrés para el merge y el push.
-   - `/carrito` avisa el mínimo y el máximo de compra antes del checkout, también sin sesión. Avisa además de los productos que el servidor rechaza, algo que antes ignoraba.
+3. **C-115:** en `main` desde el 28/09.
+   - `/carrito` avisa el mínimo y el máximo de compra antes del checkout, también sin sesión, y los productos que el servidor rechaza.
    - El mínimo cuenta solo los productos y el máximo, todo lo cobrado (decisión del 28/09). Configuración lo explica con un ejemplo.
-   - **Andrés pidió no mergear todavía.**
-   - Hallazgo: el interruptor "Cobrar IVA" de Configuración no hace nada (`STORE_CHARGES_TAX = false`). Falta preguntar si se quita.
-4. **C-116: ElectroStudio más fácil de usar** (pedida por Andrés el 28/09, tras probarlo en producción):
-   - Botones directos en cada historia creada para editarla y borrarla.
-   - Validaciones.
-   - Uso mucho más guiado y amigable.
-   - Una sola entrada en el menú: hoy está en la barra lateral del admin y además como pestaña de Marketing, que solo lleva al mismo lugar. "Debemos ser prácticos."
-   - Empezar con el inventario de acciones de `CHATGPT.md` §4 y mostrarle a Andrés la propuesta antes de cambiar el flujo.
+4. **C-116: ElectroStudio más fácil de usar.** Fases 1 y 2 en `main` desde el 28/09. Detalle en `estado/C-116.md`.
+   - Inicio con tarjetas, miniaturas y acciones directas; editor en `/admin/studio/<id>`; validaciones antes de descargar; una sola entrada.
+   - Asistente de "Nueva historia" (`/admin/studio/nueva`) con dibujos de ejemplo, editor paso a paso y aviso de letra muy chica.
+4b. **Ideas nuevas de Andrés (28/09), en este orden:**
+   - **C-117 · Sello "ES" automático.** Al subir un PNG transparente: fondo blanco, producto centrado y sello abajo a la derecha. **Andrés manda el archivo del sello.**
+   - **C-118 · Carga masiva con plantilla `.json`.** Plantilla con instrucciones para Claude en la nube; importar el `.json` con las fotos; se crean en borrador. El fondo se quita en el teléfono (iPhone: mantener el dedo sobre el producto; Samsung: "Extraer objeto").
+   - **C-119 · Productos usados.** Lleva migración (con OK). Etiqueta "Usado" encima de la foto, sin el sello. Faltan las decisiones de garantía y cupones.
 5. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
 6. **C-92:** desactivar clientes en vez de borrarlos. Detalle en `AUDITORIA_CLIENTES_BORRADOS.md`.
    - Falta de Andrés: las 4 consultas de diagnóstico y cancelar esas órdenes con el motivo "Prueba: cliente eliminado".
@@ -93,6 +92,8 @@ bash scripts/deploy.sh
   - Comisiones solo por compras pagadas.
   - **Pago Móvil sin orden → al saldo del cliente** (28/09).
   - **Mínimo de compra solo sobre los productos**, sin embalaje ni envío. **Máximo sobre todo lo que paga el cliente** (28/09).
+- **Productos (28/09):** el fondo de las fotos se quita desde el teléfono; los usados llevan etiqueta "Usado" y no el sello "ES".
+- **ElectroStudio (28/09):** dos pantallas (inicio y editor); lo agotado o sin publicar avisa y deja descargar; miniaturas reales en la lista.
 - **Descuentos (25/09):**
   - Si hay varios, gana el mayor.
   - Los digitales, fuera.

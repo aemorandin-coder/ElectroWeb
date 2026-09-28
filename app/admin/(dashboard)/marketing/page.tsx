@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import type { IconType } from 'react-icons';
-import Link from 'next/link';
-import { FiArrowRight, FiEye, FiFilm, FiSend, FiTv, FiUserCheck } from 'react-icons/fi';
-import { adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminTab } from '@/lib/admin-ui';
+import { useRouter } from 'next/navigation';
+import { FiEye, FiSend, FiTv, FiUserCheck } from 'react-icons/fi';
+import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
 import Promotores from './_components/Promotores';
 import Popup from './_components/Popup';
 import Campanas from './_components/Campanas';
@@ -13,15 +13,14 @@ import Plantillas from './_components/Plantillas';
 // Marketing (C-75): una sección por tarea y un archivo por sección. Antes: 1.118 líneas en un archivo con 6 pestañas,
 // una de ellas la configuración SMTP (ahora en Configuración → Correo).
 
-type SeccionId = 'promotores' | 'campanas' | 'popup' | 'plantillas' | 'redes';
+type SeccionId = 'promotores' | 'campanas' | 'popup' | 'plantillas';
 
 const SECCIONES: { id: SeccionId; label: string; descripcion: string; icon: IconType }[] = [
   { id: 'promotores', label: 'Promotores', descripcion: 'Códigos de referido y comisiones por compras pagadas.', icon: FiUserCheck },
   { id: 'campanas', label: 'Campañas de correo', descripcion: 'Correos con imágenes para los clientes que aceptan promociones.', icon: FiSend },
   { id: 'popup', label: 'Popup del home', descripcion: 'La imagen promocional que aparece al entrar a la tienda.', icon: FiTv },
   { id: 'plantillas', label: 'Correos de la tienda', descripcion: 'Cómo se ven los correos automáticos que recibe el cliente.', icon: FiEye },
-  // C-112: las imágenes para redes pasaron a ElectroStudio (/admin/studio); la pestaña queda como acceso directo
-  { id: 'redes', label: 'ElectroStudio', descripcion: 'Historias y videos para Instagram con los productos de la tienda.', icon: FiFilm },
+  // C-116: la pestaña "ElectroStudio" (acceso directo desde C-112) se quitó: el estudio tiene su entrada en la barra lateral
 ];
 
 function seccionDelHash(): SeccionId {
@@ -36,6 +35,11 @@ function suscribirHash(avisar: () => void) {
 
 export default function MarketingPage() {
   const activa = useSyncExternalStore(suscribirHash, seccionDelHash, () => 'promotores' as SeccionId);
+  const router = useRouter();
+  // Enlaces viejos a la pestaña de redes: van directo al estudio
+  useEffect(() => {
+    if (window.location.hash === '#redes') router.replace('/admin/studio');
+  }, [router]);
 
   // Cambiar el hash dispara hashchange y la sección se lee de ahí; replaceState no lo dispara, por eso se avisa a mano
   const ir = useCallback((id: SeccionId) => {
@@ -74,18 +78,6 @@ export default function MarketingPage() {
       {activa === 'campanas' && <Campanas />}
       {activa === 'popup' && <Popup />}
       {activa === 'plantillas' && <Plantillas />}
-      {activa === 'redes' && (
-        <div className={`${adminNotice('brand')} flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between`}>
-          <p>
-            Las imágenes para redes ahora se hacen en <strong>ElectroStudio</strong>: historias y videos con el precio, la oferta y la foto de
-            cada producto tomados de la tienda.
-          </p>
-          <Link href="/admin/studio" className={`${adminPrimaryButton} shrink-0`}>
-            Abrir ElectroStudio
-            <FiArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
-        </div>
-      )}
     </div>
   );
 }

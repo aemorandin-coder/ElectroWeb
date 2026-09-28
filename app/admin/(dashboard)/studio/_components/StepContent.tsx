@@ -7,6 +7,7 @@ import { adminBadge, adminChoice, adminHint, adminInput, adminLabel, adminNotice
 import { formatUSD } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { SPEC_ICONS } from '@/lib/studio/icons';
+import { slotDone } from '@/lib/studio/checks';
 import { linkProduct } from '@/lib/studio/live';
 import { TEMPLATES, hasProductForm, type StudioMessage, type StudioProductSlot, type StudioSpec, type TemplateId } from '@/lib/studio/schema';
 import ProductPicker from './ProductPicker';
@@ -57,10 +58,6 @@ const PRESETS: { label: string; msg: Partial<StudioMessage> }[] = [
     msg: { eyebrow: 'Envíos', headline: 'Enviamos a *toda Venezuela*', body: 'Despachamos por ZOOM y MRW con cobro a destino.', cta: 'Compra en la web', icon: 'camion' },
   },
 ];
-
-export function slotDone(p: StudioProductSlot): boolean {
-  return !!p.title && Number(p.price) > 0;
-}
 
 interface Props {
   studio: Studio;

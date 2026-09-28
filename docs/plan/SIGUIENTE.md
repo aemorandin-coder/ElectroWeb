@@ -54,12 +54,11 @@ bash scripts/deploy.sh
    - Reportes → Seguridad con la IP real.
    - ElectroStudio ya lo probó Andrés el 28/09: "muy bien". Sus pedidos de mejora son C-116.
 3. **C-115 (chica):** avisar el mínimo de compra también en `/carrito` (usa `blockers` de `/api/orders/quote`), antes de llegar al checkout.
-4. **C-116: ElectroStudio más fácil de usar** (pedida por Andrés el 28/09, tras probarlo en producción):
-   - Botones directos en cada historia creada para editarla y borrarla.
-   - Validaciones.
-   - Uso mucho más guiado y amigable.
-   - Una sola entrada en el menú: hoy está en la barra lateral del admin y además como pestaña de Marketing, que solo lleva al mismo lugar. "Debemos ser prácticos."
-   - Empezar con el inventario de acciones de `CHATGPT.md` §4 y mostrarle a Andrés la propuesta antes de cambiar el flujo.
+4. **C-116: ElectroStudio más fácil de usar.** Fase 1 hecha el 28/09 en la rama `claude/C-116`, sin mergear. Detalle en `estado/C-116.md`.
+   - Inicio con tarjetas, miniaturas reales y acciones directas (Editar, Descargar, Duplicar, Eliminar), "Por atender", y el editor en `/admin/studio/<id>`.
+   - Validaciones antes de descargar: lo incompleto y el cupón vencido lo impiden; lo agotado, la foto que falta o el texto que no cabe avisan y dejan seguir (decisión de Andrés).
+   - Una sola entrada: se quitó la pestaña de Marketing.
+   - **Fase 2 pendiente:** asistente de "Nueva historia" y editor paso a paso.
 5. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
 6. **C-92:** desactivar clientes en vez de borrarlos. Detalle en `AUDITORIA_CLIENTES_BORRADOS.md`.
    - Falta de Andrés: las 4 consultas de diagnóstico y cancelar esas órdenes con el motivo "Prueba: cliente eliminado".

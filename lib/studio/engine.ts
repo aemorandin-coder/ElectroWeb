@@ -299,6 +299,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   let bgData: Uint8ClampedArray | null = null;
   let slideFlip = 0;
   const bgCache = new Map<string, { canvas: HTMLCanvasElement; data: Uint8ClampedArray }>();
+  // Textos que no cupieron ni con la letra mínima en el dibujo en curso (C-116)
+  const overflow = new Set<string>();
   // Historia que se dibuja y su formato: fijados al empezar cada dibujo
   let FL: StudioFlyerData | null = null;
   let FX: StudioEffects = { reflejo: false, particulas: false, confeti: false };
@@ -331,6 +333,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       s -= 2;
       ctx.font = F(w, s, it);
     }
+    // C-116: ni con la letra más chica cabe; se avisa antes de descargar
+    if (text.trim() && ctx.measureText(text).width > maxW) overflow.add(text.trim());
     return s;
   }
   function rr(x: number, y: number, w: number, h: number, r: number) {
@@ -1771,16 +1775,33 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     const yMax = Y(1285) - 90; // lejos del pie
     const sideW = img || withQr ? 600 : maxW - 40;
     ctx.font = F(500, 42, false);
-    let bodyLines = m.body ? wrapLines(m.body, sideW).slice(0, 7) : [];
+    const allBody = m.body ? wrapLines(m.body, sideW) : [];
+    let bodyLines = allBody.slice(0, 7);
     const rest = () => (bodyLines.length ? bodyLines.length * 58 + 60 : 0) + (m.cta ? 124 : 0) + (m.contact ? 60 : 0);
     let size = 160;
     let lines = richLines(m.headline || 'Tu mensaje aquí', maxW, size);
+    let fits = false;
     for (; size >= 56; size -= 4) {
       lines = richLines(m.headline || 'Tu mensaje aquí', maxW, size);
-      if (lines.length <= 4 && y + lines.length * size * 1.02 + 50 + rest() <= yMax) break;
+      if (lines.length <= 4 && y + lines.length * size * 1.02 + 50 + rest() <= yMax) {
+        fits = true;
+        break;
+      }
     }
-    size = Math.max(size, 56);
+    // Ningún tamaño alcanzó: queda en el mínimo, con las líneas medidas a ese tamaño (antes se medían a 52 y se dibujaban a 56)
+    if (!fits) {
+      size = 56;
+      lines = richLines(m.headline || 'Tu mensaje aquí', maxW, size);
+    }
     while (bodyLines.length > 2 && y + lines.length * size * 1.02 + 50 + rest() > yMax) bodyLines = bodyLines.slice(0, -1);
+    // C-116: titular que no cabe (muchas líneas o una palabra más ancha que la historia) y texto recortado
+    if (m.headline.trim()) {
+      ctx.font = F(900, size);
+      const sp = ctx.measureText(' ').width;
+      const wide = lines.some((ln) => ln.reduce((sum, w) => sum + ctx.measureText(w.t).width, 0) + sp * (ln.length - 1) > maxW);
+      if (!fits || wide) overflow.add(m.headline.replace(/\*/g, '').trim());
+    }
+    if (bodyLines.length < allBody.length) overflow.add(m.body.trim());
     const baseCol = textOn(X, y, maxW, lines.length * size);
     const hlCol = isDark(X, y, maxW, lines.length * size) ? LIGHT_ON_DARK : SE();
     lines.forEach((ln, i) => {
@@ -2151,7 +2172,10 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       if (lines.length * size * 1.3 <= room) break;
     }
     const maxLines = Math.max(1, Math.floor(room / (size * 1.3)));
-    if (lines.length > maxLines) lines = [...lines.slice(0, maxLines - 1), `${lines[maxLines - 1].replace(/\s+\S*$/, '')}…`];
+    if (lines.length > maxLines) {
+      overflow.add(text);
+      lines = [...lines.slice(0, maxLines - 1), `${lines[maxLines - 1].replace(/\s+\S*$/, '')}…`];
+    }
     const color = textOn(70, top, 930, lines.length * size * 1.3);
     lines.forEach((l, i) =>
       fx('up', 0.8 + i * 0.12, 0.5, null, () => {
@@ -2341,6 +2365,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     FL = f;
     FX = f?.fx ?? { reflejo: false, particulas: false, confeti: false };
     CODE = opts.code ?? null;
+    overflow.clear();
     setFormat(f?.format ?? 'story');
     // Cambiar el alto borra el lienzo: solo cuando cambia el formato
     if (canvas.height !== FH) canvas.height = FH;
@@ -2413,7 +2438,12 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     ctx = saved;
   }
 
-  return { draw, drawBackgroundThumb };
+  return {
+    draw,
+    drawBackgroundThumb,
+    /** Textos que no cupieron en el último dibujo (C-116) */
+    overflows: () => [...overflow],
+  };
 }
 
 export type StudioRenderer = ReturnType<typeof createRenderer>;

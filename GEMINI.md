@@ -398,6 +398,7 @@ Verificación: `grep -rn "lg:group-hover:opacity-100" app/customer app/cursos co
 
 - **R23 (G-69) quedó cerrada y en `main`** el 28/09, con dos arreglos de Claude (ver "Resultado de R23" en `PLAN_GEMINI.md`). No tienes ronda abierta.
 - **ElectroStudio** reemplazó "Imágenes para redes": `components/admin/SocialMediaGenerator.tsx` ya no existe. `app/admin/(dashboard)/studio/**` y `lib/studio/**` son del carril de Claude.
+  - Desde C-116, ElectroStudio tiene inicio (`/admin/studio`) y editor (`/admin/studio/<id>`). Marketing ya no tiene la pestaña "ElectroStudio": no la vuelvas a poner.
 - **Pagos sin orden** (C-114):
   - `app/admin/(dashboard)/transactions/_components/PagosSinOrden.tsx` y `lib/pago-movil-sin-orden.ts` son de Claude: tocan dinero.
   - En `transactions/page.tsx` solo hay una línea nueva que monta ese componente: no la muevas.

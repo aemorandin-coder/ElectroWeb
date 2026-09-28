@@ -19,22 +19,6 @@ import {
 
 export type SaveStatus = 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
 
-const FLYER_KEY = 'studio-flyer';
-const lsGet = (k: string) => {
-  try {
-    return localStorage.getItem(k);
-  } catch {
-    return null;
-  }
-};
-const lsSet = (k: string, v: string) => {
-  try {
-    localStorage.setItem(k, v);
-  } catch {
-    // Navegación privada: solo se pierde recordar la última historia abierta
-  }
-};
-
 async function fetchLive(ids: string[]): Promise<Record<string, StudioStoreProduct>> {
   if (!ids.length) return {};
   const res = await fetch(`/api/admin/studio/products?ids=${ids.map(encodeURIComponent).join(',')}`);
@@ -244,7 +228,6 @@ export function useStudio() {
       past.current = [];
       future.current = [];
       syncHistory();
-      lsSet(FLYER_KEY, flyer.id);
       const fresh = await fetchLive(linkedIds([data]));
       setLive((prev) => ({ ...prev, ...fresh }));
       // Si cambió un precio, una oferta, el cupón o la tasa en la tienda, la historia se pone al día y se guarda
@@ -268,9 +251,7 @@ export function useStudio() {
       setStore(s);
       setCoupons(cp);
       setLive(allLive);
-      const want = lsGet(FLYER_KEY);
-      const pick = list.find((f) => f.id === want) ?? list[0];
-      if (pick) await open(pick);
+      // C-116: el estudio abre en el inicio (la lista); el editor abre la historia de su dirección
     } catch {
       toast.error('No se pudo cargar ElectroStudio');
     } finally {
@@ -288,18 +269,22 @@ export function useStudio() {
     [saveBrandNow],
   );
 
+  /** Abre una historia por su id. Devuelve false si no existe (borrada, o de otro enlace). */
   const select = useCallback(
-    async (id: string) => {
-      if (id === latest.current.currentId) return;
+    async (id: string): Promise<boolean> => {
+      if (id === latest.current.currentId) return true;
       await saveNow();
       const f = flyers.find((x) => x.id === id);
-      if (f) await open(f);
+      if (!f) return false;
+      await open(f);
+      return true;
     },
     [flyers, open, saveNow],
   );
 
+  /** Crea una historia y la abre (o no, si se duplica desde la lista). Devuelve la nueva, o null si falló. */
   const create = useCallback(
-    async (data: Partial<StudioFlyerData> = {}) => {
+    async (data: Partial<StudioFlyerData> = {}, opts: { open?: boolean } = {}): Promise<StudioFlyer | null> => {
       await saveNow();
       const res = await fetch('/api/admin/studio/flyers', {
         method: 'POST',
@@ -308,41 +293,57 @@ export function useStudio() {
       });
       if (!res.ok) {
         toast.error('No se pudo crear la historia');
-        return;
+        return null;
       }
       const { flyer } = (await res.json()) as { flyer: StudioFlyer };
       setFlyers((list) => [flyer, ...list]);
-      await open(flyer);
+      if (opts.open !== false) await open(flyer);
+      return flyer;
     },
     [open, saveNow],
   );
 
-  const duplicate = useCallback(async () => {
-    const f = latest.current.current;
-    if (!f) return;
-    await create({ ...f, name: `${f.name || 'Historia'} (copia)`.slice(0, 80) });
-  }, [create]);
+  /** Copia de una historia (la abierta si no se dice cuál), tal como se ve en pantalla */
+  const duplicate = useCallback(
+    async (id?: string, opts: { open?: boolean } = {}): Promise<StudioFlyer | null> => {
+      const { current: cur, currentId: curId } = latest.current;
+      const source = !id || id === curId ? cur : flyers.find((f) => f.id === id);
+      if (!source) return null;
+      const data = normalizeFlyer(source);
+      const copy = await create({ ...data, name: `${data.name || 'Historia'} (copia)`.slice(0, 80) }, opts);
+      if (copy) toast.success('Historia duplicada');
+      return copy;
+    },
+    [create, flyers],
+  );
 
-  const remove = useCallback(async () => {
-    const id = latest.current.currentId;
-    if (!id) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    openId.current = null;
-    dirty.current = false;
-    const res = await fetch(`/api/admin/studio/flyers/${id}`, { method: 'DELETE' });
-    if (!res.ok) {
-      toast.error('No se pudo eliminar');
-      return;
-    }
-    const rest = flyers.filter((f) => f.id !== id);
-    setFlyers(rest);
-    toast.success('Historia eliminada');
-    if (rest[0]) await open(rest[0]);
-    else {
-      setCurrentId(null);
-      setCurrent(null);
-    }
-  }, [flyers, open]);
+  /** Borra una historia (la abierta si no se dice cuál). Devuelve true si se borró. */
+  const remove = useCallback(
+    async (id?: string): Promise<boolean> => {
+      const target = id ?? latest.current.currentId;
+      if (!target) return false;
+      const isOpen = target === latest.current.currentId;
+      if (isOpen) {
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        openId.current = null;
+        dirty.current = false;
+      }
+      const res = await fetch(`/api/admin/studio/flyers/${target}`, { method: 'DELETE' });
+      if (!res.ok) {
+        toast.error('No se pudo eliminar');
+        return false;
+      }
+      setFlyers((list) => list.filter((f) => f.id !== target));
+      toast.success('Historia eliminada');
+      if (isOpen) {
+        latest.current = { ...latest.current, current: null, currentId: null };
+        setCurrentId(null);
+        setCurrent(null);
+      }
+      return true;
+    },
+    [],
+  );
 
   /** Historias de un lote o semana puestas al día con la tienda, para descargarlas juntas */
   const freshFlyers = useCallback(async (list: StudioFlyer[]): Promise<StudioFlyer[]> => {

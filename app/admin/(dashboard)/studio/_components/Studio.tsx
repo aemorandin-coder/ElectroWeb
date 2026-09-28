@@ -1,10 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiCheck, FiCloud, FiCornerUpLeft, FiCornerUpRight, FiDownload, FiPause, FiPlay } from 'react-icons/fi';
-import { adminEmpty, adminHint, adminIconButton, adminPrimaryButton } from '@/lib/admin-ui';
+import { FiAlertTriangle, FiArrowLeft, FiCheck, FiCloud, FiCopy, FiCornerUpLeft, FiCornerUpRight, FiDownload, FiPause, FiPlay, FiTrash2 } from 'react-icons/fi';
+import { adminEmpty, adminHint, adminIconButton, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useDelNavegador } from '@/lib/hooks/useMontado';
+import { firstOpenStep, flyerChecks, stepDone } from '@/lib/studio/checks';
 import {
   DURATION,
   H,
@@ -18,17 +22,16 @@ import {
   type ProductSrc,
   type StudioRenderer,
 } from '@/lib/studio/engine';
-import { staleWarnings } from '@/lib/studio/live';
-import { FORMATS, TEMPLATES, normalizeFlyer, slugify, type BackgroundId, type FormatId, type StudioFlyer, type StudioFlyerData } from '@/lib/studio/schema';
-import { makeZip } from '@/lib/studio/zip';
-import { canvasBlob, downloadBlob, pickVideoType, recordCanvas, shareFile, uploadStudioImage } from './exporters';
-import FlyerList from './FlyerList';
-import StepContent, { slotDone } from './StepContent';
+import { FORMATS, TEMPLATES, type BackgroundId, type FormatId, type StudioFlyerData } from '@/lib/studio/schema';
+import { canvasBlob, downloadBlob, fileBase, pickVideoType, recordCanvas, shareFile, uploadStudioImage } from './exporters';
+import StepContent from './StepContent';
 import StepDesign from './StepDesign';
 import StepPhoto from './StepPhoto';
-import StepPublish, { type PublishCheck } from './StepPublish';
+import StepPublish from './StepPublish';
+import { useStudioContext } from './StudioContext';
 import { toggleButton } from './ui';
-import { useStudio, type SaveStatus } from './useStudio';
+import { useDownloadGate } from './useDownloadGate';
+import type { SaveStatus } from './useStudio';
 
 const STEPS: [number, string][] = [
   [1, 'Contenido'],
@@ -38,42 +41,12 @@ const STEPS: [number, string][] = [
 ];
 const SAFE_KEY = 'studio-safe';
 
-const fileBase = (f: StudioFlyerData) => `${slugify(f.name || f.products[0]?.title || 'historia')}-electroshop-${f.format === 'story' ? 'historia' : `post-${FORMATS[f.format].short.replace(':', 'x')}`}`;
-
 /** Proporción de la vista previa y su ancho en escritorio (alto disponible × proporción) */
 const PREVIEW_CLASS: Record<FormatId, string> = {
   story: 'aspect-[9/16] max-w-[15rem] sm:max-w-xs lg:w-[min(100%,calc((100dvh_-_14rem)*9/16))]',
   post45: 'aspect-[4/5] max-w-xs sm:max-w-sm lg:w-[min(100%,calc((100dvh_-_14rem)*4/5))]',
   post11: 'aspect-square max-w-xs sm:max-w-sm lg:w-[min(100%,calc(100dvh_-_14rem))]',
 };
-
-function stepDone(k: number, f: StudioFlyerData, src: ProductSrc): boolean {
-  if (k === 1) {
-    switch (f.template) {
-      case 'mensaje':
-        return !!f.msg.headline.trim();
-      case 'tasa':
-        return f.rate > 0;
-      case 'cupon':
-        return !!f.coupon.code.trim();
-      case 'resena':
-        return !!f.review.comment.trim();
-      case 'giftcard': {
-        const p = f.products[0];
-        return !!p?.title && (p.price > 0 || p.variants.some((v) => v.price > 0));
-      }
-      default:
-        return f.products.slice(0, TEMPLATES[f.template].n).every(slotDone) && (f.template !== 'trio' || !!f.heading.trim());
-    }
-  }
-  if (k === 2) return missingImages(f, src).length === 0;
-  if (k === 4) return !!f.caption.trim();
-  return false;
-}
-
-function firstOpenStep(f: StudioFlyerData, src: ProductSrc): number {
-  return [1, 2, 4].find((k) => !stepDone(k, f, src)) ?? 4;
-}
 
 const STATUS_TEXT: Record<SaveStatus, string> = {
   idle: '',
@@ -83,9 +56,31 @@ const STATUS_TEXT: Record<SaveStatus, string> = {
   error: 'No se pudo guardar',
 };
 
-export default function Studio() {
-  const studio = useStudio();
-  const { loading, flyers, current, currentId, currentCode, brand, status, update } = studio;
+export default function Studio({ id }: { id: string }) {
+  const studio = useStudioContext();
+  const { loading, flyers, current: openFlyer, currentId: openId, currentCode, brand, status, update, select, saveNow } = studio;
+  // Solo cuenta la historia de esta dirección: mientras se abre otra, el editor no muestra la anterior
+  const current = openId === id ? openFlyer : null;
+  const currentId = openId === id ? openId : null;
+  const router = useRouter();
+  const params = useSearchParams();
+  const { confirm } = useConfirm();
+  const gate = useDownloadGate();
+
+  // Abre la historia de la dirección; si ya no existe, se dice
+  const [missing, setMissing] = useState(false);
+  useEffect(() => {
+    if (loading || openId === id) return;
+    let alive = true;
+    void select(id).then((ok) => {
+      if (alive && !ok) setMissing(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [loading, openId, id, select]);
+  // Al volver al inicio se guarda lo pendiente (el estado sigue vivo en el layout)
+  useEffect(() => () => void saveNow(), [saveNow]);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const images = useRef<StudioImages | null>(null);
@@ -96,8 +91,12 @@ export default function Studio() {
   const productSrc: ProductSrc = useCallback((p, i) => tempImages[`${currentId}:${i}`] || p.imageUrl, [tempImages, currentId]);
 
   const [stepFor, setStepFor] = useState<{ id: string | null; step: number }>({ id: null, step: 1 });
-  // Al abrir otra historia se va al primer paso pendiente; después el paso solo cambia cuando la persona lo elige
-  if (current && currentId && stepFor.id !== currentId) setStepFor({ id: currentId, step: firstOpenStep(current, productSrc) });
+  // Al abrir otra historia se va al paso pedido (?paso=, desde el inicio) o al primero pendiente;
+  // después el paso solo cambia cuando la persona lo elige
+  const askedStep = Number(params.get('paso'));
+  if (current && currentId && stepFor.id !== currentId) {
+    setStepFor({ id: currentId, step: askedStep >= 1 && askedStep <= 4 ? askedStep : firstOpenStep(current, productSrc) });
+  }
   const step = stepFor.id === currentId ? stepFor.step : 1;
   const goStep = (k: number) => setStepFor({ id: currentId, step: k });
   const [slotFor, setSlotFor] = useState<{ id: string | null; slot: number }>({ id: null, slot: 0 });
@@ -126,10 +125,14 @@ export default function Studio() {
   // Sube cada vez que llega una imagen: las miniaturas de los fondos con foto se vuelven a dibujar
   const [imgTick, setImgTick] = useState(0);
 
+  // Textos que no caben ni con la letra más chica (C-116): se avisan en Publicar y al descargar
+  const [overflow, setOverflow] = useState<string[]>([]);
   const drawStatic = useCallback(() => {
     if (!renderer.current || busyRef.current) return;
     const s = scene.current;
     renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, code: s.code });
+    const now = renderer.current.overflows();
+    setOverflow((prev) => (prev.join('\n') === now.join('\n') ? prev : now));
   }, []);
 
   const drawThumb = useCallback((target: HTMLCanvasElement, style: BackgroundId) => {
@@ -289,30 +292,32 @@ export default function Studio() {
     return blob;
   };
 
-  const warnMissing = (f: StudioFlyerData) => {
-    const miss = missingImages(f, productSrc);
-    if (miss.length) toast(`Sale sin foto de: ${miss.join(', ')}`, { icon: <FiAlertTriangle className="text-warning-strong" aria-hidden="true" /> });
-  };
-
   /** Anota los precios de esta descarga: si cambian en la tienda después, la lista avisa */
   const markCurrentExported = async () => {
     const f = flyers.find((x) => x.id === currentId);
     if (f) await studio.markExported([f]);
   };
 
-  const exportPng = () =>
-    exclusive(async () => {
+  // C-116: una sola revisión para el paso Publicar, la lista del inicio y cada descarga
+  const checks = current ? flyerChecks(current, { src: productSrc, live: studio.live, coupons: studio.coupons, store: studio.store, overflow }) : [];
+  /** Revisa antes de descargar: lo incompleto lleva a su paso, los avisos se confirman */
+  const ready = async () => !!current && (await gate(checks, goStep));
+
+  const exportPng = async () => {
+    if (!(await ready())) return;
+    await exclusive(async () => {
       if (!current) return;
       await studio.saveNow();
-      warnMissing(current);
       const blob = await renderStill(current, productSrc, currentCode);
       if (!blob) throw new Error('No se pudo generar la imagen');
       downloadBlob(blob, `${fileBase(current)}.png`);
       await markCurrentExported();
     });
+  };
 
-  const share = () =>
-    exclusive(async () => {
+  const share = async () => {
+    if (!(await ready())) return;
+    await exclusive(async () => {
       if (!current) return;
       const blob = await renderStill(current, productSrc, currentCode);
       if (!blob) throw new Error('No se pudo generar la imagen');
@@ -322,13 +327,14 @@ export default function Studio() {
       }
       await markCurrentExported();
     });
+  };
 
-  const exportVideo = () =>
-    exclusive(async () => {
+  const exportVideo = async () => {
+    if (!(await ready())) return;
+    await exclusive(async () => {
       if (!current || !canvasRef.current || !renderer.current || !images.current) return;
       const type = pickVideoType();
       if (!type || !canvasRef.current.captureStream) throw new Error('Este navegador no puede grabar video. Prueba con Chrome.');
-      warnMissing(current);
       await loadStudioFonts();
       await images.current.whenReady(flyerImageSources(current, brand, productSrc));
       const toastId = toast.loading(`Grabando el video (${DURATION} segundos). No cambies de pestaña.`);
@@ -341,57 +347,39 @@ export default function Studio() {
       if (ext === 'webm') toast('Tu navegador grabó en WEBM; Instagram prefiere MP4. Usa Chrome actualizado.');
       await markCurrentExported();
     });
+  };
 
-  const exportZip = (list: StudioFlyer[], name: string) =>
-    exclusive(async () => {
-      if (!list.length) return;
-      await studio.saveNow();
-      const fresh = await studio.freshFlyers(list);
-      const files: { name: string; blob: Blob }[] = [];
-      let missing = 0;
-      const toastId = toast.loading(`Preparando 1 de ${list.length}…`);
-      for (let i = 0; i < list.length; i++) {
-        toast.loading(`Preparando ${i + 1} de ${list.length}…`, { id: toastId });
-        const f = normalizeFlyer(fresh[i]);
-        const src: ProductSrc = list[i].id === currentId ? productSrc : (p) => p.imageUrl;
-        if (missingImages(f, src).length) missing++;
-        const blob = await renderStill(f, src, fresh[i].code);
-        if (blob) files.push({ name: `${String(i + 1).padStart(2, '0')}-${fileBase(f)}.png`, blob });
-      }
-      toast.dismiss(toastId);
-      if (!files.length) throw new Error('No se pudo generar');
-      downloadBlob(await makeZip(files), `${slugify(name)}-historias.zip`);
-      if (missing) toast(`${missing} historia(s) sin foto de producto`);
-      await studio.markExported(fresh);
-    });
+  const onDuplicate = async () => {
+    const copy = await studio.duplicate();
+    if (copy) router.push(`/admin/studio/${copy.id}`);
+  };
 
-  if (loading) {
+  const onRemove = async () => {
+    if (!current) return;
+    const ok = await confirm({ title: 'Eliminar historia', message: `¿Eliminar "${current.name || 'Sin nombre'}"? No se puede deshacer.`, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+    if (ok && (await studio.remove())) router.push('/admin/studio');
+  };
+
+  const back = (
+    <Link href="/admin/studio" className="mb-3 inline-flex h-10 items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline">
+      <FiArrowLeft className="h-4 w-4" aria-hidden="true" />
+      Historias
+    </Link>
+  );
+
+  if (missing) {
     return (
-      <div className={adminEmpty} aria-busy="true">
-        <p className="text-sm text-muted">Cargando ElectroStudio…</p>
+      <div>
+        {back}
+        <div className={adminEmpty}>
+          <p className="font-semibold text-ink">Esta historia ya no existe</p>
+          <p className="mt-1 text-sm text-muted">Se eliminó o el enlace está incompleto.</p>
+        </div>
       </div>
     );
   }
 
   const miss = current ? missingImages(current, productSrc) : [];
-  const contentText: Partial<Record<StudioFlyerData['template'], string>> = {
-    mensaje: 'Titular escrito',
-    tasa: 'Tasa del día cargada',
-    cupon: 'Cupón elegido',
-    resena: 'Reseña escrita',
-  };
-  // Lo que cambió en la tienda y hace vieja a esta historia (agotado, oferta vencida…), también antes de descargar
-  const stale = current ? staleWarnings({ ...current, exported: { ...current.exported, at: '' } }, studio.live, studio.coupons, studio.store) : [];
-  const checks: PublishCheck[] = current
-    ? [
-        { ok: stepDone(1, current, productSrc), text: contentText[current.template] ?? 'Textos y precio completos', step: 1 },
-        ...(TEMPLATES[current.template].photo === 'required' || miss.length
-          ? [{ ok: miss.length === 0, text: miss.length ? `Falta la foto de: ${miss.join(', ')}` : 'Fotos listas', step: 2 }]
-          : []),
-        { ok: !!current.caption.trim(), text: 'Texto para Instagram escrito' },
-        ...stale.map((w) => ({ ok: false, text: w.text })),
-      ]
-    : [];
   const format = current?.format ?? 'story';
 
   const preview = (
@@ -411,7 +399,7 @@ export default function Studio() {
               {playing ? <FiPause className="mr-1.5 h-4 w-4" aria-hidden="true" /> : <FiPlay className="mr-1.5 h-4 w-4" aria-hidden="true" />}
               {playing ? 'Detener' : 'Ver animación'}
             </button>
-            <button type="button" onClick={() => void exportPng()} disabled={busy} className={`${adminPrimaryButton} h-9 px-3`}>
+            <button type="button" onClick={() => void exportPng()} disabled={busy} className={`${adminSecondaryButton} h-9 px-3`}>
               <FiDownload className="h-4 w-4" aria-hidden="true" />
               Imagen
             </button>
@@ -442,24 +430,29 @@ export default function Studio() {
     </div>
   );
 
-  // Teléfono: vista previa, editor y lista. lg: editor y vista previa, lista abajo. Desde 1360 px (85rem, en rem para que Tailwind lo ordene después de lg): las tres columnas
+  // Teléfono: vista previa y editor debajo. lg: editor y vista previa al lado. La lista está en el inicio (C-116).
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] min-[85rem]:grid-cols-[15rem_minmax(0,1fr)_24rem]">
-      <aside className="order-3 rounded-2xl border border-line bg-white p-4 lg:col-span-2 min-[85rem]:order-1 min-[85rem]:col-span-1 min-[85rem]:sticky min-[85rem]:top-20">
-        <FlyerList studio={studio} busy={busy} onZip={(l, n) => void exportZip(l, n)} />
-      </aside>
-
-      <section className="order-2 rounded-2xl border border-line bg-white p-4 lg:order-1 min-[85rem]:order-2" aria-label="Editor">
+    <div>
+      {back}
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
+      <section className="order-2 rounded-2xl border border-line bg-white p-4 lg:order-1" aria-label="Editor">
         {current ? (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="truncate text-base font-bold text-ink">{current.name || 'Sin nombre'}</h2>
+              <h1 className="truncate text-base font-bold text-ink">{current.name || 'Sin nombre'}</h1>
               <span className="flex shrink-0 items-center gap-1">
                 <button type="button" onClick={studio.undo} disabled={!studio.canUndo} className={adminIconButton} aria-label="Deshacer (Ctrl+Z)" title="Deshacer (Ctrl+Z)">
                   <FiCornerUpLeft className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button type="button" onClick={studio.redo} disabled={!studio.canRedo} className={adminIconButton} aria-label="Rehacer (Ctrl+Mayús+Z)" title="Rehacer (Ctrl+Mayús+Z)">
                   <FiCornerUpRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <span className="mx-1 h-6 w-px bg-line" aria-hidden="true" />
+                <button type="button" onClick={() => void onDuplicate()} className={adminIconButton} aria-label="Duplicar esta historia" title="Duplicar">
+                  <FiCopy className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button type="button" onClick={() => void onRemove()} className={`${adminIconButton} text-deal hover:bg-deal-bg`} aria-label="Eliminar esta historia" title="Eliminar">
+                  <FiTrash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
               </span>
             </div>
@@ -521,17 +514,14 @@ export default function Studio() {
             )}
           </div>
         ) : (
-          <div className={adminEmpty}>
-            <p className="font-semibold text-ink">Aún no hay historias</p>
-            <p className="mt-1 text-sm text-muted">Crea la primera: elige un producto de la tienda y en un minuto la tienes lista para Instagram.</p>
-            <button type="button" onClick={() => void studio.create()} className={`${adminPrimaryButton} mt-4`}>
-              Nueva historia
-            </button>
-          </div>
+          <p className="py-12 text-center text-sm text-muted" aria-busy="true">
+            {loading ? 'Cargando ElectroStudio…' : 'Abriendo la historia…'}
+          </p>
         )}
       </section>
 
-      <div className="order-1 lg:sticky lg:top-20 lg:order-2 min-[85rem]:order-3">{preview}</div>
+      <div className="order-1 lg:sticky lg:top-20 lg:order-2">{preview}</div>
+    </div>
     </div>
   );
 }

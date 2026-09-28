@@ -1,5 +1,10 @@
 // Descargas de ElectroStudio (C-112): imagen, video y archivos juntos.
 import { DURATION } from '@/lib/studio/engine';
+import { FORMATS, slugify, type StudioFlyerData } from '@/lib/studio/schema';
+
+/** Nombre del archivo descargado, sin la extensión: "audifonos-electroshop-historia" */
+export const fileBase = (f: StudioFlyerData) =>
+  `${slugify(f.name || f.products[0]?.title || 'historia')}-electroshop-${f.format === 'story' ? 'historia' : `post-${FORMATS[f.format].short.replace(':', 'x')}`}`;
 
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);

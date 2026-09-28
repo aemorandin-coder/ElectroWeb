@@ -131,6 +131,9 @@ export interface PublicSettings {
     pickupEnabled: boolean;
     pickupAddress: string | null;
     pickupInstructions: string | null;
+    /** C-115: el carrito avisa el mínimo y el máximo de compra antes del checkout (null = sin límite) */
+    minOrderAmountUSD: number | null;
+    maxOrderAmountUSD: number | null;
     heroVideoEnabled: boolean;
     heroVideoUrl: string | null;
     heroVideoTitle: string | null;
@@ -181,6 +184,7 @@ const PUBLIC_SETTINGS_SELECT = {
     deliveryEnabled: true, localDeliveryEnabled: true, deliveryFeeUSD: true, freeDeliveryThresholdUSD: true, shippingCostPerKg: true,
     minConsolidatedShipping: true, packagingFeeUSD: true,
     pickupEnabled: true, pickupAddress: true, pickupInstructions: true,
+    minOrderAmountUSD: true, maxOrderAmountUSD: true,
     heroVideoEnabled: true, heroVideoUrl: true, heroVideoTitle: true, heroVideoDescription: true,
     heroTitle: true, heroSubtitle: true, heroButtonText: true, heroButtonLink: true, heroBackgroundImage: true,
     showStats: true,
@@ -205,6 +209,7 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     deliveryEnabled: false, localDeliveryEnabled: false, deliveryFeeUSD: 0, freeDeliveryThresholdUSD: null, shippingCostPerKg: 2,
     minConsolidatedShipping: 3, packagingFeeUSD: 2.5,
     pickupEnabled: false, pickupAddress: null, pickupInstructions: null,
+    minOrderAmountUSD: null, maxOrderAmountUSD: null,
     heroVideoEnabled: false, heroVideoUrl: null, heroVideoTitle: null, heroVideoDescription: null,
     heroTitle: null, heroSubtitle: null, heroButtonText: null, heroButtonLink: null, heroBackgroundImage: null,
     showStats: false,
@@ -243,6 +248,8 @@ function toPublicSettings(row: PublicSettingsRow): PublicSettings {
         shippingCostPerKg: num(row.shippingCostPerKg, 2),
         minConsolidatedShipping: num(row.minConsolidatedShipping, 3),
         packagingFeeUSD: num(row.packagingFeeUSD, 2.5),
+        minOrderAmountUSD: row.minOrderAmountUSD ? Number(row.minOrderAmountUSD) : null,
+        maxOrderAmountUSD: row.maxOrderAmountUSD ? Number(row.maxOrderAmountUSD) : null,
         maintenanceStartTime: row.maintenanceStartTime ? row.maintenanceStartTime.toISOString() : null,
         maintenanceEndTime: row.maintenanceEndTime ? row.maintenanceEndTime.toISOString() : null,
         pagoMovilDirecto: Boolean(process.env.BDV_API_KEY && process.env.BDV_TELEFONO_COMERCIO),

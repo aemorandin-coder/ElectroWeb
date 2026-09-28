@@ -10,13 +10,14 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import CheckoutSteps from '@/components/ui/CheckoutSteps';
 import PageHeader from '@/components/ui/PageHeader';
-import { FiMinus, FiPlus, FiShoppingCart, FiTruck } from 'react-icons/fi';
+import { FiAlertTriangle, FiMinus, FiPlus, FiShoppingCart, FiTruck } from 'react-icons/fi';
 import { ConfianzaEnvio } from '@/components/envios/ConfianzaEnvio';
 import Footer from '@/components/Footer';
 import { toast } from 'react-hot-toast';
 import { HiTrash } from 'react-icons/hi';
-import { adminCard, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
+import { orderAmountProblems } from '@/lib/pricing';
 import { getGiftCardDesign } from '@/lib/gift-card-designs';
 import { useSettings } from '@/contexts/SettingsContext';
 import CouponBox from '@/components/cart/CouponBox';
@@ -88,7 +89,7 @@ export default function CarritoPage() {
       : JSON.stringify({ items: items.map(toOrderItem), deliveryMethod: 'PICKUP', couponCode }),
     [items, couponCode]
   );
-  const [quote, setQuote] = useState<{ key: string; subtotalUSD: number; discountUSD: number; totalUSD: number; coupon: { applied: boolean; message: string } | null } | null>(null);
+  const [quote, setQuote] = useState<{ key: string; subtotalUSD: number; discountUSD: number; totalUSD: number; coupon: { applied: boolean; message: string } | null; errors: string[] } | null>(null);
   useEffect(() => {
     if (status !== 'authenticated' || !quoteBody || items.length === 0) return;
     const controller = new AbortController();
@@ -99,7 +100,11 @@ export default function CarritoPage() {
           if (!data?.calculation) return;
           const c = data.calculation;
           // Sin la entrega: el total de productos es subtotal menos descuentos
-          setQuote({ key: quoteBody, subtotalUSD: c.subtotalUSD, discountUSD: c.discountUSD, totalUSD: Math.round((c.subtotalUSD - c.discountUSD) * 100) / 100, coupon: data.coupon });
+          setQuote({
+            key: quoteBody, subtotalUSD: c.subtotalUSD, discountUSD: c.discountUSD, totalUSD: Math.round((c.subtotalUSD - c.discountUSD) * 100) / 100, coupon: data.coupon,
+            // Productos que ya no se pueden comprar (sin stock, sin publicar, monto digital que ya no existe): no suman al total
+            errors: Array.isArray(data.errors) ? data.errors : [],
+          });
         })
         .catch(() => { });
     }, 300);
@@ -117,6 +122,12 @@ export default function CarritoPage() {
   // C-106: el total aún no lleva la entrega; se avisa aquí para que el embalaje del checkout no sorprenda
   const hasPhysical = items.some(item => item.productType !== 'DIGITAL');
   const envioGratis = items.some(item => item.freeShipping && item.productType !== 'DIGITAL');
+  // C-115: lo que impide pagar se avisa aquí, no recién en el checkout: productos que el servidor rechaza y
+  // mínimo o máximo de compra. Sin sesión se compara con el total local; con sesión, con el del servidor.
+  const cartProblems = [
+    ...(server?.errors ?? []),
+    ...orderAmountProblems(total, settings?.minOrderAmountUSD ?? null, settings?.maxOrderAmountUSD ?? null),
+  ];
 
   return (
     <div className="min-h-dvh flex flex-col bg-surface">
@@ -428,6 +439,20 @@ export default function CarritoPage() {
                     )}
                   </div>
                 </div>
+
+                {cartProblems.length > 0 && (
+                  <div role="status" className={adminNotice('warning')}>
+                    <p className="flex items-center gap-2 font-semibold">
+                      <FiAlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      Todavía no puedes pagar esta compra
+                    </p>
+                    <ul className="mt-1 list-disc space-y-0.5 pl-6">
+                      {cartProblems.map((p) => (
+                        <li key={p}>{p}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div className="space-y-2 pt-2">

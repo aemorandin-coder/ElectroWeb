@@ -10,6 +10,7 @@ import { mejorOferta, repartirCupon, type LineaParaCupon } from '@/lib/promotion
 import { formatUSD } from '@/lib/currency';
 import {
   roundMoney,
+  orderAmountProblems,
   calculateOrder,
   toPricingSettings,
   DELIVERY_METHODS,
@@ -80,15 +81,11 @@ export interface OrderQuote {
  * POST /api/orders. C-114: antes solo las revisaba la orden, después de que el cliente ya había pagado por Pago Móvil.
  */
 export function orderBlockers(calculation: OrderCalculation, settings: CompanySettings | null, deliveryMethod: DeliveryMethod): string[] {
-  const out: string[] = [];
-  const min = settings?.minOrderAmountUSD ? Number(settings.minOrderAmountUSD) : 0;
-  const max = settings?.maxOrderAmountUSD ? Number(settings.maxOrderAmountUSD) : 0;
-  if (min > 0 && calculation.totalUSD < min) {
-    out.push(`La compra mínima es de ${formatUSD(min)}. Te faltan ${formatUSD(roundMoney(min - calculation.totalUSD))}: agrega algo más al carrito.`);
-  }
-  if (max > 0 && calculation.totalUSD > max) {
-    out.push(`La compra máxima es de ${formatUSD(max)}. Quita productos o divide la compra en dos pedidos.`);
-  }
+  const out = orderAmountProblems(
+    calculation.totalUSD,
+    settings?.minOrderAmountUSD ? Number(settings.minOrderAmountUSD) : null,
+    settings?.maxOrderAmountUSD ? Number(settings.maxOrderAmountUSD) : null
+  );
   if (calculation.physical) {
     if (deliveryMethod === 'PICKUP' && !settings?.pickupEnabled) out.push('El retiro en tienda no está disponible: elige otra forma de entrega.');
     if (deliveryMethod === 'SHIPPING' && settings?.deliveryEnabled === false) out.push('Por ahora no hacemos envíos nacionales: elige otra forma de entrega.');

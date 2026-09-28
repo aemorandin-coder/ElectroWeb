@@ -53,7 +53,9 @@ bash scripts/deploy.sh
    - Firmar los términos desde "Recargar saldo".
    - Reportes → Seguridad con la IP real.
    - ElectroStudio ya lo probó Andrés el 28/09: "muy bien". Sus pedidos de mejora son C-116.
-3. **C-115 (chica):** avisar el mínimo de compra también en `/carrito` (usa `blockers` de `/api/orders/quote`), antes de llegar al checkout.
+3. **C-115:** hecha el 28/09 en la rama `claude/C-115`. Falta el OK de Andrés para el merge y el push.
+   - `/carrito` avisa el mínimo y el máximo de compra antes del checkout, también sin sesión. Avisa además de los productos que el servidor rechaza, algo que antes ignoraba.
+   - **Pregunta abierta:** ¿el mínimo cuenta el embalaje y el delivery (como hoy) o solo los productos? Detalle en `estado/C-115.md`.
 4. **C-116: ElectroStudio más fácil de usar** (pedida por Andrés el 28/09, tras probarlo en producción):
    - Botones directos en cada historia creada para editarla y borrarla.
    - Validaciones.

@@ -28,7 +28,7 @@ export function useFlyerRenderer(brand: StudioBrand) {
   }, []);
 
   /** Dibuja la historia completa, como sale al descargar. Devuelve el lienzo y lo que no cupo. */
-  const drawFull = useCallback(async (f: StudioFlyerData, code: string | null) => {
+  const drawFull = useCallback(async (f: StudioFlyerData, code: string | null, preview = false) => {
     if (!engine.current) {
       const canvas = document.createElement('canvas');
       canvas.width = W;
@@ -39,31 +39,34 @@ export function useFlyerRenderer(brand: StudioBrand) {
     const { canvas, images, renderer } = engine.current;
     await loadStudioFonts();
     await images.whenReady(flyerImageSources(f, brandRef.current, storeSrc));
-    renderer.draw(f, brandRef.current, { preview: false, code });
-    return { canvas, overflow: renderer.overflows() };
+    renderer.draw(f, brandRef.current, { preview, code });
+    return { canvas, text: renderer.textIssues() };
   }, []);
 
   /** PNG de la historia para descargar */
   const still = useCallback(
     (f: StudioFlyerData, code: string | null) =>
       run(async () => {
-        const { canvas, overflow } = await drawFull(f, code);
-        return { blob: await canvasBlob(canvas), overflow };
+        const { canvas, text } = await drawFull(f, code);
+        return { blob: await canvasBlob(canvas), text };
       }),
     [drawFull, run],
   );
 
-  /** Miniatura (URL de objeto: quien la pide la libera) y los textos que no cupieron */
+  /**
+   * Miniatura (URL de objeto: quien la pide la libera) y los textos que no cupieron o quedaron chicos.
+   * `preview`: con los recuadros "Pega aquí la foto" (los ejemplos de plantilla del asistente)
+   */
   const thumbnail = useCallback(
-    (f: StudioFlyerData, code: string | null) =>
+    (f: StudioFlyerData, code: string | null, opts: { preview?: boolean } = {}) =>
       run(async () => {
-        const { canvas, overflow } = await drawFull(f, code);
+        const { canvas, text } = await drawFull(f, code, opts.preview);
         const small = document.createElement('canvas');
         small.width = THUMB_W;
         small.height = Math.round((THUMB_W * canvas.height) / W);
         small.getContext('2d')?.drawImage(canvas, 0, 0, small.width, small.height);
         const blob = await canvasBlob(small, 'image/webp');
-        return { url: blob ? URL.createObjectURL(blob) : '', overflow };
+        return { url: blob ? URL.createObjectURL(blob) : '', text };
       }),
     [drawFull, run],
   );

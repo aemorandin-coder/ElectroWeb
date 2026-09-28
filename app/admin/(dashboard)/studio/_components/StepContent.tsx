@@ -16,7 +16,7 @@ import StudioIcon from './StudioIcon';
 import { sectionSummary, smallButton } from './ui';
 import type { Studio } from './useStudio';
 
-const TEMPLATE_CARDS: [TemplateId, string, string, string][] = [
+export const TEMPLATE_CARDS: [TemplateId, string, string, string][] = [
   ['solo', 'tarjeta', '1 producto', 'Un producto con precio y características'],
   ['duo', 'chip', '2 productos', 'Dos productos, cada uno con su precio'],
   ['trio', 'pantalla', 'Categoría', '3 productos con precio "Desde"'],
@@ -28,7 +28,7 @@ const TEMPLATE_CARDS: [TemplateId, string, string, string][] = [
   ['mensaje', 'chat', 'Mensaje', 'Aviso, horario o convocatoria'],
 ];
 /** Fondo y efectos con que arranca cada plantilla al elegirla (si la persona no eligió otros) */
-const TEMPLATE_START: Partial<Record<TemplateId, { confeti?: boolean; reflejo?: boolean; anim?: 'escribir' }>> = {
+export const TEMPLATE_START: Partial<Record<TemplateId, { confeti?: boolean; reflejo?: boolean; anim?: 'escribir' }>> = {
   nuevo: { confeti: true, reflejo: true },
   resena: { anim: 'escribir' },
 };

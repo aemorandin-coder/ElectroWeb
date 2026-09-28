@@ -20,13 +20,18 @@ export interface FlyerCheck {
   download: boolean;
 }
 
+export interface TextIssues {
+  cut: string[];
+  tiny: string[];
+}
+
 export interface CheckEnv {
   src: ProductSrc;
   live: Record<string, StudioStoreProduct>;
   coupons: Record<string, StudioCoupon> | null;
   store: Pick<StudioStoreInfo, 'rateVES'> | null;
-  /** Textos que el motor no pudo hacer caber ni con la letra más chica (solo se sabe después de dibujarla) */
-  overflow?: string[];
+  /** Textos que el motor no pudo hacer caber ni con la letra más chica, y los que quedaron diminutos (se sabe al dibujarla) */
+  text?: TextIssues;
 }
 
 export function slotDone(p: StudioProductSlot): boolean {
@@ -108,8 +113,12 @@ export function flyerChecks(f: StudioFlyerData, env: CheckEnv): FlyerCheck[] {
     }
   });
 
-  (env.overflow ?? []).forEach((t) =>
-    out.push({ level: 'warn', kind: 'overflow', text: `Un texto no cabe y sale cortado: "${t.length > 40 ? `${t.slice(0, 40)}…` : t}". Acórtalo.`, step: 1, download: true }),
+  const short = (t: string) => (t.length > 40 ? `${t.slice(0, 40)}…` : t);
+  (env.text?.cut ?? []).forEach((t) =>
+    out.push({ level: 'warn', kind: 'overflow', text: `Un texto no cabe y sale cortado: "${short(t)}". Acórtalo.`, step: 1, download: true }),
+  );
+  (env.text?.tiny ?? []).forEach((t) =>
+    out.push({ level: 'warn', kind: 'overflow', text: `Un texto queda muy chico para leerse: "${short(t)}". Acórtalo.`, step: 1, download: true }),
   );
 
   // "Desde la descarga" solo cuenta si ya se descargó: la próxima descarga lo corrige

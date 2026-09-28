@@ -299,8 +299,9 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   let bgData: Uint8ClampedArray | null = null;
   let slideFlip = 0;
   const bgCache = new Map<string, { canvas: HTMLCanvasElement; data: Uint8ClampedArray }>();
-  // Textos que no cupieron ni con la letra mínima en el dibujo en curso (C-116)
+  // Textos que no cupieron ni con la letra mínima, y los que cupieron pero quedaron diminutos (C-116)
   const overflow = new Set<string>();
+  const tiny = new Set<string>();
   // Historia que se dibuja y su formato: fijados al empezar cada dibujo
   let FL: StudioFlyerData | null = null;
   let FX: StudioEffects = { reflejo: false, particulas: false, confeti: false };
@@ -333,8 +334,9 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       s -= 2;
       ctx.font = F(w, s, it);
     }
-    // C-116: ni con la letra más chica cabe; se avisa antes de descargar
+    // C-116: ni con la letra más chica cabe, o cabe a menos del 40 % del tamaño pensado; se avisa antes de descargar
     if (text.trim() && ctx.measureText(text).width > maxW) overflow.add(text.trim());
+    else if (text.trim() && s <= start * 0.4) tiny.add(text.trim());
     return s;
   }
   function rr(x: number, y: number, w: number, h: number, r: number) {
@@ -2366,6 +2368,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     FX = f?.fx ?? { reflejo: false, particulas: false, confeti: false };
     CODE = opts.code ?? null;
     overflow.clear();
+    tiny.clear();
     setFormat(f?.format ?? 'story');
     // Cambiar el alto borra el lienzo: solo cuando cambia el formato
     if (canvas.height !== FH) canvas.height = FH;
@@ -2441,8 +2444,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   return {
     draw,
     drawBackgroundThumb,
-    /** Textos que no cupieron en el último dibujo (C-116) */
-    overflows: () => [...overflow],
+    /** Textos del último dibujo que no cupieron (cut) o quedaron diminutos (tiny) (C-116) */
+    textIssues: () => ({ cut: [...overflow], tiny: [...tiny].filter((t) => !overflow.has(t)) }),
   };
 }
 

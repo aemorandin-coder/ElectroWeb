@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast';
 import { FiAlertTriangle, FiArchive, FiCheckCircle, FiChevronLeft, FiChevronRight, FiCopy, FiDownload, FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { adminBadge, adminEmpty, adminHint, adminIconButton, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminTab } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import { downloadIssues, flyerChecks, flyerStatus, type CheckKind, type FlyerCheck } from '@/lib/studio/checks';
+import { downloadIssues, flyerChecks, flyerStatus, type CheckKind, type FlyerCheck, type TextIssues } from '@/lib/studio/checks';
 import type { ProductSrc } from '@/lib/studio/engine';
 import { FORMATS, TEMPLATES, slugify, type StudioFlyer } from '@/lib/studio/schema';
 import { makeZip } from '@/lib/studio/zip';
@@ -47,7 +47,7 @@ function weekDays(offset: number): Date[] {
 }
 
 // Miniaturas ya dibujadas: sobreviven al ir y volver del editor. Clave: id y fecha de guardado.
-const thumbCache = new Map<string, { key: string; url: string; overflow: string[] }>();
+const thumbCache = new Map<string, { key: string; url: string; text: TextIssues }>();
 const thumbPending = new Set<string>();
 
 export default function StudioHome() {
@@ -78,7 +78,6 @@ export default function StudioHome() {
   const [attention, setAttention] = useState<CheckKind | null>(null);
   const [weekOffset, setWeekOffset] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [creating, setCreating] = useState(false);
   const [, setThumbTick] = useState(0);
 
   // Dibuja las miniaturas que faltan, de a una (la cola del dibujante las ordena)
@@ -89,10 +88,10 @@ export default function StudioHome() {
       if (thumbCache.get(f.id)?.key === key || thumbPending.has(`${f.id}:${key}`)) return;
       thumbPending.add(`${f.id}:${key}`);
       void thumbnail(f, f.code)
-        .then(({ url, overflow }) => {
+        .then(({ url, text }) => {
           const old = thumbCache.get(f.id);
           if (old?.url) URL.revokeObjectURL(old.url);
-          thumbCache.set(f.id, { key, url, overflow });
+          thumbCache.set(f.id, { key, url, text });
           setThumbTick((n) => n + 1);
         })
         .catch(() => undefined)
@@ -100,7 +99,7 @@ export default function StudioHome() {
     });
   }, [flyers, loading, thumbnail]);
 
-  const checksFor = (f: StudioFlyer): FlyerCheck[] => flyerChecks(f, { src: storeSrc, live, coupons, store, overflow: thumbCache.get(f.id)?.overflow });
+  const checksFor = (f: StudioFlyer): FlyerCheck[] => flyerChecks(f, { src: storeSrc, live, coupons, store, text: thumbCache.get(f.id)?.text });
   const checks = new Map(flyers.map((f) => [f.id, checksFor(f)]));
   const has = (f: StudioFlyer, kind: CheckKind, blocksOnly?: boolean) =>
     (checks.get(f.id) ?? []).some((c) => c.kind === kind && (blocksOnly ? c.level === 'block' : c.level !== 'ok'));
@@ -110,13 +109,6 @@ export default function StudioHome() {
     flyers.forEach((f) => map.set(f.batch, (map.get(f.batch) ?? 0) + 1));
     return [...map.entries()].sort(([a], [b]) => Number(a === '') - Number(b === '') || a.localeCompare(b));
   }, [flyers]);
-
-  const onNew = async () => {
-    setCreating(true);
-    const flyer = await studio.create();
-    setCreating(false);
-    if (flyer) router.push(editHref(flyer.id));
-  };
 
   const askRemove = async (f: StudioFlyer) => {
     const ok = await confirm({ title: 'Eliminar historia', message: `¿Eliminar "${f.name || 'Sin nombre'}"? No se puede deshacer.`, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
@@ -189,10 +181,11 @@ export default function StudioHome() {
         <h1 className={adminPageTitle}>ElectroStudio</h1>
         <p className={adminPageSubtitle}>Historias y videos para Instagram con los productos, precios y ofertas de la tienda.</p>
       </div>
-      <button type="button" onClick={() => void onNew()} disabled={creating || loading} className={`${adminPrimaryButton} shrink-0 self-start whitespace-nowrap sm:self-auto`}>
+      {/* C-116, fase 2: el asistente guarda la historia recién cuando se eligió qué publicar */}
+      <Link href="/admin/studio/nueva" className={`${adminPrimaryButton} shrink-0 self-start whitespace-nowrap sm:self-auto`}>
         <FiPlus className="h-4 w-4" aria-hidden="true" />
         Nueva historia
-      </button>
+      </Link>
     </div>
   );
 

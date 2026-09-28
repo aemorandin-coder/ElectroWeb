@@ -8,7 +8,7 @@ import { FiAlertTriangle, FiArrowLeft, FiCheck, FiCloud, FiCopy, FiCornerUpLeft,
 import { adminEmpty, adminHint, adminIconButton, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useDelNavegador } from '@/lib/hooks/useMontado';
-import { firstOpenStep, flyerChecks, stepDone } from '@/lib/studio/checks';
+import { firstOpenStep, flyerChecks, stepDone, type TextIssues } from '@/lib/studio/checks';
 import {
   DURATION,
   H,
@@ -40,6 +40,21 @@ const STEPS: [number, string][] = [
   [4, 'Publicar'],
 ];
 const SAFE_KEY = 'studio-safe';
+
+/** Qué se hace en cada paso (C-116, fase 2): una línea arriba del paso */
+const STEP_HELP: Record<number, string> = {
+  1: 'Qué publicar y el producto. Con un producto de la tienda, el precio y la oferta se ponen solos.',
+  2: 'La foto de cada producto: pégala (Ctrl+V), arrástrala o elígela. Mejor con fondo blanco o transparente.',
+  3: 'Opcional: formato, fondo, efectos y colores. Si no cambias nada, queda con el diseño de la plantilla.',
+  4: 'Revisa la lista, descarga la imagen o el video y copia el texto para Instagram.',
+};
+
+/** Vista previa chica del teléfono, para que el editor quede a la vista (se agranda con un botón) */
+const PREVIEW_SMALL: Record<FormatId, string> = {
+  story: 'max-lg:max-w-[9rem]',
+  post45: 'max-lg:max-w-[11rem]',
+  post11: 'max-lg:max-w-[12rem]',
+};
 
 /** Proporción de la vista previa y su ancho en escritorio (alto disponible × proporción) */
 const PREVIEW_CLASS: Record<FormatId, string> = {
@@ -98,12 +113,20 @@ export default function Studio({ id }: { id: string }) {
     setStepFor({ id: currentId, step: askedStep >= 1 && askedStep <= 4 ? askedStep : firstOpenStep(current, productSrc) });
   }
   const step = stepFor.id === currentId ? stepFor.step : 1;
-  const goStep = (k: number) => setStepFor({ id: currentId, step: k });
+  const editorRef = useRef<HTMLElement | null>(null);
+  const goStep = (k: number) => {
+    setStepFor({ id: currentId, step: k });
+    // Si el comienzo del editor quedó arriba de la pantalla (teléfono, después de un paso largo), se vuelve a él
+    const top = editorRef.current?.getBoundingClientRect().top ?? 0;
+    if (top < 0) editorRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+  };
   const [slotFor, setSlotFor] = useState<{ id: string | null; slot: number }>({ id: null, slot: 0 });
   const activeSlot = slotFor.id === currentId ? slotFor.slot : 0;
   const setActiveSlot = useCallback((i: number) => setSlotFor({ id: currentId, slot: i }), [currentId]);
 
   const [playing, setPlaying] = useState(false);
+  // Teléfono: vista previa chica por defecto
+  const [bigPreview, setBigPreview] = useState(false);
   const playStart = useRef(0);
   const busyRef = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -126,13 +149,13 @@ export default function Studio({ id }: { id: string }) {
   const [imgTick, setImgTick] = useState(0);
 
   // Textos que no caben ni con la letra más chica (C-116): se avisan en Publicar y al descargar
-  const [overflow, setOverflow] = useState<string[]>([]);
+  const [textIssues, setTextIssues] = useState<TextIssues>({ cut: [], tiny: [] });
   const drawStatic = useCallback(() => {
     if (!renderer.current || busyRef.current) return;
     const s = scene.current;
     renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, code: s.code });
-    const now = renderer.current.overflows();
-    setOverflow((prev) => (prev.join('\n') === now.join('\n') ? prev : now));
+    const now = renderer.current.textIssues();
+    setTextIssues((prev) => (JSON.stringify(prev) === JSON.stringify(now) ? prev : now));
   }, []);
 
   const drawThumb = useCallback((target: HTMLCanvasElement, style: BackgroundId) => {
@@ -299,7 +322,7 @@ export default function Studio({ id }: { id: string }) {
   };
 
   // C-116: una sola revisión para el paso Publicar, la lista del inicio y cada descarga
-  const checks = current ? flyerChecks(current, { src: productSrc, live: studio.live, coupons: studio.coupons, store: studio.store, overflow }) : [];
+  const checks = current ? flyerChecks(current, { src: productSrc, live: studio.live, coupons: studio.coupons, store: studio.store, text: textIssues }) : [];
   /** Revisa antes de descargar: lo incompleto lleva a su paso, los avisos se confirman */
   const ready = async () => !!current && (await gate(checks, goStep));
 
@@ -390,10 +413,13 @@ export default function Studio({ id }: { id: string }) {
         height={H}
         role="img"
         aria-label={current ? `Vista previa de ${current.name}` : 'Vista previa'}
-        className={`${PREVIEW_CLASS[format]} h-auto w-full rounded-md bg-white shadow-lg lg:max-w-none`}
+        className={`${PREVIEW_CLASS[format]} ${bigPreview ? '' : PREVIEW_SMALL[format]} h-auto w-full rounded-md bg-white shadow-lg lg:max-w-none`}
       />
       {current && (
         <>
+          <button type="button" aria-pressed={bigPreview} onClick={() => setBigPreview((b) => !b)} className={`${toggleButton(bigPreview)} lg:hidden`}>
+            {bigPreview ? 'Achicar la vista previa' : 'Agrandar la vista previa'}
+          </button>
           <div className="flex flex-wrap justify-center gap-2">
             <button type="button" aria-pressed={playing} onClick={() => setPlaying((p) => !p)} className={toggleButton(playing)}>
               {playing ? <FiPause className="mr-1.5 h-4 w-4" aria-hidden="true" /> : <FiPlay className="mr-1.5 h-4 w-4" aria-hidden="true" />}
@@ -435,7 +461,7 @@ export default function Studio({ id }: { id: string }) {
     <div>
       {back}
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
-      <section className="order-2 rounded-2xl border border-line bg-white p-4 lg:order-1" aria-label="Editor">
+      <section ref={editorRef} className="order-2 scroll-mt-20 rounded-2xl border border-line bg-white p-4 lg:order-1" aria-label="Editor">
         {current ? (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-2">
@@ -489,6 +515,9 @@ export default function Studio({ id }: { id: string }) {
                 );
               })}
             </nav>
+            <p className="-mt-1 text-sm text-ink-soft">
+              <strong className="text-ink">Paso {step} de 4.</strong> {STEP_HELP[step]}
+            </p>
 
             {step === 1 && <StepContent studio={studio} activeSlot={activeSlot} setActiveSlot={setActiveSlot} />}
             {step === 2 && <StepPhoto studio={studio} productSrc={productSrc} onFile={(i, f) => void onFile(i, f)} activeSlot={activeSlot} setActiveSlot={setActiveSlot} />}
@@ -505,13 +534,20 @@ export default function Studio({ id }: { id: string }) {
                 goStep={goStep}
               />
             )}
-            {step < 4 && (
-              <div className="flex justify-end border-t border-line pt-3">
+            <div className="flex items-center justify-between gap-2 border-t border-line pt-3">
+              {step > 1 ? (
+                <button type="button" onClick={() => goStep(step - 1)} className={adminSecondaryButton}>
+                  Atrás
+                </button>
+              ) : (
+                <span />
+              )}
+              {step < 4 && (
                 <button type="button" onClick={() => goStep(step + 1)} className={adminPrimaryButton}>
                   Siguiente: {STEPS[step][1]}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ) : (
           <p className="py-12 text-center text-sm text-muted" aria-busy="true">

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { FiArrowRight, FiCreditCard, FiDownloadCloud, FiRefreshCw } from 'react-icons/fi';
 import { adminChoice, adminIconChip, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
+import { roundMoney } from '@/lib/pricing';
 import type { SectionProps } from './settings-form';
 import { NumberField, SettingsCard, SwitchRow } from './fields';
 
@@ -29,6 +30,9 @@ function timeAgo(iso: string | null): string {
 export default function PricesSection({ form, set, errors, savedAutoExchangeRates, lastRateUpdate, onRateRefreshed }: PricesSectionProps) {
   const [loadingRate, setLoadingRate] = useState(false);
   const rate = Number(form.exchangeRateVES) || 0;
+  const minOrder = Number(form.minOrderAmountUSD) || 0;
+  const sampleProducts = roundMoney(minOrder * 0.3);
+  const packagingFee = Number(form.packagingFeeUSD) || 0;
 
   const refreshSavedRate = async () => {
     setLoadingRate(true);
@@ -147,11 +151,20 @@ export default function PricesSection({ form, set, errors, savedAutoExchangeRate
         </div>
       </SettingsCard>
 
-      <SettingsCard title="Montos por compra" description="Vacío significa sin límite. Se aplican al total de la orden, con envío.">
+      <SettingsCard title="Montos por compra" description="Vacío significa sin límite. El carrito avisa al cliente antes de pagar y el checkout no deja comprar fuera de estos montos.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <NumberField label="Mínimo" prefix="$" value={form.minOrderAmountUSD} onChange={(v) => set('minOrderAmountUSD', v)} error={errors.minOrderAmountUSD} step={0.01} placeholder="Sin mínimo" />
-          <NumberField label="Máximo" prefix="$" value={form.maxOrderAmountUSD} onChange={(v) => set('maxOrderAmountUSD', v)} error={errors.maxOrderAmountUSD} step={0.01} placeholder="Sin máximo" />
+          <NumberField label="Mínimo" prefix="$" value={form.minOrderAmountUSD} onChange={(v) => set('minOrderAmountUSD', v)} error={errors.minOrderAmountUSD} step={0.01} placeholder="Sin mínimo" hint="Cuenta solo los productos. El embalaje y el envío van aparte." />
+          <NumberField label="Máximo" prefix="$" value={form.maxOrderAmountUSD} onChange={(v) => set('maxOrderAmountUSD', v)} error={errors.maxOrderAmountUSD} step={0.01} placeholder="Sin máximo" hint="Cuenta todo lo que paga el cliente, con envío." />
         </div>
+
+        {/* C-115: el mínimo se explica con un caso real, como la tasa de arriba */}
+        {minOrder > 0 && (
+          <p className={`${adminNotice('neutral')} mt-4 tabular-nums`}>
+            Un carrito con <strong className="text-ink">{formatUSD(sampleProducts)}</strong> en productos ve «Te faltan {formatUSD(roundMoney(minOrder - sampleProducts))}» y no puede pagar.
+            Con <strong className="text-ink">{formatUSD(minOrder)}</strong> en productos ya compra
+            {packagingFee > 0 ? <>; si pide envío por ZOOM o MRW paga además {formatUSD(packagingFee)} de embalaje, y el flete al retirar.</> : '.'}
+          </p>
+        )}
       </SettingsCard>
 
       <Link href="/admin/payments" className="flex items-center gap-4 rounded-2xl border border-line bg-white p-5 transition-colors hover:border-brand-200 hover:bg-brand-50">

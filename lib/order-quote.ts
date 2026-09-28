@@ -82,7 +82,7 @@ export interface OrderQuote {
  */
 export function orderBlockers(calculation: OrderCalculation, settings: CompanySettings | null, deliveryMethod: DeliveryMethod): string[] {
   const out = orderAmountProblems(
-    calculation.totalUSD,
+    { productsUSD: roundMoney(calculation.subtotalUSD - calculation.discountUSD), totalUSD: calculation.totalUSD },
     settings?.minOrderAmountUSD ? Number(settings.minOrderAmountUSD) : null,
     settings?.maxOrderAmountUSD ? Number(settings.maxOrderAmountUSD) : null
   );

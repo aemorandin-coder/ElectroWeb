@@ -124,9 +124,10 @@ export default function CarritoPage() {
   const envioGratis = items.some(item => item.freeShipping && item.productType !== 'DIGITAL');
   // C-115: lo que impide pagar se avisa aquí, no recién en el checkout: productos que el servidor rechaza y
   // mínimo o máximo de compra. Sin sesión se compara con el total local; con sesión, con el del servidor.
+  // Aún no hay entrega elegida: para el máximo, el total de productos es lo mínimo que se cobrará.
   const cartProblems = [
     ...(server?.errors ?? []),
-    ...orderAmountProblems(total, settings?.minOrderAmountUSD ?? null, settings?.maxOrderAmountUSD ?? null),
+    ...orderAmountProblems({ productsUSD: total, totalUSD: total }, settings?.minOrderAmountUSD ?? null, settings?.maxOrderAmountUSD ?? null),
   ];
 
   return (

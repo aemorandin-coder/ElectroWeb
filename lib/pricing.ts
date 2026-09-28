@@ -99,14 +99,23 @@ export function roundMoney(value: number): number {
 /**
  * Montos mínimo y máximo de compra (0 o null = sin límite). Un solo texto para la orden, la cotización (C-114)
  * y el aviso del carrito (C-115).
+ * El mínimo cuenta solo los productos, con sus descuentos: el embalaje y el envío van aparte y no ayudan a llegar
+ * (Andrés, 28/09). El máximo cuenta lo que paga el cliente, con envío, porque protege el cobro.
  */
-export function orderAmountProblems(totalUSD: number, minUSD: number | null, maxUSD: number | null): string[] {
+export function orderAmountProblems(
+  amounts: { productsUSD: number; totalUSD: number },
+  minUSD: number | null,
+  maxUSD: number | null
+): string[] {
   const out: string[] = [];
-  if (minUSD && minUSD > 0 && totalUSD < minUSD) {
-    out.push(`La compra mínima es de ${formatUSD(minUSD)}. Te faltan ${formatUSD(roundMoney(minUSD - totalUSD))}: agrega algo más al carrito.`);
+  if (minUSD && minUSD > 0 && amounts.productsUSD < minUSD) {
+    out.push(
+      `La compra mínima es de ${formatUSD(minUSD)} en productos, sin contar embalaje ni envío. ` +
+      `Te faltan ${formatUSD(roundMoney(minUSD - amounts.productsUSD))}: agrega algo más al carrito.`
+    );
   }
-  if (maxUSD && maxUSD > 0 && totalUSD > maxUSD) {
-    out.push(`La compra máxima es de ${formatUSD(maxUSD)}. Quita productos o divide la compra en dos pedidos.`);
+  if (maxUSD && maxUSD > 0 && amounts.totalUSD > maxUSD) {
+    out.push(`La compra máxima es de ${formatUSD(maxUSD)}, con envío incluido. Quita productos o divide la compra en dos pedidos.`);
   }
   return out;
 }

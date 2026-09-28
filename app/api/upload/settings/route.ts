@@ -5,7 +5,9 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+import { randomBytes } from 'crypto';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
+import { detectFileType } from '@/lib/file-signature';
 
 // Rate limit for settings uploads
 const UPLOAD_RATE_LIMIT = {
@@ -77,13 +79,14 @@ export async function POST(request: NextRequest) {
         }
 
         const seoImageTypes = ['homeMetaImage', 'productsMetaImage', 'servicesMetaImage', 'coursesMetaImage'];
-        // campaign: imágenes de las campañas de correo de Marketing (C-75)
-        const allowedAssetTypes = ['logo', 'favicon', 'heroBackground', 'hotAd', 'campaign', ...seoImageTypes];
+        // campaign: imágenes de las campañas de correo de Marketing (C-75). studio: fotos y logos de ElectroStudio (C-112)
+        const allowedAssetTypes = ['logo', 'favicon', 'heroBackground', 'hotAd', 'campaign', 'studio', ...seoImageTypes];
 
         if (!type || !allowedAssetTypes.includes(type)) {
             return NextResponse.json({ error: 'Tipo de asset no válido' }, { status: 400 });
         }
-        if (!canManageSettings && type !== 'hotAd' && type !== 'campaign') {
+        const marketingTypes = ['hotAd', 'campaign', 'studio'];
+        if (!canManageSettings && !marketingTypes.includes(type)) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
@@ -103,7 +106,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Validate file size (max 2MB for logos/favicons, 5MB for backgrounds/SEO)
-        const maxSize = (type === 'heroBackground' || type === 'hotAd' || type === 'campaign' || seoImageTypes.includes(type)) ? 5 * 1024 * 1024 : 2 * 1024 * 1024;
+        const maxSize = (type === 'heroBackground' || marketingTypes.includes(type) || seoImageTypes.includes(type)) ? 5 * 1024 * 1024 : 2 * 1024 * 1024;
         if (file.size > maxSize) {
             return NextResponse.json({
                 error: `El archivo es demasiado grande. Máximo ${maxSize / (1024 * 1024)}MB`
@@ -123,16 +126,18 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        // Determine file extension
-        let extension = file.name.split('.').pop()?.toLowerCase() || 'png';
-        const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'ico'];
-        if (!validExtensions.includes(extension)) {
-            extension = 'png';
+        // C-112: la extensión sale del contenido real, no del nombre que manda el navegador (un PNG llamado .gif
+        // quedaba como .gif), y el nombre lleva un sufijo al azar: dos subidas en el mismo milisegundo se pisaban
+        const isIco = mimeType === 'image/x-icon' || mimeType === 'image/vnd.microsoft.icon';
+        const detected = detectFileType(new Uint8Array(buffer));
+        if (!isIco && (!detected || detected === 'pdf')) {
+            return NextResponse.json({ error: 'El archivo no es una imagen válida' }, { status: 400 });
         }
+        const extension = isIco ? 'ico' : detected;
 
         // Create unique filename with type prefix
         const timestamp = Date.now();
-        const filename = `${type}-${timestamp}.${extension}`;
+        const filename = `${type}-${timestamp}-${randomBytes(3).toString('hex')}.${extension}`;
 
         // Ensure upload directory exists - use process.cwd() which should be the project root
         const uploadDir = path.join(process.cwd(), 'public', 'uploads');

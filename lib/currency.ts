@@ -51,7 +51,7 @@ export function formatPrice(
 // Formato manual (no Intl) para que servidor y navegador den exactamente el mismo texto.
 // ============================================
 
-function formatAmount(value: number): string {
+export function formatAmount(value: number): string {
   // Los Decimal de Prisma llegan del API como texto ("320"): Number.isFinite no convierte,
   // así que antes se mostraban como $0,00.
   const numero = typeof value === 'number' ? value : Number(value);

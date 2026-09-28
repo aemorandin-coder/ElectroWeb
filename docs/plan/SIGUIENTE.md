@@ -1,19 +1,16 @@
-# Punto de partida (actualizado 2026-09-26: C-104, C-102, C-103, C-51, C-110, C-111 y C-40 listos para mergear)
+# Punto de partida (actualizado 2026-09-28: todo hasta C-40 en `main`; C-112 ElectroStudio lista para mergear)
 
 Léelo antes de empezar.
 
-## 0. URGENTE: dos credenciales quedaron públicas (el repositorio de GitHub es público)
-Encontrado en C-40. Ya se quitaron del código, pero **siguen en el historial de git**: hay que cambiarlas.
-1. **`SADES_WEBHOOK_SECRET`.** `scripts/test-webhook.js` tenía escrito un secreto `whsec_…`, con el comentario "CONFIGURACIÓN CON TU CLAVE REAL".
-   - Con él, cualquiera puede cambiar el precio y el stock de cualquier producto por SKU.
-   - **Si el `.env` del servidor tiene ese mismo valor:** genera otro (`openssl rand -hex 24`), ponlo en el `.env` del servidor y en SADES, y reinicia.
-   - Desde C-40 esos cambios quedan en Reportes → Seguridad ("SADES (webhook)").
-2. **Cuenta `masteradmin@electroshopve.com`.** `scripts/create-master-admin.ts` tenía su contraseña escrita.
-   - **Si existe en producción**, cámbiale la contraseña o bórrala. Revisa también en Reportes → Seguridad si alguien entró con ella.
-   - Lo mismo para `cliente@electroshop.com` (`create-customer.ts`), si se creó en producción.
-3. Recomendado: **poner el repositorio en privado** (GitHub → Settings → Change visibility).
+## 0. Credenciales del historial (resuelto el 26/09)
+Encontradas en C-40: el secreto del webhook de SADES (`scripts/test-webhook.js`) y la contraseña de `masteradmin@electroshopve.com` (`scripts/create-master-admin.ts`). Ya no están en el código, pero siguen en el historial del repositorio público.
+- Revisado en producción el 26/09: `SADES_WEBHOOK_SECRET` no está en el `.env` del servidor y la cuenta `masteradmin` no existe. **No había nada que cambiar.**
+- Si algún día se configura el webhook de SADES: secreto nuevo (`openssl rand -hex 24`), nunca el del historial.
+- Sigue recomendado **poner el repositorio en privado** (GitHub → Settings → Change visibility).
 
 ## 1. Ramas
+- **Nueva: `claude/C-112` (ElectroStudio, fase 1)**, sale de `main` (9739bfa). Reemplaza "Imágenes para redes" por `/admin/studio`: historias y videos con los productos, precios y ofertas reales de la tienda. **Crea 2 tablas** (OK de Andrés del 26/09): en el deploy, `deploy.sh` para y muestra el SQL; correr `npx prisma db push` y otra vez el guion. Detalle en `estado/C-112.md`.
+- **Anterior (ya en `main`):**
 - **Encadenadas:** `main` → C-104 → C-102 → C-103 → C-51 → C-110 → C-111 → C-40. **Mergear `claude/C-40` trae todo.** Cada una tiene su `docs/plan/estado/C-XX.md`.
 - **Resumen:**
   - **C-104:** reportes reales y bitácora conectada (logins, precios y aprobaciones).
@@ -69,6 +66,7 @@ Detalle en `docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`.
 - **Onboarding:** con física.
 - **ChatGPT:** fuera del equipo.
 - **Envíos:** ZOOM y MRW con cobro a destino.
+- **ElectroStudio (26/09):** ese nombre; historias guardadas en la base (2 tablas); por fases; el artefacto sigue hasta la fase 2.
 - **Clientes:** se borran solo si no tienen nada; si tienen, se desactivan.
 - **Dinero:** nunca sale de la empresa. Comisiones solo por compras pagadas.
 - **Descuentos (25/09):**
@@ -81,7 +79,8 @@ Detalle en `docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`.
 - **Reseñas:** solo con una orden entregada del producto.
 
 ## 5. Pendientes para la próxima sesión (Claude)
-1. **Revisión final con Andrés** (`REVISION_FINAL.md`) y lo que salga de ella.
+1. **Revisión final con Andrés** (`REVISION_FINAL.md`) y lo que salga de ella. Sumar ElectroStudio: una historia de un producto real, el video en Chrome y "Compartir" desde el teléfono.
+1b. **C-112 fase 2 (ElectroStudio):** fondos nuevos, efectos, formatos 4:5 y 1:1 y plantillas de cupón, reseña, "llegó nuevo" y gift card (lista en `estado/C-112.md`). El artefacto "Flyers ElectroShop" se retira al terminarla (decisión del 26/09).
 2. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
 3. **C-92:** desactivar clientes en vez de borrarlos (con el diagnóstico del §3).
 4. **Wizard de producto** (crear y editar): rediseño paso a paso (lo que quedó de C-51).

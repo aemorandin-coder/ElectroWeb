@@ -2,9 +2,9 @@
 
 import { useCallback, useSyncExternalStore } from 'react';
 import type { IconType } from 'react-icons';
-import { FiEye, FiImage, FiSend, FiTv, FiUserCheck } from 'react-icons/fi';
-import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
-import SocialMediaGenerator from '@/components/admin/SocialMediaGenerator';
+import Link from 'next/link';
+import { FiArrowRight, FiEye, FiFilm, FiSend, FiTv, FiUserCheck } from 'react-icons/fi';
+import { adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminTab } from '@/lib/admin-ui';
 import Promotores from './_components/Promotores';
 import Popup from './_components/Popup';
 import Campanas from './_components/Campanas';
@@ -20,7 +20,8 @@ const SECCIONES: { id: SeccionId; label: string; descripcion: string; icon: Icon
   { id: 'campanas', label: 'Campañas de correo', descripcion: 'Correos con imágenes para los clientes que aceptan promociones.', icon: FiSend },
   { id: 'popup', label: 'Popup del home', descripcion: 'La imagen promocional que aparece al entrar a la tienda.', icon: FiTv },
   { id: 'plantillas', label: 'Correos de la tienda', descripcion: 'Cómo se ven los correos automáticos que recibe el cliente.', icon: FiEye },
-  { id: 'redes', label: 'Imágenes para redes', descripcion: 'Historias y posts con un producto o una convocatoria.', icon: FiImage },
+  // C-112: las imágenes para redes pasaron a ElectroStudio (/admin/studio); la pestaña queda como acceso directo
+  { id: 'redes', label: 'ElectroStudio', descripcion: 'Historias y videos para Instagram con los productos de la tienda.', icon: FiFilm },
 ];
 
 function seccionDelHash(): SeccionId {
@@ -73,7 +74,18 @@ export default function MarketingPage() {
       {activa === 'campanas' && <Campanas />}
       {activa === 'popup' && <Popup />}
       {activa === 'plantillas' && <Plantillas />}
-      {activa === 'redes' && <SocialMediaGenerator />}
+      {activa === 'redes' && (
+        <div className={`${adminNotice('brand')} flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between`}>
+          <p>
+            Las imágenes para redes ahora se hacen en <strong>ElectroStudio</strong>: historias y videos con el precio, la oferta y la foto de
+            cada producto tomados de la tienda.
+          </p>
+          <Link href="/admin/studio" className={`${adminPrimaryButton} shrink-0`}>
+            Abrir ElectroStudio
+            <FiArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

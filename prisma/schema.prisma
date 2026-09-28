@@ -1688,3 +1688,29 @@ model EmailCampaignRecipient {
   @@index([campaignId, status])
   @@map("email_campaign_recipients")
 }
+
+// C-112: ElectroStudio, las historias y posts de Marketing. El contenido va en `data` (JSON validado con zod en
+// lib/studio/schema.ts); nombre, fecha y lote quedan en columnas para listar y agrupar sin leer el JSON.
+model StudioFlyer {
+  id          String   @id @default(cuid())
+  name        String
+  template    String   // solo | duo | trio | mensaje
+  data        Json
+  date        String?  // AAAA-MM-DD en que se piensa publicar
+  batch       String?  // lote ("Componentes PC") para descargar juntos
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([updatedAt])
+  @@map("studio_flyers")
+}
+
+// C-112: ajustes de marca de ElectroStudio (colores, envíos, logos de pago). Una sola fila: id "default".
+model StudioBrand {
+  id        String   @id @default("default")
+  data      Json
+  updatedAt DateTime @updatedAt
+
+  @@map("studio_brand")
+}

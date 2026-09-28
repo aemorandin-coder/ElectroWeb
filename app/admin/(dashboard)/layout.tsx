@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   FiBarChart2, FiBox, FiClipboard, FiCreditCard, FiDollarSign, FiExternalLink, FiGift, FiGrid, FiLogOut,
-  FiBell, FiBookOpen, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUsers, FiX,
+  FiBell, FiBookOpen, FiFilm, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUsers, FiX,
 } from 'react-icons/fi';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { MdAdminPanelSettings } from 'react-icons/md';
@@ -202,6 +202,13 @@ export default function AdminLayout({
       name: 'Marketing y Contenido',
       href: '/admin/marketing',
       icon: <FiTrendingUp className="h-5 w-5" aria-hidden="true" />,
+      permission: 'MANAGE_CONTENT',
+    },
+    {
+      // C-112: reemplaza a "Imágenes para redes" de Marketing
+      name: 'ElectroStudio',
+      href: '/admin/studio',
+      icon: <FiFilm className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_CONTENT',
     },
     // C-82: no había forma de llegar a los cursos ni a los creadores desde el menú (solo desde una notificación)

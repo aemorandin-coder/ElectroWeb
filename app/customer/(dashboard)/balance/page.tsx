@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiPlus, FiDownload, FiArrowUpRight, FiArrowDownLeft } from 'react-icons/fi';
+import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiPlus, FiArrowUpRight, FiArrowDownLeft } from 'react-icons/fi';
 import RechargeModal from '@/components/modals/RechargeModalV2';
 import { formatPaymentMethod, formatTransactionStatus, isCreditTransaction } from '@/lib/format-helpers';
 import { formatUSD } from '@/lib/currency';
@@ -385,9 +385,6 @@ export default function BalancePage() {
                     Compras
                   </button>
                 </div>
-                <button className="p-1.5 lg:p-2 hover:bg-surface rounded-lg transition-colors hidden sm:block">
-                  <FiDownload className="w-4 h-4 lg:w-5 lg:h-5 text-muted" />
-                </button>
               </div>
             </div>
           </div>

@@ -48,6 +48,7 @@ export const ADMIN_EVENTS = {
 
   RECHARGE_REQUESTED: { category: 'pagos', label: 'Recarga por aprobar', description: 'Un cliente pidió recargar saldo y espera aprobación.', defaults: on(true, true, true) },
   RECHARGE_AUTO_APPROVED: { category: 'pagos', label: 'Recarga aprobada por Pago Móvil', description: 'El banco confirmó el pago y el saldo se acreditó solo.', defaults: on(true, false, true) },
+  ORDER_PAYMENT_ORPHAN: { category: 'pagos', label: 'Pago sin orden', description: 'Un cliente pagó por Pago Móvil y la orden no se pudo crear: el dinero pasó a su saldo o espera que lo revises.', defaults: on(true, true, true) },
   PAYMENT_REFERENCE_DUPLICATE: { category: 'pagos', label: 'Referencia de pago repetida', description: 'Alguien intentó usar una referencia de Pago Móvil que ya se usó.', defaults: on(true, true, true) },
 
   CUSTOMER_REGISTERED: { category: 'clientes', label: 'Cliente nuevo', description: 'Alguien creó una cuenta en la tienda.', defaults: on(true, false, true), silent: true },

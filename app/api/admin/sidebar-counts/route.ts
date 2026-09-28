@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { pagoSinOrdenWhere } from '@/lib/pago-movil-sin-orden';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -36,8 +37,11 @@ export async function GET() {
       // Órdenes pendientes
       prisma.order.count({ where: { status: 'PENDING' } }),
 
-      // Transacciones RECHARGE pendientes
-      prisma.transaction.count({ where: { status: 'PENDING', type: 'RECHARGE' } }),
+      // Transacciones RECHARGE pendientes, más los Pagos Móvil de compra sin orden (C-114)
+      Promise.all([
+        prisma.transaction.count({ where: { status: 'PENDING', type: 'RECHARGE' } }),
+        prisma.pagoMovilVerificacion.count({ where: pagoSinOrdenWhere }),
+      ]).then(([recargas, sinOrden]) => recargas + sinOrden),
 
       // Mensajes de contacto pendientes (Centro de Consultas)
       prisma.contactMessage.count({ where: { status: 'PENDING' } }),

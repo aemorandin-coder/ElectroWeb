@@ -1731,9 +1731,8 @@ Hay **dos** grupos de filtros y los dos llevan la opción nueva, **después de "
    ```
 2. **Escritorio**, tres `<button>` cerca de las líneas 369-386 (Todas, Recargas, Compras). Copia el botón de "Compras" completo, debajo de él, y cambia **solo** `'PURCHASE'` por `'REFUND'` (las dos veces) y el texto `Compras` por `Reembolsos`. El `className` queda idéntico.
 
-**No toques:**
-- La lógica del filtro (`filteredTransactions`), `isCreditTransaction` ni `lib/format-helpers.ts`, que es de Claude.
-- El botón con `FiDownload` que está al lado: no hace nada, pero quitarlo lo decide Andrés. Anótalo en "Notas".
+**No toques** la lógica del filtro (`filteredTransactions`), `isCreditTransaction` ni `lib/format-helpers.ts`, que es de Claude.
+(El botón de descarga que había al lado no hacía nada: Claude lo quitó en C-114, con aprobación de Andrés del 28/09.)
 
 **Verificación (pega la salida real en `estado/G-69.md`):**
 ```bash

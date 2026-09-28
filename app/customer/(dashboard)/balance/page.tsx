@@ -209,9 +209,9 @@ export default function BalancePage() {
 
         {/* TRANSACTIONS */}
         <div className="pt-3 pb-20">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
             <span className="text-xs font-bold text-ink">Movimientos</span>
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               {[
                 { value: 'ALL', label: 'Todos' },
                 { value: 'RECHARGE', label: 'Recargas' },
@@ -455,7 +455,7 @@ export default function BalancePage() {
                 <p className="text-muted text-xs lg:text-base mb-4 lg:mb-6 px-4">
                   {filterType === 'ALL'
                     ? 'Aún no has realizado ninguna transacción'
-                    : `No tienes ${filterType === 'RECHARGE' ? 'recargas' : 'compras'}`
+                    : `No tienes ${filterType === 'RECHARGE' ? 'recargas' : filterType === 'REFUND' ? 'reembolsos' : 'compras'}`
                   }
                 </p>
                 <button

@@ -1,12 +1,15 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { FiArchive, FiChevronLeft, FiChevronRight, FiPlus } from 'react-icons/fi';
+import { FiAlertTriangle, FiArchive, FiChevronLeft, FiChevronRight, FiPlus } from 'react-icons/fi';
 import { adminBadge, adminIconButton, adminPrimaryButton } from '@/lib/admin-ui';
-import { TEMPLATES, type StudioFlyer } from '@/lib/studio/schema';
+import { staleWarnings } from '@/lib/studio/live';
+import { FORMATS, requiredPhotos, TEMPLATES, type StudioFlyer } from '@/lib/studio/schema';
+import StudioResults from './StudioResults';
 import { smallButton, toggleButton } from './ui';
+import type { Studio } from './useStudio';
 
-type View = 'lista' | 'semana';
+type View = 'lista' | 'semana' | 'resultados';
 const VIEW_KEY = 'studio-view';
 
 function ymd(d: Date): string {
@@ -25,23 +28,23 @@ function weekDays(offset: number): Date[] {
 }
 
 export function missingPhotos(f: StudioFlyer): number {
-  if (f.template === 'mensaje') return 0;
-  return f.products.slice(0, TEMPLATES[f.template].n).filter((p) => !p.imageUrl).length;
+  return f.products.slice(0, requiredPhotos(f.template)).filter((p) => !p.imageUrl).length;
 }
 
 interface Props {
-  flyers: StudioFlyer[];
-  currentId: string | null;
+  studio: Studio;
   busy: boolean;
-  onSelect: (id: string) => void;
-  onNew: () => void;
   onZip: (list: StudioFlyer[], name: string) => void;
 }
 
-export default function FlyerList({ flyers, currentId, busy, onSelect, onNew, onZip }: Props) {
+export default function FlyerList({ studio, busy, onZip }: Props) {
+  const { flyers, currentId, live, coupons, store } = studio;
+  const onSelect = (id: string) => void studio.select(id);
+  const onNew = () => void studio.create();
   const [view, setView] = useState<View>(() => {
     try {
-      return localStorage.getItem(VIEW_KEY) === 'semana' ? 'semana' : 'lista';
+      const v = localStorage.getItem(VIEW_KEY);
+      return v === 'semana' || v === 'resultados' ? v : 'lista';
     } catch {
       return 'lista';
     }
@@ -67,6 +70,8 @@ export default function FlyerList({ flyers, currentId, busy, onSelect, onNew, on
 
   const item = (f: StudioFlyer) => {
     const miss = missingPhotos(f);
+    const warnings = staleWarnings(f, live, coupons, store);
+    const worst = warnings.find((w) => w.tone === 'danger') ?? warnings[0];
     const thumb = f.products[0]?.imageUrl;
     const date = f.date ? new Date(`${f.date}T12:00:00`).toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
     return (
@@ -91,8 +96,17 @@ export default function FlyerList({ flyers, currentId, busy, onSelect, onNew, on
           <span className="truncate text-sm font-semibold text-ink">{f.name || f.products[0]?.title || 'Sin nombre'}</span>
           <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
             {TEMPLATES[f.template].label}
+            {f.format !== 'story' && ` · ${FORMATS[f.format].short}`}
             {date && ` · ${date}`}
-            <span className={adminBadge(miss ? 'warning' : 'success')}>{miss ? 'Falta foto' : 'Lista'}</span>
+            {worst ? (
+              <span className={adminBadge(worst.tone)} title={warnings.map((w) => w.text).join(' · ')}>
+                <FiAlertTriangle className="h-3 w-3" aria-hidden="true" />
+                {worst.text}
+                {warnings.length > 1 && ` (+${warnings.length - 1})`}
+              </span>
+            ) : (
+              <span className={adminBadge(miss ? 'warning' : 'success')}>{miss ? 'Falta foto' : 'Lista'}</span>
+            )}
           </span>
         </span>
       </button>
@@ -112,16 +126,21 @@ export default function FlyerList({ flyers, currentId, busy, onSelect, onNew, on
           Nueva
         </button>
       </div>
-      <div className="flex gap-2" role="group" aria-label="Vista">
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Vista">
         <button type="button" aria-pressed={view === 'lista'} onClick={() => changeView('lista')} className={toggleButton(view === 'lista')}>
           Por lote
         </button>
         <button type="button" aria-pressed={view === 'semana'} onClick={() => changeView('semana')} className={toggleButton(view === 'semana')}>
           Semana
         </button>
+        <button type="button" aria-pressed={view === 'resultados'} onClick={() => changeView('resultados')} className={toggleButton(view === 'resultados')}>
+          Resultados
+        </button>
       </div>
 
-      {flyers.length === 0 ? (
+      {view === 'resultados' ? (
+        <StudioResults onSelect={onSelect} />
+      ) : flyers.length === 0 ? (
         <p className="text-sm text-muted">Aún no hay historias. Toca &quot;Nueva&quot; para hacer la primera.</p>
       ) : view === 'semana' ? (
         <div className="flex flex-col gap-2">

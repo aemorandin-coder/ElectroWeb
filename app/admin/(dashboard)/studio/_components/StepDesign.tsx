@@ -3,52 +3,27 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { adminHint, adminInput, adminLabel } from '@/lib/admin-ui';
-import { bgFor, OFFICIAL_LOGO, qrUrlFor } from '@/lib/studio/engine';
+import { OFFICIAL_LOGO, qrUrlFor } from '@/lib/studio/engine';
 import { payIcon } from '@/lib/studio/icons';
-import { ANIMATIONS, BACKGROUNDS, payKey, payMethods, type AnimationId, type BackgroundId, type StudioBrand } from '@/lib/studio/schema';
+import { payKey, payMethods, type StudioBrand } from '@/lib/studio/schema';
+import { BackgroundPicker, EffectsPicker, FormatPicker, PhotoControls, StoryColors, StylesBar, type DrawThumb } from './DesignControls';
 import StudioIcon from './StudioIcon';
 import { uploadStudioImage } from './exporters';
-import { sectionSummary, smallButton, toggleButton } from './ui';
+import { sectionSummary, smallButton } from './ui';
 import type { Studio } from './useStudio';
 
-export default function StepDesign({ studio, onAnim }: { studio: Studio; onAnim: () => void }) {
+export default function StepDesign({ studio, onAnim, drawThumb, imgTick }: { studio: Studio; onAnim: () => void; drawThumb: DrawThumb; imgTick: number }) {
   const { current, update } = studio;
   if (!current) return null;
-  const bg = bgFor(current);
 
   return (
     <div className="flex flex-col gap-4">
-      <fieldset>
-        <legend className={adminLabel}>Forma del fondo</legend>
-        <div className="flex flex-wrap gap-2">
-          {(Object.entries(BACKGROUNDS) as [BackgroundId, string][]).map(([id, label]) => (
-            <button key={id} type="button" aria-pressed={bg === id} onClick={() => update((f) => ({ ...f, bg: id }))} className={toggleButton(bg === id)}>
-              {label}
-            </button>
-          ))}
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend className={adminLabel}>Animación del video</legend>
-        <div className="flex flex-wrap gap-2">
-          {(Object.entries(ANIMATIONS) as [AnimationId, string][]).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={current.anim === id}
-              onClick={() => {
-                update((f) => ({ ...f, anim: id }));
-                onAnim();
-              }}
-              className={toggleButton(current.anim === id)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <p className={adminHint}>Al elegir una, se reproduce en la vista previa.</p>
-      </fieldset>
+      <FormatPicker studio={studio} />
+      <StylesBar studio={studio} />
+      <BackgroundPicker studio={studio} drawThumb={drawThumb} imgTick={imgTick} />
+      <PhotoControls studio={studio} />
+      <EffectsPicker studio={studio} onAnim={onAnim} />
+      <StoryColors studio={studio} />
 
       <details className="border-t border-line pt-3" open={!!current.offerEnds}>
         <summary className={sectionSummary}>Contador de oferta</summary>
@@ -93,7 +68,7 @@ export default function StepDesign({ studio, onAnim }: { studio: Studio; onAnim:
                 placeholder={qrUrlFor({ ...current, qrUrl: '' }, studio.brand)}
                 className={adminInput()}
               />
-              <p className={adminHint}>Vacío: lleva a la ficha del producto en la tienda.</p>
+              <p className={adminHint}>Vacío: lleva a la ficha del producto en la tienda. El QR suma la marca de la historia para contar visitas y compras.</p>
             </div>
           )}
         </div>

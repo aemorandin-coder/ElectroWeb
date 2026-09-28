@@ -8,8 +8,9 @@ import { formatUSD } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { SPEC_ICONS } from '@/lib/studio/icons';
 import { linkProduct } from '@/lib/studio/live';
-import { TEMPLATES, type StudioMessage, type StudioProductSlot, type StudioSpec, type TemplateId } from '@/lib/studio/schema';
+import { TEMPLATES, hasProductForm, type StudioMessage, type StudioProductSlot, type StudioSpec, type TemplateId } from '@/lib/studio/schema';
 import ProductPicker from './ProductPicker';
+import { CouponForm, HeadingField, RateInfo, ReviewForm, VariantsEditor } from './TemplateForms';
 import StudioIcon from './StudioIcon';
 import { sectionSummary, smallButton } from './ui';
 import type { Studio } from './useStudio';
@@ -17,9 +18,19 @@ import type { Studio } from './useStudio';
 const TEMPLATE_CARDS: [TemplateId, string, string, string][] = [
   ['solo', 'tarjeta', '1 producto', 'Un producto con precio y características'],
   ['duo', 'chip', '2 productos', 'Dos productos, cada uno con su precio'],
-  ['trio', 'regalo', 'Categoría', '3 productos con precio "Desde"'],
-  ['mensaje', 'chat', 'Mensaje', 'Aviso, horario o convocatoria sin producto'],
+  ['trio', 'pantalla', 'Categoría', '3 productos con precio "Desde"'],
+  ['nuevo', 'rayo', 'Llegó nuevo', 'Lanzamiento en podio, con confeti'],
+  ['giftcard', 'regalo', 'Gift card', 'Montos y precios de una gift card'],
+  ['cupon', 'billete', 'Cupón', 'Un cupón de Descuentos con su código'],
+  ['resena', 'estrella', 'Reseña', 'Lo que dijo un cliente, con estrellas'],
+  ['tasa', 'tasa', 'Tasa BCV', 'La tasa del día y equivalencias'],
+  ['mensaje', 'chat', 'Mensaje', 'Aviso, horario o convocatoria'],
 ];
+/** Fondo y efectos con que arranca cada plantilla al elegirla (si la persona no eligió otros) */
+const TEMPLATE_START: Partial<Record<TemplateId, { confeti?: boolean; reflejo?: boolean; anim?: 'escribir' }>> = {
+  nuevo: { confeti: true, reflejo: true },
+  resena: { anim: 'escribir' },
+};
 
 /** Mensajes listos para ajustar. "Únete como creador" viene de la herramienta vieja de redes. */
 const PRESETS: { label: string; msg: Partial<StudioMessage> }[] = [
@@ -62,6 +73,19 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
   const { confirm } = useConfirm();
   if (!current) return null;
   const n = TEMPLATES[current.template].n;
+  const chooseTemplate = (id: TemplateId) =>
+    update((f) => {
+      const start = TEMPLATE_START[id];
+      // Una plantilla nueva arranca con su fondo (bg vacío = el de la plantilla) y, si tiene, sus efectos
+      return {
+        ...f,
+        template: id,
+        bg: '',
+        fx: start ? { ...f.fx, confeti: start.confeti ?? f.fx.confeti, reflejo: start.reflejo ?? f.fx.reflejo } : f.fx,
+        anim: start?.anim ?? f.anim,
+        name: id === 'tasa' && f.name === 'Nueva historia' ? 'Tasa BCV del día' : f.name,
+      };
+    });
 
   const setMsg = (patch: Partial<StudioMessage>) => update((f) => ({ ...f, msg: { ...f.msg, ...patch } }));
   // Como con un producto de la tienda: la historia nueva toma su nombre del titular
@@ -82,13 +106,13 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
     <div className="flex flex-col gap-4">
       <fieldset>
         <legend className={adminLabel}>¿Qué quieres publicar?</legend>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {TEMPLATE_CARDS.map(([id, icon, title, desc]) => (
             <button
               key={id}
               type="button"
               aria-pressed={current.template === id}
-              onClick={() => update((f) => ({ ...f, template: id }))}
+              onClick={() => current.template !== id && chooseTemplate(id)}
               className={`${adminChoice(current.template === id)} flex flex-col items-start gap-1 p-3`}
             >
               <StudioIcon name={icon} className="h-6 w-6 text-brand-500" />
@@ -99,7 +123,12 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
         </div>
       </fieldset>
 
-      {current.template === 'mensaje' ? (
+      {current.template === 'cupon' && <CouponForm studio={studio} />}
+      {current.template === 'resena' && <ReviewForm studio={studio} />}
+      {current.template === 'tasa' && <RateInfo studio={studio} />}
+      {current.template === 'nuevo' && <HeadingField studio={studio} label="Etiqueta de arriba" placeholder="Recién llegado" />}
+
+      {!hasProductForm(current.template) && current.template !== 'mensaje' ? null : current.template === 'mensaje' ? (
         <>
           <div>
             <p className={adminLabel}>Mensajes listos</p>
@@ -329,7 +358,15 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
         </div>
       </details>
 
-      {studio.current?.template !== 'trio' && (
+      {studio.current?.template === 'giftcard' && (
+        <VariantsEditor
+          variants={p.variants}
+          linked={!!p.productId}
+          onChange={(variants) => setSlot({ variants })}
+        />
+      )}
+
+      {studio.current?.template !== 'trio' && studio.current?.template !== 'giftcard' && (
         <details className="border-t border-line pt-3">
           <summary className={sectionSummary}>Características ({p.specs.filter((s) => s.label || s.value).length}/4) y frase</summary>
           <div className="mt-3 flex flex-col gap-2">

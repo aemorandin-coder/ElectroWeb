@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { isFlyerCode } from '@/lib/studio/code';
 
 // Declare global window properties for TypeScript
 declare global {
@@ -60,6 +61,20 @@ function trackPageView(pathname: string) {
         eventAction: 'view',
         eventLabel: pathname,
     });
+}
+
+// Visita que llegó por una historia de ElectroStudio (?es=<código> en el enlace o el QR): una por sesión (C-113)
+function trackStudioVisit() {
+    const code = new URLSearchParams(window.location.search).get('es');
+    if (!isFlyerCode(code)) return;
+    try {
+        const key = `studio_visit_${code}`;
+        if (sessionStorage.getItem(key)) return;
+        sessionStorage.setItem(key, '1');
+    } catch {
+        // Sin sessionStorage (navegación privada estricta): se cuenta igual
+    }
+    trackEvent({ eventType: 'studio_visit', eventCategory: 'navigation', eventAction: 'visit', eventLabel: code });
 }
 
 // Track click
@@ -126,6 +141,7 @@ export default function AnalyticsTracker() {
 
             lastPathname.current = pathname;
             trackPageView(pathname);
+            trackStudioVisit();
 
             // Google Analytics pageview
             const gaId = process.env.NEXT_PUBLIC_GA_ID;

@@ -2,6 +2,7 @@ import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 import { getMaintenanceState, getRequestIP, isMaintenanceExemptPath, maintenanceResponse } from '@/lib/maintenance';
 import { scheduleExchangeRateRefresh } from '@/lib/exchange-rate';
+import { isFlyerCode, STUDIO_COOKIE, STUDIO_COOKIE_DAYS } from '@/lib/studio/code';
 
 const REF_COOKIE = 'electroshop_ref';
 const REF_TTL_DAYS = 30;
@@ -43,6 +44,18 @@ export default withAuth(
           path: '/',
         });
       }
+    }
+
+    // ── ELECTROSTUDIO (C-113) ───────────────────────────────────────
+    // ?es=<código>: llegó por una historia de Instagram. Último toque: la historia más reciente se queda con la compra
+    const esParam = req.nextUrl.searchParams.get('es');
+    if (isFlyerCode(esParam)) {
+      response.cookies.set(STUDIO_COOKIE, esParam, {
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: STUDIO_COOKIE_DAYS * 24 * 60 * 60,
+        path: '/',
+      });
     }
 
     // Cabeceras de seguridad: solo en next.config.js (una sola fuente)

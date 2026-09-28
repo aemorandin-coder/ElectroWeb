@@ -20,7 +20,17 @@ export default function StepPhoto({ studio, productSrc, onFile, activeSlot, setA
   const { current, update } = studio;
   if (!current) return null;
   const isMsg = current.template === 'mensaje';
-  const n = isMsg ? 1 : TEMPLATES[current.template].n;
+  const kind = TEMPLATES[current.template].photo;
+  const optional = kind === 'optional';
+  const n = TEMPLATES[current.template].n;
+  if (kind === 'none') {
+    return (
+      <div className={adminNotice('neutral')}>
+        <p className="font-semibold text-ink">Esta plantilla no lleva foto de producto</p>
+        <p className="mt-1">Si quieres una foto de fondo (el local, el mostrador), elige &quot;Tu foto&quot; en el paso Diseño.</p>
+      </div>
+    );
+  }
   const setSlot = (i: number, patch: Partial<StudioProductSlot>) =>
     update((f) => ({ ...f, products: f.products.map((s, k) => (k === i ? { ...s, ...patch } : s)) }));
 
@@ -33,16 +43,20 @@ export default function StepPhoto({ studio, productSrc, onFile, activeSlot, setA
           cópiala (clic derecho, Copiar imagen) y pulsa Ctrl+V con el recuadro marcado.
         </p>
       </div>
-      {isMsg && <p className={adminHint}>En un mensaje la imagen es opcional. Si no pones ninguna, puedes usar un ícono de fondo.</p>}
+      {optional && (
+        <p className={adminHint}>
+          {isMsg ? 'En un mensaje la imagen es opcional. Si no pones ninguna, puedes usar un ícono de fondo.' : 'En esta plantilla la foto es opcional.'}
+        </p>
+      )}
       {Array.from({ length: n }, (_, i) => {
         const p = current.products[i];
         if (!p) return null;
         return (
           <PhotoSlot
             key={i}
-            label={isMsg ? 'Imagen' : p.title || `Producto ${i + 1}`}
+            label={optional ? (isMsg ? 'Imagen' : p.title || 'Foto del producto') : p.title || `Producto ${i + 1}`}
             src={productSrc(p, i)}
-            optional={isMsg}
+            optional={optional}
             active={activeSlot === i && n > 1}
             cutout={p.cutout}
             onActivate={() => setActiveSlot(i)}

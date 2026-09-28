@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
-import { linkedIds, refreshLinked } from '@/lib/studio/live';
+import { exportSnapshot, linkedIds, refreshCoupon, refreshLinked, refreshRate } from '@/lib/studio/live';
 import {
   TEMPLATES,
   blankProduct,
   normalizeBrand,
   normalizeFlyer,
   type StudioBrand,
+  type StudioCoupon,
   type StudioFlyer,
   type StudioFlyerData,
   type StudioStoreInfo,
@@ -42,6 +43,27 @@ async function fetchLive(ids: string[]): Promise<Record<string, StudioStoreProdu
   return Object.fromEntries(products.map((p) => [p.id, p]));
 }
 
+async function fetchCoupons(): Promise<Record<string, StudioCoupon>> {
+  const res = await fetch('/api/admin/studio/coupons');
+  if (!res.ok) return {};
+  const { coupons } = (await res.json()) as { coupons: StudioCoupon[] };
+  return Object.fromEntries(coupons.map((c) => [c.code, c]));
+}
+
+/** Pone al día lo que viene de la tienda: precios y ofertas, cupón y tasa */
+function refreshAll(
+  f: StudioFlyerData,
+  live: Record<string, StudioStoreProduct>,
+  coupons: Record<string, StudioCoupon> | null,
+  store: StudioStoreInfo | null,
+): StudioFlyerData {
+  return refreshRate(refreshCoupon(refreshLinked(f, live), coupons?.[f.coupon.code]), store);
+}
+
+const HISTORY_MAX = 60;
+/** Cambios más seguidos que esto (escribir una palabra) se deshacen juntos */
+const HISTORY_GROUP_MS = 700;
+
 /** Asegura tantos productos como pide la plantilla */
 function withSlots(f: StudioFlyerData): StudioFlyerData {
   const n = Math.max(TEMPLATES[f.template].n, 1);
@@ -61,7 +83,16 @@ export function useStudio() {
   const [brand, setBrandState] = useState<StudioBrand>(() => normalizeBrand({}));
   const [store, setStore] = useState<StudioStoreInfo | null>(null);
   const [live, setLive] = useState<Record<string, StudioStoreProduct>>({});
+  const [coupons, setCoupons] = useState<Record<string, StudioCoupon> | null>(null);
   const [status, setStatus] = useState<SaveStatus>('idle');
+  // Deshacer y rehacer de la historia abierta (C-113)
+  const past = useRef<StudioFlyerData[]>([]);
+  const future = useRef<StudioFlyerData[]>([]);
+  const lastPush = useRef(0);
+  const [historySize, setHistorySize] = useState({ undo: 0, redo: 0 });
+  const syncHistory = () => setHistorySize({ undo: past.current.length, redo: future.current.length });
+  // Cupones y tasa de la tienda: se leen al abrir cada historia (y al cambiarla) para ponerla al día
+  const latestStore = useRef<{ coupons: Record<string, StudioCoupon> | null; store: StudioStoreInfo | null }>({ coupons: null, store: null });
 
   // Lo último, para los temporizadores de guardado (no se leen durante el render)
   const latest = useRef({ current, currentId, brand });
@@ -141,17 +172,63 @@ export function useStudio() {
     };
   }, [saveNow, saveBrandNow]);
 
-  /** Cambia la historia abierta y la guarda un momento después */
+  const scheduleSave = useCallback(() => {
+    dirty.current = true;
+    setStatus('dirty');
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => void saveNow(), 1200);
+  }, [saveNow]);
+
+  /**
+   * Cambia la historia abierta y la guarda un momento después. Lo que hace la persona se puede deshacer;
+   * lo que pone al día la tienda (precios, tasa) no entra en el historial (history: false).
+   */
   const update = useCallback(
-    (fn: (f: StudioFlyerData) => StudioFlyerData) => {
-      setCurrent((f) => (f ? withSlots(fn(f)) : f));
-      dirty.current = true;
-      setStatus('dirty');
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => void saveNow(), 1200);
+    (fn: (f: StudioFlyerData) => StudioFlyerData, opts: { history?: boolean } = {}) => {
+      const before = latest.current.current;
+      if (!before) return;
+      if (opts.history !== false) {
+        const now = Date.now();
+        // Solo se agrupa lo que se escribe o se arrastra en un campo; cada botón es un paso aparte
+        const el = document.activeElement;
+        const typing = el instanceof HTMLTextAreaElement || (el instanceof HTMLInputElement && el.type !== 'checkbox' && el.type !== 'file');
+        if (!typing || now - lastPush.current > HISTORY_GROUP_MS || !past.current.length) {
+          past.current = [...past.current, before].slice(-HISTORY_MAX);
+        }
+        lastPush.current = typing ? now : 0;
+        future.current = [];
+        syncHistory();
+      }
+      // La tasa siempre es la de la tienda: también al pasar a la plantilla "Tasa BCV"
+      setCurrent((f) => (f ? withSlots(refreshRate(fn(f), latestStore.current.store)) : f));
+      scheduleSave();
     },
-    [saveNow],
+    [scheduleSave],
   );
+
+  const undo = useCallback(() => {
+    const prev = past.current.at(-1);
+    const now = latest.current.current;
+    if (!prev || !now) return;
+    past.current = past.current.slice(0, -1);
+    future.current = [...future.current, now];
+    lastPush.current = 0;
+    syncHistory();
+    setCurrent(prev);
+    scheduleSave();
+  }, [scheduleSave]);
+
+  const redo = useCallback(() => {
+    const next = future.current.at(-1);
+    const now = latest.current.current;
+    if (!next || !now) return;
+    future.current = future.current.slice(0, -1);
+    past.current = [...past.current, now];
+    lastPush.current = 0;
+    syncHistory();
+    setCurrent(next);
+    scheduleSave();
+  }, [scheduleSave]);
 
   /** Abre una historia: la normaliza y pone al día los productos de la tienda */
   const openId = useRef<string | null>(null);
@@ -159,15 +236,20 @@ export function useStudio() {
     async (flyer: StudioFlyer) => {
       const data = withSlots(normalizeFlyer(flyer));
       openId.current = flyer.id;
+      latest.current = { ...latest.current, current: data, currentId: flyer.id };
       setCurrentId(flyer.id);
       setCurrent(data);
       setStatus('idle');
       dirty.current = false;
+      past.current = [];
+      future.current = [];
+      syncHistory();
       lsSet(FLYER_KEY, flyer.id);
       const fresh = await fetchLive(linkedIds([data]));
       setLive((prev) => ({ ...prev, ...fresh }));
-      // Si cambió un precio u oferta en la tienda, la historia se pone al día y se guarda
-      if (openId.current === flyer.id && refreshLinked(data, fresh) !== data) update((f) => refreshLinked(f, fresh));
+      // Si cambió un precio, una oferta, el cupón o la tasa en la tienda, la historia se pone al día y se guarda
+      const { coupons: cp, store: st } = latestStore.current;
+      if (openId.current === flyer.id && refreshAll(data, fresh, cp, st) !== data) update((f) => refreshAll(f, fresh, cp, st), { history: false });
     },
     [update],
   );
@@ -178,9 +260,14 @@ export function useStudio() {
       if (!fr.ok || !br.ok) throw new Error();
       const { flyers: list } = (await fr.json()) as { flyers: StudioFlyer[] };
       const { brand: b, store: s } = (await br.json()) as { brand: StudioBrand; store: StudioStoreInfo };
+      // Cupones y productos de todas las historias: para avisar en la lista cuáles quedaron viejas
+      const [cp, allLive] = await Promise.all([fetchCoupons(), fetchLive(linkedIds(list.map((f) => normalizeFlyer(f))))]);
+      latestStore.current = { coupons: cp, store: s };
       setFlyers(list);
       setBrandState(normalizeBrand(b));
       setStore(s);
+      setCoupons(cp);
+      setLive(allLive);
       const want = lsGet(FLYER_KEY);
       const pick = list.find((f) => f.id === want) ?? list[0];
       if (pick) await open(pick);
@@ -257,18 +344,45 @@ export function useStudio() {
     }
   }, [flyers, open]);
 
-  /** Productos de la tienda que otras historias necesitan al exportarlas juntas */
-  const liveFor = useCallback(
-    async (list: StudioFlyerData[]) => {
-      const missing = linkedIds(list);
-      const fresh = await fetchLive(missing);
-      setLive((prev) => ({ ...prev, ...fresh }));
-      return { ...live, ...fresh };
+  /** Historias de un lote o semana puestas al día con la tienda, para descargarlas juntas */
+  const freshFlyers = useCallback(async (list: StudioFlyer[]): Promise<StudioFlyer[]> => {
+    const fresh = await fetchLive(linkedIds(list.map((f) => normalizeFlyer(f))));
+    setLive((prev) => ({ ...prev, ...fresh }));
+    const { coupons: cp, store: st } = latestStore.current;
+    return list.map((f) => ({ ...f, ...withSlots(refreshAll(normalizeFlyer(f), fresh, cp, st)) }));
+  }, []);
+
+  /**
+   * Anota lo que salió en la descarga (precios, tasa, cupón): si la tienda cambia después, la lista avisa.
+   * La abierta se guarda como siempre; las demás (descarga de un lote) se guardan aquí.
+   */
+  const markExported = useCallback(
+    async (list: StudioFlyer[]) => {
+      const openNow = latest.current.currentId;
+      const others = list.filter((f) => f.id !== openNow);
+      if (list.some((f) => f.id === openNow)) update((f) => ({ ...f, exported: exportSnapshot(f) }), { history: false });
+      const saved = await Promise.all(
+        others.map(async (f) => {
+          const { id, ...rest } = f;
+          const data = { ...normalizeFlyer(rest), exported: exportSnapshot(normalizeFlyer(rest)) };
+          const res = await fetch(`/api/admin/studio/flyers/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).catch(() => null);
+          return res?.ok ? ((await res.json()) as { flyer: StudioFlyer }).flyer : null;
+        }),
+      );
+      const byId = new Map(saved.filter((f): f is StudioFlyer => !!f).map((f) => [f.id, f]));
+      if (byId.size) setFlyers((all) => all.map((f) => byId.get(f.id) ?? f));
     },
-    [live],
+    [update],
   );
 
   const rememberLive = useCallback((p: StudioStoreProduct) => setLive((prev) => ({ ...prev, [p.id]: p })), []);
+
+  /** Aplica un estilo guardado a la historia abierta */
+  const applyStyle = useCallback(
+    (style: StudioBrand['styles'][number]) =>
+      update((f) => ({ ...f, bg: style.bg, anim: style.anim, fx: { ...style.fx }, accent: style.accent, accent2: style.accent2 })),
+    [update],
+  );
 
   /** La lista con la historia abierta tal como está en pantalla (aunque aún no se haya guardado) */
   const flyersView = useMemo(
@@ -276,15 +390,26 @@ export function useStudio() {
     [flyers, current, currentId],
   );
 
+  const currentCode = flyers.find((f) => f.id === currentId)?.code ?? null;
+
   return {
     loading,
     flyers: flyersView,
     current,
     currentId,
+    currentCode,
     brand,
     store,
     live,
+    coupons,
     status,
+    canUndo: historySize.undo > 0,
+    canRedo: historySize.redo > 0,
+    undo,
+    redo,
+    applyStyle,
+    markExported,
+    freshFlyers,
     update,
     setBrand,
     select,
@@ -292,7 +417,6 @@ export function useStudio() {
     duplicate,
     remove,
     saveNow,
-    liveFor,
     rememberLive,
   };
 }

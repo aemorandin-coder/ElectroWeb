@@ -1,4 +1,4 @@
-# Punto de partida (actualizado 2026-09-28: todo hasta C-40 en `main`; C-112 ElectroStudio lista para mergear)
+# Punto de partida (actualizado 2026-09-28: todo hasta C-40 en `main`; ElectroStudio C-112 + C-113 lista para mergear)
 
 Léelo antes de empezar.
 
@@ -9,7 +9,11 @@ Encontradas en C-40: el secreto del webhook de SADES (`scripts/test-webhook.js`)
 - Sigue recomendado **poner el repositorio en privado** (GitHub → Settings → Change visibility).
 
 ## 1. Ramas
-- **Nueva: `claude/C-112` (ElectroStudio, fase 1)**, sale de `main` (9739bfa). Reemplaza "Imágenes para redes" por `/admin/studio`: historias y videos con los productos, precios y ofertas reales de la tienda. **Crea 2 tablas** (OK de Andrés del 26/09): en el deploy, `deploy.sh` para y muestra el SQL; correr `npx prisma db push` y otra vez el guion. Detalle en `estado/C-112.md`.
+- **Nuevas: ElectroStudio, `main` → `claude/C-112` (fase 1) → `claude/C-113` (fase 2). Mergear `claude/C-113` trae las dos.**
+  - Reemplaza "Imágenes para redes" por `/admin/studio`: historias, posts y videos con los productos, precios, ofertas, cupones, reseñas y la tasa reales de la tienda.
+  - **Base:** crea 2 tablas (`studio_flyers` con su columna `code`, y `studio_brand`), con el OK de Andrés del 26/09. `deploy.sh` para y muestra el SQL: solo `CREATE`, sin DROP. Correr `npx prisma db push` y otra vez el guion.
+  - **Medición:** sin tablas nuevas. Usa `analytics_events`, una cookie en `proxy.ts` y una línea en la API de órdenes que no frena la compra.
+  - Detalle en `estado/C-112.md` y `estado/C-113.md`.
 - **Anterior (ya en `main`):**
 - **Encadenadas:** `main` → C-104 → C-102 → C-103 → C-51 → C-110 → C-111 → C-40. **Mergear `claude/C-40` trae todo.** Cada una tiene su `docs/plan/estado/C-XX.md`.
 - **Resumen:**
@@ -67,6 +71,7 @@ Detalle en `docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`.
 - **ChatGPT:** fuera del equipo.
 - **Envíos:** ZOOM y MRW con cobro a destino.
 - **ElectroStudio (26/09):** ese nombre; historias guardadas en la base (2 tablas); por fases; el artefacto sigue hasta la fase 2.
+- **ElectroStudio fase 2 (28/09):** de las 6 recomendaciones, Andrés eligió la 2 (tasa BCV), la 3 (aviso de historia vencida), la 4 (qué historia vende), la 5 (deshacer y estilos) y la 6 (fondo con foto propia). La 1 (plan semanal automático) quedó fuera.
 - **Clientes:** se borran solo si no tienen nada; si tienen, se desactivan.
 - **Dinero:** nunca sale de la empresa. Comisiones solo por compras pagadas.
 - **Descuentos (25/09):**
@@ -79,8 +84,12 @@ Detalle en `docs/plan/AUDITORIA_CLIENTES_BORRADOS.md`.
 - **Reseñas:** solo con una orden entregada del producto.
 
 ## 5. Pendientes para la próxima sesión (Claude)
-1. **Revisión final con Andrés** (`REVISION_FINAL.md`) y lo que salga de ella. Sumar ElectroStudio: una historia de un producto real, el video en Chrome y "Compartir" desde el teléfono.
-1b. **C-112 fase 2 (ElectroStudio):** fondos nuevos, efectos, formatos 4:5 y 1:1 y plantillas de cupón, reseña, "llegó nuevo" y gift card (lista en `estado/C-112.md`). El artefacto "Flyers ElectroShop" se retira al terminarla (decisión del 26/09).
+1. **Revisión final con Andrés** (`REVISION_FINAL.md`) y lo que salga de ella. Sumar ElectroStudio:
+   - Una historia de un producto real.
+   - "Tu foto" con una foto del local.
+   - El video en Chrome y "Compartir" desde el teléfono.
+   - Después de unos días, mirar "Resultados".
+1b. **ElectroStudio:** fases 1 y 2 listas (C-112 y C-113). El artefacto "Flyers ElectroShop" ya se puede retirar (decisión del 26/09). Si Andrés quiere pasar sus historias, se hace un importador.
 2. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
 3. **C-92:** desactivar clientes en vez de borrarlos (con el diagnóstico del §3).
 4. **Wizard de producto** (crear y editar): rediseño paso a paso (lo que quedó de C-51).

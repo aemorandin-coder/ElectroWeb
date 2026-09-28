@@ -5,6 +5,8 @@ import { toast } from 'react-hot-toast';
 import { adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { buildCaption } from '@/lib/studio/caption';
+import { qrUrlFor } from '@/lib/studio/engine';
+import { FiLink } from 'react-icons/fi';
 import { sectionSummary, smallButton, smallDangerButton } from './ui';
 import type { Studio } from './useStudio';
 
@@ -26,31 +28,34 @@ interface Props {
 }
 
 export default function StepPublish({ studio, checks, busy, canShare, onPng, onVideo, onShare, goStep }: Props) {
-  const { current, update, brand, flyers, duplicate, remove } = studio;
+  const { current, update, brand, flyers, duplicate, remove, currentCode } = studio;
   const { confirm } = useConfirm();
   if (!current) return null;
   const batches = [...new Set(flyers.map((f) => f.batch).filter(Boolean))];
+  // Enlace con la marca de la historia: lo que entra por aquí (y por el QR) cuenta en Resultados
+  const link = currentCode ? qrUrlFor(current, brand, currentCode) : '';
 
   const generate = async () => {
     if (current.caption.trim()) {
       const ok = await confirm({ title: 'Escribir el texto de nuevo', message: 'Se reemplaza el texto que ya tienes.', confirmText: 'Reemplazar', cancelText: 'Cancelar' });
       if (!ok) return;
     }
-    update((f) => ({ ...f, caption: buildCaption(f, brand) }));
+    update((f) => ({ ...f, caption: buildCaption(f, brand, link) }));
   };
 
-  const copy = async () => {
-    if (!current.caption) {
+  const copyText = async (text: string, done: string) => {
+    if (!text) {
       toast.error('No hay texto todavía');
       return;
     }
     try {
-      await navigator.clipboard.writeText(current.caption);
-      toast.success('Texto copiado');
+      await navigator.clipboard.writeText(text);
+      toast.success(done);
     } catch {
       toast.error('Selecciónalo y cópialo');
     }
   };
+  const copy = () => copyText(current.caption, 'Texto copiado');
 
   const askRemove = async () => {
     const ok = await confirm({ title: 'Eliminar historia', message: `¿Eliminar "${current.name}"? No se puede deshacer.`, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
@@ -89,6 +94,23 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
           </button>
         )}
       </div>
+
+      {link && (
+        <div className="rounded-xl border border-line bg-surface p-3">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+            <FiLink className="h-4 w-4 text-brand-500" aria-hidden="true" />
+            Enlace de esta historia
+          </p>
+          <div className="mt-2 flex gap-2">
+            <input type="text" readOnly value={link} aria-label="Enlace de esta historia" onFocus={(e) => e.target.select()} className={`${adminInput()} h-9 font-mono text-xs`} />
+            <button type="button" onClick={() => void copyText(link, 'Enlace copiado')} className={smallButton}>
+              <FiCopy className="h-4 w-4" aria-hidden="true" />
+              Copiar
+            </button>
+          </div>
+          <p className={adminHint}>Úsalo en el sticker de enlace de Instagram. Las visitas y compras que lleguen por aquí o por el QR se ven en &quot;Resultados&quot;.</p>
+        </div>
+      )}
 
       <div>
         <div className="mb-1.5 flex items-center justify-between gap-2">

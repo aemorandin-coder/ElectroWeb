@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiCheck, FiCloud, FiDownload, FiPause, FiPlay } from 'react-icons/fi';
-import { adminEmpty, adminHint, adminPrimaryButton } from '@/lib/admin-ui';
+import { FiAlertTriangle, FiCheck, FiCloud, FiCornerUpLeft, FiCornerUpRight, FiDownload, FiPause, FiPlay } from 'react-icons/fi';
+import { adminEmpty, adminHint, adminIconButton, adminPrimaryButton } from '@/lib/admin-ui';
 import { useDelNavegador } from '@/lib/hooks/useMontado';
 import {
   DURATION,
   H,
   StudioImages,
+  formatHeight,
   W,
   createRenderer,
   flyerImageSources,
@@ -17,8 +18,8 @@ import {
   type ProductSrc,
   type StudioRenderer,
 } from '@/lib/studio/engine';
-import { refreshLinked } from '@/lib/studio/live';
-import { TEMPLATES, normalizeFlyer, slugify, type StudioFlyer, type StudioFlyerData } from '@/lib/studio/schema';
+import { staleWarnings } from '@/lib/studio/live';
+import { FORMATS, TEMPLATES, normalizeFlyer, slugify, type BackgroundId, type FormatId, type StudioFlyer, type StudioFlyerData } from '@/lib/studio/schema';
 import { makeZip } from '@/lib/studio/zip';
 import { canvasBlob, downloadBlob, pickVideoType, recordCanvas, shareFile, uploadStudioImage } from './exporters';
 import FlyerList from './FlyerList';
@@ -37,12 +38,33 @@ const STEPS: [number, string][] = [
 ];
 const SAFE_KEY = 'studio-safe';
 
-const fileBase = (f: StudioFlyerData) => `${slugify(f.name || f.products[0]?.title || 'historia')}-electroshop-historia`;
+const fileBase = (f: StudioFlyerData) => `${slugify(f.name || f.products[0]?.title || 'historia')}-electroshop-${f.format === 'story' ? 'historia' : `post-${FORMATS[f.format].short.replace(':', 'x')}`}`;
+
+/** Proporción de la vista previa y su ancho en escritorio (alto disponible × proporción) */
+const PREVIEW_CLASS: Record<FormatId, string> = {
+  story: 'aspect-[9/16] max-w-[15rem] sm:max-w-xs lg:w-[min(100%,calc((100dvh_-_14rem)*9/16))]',
+  post45: 'aspect-[4/5] max-w-xs sm:max-w-sm lg:w-[min(100%,calc((100dvh_-_14rem)*4/5))]',
+  post11: 'aspect-square max-w-xs sm:max-w-sm lg:w-[min(100%,calc(100dvh_-_14rem))]',
+};
 
 function stepDone(k: number, f: StudioFlyerData, src: ProductSrc): boolean {
   if (k === 1) {
-    if (f.template === 'mensaje') return !!f.msg.headline.trim();
-    return f.products.slice(0, TEMPLATES[f.template].n).every(slotDone) && (f.template !== 'trio' || !!f.heading.trim());
+    switch (f.template) {
+      case 'mensaje':
+        return !!f.msg.headline.trim();
+      case 'tasa':
+        return f.rate > 0;
+      case 'cupon':
+        return !!f.coupon.code.trim();
+      case 'resena':
+        return !!f.review.comment.trim();
+      case 'giftcard': {
+        const p = f.products[0];
+        return !!p?.title && (p.price > 0 || p.variants.some((v) => v.price > 0));
+      }
+      default:
+        return f.products.slice(0, TEMPLATES[f.template].n).every(slotDone) && (f.template !== 'trio' || !!f.heading.trim());
+    }
   }
   if (k === 2) return missingImages(f, src).length === 0;
   if (k === 4) return !!f.caption.trim();
@@ -63,7 +85,7 @@ const STATUS_TEXT: Record<SaveStatus, string> = {
 
 export default function Studio() {
   const studio = useStudio();
-  const { loading, flyers, current, currentId, brand, status, update } = studio;
+  const { loading, flyers, current, currentId, currentCode, brand, status, update } = studio;
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const images = useRef<StudioImages | null>(null);
@@ -96,16 +118,23 @@ export default function Studio() {
   const canShare = useDelNavegador(() => typeof navigator.share === 'function' && typeof navigator.canShare === 'function', false);
 
   // Lo último que hay que dibujar, para el bucle de animación y las cargas de imágenes
-  const scene = useRef({ current, brand, safe });
+  const scene = useRef({ current, brand, safe, code: currentCode });
   useEffect(() => {
-    scene.current = { current, brand, safe };
+    scene.current = { current, brand, safe, code: currentCode };
     srcRef.current = productSrc;
   });
+  // Sube cada vez que llega una imagen: las miniaturas de los fondos con foto se vuelven a dibujar
+  const [imgTick, setImgTick] = useState(0);
 
   const drawStatic = useCallback(() => {
     if (!renderer.current || busyRef.current) return;
     const s = scene.current;
-    renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe });
+    renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, code: s.code });
+  }, []);
+
+  const drawThumb = useCallback((target: HTMLCanvasElement, style: BackgroundId) => {
+    const s = scene.current;
+    if (renderer.current && s.current) renderer.current.drawBackgroundThumb(target, style, s.current, s.brand);
   }, []);
 
   // Canvas y motor: una vez
@@ -117,7 +146,10 @@ export default function Studio() {
     let frame = 0;
     images.current.onLoad = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(drawStatic);
+      frame = requestAnimationFrame(() => {
+        drawStatic();
+        setImgTick((n) => n + 1);
+      });
     };
     void loadStudioFonts().then(drawStatic);
     return () => cancelAnimationFrame(frame);
@@ -128,7 +160,7 @@ export default function Studio() {
     if (playing) return;
     const frame = requestAnimationFrame(drawStatic);
     return () => cancelAnimationFrame(frame);
-  }, [current, brand, safe, tempImages, playing, drawStatic]);
+  }, [current, brand, safe, tempImages, playing, drawStatic, currentCode]);
 
   // Animación en la vista previa, en bucle
   useEffect(() => {
@@ -140,7 +172,7 @@ export default function Studio() {
       if (!busyRef.current && renderer.current) {
         const t = Math.min(DURATION, ((now - playStart.current) / 1000) % (DURATION + 0.8));
         const s = scene.current;
-        renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, t, epoch });
+        renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, t, epoch, code: s.code });
       }
       frame = requestAnimationFrame(loop);
     };
@@ -196,7 +228,11 @@ export default function Studio() {
       const file = item?.getAsFile();
       if (!file) return;
       e.preventDefault();
-      const n = f.template === 'mensaje' ? 1 : TEMPLATES[f.template].n;
+      const n = TEMPLATES[f.template].n;
+      if (n === 0) {
+        toast('Esta plantilla no lleva foto de producto. Para una foto de fondo, usa "Tu foto" en Diseño.');
+        return;
+      }
       const slot = Math.min(activeSlot, n - 1);
       void onFile(slot, file);
       toast.success(n > 1 ? `Foto pegada en el producto ${slot + 1}` : 'Foto pegada');
@@ -204,6 +240,24 @@ export default function Studio() {
     document.addEventListener('paste', onPaste);
     return () => document.removeEventListener('paste', onPaste);
   }, [activeSlot, onFile]);
+
+  // Ctrl+Z deshace y Ctrl+Mayús+Z (o Ctrl+Y) rehace, en todo el estudio
+  const { undo, redo } = studio;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      const k = e.key.toLowerCase();
+      if (k === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((k === 'z' && e.shiftKey) || k === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [undo, redo]);
 
   /** Bloquea la vista previa mientras se exporta y la devuelve al terminar */
   const exclusive = async (fn: () => Promise<void>) => {
@@ -221,7 +275,7 @@ export default function Studio() {
     }
   };
 
-  const renderStill = async (f: StudioFlyerData, src: ProductSrc): Promise<Blob | null> => {
+  const renderStill = async (f: StudioFlyerData, src: ProductSrc, code: string | null): Promise<Blob | null> => {
     const r = renderer.current;
     const canvas = canvasRef.current;
     if (!r || !canvas || !images.current) return null;
@@ -229,7 +283,7 @@ export default function Studio() {
     await images.current.whenReady(flyerImageSources(f, brand, src));
     const prev = srcRef.current;
     srcRef.current = src;
-    r.draw(f, brand, { preview: false });
+    r.draw(f, brand, { preview: false, code });
     const blob = await canvasBlob(canvas);
     srcRef.current = prev;
     return blob;
@@ -240,25 +294,33 @@ export default function Studio() {
     if (miss.length) toast(`Sale sin foto de: ${miss.join(', ')}`, { icon: <FiAlertTriangle className="text-warning-strong" aria-hidden="true" /> });
   };
 
+  /** Anota los precios de esta descarga: si cambian en la tienda después, la lista avisa */
+  const markCurrentExported = async () => {
+    const f = flyers.find((x) => x.id === currentId);
+    if (f) await studio.markExported([f]);
+  };
+
   const exportPng = () =>
     exclusive(async () => {
       if (!current) return;
       await studio.saveNow();
       warnMissing(current);
-      const blob = await renderStill(current, productSrc);
+      const blob = await renderStill(current, productSrc, currentCode);
       if (!blob) throw new Error('No se pudo generar la imagen');
       downloadBlob(blob, `${fileBase(current)}.png`);
+      await markCurrentExported();
     });
 
   const share = () =>
     exclusive(async () => {
       if (!current) return;
-      const blob = await renderStill(current, productSrc);
+      const blob = await renderStill(current, productSrc, currentCode);
       if (!blob) throw new Error('No se pudo generar la imagen');
       if (!(await shareFile(blob, `${fileBase(current)}.png`, current.caption))) {
         downloadBlob(blob, `${fileBase(current)}.png`);
         toast('Este navegador no comparte archivos: se descargó la imagen');
       }
+      await markCurrentExported();
     });
 
   const exportVideo = () =>
@@ -272,33 +334,35 @@ export default function Studio() {
       const toastId = toast.loading(`Grabando el video (${DURATION} segundos). No cambies de pestaña.`);
       const epoch = Date.now();
       const r = renderer.current;
-      const blob = await recordCanvas(canvasRef.current, type, (t) => r.draw(current, brand, { preview: false, t, epoch }));
+      const blob = await recordCanvas(canvasRef.current, type, (t) => r.draw(current, brand, { preview: false, t, epoch, code: currentCode }));
       toast.dismiss(toastId);
       const ext = type.startsWith('video/mp4') ? 'mp4' : 'webm';
       downloadBlob(blob, `${fileBase(current)}.${ext}`);
       if (ext === 'webm') toast('Tu navegador grabó en WEBM; Instagram prefiere MP4. Usa Chrome actualizado.');
+      await markCurrentExported();
     });
 
   const exportZip = (list: StudioFlyer[], name: string) =>
     exclusive(async () => {
       if (!list.length) return;
       await studio.saveNow();
-      const live = await studio.liveFor(list);
+      const fresh = await studio.freshFlyers(list);
       const files: { name: string; blob: Blob }[] = [];
       let missing = 0;
       const toastId = toast.loading(`Preparando 1 de ${list.length}…`);
       for (let i = 0; i < list.length; i++) {
         toast.loading(`Preparando ${i + 1} de ${list.length}…`, { id: toastId });
-        const f = refreshLinked(normalizeFlyer(list[i]), live);
+        const f = normalizeFlyer(fresh[i]);
         const src: ProductSrc = list[i].id === currentId ? productSrc : (p) => p.imageUrl;
         if (missingImages(f, src).length) missing++;
-        const blob = await renderStill(f, src);
+        const blob = await renderStill(f, src, fresh[i].code);
         if (blob) files.push({ name: `${String(i + 1).padStart(2, '0')}-${fileBase(f)}.png`, blob });
       }
       toast.dismiss(toastId);
       if (!files.length) throw new Error('No se pudo generar');
       downloadBlob(await makeZip(files), `${slugify(name)}-historias.zip`);
       if (missing) toast(`${missing} historia(s) sin foto de producto`);
+      await studio.markExported(fresh);
     });
 
   if (loading) {
@@ -310,13 +374,25 @@ export default function Studio() {
   }
 
   const miss = current ? missingImages(current, productSrc) : [];
+  const contentText: Partial<Record<StudioFlyerData['template'], string>> = {
+    mensaje: 'Titular escrito',
+    tasa: 'Tasa del día cargada',
+    cupon: 'Cupón elegido',
+    resena: 'Reseña escrita',
+  };
+  // Lo que cambió en la tienda y hace vieja a esta historia (agotado, oferta vencida…), también antes de descargar
+  const stale = current ? staleWarnings({ ...current, exported: { ...current.exported, at: '' } }, studio.live, studio.coupons, studio.store) : [];
   const checks: PublishCheck[] = current
     ? [
-        { ok: stepDone(1, current, productSrc), text: current.template === 'mensaje' ? 'Titular escrito' : 'Textos y precio completos', step: 1 },
-        { ok: miss.length === 0, text: miss.length ? `Falta la foto de: ${miss.join(', ')}` : 'Fotos listas', step: 2 },
+        { ok: stepDone(1, current, productSrc), text: contentText[current.template] ?? 'Textos y precio completos', step: 1 },
+        ...(TEMPLATES[current.template].photo === 'required' || miss.length
+          ? [{ ok: miss.length === 0, text: miss.length ? `Falta la foto de: ${miss.join(', ')}` : 'Fotos listas', step: 2 }]
+          : []),
         { ok: !!current.caption.trim(), text: 'Texto para Instagram escrito' },
+        ...stale.map((w) => ({ ok: false, text: w.text })),
       ]
     : [];
+  const format = current?.format ?? 'story';
 
   const preview = (
     <div className="flex flex-col items-center gap-3">
@@ -325,8 +401,8 @@ export default function Studio() {
         width={W}
         height={H}
         role="img"
-        aria-label={current ? `Vista previa de la historia ${current.name}` : 'Vista previa'}
-        className="aspect-[9/16] h-auto w-full max-w-[15rem] rounded-md bg-white shadow-lg sm:max-w-xs lg:w-[min(100%,calc((100dvh_-_14rem)*9/16))] lg:max-w-none"
+        aria-label={current ? `Vista previa de ${current.name}` : 'Vista previa'}
+        className={`${PREVIEW_CLASS[format]} h-auto w-full rounded-md bg-white shadow-lg lg:max-w-none`}
       />
       {current && (
         <>
@@ -340,6 +416,7 @@ export default function Studio() {
               Imagen
             </button>
           </div>
+          {format === 'story' && (
           <label className="flex items-center gap-2 text-sm text-ink-soft">
             <input
               type="checkbox"
@@ -356,7 +433,10 @@ export default function Studio() {
             />
             Ver lo que tapa Instagram
           </label>
-          <p className={`${adminHint} text-center`}>{miss.length ? `Falta la foto de: ${miss.join(', ')}` : 'Historia de Instagram: 1080 × 1920 (9:16).'}</p>
+          )}
+          <p className={`${adminHint} text-center`}>
+            {miss.length ? `Falta la foto de: ${miss.join(', ')}` : `${FORMATS[format].label}: 1080 × ${formatHeight(format)}.`}
+          </p>
         </>
       )}
     </div>
@@ -366,7 +446,7 @@ export default function Studio() {
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] min-[85rem]:grid-cols-[15rem_minmax(0,1fr)_24rem]">
       <aside className="order-3 rounded-2xl border border-line bg-white p-4 lg:col-span-2 min-[85rem]:order-1 min-[85rem]:col-span-1 min-[85rem]:sticky min-[85rem]:top-20">
-        <FlyerList flyers={flyers} currentId={currentId} busy={busy} onSelect={(id) => void studio.select(id)} onNew={() => void studio.create()} onZip={(l, n) => void exportZip(l, n)} />
+        <FlyerList studio={studio} busy={busy} onZip={(l, n) => void exportZip(l, n)} />
       </aside>
 
       <section className="order-2 rounded-2xl border border-line bg-white p-4 lg:order-1 min-[85rem]:order-2" aria-label="Editor">
@@ -374,6 +454,16 @@ export default function Studio() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-2">
               <h2 className="truncate text-base font-bold text-ink">{current.name || 'Sin nombre'}</h2>
+              <span className="flex shrink-0 items-center gap-1">
+                <button type="button" onClick={studio.undo} disabled={!studio.canUndo} className={adminIconButton} aria-label="Deshacer (Ctrl+Z)" title="Deshacer (Ctrl+Z)">
+                  <FiCornerUpLeft className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button type="button" onClick={studio.redo} disabled={!studio.canRedo} className={adminIconButton} aria-label="Rehacer (Ctrl+Mayús+Z)" title="Rehacer (Ctrl+Mayús+Z)">
+                  <FiCornerUpRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </span>
+            </div>
+            <div className="-mt-3 flex justify-end">
               <span className="flex shrink-0 items-center gap-1 text-xs text-muted" aria-live="polite">
                 {status === 'saved' && <FiCheck className="h-3.5 w-3.5 text-success-strong" aria-hidden="true" />}
                 {status === 'saving' && <FiCloud className="h-3.5 w-3.5" aria-hidden="true" />}
@@ -409,7 +499,7 @@ export default function Studio() {
 
             {step === 1 && <StepContent studio={studio} activeSlot={activeSlot} setActiveSlot={setActiveSlot} />}
             {step === 2 && <StepPhoto studio={studio} productSrc={productSrc} onFile={(i, f) => void onFile(i, f)} activeSlot={activeSlot} setActiveSlot={setActiveSlot} />}
-            {step === 3 && <StepDesign studio={studio} onAnim={replay} />}
+            {step === 3 && <StepDesign studio={studio} onAnim={replay} drawThumb={drawThumb} imgTick={imgTick} />}
             {step === 4 && (
               <StepPublish
                 studio={studio}

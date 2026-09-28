@@ -52,6 +52,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Las compras que llegan por una historia de ElectroStudio las anota solo el servidor (C-113)
+        if (sanitizedEventType === 'studio_order') {
+            return NextResponse.json({ error: 'Invalid eventType' }, { status: 400 });
+        }
+
         // Validate event category
         const validCategories = ['interaction', 'navigation', 'conversion', 'error', 'performance'];
         const eventCategory = validCategories.includes(data.eventCategory)

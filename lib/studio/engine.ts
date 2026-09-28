@@ -8,13 +8,16 @@ import {
   ANIMATIONS,
   BACKGROUNDS,
   BACKGROUND_DEFAULT,
-  TEMPLATES,
+  FORMATS,
   blankProduct,
   payKey,
   payMethods,
+  requiredPhotos,
   type AnimationId,
   type BackgroundId,
+  type FormatId,
   type StudioBrand,
+  type StudioEffects,
   type StudioFlyerData,
   type StudioProductSlot,
   type StudioSpec,
@@ -22,7 +25,9 @@ import {
 } from './schema';
 
 export const W = 1080;
+/** Alto de la historia (9:16), el formato por defecto */
 export const H = 1920;
+export const formatHeight = (format: FormatId) => FORMATS[format]?.h ?? H;
 export const DURATION = 7;
 export const OFFICIAL_LOGO = { color: '/images/studio/logo-color.png', white: '/images/studio/logo-white.png' };
 
@@ -150,11 +155,13 @@ export interface DrawOptions {
   t?: number | null;
   /** Hora real en que empezó la animación (para el contador de la oferta) */
   epoch?: number;
+  /** Código de la historia: va en el QR (?es=código) para medir visitas y compras */
+  code?: string | null;
 }
 
 export function missingImages(f: StudioFlyerData | null, productSrc: ProductSrc): string[] {
-  if (!f || f.template === 'mensaje') return [];
-  const n = TEMPLATES[f.template]?.n || 1;
+  if (!f) return [];
+  const n = requiredPhotos(f.template);
   const out: string[] = [];
   for (let i = 0; i < n; i++) {
     const p = f.products[i];
@@ -171,20 +178,45 @@ export function bgFor(f: Pick<StudioFlyerData, 'bg' | 'template'>): BackgroundId
 type Box = [number, number, number, number];
 type FxKind = 'up' | 'left' | 'right' | 'zoomin' | 'pop' | 'wipe' | 'fade';
 
+/** Números al azar pero siempre los mismos (mulberry32): el fondo y las partículas no cambian entre dibujos */
+function rng(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** "#004AAD" + 0.5 → "rgba(0,74,173,0.5)" */
+function alpha(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
 /* ---------- paleta ---------- */
 const INK = '#0A1B3D';
 const PALE = '#EEF3FB';
 const HOT = '#E0263A'; // solo ofertas: sticker de descuento, etiqueta y contador
 const LIGHT_ON_DARK = '#9CC0FF';
-/* Historia 9:16. Los diseños están hechos en una grilla de 1080×1350 y se estiran en vertical (K) para llenar
-   el espacio entre la barra de perfil y la de responder de Instagram. */
-const OY = 185;
-const K = 1.15;
+const GOLD = '#FFB400'; // estrellas de las reseñas
+const CONFETTI = ['#FFB400', '#E0263A', '#22D3EE', '#FFFFFF'];
+/* Los diseños están hechos en una grilla de 1080×1350 (4:5). Cada formato la acomoda en su lienzo (FORMAT_LAYOUT):
+   - Historia 9:16: se estira en vertical (K) para llenar el espacio entre la barra de perfil y la de responder.
+   - Post 4:5: tal cual.
+   - Post 1:1: se achica parejo (SC) y se centra; el fondo sí llena todo el ancho. */
 const CH = 1350;
-const TOP = -OY;
-const BOT = H - OY;
-const Y = (v: number) => v * K;
-const SPLIT: Record<TemplateId, number> = { solo: 860, duo: 650, trio: 880, mensaje: 1000 };
+const FORMAT_LAYOUT: Record<FormatId, { K: number; OY: number; S: number; TX: number }> = {
+  story: { K: 1.15, OY: 185, S: 1, TX: 0 },
+  post45: { K: 1, OY: 0, S: 1, TX: 0 },
+  post11: { K: 1, OY: 0, S: 0.8, TX: 108 },
+};
+const SPLIT: Record<TemplateId, number> = { solo: 860, duo: 650, trio: 880, nuevo: 900, giftcard: 600, cupon: 980, resena: 900, mensaje: 1000, tasa: 790 };
+/** Dónde va el podio y el centro de los rayos, según la plantilla */
+const PODIUM_X: Partial<Record<TemplateId, number>> = { solo: 760, duo: 850, nuevo: 400, giftcard: 840 };
+const RAYS_CENTER: Partial<Record<TemplateId, [number, number]>> = { solo: [310, 1010], duo: [505, 475], cupon: [540, 560], tasa: [540, 520], nuevo: [540, 620] };
 
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 const back = (t: number) => {
@@ -231,8 +263,19 @@ function dims(img: Drawable): { w: number; h: number } {
   return img instanceof HTMLImageElement ? { w: img.naturalWidth, h: img.naturalHeight } : { w: img.width, h: img.height };
 }
 
-export function qrUrlFor(f: StudioFlyerData, brand: StudioBrand): string {
-  return (f.qrUrl || '').trim() || (f.products[0] || {}).url || `https://${brand.website || 'electroshopve.com'}`;
+/** Enlace de la historia (QR y texto). Con código lleva la marca de campaña ?es=código, que cuenta visitas y compras. */
+export function qrUrlFor(f: StudioFlyerData, brand: StudioBrand, code?: string | null): string {
+  const site = `https://${(brand.website || 'electroshopve.com').replace(/^https?:\/\//, '').replace(/\/$/, '')}`;
+  let base = (f.qrUrl || '').trim() || (f.products[0] || {}).url || site;
+  if (base.startsWith('/')) base = site + base;
+  if (!code) return base;
+  try {
+    const u = new URL(base);
+    u.searchParams.set('es', code);
+    return u.toString();
+  } catch {
+    return base;
+  }
 }
 
 export function discountPct(p: Pick<StudioProductSlot, 'oldPrice' | 'price'>): number {
@@ -253,13 +296,32 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   let T: number | null = null;
   let animEpoch = 0;
   let ANIM: AnimationId = 'entrada';
-  let OFF_Y = 0;
   let bgData: Uint8ClampedArray | null = null;
   let slideFlip = 0;
   const bgCache = new Map<string, { canvas: HTMLCanvasElement; data: Uint8ClampedArray }>();
+  // Historia que se dibuja y su formato: fijados al empezar cada dibujo
+  let FL: StudioFlyerData | null = null;
+  let FX: StudioEffects = { reflejo: false, particulas: false, confeti: false };
+  let CODE: string | null = null;
+  let FH = H;
+  let K = 1.15;
+  let OY = 185;
+  let SC = 1;
+  let TX = 0;
+  let TOP = -OY;
+  let BOT = H - OY;
+  const Y = (v: number) => v * K;
+  function setFormat(format: FormatId) {
+    const l = FORMAT_LAYOUT[format] ?? FORMAT_LAYOUT.story;
+    FH = formatHeight(format);
+    ({ K, OY, S: SC, TX } = l);
+    // El fondo se dibuja con escala vertical SC: estas son sus coordenadas arriba y abajo del lienzo
+    TOP = -OY / SC;
+    BOT = (FH - OY) / SC;
+  }
 
-  const PR = () => brand.accent || '#004AAD';
-  const SE = () => brand.accent2 || '#2463D6';
+  const PR = () => (FL?.accent || brand.accent || '#004AAD');
+  const SE = () => (FL?.accent2 || brand.accent2 || '#2463D6');
 
   /* ---------- ayudas de canvas ---------- */
   function fit(text: string, maxW: number, start: number, w: number, it = true, min = 18): number {
@@ -280,7 +342,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     // letterSpacing es reciente en canvas: donde no existe, no pasa nada
     (ctx as CanvasRenderingContext2D & { letterSpacing?: string }).letterSpacing = px;
   }
-  function contain(img: Drawable, x: number, y: number, w: number, h: number, shadow = true, anchor: 'center' | 'bottom' = 'center') {
+  function contain(img: Drawable, x: number, y: number, w: number, h: number, shadow = true, anchor: 'center' | 'bottom' = 'center', reflect = false) {
     const { w: iw, h: ih } = dims(img);
     const s = Math.min(w / iw, h / ih);
     const dw = iw * s;
@@ -295,6 +357,33 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     }
     ctx.drawImage(img, dx, dy, dw, dh);
     ctx.restore();
+    if (reflect) ctx.drawImage(reflection(img), dx, dy + dh + 6, dw, dh * 0.4);
+  }
+  /** Reflejo en el piso: la parte de abajo de la foto, invertida y desvanecida (se calcula una vez por foto) */
+  const reflections = new WeakMap<Drawable, HTMLCanvasElement>();
+  function reflection(img: Drawable): HTMLCanvasElement {
+    const hit = reflections.get(img);
+    if (hit) return hit;
+    const { w: iw, h: ih } = dims(img);
+    const rh = Math.max(1, Math.round(ih * 0.4));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, iw);
+    c.height = rh;
+    const x = c.getContext('2d');
+    if (x) {
+      x.translate(0, rh);
+      x.scale(1, -1);
+      x.drawImage(img, 0, ih - rh, iw, rh, 0, 0, iw, rh);
+      x.setTransform(1, 0, 0, 1, 0, 0);
+      x.globalCompositeOperation = 'destination-in';
+      const g = x.createLinearGradient(0, 0, 0, rh);
+      g.addColorStop(0, 'rgba(0,0,0,.42)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g;
+      x.fillRect(0, 0, iw, rh);
+    }
+    reflections.set(img, c);
+    return c;
   }
   function placeholder(x: number, y: number, w: number, h: number, label: string, dark = false) {
     ctx.save();
@@ -422,8 +511,9 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   /* ---------- color según el fondo ---------- */
   function lumAt(px: number, py: number): number {
     if (!bgData) return 255;
-    const X = Math.max(0, Math.min(W - 1, Math.round(px)));
-    const Yy = Math.max(0, Math.min(H - 1, Math.round(py + OFF_Y)));
+    // Del contenido al lienzo: el contenido está desplazado (TX, OY) y escalado (SC)
+    const X = Math.max(0, Math.min(W - 1, Math.round(TX + px * SC)));
+    const Yy = Math.max(0, Math.min(FH - 1, Math.round(OY + py * SC)));
     const k = (Yy * W + X) * 4;
     return 0.2126 * bgData[k] + 0.7152 * bgData[k + 1] + 0.0722 * bgData[k + 2];
   }
@@ -526,6 +616,68 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       ctx.restore();
     });
   }
+  /** Animación "Escribir": el texto aparece letra por letra entre t0 y t0 + dur */
+  function typed(text: string, t0: number, dur: number): string {
+    if (T === null || ANIM !== 'escribir') return text;
+    return text.slice(0, Math.floor(prog(t0, dur) * text.length));
+  }
+  /** Partículas de luz detrás del contenido: quietas en la imagen, flotando en el video */
+  function particles() {
+    const r = rng(23);
+    const h = Y(CH);
+    ctx.save();
+    for (let i = 0; i < 46; i++) {
+      const x0 = r() * W;
+      const y0 = r() * h;
+      const size = 2 + r() * 5;
+      const speed = 20 + r() * 50;
+      const phase = r() * 6.28;
+      const y = T === null ? y0 : ((y0 - T * speed) % h + h) % h;
+      const x = x0 + (T === null ? 0 : Math.sin(T * 1.4 + phase) * 14);
+      const dark = isDark(x, y);
+      ctx.globalAlpha = 0.25 + r() * 0.5;
+      ctx.fillStyle = dark ? '#FFFFFF' : PR();
+      if (i % 6 === 0) {
+        // Destellos en cruz
+        ctx.fillRect(x - size * 2, y - 1, size * 4, 2);
+        ctx.fillRect(x - 1, y - size * 2, 2, size * 4);
+      } else {
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+  /** Confeti encima de todo: cae al principio del video y queda repartido en la imagen fija */
+  function confetti() {
+    const r = rng(41);
+    const h = Y(CH);
+    const p = T === null ? 1 : ease(prog(0.9, 1.8));
+    if (p <= 0) return;
+    ctx.save();
+    for (let i = 0; i < 64; i++) {
+      const x = r() * W;
+      // Más confeti arriba y a los lados, para no tapar el precio
+      const yEnd = Math.pow(r(), 1.6) * h * 0.75;
+      const y = yEnd - (1 - p) * (h * 0.8 + r() * 300);
+      const w = 10 + r() * 14;
+      const hh = 6 + r() * 8;
+      const rot = r() * Math.PI + (T === null ? 0 : T * (r() - 0.5) * 4);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.fillStyle = i % 5 === 0 ? PR() : i % 7 === 0 ? SE() : CONFETTI[i % CONFETTI.length];
+      ctx.globalAlpha = 0.9;
+      if (i % 4 === 0) {
+        ctx.beginPath();
+        ctx.arc(0, 0, hh * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+      } else ctx.fillRect(-w / 2, -hh / 2, w, hh);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
   const pulse = () =>
     T === null || ANIM !== 'destello' ? 1 : 1 + 0.05 * Math.max(0, Math.sin(((T - 3) * Math.PI) / 0.6)) * (T > 3 && T < 3.6 ? 1 : 0);
 
@@ -559,12 +711,12 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     const P = PR();
     const S = SE();
     ctx.fillStyle = PALE;
-    ctx.fillRect(0, TOP, W, H);
+    ctx.fillRect(0, TOP, W, BOT - TOP);
     const g = ctx.createRadialGradient(600, Y(380), 40, 600, Y(380), 860);
     g.addColorStop(0, '#FFFFFF');
     g.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = g;
-    ctx.fillRect(0, TOP, W, H);
+    ctx.fillRect(0, TOP, W, BOT - TOP);
     switch (style) {
       case 'diagonal':
         ctx.fillStyle = S;
@@ -629,7 +781,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       }
       case 'lateral':
         ctx.fillStyle = P;
-        ctx.fillRect(0, TOP, W, H);
+        ctx.fillRect(0, TOP, W, BOT - TOP);
         ([[S, 700], ['#FFFFFF', 740]] as [string, number][]).forEach(([c, x0]) => {
           const d = x0 - 700;
           ctx.fillStyle = c;
@@ -662,12 +814,12 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
         break;
       case 'azul': {
         ctx.fillStyle = P;
-        ctx.fillRect(0, TOP, W, H);
+        ctx.fillRect(0, TOP, W, BOT - TOP);
         const g2 = ctx.createRadialGradient(W - 120, 60, 20, W - 120, 60, 860);
         g2.addColorStop(0, 'rgba(80,140,240,.75)');
         g2.addColorStop(1, 'rgba(80,140,240,0)');
         ctx.fillStyle = g2;
-        ctx.fillRect(0, TOP, W, H);
+        ctx.fillRect(0, TOP, W, BOT - TOP);
         ctx.strokeStyle = 'rgba(255,255,255,.08)';
         ctx.lineWidth = 3;
         for (let i = 1; i < 10; i++) {
@@ -682,6 +834,229 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
         ctx.globalAlpha = 1;
         break;
       }
+      case 'circuito': {
+        const g = ctx.createLinearGradient(0, TOP, 0, BOT);
+        g.addColorStop(0, INK);
+        g.addColorStop(1, P);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, TOP, W, BOT - TOP);
+        const r = rng(7);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        for (let i = 0; i < 38; i++) {
+          let x = Math.round((r() * W) / 40) * 40;
+          let y = TOP + r() * (BOT - TOP);
+          const accentTrace = i % 5 === 0;
+          ctx.strokeStyle = accentTrace ? alpha(LIGHT_ON_DARK, 0.45) : 'rgba(255,255,255,.10)';
+          ctx.lineWidth = accentTrace ? 5 : 4;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          for (let k = 0; k < 3; k++) {
+            const len = 60 + r() * 220;
+            if (k % 2 === 0) x += (r() < 0.5 ? -1 : 1) * len;
+            else y += (r() < 0.5 ? -1 : 1) * len * 0.7;
+            ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          ctx.fillStyle = INK;
+          ctx.beginPath();
+          ctx.arc(x, y, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        // Un chip de fondo, arriba a la derecha
+        ctx.strokeStyle = 'rgba(255,255,255,.12)';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(W - 330, -90, 250, 250, 26);
+        else ctx.rect(W - 330, -90, 250, 250);
+        ctx.stroke();
+        for (let i = 0; i < 5; i++) {
+          ctx.beginPath();
+          ctx.moveTo(W - 300 + i * 48, -90);
+          ctx.lineTo(W - 300 + i * 48, -130);
+          ctx.moveTo(W - 300 + i * 48, 160);
+          ctx.lineTo(W - 300 + i * 48, 200);
+          ctx.stroke();
+        }
+        break;
+      }
+      case 'hexagonos': {
+        const edge = (x: number) => split + 60 - (120 * x) / W;
+        ctx.fillStyle = P;
+        ctx.beginPath();
+        ctx.moveTo(0, edge(0));
+        ctx.lineTo(W, edge(W));
+        ctx.lineTo(W, BOT);
+        ctx.lineTo(0, BOT);
+        ctx.closePath();
+        ctx.fill();
+        const R = 46;
+        const hw = Math.sqrt(3) * R;
+        ctx.lineWidth = 3;
+        for (let row = 0, cy = TOP; cy < BOT + R; row++, cy += R * 1.5) {
+          for (let cx = row % 2 ? hw / 2 : 0; cx < W + hw; cx += hw) {
+            const onBand = cy > edge(cx);
+            const a = onBand ? 0.13 : 0.04 + 0.18 * Math.max(0, (cy - TOP) / (split - TOP));
+            ctx.strokeStyle = onBand ? `rgba(255,255,255,${a})` : alpha(P, a);
+            ctx.beginPath();
+            for (let k = 0; k < 6; k++) {
+              const ang = (Math.PI / 3) * k + Math.PI / 6;
+              const px = cx + R * Math.cos(ang);
+              const py = cy + R * Math.sin(ang);
+              if (k === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+      case 'aurora': {
+        ctx.fillStyle = INK;
+        ctx.fillRect(0, TOP, W, BOT - TOP);
+        const blobs: [number, number, number, string][] = [
+          [W * 0.15, Y(200), 760, alpha(P, 0.95)],
+          [W * 0.95, Y(520), 700, alpha(S, 0.85)],
+          [W * 0.45, Y(1150), 820, alpha('#22D3EE', 0.35)],
+          [W * 0.05, Y(1350), 620, alpha(LIGHT_ON_DARK, 0.3)],
+        ];
+        blobs.forEach(([x, y, r, c]) => {
+          const g = ctx.createRadialGradient(x, y, 10, x, y, r);
+          g.addColorStop(0, c);
+          g.addColorStop(1, 'rgba(10,27,61,0)');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, TOP, W, BOT - TOP);
+        });
+        const r = rng(11);
+        for (let i = 0; i < 70; i++) {
+          ctx.fillStyle = `rgba(255,255,255,${0.15 + r() * 0.45})`;
+          ctx.beginPath();
+          ctx.arc(r() * W, TOP + r() * (BOT - TOP), 1.5 + r() * 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      }
+      case 'podio': {
+        const px = PODIUM_X[FL?.template ?? 'solo'] ?? W / 2;
+        const glow = ctx.createRadialGradient(px, split - 260, 20, px, split - 260, 620);
+        glow.addColorStop(0, 'rgba(255,255,255,1)');
+        glow.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, TOP, W, BOT - TOP);
+        ctx.strokeStyle = alpha(S, 0.16);
+        ctx.lineWidth = 16;
+        [430, 540].forEach((r) => {
+          ctx.beginPath();
+          ctx.arc(px, split - 240, r, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+        const floor = ctx.createLinearGradient(0, split, 0, BOT);
+        floor.addColorStop(0, P);
+        floor.addColorStop(1, INK);
+        ctx.fillStyle = floor;
+        ctx.fillRect(0, split + 30, W, BOT - split);
+        const rx = 340;
+        const ry = 62;
+        const hgt = 90;
+        ctx.fillStyle = S;
+        ctx.fillRect(px - rx, split, rx * 2, hgt);
+        ctx.fillStyle = INK;
+        ctx.beginPath();
+        ctx.ellipse(px, split + hgt, rx, ry, 0, 0, Math.PI);
+        ctx.fill();
+        const top = ctx.createLinearGradient(0, split - ry, 0, split + ry);
+        top.addColorStop(0, '#FFFFFF');
+        top.addColorStop(1, PALE);
+        ctx.fillStyle = top;
+        ctx.beginPath();
+        ctx.ellipse(px, split, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = alpha(S, 0.6);
+        ctx.lineWidth = 6;
+        ctx.stroke();
+        break;
+      }
+      case 'rayos': {
+        const [rcx, rcy] = RAYS_CENTER[FL?.template ?? 'solo'] ?? [W / 2, 600];
+        const cx = rcx;
+        const cy = Y(rcy);
+        ctx.fillStyle = P;
+        ctx.fillRect(0, TOP, W, BOT - TOP);
+        ctx.fillStyle = alpha(S, 0.85);
+        const n = 22;
+        for (let i = 0; i < n; i += 2) {
+          const a0 = (Math.PI * 2 * i) / n;
+          const a1 = (Math.PI * 2 * (i + 1)) / n;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx + Math.cos(a0) * 3000, cy + Math.sin(a0) * 3000);
+          ctx.lineTo(cx + Math.cos(a1) * 3000, cy + Math.sin(a1) * 3000);
+          ctx.closePath();
+          ctx.fill();
+        }
+        const g = ctx.createRadialGradient(cx, cy, 20, cx, cy, 620);
+        g.addColorStop(0, 'rgba(255,255,255,.55)');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, TOP, W, BOT - TOP);
+        ctx.fillStyle = alpha(INK, 0.4);
+        ctx.fillRect(0, Y(1220), W, BOT - Y(1220));
+        break;
+      }
+      case 'neon': {
+        ctx.fillStyle = '#070B1A';
+        ctx.fillRect(0, TOP, W, BOT - TOP);
+        const vx = W / 2;
+        ctx.save();
+        ctx.shadowColor = S;
+        ctx.shadowBlur = 16;
+        ctx.strokeStyle = alpha(LIGHT_ON_DARK, 0.45);
+        ctx.lineWidth = 3;
+        for (let i = 1; i < 14; i++) {
+          const y = split + Math.pow(i / 13, 1.8) * (BOT - split);
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(W, y);
+          ctx.stroke();
+        }
+        for (let i = -9; i <= 9; i++) {
+          ctx.beginPath();
+          ctx.moveTo(vx + i * 30, split);
+          ctx.lineTo(vx + i * 260, BOT);
+          ctx.stroke();
+        }
+        ctx.shadowColor = P;
+        ctx.shadowBlur = 34;
+        ctx.strokeStyle = S;
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.moveTo(0, split);
+        ctx.lineTo(W, split);
+        ctx.stroke();
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = alpha(S, 0.9);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(28, TOP + 28, W - 56, split - TOP - 70, 40);
+        else ctx.rect(28, TOP + 28, W - 56, split - TOP - 70);
+        ctx.stroke();
+        ctx.restore();
+        const sun = ctx.createLinearGradient(0, split - 420, 0, split - 40);
+        sun.addColorStop(0, S);
+        sun.addColorStop(1, P);
+        ctx.fillStyle = sun;
+        ctx.beginPath();
+        ctx.arc(W * 0.8, split - 230, 170, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#070B1A';
+        for (let i = 0; i < 6; i++) ctx.fillRect(W * 0.8 - 180, split - 200 + i * 30, 360, 6 + i * 2);
+        break;
+      }
+      case 'foto':
+      case 'fotoproducto':
+        photoBackground(style, split);
+        break;
       default: // ondas
         ctx.fillStyle = S;
         circle(W + 40, -90, 380);
@@ -693,23 +1068,93 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
         wave(split, P);
     }
   }
+  /** La foto del fondo: la propia del paso Diseño o la del primer producto */
+  function photoSource(style: BackgroundId): string {
+    if (!FL) return '';
+    if (style === 'foto') return FL.bgPhoto.url;
+    return FL.products[0] ? productSrc(FL.products[0], 0) : '';
+  }
+  function photoKey(style: BackgroundId): string {
+    if (style !== 'foto' && style !== 'fotoproducto') return '';
+    const src = photoSource(style);
+    const bp = FL?.bgPhoto;
+    return [src, images.get(src) ? 1 : 0, bp?.blur, bp?.darken, bp?.tint, bp?.x, bp?.y, bp?.zoom].join(',');
+  }
+  /** Foto a pantalla completa, desenfocada, oscurecida y (si se pide) teñida con el color de la marca, para que se lea encima */
+  function photoBackground(style: BackgroundId, split: number) {
+    const bp = FL?.bgPhoto ?? { blur: 14, darken: 45, tint: true, x: 50, y: 50, zoom: 100 };
+    const src = photoSource(style);
+    const img = images.get(src);
+    const h = BOT - TOP;
+    if (!img) {
+      const g = ctx.createLinearGradient(0, TOP, 0, BOT);
+      g.addColorStop(0, SE());
+      g.addColorStop(1, INK);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, TOP, W, h);
+      return;
+    }
+    // Cubrir el lienzo (como object-fit: cover) con zoom y punto de interés; el desenfoque necesita margen extra
+    const blur = bp.blur;
+    const margin = blur * 3;
+    const cover = Math.max((W + margin * 2) / img.naturalWidth, (h + margin * 2) / img.naturalHeight) * (bp.zoom / 100);
+    const dw = img.naturalWidth * cover;
+    const dh = img.naturalHeight * cover;
+    const dx = -((dw - W) * bp.x) / 100;
+    const dy = TOP - ((dh - h) * bp.y) / 100;
+    ctx.save();
+    if (blur > 0 && typeof ctx.filter === 'string') {
+      ctx.filter = `blur(${blur}px)`;
+      ctx.drawImage(img, dx, dy, dw, dh);
+      ctx.filter = 'none';
+    } else if (blur > 0) {
+      // Navegadores sin ctx.filter (Safari viejo): achicar y volver a agrandar desenfoca igual
+      const f = 1 + blur * 0.6;
+      const small = document.createElement('canvas');
+      small.width = Math.max(8, Math.round(dw / f));
+      small.height = Math.max(8, Math.round(dh / f));
+      small.getContext('2d')?.drawImage(img, 0, 0, small.width, small.height);
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(small, dx, dy, dw, dh);
+    } else ctx.drawImage(img, dx, dy, dw, dh);
+    if (bp.tint) {
+      ctx.globalCompositeOperation = 'color';
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = PR();
+      ctx.fillRect(0, TOP, W, h);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
+    }
+    ctx.fillStyle = `rgba(6,14,32,${bp.darken / 100})`;
+    ctx.fillRect(0, TOP, W, h);
+    // Más oscuro arriba (logo) y abajo (precio y pie), donde va el texto
+    const g = ctx.createLinearGradient(0, TOP, 0, BOT);
+    g.addColorStop(0, 'rgba(6,14,32,.45)');
+    g.addColorStop(0.3, 'rgba(6,14,32,0)');
+    g.addColorStop(Math.min(0.95, Math.max(0.35, (split - TOP) / h)), 'rgba(6,14,32,0)');
+    g.addColorStop(1, 'rgba(6,14,32,.6)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, TOP, W, h);
+    ctx.restore();
+  }
   function bgCanvas(style: BackgroundId, split: number) {
-    const key = [style, split, PR(), SE()].join('|');
+    const key = [style, split, PR(), SE(), FH, FL?.template ?? '', photoKey(style)].join('|');
     const hit = bgCache.get(key);
     if (hit) return hit;
     const c = document.createElement('canvas');
     c.width = W;
-    c.height = H;
+    c.height = FH;
     const cx2 = c.getContext('2d', { willReadFrequently: true });
     if (!cx2) throw new Error('Canvas 2D no disponible');
     const saved = ctx;
     ctx = cx2;
     ctx.save();
     ctx.translate(0, OY);
+    ctx.scale(1, SC);
     drawBg(style, Y(split));
     ctx.restore();
     ctx = saved;
-    const entry = { canvas: c, data: cx2.getImageData(0, 0, W, H).data };
+    const entry = { canvas: c, data: cx2.getImageData(0, 0, W, FH).data };
     if (bgCache.size > 16) bgCache.clear();
     bgCache.set(key, entry);
     return entry;
@@ -720,19 +1165,20 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     bgData = bg.data;
     const p = prog(0, 0.9);
     ctx.fillStyle = PALE;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, W, FH);
     if (p >= 1) ctx.drawImage(bg.canvas, 0, 0);
     else if (p > 0) {
       ctx.save();
       ctx.beginPath();
-      if (ANIM === 'deslizar') ctx.rect(0, 0, W * ease(p), H);
-      else ctx.arc(0, H, ease(p) * 2500, 0, Math.PI * 2);
+      if (ANIM === 'deslizar') ctx.rect(0, 0, W * ease(p), FH);
+      else ctx.arc(0, FH, ease(p) * 2500, 0, Math.PI * 2);
       ctx.clip();
       ctx.drawImage(bg.canvas, 0, 0);
       ctx.restore();
     }
-    ctx.translate(0, OY);
-    OFF_Y = OY;
+    ctx.translate(TX, OY);
+    ctx.scale(SC, SC);
+    if (FX.particulas) particles();
     if (ANIM === 'zoom' && T !== null) {
       const s = 1 + 0.05 * (T / DURATION);
       ctx.translate(W / 2, Y(CH) / 2);
@@ -822,7 +1268,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   }
   function qrCard(f: StudioFlyerData, x: number, y: number, size: number, t0 = 1.9, caption = 'ESCANEA Y COMPRA') {
     if (!f.qr) return;
-    const m = qrModules(qrUrlFor(f, brand));
+    const m = qrModules(qrUrlFor(f, brand, CODE));
     if (!m) return;
     fx('pop', t0, 0.5, [x, y, size, size], () => {
       ctx.save();
@@ -849,7 +1295,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       ctx.restore();
     });
   }
-  const qrOn = (f: StudioFlyerData) => !!(f.qr && qrModules(qrUrlFor(f, brand)));
+  const qrOn = (f: StudioFlyerData) => !!(f.qr && qrModules(qrUrlFor(f, brand, CODE)));
 
   /* ---------- piezas compartidas ---------- */
   function footer(y: number) {
@@ -983,7 +1429,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       ctx.font = F(900, s);
       ctx.fillStyle = dark ? PR() : '#FFFFFF';
       ctx.textBaseline = 'alphabetic';
-      ctx.fillText(text, bx + 22, y + bh * 0.8);
+      ctx.fillText(typed(text, t0 + 0.15, 0.8), bx + 22, y + bh * 0.8);
     });
     shine([bx, y, bw, bh], 2.4);
     return { bx, bw, bh, s };
@@ -1085,7 +1531,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   function productImage(p: StudioProductSlot, i: number, box: Box, anchor: 'center' | 'bottom' = 'center', t0 = 0.7, phase = 0) {
     const img = productDrawable(p, i);
     fx('up', t0, 0.7, box, () => {
-      if (img) contain(img, box[0], box[1] + bob(phase), box[2], box[3], true, anchor);
+      if (img) contain(img, box[0], box[1] + bob(phase), box[2], box[3], true, anchor, FX.reflejo);
     });
     return img;
   }
@@ -1230,7 +1676,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       ctx.font = F(900, ts);
       ctx.fillStyle = INK;
       ctx.textBaseline = 'alphabetic';
-      ctx.fillText(title, bx + 32, by + bh * 0.8);
+      ctx.fillText(typed(title, 0.5, 0.9), bx + 32, by + bh * 0.8);
     });
     shine([bx, by, bw, bh], 2.4);
     const boxes: Box[] = [
@@ -1345,9 +1791,14 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
         ctx.font = F(900, size);
         const sp = ctx.measureText(' ').width;
         let x = X;
+        // "Escribir": la línea aparece letra por letra
+        let budget = typed(ln.map((w) => w.t).join(' '), 0.6 + i * 0.45, 0.45).length;
         ln.forEach((w) => {
+          if (budget <= 0) return;
+          const part = w.t.slice(0, budget);
+          budget -= w.t.length + 1;
           ctx.fillStyle = w.hl ? hlCol : baseCol;
-          ctx.fillText(w.t, x, by);
+          ctx.fillText(part, x, by);
           x += ctx.measureText(w.t).width + sp;
         });
         ctx.restore();
@@ -1412,61 +1863,557 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     fx('up', tb + 0.7, 0.5, null, () => footer(Y(1285)));
   }
 
+  /* ---------- piezas de las plantillas nuevas (C-113) ---------- */
+  /** Precio con el símbolo de la marca: "$60,00", "Ref: 60,00" o "60,00" */
+  const money = (n: number) => `${brand.pricePrefix === '$' ? '$' : brand.pricePrefix ? `${brand.pricePrefix} ` : ''}${formatAmount(n)}`;
+  /** Etiqueta en píldora ("RECIÉN LLEGADO", "TASA OFICIAL BCV") */
+  function pill(text: string, x: number, y: number, t0: number, align: 'left' | 'center' = 'left') {
+    fx('left', t0, 0.5, null, () => {
+      ctx.save();
+      const t = text.toUpperCase();
+      ctx.font = F(800, 32, false);
+      spacing('3px');
+      const w = ctx.measureText(t).width + 52;
+      const px = align === 'center' ? x - w / 2 : x;
+      const dark = isDark(px, y, w, 60);
+      ctx.fillStyle = dark ? '#FFFFFF' : PR();
+      rr(px, y, w, 60, 30);
+      ctx.fill();
+      ctx.fillStyle = dark ? PR() : '#FFFFFF';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(t, px + 26, y + 31);
+      ctx.restore();
+    });
+  }
+  function star(x: number, y: number, s: number, filled: boolean, onDark: boolean) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s / 24, s / 24);
+    const path = iconPaths('estrella')[0];
+    ctx.fillStyle = filled ? GOLD : onDark ? 'rgba(255,255,255,.2)' : alpha(INK, 0.12);
+    ctx.fill(path);
+    ctx.strokeStyle = filled ? GOLD : onDark ? 'rgba(255,255,255,.4)' : alpha(INK, 0.25);
+    ctx.lineWidth = 1.6;
+    ctx.lineJoin = 'round';
+    ctx.stroke(path);
+    ctx.restore();
+  }
+  function longDate(iso: string): string {
+    const d = iso ? new Date(iso) : new Date();
+    const text = (Number.isNaN(d.getTime()) ? new Date() : d).toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' });
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+  /** Número corto para un cupón: "15" o "7,50" */
+  const shortAmount = (n: number) => (Number.isInteger(n) ? String(n) : formatAmount(n));
+
+  function drawNuevo(f: StudioFlyerData, preview: boolean) {
+    const p = f.products[0] || blankProduct();
+    layerBg(bgFor(f), SPLIT.nuevo);
+    fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 440, 84));
+    countdown(f, W - 56, Y(30));
+    pill(f.heading || 'Recién llegado', W / 2, Y(140), 0.3, 'center');
+    const title = (p.title || 'PRODUCTO').toUpperCase();
+    const mt = (p.model || '').toUpperCase();
+    fx('up', 0.5, 0.5, null, () => {
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      const s = fit(title, 960, 116, 900);
+      ctx.font = F(900, s);
+      ctx.fillStyle = textOn(60, Y(215), 960, s);
+      ctx.fillText(typed(title, 0.5, 0.8), W / 2, Y(215) + s * 0.9);
+      if (mt) {
+        const ms = fit(mt, 900, 48, 800);
+        ctx.font = F(800, ms);
+        ctx.globalAlpha *= 0.85;
+        ctx.fillText(mt, W / 2, Y(215) + s * 0.9 + ms + 16);
+      }
+      ctx.restore();
+    });
+    const img = productImage(p, 0, [40, Y(370), 720, Y(520)], 'bottom', 0.8);
+    if (!img && preview) placeholder(90, Y(400), 620, Y(460), 'Ctrl+V o arrastra la foto', isDark(400, Y(620)));
+    priceBurst(880, Y(520), 165, p, bsText(p), 1.3);
+    specsBlock(p.specs.slice(0, 3), 720, Y(730), 340, Y(78), 54, 1.5);
+    tagText(p.tag, W / 2, Y(1135), 900, 'center', 1.9);
+    qrCard(f, W - 60 - 130, Y(1060), 130, 2.0, 'ESCANEA');
+    fx('up', 2.1, 0.5, null, () => footer(Y(1285)));
+  }
+
+  function drawGiftcard(f: StudioFlyerData, preview: boolean) {
+    const p = f.products[0] || blankProduct();
+    layerBg(bgFor(f), SPLIT.giftcard);
+    fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 440, 84));
+    countdown(f, W - 56, Y(30));
+    const tb = titleBox(60, Y(170), (p.title || 'GIFT CARD').toUpperCase(), 100, 600);
+    const sub = p.model || 'Código digital · Entrega rápida';
+    fx('up', 0.6, 0.5, null, () => {
+      ctx.save();
+      const ss = fit(sub, 520, 40, 800);
+      ctx.font = F(800, ss);
+      ctx.fillStyle = textOn(60, Y(170) + tb.bh + 20, 520, 50);
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(sub, 64, Y(170) + tb.bh + 64);
+      ctx.restore();
+    });
+    const img = productImage(p, 0, [620, Y(120), 440, Y(420)], 'center', 0.6);
+    if (!img && preview) placeholder(650, Y(150), 380, Y(360), '', isDark(840, Y(330)));
+    const variants = p.variants.filter((v) => v.label || v.price > 0).slice(0, 8);
+    if (variants.length) {
+      const y0 = Y(670);
+      fx('up', 0.9, 0.5, null, () => {
+        ctx.save();
+        ctx.font = F(900, 34);
+        ctx.fillStyle = textOn(60, y0 - 50, 500, 40);
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText('ELIGE TU MONTO', 64, y0 - 22);
+        ctx.restore();
+      });
+      const cw = 470;
+      const ch = Y(100);
+      variants.forEach((v, i) => {
+        const x = 60 + (i % 2) * (cw + 20);
+        const y = y0 + Math.floor(i / 2) * Y(118);
+        fx('left', 1.0 + i * 0.1, 0.45, null, () => {
+          ctx.save();
+          const dark = isDark(x, y, cw, ch);
+          ctx.fillStyle = dark ? '#FFFFFF' : PR();
+          rr(x, y, cw, ch, 22);
+          ctx.fill();
+          ctx.fillStyle = dark ? INK : '#FFFFFF';
+          ctx.textBaseline = 'middle';
+          const ls = fit(v.label, cw * 0.5, 44, 900, false, 18);
+          ctx.font = F(900, ls, false);
+          ctx.fillText(v.label, x + 28, y + ch / 2 + 2);
+          ctx.textAlign = 'right';
+          ctx.fillStyle = dark ? PR() : '#FFFFFF';
+          const pr = v.price > 0 ? money(v.price) : '';
+          const ps = fit(pr, cw * 0.42, 40, 800, false, 18);
+          ctx.font = F(800, ps, false);
+          ctx.fillText(pr, x + cw - 28, y + ch / 2 + 2);
+          ctx.restore();
+        });
+      });
+    } else priceBurst(300, Y(900), 230, p, bsText(p), 1.1);
+    qrCard(f, W - 60 - 130, Y(1110), 120, 2.0, 'ESCANEA');
+    fx('up', 2.0, 0.5, null, () => footer(Y(1285)));
+  }
+
+  function drawCupon(f: StudioFlyerData) {
+    const c = f.coupon;
+    layerBg(bgFor(f), SPLIT.cupon);
+    fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 440, 84));
+    countdown(f, W - 56, Y(30));
+    pill(f.heading || 'Cupón de descuento', W / 2, Y(165), 0.3, 'center');
+    const tx = 90;
+    const ty = Y(260);
+    const tw = 900;
+    const th = Y(640);
+    const ny = ty + th * 0.6;
+    const nr = 38;
+    const big = c.percentOff > 0 ? `${shortAmount(c.percentOff)}%` : c.amountOff > 0 ? `${brand.pricePrefix === '$' ? '$' : ''}${shortAmount(c.amountOff)}` : '';
+    fx('pop', 0.4, 0.6, [tx, ty, tw, th], () => {
+      ctx.save();
+      ctx.shadowColor = 'rgba(10,27,61,.35)';
+      ctx.shadowBlur = 30;
+      ctx.shadowOffsetY = 16;
+      ctx.fillStyle = '#FFFFFF';
+      // Ticket con muescas a los lados
+      ctx.beginPath();
+      ctx.moveTo(tx + 30, ty);
+      ctx.lineTo(tx + tw - 30, ty);
+      ctx.arcTo(tx + tw, ty, tx + tw, ty + 30, 30);
+      ctx.lineTo(tx + tw, ny - nr);
+      ctx.arc(tx + tw, ny, nr, -Math.PI / 2, Math.PI / 2, true);
+      ctx.lineTo(tx + tw, ty + th - 30);
+      ctx.arcTo(tx + tw, ty + th, tx + tw - 30, ty + th, 30);
+      ctx.lineTo(tx + 30, ty + th);
+      ctx.arcTo(tx, ty + th, tx, ty + th - 30, 30);
+      ctx.lineTo(tx, ny + nr);
+      ctx.arc(tx, ny, nr, Math.PI / 2, -Math.PI / 2, true);
+      ctx.lineTo(tx, ty + 30);
+      ctx.arcTo(tx, ty, tx + 30, ty, 30);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.save();
+      ctx.strokeStyle = alpha(INK, 0.25);
+      ctx.setLineDash([14, 12]);
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(tx + nr + 20, ny);
+      ctx.lineTo(tx + tw - nr - 20, ny);
+      ctx.stroke();
+      ctx.restore();
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      if (c.label) {
+        ctx.font = F(800, 34, false);
+        spacing('3px');
+        ctx.fillStyle = SE();
+        ctx.fillText(c.label.toUpperCase(), W / 2, ty + th * 0.13);
+        spacing('0px');
+      }
+      const bs = fit(big || 'DESCUENTO', tw - 140, 230, 900);
+      ctx.font = F(900, bs);
+      ctx.fillStyle = PR();
+      ctx.fillText(big || 'DESCUENTO', W / 2, ty + th * 0.4);
+      if (big) {
+        ctx.font = F(800, 46);
+        ctx.fillStyle = INK;
+        ctx.fillText('DE DESCUENTO', W / 2, ty + th * 0.5);
+      }
+      // El código, en un recuadro punteado
+      const bw = 640;
+      const bh = th * 0.17;
+      const by = ny + th * 0.06;
+      ctx.fillStyle = alpha(PR(), 0.07);
+      rr(W / 2 - bw / 2, by, bw, bh, 22);
+      ctx.fill();
+      ctx.setLineDash([16, 10]);
+      ctx.strokeStyle = PR();
+      ctx.lineWidth = 5;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      const code = c.code || 'TUCÓDIGO';
+      ctx.font = F(900, 90, false);
+      spacing('6px');
+      let cs = 90;
+      while (ctx.measureText(code).width > bw - 60 && cs > 30) {
+        cs -= 4;
+        ctx.font = F(900, cs, false);
+      }
+      ctx.fillStyle = INK;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(typed(code, 1.0, 0.8), W / 2, by + bh / 2 + 4);
+      spacing('0px');
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = F(600, 26, false);
+      ctx.fillStyle = alpha(INK, 0.7);
+      ctx.fillText('Escribe este código al pagar', W / 2, by + bh + 40);
+      const cond = [c.minSubtotal > 0 ? `Compra mínima ${money(c.minSubtotal)}` : '', c.scope].filter(Boolean).join(' · ');
+      if (cond) {
+        const s2 = fit(cond, tw - 100, 30, 700, false, 16);
+        ctx.font = F(700, s2, false);
+        ctx.fillStyle = INK;
+        ctx.fillText(cond, W / 2, ty + th - 34);
+      }
+      ctx.restore();
+    });
+    shine([tx, ty, tw, th], 2.4);
+    const img = productDrawable(f.products[0] || blankProduct(), 0);
+    const withQr = qrOn(f);
+    const side = img || withQr;
+    const lines = [c.endsAt ? `Válido hasta el ${longDate(c.endsAt).toLowerCase()}` : '', `Úsalo en ${brand.website || 'electroshopve.com'}`].filter(Boolean);
+    fx('up', 1.4, 0.5, null, () => {
+      ctx.save();
+      ctx.textAlign = side ? 'left' : 'center';
+      ctx.textBaseline = 'alphabetic';
+      const x = side ? 70 : W / 2;
+      lines.forEach((l, i) => {
+        const s2 = fit(l, side ? 600 : 900, i === 0 ? 42 : 34, i === 0 ? 900 : 700, i === 0, 18);
+        ctx.font = F(i === 0 ? 900 : 700, s2, i === 0);
+        ctx.fillStyle = textOn(side ? 70 : 90, Y(940) + i * 56, side ? 600 : 900, 50);
+        ctx.fillText(l, x, Y(990) + i * 56);
+      });
+      ctx.restore();
+    });
+    if (withQr) qrCard(f, W - 70 - 190, Y(930), 190, 1.7);
+    else if (img) fx('up', 1.5, 0.6, [700, Y(920), 340, Y(290)], () => contain(img, 700, Y(920) + bob(), 340, Y(290), true, 'bottom', FX.reflejo));
+    fx('up', 2.0, 0.5, null, () => footer(Y(1285)));
+  }
+
+  function drawResena(f: StudioFlyerData) {
+    const rv = f.review;
+    const p = f.products[0] || blankProduct();
+    layerBg(bgFor(f), SPLIT.resena);
+    fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 440, 84));
+    pill(f.heading || 'Lo que dicen nuestros clientes', 70, Y(165), 0.3);
+    const onDark = isDark(70, Y(260), 420, 70);
+    for (let i = 0; i < 5; i++) fx('pop', 0.5 + i * 0.1, 0.4, [70 + i * 84, Y(255), 70, 70], () => star(70 + i * 84, Y(255), 70, i < rv.rating, onDark));
+    fx('fade', 0.6, 0.6, null, () => {
+      ctx.save();
+      ctx.font = F(900, 300, false);
+      ctx.fillStyle = alpha(PR(), 0.16);
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('“', 30, Y(330) + 230);
+      ctx.restore();
+    });
+    const text = rv.comment || 'Aquí va la reseña del cliente';
+    const top = Y(370);
+    const room = Y(830) - top;
+    let size = 62;
+    let lines: string[] = [];
+    for (; size >= 32; size -= 2) {
+      ctx.font = F(700, size);
+      lines = wrapLines(text, 930);
+      if (lines.length * size * 1.3 <= room) break;
+    }
+    const maxLines = Math.max(1, Math.floor(room / (size * 1.3)));
+    if (lines.length > maxLines) lines = [...lines.slice(0, maxLines - 1), `${lines[maxLines - 1].replace(/\s+\S*$/, '')}…`];
+    const color = textOn(70, top, 930, lines.length * size * 1.3);
+    lines.forEach((l, i) =>
+      fx('up', 0.8 + i * 0.12, 0.5, null, () => {
+        ctx.save();
+        ctx.font = F(700, size);
+        ctx.fillStyle = color;
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(typed(l, 0.8 + i * 0.35, 0.35), 74, top + size + i * size * 1.3);
+        ctx.restore();
+      }),
+    );
+    const ay = top + size + lines.length * size * 1.3 + 30;
+    fx('up', 1.3, 0.5, null, () => {
+      ctx.save();
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = F(800, 40, false);
+      const col = textOn(74, ay - 30, 600, 40);
+      ctx.fillStyle = col;
+      const who = `— ${rv.author || 'Cliente'}`;
+      ctx.fillText(who, 74, ay + 10);
+      if (rv.verified) {
+        const wx = 74 + ctx.measureText(who).width + 30;
+        icon('escudo', wx, ay - 24, 36, col, 2.4);
+        ctx.font = F(700, 28, false);
+        ctx.fillText('Compra verificada', wx + 46, ay + 6);
+      }
+      ctx.restore();
+    });
+    const img = productDrawable(p, 0);
+    if (p.title || img) {
+      const cx = 70;
+      const cy = Y(930);
+      const cw = 940;
+      const ch = Y(230);
+      fx('up', 1.5, 0.6, [cx, cy, cw, ch], () => {
+        ctx.save();
+        ctx.shadowColor = 'rgba(10,27,61,.25)';
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetY = 10;
+        ctx.fillStyle = '#FFFFFF';
+        rr(cx, cy, cw, ch, 28);
+        ctx.fill();
+        ctx.restore();
+        if (img) contain(img, cx + 24, cy + 20, 220, ch - 40, false);
+        ctx.save();
+        ctx.textBaseline = 'alphabetic';
+        const tx0 = cx + (img ? 280 : 40);
+        const tmax = cw - (img ? 320 : 80);
+        const name = [p.title, p.model].filter(Boolean).join(' ') || rv.productName;
+        const ns = fit(name, tmax, 44, 900, false, 20);
+        ctx.font = F(900, ns, false);
+        ctx.fillStyle = INK;
+        ctx.fillText(name, tx0, cy + ch * 0.36);
+        if (p.price > 0) {
+          ctx.font = F(900, 56, false);
+          ctx.fillStyle = PR();
+          ctx.fillText(`${p.from ? 'Desde ' : ''}${money(p.price)}`, tx0, cy + ch * 0.68);
+        }
+        ctx.font = F(600, 26, false);
+        ctx.fillStyle = alpha(INK, 0.7);
+        ctx.fillText(`Cómpralo en ${brand.website || 'electroshopve.com'}`, tx0, cy + ch * 0.88);
+        ctx.restore();
+      });
+    }
+    fx('up', 2.0, 0.5, null, () => footer(Y(1285)));
+  }
+
+  function drawTasa(f: StudioFlyerData) {
+    const rate = Number(f.rate) || 0;
+    layerBg(bgFor(f), SPLIT.tasa);
+    fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 440, 84));
+    pill('Tasa oficial BCV', 70, Y(165), 0.3);
+    const date = longDate(f.rateDate);
+    fx('up', 0.45, 0.5, null, () => {
+      ctx.save();
+      const ds = fit(date, 940, 66, 900);
+      ctx.font = F(900, ds);
+      ctx.fillStyle = textOn(70, Y(250), 940, ds);
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(typed(date, 0.45, 0.7), 72, Y(250) + ds);
+      ctx.restore();
+    });
+    const cx = 70;
+    const cy = Y(370);
+    const cw = 940;
+    const chh = Y(320);
+    fx('pop', 0.7, 0.6, [cx, cy, cw, chh], () => {
+      ctx.save();
+      ctx.shadowColor = 'rgba(10,27,61,.3)';
+      ctx.shadowBlur = 30;
+      ctx.shadowOffsetY = 14;
+      ctx.fillStyle = '#FFFFFF';
+      rr(cx, cy, cw, chh, 36);
+      ctx.fill();
+      ctx.restore();
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = F(800, 36, false);
+      ctx.fillStyle = alpha(INK, 0.75);
+      ctx.fillText('1 DÓLAR (USD) =', W / 2, cy + chh * 0.22);
+      const value = rate > 0 ? `Bs. ${formatAmount(rate * count(0.8))}` : 'Bs. —';
+      const vs = fit(`Bs. ${formatAmount(rate)}`, cw - 100, 200, 900, false, 40);
+      ctx.font = F(900, vs, false);
+      ctx.fillStyle = PR();
+      ctx.fillText(value, W / 2, cy + chh * 0.72);
+      ctx.font = F(600, 28, false);
+      ctx.fillStyle = alpha(INK, 0.65);
+      ctx.fillText('Bolívares por cada dólar', W / 2, cy + chh - 30);
+      ctx.restore();
+    });
+    shine([cx, cy, cw, chh], 2.4);
+    const y0 = Y(790);
+    fx('up', 1.2, 0.5, null, () => {
+      ctx.save();
+      ctx.font = F(900, 32);
+      ctx.fillStyle = textOn(70, y0 - 50, 500, 40);
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('EQUIVALENCIAS', 72, y0 - 20);
+      ctx.restore();
+    });
+    [10, 20, 50, 100].forEach((a, i) => {
+      const x = 70 + (i % 2) * 480;
+      const y = y0 + Math.floor(i / 2) * Y(130);
+      const w = 460;
+      const h = Y(110);
+      fx('left', 1.3 + i * 0.12, 0.45, null, () => {
+        ctx.save();
+        const dark = isDark(x, y, w, h);
+        ctx.fillStyle = dark ? 'rgba(255,255,255,.14)' : alpha(PR(), 0.08);
+        rr(x, y, w, h, 22);
+        ctx.fill();
+        ctx.fillStyle = dark ? '#FFFFFF' : INK;
+        ctx.textBaseline = 'middle';
+        ctx.font = F(900, 46, false);
+        ctx.fillText(`$${a}`, x + 26, y + h / 2 + 2);
+        ctx.textAlign = 'right';
+        const bs = rate > 0 ? `Bs. ${formatAmount(a * rate)}` : '—';
+        const s2 = fit(bs, w - 170, 38, 800, false, 18);
+        ctx.font = F(800, s2, false);
+        ctx.fillStyle = dark ? LIGHT_ON_DARK : PR();
+        ctx.fillText(bs, x + w - 26, y + h / 2 + 2);
+        ctx.restore();
+      });
+    });
+    fx('up', 1.8, 0.5, null, () => {
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      const note = 'Nuestros precios en bolívares se calculan con esta tasa.';
+      const ns = fit(note, 940, 30, 600, false, 16);
+      ctx.font = F(600, ns, false);
+      ctx.fillStyle = textOn(70, y0 + Y(270), 940, 40);
+      ctx.fillText(note, W / 2, y0 + Y(300));
+      ctx.restore();
+    });
+    fx('up', 2.0, 0.5, null, () => footer(Y(1285)));
+  }
+
   function safeZones() {
     ctx.save();
     const top = 200;
     const bottom = 190;
     ctx.fillStyle = 'rgba(220,38,38,.18)';
     ctx.fillRect(0, 0, W, top);
-    ctx.fillRect(0, H - bottom, W, bottom);
+    ctx.fillRect(0, FH - bottom, W, bottom);
     ctx.strokeStyle = 'rgba(220,38,38,.8)';
     ctx.setLineDash([18, 12]);
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(0, top);
     ctx.lineTo(W, top);
-    ctx.moveTo(0, H - bottom);
-    ctx.lineTo(W, H - bottom);
+    ctx.moveTo(0, FH - bottom);
+    ctx.lineTo(W, FH - bottom);
     ctx.stroke();
     ctx.fillStyle = '#B91C1C';
     ctx.font = F(700, 28, false);
     ctx.textAlign = 'center';
     ctx.fillText('Tapado por Instagram (perfil)', W / 2, top / 2 + 10);
-    ctx.fillText('Tapado por Instagram (responder)', W / 2, H - bottom / 2 + 10);
+    ctx.fillText('Tapado por Instagram (responder)', W / 2, FH - bottom / 2 + 10);
     ctx.restore();
   }
 
   /** Dibuja el flyer completo (o el aviso de "elige un flyer" si no hay ninguno) */
   function draw(f: StudioFlyerData | null, b: StudioBrand, opts: DrawOptions) {
     brand = b;
+    FL = f;
+    FX = f?.fx ?? { reflejo: false, particulas: false, confeti: false };
+    CODE = opts.code ?? null;
+    setFormat(f?.format ?? 'story');
+    // Cambiar el alto borra el lienzo: solo cuando cambia el formato
+    if (canvas.height !== FH) canvas.height = FH;
     T = opts.t ?? null;
     animEpoch = opts.epoch ?? Date.now();
-    OFF_Y = 0;
     bgData = null;
     slideFlip = 0;
     ANIM = f && ANIMATIONS[f.anim] ? f.anim : 'entrada';
     ctx.save();
-    ctx.clearRect(0, 0, W, H);
+    ctx.clearRect(0, 0, W, FH);
     if (!f) {
       ctx.fillStyle = PALE;
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(0, 0, W, FH);
       ctx.fillStyle = '#7A8AA8';
       ctx.textAlign = 'center';
       ctx.font = F(800, 40);
-      ctx.fillText('Elige o crea una historia', W / 2, H / 2);
+      ctx.fillText('Elige o crea una historia', W / 2, FH / 2);
       ctx.restore();
       return;
     }
-    if (f.template === 'duo') drawDuo(f, opts.preview);
-    else if (f.template === 'trio') drawTrio(f, opts.preview);
-    else if (f.template === 'mensaje') drawMensaje(f);
-    else drawSolo(f, opts.preview);
+    switch (f.template) {
+      case 'duo':
+        drawDuo(f, opts.preview);
+        break;
+      case 'trio':
+        drawTrio(f, opts.preview);
+        break;
+      case 'mensaje':
+        drawMensaje(f);
+        break;
+      case 'nuevo':
+        drawNuevo(f, opts.preview);
+        break;
+      case 'giftcard':
+        drawGiftcard(f, opts.preview);
+        break;
+      case 'cupon':
+        drawCupon(f);
+        break;
+      case 'resena':
+        drawResena(f);
+        break;
+      case 'tasa':
+        drawTasa(f);
+        break;
+      default:
+        drawSolo(f, opts.preview);
+    }
+    if (FX.confeti) confetti();
     ctx.restore();
-    OFF_Y = 0;
-    if (opts.preview && opts.safeZones) safeZones();
+    if (opts.preview && opts.safeZones && f.format === 'story') safeZones();
   }
 
-  return { draw };
+  /** Miniatura de un fondo para el selector: el mismo dibujo, a escala */
+  function drawBackgroundThumb(target: HTMLCanvasElement, style: BackgroundId, f: StudioFlyerData, b: StudioBrand) {
+    const x = target.getContext('2d');
+    if (!x) return;
+    brand = b;
+    FL = f;
+    setFormat(f.format);
+    const saved = ctx;
+    ctx = x;
+    ctx.save();
+    ctx.clearRect(0, 0, target.width, target.height);
+    ctx.scale(target.width / W, target.height / FH);
+    ctx.translate(0, OY);
+    ctx.scale(1, SC);
+    drawBg(style, Y(SPLIT[f.template]));
+    ctx.restore();
+    ctx = saved;
+  }
+
+  return { draw, drawBackgroundThumb };
 }
 
 export type StudioRenderer = ReturnType<typeof createRenderer>;
@@ -1474,6 +2421,7 @@ export type StudioRenderer = ReturnType<typeof createRenderer>;
 /** Todas las imágenes que usa un flyer, para esperarlas antes de exportar. */
 export function flyerImageSources(f: StudioFlyerData, brand: StudioBrand, productSrc: ProductSrc): string[] {
   const srcs = f.products.map((p, i) => productSrc(p, i)).filter(Boolean);
+  if (f.bg === 'foto') srcs.push(f.bgPhoto.url);
   srcs.push(brand.logoUrl || '', OFFICIAL_LOGO.color, OFFICIAL_LOGO.white, ...Object.values(brand.payLogos));
   return srcs.filter(Boolean);
 }

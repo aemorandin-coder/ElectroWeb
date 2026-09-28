@@ -41,6 +41,8 @@ import {
   MOTIVO_CANCELACION_MINIMO,
 } from '@/lib/order-admin';
 import { recordPaidOrder, rejectOrderConversions } from '@/lib/influencer-commission';
+import { recordStudioOrder } from '@/lib/studio/tracking';
+import { STUDIO_COOKIE } from '@/lib/studio/code';
 import { avisarPedidoDigitalPorEntregar } from '@/lib/digital-delivery';
 import { DestinoError, leerDestino, type DestinoOrden } from '@/lib/envios/destino';
 import { actualizarRastreoZoom } from '@/lib/envios/seguimiento';
@@ -677,6 +679,9 @@ export async function POST(request: NextRequest) {
         if (!isOrderNumberConflict(error) || attempt >= ORDER_NUMBER_RETRIES) throw error;
       }
     }
+
+    // ElectroStudio (C-113): la persona llegó por una historia de Instagram en los últimos 7 días
+    void recordStudioOrder(request.cookies.get(STUDIO_COOKIE)?.value, orders.map((order) => order.id), userId);
 
     // Comisión de promotor solo si la orden ya nació pagada (saldo o pago móvil verificado).
     // Las demás la generan cuando el admin confirma el pago (C-75).

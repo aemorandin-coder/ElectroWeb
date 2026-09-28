@@ -1698,6 +1698,7 @@ model StudioFlyer {
   data        Json
   date        String?  // AAAA-MM-DD en que se piensa publicar
   batch       String?  // lote ("Componentes PC") para descargar juntos
+  code        String?  @unique // C-113: marca de campaña del enlace y el QR (?es=código) para medir visitas y compras
   createdById String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

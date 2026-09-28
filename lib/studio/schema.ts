@@ -2,14 +2,32 @@
 // llega) y el editor (normalizar lo que se lee). Sale del artefacto "Flyers ElectroShop" de Andrés.
 import { z } from 'zod';
 
+/** photo: la foto del producto es obligatoria, opcional o no se usa */
 export const TEMPLATES = {
-  solo: { label: '1 producto', n: 1 },
-  duo: { label: '2 productos', n: 2 },
-  trio: { label: 'Categoría (3)', n: 3 },
-  mensaje: { label: 'Mensaje', n: 0 },
+  solo: { label: '1 producto', n: 1, photo: 'required' },
+  duo: { label: '2 productos', n: 2, photo: 'required' },
+  trio: { label: 'Categoría (3)', n: 3, photo: 'required' },
+  nuevo: { label: 'Llegó nuevo', n: 1, photo: 'required' },
+  giftcard: { label: 'Gift card', n: 1, photo: 'required' },
+  cupon: { label: 'Cupón', n: 1, photo: 'optional' },
+  resena: { label: 'Reseña', n: 1, photo: 'optional' },
+  mensaje: { label: 'Mensaje', n: 1, photo: 'optional' },
+  tasa: { label: 'Tasa BCV', n: 0, photo: 'none' },
 } as const;
 export type TemplateId = keyof typeof TEMPLATES;
 export const TEMPLATE_IDS = Object.keys(TEMPLATES) as TemplateId[];
+/** Plantillas con productos que se escriben en el paso Contenido (el resto tiene su propio formulario) */
+export const hasProductForm = (t: TemplateId) => t === 'solo' || t === 'duo' || t === 'trio' || t === 'nuevo' || t === 'giftcard';
+/** Cuántas fotos de producto pide la plantilla (0 si no pide ninguna obligatoria) */
+export const requiredPhotos = (t: TemplateId) => (TEMPLATES[t].photo === 'required' ? TEMPLATES[t].n : 0);
+
+/** Tamaños de salida. Todos miden 1080 de ancho; los diseños se hacen en una grilla de 1080×1350 (4:5). */
+export const FORMATS = {
+  story: { label: 'Historia 9:16', short: '9:16', h: 1920 },
+  post45: { label: 'Post 4:5', short: '4:5', h: 1350 },
+  post11: { label: 'Post 1:1', short: '1:1', h: 1080 },
+} as const;
+export type FormatId = keyof typeof FORMATS;
 
 export const BACKGROUNDS = {
   ondas: 'Ondas',
@@ -19,12 +37,33 @@ export const BACKGROUNDS = {
   lateral: 'Ola lateral',
   liso: 'Claro',
   azul: 'Azul',
+  circuito: 'Circuito',
+  hexagonos: 'Hexágonos',
+  aurora: 'Aurora',
+  podio: 'Podio',
+  rayos: 'Rayos',
+  neon: 'Neón',
+  foto: 'Tu foto',
+  fotoproducto: 'Foto del producto',
 } as const;
 export type BackgroundId = keyof typeof BACKGROUNDS;
-export const BACKGROUND_DEFAULT: Record<TemplateId, BackgroundId> = { solo: 'ondas', duo: 'ondas', trio: 'lateral', mensaje: 'azul' };
+export const BACKGROUND_DEFAULT: Record<TemplateId, BackgroundId> = {
+  solo: 'ondas',
+  duo: 'ondas',
+  trio: 'lateral',
+  nuevo: 'podio',
+  giftcard: 'aurora',
+  cupon: 'rayos',
+  resena: 'liso',
+  mensaje: 'azul',
+  tasa: 'circuito',
+};
 
-export const ANIMATIONS = { entrada: 'Entrada', zoom: 'Zoom', deslizar: 'Deslizar', destello: 'Destello' } as const;
+export const ANIMATIONS = { entrada: 'Entrada', zoom: 'Zoom', deslizar: 'Deslizar', destello: 'Destello', escribir: 'Escribir' } as const;
 export type AnimationId = keyof typeof ANIMATIONS;
+
+export const EFFECTS = { reflejo: 'Reflejo en el piso', particulas: 'Partículas', confeti: 'Confeti' } as const;
+export type EffectId = keyof typeof EFFECTS;
 
 /** Rutas de la propia tienda ("/api/uploads/…"). Una imagen de otro dominio "ensucia" el canvas y ya no se puede descargar. */
 const localPath = z
@@ -47,6 +86,8 @@ export const specSchema = z.object({
 });
 export type StudioSpec = z.infer<typeof specSchema>;
 
+const variantSchema = z.object({ label: text(30).default(''), price: money.default(0) });
+
 export const productSlotSchema = z.object({
   /** Producto de la tienda: con él, precio, oferta y Bs salen del servidor al abrir el flyer. */
   productId: z.string().max(40).nullable().catch(null).default(null),
@@ -62,6 +103,8 @@ export const productSlotSchema = z.object({
   imageUrl: localPath.catch('').default(''),
   cutout: z.boolean().catch(true).default(true),
   specs: z.array(specSchema).max(4).catch([]).default([]),
+  /** Montos de una gift card o recarga (de la tienda) */
+  variants: z.array(variantSchema).max(8).catch([]).default([]),
 });
 export type StudioProductSlot = z.infer<typeof productSlotSchema>;
 
@@ -75,11 +118,71 @@ export const messageSchema = z.object({
 });
 export type StudioMessage = z.infer<typeof messageSchema>;
 
+const pct = (min: number, max: number, def: number) => z.coerce.number().min(min).max(max).catch(def).default(def);
+const colorOrEmpty = z.union([hexColor, z.literal('')]).catch('').default('');
+
+/** Fondo con una foto: la propia (del local, un unboxing) o la del producto, desenfocada y oscurecida para que se lea */
+export const bgPhotoSchema = z.object({
+  url: localPath.catch('').default(''),
+  blur: pct(0, 40, 14),
+  darken: pct(0, 85, 45),
+  /** Tiñe la foto con el color de la marca */
+  tint: z.boolean().catch(true).default(true),
+  x: pct(0, 100, 50),
+  y: pct(0, 100, 50),
+  zoom: pct(100, 250, 100),
+});
+export type StudioBgPhoto = z.infer<typeof bgPhotoSchema>;
+
+export const effectsSchema = z.object({
+  reflejo: z.boolean().catch(false).default(false),
+  particulas: z.boolean().catch(false).default(false),
+  confeti: z.boolean().catch(false).default(false),
+});
+export type StudioEffects = z.infer<typeof effectsSchema>;
+
+/** Cupón de Descuentos, copiado al elegirlo y puesto al día al abrir la historia */
+export const couponSchema = z.object({
+  code: text(40).default(''),
+  label: text(40).default(''),
+  percentOff: money.default(0),
+  amountOff: money.default(0),
+  minSubtotal: money.default(0),
+  endsAt: z.string().max(40).catch('').default(''),
+  scope: text(60).default(''),
+});
+export type StudioCouponData = z.infer<typeof couponSchema>;
+
+/** Reseña aprobada de un cliente (solo el nombre corto, nunca el correo) */
+export const reviewSchema = z.object({
+  id: z.string().max(40).catch('').default(''),
+  rating: z.coerce.number().int().min(1).max(5).catch(5).default(5),
+  comment: text(400).default(''),
+  author: text(40).default(''),
+  verified: z.boolean().catch(false).default(false),
+  productName: text(80).default(''),
+});
+export type StudioReviewData = z.infer<typeof reviewSchema>;
+
+/** Lo que salió en la última descarga: si la tienda cambia después, la lista avisa */
+export const exportedSchema = z.object({
+  at: z.string().max(40).catch('').default(''),
+  prices: z.array(money).max(3).catch([]).default([]),
+  rate: money.default(0),
+  coupon: text(40).default(''),
+});
+
 export const flyerSchema = z.object({
   name: text(80).default('Nueva historia'),
   template: z.enum(TEMPLATE_IDS as [TemplateId, ...TemplateId[]]).catch('solo').default('solo'),
+  format: z.enum(Object.keys(FORMATS) as [FormatId, ...FormatId[]]).catch('story').default('story'),
   bg: z.union([z.enum(Object.keys(BACKGROUNDS) as [BackgroundId, ...BackgroundId[]]), z.literal('')]).catch('').default(''),
+  bgPhoto: bgPhotoSchema.catch(() => bgPhotoSchema.parse({})).default(() => bgPhotoSchema.parse({})),
   anim: z.enum(Object.keys(ANIMATIONS) as [AnimationId, ...AnimationId[]]).catch('entrada').default('entrada'),
+  fx: effectsSchema.catch(() => effectsSchema.parse({})).default(() => effectsSchema.parse({})),
+  /** Colores solo de esta historia (vacío = los de la marca) */
+  accent: colorOrEmpty,
+  accent2: colorOrEmpty,
   heading: text(40).default(''),
   caption: text(2200).default(''),
   date: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/).catch('').default(''),
@@ -89,10 +192,17 @@ export const flyerSchema = z.object({
   offerEnds: z.string().max(30).catch('').default(''),
   offerLabel: text(40).default(''),
   msg: messageSchema.catch(() => messageSchema.parse({})).default(() => messageSchema.parse({})),
+  coupon: couponSchema.catch(() => couponSchema.parse({})).default(() => couponSchema.parse({})),
+  review: reviewSchema.catch(() => reviewSchema.parse({})).default(() => reviewSchema.parse({})),
+  /** Tasa BCV (Bs por dólar) y cuándo la publicó el BCV: la pone el servidor */
+  rate: money.default(0),
+  rateDate: z.string().max(40).catch('').default(''),
+  exported: exportedSchema.catch(() => exportedSchema.parse({})).default(() => exportedSchema.parse({})),
   products: z.array(productSlotSchema).max(3).catch([]).default([]),
 });
 export type StudioFlyerData = z.infer<typeof flyerSchema>;
-export type StudioFlyer = StudioFlyerData & { id: string; updatedAt: string };
+/** code: el de la marca de campaña (?es=código) del enlace y el QR */
+export type StudioFlyer = StudioFlyerData & { id: string; updatedAt: string; code: string | null };
 
 export function blankProduct(): StudioProductSlot {
   return productSlotSchema.parse({});
@@ -104,6 +214,17 @@ export function normalizeFlyer(raw: unknown): StudioFlyerData {
   if (!f.products.length) f.products.push(blankProduct());
   return f;
 }
+
+export const styleSchema = z.object({
+  id: z.string().max(20).catch('').default(''),
+  name: text(30).default('Estilo'),
+  bg: z.union([z.enum(Object.keys(BACKGROUNDS) as [BackgroundId, ...BackgroundId[]]), z.literal('')]).catch('').default(''),
+  anim: z.enum(Object.keys(ANIMATIONS) as [AnimationId, ...AnimationId[]]).catch('entrada').default('entrada'),
+  fx: effectsSchema.catch(() => effectsSchema.parse({})).default(() => effectsSchema.parse({})),
+  accent: colorOrEmpty,
+  accent2: colorOrEmpty,
+});
+export type StudioStyle = z.infer<typeof styleSchema>;
 
 export const brandSchema = z.object({
   accent: hexColor.catch('#004AAD').default('#004AAD'),
@@ -118,6 +239,8 @@ export const brandSchema = z.object({
   logoUrl: localPath.catch('').default(''),
   /** Logo de cada método de pago, por su nombre en minúsculas y sin acentos */
   payLogos: z.record(z.string().max(60), localPath).catch({}).default({}),
+  /** Estilos guardados: combinaciones de fondo, animación, efectos y colores para aplicar en un toque */
+  styles: z.array(styleSchema).max(12).catch([]).default([]),
 });
 export type StudioBrand = z.infer<typeof brandSchema>;
 
@@ -147,7 +270,7 @@ export function payMethods(brand: Pick<StudioBrand, 'payments'>): string[] {
     .slice(0, 4);
 }
 
-/** Producto de la tienda tal como lo necesita el estudio: lista blanca, sin costo ni SKU. */
+/** Producto de la tienda tal como lo necesita el estudio: lista blanca, sin costo, SKU ni cantidad en stock. */
 export interface StudioStoreProduct {
   id: string;
   name: string;
@@ -163,26 +286,54 @@ export interface StudioStoreProduct {
   priceVES: number;
   /** Primeras características de la ficha, como "Capacidad: 128 GB" */
   specs: { label: string; value: string }[];
-  /** Tiene montos (gift cards, recargas): el precio es el menor y se dice "Desde" */
+  /** Montos de gift cards y recargas: el precio es el menor y se dice "Desde" */
+  variants: { label: string; priceUSD: number }[];
   hasVariants: boolean;
   /** false si lo sacaron de la tienda: el flyer avisa */
   published: boolean;
+  /** Solo si hay o no: la cantidad no sale del servidor */
+  inStock: boolean;
 }
 
-/** Datos de la tienda para arrancar la marca y avisar de los métodos de pago activos. */
+export interface StudioCoupon {
+  code: string;
+  label: string | null;
+  percentOff: number | null;
+  amountOffUSD: number | null;
+  minSubtotalUSD: number | null;
+  endsAt: string | null;
+  /** "En toda la tienda", "En Audio" o "En productos seleccionados" */
+  scope: string;
+  isPublic: boolean;
+}
+
+export interface StudioReview {
+  id: string;
+  rating: number;
+  comment: string;
+  author: string;
+  verified: boolean;
+  createdAt: string;
+  product: StudioStoreProduct | null;
+}
+
+/** Datos de la tienda para arrancar la marca, la tasa del día y los métodos de pago activos. */
 export interface StudioStoreInfo {
   logo: string | null;
   instagram: string | null;
   website: string;
   rateVES: number;
+  rateUpdatedAt: string | null;
   payments: { label: string; logo: string | null }[];
 }
 
-export interface StudioListItem {
-  id: string;
+/** Resultados de una historia: visitas por su enlace o QR y compras de quienes llegaron por ella */
+export interface StudioResult {
+  flyerId: string;
+  code: string;
   name: string;
-  template: TemplateId;
-  date: string | null;
-  batch: string | null;
-  updatedAt: string;
+  visits: number;
+  orders: number;
+  paidOrders: number;
+  paidUSD: number;
 }

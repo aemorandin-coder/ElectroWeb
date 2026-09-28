@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { flyerSchema } from '@/lib/studio/schema';
-import { flyerColumns, flyerFromRow } from '@/lib/studio/store';
+import { flyerColumns, flyerFromRow, flyerSelect } from '@/lib/studio/store';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -22,7 +22,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
   const data = parsed.data;
   const updated = await prisma.studioFlyer.updateMany({ where: { id }, data: { ...flyerColumns(data), data } });
   if (updated.count === 0) return NextResponse.json({ error: 'La historia ya no existe' }, { status: 404 });
-  const row = await prisma.studioFlyer.findUniqueOrThrow({ where: { id }, select: { id: true, data: true, updatedAt: true } });
+  const row = await prisma.studioFlyer.findUniqueOrThrow({ where: { id }, select: flyerSelect });
   return NextResponse.json({ flyer: flyerFromRow(row) });
 }
 

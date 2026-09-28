@@ -8,7 +8,7 @@ import type { PublicProduct } from '@/lib/dto/product';
 import { aplicaA, mejorOferta, normalizarCodigo, type PromotionRule } from '@/lib/promotions-core';
 
 /** Vigente ahora: activa, dentro de sus fechas y sin agotar. El tope de usos se revisa aparte (Prisma no compara columnas). */
-function vigentes(now: Date): Prisma.PromotionWhereInput {
+export function vigentes(now: Date): Prisma.PromotionWhereInput {
   return {
     isActive: true,
     startsAt: { lte: now },
@@ -16,7 +16,7 @@ function vigentes(now: Date): Prisma.PromotionWhereInput {
   };
 }
 
-const agotada = (p: Pick<Promotion, 'maxUses' | 'usesCount'>) => p.maxUses !== null && p.usesCount >= p.maxUses;
+export const agotada = (p: Pick<Promotion, 'maxUses' | 'usesCount'>) => p.maxUses !== null && p.usesCount >= p.maxUses;
 
 export function toRule(p: Promotion): PromotionRule {
   return {

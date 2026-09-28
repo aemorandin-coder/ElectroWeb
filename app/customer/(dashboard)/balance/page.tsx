@@ -216,6 +216,7 @@ export default function BalancePage() {
                 { value: 'ALL', label: 'Todos' },
                 { value: 'RECHARGE', label: 'Recargas' },
                 { value: 'PURCHASE', label: 'Compras' },
+                { value: 'REFUND', label: 'Reembolsos' },
               ].map((filter) => (
                 <button
                   key={filter.value}
@@ -383,6 +384,12 @@ export default function BalancePage() {
                     className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'PURCHASE' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
                   >
                     Compras
+                  </button>
+                  <button
+                    onClick={() => setFilterType('REFUND')}
+                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'REFUND' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
+                  >
+                    Reembolsos
                   </button>
                 </div>
                 <button className="p-1.5 lg:p-2 hover:bg-surface rounded-lg transition-colors hidden sm:block">

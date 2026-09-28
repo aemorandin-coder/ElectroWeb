@@ -53,7 +53,11 @@ bash scripts/deploy.sh
    - Firmar los términos desde "Recargar saldo".
    - Reportes → Seguridad con la IP real.
    - ElectroStudio ya lo probó Andrés el 28/09: "muy bien". Sus pedidos de mejora son C-116.
-3. **C-115 (chica):** avisar el mínimo de compra también en `/carrito` (usa `blockers` de `/api/orders/quote`), antes de llegar al checkout.
+3. **C-115:** hecha el 28/09 en la rama `claude/C-115`. Falta el OK de Andrés para el merge y el push.
+   - `/carrito` avisa el mínimo y el máximo de compra antes del checkout, también sin sesión. Avisa además de los productos que el servidor rechaza, algo que antes ignoraba.
+   - El mínimo cuenta solo los productos y el máximo, todo lo cobrado (decisión del 28/09). Configuración lo explica con un ejemplo.
+   - **Andrés pidió no mergear todavía.**
+   - Hallazgo: el interruptor "Cobrar IVA" de Configuración no hace nada (`STORE_CHARGES_TAX = false`). Falta preguntar si se quita.
 4. **C-116: ElectroStudio más fácil de usar** (pedida por Andrés el 28/09, tras probarlo en producción):
    - Botones directos en cada historia creada para editarla y borrarla.
    - Validaciones.
@@ -88,6 +92,7 @@ bash scripts/deploy.sh
   - Nunca sale de la empresa.
   - Comisiones solo por compras pagadas.
   - **Pago Móvil sin orden → al saldo del cliente** (28/09).
+  - **Mínimo de compra solo sobre los productos**, sin embalaje ni envío. **Máximo sobre todo lo que paga el cliente** (28/09).
 - **Descuentos (25/09):**
   - Si hay varios, gana el mayor.
   - Los digitales, fuera.

@@ -80,6 +80,13 @@ main() {
 
   echo "--- 3. Build en $NUEVA (la tienda sigue respondiendo)"
   rm -rf "$NUEVA"
+  # tsconfig.json incluye los tipos de .next, .next-a y .next-b (Next los agrega solo). Los de la carpeta que se está
+  # sirviendo nombran las rutas de la versión anterior: si este deploy borra una ruta, el chequeo de tipos del build
+  # falla por ellos (pasó el 28/09 con /api/admin/social/generate). next start no usa esos tipos: se pueden borrar.
+  local D
+  for D in .next .next-a .next-b; do
+    if [ "$D" != "$NUEVA" ]; then rm -rf "$D/types" "$D/dev/types"; fi
+  done
   # La caché de la carpeta actual acelera el build y conserva las imágenes ya optimizadas
   if [ -d "$ACTUAL/cache" ]; then mkdir -p "$NUEVA" && cp -a "$ACTUAL/cache" "$NUEVA/"; fi
   if ! NEXT_DIST_DIR="$NUEVA" npm run build; then

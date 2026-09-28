@@ -396,7 +396,7 @@ Verificación: `grep -rn "lg:group-hover:opacity-100" app/customer app/cursos co
 
 ## 8. Cambios de Claude del 28/09 que te afectan (C-112, C-113, C-114) y tu ronda R23
 
-- **Tu ronda actual es R23** (`PLAN_GEMINI.md`, al final): solo G-69, el filtro "Reembolsos" en Mi saldo.
+- **R23 (G-69) quedó cerrada y en `main`** el 28/09, con dos arreglos de Claude (ver "Resultado de R23" en `PLAN_GEMINI.md`). No tienes ronda abierta.
 - **ElectroStudio** reemplazó "Imágenes para redes": `components/admin/SocialMediaGenerator.tsx` ya no existe. `app/admin/(dashboard)/studio/**` y `lib/studio/**` son del carril de Claude.
 - **Pagos sin orden** (C-114):
   - `app/admin/(dashboard)/transactions/_components/PagosSinOrden.tsx` y `lib/pago-movil-sin-orden.ts` son de Claude: tocan dinero.

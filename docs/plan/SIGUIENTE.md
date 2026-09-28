@@ -1,9 +1,9 @@
 # Punto de partida (actualizado 2026-09-28)
 
-Léelo antes de empezar. En producción: `main` en 70093de (ElectroStudio C-112 + C-113), sirviendo `.next-b`.
+Léelo antes de empezar. En producción: 70093de (ElectroStudio C-112 + C-113), sirviendo `.next-b`. En GitHub, `main` ya tiene C-114 y G-69: falta el deploy.
 
-## 0. Urgente: mergear y subir C-114 (Pago Móvil cobrado y orden rechazada)
-- **Rama `claude/C-114`, sale de `main`.** Espera el OK de Andrés para el merge y el push. Detalle en `estado/C-114.md`.
+## 0. Urgente: desplegar C-114 (Pago Móvil cobrado y orden rechazada)
+- **En `main` y subida el 28/09** (merge y push autorizados por Andrés). Falta el deploy (§2). Detalle en `estado/C-114.md`.
 - **Qué pasaba:** el mínimo de compra (y el máximo, las entregas apagadas y los problemas de stock) solo se revisaban al crear la orden, **después** de verificar el Pago Móvil. Andrés lo probó en producción con "Test Digital" (menos de $5): cobrado y sin pedido. Esos pagos no aparecían en ninguna pantalla del panel.
 - **Qué hace C-114:**
   - El checkout no muestra el Pago Móvil ni deja completar mientras la orden no se pueda crear. Dice qué falta.
@@ -14,9 +14,8 @@ Léelo antes de empezar. En producción: `main` en 70093de (ElectroStudio C-112 
 - **Después del deploy:** Andrés pasa a su saldo su pago de prueba, desde Transacciones.
 
 ## 1. Estado de las ramas
-- **`main`:** todo hasta C-113, en producción desde el 28/09.
-- **`claude/C-114`:** por mergear (§0).
-- **Gemini:** ronda **R23** abierta en `PLAN_GEMINI.md`, con una sola tarjeta chica (G-69). Su carril no tiene deudas de reglas (verificado el 28/09 con `grep`: 0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis).
+- **`main`:** todo hasta C-114 y G-69, subido el 28/09. En producción, hasta C-113.
+- **Gemini:** R23 (G-69) cerrada y en `main`, con dos arreglos de Claude (resultado al final de `PLAN_GEMINI.md`). **No tiene ronda abierta.** Su carril no tiene deudas de reglas (verificado el 28/09 con `grep`: 0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis).
 - **ChatGPT:** fuera del equipo desde el 21/09. Limpieza opcional en la máquina de Andrés: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
 - **Historial de tareas:** cada una tiene su `docs/plan/estado/C-XX.md`. Resumen en `PLAN_CLAUDE.md`, "Orden de trabajo".
 
@@ -38,7 +37,7 @@ bash scripts/deploy.sh
   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-<fecha>.dump`
   (`pg_dump` no acepta el `?schema=` de la URL de Prisma).
 - **Volver atrás:** `git reset --hard <commit> && npm install && bash scripts/deploy.sh --sin-pull`.
-- **Memoria:** el servidor tiene 7,8 GB. El build usa unos 2,7 GB. **Recomendado:** 4 GB de swap como margen. Pregúntale a Andrés si ya lo agregó.
+- **Memoria:** el servidor tiene 7,8 GB. El build usa unos 2,7 GB. Andrés agregó 4 GB de swap el 28/09.
 - **Respaldo de archivos:** incluir `private-uploads/signatures/` (constancias firmadas) y `public/uploads/` (fotos de productos y de ElectroStudio).
 
 **Deploys hechos:**
@@ -47,25 +46,26 @@ bash scripts/deploy.sh
   - Hubo dos fallos del build: los tipos de una ruta borrada y la falta de memoria. Los dos se arreglaron en `deploy.sh` y `next.config.js`.
 
 ## 3. Qué sigue (Claude, en orden)
-1. **C-114:** merge, push y deploy (§0). Pasar a saldo el pago de prueba.
+1. **C-114:** deploy (§0). Pasar a saldo el pago de prueba.
 2. **Revisión final con Andrés** (`REVISION_FINAL.md`), y arreglar lo que salga. En producción:
    - Checkout: con el mínimo de compra activo, el aviso aparece antes de pagar. Una compra real con saldo y otra con Pago Móvil.
-   - ElectroStudio:
-     - Una historia de un producto real.
-     - "Tu foto" con una foto del local.
-     - Un video en Chrome y "Compartir" desde el teléfono.
-     - La plantilla Tasa BCV.
-     - Una visita en "Resultados".
    - Una compra con cupón.
    - Firmar los términos desde "Recargar saldo".
    - Reportes → Seguridad con la IP real.
+   - ElectroStudio ya lo probó Andrés el 28/09: "muy bien". Sus pedidos de mejora son C-116.
 3. **C-115 (chica):** avisar el mínimo de compra también en `/carrito` (usa `blockers` de `/api/orders/quote`), antes de llegar al checkout.
-4. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
-5. **C-92:** desactivar clientes en vez de borrarlos. Detalle en `AUDITORIA_CLIENTES_BORRADOS.md`.
+4. **C-116: ElectroStudio más fácil de usar** (pedida por Andrés el 28/09, tras probarlo en producción):
+   - Botones directos en cada historia creada para editarla y borrarla.
+   - Validaciones.
+   - Uso mucho más guiado y amigable.
+   - Una sola entrada en el menú: hoy está en la barra lateral del admin y además como pestaña de Marketing, que solo lleva al mismo lugar. "Debemos ser prácticos."
+   - Empezar con el inventario de acciones de `CHATGPT.md` §4 y mostrarle a Andrés la propuesta antes de cambiar el flujo.
+5. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
+6. **C-92:** desactivar clientes en vez de borrarlos. Detalle en `AUDITORIA_CLIENTES_BORRADOS.md`.
    - Falta de Andrés: las 4 consultas de diagnóstico y cancelar esas órdenes con el motivo "Prueba: cliente eliminado".
    - Lleva una migración de `onDelete`, con su OK.
-6. **Wizard de producto** (crear y editar): rediseño paso a paso, lo que quedó de C-51.
-7. **Menores:**
+7. **Wizard de producto** (crear y editar): rediseño paso a paso, lo que quedó de C-51.
+8. **Menores:**
    - Aviso cuando un favorito entra en oferta.
    - Ordenar el catálogo por el precio de oferta.
    - Ocultar el formulario de reseña a quien no puede reseñar.
@@ -73,8 +73,8 @@ bash scripts/deploy.sh
    - Conservar el slug al renombrar una categoría.
    - Advertencias "Dynamic filesystem access" de `app/api/uploads/[...path]`.
    - Los 11 errores de ESLint fuera de `app`, `components`, `lib` y `contexts`: `scripts/`, `prisma/seed.ts`, `proxy.ts` y `docs/plan/scripts`.
-8. **ElectroStudio:** el artefacto "Flyers ElectroShop" ya se puede retirar. Si Andrés quiere pasar sus historias, se hace un importador.
-9. **Al cerrar el ciclo:** borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` de la máquina local.
+9. **ElectroStudio:** el artefacto "Flyers ElectroShop" ya se puede retirar. Si Andrés quiere pasar sus historias, se hace un importador.
+10. **Al cerrar el ciclo:** borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` de la máquina local.
 
 ## 4. Decisiones tomadas (no volver a preguntar)
 - **Google:** vincular por correo; teléfono y cédula en la primera compra; admins nunca con Google.
@@ -129,10 +129,6 @@ bash scripts/deploy.sh
 ## 6. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto.
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
-> 2. Pregúntame:
->    - Si ya se mergeó, subió y desplegó C-114, y si pasé a saldo el pago de prueba.
->    - Si agregué la swap de 4 GB.
->    - Cómo salió la prueba de ElectroStudio en producción.
-> 3. Si C-114 no está en `main`, ofrécete a hacer el merge y el push (necesita mi OK).
-> 4. Si Gemini entregó la ronda R23 (G-69), revísala según `CLAUDE.md` antes de mergear.
-> 5. Después sigue el orden de `SIGUIENTE.md` §3: la revisión final (`REVISION_FINAL.md`), C-115, C-107, C-92 y el wizard de producto.
+> 2. Pregúntame si ya desplegué C-114 y si pasé a saldo el pago de prueba (Transacciones → "Pagos Móvil de compra sin orden").
+> 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
+> 4. Después sigue el orden de `SIGUIENTE.md` §3: la revisión final (`REVISION_FINAL.md`), C-115, C-116 (ElectroStudio), C-107, C-92 y el wizard de producto.

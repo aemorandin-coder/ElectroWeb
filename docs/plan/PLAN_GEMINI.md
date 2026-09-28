@@ -1745,3 +1745,10 @@ git diff --stat main                                                  # 1 archiv
 Un commit `[G-69] Filtro Reembolsos en Mi saldo`.
 
 **Regla de siempre:** cada texto entre comillas y cada número de línea de tu estado sale de un `grep -n` que pegas al lado. Lo que no encontraste con `grep`, no lo escribes.
+
+## Resultado de R23 (revisión de Claude en C-114, 28/09)
+- **G-69: aprobada con dos arreglos de Claude**, ya en `main`:
+  - En móvil, a 360 px, el botón "Reembolsos" se salía de la pantalla. Los filtros ahora bajan debajo del título (`flex-wrap`).
+  - El estado vacío de escritorio decía "No tienes compras" con el filtro de reembolsos.
+- **Para la próxima vez:** al agregar un botón a una fila, revisa el ancho a 360 px. Revisa también los textos que dependen del filtro (busca `filterType` en todo el archivo).
+- No hay ronda abierta. La próxima la escribe Claude.

@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
-import { parseDeliveryMethod, parseOrderItems, quoteOrder, OrderInputError } from '@/lib/order-quote';
+import { orderBlockers, parseDeliveryMethod, parseOrderItems, quoteOrder, OrderInputError } from '@/lib/order-quote';
 
 // POST - Cotiza el carrito con precios, envío y descuentos del servidor (no crea nada).
-// El checkout lo usa para mostrar el mismo total que cobrará POST /api/orders.
+// El checkout lo usa para mostrar el mismo total que cobrará POST /api/orders y, con `blockers` y `errors`,
+// para no dejar pagar una compra que después no se podría crear (C-114).
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -26,9 +27,10 @@ export async function POST(request: NextRequest) {
     const deliveryMethod = parseDeliveryMethod(body?.deliveryMethod);
 
     const couponCode = typeof body?.couponCode === 'string' && body.couponCode.trim() ? body.couponCode.trim().slice(0, 40) : null;
-    const { calculation, errors, coupon } = await quoteOrder(session.user.id, items, deliveryMethod, couponCode);
+    const { calculation, errors, coupon, settings } = await quoteOrder(session.user.id, items, deliveryMethod, couponCode);
+    const blockers = orderBlockers(calculation, settings, deliveryMethod);
 
-    return NextResponse.json({ calculation, errors, coupon });
+    return NextResponse.json({ calculation, errors, coupon, blockers });
   } catch (error) {
     if (error instanceof OrderInputError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

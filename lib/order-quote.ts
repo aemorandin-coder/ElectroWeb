@@ -74,6 +74,29 @@ export interface OrderQuote {
   coupon: CouponQuote | null;
 }
 
+/**
+ * Reglas de la tienda que impiden crear la orden aunque el carrito esté bien: montos mínimo y máximo de compra y
+ * formas de entrega apagadas. Las revisan la cotización (el checkout no deja pagar mientras haya alguna) y
+ * POST /api/orders. C-114: antes solo las revisaba la orden, después de que el cliente ya había pagado por Pago Móvil.
+ */
+export function orderBlockers(calculation: OrderCalculation, settings: CompanySettings | null, deliveryMethod: DeliveryMethod): string[] {
+  const out: string[] = [];
+  const min = settings?.minOrderAmountUSD ? Number(settings.minOrderAmountUSD) : 0;
+  const max = settings?.maxOrderAmountUSD ? Number(settings.maxOrderAmountUSD) : 0;
+  if (min > 0 && calculation.totalUSD < min) {
+    out.push(`La compra mínima es de ${formatUSD(min)}. Te faltan ${formatUSD(roundMoney(min - calculation.totalUSD))}: agrega algo más al carrito.`);
+  }
+  if (max > 0 && calculation.totalUSD > max) {
+    out.push(`La compra máxima es de ${formatUSD(max)}. Quita productos o divide la compra en dos pedidos.`);
+  }
+  if (calculation.physical) {
+    if (deliveryMethod === 'PICKUP' && !settings?.pickupEnabled) out.push('El retiro en tienda no está disponible: elige otra forma de entrega.');
+    if (deliveryMethod === 'SHIPPING' && settings?.deliveryEnabled === false) out.push('Por ahora no hacemos envíos nacionales: elige otra forma de entrega.');
+    if (deliveryMethod === 'LOCAL_DELIVERY' && !settings?.localDeliveryEnabled) out.push('El delivery en Guanare no está disponible: elige otra forma de entrega.');
+  }
+  return out;
+}
+
 /** Valida `items` del body. Solo se aceptan productId, quantity, digitalVariantId, digitalAmount y digitalUsername. */
 export function parseOrderItems(raw: unknown): OrderItemInput[] {
   if (!Array.isArray(raw) || raw.length === 0) {

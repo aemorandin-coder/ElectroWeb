@@ -25,7 +25,7 @@ import { generateReviewReminderEmail } from '@/lib/email-templates/ReviewReminde
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
-import { parseDeliveryMethod, parseOrderItems, quoteOrder, OrderInputError, type QuotedLine } from '@/lib/order-quote';
+import { orderBlockers, parseDeliveryMethod, parseOrderItems, quoteOrder, OrderInputError, type QuotedLine } from '@/lib/order-quote';
 import { montoDecimal, type OrderGroupTotals } from '@/lib/pricing';
 import {
   orderPatchSchema,
@@ -42,6 +42,7 @@ import {
 } from '@/lib/order-admin';
 import { recordPaidOrder, rejectOrderConversions } from '@/lib/influencer-commission';
 import { recordStudioOrder } from '@/lib/studio/tracking';
+import { acreditarPagoSinOrden, pagoSinOrdenWhere } from '@/lib/pago-movil-sin-orden';
 import { STUDIO_COOKIE } from '@/lib/studio/code';
 import { avisarPedidoDigitalPorEntregar } from '@/lib/digital-delivery';
 import { DestinoError, leerDestino, type DestinoOrden } from '@/lib/envios/destino';
@@ -339,28 +340,50 @@ export async function POST(request: NextRequest) {
 
     const notes = typeof body.notes === 'string' ? body.notes.trim().slice(0, 1000) : '';
 
+    // Pago Móvil de compra ya verificado por el banco y todavía libre (sin orden ni crédito). C-114: si la orden no se
+    // puede crear, ese dinero ya entró: o pasa al saldo del cliente (rechazo definitivo) o sigue libre para reintentar.
+    const mobilePaymentData = (body.mobilePaymentData && typeof body.mobilePaymentData === 'object'
+      ? body.mobilePaymentData
+      : {}) as Record<string, unknown>;
+    const referencia = typeof mobilePaymentData.referencia === 'string' ? mobilePaymentData.referencia.trim() : '';
+    const pagoLibre = paymentMethod === 'MOBILE_PAYMENT' && referencia
+      ? await prisma.pagoMovilVerificacion.findFirst({
+          where: { userId, referencia, ...pagoSinOrdenWhere },
+          orderBy: { createdAt: 'desc' },
+        })
+      : null;
+
+    /** Rechazo que no se arregla reintentando: el Pago Móvil ya verificado pasa al saldo del cliente */
+    const rechazoDefinitivo = async (error: string, details?: string[]) => {
+      if (!pagoLibre) return NextResponse.json({ error, details }, { status: 400 });
+      const credito = await acreditarPagoSinOrden(pagoLibre.id, [error, ...(details ?? [])].join(' ').slice(0, 300));
+      if (!credito.ok) return NextResponse.json({ error, details }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: `No pudimos crear tu pedido: ${[error, ...(details ?? [])].join(' ')} Tu Pago Móvil no se perdió: pasamos ${formatUSD(credito.montoUSD)} a tu saldo para que lo uses en tu compra.`,
+          creditedUSD: credito.montoUSD,
+        },
+        { status: 400 }
+      );
+    };
+    /** Rechazo que el cliente corrige y vuelve a confirmar: el pago sigue libre para esta misma compra */
+    const conPagoRegistrado = (error: string) =>
+      pagoLibre ? `${error} Tu Pago Móvil (ref. ${pagoLibre.referencia}) quedó registrado: corrige y confirma de nuevo con la misma referencia.` : error;
+
     // C-102: cupón escrito o elegido en la ficha; el servidor lo valida de nuevo al cobrar
     const couponCode = typeof body.couponCode === 'string' && body.couponCode.trim() ? body.couponCode.trim().slice(0, 40) : null;
     const quote = await quoteOrder(userId, items, deliveryMethod, couponCode);
     const { calculation, settings } = quote;
 
     if (quote.errors.length > 0) {
-      return NextResponse.json(
-        { error: 'Hay problemas con los productos de tu carrito', details: quote.errors },
-        { status: 400 }
-      );
+      return rechazoDefinitivo('Hay problemas con los productos de tu carrito.', quote.errors);
     }
 
-    if (deliveryMethod === 'PICKUP' && calculation.physical && !settings?.pickupEnabled) {
-      return NextResponse.json({ error: 'El retiro en tienda no está disponible' }, { status: 400 });
-    }
-
-    // Envío nacional apagado en Configuración (C-50b): los productos físicos solo se retiran o van por delivery
-    if (deliveryMethod === 'SHIPPING' && calculation.physical && settings?.deliveryEnabled === false) {
-      return NextResponse.json({ error: 'Por ahora no hacemos envíos nacionales: elige otra forma de entrega' }, { status: 400 });
-    }
-    if (deliveryMethod === 'LOCAL_DELIVERY' && calculation.physical && !settings?.localDeliveryEnabled) {
-      return NextResponse.json({ error: 'El delivery en Guanare no está disponible' }, { status: 400 });
+    // C-114: montos mínimo y máximo y formas de entrega apagadas. La cotización ya los muestra y el checkout no deja
+    // pagar mientras haya alguno: si igual llegan aquí (la regla cambió en medio), el pago pasa al saldo.
+    const blockers = orderBlockers(calculation, settings, deliveryMethod);
+    if (blockers.length > 0) {
+      return rechazoDefinitivo(blockers[0], blockers.slice(1));
     }
 
     // C-100: destino y destinatario validados aquí (la oficina sale de la lista de ZOOM o MRW, no del navegador)
@@ -370,25 +393,10 @@ export async function POST(request: NextRequest) {
         destino = await leerDestino(body.shipping, deliveryMethod);
       } catch (destinoError) {
         if (destinoError instanceof DestinoError) {
-          return NextResponse.json({ error: destinoError.message, field: destinoError.field }, { status: 400 });
+          return NextResponse.json({ error: conPagoRegistrado(destinoError.message), field: destinoError.field }, { status: 400 });
         }
         throw destinoError;
       }
-    }
-
-    // Min/max de compra con el total calculado en el servidor
-    if (settings?.minOrderAmountUSD && calculation.totalUSD < Number(settings.minOrderAmountUSD)) {
-      return NextResponse.json(
-        { error: `El monto mínimo de compra es $${settings.minOrderAmountUSD}` },
-        { status: 400 }
-      );
-    }
-
-    if (settings?.maxOrderAmountUSD && calculation.totalUSD > Number(settings.maxOrderAmountUSD)) {
-      return NextResponse.json(
-        { error: `El monto máximo de compra es $${settings.maxOrderAmountUSD}` },
-        { status: 400 }
-      );
     }
 
     // Si el total que vio el cliente no coincide (precio o envío cambiaron), no se cobra nada:
@@ -396,9 +404,9 @@ export async function POST(request: NextRequest) {
     if (typeof body.expectedTotalUSD === 'number' && Math.abs(body.expectedTotalUSD - calculation.totalUSD) > 0.01) {
       return NextResponse.json(
         {
-          error: quote.coupon && !quote.coupon.applied && quote.coupon.message
+          error: conPagoRegistrado(quote.coupon && !quote.coupon.applied && quote.coupon.message
             ? `${quote.coupon.message} Revisa el resumen actualizado y confirma de nuevo.`
-            : 'El total de tu compra cambió. Revisa el resumen actualizado y confirma de nuevo.',
+            : 'El total de tu compra cambió. Revisa el resumen actualizado y confirma de nuevo.'),
           calculation,
           coupon: quote.coupon,
         },
@@ -412,25 +420,13 @@ export async function POST(request: NextRequest) {
     // NUNCA confiar en body.mobilePaymentData.verified del cliente: la verificación debe existir
     // en la base de datos, no estar usada y cubrir el total calculado aquí.
     const exchangeRateVES = settings?.exchangeRateVES ? Number(settings.exchangeRateVES) : 0;
-    const mobilePaymentData = (body.mobilePaymentData && typeof body.mobilePaymentData === 'object'
-      ? body.mobilePaymentData
-      : {}) as Record<string, unknown>;
-    const referencia = typeof mobilePaymentData.referencia === 'string' ? mobilePaymentData.referencia.trim() : '';
 
     let mobilePaymentVerificationId: string | null = null;
     let isPaymentConfirmed = paymentMethod === 'WALLET';
 
     if (paymentMethod === 'MOBILE_PAYMENT' && referencia) {
-      const verificacion = await prisma.pagoMovilVerificacion.findFirst({
-        where: {
-          userId,
-          referencia,
-          verificado: true,
-          contexto: 'ORDER',
-          orderId: null,  // Solo verificaciones no usadas
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+      // Solo verificaciones libres: sin orden y sin haberse pasado al saldo (C-114)
+      const verificacion = pagoLibre;
 
       if (verificacion) {
         mobilePaymentVerificationId = verificacion.id;
@@ -659,7 +655,7 @@ export async function POST(request: NextRequest) {
       // SEGURIDAD: Vincular la verificación de pago móvil con la orden para prevenir reutilización
       if (mobilePaymentVerificationId) {
         const linked = await tx.pagoMovilVerificacion.updateMany({
-          where: { id: mobilePaymentVerificationId, orderId: null },
+          where: { id: mobilePaymentVerificationId, orderId: null, transactionId: null },
           data: { orderId: orders[0].id },
         });
         if (linked.count === 0) {
@@ -676,6 +672,13 @@ export async function POST(request: NextRequest) {
         orders = await createOrders();
         break;
       } catch (error) {
+        // C-114: la orden falló después de un Pago Móvil ya verificado. Si se agotó un producto no hay reintento
+        // posible: el pago pasa al saldo. Si cambió una oferta o un descuento, el cliente confirma de nuevo con el mismo pago.
+        if (error instanceof OrderInputError && pagoLibre) {
+          if (error.message.startsWith('Uno de los productos se agotó')) return rechazoDefinitivo(error.message);
+          if (error.message.startsWith('Este pago móvil ya fue usado')) return NextResponse.json({ error: error.message }, { status: error.status });
+          return NextResponse.json({ error: conPagoRegistrado(error.message), details: error.details }, { status: error.status });
+        }
         if (!isOrderNumberConflict(error) || attempt >= ORDER_NUMBER_RETRIES) throw error;
       }
     }

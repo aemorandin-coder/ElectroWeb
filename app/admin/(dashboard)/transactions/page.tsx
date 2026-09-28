@@ -41,6 +41,7 @@ import {
     adminLabel,
     adminBadge,
     } from '@/lib/admin-ui';
+import PagosSinOrden from './_components/PagosSinOrden';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 
@@ -332,6 +333,9 @@ export default function TransactionsPage() {
                     </button>
                 </div>
             </div>
+
+            {/* C-114: Pagos Móvil confirmados por el banco que no llegaron a ser orden */}
+            <PagosSinOrden onChange={() => { fetchTransactions(); fetchStats(); }} />
 
             {pendingCount > 0 && (
                 <button type="button" onClick={() => setFilterStatus('PENDING')} className={`${adminNotice('warning')} flex min-h-11 w-full items-center justify-between gap-3 text-left`}>

@@ -1,4 +1,14 @@
-# Punto de partida (actualizado 2026-09-28: ElectroStudio C-112 + C-113 en producción)
+# Punto de partida (actualizado 2026-09-28: ElectroStudio en producción; C-114 crítico listo para mergear)
+
+## Urgente: C-114 · Pago Móvil cobrado y orden rechazada
+- Rama `claude/C-114`, sale de `main`. Detalle en `estado/C-114.md`.
+- **Qué pasaba:** el mínimo de compra y otras reglas se revisaban después del pago. El pago quedaba sin orden y sin verse en el panel.
+- **Qué cambia:**
+  - El checkout ya no deja pagar si la orden no se puede crear.
+  - Si igual pasa, el dinero va al saldo del cliente (decisión de Andrés del 28/09).
+  - En Transacciones aparece la lista "Pagos Móvil de compra sin orden", con el botón "Pasar a su saldo".
+- **Sin cambios de base.** Deploy normal.
+- **Después del deploy:** pasar a saldo el pago de prueba de Andrés desde Transacciones.
 
 Léelo antes de empezar.
 

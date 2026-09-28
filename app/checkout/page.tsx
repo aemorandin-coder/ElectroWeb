@@ -14,14 +14,14 @@ import PageHeader from '@/components/ui/PageHeader';
 import RechargeModal from '@/components/modals/RechargeModalV2';
 import CheckoutPagoMovilForm from '@/components/checkout/CheckoutPagoMovilForm';
 import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverlay';
-import { FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiPackage, FiInfo, FiCheckCircle, FiGift, FiShield } from 'react-icons/fi';
+import { FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiPackage, FiInfo, FiCheckCircle, FiGift, FiShield, FiAlertTriangle } from 'react-icons/fi';
 import { FaMobileScreen } from 'react-icons/fa6';
 import { FaCheck } from 'react-icons/fa';
 import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWallet } from '@fortawesome/free-solid-svg-icons';
 import { formatUSD, formatVES } from '@/lib/currency';
-import { adminCard, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
+import { adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import DatosDelCliente from '@/components/checkout/DatosDelCliente';
 import EntregaEnvio, { ENVIO_INICIAL, ResumenEnvio, envioParaServidor, validarEnvio, type EnvioForm } from '@/components/checkout/EntregaEnvio';
@@ -270,7 +270,14 @@ export default function CheckoutPage() {
     [items, envio.deliveryMethod, couponCode]
   );
   type CuponCotizado = { code: string; applied: boolean; message: string; savingsUSD: number };
-  const [serverQuote, setServerQuote] = useState<{ key: string; calculation: OrderCalculation; coupon: CuponCotizado | null } | null>(null);
+  // C-114: la cotización también dice si la orden se podrá crear (mínimo, máximo, entrega, productos). Mientras haya
+  // algún problema no se muestra el Pago Móvil: antes el cliente pagaba y recién después la orden se rechazaba.
+  const [serverQuote, setServerQuote] = useState<{
+    key: string;
+    calculation: OrderCalculation;
+    coupon: CuponCotizado | null;
+    problems: string[];
+  } | null>(null);
 
   useEffect(() => {
     if (status !== 'authenticated' || items.length === 0) return;
@@ -285,7 +292,14 @@ export default function CheckoutPage() {
       })
         .then(res => (res.ok ? res.json() : null))
         .then(data => {
-          if (data?.calculation) setServerQuote({ key: quoteBody, calculation: data.calculation, coupon: data.coupon ?? null });
+          if (data?.calculation) {
+            setServerQuote({
+              key: quoteBody,
+              calculation: data.calculation,
+              coupon: data.coupon ?? null,
+              problems: [...(Array.isArray(data.errors) ? data.errors : []), ...(Array.isArray(data.blockers) ? data.blockers : [])],
+            });
+          }
         })
         .catch(() => { });
     }, 400);
@@ -296,8 +310,17 @@ export default function CheckoutPage() {
     };
   }, [quoteBody, status, items.length]);
 
-  const orderCalculation = serverQuote?.key === quoteBody ? serverQuote.calculation : localCalculation;
-  const couponQuote = serverQuote?.key === quoteBody ? serverQuote.coupon : null;
+  const quoteReady = serverQuote?.key === quoteBody;
+  const orderCalculation = quoteReady ? serverQuote.calculation : localCalculation;
+  const couponQuote = quoteReady ? serverQuote.coupon : null;
+  const quoteProblems = quoteReady ? serverQuote.problems : [];
+  // Solo se paga cuando el servidor confirmó este mismo carrito y no hay nada que impida crear la orden
+  const canPay = quoteReady && quoteProblems.length === 0;
+  // Si ya vio los datos del Pago Móvil (quizás ya transfirió), el formulario no se oculta aunque después aparezca un
+  // problema: así puede verificar su pago y, si la orden no se puede crear, el servidor lo pasa a su saldo
+  const [pagoMovilVisto, setPagoMovilVisto] = useState(false);
+  if (paymentMode === 'PAGO_MOVIL' && canPay && !pagoMovilVisto) setPagoMovilVisto(true);
+  const mostrarPagoMovil = canPay || mobilePaymentVerified || pagoMovilVisto;
   const cartSubtotal = orderCalculation.subtotalUSD;
   const cartDiscount = orderCalculation.discountUSD;
   const shippingBreakdown = orderCalculation.shipping;
@@ -366,6 +389,14 @@ export default function CheckoutPage() {
       return;
     }
 
+    // C-114: con un Pago Móvil ya verificado se deja confirmar igual: si la orden no se puede crear, el servidor lo pasa al saldo
+    if (quoteProblems.length > 0 && !(paymentMode === 'PAGO_MOVIL' && mobilePaymentVerified)) {
+      setError(quoteProblems.join(' '));
+      setLoading(false);
+      document.getElementById('metodo-de-pago')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
     if (paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified) {
       setError('Debes verificar tu Pago Móvil antes de completar el pedido.');
       setLoading(false);
@@ -405,7 +436,14 @@ export default function CheckoutPage() {
 
       if (!orderResponse.ok) {
         if (orderResponse.status === 409 && orderData.calculation) {
-          setServerQuote({ key: quoteBody, calculation: orderData.calculation, coupon: orderData.coupon ?? null });
+          setServerQuote({ key: quoteBody, calculation: orderData.calculation, coupon: orderData.coupon ?? null, problems: [] });
+        }
+        // C-114: la orden no se pudo crear y el Pago Móvil pasó al saldo: ese pago ya no sirve, ahora se paga con saldo
+        if (typeof orderData.creditedUSD === 'number') {
+          setMobilePaymentVerified(false);
+          setMobilePaymentData(null);
+          setPaymentMode('WALLET');
+          void fetchBalance();
         }
         throw new Error(orderData.details?.join(' ') || orderData.error || 'Error al crear la orden');
       }
@@ -738,7 +776,7 @@ export default function CheckoutPage() {
               )}
 
               {/* Payment Method */}
-              <div className="bg-white rounded-lg shadow-md border border-line p-6 relative overflow-hidden">
+              <div id="metodo-de-pago" className="bg-white rounded-lg shadow-md border border-line p-6 relative overflow-hidden">
                 <h2 className="text-lg font-bold text-ink mb-4 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -772,6 +810,21 @@ export default function CheckoutPage() {
                         Ir a Mi Cuenta
                       </Link>
                     </div>
+                  </div>
+                )}
+
+                {/* C-114: lo que impide crear la orden se dice ANTES de pagar */}
+                {quoteProblems.length > 0 && (
+                  <div role="alert" className={`${adminNotice('warning')} mb-6`}>
+                    <p className="flex items-center gap-2 font-semibold">
+                      <FiAlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      Todavía no puedes pagar esta compra
+                    </p>
+                    <ul className="mt-1 list-disc space-y-0.5 pl-6">
+                      {quoteProblems.map((p) => (
+                        <li key={p}>{p}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 
@@ -867,8 +920,17 @@ export default function CheckoutPage() {
                   </button>
                 </div>
 
+                {/* Sin cotización del servidor (o con problemas) no se muestran los datos para transferir */}
+                {paymentMode === 'PAGO_MOVIL' && !mostrarPagoMovil && (
+                  <div className={`${adminNotice('neutral')} mb-6`}>
+                    {quoteProblems.length > 0
+                      ? 'Resuelve lo de arriba y aquí aparecerán los datos para tu Pago Móvil. Así no pagas algo que no se puede despachar.'
+                      : 'Calculando el total exacto de tu compra…'}
+                  </div>
+                )}
+
                 {/* Direct BDV Pago Movil Form */}
-                {paymentMode === 'PAGO_MOVIL' && (
+                {paymentMode === 'PAGO_MOVIL' && mostrarPagoMovil && (
                   <div className="bg-surface rounded-2xl p-6 border border-line shadow-sm mb-6">
                     <div className="mb-4 pb-3 border-b border-line flex items-center justify-between flex-wrap gap-2">
                       <div>
@@ -1319,6 +1381,7 @@ export default function CheckoutPage() {
                   loading ||
                   !acceptedTerms ||
                   !paymentMode ||
+                  (!canPay && !(paymentMode === 'PAGO_MOVIL' && mobilePaymentVerified)) ||
                   (paymentMode === 'WALLET' && userBalance < finalTotal) ||
                   ((paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT') && userBalance < finalTotal) ||
                   (paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified)

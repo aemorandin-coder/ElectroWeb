@@ -231,6 +231,7 @@ components/UserAccountButton.tsx   components/WhatsAppButton.tsx   components/Ho
 components/MobileScrollProgress.tsx   components/DynamicFavicon.tsx   components/AnalyticsTracker.tsx
 app/login/**  app/registro/**  components/auth/**        (desde C-84: seguridad y registro con Google)
 app/admin/(dashboard)/studio/**                            (desde C-112: ElectroStudio)
+app/admin/(dashboard)/transactions/_components/PagosSinOrden.tsx   (desde C-114: dinero)
 CLAUDE.md  GEMINI.md  CHATGPT.md  docs/plan/PLAN*.md  docs/plan/AUDITORIA*.md  docs/plan/estado/C-*.md
 ```
 (*) Se **liberan para Gemini** cuando `estado/C-01.md` y `estado/C-05.md` digan `Estado: HECHO` en `main` (solo para las tareas G-05g y G-06g).

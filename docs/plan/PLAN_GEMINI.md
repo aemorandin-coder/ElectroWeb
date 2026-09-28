@@ -1710,3 +1710,39 @@ Un commit `[G-68]`.
 - **R20 (G-62…G-66) y R22 (G-68): aprobadas.** G-68 quedó idéntica a la versión que Claude probó, y solo se movieron líneas.
 - **G-67: rechazada como fuente.** 21 de los 49 textos que citaste entre comillas no existen en el código, y describiste paginación y búsqueda en una API que no las tiene. Decir "QA con datos pendiente" estuvo bien; inventar lo que no leíste, no.
 - **Regla nueva (también en `GEMINI.md`):** en un informe, cada texto entre comillas y cada número de línea sale de un `grep -n` que pegas al lado. Si no lo encontraste con `grep`, no lo escribes.
+
+---
+
+## Ronda R23 (desde 28/09) · Filtro "Reembolsos" en el saldo del cliente · G-69
+
+**Contexto.** Desde C-114, cuando un Pago Móvil no llega a ser orden, el dinero pasa al saldo del cliente como una transacción de tipo `REFUND`. La página del saldo ya la muestra bien: verde, con "+" y la etiqueta "Reembolso", gracias a `isCreditTransaction` de `lib/format-helpers.ts`. Pero sus filtros solo tienen Todas, Recargas y Compras: un cliente no puede ver solo sus reembolsos.
+
+Revisión del 28/09 con `grep` (Claude): tu carril no tiene deudas de reglas (0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis). Por eso esta ronda es corta.
+
+Rama: `git switch -c gemini/R23 main` en tu worktree `../ElectroShopVe-gemini`, **nunca** en la carpeta principal.
+
+### G-69 · Filtro "Reembolsos" en Mi saldo · Depende: —
+**Archivo (solo este):** `app/customer/(dashboard)/balance/page.tsx`.
+
+Hay **dos** grupos de filtros y los dos llevan la opción nueva, **después de "Compras"**:
+1. **Móvil**, un arreglo cerca de la línea 215 (`{ value: 'PURCHASE', label: 'Compras' },`). Agrega debajo:
+   ```tsx
+   { value: 'REFUND', label: 'Reembolsos' },
+   ```
+2. **Escritorio**, tres `<button>` cerca de las líneas 369-386 (Todas, Recargas, Compras). Copia el botón de "Compras" completo, debajo de él, y cambia **solo** `'PURCHASE'` por `'REFUND'` (las dos veces) y el texto `Compras` por `Reembolsos`. El `className` queda idéntico.
+
+**No toques:**
+- La lógica del filtro (`filteredTransactions`), `isCreditTransaction` ni `lib/format-helpers.ts`, que es de Claude.
+- El botón con `FiDownload` que está al lado: no hace nada, pero quitarlo lo decide Andrés. Anótalo en "Notas".
+
+**Verificación (pega la salida real en `estado/G-69.md`):**
+```bash
+grep -n "'REFUND'" "app/customer/(dashboard)/balance/page.tsx"      # 3 líneas: la del arreglo y 2 en el botón nuevo
+grep -n "Reembolsos" "app/customer/(dashboard)/balance/page.tsx"    # 2 líneas
+npx eslint "app/customer/(dashboard)/balance/page.tsx"              # 0 errores (igual que en main)
+npx tsc --noEmit                                                      # sin errores nuevos
+git diff --stat main                                                  # 1 archivo (más tu estado/G-69.md)
+```
+Un commit `[G-69] Filtro Reembolsos en Mi saldo`.
+
+**Regla de siempre:** cada texto entre comillas y cada número de línea de tu estado sale de un `grep -n` que pegas al lado. Lo que no encontraste con `grep`, no lo escribes.

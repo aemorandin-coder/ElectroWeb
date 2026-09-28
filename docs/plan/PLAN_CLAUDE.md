@@ -224,7 +224,7 @@ Hallazgos confirmados leyendo el código (C-73):
 - Mismo trabajo que C-52 en el admin:
   - Sin `transform`, `backdrop-blur-xl` ni manchas animadas.
   - Cajón móvil con capa, Escape y cierre al navegar. `useBodyScrollLock`.
-  - `z-[var(--z-*)]`, `react-icons`, recetas de `lib/admin-ui`.
+  - `z-[var(--z-modal)] (o la capa que toque)`, `react-icons`, recetas de `lib/admin-ui`.
 - **Campana:** usar `NotificationBell` de `components/notifications` (C-73).
 - **Verificación:** modales de `/customer/profile` y "Recargar saldo" cubren 1440×900 y 390×844. Sin scroll doble. Cajón con teclado.
 - Al terminar: `docs/plan/estado/C-55.md` en `main` (Gemini lo espera para G-38).

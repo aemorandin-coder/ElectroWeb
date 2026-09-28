@@ -66,10 +66,15 @@ main() {
     exit 1
   fi
 
-  if ! git diff --quiet "$ANTES" "$DESPUES" -- package.json package-lock.json; then
+  # Dependencias: se instalan si package-lock.json no es el de la última instalación. Antes se comparaba
+  # ANTES..DESPUES, pero si el guion paraba por la base, la segunda corrida ya no veía el pull y no instalaba (C-113)
+  local LOCK_HASH
+  LOCK_HASH=$(sha256sum package-lock.json | cut -d' ' -f1)
+  if [ "$(cat node_modules/.deploy-lock-hash 2>/dev/null)" != "$LOCK_HASH" ]; then
     # npm install y no npm ci: ci borra node_modules entero con la tienda corriendo
-    echo "--- Cambiaron las dependencias"
+    echo "--- Instalando dependencias (package-lock.json cambió)"
     npm install --no-audit --no-fund
+    echo "$LOCK_HASH" > node_modules/.deploy-lock-hash
   fi
   npx prisma generate
 

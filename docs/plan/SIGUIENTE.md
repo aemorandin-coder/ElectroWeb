@@ -1,4 +1,4 @@
-# Punto de partida (actualizado 2026-09-28: todo hasta C-40 en `main`; ElectroStudio C-112 + C-113 lista para mergear)
+# Punto de partida (actualizado 2026-09-28: ElectroStudio C-112 + C-113 en `main` y en GitHub; falta el deploy)
 
 Léelo antes de empezar.
 
@@ -9,7 +9,7 @@ Encontradas en C-40: el secreto del webhook de SADES (`scripts/test-webhook.js`)
 - Sigue recomendado **poner el repositorio en privado** (GitHub → Settings → Change visibility).
 
 ## 1. Ramas
-- **Nuevas: ElectroStudio, `main` → `claude/C-112` (fase 1) → `claude/C-113` (fase 2). Mergear `claude/C-113` trae las dos.**
+- **ElectroStudio, fases 1 y 2 (`claude/C-112` y `claude/C-113`): en `main` desde el 28/09** (super merge y push de Claude, pedido por Andrés). Falta el deploy (§2).
   - Reemplaza "Imágenes para redes" por `/admin/studio`: historias, posts y videos con los productos, precios, ofertas, cupones, reseñas y la tasa reales de la tienda.
   - **Base:** crea 2 tablas (`studio_flyers` con su columna `code`, y `studio_brand`), con el OK de Andrés del 26/09. `deploy.sh` para y muestra el SQL: solo `CREATE`, sin DROP. Correr `npx prisma db push` y otra vez el guion.
   - **Medición:** sin tablas nuevas. Usa `analytics_events`, una cookie en `proxy.ts` y una línea en la API de órdenes que no frena la compra.
@@ -35,6 +35,18 @@ Servidor `/var/www/electroshopve`, proceso de PM2 `electroshop` (no `electroshop
 - Respaldo de la base: `~/respaldo-antes-deploy-26-09.dump`.
 - Firmas del saldo pasadas: 11 de 11, con su PDF. Respaldo: `~/firmas-2026-09-26.tgz`.
 - **Se encontró un problema:** 55.910 "Could not find a production build" en el log de PM2. `npm run build` borraba `.next` con la tienda corriendo, y PM2 la reiniciaba sin parar mientras duraba el build. El contador de reinicios se puso en 0 el 26/09.
+
+**Pendiente: deploy de ElectroStudio (C-112 + C-113).**
+- Crea 2 tablas: solo `CREATE`, sin DROP ni `ALTER ... TYPE`.
+- Cambia dependencias: entra `qrcode-generator` y salen `html2canvas` y `@google/generative-ai`.
+- **Pasos:**
+  1. Respaldo:
+     `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-28-09.dump`
+     (`pg_dump` no acepta el `?schema=` de la URL de Prisma).
+  2. `bash scripts/deploy.sh`: hace el pull y **para** mostrando el SQL.
+  3. `npx prisma db push`.
+  4. `bash scripts/deploy.sh` otra vez: instala las dependencias, compila y cambia de carpeta.
+- **Al pasar (C-113):** el guion viejo solo instalaba dependencias si el pull era de esa misma corrida. Si paraba por la base, la segunda corrida no instalaba y el build fallaba. Ahora instala cuando `package-lock.json` no es el de la última instalación.
 
 **Desde ahora, cada deploy:**
 ```bash

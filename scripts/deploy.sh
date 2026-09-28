@@ -87,8 +87,9 @@ main() {
   for D in .next .next-a .next-b; do
     if [ "$D" != "$NUEVA" ]; then rm -rf "$D/types" "$D/dev/types"; fi
   done
-  # La caché de la carpeta actual acelera el build y conserva las imágenes ya optimizadas
-  if [ -d "$ACTUAL/cache" ]; then mkdir -p "$NUEVA" && cp -a "$ACTUAL/cache" "$NUEVA/"; fi
+  # Solo las imágenes ya optimizadas pasan a la carpeta nueva. La caché de Turbopack no: copiada, subía la memoria
+  # del build un 40 % y crecía en cada deploy; el 28/09 el servidor mató el build por falta de memoria (6,8 GB)
+  if [ -d "$ACTUAL/cache/images" ]; then mkdir -p "$NUEVA/cache" && cp -a "$ACTUAL/cache/images" "$NUEVA/cache/"; fi
   if ! NEXT_DIST_DIR="$NUEVA" npm run build; then
     echo "PARADO: el build falló. La tienda sigue sirviendo $ACTUAL sin cambios."
     exit 1

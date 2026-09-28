@@ -5,6 +5,11 @@ const nextConfig = {
   // ("Could not find a production build", 55.910 veces hasta el 26/09). Next graba este nombre en cada ruta
   // compilada: una carpeta no se puede renombrar después del build.
   distDir: process.env.NEXT_DIST_DIR || '.next',
+  experimental: {
+    // El build de producción es siempre desde cero en otra carpeta: la caché en disco de Turbopack no ahorra nada,
+    // escribe ~550 MB y sube la memoria del build. El 28/09 el servidor (7,8 GB, sin swap) lo mató por falta de memoria.
+    turbopackFileSystemCacheForBuild: false,
+  },
   images: {
     // C-33: optimización activada. Antes (unoptimized) cada foto bajaba en su PNG original de 0,3-1,8 MB aunque se viera a 200 px;
     // ahora /_next/image la entrega redimensionada al tamaño en pantalla y en WebP, y la guarda en .next/cache/images.

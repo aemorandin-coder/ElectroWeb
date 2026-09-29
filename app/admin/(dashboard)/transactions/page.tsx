@@ -42,6 +42,7 @@ import {
     adminBadge,
     } from '@/lib/admin-ui';
 import PagosSinOrden from './_components/PagosSinOrden';
+import ConsultarPagoMovil from './_components/ConsultarPagoMovil';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useTiempoReal } from '@/lib/realtime/hooks';
 import { EnVivo } from '@/components/ui/EnVivo';
@@ -331,7 +332,8 @@ export default function TransactionsPage() {
                     <p className={adminPageSubtitle}>Recargas y movimientos de saldo · máx. 200 registros</p>
                     <div className="mt-1"><EnVivo estado={enVivo} /></div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                    <ConsultarPagoMovil />
                     <button
                         onClick={() => { fetchTransactions(); fetchStats(); }}
                         className={`${adminSecondaryButton} px-3`}

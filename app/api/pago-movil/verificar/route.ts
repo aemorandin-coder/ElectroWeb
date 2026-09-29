@@ -15,6 +15,7 @@ import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { aCentimos, hoyCaracas, leerMontoBs, montoBs, montoParaCopiar } from '@/lib/pago-movil/monto';
 import { leerCotizacion } from '@/lib/pago-movil/cotizacion';
+import { clavePago, unaALaVez } from '@/lib/pago-movil/candado';
 
 /**
  * POST /api/pago-movil/verificar
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
             // Contexto de la verificación
             contexto = 'GENERAL', // RECHARGE, ORDER, GENERAL
             transactionId,        // ID de transacción de recarga (si aplica)
-            orderId,              // ID de orden (si aplica)
+            // orderId del navegador: se ignora desde C-129 (lo pone POST /api/orders)
             cotizacion: cotizacionToken, // C-125: monto y tasa firmados por /api/orders/quote
         } = body;
 
@@ -155,142 +156,175 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Verificar que la referencia no haya sido usada anteriormente (VERIFICADA con éxito)
-        const referenciaExistente = await prisma.pagoMovilVerificacion.findFirst({
-            where: {
-                referencia: referencia.trim(),
-                verificado: true,
-            },
-        });
-
-        // C-125: el mismo cliente vuelve a escribir la referencia de un pago de compra suyo que sigue libre (recargó
-        // la página o volvió al checkout): se le devuelve ese pago como verificado. Antes era "referencia ya utilizada",
-        // una alerta de seguridad, y el cliente se quedaba sin poder usar su propio pago
-        if (
-            referenciaExistente && contexto === 'ORDER' && referenciaExistente.userId === userId &&
-            referenciaExistente.contexto === 'ORDER' && !referenciaExistente.orderId && !referenciaExistente.transactionId && !referenciaExistente.archivadoEn
-        ) {
-            return NextResponse.json({
-                success: true,
-                verified: true,
-                reutilizado: true,
-                message: 'Este pago ya estaba verificado y sigue disponible para tu compra.',
-                amount: referenciaExistente.importeVerificado?.toString(),
-                pagadoBs: Number(referenciaExistente.importeVerificado ?? 0),
-                tasa: Number(referenciaExistente.tasaVES ?? 0) || null,
-            });
-        }
-
-        if (referenciaExistente) {
-            // ALERTA DE SEGURIDAD: Referencia duplicada
-            const requestMetadata = getRequestMetadata(req);
-
-            // Registrar en audit log
-            await createAuditLog({
-                action: 'SECURITY_DUPLICATE_PAYMENT_REFERENCE',
-                userId,
-                userEmail: session.user.email || undefined,
-                targetType: 'PAYMENT_VERIFICATION',
-                targetId: referencia,
-                details: {
-                    referencia,
-                    telefonoPagador,
-                    bancoOrigen,
-                    importeIntentado: montoNumerico,
-                    referenciaOriginalId: referenciaExistente.id,
-                    referenciaOriginalUserId: referenciaExistente.userId,
-                    fechaPagoIntentada: fechaPago,
-                    contexto,
-                    transactionId,
-                    alertType: 'DUPLICATE_REFERENCE_ATTEMPT',
-                    message: 'Intento de uso de referencia de pago duplicada detectado',
-                },
-                ...requestMetadata,
-                severity: 'CRITICAL',
-            });
-
-            emitAdminEvent({
-                type: 'PAYMENT_REFERENCE_DUPLICATE',
-                title: `Referencia de pago repetida · ${String(referencia).slice(0, 30)}`,
-                summary: `${session.user.name || session.user.email || 'Un cliente'} intentó usar una referencia de Pago Móvil que ya se usó`,
-                fields: [
-                    ['Monto declarado', formatVES(montoNumerico)],
-                    ['Banco', String(bancoOrigen).slice(0, 40)],
-                    ['Para', contexto === 'ORDER' ? 'una orden' : contexto === 'RECHARGE' ? 'una recarga' : String(contexto)],
-                    ['IP', requestMetadata.ipAddress],
-                ],
-                link: '/admin/transactions',
-                throttleKey: `${userId}:${referencia}`,
-            });
-
-
-            return NextResponse.json({
-                success: false,
-                verified: false,
-                code: 4001,
-                errorType: 'DUPLICATE_REFERENCE',
-                message: 'Esta referencia de pago ya fue utilizada anteriormente. Si crees que esto es un error, contacta a soporte con los datos de tu pago.',
-                duplicateReference: true,
-                requiresContact: true,
-            }, { status: 400 });
-        }
-
-        // Verificar con la API del BDV
-        const resultado = await verificarPagoMovil({
-            telefonoPagador,
-            bancoOrigen,
-            referencia,
-            fechaPago: fechaTexto,
-            importe: montoNumerico,
-            cedulaPagador,
-            reqCed, // Pasar flag de validación de cédula
-        });
-
-        // Lo que confirmó el banco. Como busca por monto exacto, si no devuelve el importe es el que se pidió.
-        // Antes era parseFloat(amount || '0'): sin `amount` la compra quedaba con Bs. 0 pagados y sin confirmar
-        const montoBanco = resultado.verified ? leerMontoBs(String(resultado.amount ?? '')) ?? montoNumerico : null;
-        // Tasa congelada del pago: la de la cotización que vio el cliente o, sin ella, la del momento
-        const tasaPago = cotizacion?.tasa ?? Number((await prisma.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } }))?.exchangeRateVES ?? 0);
-
-        // Registrar la verificación en la base de datos
-        // SEGURIDAD: Try-catch para manejar constraint único (race condition protection)
-        try {
-            await prisma.pagoMovilVerificacion.create({
-                data: {
+        // C-129: la recarga es del cliente y sigue pendiente, ANTES de consultar al banco. Antes se consultaba primero y
+        // se guardaba la verificación con el transactionId ajeno, y recién después se detectaba el intento
+        if (contexto === 'RECHARGE' && transactionId) {
+            const recarga = await prisma.transaction.findUnique({ where: { id: String(transactionId) }, select: { status: true, balance: { select: { userId: true } } } });
+            if (!recarga || recarga.balance.userId !== userId) {
+                await createAuditLog({
+                    action: 'SECURITY_SUSPICIOUS_ACTIVITY',
                     userId,
-                    telefonoPagador,
-                    bancoOrigen,
-                    referencia,
-                    fechaPago: fechaPagoDate,
-                    importeSolicitado: montoNumerico,
-                    importeVerificado: montoBanco,
-                    tasaVES: tasaPago > 0 ? tasaPago : null,
-                    codigoRespuesta: resultado.code,
-                    mensajeRespuesta: resultado.message,
-                    verificado: resultado.verified,
-                    contexto,
-                    transactionId: contexto === 'RECHARGE' ? transactionId : null,
-                    orderId: contexto === 'ORDER' ? orderId : null,
-                    rawResponse: resultado.rawResponse ? JSON.stringify(resultado.rawResponse) : null,
+                    userEmail: session.user.email || undefined,
+                    targetType: 'TRANSACTION',
+                    targetId: String(transactionId),
+                    details: { alertType: 'IDOR_ATTEMPT', message: 'Verificación de Pago Móvil con una recarga ajena o inexistente', referencia },
+                    ...getRequestMetadata(req),
+                    severity: 'CRITICAL',
+                });
+                return NextResponse.json({ success: false, verified: false, error: 'Recarga no encontrada' }, { status: 404 });
+            }
+        }
+
+        const bancoLimpio = String(bancoOrigen).trim();
+        // C-129: una verificación a la vez por referencia y banco (ver lib/pago-movil/candado.ts)
+        const tramo = await unaALaVez(clavePago(referencia, bancoLimpio), async () => {
+            // Verificar que la referencia no haya sido usada anteriormente (VERIFICADA con éxito)
+            const referenciaExistente = await prisma.pagoMovilVerificacion.findFirst({
+                // C-129: referencia y banco. La referencia la pone el banco que envía: dos bancos pueden repetirla, y
+                // antes el segundo cliente recibía "referencia ya utilizada" y una alerta de seguridad sin haber hecho nada
+                where: {
+                    referencia: referencia.trim(),
+                    bancoOrigen: bancoLimpio,
+                    verificado: true,
                 },
             });
-        } catch (dbError: unknown) {
-            const dbErr = dbError as { code?: string };
-            // Si es error de constraint único, significa que otra solicitud procesó esta referencia
-            if (dbErr?.code === 'P2002') {
-                console.error('[SECURITY] Race condition detectada - referencia duplicada:', referencia);
+
+            // C-125: el mismo cliente vuelve a escribir la referencia de un pago de compra suyo que sigue libre (recargó
+            // la página o volvió al checkout): se le devuelve ese pago como verificado. Antes era "referencia ya utilizada",
+            // una alerta de seguridad, y el cliente se quedaba sin poder usar su propio pago
+            if (
+                referenciaExistente && contexto === 'ORDER' && referenciaExistente.userId === userId &&
+                referenciaExistente.contexto === 'ORDER' && !referenciaExistente.orderId && !referenciaExistente.transactionId && !referenciaExistente.archivadoEn
+            ) {
+                return NextResponse.json({
+                    success: true,
+                    verified: true,
+                    reutilizado: true,
+                    message: 'Este pago ya estaba verificado y sigue disponible para tu compra.',
+                    amount: referenciaExistente.importeVerificado?.toString(),
+                    pagadoBs: Number(referenciaExistente.importeVerificado ?? 0),
+                    tasa: Number(referenciaExistente.tasaVES ?? 0) || null,
+                });
+            }
+
+            if (referenciaExistente) {
+                // ALERTA DE SEGURIDAD: Referencia duplicada
+                const requestMetadata = getRequestMetadata(req);
+
+                // Registrar en audit log
+                await createAuditLog({
+                    action: 'SECURITY_DUPLICATE_PAYMENT_REFERENCE',
+                    userId,
+                    userEmail: session.user.email || undefined,
+                    targetType: 'PAYMENT_VERIFICATION',
+                    targetId: referencia,
+                    details: {
+                        referencia,
+                        telefonoPagador,
+                        bancoOrigen,
+                        importeIntentado: montoNumerico,
+                        referenciaOriginalId: referenciaExistente.id,
+                        referenciaOriginalUserId: referenciaExistente.userId,
+                        fechaPagoIntentada: fechaPago,
+                        contexto,
+                        transactionId,
+                        alertType: 'DUPLICATE_REFERENCE_ATTEMPT',
+                        message: 'Intento de uso de referencia de pago duplicada detectado',
+                    },
+                    ...requestMetadata,
+                    severity: 'CRITICAL',
+                });
+
+                emitAdminEvent({
+                    type: 'PAYMENT_REFERENCE_DUPLICATE',
+                    title: `Referencia de pago repetida · ${String(referencia).slice(0, 30)}`,
+                    summary: `${session.user.name || session.user.email || 'Un cliente'} intentó usar una referencia de Pago Móvil que ya se usó`,
+                    fields: [
+                        ['Monto declarado', formatVES(montoNumerico)],
+                        ['Banco', String(bancoOrigen).slice(0, 40)],
+                        ['Para', contexto === 'ORDER' ? 'una orden' : contexto === 'RECHARGE' ? 'una recarga' : String(contexto)],
+                        ['IP', requestMetadata.ipAddress],
+                    ],
+                    link: '/admin/transactions',
+                    throttleKey: `${userId}:${referencia}`,
+                });
+
+
                 return NextResponse.json({
                     success: false,
                     verified: false,
                     code: 4001,
                     errorType: 'DUPLICATE_REFERENCE',
-                    message: 'Esta referencia ya fue procesada. Por favor, intenta nuevamente o contacta a soporte.',
+                    message: 'Esta referencia de pago ya fue utilizada anteriormente. Si crees que esto es un error, contacta a soporte con los datos de tu pago.',
                     duplicateReference: true,
                     requiresContact: true,
                 }, { status: 400 });
             }
-            throw dbError; // Re-lanzar otros errores
-        }
+
+            // Verificar con la API del BDV
+            const resultado = await verificarPagoMovil({
+                telefonoPagador,
+                bancoOrigen,
+                referencia,
+                fechaPago: fechaTexto,
+                importe: montoNumerico,
+                cedulaPagador,
+                // C-129: el BDV solo valida la cédula en pagos BDV a BDV; se decide aquí y no en el navegador
+                reqCed: bancoLimpio === '0102' && reqCed !== false,
+            });
+
+            // Lo que confirmó el banco. Como busca por monto exacto, si no devuelve el importe es el que se pidió.
+            // Antes era parseFloat(amount || '0'): sin `amount` la compra quedaba con Bs. 0 pagados y sin confirmar
+            const montoBanco = resultado.verified ? leerMontoBs(String(resultado.amount ?? '')) ?? montoNumerico : null;
+            // Tasa congelada del pago: la de la cotización que vio el cliente o, sin ella, la del momento
+            const tasaPago = cotizacion?.tasa ?? Number((await prisma.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } }))?.exchangeRateVES ?? 0);
+
+            // Registrar la verificación en la base de datos
+            // SEGURIDAD: Try-catch para manejar constraint único (race condition protection)
+            try {
+                await prisma.pagoMovilVerificacion.create({
+                    data: {
+                        userId,
+                        telefonoPagador,
+                        bancoOrigen,
+                        referencia,
+                        fechaPago: fechaPagoDate,
+                        importeSolicitado: montoNumerico,
+                        importeVerificado: montoBanco,
+                        tasaVES: tasaPago > 0 ? tasaPago : null,
+                        codigoRespuesta: resultado.code,
+                        mensajeRespuesta: resultado.message,
+                        verificado: resultado.verified,
+                        contexto,
+                        transactionId: contexto === 'RECHARGE' ? transactionId : null,
+                        // C-129: el orderId nunca viene del navegador (antes se guardaba cualquiera y el pago quedaba
+                        // pegado a una orden ajena). Lo pone POST /api/orders al crear la orden con este pago
+                        orderId: null,
+                        rawResponse: resultado.rawResponse ? JSON.stringify(resultado.rawResponse) : null,
+                    },
+                });
+            } catch (dbError: unknown) {
+                const dbErr = dbError as { code?: string };
+                // Si es error de constraint único, significa que otra solicitud procesó esta referencia
+                if (dbErr?.code === 'P2002') {
+                    console.error('[SECURITY] Race condition detectada - referencia duplicada:', referencia);
+                    return NextResponse.json({
+                        success: false,
+                        verified: false,
+                        code: 4001,
+                        errorType: 'DUPLICATE_REFERENCE',
+                        message: 'Esta referencia ya fue procesada. Por favor, intenta nuevamente o contacta a soporte.',
+                        duplicateReference: true,
+                        requiresContact: true,
+                    }, { status: 400 });
+                }
+                throw dbError; // Re-lanzar otros errores
+            }
+
+            return { resultado, montoBanco, tasaPago };
+        });
+        if (tramo instanceof Response) return tramo;
+        const { resultado, montoBanco, tasaPago } = tramo;
 
         // Si la verificación fue exitosa y es una recarga, actualizar la transacción
         if (resultado.verified && contexto === 'RECHARGE' && transactionId) {

@@ -1764,7 +1764,7 @@ export default function CheckoutPage() {
               <div>
                 <h3 className="font-bold text-base mb-2">5. Métodos de Pago</h3>
                 <p className="leading-relaxed text-ink-soft">
-                  Aceptamos transferencias bancarias, pago móvil, criptomonedas y saldo de billetera. Los pedidos se procesan una vez confirmado el pago.
+                  Aceptamos transferencias bancarias, pago móvil, criptomonedas y tu saldo para compras. Los pedidos se procesan una vez confirmado el pago.
                 </p>
               </div>
 

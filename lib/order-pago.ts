@@ -41,7 +41,7 @@ export interface PagoMovilResumen {
 }
 
 export interface DescripcionPago {
-  /** "Billetera Electro Shop", "Pago Móvil · Banesco" */
+  /** "Saldo para compras", "Pago Móvil · Banesco" */
   titulo: string;
   /** "Saldo a favor del cliente", "Ref. 123456 · Bs. 2.190,00" */
   detalle: string | null;
@@ -52,7 +52,8 @@ export function describirPago(method: string | null | undefined, pagosMovil: Pag
   switch (method) {
     case 'WALLET':
     case 'BALANCE':
-      return { titulo: 'Billetera Electro Shop', detalle: 'Saldo a favor del cliente (recargas, devoluciones o pagos de más)' };
+      // C-129: sin "billetera": es la palabra con la que SUDEBAN describe los servicios de pago que exigen licencia
+      return { titulo: 'Saldo para compras', detalle: 'Pago anticipado del cliente en la tienda (recargas, devoluciones o pagos de más)' };
     case 'MOBILE_PAYMENT': {
       if (pagosMovil.length === 0) return { titulo: 'Pago Móvil', detalle: 'Sin verificación del banco vinculada' };
       const bancos = [...new Set(pagosMovil.map((p) => getBancoPorCodigo(p.bancoOrigen)?.nombreCorto ?? p.bancoOrigen))];

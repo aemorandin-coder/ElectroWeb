@@ -43,6 +43,7 @@ export const ETIQUETA_ACCION: Record<string, string> = {
     BALANCE_RECHARGE_REJECTED: 'Recarga rechazada',
     ORPHAN_PAYMENT_LINKED: 'Pago sin orden vinculado a su orden',
     ORPHAN_PAYMENT_ARCHIVED: 'Pago sin orden archivado (ya atendido)',
+    PAGO_MOVIL_CONSULTADO: 'Pago Móvil consultado al banco',
 };
 
 export function etiquetaAccion(accion: string): string {

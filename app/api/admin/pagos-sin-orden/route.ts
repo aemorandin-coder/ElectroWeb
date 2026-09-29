@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { roundMoney } from '@/lib/pricing';
-import { MINUTOS_ANTES_DE_ACREDITAR, pagoSinOrdenWhere } from '@/lib/pago-movil-sin-orden';
+import { DIAS_PAGO_VIEJO, MINUTOS_ANTES_DE_ACREDITAR, ordenesCandidatas, pagoSinOrdenWhere } from '@/lib/pago-movil-sin-orden';
 
 // GET — Pagos Móvil de compra verificados por el banco que no llegaron a ser orden (C-114)
 export async function GET() {
@@ -27,8 +27,10 @@ export async function GET() {
   const byId = new Map(users.map((u) => [u.id, u]));
   const tasa = Number(settings?.exchangeRateVES ?? 0);
   const limite = Date.now() - MINUTOS_ANTES_DE_ACREDITAR * 60_000;
+  // C-123: órdenes del mismo cliente cerca de la fecha del pago (la orden pudo hacerse o confirmarse a mano)
+  const candidatas = await Promise.all(rows.map((r) => ordenesCandidatas(r)));
   return NextResponse.json({
-    pagos: rows.map((r) => {
+    pagos: rows.map((r, i) => {
       const montoVES = Number(r.importeVerificado ?? 0);
       return {
         id: r.id,
@@ -40,8 +42,11 @@ export async function GET() {
         cliente: byId.get(r.userId) ?? null,
         // Recién verificado: el cliente puede estar terminando la compra con ese pago
         puedeAcreditar: r.createdAt.getTime() <= limite,
+        diasDesdePago: Math.floor((Date.now() - r.createdAt.getTime()) / 86_400_000),
+        candidatas: candidatas[i],
       };
     }),
     minutos: MINUTOS_ANTES_DE_ACREDITAR,
+    diasViejo: DIAS_PAGO_VIEJO,
   });
 }

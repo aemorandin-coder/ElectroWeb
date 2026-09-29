@@ -10,9 +10,14 @@ import { roundMoney, montoDecimal } from '@/lib/pricing';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { createNotification } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { ETIQUETA_ESTADO } from '@/lib/order-admin';
+import { formatPaymentMethod } from '@/lib/format-helpers';
 
-/** Pagos de compra verificados por el banco, sin orden y sin acreditar */
-export const pagoSinOrdenWhere = { verificado: true, contexto: 'ORDER', orderId: null, transactionId: null } as const;
+/** Pagos de compra verificados por el banco, sin orden, sin acreditar y sin archivar (C-123) */
+export const pagoSinOrdenWhere = { verificado: true, contexto: 'ORDER', orderId: null, transactionId: null, archivadoEn: null } as const;
+
+/** Un pago más viejo que esto casi seguro se atendió por otro camino: el panel pide revisar antes de acreditarlo (C-123) */
+export const DIAS_PAGO_VIEJO = 3;
 
 /** Un pago recién verificado puede ser de alguien que está terminando la compra: el panel no lo acredita antes de esto */
 export const MINUTOS_ANTES_DE_ACREDITAR = 30;
@@ -28,7 +33,7 @@ export type ResultadoCredito =
 export async function acreditarPagoSinOrden(verificacionId: string, motivo: string, porAdmin?: string): Promise<ResultadoCredito> {
   const resultado = await prisma.$transaction(async (tx): Promise<ResultadoCredito> => {
     const v = await tx.pagoMovilVerificacion.findFirst({ where: { id: verificacionId, ...pagoSinOrdenWhere } });
-    if (!v) return { ok: false, mensaje: 'Ese pago ya tiene orden, ya se acreditó o no está verificado.' };
+    if (!v) return { ok: false, mensaje: 'Ese pago ya tiene orden, ya se acreditó, se archivó o no está verificado.' };
 
     const settings = await tx.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } });
     const tasa = Number(settings?.exchangeRateVES ?? 0);
@@ -100,4 +105,94 @@ export function avisarPagoSinOrden(referencia: string, montoVES: number, motivo:
     throttleKey: `orphan-${referencia}`,
     throttleMs: 60 * 60 * 1000,
   });
+}
+
+// C-123: pagos de compra que quedaron sueltos porque la orden se hizo o se confirmó a mano (casos de diciembre de 2025).
+// Pasarlos al saldo le daría al cliente otra vez lo que ya recibió: se vinculan a su orden o se archivan con una nota.
+
+/** Días alrededor del pago en los que se buscan órdenes del mismo cliente */
+const VENTANA_CANDIDATAS_DIAS = 7;
+const DIA_MS = 24 * 60 * 60 * 1000;
+
+export interface OrdenCandidata {
+  id: string;
+  orderNumber: string;
+  totalUSD: number;
+  totalVES: number;
+  /** "Entregada", "Pendiente"… */
+  estado: string;
+  /** "pagada", "pago pendiente"… */
+  pago: string;
+  metodoPago: string;
+  /** El total en Bs. de la orden (a la tasa de ese día) coincide con lo que confirmó el banco */
+  montoCoincide: boolean;
+  createdAt: string;
+}
+
+const ETIQUETA_PAGO: Record<string, string> = { PAID: 'pagada', PENDING: 'pago pendiente', FAILED: 'pago fallido', REFUNDED: 'reembolsada' };
+
+/**
+ * Órdenes del mismo cliente cerca de la fecha del pago, sin otro Pago Móvil enlazado y no canceladas (vincular un pago a
+ * una orden cancelada escondería ese dinero). Primero las que tienen el mismo monto en Bs.; luego, la más cercana.
+ */
+export async function ordenesCandidatas(v: { userId: string; createdAt: Date; importeVerificado: unknown }): Promise<OrdenCandidata[]> {
+  const desde = new Date(v.createdAt.getTime() - VENTANA_CANDIDATAS_DIAS * DIA_MS);
+  const hasta = new Date(v.createdAt.getTime() + VENTANA_CANDIDATAS_DIAS * DIA_MS);
+  const ordenes = await prisma.order.findMany({
+    where: { userId: v.userId, createdAt: { gte: desde, lte: hasta }, status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+    select: { id: true, orderNumber: true, totalUSD: true, totalVES: true, status: true, paymentStatus: true, paymentMethod: true, createdAt: true },
+    take: 20,
+  });
+  if (ordenes.length === 0) return [];
+  const conPago = await prisma.pagoMovilVerificacion.findMany({ where: { orderId: { in: ordenes.map((o) => o.id) } }, select: { orderId: true } });
+  const ocupadas = new Set(conPago.map((p) => p.orderId));
+  const montoVES = Number(v.importeVerificado ?? 0);
+  const coincide = (totalVES: unknown) => montoVES > 0 && Math.abs(Number(totalVES) - montoVES) <= montoVES * 0.01;
+  const distancia = (d: Date) => Math.abs(d.getTime() - v.createdAt.getTime());
+  return ordenes
+    .filter((o) => !ocupadas.has(o.id))
+    .sort((a, b) => Number(coincide(b.totalVES)) - Number(coincide(a.totalVES)) || distancia(a.createdAt) - distancia(b.createdAt))
+    .slice(0, 3)
+    .map((o) => ({
+      id: o.id,
+      orderNumber: o.orderNumber,
+      totalUSD: Number(o.totalUSD),
+      totalVES: Number(o.totalVES),
+      estado: ETIQUETA_ESTADO[o.status] ?? o.status,
+      pago: ETIQUETA_PAGO[o.paymentStatus] ?? o.paymentStatus,
+      montoCoincide: coincide(o.totalVES),
+      metodoPago: formatPaymentMethod(o.paymentMethod),
+      createdAt: o.createdAt.toISOString(),
+    }));
+}
+
+export type ResultadoCierre = { ok: true; referencia: string; userId: string; orderNumber?: string } | { ok: false; mensaje: string };
+
+/** Enlaza el pago con una orden del mismo cliente que no tenga otro Pago Móvil. No cambia la orden ni mueve dinero. */
+export async function vincularPagoAOrden(verificacionId: string, orderId: string): Promise<ResultadoCierre> {
+  return prisma.$transaction(async (tx): Promise<ResultadoCierre> => {
+    const v = await tx.pagoMovilVerificacion.findFirst({ where: { id: verificacionId, ...pagoSinOrdenWhere }, select: { id: true, userId: true, referencia: true } });
+    if (!v) return { ok: false, mensaje: 'Ese pago ya tiene orden, ya se acreditó o se archivó.' };
+    const orden = await tx.order.findFirst({ where: { id: orderId, userId: v.userId }, select: { id: true, orderNumber: true, status: true } });
+    if (!orden) return { ok: false, mensaje: 'Esa orden no es de este cliente.' };
+    if (orden.status === 'CANCELLED' || orden.status === 'REFUNDED') return { ok: false, mensaje: `La orden #${orden.orderNumber} está cancelada: archiva el pago con una nota.` };
+    if (await tx.pagoMovilVerificacion.findFirst({ where: { orderId: orden.id }, select: { id: true } })) {
+      return { ok: false, mensaje: `La orden #${orden.orderNumber} ya tiene su Pago Móvil.` };
+    }
+    const hecho = await tx.pagoMovilVerificacion.updateMany({ where: { id: v.id, ...pagoSinOrdenWhere }, data: { orderId: orden.id } });
+    if (hecho.count !== 1) return { ok: false, mensaje: 'Ese pago cambió mientras tanto. Recarga la página.' };
+    return { ok: true, referencia: v.referencia, userId: v.userId, orderNumber: orden.orderNumber };
+  });
+}
+
+/** Cierra el pago sin orden ni crédito, con el motivo: ya se atendió fuera del sistema */
+export async function archivarPagoSinOrden(verificacionId: string, nota: string, porAdmin: string): Promise<ResultadoCierre> {
+  const v = await prisma.pagoMovilVerificacion.findFirst({ where: { id: verificacionId, ...pagoSinOrdenWhere }, select: { id: true, userId: true, referencia: true } });
+  if (!v) return { ok: false, mensaje: 'Ese pago ya tiene orden, ya se acreditó o se archivó.' };
+  const hecho = await prisma.pagoMovilVerificacion.updateMany({
+    where: { id: v.id, ...pagoSinOrdenWhere },
+    data: { archivadoEn: new Date(), archivadoPor: porAdmin.slice(0, 120), archivadoNota: nota.slice(0, 500) },
+  });
+  if (hecho.count !== 1) return { ok: false, mensaje: 'Ese pago cambió mientras tanto. Recarga la página.' };
+  return { ok: true, referencia: v.referencia, userId: v.userId };
 }

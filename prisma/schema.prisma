@@ -1583,6 +1583,11 @@ model PagoMovilVerificacion {
   contexto            String   @default("GENERAL") // RECHARGE, ORDER, GENERAL
   transactionId       String?  // Referencia a Transaction (recarga)
   orderId             String?  // Referencia a Order (compra)
+  // C-123: pago de compra sin orden que ya se atendió fuera del sistema (orden a mano, producto entregado).
+  // Archivado: no se lista, no se acredita y no sirve para otra orden
+  archivadoEn         DateTime?
+  archivadoPor        String?
+  archivadoNota       String?
   
   // Datos raw de respuesta
   rawResponse         String?  // JSON de la respuesta completa

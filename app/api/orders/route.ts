@@ -129,6 +129,9 @@ export async function GET(request: NextRequest) {
                 customerType: true,
                 companyName: true,
                 taxId: true,
+                // C-126: datos de facturación en el detalle (antes solo nombre y correo)
+                phone: true,
+                idNumber: true,
               }
             }
           },
@@ -152,9 +155,42 @@ export async function GET(request: NextRequest) {
       ...(all ? {} : { take: limit, skip }),
     });
 
+    // C-126: los Pagos Móvil verificados de cada orden (referencia, banco, monto) para describir el pago
+    const pagos = orders.length > 0
+      ? await prisma.pagoMovilVerificacion.findMany({
+          where: { orderId: { in: orders.map((o) => o.id) }, verificado: true },
+          select: { orderId: true, referencia: true, bancoOrigen: true, importeVerificado: true, fechaPago: true },
+          orderBy: { createdAt: 'asc' },
+        })
+      : [];
+    const pagosPorOrden = new Map<string, Array<{ referencia: string; bancoOrigen: string; importeBs: number; fechaPago: string; tasa: null }>>();
+    for (const p of pagos) {
+      if (!p.orderId) continue;
+      const lista = pagosPorOrden.get(p.orderId) ?? [];
+      lista.push({ referencia: p.referencia, bancoOrigen: p.bancoOrigen, importeBs: Number(p.importeVerificado ?? 0), fechaPago: p.fechaPago.toISOString(), tasa: null });
+      pagosPorOrden.set(p.orderId, lista);
+    }
+
+    // C-126: las tarjetas del panel cuentan todas las órdenes, no solo la página cargada (antes: las últimas 25)
+    const porEstado = await prisma.order.groupBy({ by: ['status'], where: userId ? { userId } : {}, _count: { _all: true } });
+    const contar = (estados: string[]) => porEstado.filter((g) => estados.includes(g.status)).reduce((n, g) => n + g._count._all, 0);
+    const summary = {
+      total: porEstado.reduce((n, g) => n + g._count._all, 0),
+      // Ingresos: solo lo cobrado (antes sumaba también las pendientes sin pagar)
+      revenueUSD: Number((await prisma.order.aggregate({
+        where: { ...(userId ? { userId } : {}), paymentStatus: 'PAID', status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+        _sum: { totalUSD: true },
+      }))._sum.totalUSD ?? 0),
+      byStatus: Object.fromEntries(porEstado.map((g) => [g.status, g._count._all])),
+      pending: contar(['PENDING']),
+      inProgress: contar(['CONFIRMED', 'PAID', 'PROCESSING', 'READY_FOR_PICKUP', 'SHIPPED']),
+      delivered: contar(['DELIVERED']),
+    };
+
     // Return with pagination metadata
     return NextResponse.json({
-      orders,
+      orders: orders.map((o) => ({ ...o, pagosMovil: pagosPorOrden.get(o.id) ?? [] })),
+      summary,
       pagination: {
         page,
         limit,

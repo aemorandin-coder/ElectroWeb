@@ -66,7 +66,8 @@ bash scripts/deploy.sh
 4. **C-118 · Carga masiva con plantilla `.json`:** hecha el 29/09 (rama `claude/C-118`, `estado/C-118.md`). Productos → Más → "Importar (.json)". Sin cambio de base.
    - Andrés: probarla con 2 o 3 productos reales y claude.ai.
 4b. **C-119 · Productos usados y reacondicionados:** hecha y en `main` el 29/09 (`estado/C-119.md`). Lleva cambio de base (§0).
-   - Pendiente para después: módulo propio de solicitudes de garantía (hoy llegan a Mensajes y Solicitudes) y "Usado" en el correo de compra.
+   - "Usado" en el correo de compra: hecho en C-121 (29/09, rama `claude/C-121`), con 4 arreglos del correo (decía "debitado de tu billetera" también en un Pago Móvil por confirmar, faltaba el descuento, no escapaba el nombre y la dirección).
+   - Pendiente: módulo propio de solicitudes de garantía (C-122).
 4c. **C-120 · Facturación a empresa, IVA y términos** (pedida por Andrés el 29/09 para después, con investigación a fondo):
    - El flujo empieza cuando el cliente cambia a "empresa" en su panel, para facturar.
    - Revisar las leyes venezolanas (IVA, facturación, ventas en línea, protección al consumidor) y los términos y condiciones, pensando en el crecimiento de la empresa.

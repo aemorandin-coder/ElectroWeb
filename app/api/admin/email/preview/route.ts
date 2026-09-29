@@ -33,9 +33,12 @@ const PLANTILLAS: { id: string; name: string; description: string; render: () =>
                 html: generateOrderConfirmationEmail({
                     companyName: ajustes?.companyName || 'Electro Shop', companyLogo: ajustes?.logo || undefined,
                     orderNumber: 'ORD-2026-0001', customerName: 'María', orderDate: new Date().toLocaleDateString('es-VE'),
-                    items: [{ name: 'Audífonos inalámbricos', quantity: 1, price: '49.90' }, { name: 'Cable USB-C', quantity: 2, price: '7.50' }],
-                    subtotal: '64.90', shipping: '5.00', tax: '0.00', total: '69.90', currency: 'USD',
-                    paymentMethod: 'Pago Móvil', deliveryMethod: 'Delivery', deliveryAddress: 'Av. Principal, Guanare',
+                    items: [
+                        { name: 'Audífonos inalámbricos', quantity: 1, price: '49.90' },
+                        { name: 'Control DualSense PS5', quantity: 1, price: '45.00', condition: 'Usado · Muy bueno', warrantyDays: 30 },
+                    ],
+                    subtotal: '94.90', discount: '5.00', shipping: '3.00', tax: '0.00', total: '92.90', currency: 'USD',
+                    paymentMethod: 'Pago Móvil', paid: true, deliveryMethod: 'Delivery en Guanare', deliveryAddress: 'Av. Principal, Guanare',
                 }),
             };
         },

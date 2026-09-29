@@ -12,6 +12,7 @@ import { emitAdminEvent } from '@/lib/admin-events';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { formatPaymentMethod } from '@/lib/format-helpers';
+import { conditionBadge, warrantyDaysFor } from '@/lib/product-condition';
 import { notifyStockCrossings } from '@/lib/stock-alerts';
 import { OrderStatus, PaymentStatus, PaymentMethodType, Prisma } from '@prisma/client';
 import {
@@ -252,13 +253,18 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
         name: item.productName || 'Producto',
         quantity: item.quantity,
         price: item.priceUSD.toString(),
+        // C-121: lo que guardó el pedido al vender (C-119), igual que "Mis pedidos"
+        condition: conditionBadge(item.productCondition, item.conditionGrade),
+        warrantyDays: warrantyDaysFor(item.productCondition, item.warrantyDays),
       })),
       subtotal: order.subtotalUSD.toString(),
+      discount: order.discountUSD.toString(),
       shipping: order.shippingUSD.toString(),
       tax: order.taxUSD.toString(),
       total: order.totalUSD.toString(),
       currency: 'USD',
-      paymentMethod: order.paymentMethod || 'N/A',
+      paymentMethod: formatPaymentMethod(order.paymentMethod),
+      paid: order.paymentStatus === 'PAID',
       deliveryMethod: DELIVERY_LABELS[order.deliveryMethod || ''] || 'Entrega',
       deliveryAddress: order.shippingAddress || undefined,
     });

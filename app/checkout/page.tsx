@@ -12,7 +12,8 @@ import PublicHeader from '@/components/public/PublicHeader';
 import CheckoutSteps from '@/components/ui/CheckoutSteps';
 import PageHeader from '@/components/ui/PageHeader';
 import RechargeModal from '@/components/modals/RechargeModalV2';
-import CheckoutPagoMovilForm from '@/components/checkout/CheckoutPagoMovilForm';
+import CheckoutPagoMovilForm, { conciliarPagos, type PagoMovilVerificado } from '@/components/checkout/CheckoutPagoMovilForm';
+import { montoBs } from '@/lib/pago-movil/monto';
 import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverlay';
 import { FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiPackage, FiInfo, FiCheckCircle, FiGift, FiShield, FiAlertTriangle } from 'react-icons/fi';
 import { FaMobileScreen } from 'react-icons/fa6';
@@ -101,16 +102,8 @@ export default function CheckoutPage() {
   // Descuentos aprobados de antes de C-102 que siguen vigentes (lo que devuelve /api/customer/discount-requests)
   const [activeDiscounts, setActiveDiscounts] = useState<Array<{ productId: string; status: string; expiresAt: string | null; approvedDiscount: number | null; requestedDiscount: number }>>([]);
 
-  // Mobile Payment Verification State
-  const [mobilePaymentVerified, setMobilePaymentVerified] = useState(false);
-  const [mobilePaymentData, setMobilePaymentData] = useState<{
-    referencia: string;
-    telefonoPagador: string;
-    bancoOrigen: string;
-    fechaPago: string;
-    cedulaPagador: string; // Agregado para trazabilidad
-    comprobante?: string;
-  } | null>(null);
+  // C-125: Pagos Móvil verificados de esta compra (el primero y, si faltó algo, el de la diferencia)
+  const [pagosMovil, setPagosMovil] = useState<PagoMovilVerificado[]>([]);
 
   // Gift Card Redemption State
   const [giftCardCode, setGiftCardCode] = useState('');
@@ -278,6 +271,9 @@ export default function CheckoutPage() {
     coupon: CuponCotizado | null;
     problems: string[];
   } | null>(null);
+  // C-125: monto exacto en Bs. y tasa firmados por el servidor. Se guarda la última cotización buena: si después
+  // aparece un problema, el cliente que ya pagó sigue viendo el monto que se le pidió
+  const [cotizacionBs, setCotizacionBs] = useState<{ montoBs: number; tasa: number; token: string } | null>(null);
 
   useEffect(() => {
     if (status !== 'authenticated' || items.length === 0) return;
@@ -292,6 +288,9 @@ export default function CheckoutPage() {
       })
         .then(res => (res.ok ? res.json() : null))
         .then(data => {
+          if (data?.pagoMovil?.token) {
+            setCotizacionBs(data.pagoMovil);
+          }
           if (data?.calculation) {
             setServerQuote({
               key: quoteBody,
@@ -320,7 +319,13 @@ export default function CheckoutPage() {
   // problema: así puede verificar su pago y, si la orden no se puede crear, el servidor lo pasa a su saldo
   const [pagoMovilVisto, setPagoMovilVisto] = useState(false);
   if (paymentMode === 'PAGO_MOVIL' && canPay && !pagoMovilVisto) setPagoMovilVisto(true);
-  const mostrarPagoMovil = canPay || mobilePaymentVerified || pagoMovilVisto;
+  // C-125: cubierto = lo pagado alcanza (exacto, redondeo o de más). Cada pago cuenta a su tasa congelada
+  const conciliacionPM = conciliarPagos(pagosMovil, orderCalculation.totalUSD, cotizacionBs?.tasa ?? 0);
+  const mobilePaymentVerified = conciliacionPM !== null && conciliacionPM.estado !== 'FALTA';
+  const mobilePaymentData = pagosMovil.length > 0
+    ? { ...pagosMovil[0], referencias: pagosMovil.map((p) => p.referencia) }
+    : null;
+  const mostrarPagoMovil = canPay || pagosMovil.length > 0 || pagoMovilVisto;
   const cartSubtotal = orderCalculation.subtotalUSD;
   const cartDiscount = orderCalculation.discountUSD;
   const shippingBreakdown = orderCalculation.shipping;
@@ -440,15 +445,22 @@ export default function CheckoutPage() {
         }
         // C-114: la orden no se pudo crear y el Pago Móvil pasó al saldo: ese pago ya no sirve, ahora se paga con saldo
         if (typeof orderData.creditedUSD === 'number') {
-          setMobilePaymentVerified(false);
-          setMobilePaymentData(null);
+          setPagosMovil([]);
           setPaymentMode('WALLET');
           void fetchBalance();
+        }
+        // C-125: el pago no alcanzó (cambió el total o la tasa): los pagos siguen registrados y el formulario pide la diferencia
+        if (orderResponse.status === 402 && orderData.pagoIncompleto) {
+          document.getElementById('metodo-de-pago')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         throw new Error(orderData.details?.join(' ') || orderData.error || 'Error al crear la orden');
       }
 
       const createdOrders: Array<{ orderNumber: string }> = orderData.orders || [];
+      // C-125: pagó de más con Pago Móvil: la diferencia ya está en su saldo
+      if (orderData.sobrepago && typeof orderData.creditedUSD === 'number') {
+        toast.success(`Pagaste de más: ${formatUSD(orderData.creditedUSD)} pasaron a tu saldo.`, { duration: 6000 });
+      }
       setProcessingStep(3);
 
       // Dirección nueva de un envío a domicilio o delivery: se guarda en el perfil para la próxima compra
@@ -931,11 +943,11 @@ export default function CheckoutPage() {
 
                 {/* Direct BDV Pago Movil Form */}
                 {paymentMode === 'PAGO_MOVIL' && mostrarPagoMovil && (
-                  <div className="bg-surface rounded-2xl p-6 border border-line shadow-sm mb-6">
+                  <div className="bg-surface rounded-2xl p-2 sm:p-6 border border-line shadow-sm mb-6">
                     <div className="mb-4 pb-3 border-b border-line flex items-center justify-between flex-wrap gap-2">
                       <div>
                         <h3 className="font-bold text-ink text-base">Verificación Directa de Pago Móvil</h3>
-                        <p className="text-xs text-muted">Transfiere a la cuenta de la tienda y valida tu comprobante</p>
+                        <p className="text-xs text-muted">Transfiere a la cuenta de la tienda y confirma con la referencia</p>
                       </div>
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-success-strong/10 text-success-strong text-xs font-bold rounded-full">
                         <FiShield className="w-3.5 h-3.5" />
@@ -943,24 +955,19 @@ export default function CheckoutPage() {
                       </span>
                     </div>
                     <CheckoutPagoMovilForm
-                      montoEsperado={finalTotal}
-                      montoEnBs={companySettings?.exchangeRateVES ? finalTotal * Number(companySettings.exchangeRateVES) : 0}
+                      montoUSD={orderCalculation.totalUSD}
+                      montoBs={montoBs(orderCalculation.totalUSD, cotizacionBs?.tasa ?? 0)}
+                      tasa={cotizacionBs?.tasa ?? 0}
+                      cotizacion={cotizacionBs?.token ?? null}
+                      pagador={{ cedula: formData.customerIdNumber, telefono: formData.customerPhone }}
+                      pagos={pagosMovil}
+                      onPagosChange={setPagosMovil}
                       datosComercio={{
                         telefono: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.phone,
                         cedula: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderId,
                         banco: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.bankName,
                         titular: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderName,
                       }}
-                      onVerified={(data) => {
-                        setMobilePaymentVerified(true);
-                        setMobilePaymentData(data);
-                        toast.success('Pago Móvil verificado exitosamente');
-                      }}
-                      onReset={() => {
-                        setMobilePaymentVerified(false);
-                        setMobilePaymentData(null);
-                      }}
-                      isVerified={mobilePaymentVerified}
                     />
                   </div>
                 )}
@@ -1631,7 +1638,7 @@ export default function CheckoutPage() {
                           {companySettings?.exchangeRateVES && (
                             <div className="mt-1 px-3 py-1 bg-brand-500/10 rounded-lg inline-block">
                               <span className="text-sm font-bold text-brand-500">
-                                {formatVES(finalTotal * Number(companySettings.exchangeRateVES))}
+                                {formatVES(montoBs(finalTotal, cotizacionBs?.tasa || Number(companySettings.exchangeRateVES)))}
                               </span>
                             </div>
                           )}

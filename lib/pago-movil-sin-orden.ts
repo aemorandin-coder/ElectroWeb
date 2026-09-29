@@ -35,8 +35,9 @@ export async function acreditarPagoSinOrden(verificacionId: string, motivo: stri
     const v = await tx.pagoMovilVerificacion.findFirst({ where: { id: verificacionId, ...pagoSinOrdenWhere } });
     if (!v) return { ok: false, mensaje: 'Ese pago ya tiene orden, ya se acreditó, se archivó o no está verificado.' };
 
+    // C-125: la tasa congelada del pago (la que se le cotizó); los pagos de antes de C-125 no la tienen y usan la de hoy
     const settings = await tx.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } });
-    const tasa = Number(settings?.exchangeRateVES ?? 0);
+    const tasa = Number(v.tasaVES ?? 0) || Number(settings?.exchangeRateVES ?? 0);
     const montoVES = Number(v.importeVerificado ?? 0);
     if (!(tasa > 0) || !(montoVES > 0)) return { ok: false, mensaje: 'Falta la tasa de la tienda o el monto verificado.' };
     const montoUSD = roundMoney(montoVES / tasa);

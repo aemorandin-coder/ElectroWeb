@@ -37,7 +37,15 @@ globalThis.fetch = async function mockedFetch(input, init = {}) {
   if (url.startsWith('https://api.hcaptcha.com/')) return json({ success: true });
   if (url.startsWith('https://bdvconciliacion')) {
     append('bdv-calls.jsonl', body);
-    return json(readJson('bdv-next.json', { code: 1010, message: 'No encontrado' }));
+    // C-125: con `movimientos` el mock busca como el banco, por referencia y monto exacto ("1115.25")
+    const estado = readJson('bdv-next.json', { code: 1010, message: 'No encontrado' });
+    if (Array.isArray(estado.movimientos)) {
+      const mov = estado.movimientos.find((m) => m.referencia === body.referencia);
+      if (!mov) return json({ code: 1010, message: 'El registro solicitado no existe' });
+      if (mov.importe !== body.importe) return json({ code: 1010, message: 'El importe no coincide con el de la transaccion' });
+      return json({ code: 1000, message: 'Transaccion realizada', data: { amount: mov.importe } });
+    }
+    return json(estado);
   }
   if (url.startsWith('https://ve.dolarapi.com/')) {
     return json([{ fuente: 'oficial', nombre: 'Oficial', promedio: readJson('rate.json', 842.21), fechaActualizacion: new Date().toISOString() }]);

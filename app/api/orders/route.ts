@@ -44,6 +44,7 @@ import {
 import { recordPaidOrder, rejectOrderConversions } from '@/lib/influencer-commission';
 import { recordStudioOrder } from '@/lib/studio/tracking';
 import { acreditarPagoSinOrden, pagoSinOrdenWhere } from '@/lib/pago-movil-sin-orden';
+import { aCentimos, conciliar, montoBs, type Conciliacion } from '@/lib/pago-movil/monto';
 import { STUDIO_COOKIE } from '@/lib/studio/code';
 import { avisarPedidoDigitalPorEntregar } from '@/lib/digital-delivery';
 import { DestinoError, leerDestino, type DestinoOrden } from '@/lib/envios/destino';
@@ -168,8 +169,8 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Margen para diferencias de redondeo o de tasa entre el pago móvil y la orden
-const MOBILE_PAYMENT_TOLERANCE = 0.01;
+// C-125: una compra se puede pagar con hasta 3 Pagos Móvil (el primero y lo que faltó)
+const MAX_PAGOS_MOVIL_POR_COMPRA = 3;
 const ORDER_NUMBER_RETRIES = 5;
 const ACCEPTED_PAYMENT_METHODS: string[] = ['WALLET', ...Object.values(PaymentMethodType)];
 
@@ -351,30 +352,43 @@ export async function POST(request: NextRequest) {
     const mobilePaymentData = (body.mobilePaymentData && typeof body.mobilePaymentData === 'object'
       ? body.mobilePaymentData
       : {}) as Record<string, unknown>;
-    const referencia = typeof mobilePaymentData.referencia === 'string' ? mobilePaymentData.referencia.trim() : '';
-    const pagoLibre = paymentMethod === 'MOBILE_PAYMENT' && referencia
-      ? await prisma.pagoMovilVerificacion.findFirst({
-          where: { userId, referencia, ...pagoSinOrdenWhere },
+    // C-125: `referencias` trae todos los Pagos Móvil de esta compra (el primero y lo que faltó); `referencia` sigue
+    // valiendo para un solo pago
+    const referencias = [...new Set(
+      [mobilePaymentData.referencia, ...(Array.isArray(mobilePaymentData.referencias) ? mobilePaymentData.referencias : [])]
+        .filter((r): r is string => typeof r === 'string' && r.trim() !== '')
+        .map((r) => r.trim())
+    )].slice(0, MAX_PAGOS_MOVIL_POR_COMPRA);
+    const referencia = referencias[0] ?? '';
+    const pagosLibres = paymentMethod === 'MOBILE_PAYMENT' && referencias.length > 0
+      ? (await prisma.pagoMovilVerificacion.findMany({
+          where: { userId, referencia: { in: referencias }, ...pagoSinOrdenWhere },
           orderBy: { createdAt: 'desc' },
-        })
-      : null;
+        })).filter((v, i, todos) => todos.findIndex((w) => w.referencia === v.referencia) === i)
+      : [];
+    const pagoLibre = pagosLibres[0] ?? null;
+    const refsTexto = pagosLibres.map((v) => v.referencia).join(', ');
 
-    /** Rechazo que no se arregla reintentando: el Pago Móvil ya verificado pasa al saldo del cliente */
+    /** Rechazo que no se arregla reintentando: los Pagos Móvil ya verificados pasan al saldo del cliente */
     const rechazoDefinitivo = async (error: string, details?: string[]) => {
-      if (!pagoLibre) return NextResponse.json({ error, details }, { status: 400 });
-      const credito = await acreditarPagoSinOrden(pagoLibre.id, [error, ...(details ?? [])].join(' ').slice(0, 300));
-      if (!credito.ok) return NextResponse.json({ error, details }, { status: 400 });
+      if (pagosLibres.length === 0) return NextResponse.json({ error, details }, { status: 400 });
+      let creditedUSD = 0;
+      for (const pago of pagosLibres) {
+        const credito = await acreditarPagoSinOrden(pago.id, [error, ...(details ?? [])].join(' ').slice(0, 300));
+        if (credito.ok) creditedUSD += credito.montoUSD;
+      }
+      if (!(creditedUSD > 0)) return NextResponse.json({ error, details }, { status: 400 });
       return NextResponse.json(
         {
-          error: `No pudimos crear tu pedido: ${[error, ...(details ?? [])].join(' ')} Tu Pago Móvil no se perdió: pasamos ${formatUSD(credito.montoUSD)} a tu saldo para que lo uses en tu compra.`,
-          creditedUSD: credito.montoUSD,
+          error: `No pudimos crear tu pedido: ${[error, ...(details ?? [])].join(' ')} Tu Pago Móvil no se perdió: pasamos ${formatUSD(creditedUSD)} a tu saldo para que lo uses en tu compra.`,
+          creditedUSD,
         },
         { status: 400 }
       );
     };
     /** Rechazo que el cliente corrige y vuelve a confirmar: el pago sigue libre para esta misma compra */
     const conPagoRegistrado = (error: string) =>
-      pagoLibre ? `${error} Tu Pago Móvil (ref. ${pagoLibre.referencia}) quedó registrado: corrige y confirma de nuevo con la misma referencia.` : error;
+      pagoLibre ? `${error} Tu Pago Móvil (ref. ${refsTexto}) quedó registrado: corrige y confirma de nuevo con la misma referencia.` : error;
 
     // C-102: cupón escrito o elegido en la ficha; el servidor lo valida de nuevo al cobrar
     const couponCode = typeof body.couponCode === 'string' && body.couponCode.trim() ? body.couponCode.trim().slice(0, 40) : null;
@@ -427,27 +441,48 @@ export async function POST(request: NextRequest) {
     // en la base de datos, no estar usada y cubrir el total calculado aquí.
     const exchangeRateVES = settings?.exchangeRateVES ? Number(settings.exchangeRateVES) : 0;
 
-    let mobilePaymentVerificationId: string | null = null;
+    let mobilePaymentVerificationIds: string[] = [];
     let isPaymentConfirmed = paymentMethod === 'WALLET';
+    /** C-125: cómo cuadró el Pago Móvil con el total (exacto, redondeo, de más). Null si no hubo */
+    let conciliacion: Conciliacion | null = null;
 
     if (paymentMethod === 'MOBILE_PAYMENT' && referencia) {
       // Solo verificaciones libres: sin orden y sin haberse pasado al saldo (C-114)
-      const verificacion = pagoLibre;
+      if (pagosLibres.length > 0) {
+        // Cada pago vale en USD a SU tasa congelada (la de la cotización que vio el cliente). Antes se comparaba con la
+        // tasa del momento de crear la orden y un 1 % de margen: con la tasa nueva, un pago exacto podía "no alcanzar"
+        const tasaConciliacion = Number(pagoLibre?.tasaVES ?? 0) || exchangeRateVES;
+        const pagadoBs = aCentimos(pagosLibres.reduce((suma, v) => {
+          const tasa = Number(v.tasaVES ?? 0) || exchangeRateVES;
+          return suma + (tasa > 0 ? (Number(v.importeVerificado ?? 0) / tasa) * tasaConciliacion : 0);
+        }, 0)) / 100;
+        conciliacion = tasaConciliacion > 0 ? conciliar(pagadoBs, calculation.totalUSD, tasaConciliacion) : null;
 
-      if (verificacion) {
-        mobilePaymentVerificationId = verificacion.id;
-        const paidVES = Number(verificacion.importeVerificado ?? 0);
-        const requiredVES = calculation.totalUSD * exchangeRateVES;
-
-        if (exchangeRateVES > 0 && paidVES >= requiredVES * (1 - MOBILE_PAYMENT_TOLERANCE)) {
+        if (conciliacion && conciliacion.estado !== 'FALTA') {
           isPaymentConfirmed = true;
+          mobilePaymentVerificationIds = pagosLibres.map((v) => v.id);
         } else {
-          console.warn(`[SECURITY] Pago móvil ${referencia} no cubre el total de la orden (Bs. ${paidVES} de Bs. ${requiredVES}) - usuario ${userId}`);
+          // C-125: pago incompleto. Antes se creaba la orden "pendiente" con el pago adentro y el dinero quedaba
+          // trabado hasta que alguien la revisara. Ahora no se crea: el pago sigue libre y el cliente paga lo que falta
+          console.warn(`[PAGO MOVIL] ${refsTexto} no cubre el total (Bs. ${pagadoBs} de Bs. ${conciliacion?.esperadoBs ?? '?'}) - usuario ${userId}`);
+          return NextResponse.json(
+            {
+              error: conciliacion
+                ? `Recibimos ${formatVES(conciliacion.pagadoBs)} y el total es ${formatVES(conciliacion.esperadoBs)}. Te faltan ${formatVES(-conciliacion.diferenciaBs)}: haz otro Pago Móvil por esa diferencia y verifícalo. Lo que ya pagaste queda registrado.`
+                : 'No pudimos confirmar el monto de tu pago porque falta la tasa de la tienda. Escríbenos por WhatsApp.',
+              pagoIncompleto: conciliacion
+                ? { faltaBs: -conciliacion.diferenciaBs, faltaUSD: -conciliacion.diferenciaUSD, pagadoBs: conciliacion.pagadoBs, esperadoBs: conciliacion.esperadoBs, tasa: tasaConciliacion, referencias: pagosLibres.map((v) => v.referencia) }
+                : null,
+            },
+            { status: 402 }
+          );
         }
       } else {
         console.warn(`[SECURITY] Intento de orden con pago móvil no verificado: ${referencia} por usuario ${userId}`);
       }
     }
+    /** Pagó de más (fuera del redondeo): la diferencia pasa a su saldo en USD a la tasa congelada del pago */
+    const sobranteUSD = conciliacion?.estado === 'SOBREPAGO' ? conciliacion.diferenciaUSD : 0;
 
     // Unidades físicas por producto (para descontar stock o reservarlo)
     const physicalQuantities = new Map<string, number>();
@@ -548,7 +583,8 @@ export async function POST(request: NextRequest) {
             discountUSD: montoDecimal(totals.discountUSD),
             totalUSD: montoDecimal(totals.totalUSD),
             exchangeRate: 1,
-            totalVES: exchangeRateVES > 0 ? montoDecimal(totals.totalUSD * exchangeRateVES) : 0,
+            // C-125: los mismos céntimos que se le cotizaron (montoDecimal redondeaba 37,595 a 37,59)
+            totalVES: exchangeRateVES > 0 ? montoBs(totals.totalUSD, exchangeRateVES).toFixed(2) : 0,
             exchangeRateVES: settings?.exchangeRateVES ?? null,
             exchangeRateEUR: settings?.exchangeRateEUR ?? null,
             paymentMethod,
@@ -662,15 +698,41 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // SEGURIDAD: Vincular la verificación de pago móvil con la orden para prevenir reutilización
-      if (mobilePaymentVerificationId) {
+      // SEGURIDAD: Vincular los Pagos Móvil con la orden para prevenir reutilización (todos o ninguno)
+      if (mobilePaymentVerificationIds.length > 0) {
         const linked = await tx.pagoMovilVerificacion.updateMany({
-          where: { id: mobilePaymentVerificationId, orderId: null, transactionId: null },
+          where: { id: { in: mobilePaymentVerificationIds }, orderId: null, transactionId: null, archivadoEn: null },
           data: { orderId: orders[0].id },
         });
-        if (linked.count === 0) {
+        if (linked.count !== mobilePaymentVerificationIds.length) {
           throw new OrderInputError('Este pago móvil ya fue usado en otra orden');
         }
+      }
+
+      // C-125: lo que pagó de más va a su saldo en la misma transacción (el dinero nunca sale de la empresa: decisión
+      // de Andrés del 28/09 para los Pagos Móvil sin orden). Lo absorbido por redondeo queda anotado en la orden
+      if (conciliacion && conciliacion.estado !== 'EXACTO') {
+        const nota = conciliacion.estado === 'SOBREPAGO'
+          ? `Pago Móvil: pagó ${formatVES(conciliacion.diferenciaBs)} de más (${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}). ${formatUSD(sobranteUSD)} pasaron a su saldo.`
+          : `Pago Móvil: diferencia de ${formatVES(conciliacion.diferenciaBs)} absorbida por redondeo (${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}).`;
+        await tx.order.update({ where: { id: orders[0].id }, data: { adminNotes: nota } });
+      }
+      if (sobranteUSD > 0) {
+        const balance = await tx.userBalance.upsert({ where: { userId }, create: { userId }, update: {}, select: { id: true } });
+        await tx.transaction.create({
+          data: {
+            balanceId: balance.id,
+            type: 'REFUND',
+            status: 'COMPLETED',
+            amount: montoDecimal(sobranteUSD),
+            currency: 'USD',
+            description: `Pagaste de más en ${orders[0].orderNumber} (ref. ${refsTexto}): pasado a tu saldo`,
+            reference: referencia,
+            paymentMethod: 'MOBILE_PAYMENT',
+            metadata: JSON.stringify({ sobrepago: true, orderId: orders[0].id, orderNumber: orders[0].orderNumber, pagoMovilVerificacionIds: mobilePaymentVerificationIds, conciliacion }),
+          },
+        });
+        await tx.userBalance.update({ where: { id: balance.id }, data: { balance: { increment: montoDecimal(sobranteUSD) } } });
       }
 
       return orders;
@@ -691,6 +753,16 @@ export async function POST(request: NextRequest) {
         }
         if (!isOrderNumberConflict(error) || attempt >= ORDER_NUMBER_RETRIES) throw error;
       }
+    }
+
+    if (sobranteUSD > 0 && conciliacion) {
+      void createNotification({
+        userId,
+        type: 'BALANCE_RECHARGED',
+        title: 'Pagaste de más: lo pasamos a tu saldo',
+        message: `En tu pedido ${orders[0].orderNumber} transferiste ${formatVES(conciliacion.diferenciaBs)} de más. Ya tienes ${formatUSD(sobranteUSD)} en tu saldo para tu próxima compra.`,
+        link: '/customer/balance',
+      });
     }
 
     // ElectroStudio (C-113): la persona llegó por una historia de Instagram en los últimos 7 días
@@ -723,7 +795,7 @@ export async function POST(request: NextRequest) {
         .catch((error) => console.error('Error enviando avisos de stock:', error));
     }
 
-    return NextResponse.json({ orders, totalUSD: calculation.totalUSD }, { status: 201 });
+    return NextResponse.json({ orders, totalUSD: calculation.totalUSD, ...(sobranteUSD > 0 ? { creditedUSD: sobranteUSD, sobrepago: true } : {}) }, { status: 201 });
   } catch (error) {
     if (error instanceof OrderInputError) {
       return NextResponse.json({ error: error.message, details: error.details }, { status: error.status });

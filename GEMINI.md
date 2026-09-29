@@ -410,3 +410,24 @@ Verificación: `grep -rn "lg:group-hover:opacity-100" app/customer app/cursos co
 - **Transacciones `REFUND`:** ahora también las crea el servidor cuando un Pago Móvil no llega a ser orden. Se muestran como crédito con `isCreditTransaction`. No hagas un mapeo de tipos aparte.
 - **Checkout** (carril de Claude): no deja pagar si la orden no se puede crear. No lo toques aunque una tarjeta vieja lo nombre.
 - **Medición de historias:** `proxy.ts` y `components/AnalyticsTracker.tsx` guardan `?es=<código>`. Los dos son de Claude.
+
+## 9. Cambios de Claude del 29/09 que te afectan (C-124 a C-128)
+
+Andrés pidió el 29/09 cinco módulos, y algunos tocan tu carril. **No reviertas estos cambios ni los "limpies"**: dependen de APIs y librerías del carril de Claude.
+- **Reseñas (C-124):**
+  - La columna `isPublished` no existe: no la vuelvas a usar.
+  - El estado de una reseña sale de `reviewStatus()` (`lib/review-status.ts`): Pendiente, Publicada o Rechazada.
+  - Archivo tuyo tocado: `app/customer/(dashboard)/reviews/page.tsx`.
+- **Pago Móvil (C-125):**
+  - Las fechas de pago salen de `hoyCaracas()` (`lib/pago-movil/monto.ts`). **Nunca** `new Date().toISOString().split('T')[0]`: después de las 8 p. m. da el día de mañana y el banco responde 1010.
+  - Los montos en Bs. salen de `montoBs()` y `montoParaAPI()`, no de `toFixed`.
+  - Archivo tuyo tocado: `components/pago-movil/VerificarPagoMovilForm.tsx`.
+- **Tiempo real (C-127):** `useTiempoReal`, `useOrderRealtime` y `useStockEnVivo` (`lib/realtime/hooks.ts`).
+  - En `app/customer/(dashboard)/orders/page.tsx` y `balance/page.tsx` hay un `useTiempoReal`: no lo quites.
+  - `fetchOrders(silencioso)` recibe un booleano: en un `onClick` úsalo como `() => fetchOrders()`.
+- **Panel del cliente (C-128), rehechos por Claude:**
+  - `app/customer/(dashboard)/page.tsx` (inicio).
+  - `components/customer/CustomerMobileNavBar.tsx` (barra inferior: Inicio, Pedidos, Saldo, Favoritos y Más).
+  - `components/customer/OrderStepper.tsx` (nuevo).
+  - El layout: el inicio va sin tarjeta envolvente y escucha el evento `abrir-menu-cliente`.
+  - Los pasos de un pedido salen de `pasosPedido()` (`lib/order-pasos.ts`): no hagas otro mapeo de estados.

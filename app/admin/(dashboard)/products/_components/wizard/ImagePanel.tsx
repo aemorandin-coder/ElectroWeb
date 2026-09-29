@@ -2,9 +2,36 @@
 
 import { useRef, useState } from 'react';
 import Image from 'next/image';
+import { toast } from 'react-hot-toast';
 import { FiImage, FiPlus, FiTrash2, FiStar, FiLink, FiX } from 'react-icons/fi';
 
 const MAX_IMAGES = 8;
+/** El servidor acepta hasta 5 MB; se deja margen */
+const MAX_UPLOAD = 4.5 * 1024 * 1024;
+
+function canvasToBlob(c: HTMLCanvasElement, type: string, quality?: number): Promise<Blob | null> {
+  return new Promise((resolve) => c.toBlob(resolve, type, quality));
+}
+
+/**
+ * C-117: el PNG que sale de "copiar sujeto" en el teléfono suele pasar de 5 MB. Se achica a 2000 px
+ * sin perder la transparencia (PNG o, si sigue pesado, WebP, que también la guarda).
+ */
+async function prepareProductPhoto(file: File): Promise<Blob> {
+  if (file.size <= MAX_UPLOAD) return file;
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 2000 / Math.max(bitmap.width, bitmap.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(bitmap.width * scale);
+  c.height = Math.round(bitmap.height * scale);
+  c.getContext('2d')?.drawImage(bitmap, 0, 0, c.width, c.height);
+  bitmap.close();
+  for (const [type, q] of [['image/png', undefined], ['image/webp', 0.92], ['image/webp', 0.8]] as const) {
+    const blob = await canvasToBlob(c, type, q);
+    if (blob && blob.size <= MAX_UPLOAD) return blob;
+  }
+  throw new Error(`"${file.name}" pesa demasiado aun achicada`);
+}
 
 interface Props {
   images: string[];
@@ -22,22 +49,33 @@ export default function ImagePanel({ images, onChange, error }: Props) {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
-    if (images.length + files.length > MAX_IMAGES) return;
+    if (images.length + files.length > MAX_IMAGES) {
+      toast.error(`Son ${MAX_IMAGES} fotos como máximo: quedan ${MAX_IMAGES - images.length}`);
+      if (e.target) e.target.value = '';
+      return;
+    }
 
     setUploading(true);
     try {
-      const urls = await Promise.all(
+      const results = await Promise.all(
         Array.from(files).map(async (file) => {
+          const blob = await prepareProductPhoto(file);
           const fd = new FormData();
-          fd.append('file', file);
+          fd.append('file', blob instanceof File ? blob : new File([blob], file.name.replace(/\.\w+$/, blob.type === 'image/webp' ? '.webp' : '.png'), { type: blob.type }));
+          // C-117: con fondo transparente, el servidor arma la foto final con fondo blanco y la cinta "ES"
+          fd.append('purpose', 'product');
           const res = await fetch('/api/upload', { method: 'POST', body: fd });
-          if (!res.ok) throw new Error('Upload failed');
-          return (await res.json()).url as string;
+          const data = (await res.json().catch(() => null)) as { url?: string; error?: string; badged?: boolean } | null;
+          if (!res.ok || !data?.url) throw new Error(data?.error || `No se pudo subir "${file.name}"`);
+          return data;
         })
       );
-      onChange([...images, ...urls]);
-    } catch {
-      // silent — upload errors show via the error prop from parent
+      onChange([...images, ...results.map((r) => r.url as string)]);
+      const badged = results.filter((r) => r.badged).length;
+      if (badged) toast.success(badged === 1 ? 'Foto lista con fondo blanco y la cinta ES' : `${badged} fotos listas con fondo blanco y la cinta ES`);
+    } catch (err) {
+      // Antes el error se tragaba en silencio y la foto simplemente no aparecía
+      toast.error(err instanceof Error ? err.message : 'No se pudo subir la foto');
     } finally {
       setUploading(false);
       if (e.target) e.target.value = '';
@@ -139,6 +177,7 @@ export default function ImagePanel({ images, onChange, error }: Props) {
               <FiImage className="w-8 h-8 text-muted mx-auto mb-2" />
               <p className="text-sm font-medium text-muted">Subir imágenes</p>
               <p className="text-xs text-muted mt-1">JPG, PNG, WEBP</p>
+              <p className="text-xs text-muted mt-1">PNG con fondo transparente: la tienda pone el fondo blanco y la cinta ES</p>
             </>
           )}
         </div>
@@ -148,11 +187,14 @@ export default function ImagePanel({ images, onChange, error }: Props) {
           <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-brand-500/30 group bg-surface">
             <Image src={images[0]} alt="Principal" fill className="object-cover" sizes="300px" />
             <div className="absolute top-2 left-2 bg-brand-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm">Principal</div>
-            <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+            {/* Acciones siempre visibles en pantallas táctiles; en escritorio al pasar el mouse o con el teclado */}
+            <div className="absolute right-2 top-2 flex gap-1 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
               <button
                 type="button"
                 onClick={() => handleRemove(0)}
                 className="bg-white p-2 rounded-full shadow-lg text-deal hover:text-deal"
+                aria-label="Quitar la foto principal"
+                title="Quitar"
               >
                 <FiTrash2 className="w-4 h-4" />
               </button>
@@ -164,19 +206,22 @@ export default function ImagePanel({ images, onChange, error }: Props) {
             {images.slice(1).map((url, idx) => (
               <div key={idx + 1} className="relative aspect-square rounded-lg overflow-hidden border border-line group bg-surface">
                 <Image src={url} alt="" fill className="object-cover" sizes="100px" />
-                <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1 p-1 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
                   <button
                     type="button"
                     onClick={() => handleSetMain(idx + 1)}
-                    className="p-1 bg-white rounded-full shadow text-brand-600 hover:text-brand-700"
+                    className="p-1.5 bg-white rounded-full shadow text-brand-600 hover:text-brand-700"
                     title="Hacer imagen principal"
+                    aria-label={`Hacer principal la foto ${idx + 2}`}
                   >
                     <FiStar className="w-3 h-3" />
                   </button>
                   <button
                     type="button"
                     onClick={() => handleRemove(idx + 1)}
-                    className="p-1 bg-white rounded-full shadow text-deal hover:text-deal"
+                    className="p-1.5 bg-white rounded-full shadow text-deal hover:text-deal"
+                    title="Quitar"
+                    aria-label={`Quitar la foto ${idx + 2}`}
                   >
                     <FiTrash2 className="w-3 h-3" />
                   </button>
@@ -208,7 +253,7 @@ export default function ImagePanel({ images, onChange, error }: Props) {
       )}
 
       <p className="text-xs text-muted mt-3 text-center">
-        La primera imagen es la imagen principal
+        La primera imagen es la imagen principal. Con fondo transparente, la tienda pone el fondo blanco y la cinta ES.
       </p>
     </div>
   );

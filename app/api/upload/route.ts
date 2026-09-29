@@ -5,7 +5,9 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+import sharp from 'sharp';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
+import { composeProductImage, hasTransparency } from '@/lib/product-image';
 
 // Rate limit for uploads
 const UPLOAD_RATE_LIMIT = {
@@ -96,7 +98,7 @@ export async function POST(request: NextRequest) {
     const randomString = Math.random().toString(36).substring(2, 8);
     const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
     const safeExtension = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(extension) ? extension : 'jpg';
-    const filename = `product-${timestamp}-${randomString}.${safeExtension}`;
+    const base = `product-${timestamp}-${randomString}`;
 
     // Ensure upload directory exists
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products');
@@ -104,7 +106,27 @@ export async function POST(request: NextRequest) {
       await mkdir(uploadDir, { recursive: true });
     }
 
+    // C-117: foto de producto con fondo transparente → la tienda arma la final (fondo blanco, centrada y con la
+    // cinta "ES"). El original transparente queda al lado como <nombre>.orig.png para ElectroStudio.
+    // Solo si lo pide el formulario de productos: categorías y métodos de pago usan esta ruta sin tocar la imagen.
+    const isProductPhoto = formData.get('purpose') === 'product' && (mimeType === 'image/png' || mimeType === 'image/webp');
+    if (isProductPhoto && (await hasTransparency(buffer).catch(() => false))) {
+      const composed = await composeProductImage(buffer);
+      await writeFile(path.join(uploadDir, `${base}.orig.png`), await sharp(buffer).png().toBuffer());
+      await writeFile(path.join(uploadDir, `${base}.webp`), composed);
+      return NextResponse.json({
+        success: true,
+        url: `/api/uploads/products/${base}.webp`,
+        original: `/api/uploads/products/${base}.orig.png`,
+        filename: `${base}.webp`,
+        size: composed.length,
+        type: 'image/webp',
+        badged: true,
+      });
+    }
+
     // Save file
+    const filename = `${base}.${safeExtension}`;
     const filepath = path.join(uploadDir, filename);
     await writeFile(filepath, buffer);
 
@@ -117,6 +139,7 @@ export async function POST(request: NextRequest) {
       filename,
       size: file.size,
       type: file.type,
+      badged: false,
     });
   } catch (error) {
     console.error('Error uploading file:', error);

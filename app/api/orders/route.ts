@@ -272,7 +272,7 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
       userId,
       type: 'ORDER_PAID',
       title: 'Pago Confirmado',
-      message: `El pago de tu orden #${order.orderNumber} ha sido confirmado con Billetera Digital.`,
+      message: `El pago de tu orden #${order.orderNumber} quedó pagado con tu saldo.`,
       link: `/customer/orders`,
       icon: 'payment'
     });
@@ -581,7 +581,7 @@ export async function POST(request: NextRequest) {
           : { count: 0 };
 
         if (!userBalance || debited.count === 0) {
-          throw new OrderInputError('Saldo insuficiente en billetera');
+          throw new OrderInputError('Saldo insuficiente para esta compra');
         }
         balanceId = userBalance.id;
       }
@@ -751,7 +751,7 @@ export async function POST(request: NextRequest) {
       if (conciliacion && conciliacion.estado !== 'EXACTO') {
         const nota = conciliacion.estado === 'SOBREPAGO'
           ? `Pago Móvil: pagó ${formatVES(conciliacion.diferenciaBs)} de más (${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}). ${formatUSD(sobranteUSD)} pasaron a su saldo.`
-          : `Pago Móvil: diferencia de ${formatVES(conciliacion.diferenciaBs)} absorbida por redondeo (${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}).`;
+          : `Pago Móvil: diferencia de ${formatVES(conciliacion.diferenciaBs)} absorbida (menor que la comisión mínima de un Pago Móvil; ${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}).`;
         await tx.order.update({ where: { id: orders[0].id }, data: { adminNotes: nota } });
       }
       if (sobranteUSD > 0) {

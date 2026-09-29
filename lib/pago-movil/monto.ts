@@ -4,8 +4,18 @@
 // ("Bs. 37,60") y mandaba al banco el mismo número con `toFixed(2)` ("37.59"): en 3,5 % de los totales diferían
 // en un céntimo, el cliente pagaba lo que veía y el banco respondía 1010. Aquí todo sale de los céntimos enteros.
 
-/** Diferencia que se absorbe sola al conciliar (redondeo del banco o del cliente): Bs. 1,00. */
-export const TOLERANCIA_BS = 1;
+/**
+ * Comisión mínima de un Pago Móvil de persona a comercio (P2C). La paga la tienda, que recibe: hasta 1,5 % del monto
+ * (entre bancos distintos), nunca menos de Bs. 14. BCV, Gaceta Oficial 46.427 del 31/07/2026. Actualizar si cambia.
+ */
+export const COMISION_MINIMA_P2C_BS = 14;
+
+/**
+ * Diferencia que se absorbe sola al conciliar, en cualquier sentido (C-129; en C-125 era Bs. 1,00).
+ * Pedir un segundo Pago Móvil por menos de la comisión mínima le cuesta a la tienda más de lo que cobra, y
+ * acreditar al saldo menos que eso no le sirve al cliente.
+ */
+export const TOLERANCIA_BS = COMISION_MINIMA_P2C_BS;
 
 /** Una cotización firmada del monto en Bs. vale este tiempo; después se usa la tasa del momento. */
 export const VIGENCIA_COTIZACION_MS = 3 * 60 * 60 * 1000;

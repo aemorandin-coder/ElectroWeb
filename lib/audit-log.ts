@@ -57,7 +57,9 @@ export type AuditAction =
     | 'BALANCE_RECHARGE_REJECTED'
     // C-123: Pagos Móvil de compra sin orden
     | 'ORPHAN_PAYMENT_LINKED'
-    | 'ORPHAN_PAYMENT_ARCHIVED';
+    | 'ORPHAN_PAYMENT_ARCHIVED'
+    // C-129: el equipo consultó un Pago Móvil al BDV desde Transacciones (solo consulta)
+    | 'PAGO_MOVIL_CONSULTADO';
 
 export type AuditSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
 

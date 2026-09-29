@@ -25,7 +25,7 @@ Producción ya mostraba C-114 el 29/09 (captura de Andrés): el commit exacto de
   5. Si C-119 entra en este deploy, también: producto **Usado** de prueba en borrador, `/terminos` 3.0 y la página "Garantía" del cliente.
 
 ## 0b. Nuevo del 29/09 (tarde): 5 módulos pedidos por Andrés, en ramas, sin mergear
-**Orden de merge obligatorio:** `claude/C-124` → `claude/C-125` → `claude/C-126` → `claude/C-127` → `claude/C-128`.
+**Orden de merge obligatorio:** `claude/C-124` → `claude/C-125` → `claude/C-126` → `claude/C-127` → `claude/C-128` → `claude/C-129`.
 - C-127 sale de C-126 y ya integra C-125. C-128 sale de C-127.
 - Probado en una rama temporal con los cinco mezclados: 0 conflictos, `tsc` y `build` pasan, y las pruebas de punta a punta de reseñas, Pago Móvil (24/24) y tiempo real dan lo esperado.
 - **C-124 · Reseñas:** el 500 al aprobar era la columna `isPublished`, que no existe. Ahora hay estado "rechazada" con motivo y un panel de moderación nuevo.
@@ -39,13 +39,22 @@ Producción ya mostraba C-114 el 29/09 (captura de Andrés): el commit exacto de
   - **La lista de Órdenes mostraba solo las últimas 25.**
 - **C-127 · Tiempo real (SSE):** órdenes, stock y pagos sin recargar, optimista en el panel y respaldo si se cae la conexión.
 - **C-128 · Panel del cliente:** resumen (saldo, compras activas, garantías), pedidos en curso con stepper en vivo y barra inferior con Saldo. Arregla las misiones que marcaban 0 %.
+- **C-129 · Pago Móvil, lo legal y la API** (sale de C-128):
+  - Se quitó "billetera" de los textos: es la palabra de la sanción de SUDEBAN a Yummy.
+  - Tolerancia de Bs. 14, la comisión mínima P2C que paga la tienda.
+  - `reqCed` solo en pagos BDV a BDV (otra causa probable del 1010).
+  - Duplicados por referencia y banco, y una verificación a la vez por referencia.
+  - El `orderId` del navegador se ignora.
+  - Nuevo "Consultar Pago Móvil" en Transacciones.
+  - La investigación con fuentes está en `estado/C-129.md`.
 - **Cambio de base (todo aditivo), SQL esperado en el deploy:**
   - `ALTER TABLE "reviews" ADD COLUMN "rejectedAt" TIMESTAMP(3), ADD COLUMN "rejectionReason" TEXT;`
   - `ALTER TABLE "pago_movil_verificaciones" ADD COLUMN "tasaVES" DECIMAL(65,30);`
-- **Decisiones que esperan a Andrés:**
-  - C-125: el sobrepago va al saldo (regla del 28/09). La tolerancia es Bs. 1,00, fija en el código.
-  - C-125: se quitó "Subir captura", que nunca se guardaba.
-  - C-128: la barra inferior cambia Referidos y Perfil por Saldo y "Más".
+- **Decidido por Andrés el 29/09:**
+  - El sobrepago va al saldo.
+  - Sin subir capturas: se usa la verificación con el BDV.
+  - La barra inferior del cliente queda aprobada.
+- **Pendiente de Andrés:** ¿"saldo" se queda o pasa a "anticipo" / "abono" en toda la tienda? (ver `estado/C-129.md`).
 - Detalle y pruebas de cada una en su `estado/C-12X.md`.
 
 ## 1. Estado de las ramas
@@ -146,6 +155,12 @@ bash scripts/deploy.sh
   - Revisado el 26/09: no había nada que cambiar.
   - Si algún día se configura el webhook de SADES, usar un secreto nuevo.
   - Sigue recomendado poner el repositorio en privado.
+
+- **Saldo y Pago Móvil, reglas legales (29/09, C-129):**
+  - El saldo solo compra en la tienda: nunca se transfiere a otro cliente, nunca se retira, nunca paga a terceros. Así queda como "esquema de prepago", excluido de la regulación del BCV (Resolución 18-12-01, art. 19).
+  - Nunca "billetera", "wallet" ni "monedero" en textos.
+  - La comisión del Pago Móvil P2C (hasta 1,5 %, mínimo Bs. 14) la paga la tienda. **No se cobra recargo al cliente**: está prohibido.
+  - Lo pagado de más se acredita completo.
 
 ## 5. Datos útiles para Claude
 - **Node:** `export PATH="$HOME/.local/lib/nodejs/node-v20.18.0-linux-x64/bin:$PATH"`.

@@ -96,7 +96,7 @@ export async function POST(
     const userBalance = await prisma.userBalance.findUnique({ where: { userId } });
     if (!userBalance || roundMoney(Number(userBalance.balance)) < roundMoney(Number(course.priceUSD))) {
       return NextResponse.json(
-        { error: 'Saldo insuficiente. Recarga tu billetera para inscribirte.' },
+        { error: 'Saldo insuficiente. Recarga tu saldo para inscribirte.' },
         { status: 402 }
       );
     }
@@ -153,7 +153,7 @@ export async function POST(
       });
     } catch (error) {
       if (error instanceof InsufficientBalanceError) {
-        return NextResponse.json({ error: 'Saldo insuficiente. Recarga tu billetera para inscribirte.' }, { status: 402 });
+        return NextResponse.json({ error: 'Saldo insuficiente. Recarga tu saldo para inscribirte.' }, { status: 402 });
       }
       throw error;
     }

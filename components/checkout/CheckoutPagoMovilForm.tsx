@@ -259,7 +259,7 @@ export default function CheckoutPagoMovilForm({
               </p>
               <p className="text-sm text-ink-soft">
                 {conciliacion.estado === 'EXACTO' && 'El banco confirmó el monto exacto. Ya puedes confirmar tu pedido.'}
-                {conciliacion.estado === 'REDONDEO' && `Hay una diferencia de ${formatVES(Math.abs(conciliacion.diferenciaBs))} por redondeo: no tienes que hacer nada.`}
+                {conciliacion.estado === 'REDONDEO' && `Hay una diferencia de ${formatVES(Math.abs(conciliacion.diferenciaBs))}: es muy pequeña, no tienes que hacer nada.`}
                 {conciliacion.estado === 'SOBREPAGO' && `Pagaste ${formatVES(conciliacion.diferenciaBs)} de más. Al confirmar tu pedido pasamos ${formatUSD(conciliacion.diferenciaUSD)} a tu saldo.`}
                 {conciliacion.estado === 'FALTA' && `Recibimos ${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}. Haz otro Pago Móvil solo por la diferencia; lo que ya pagaste queda registrado.`}
               </p>

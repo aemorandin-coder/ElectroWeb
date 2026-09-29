@@ -88,14 +88,14 @@ export async function verificarPagoMovil(
         reqCed: params.reqCed || false,
     };
 
-    try {
+    // C-129: un reintento si falla la red o se agota el tiempo (nunca si el banco respondió): un corte de un segundo
+    // ya no le cuesta al cliente otra verificación de su límite de 10 por minuto
+    const consultar = async (): Promise<Response> => {
         // Issue #16 fix: AbortController con timeout de 15s para evitar peticiones zombi
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15_000);
-
-        let response: Response;
+        const timeoutId = setTimeout(() => controller.abort(), 12_000);
         try {
-            response = await fetch(apiUrl, {
+            return await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -106,6 +106,16 @@ export async function verificarPagoMovil(
             });
         } finally {
             clearTimeout(timeoutId);
+        }
+    };
+
+    try {
+        let response: Response;
+        try {
+            response = await consultar();
+        } catch {
+            await new Promise((r) => setTimeout(r, 1500));
+            response = await consultar();
         }
 
         const data = await response.json();

@@ -1,5 +1,6 @@
 import { getEmailStyles, getEmailHeader, getEmailFooter } from './base';
 import { ETIQUETA_ENTREGA } from '@/lib/envios/empresas';
+import { escapeHtml } from '@/lib/html';
 
 interface OrderConfirmationData {
   companyName: string;
@@ -11,13 +12,22 @@ interface OrderConfirmationData {
     name: string;
     quantity: number;
     price: string;
+    /** C-119: "Usado · Muy bueno" (conditionBadge); null si es nuevo */
+    condition?: string | null;
+    /** Garantía de la tienda que guardó el pedido */
+    warrantyDays?: number | null;
   }>;
   subtotal: string;
+  /** Descuento de cupón u ofertas; sin él, el total no cuadraba con el subtotal */
+  discount?: string;
   shipping: string;
   tax: string;
   total: string;
   currency: string;
+  /** Ya legible ("Saldo de la tienda", "Pago Móvil") */
   paymentMethod: string;
+  /** Saldo o Pago Móvil verificado. Si no, el pago está por confirmar */
+  paid: boolean;
   deliveryMethod: string;
   deliveryAddress?: string;
   trackingUrl?: string;
@@ -32,15 +42,20 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
     orderDate,
     items,
     subtotal,
+    discount,
     shipping,
     tax,
     total,
     currency,
     paymentMethod,
+    paid,
     deliveryMethod,
     deliveryAddress,
     trackingUrl,
   } = data;
+  // C-121: antes decía "debitado de tu billetera prepago" también en un Pago Móvil por verificar
+  const hasSecondHand = items.some((item) => item.condition);
+  const hasDiscount = !!discount && Number(discount) > 0;
 
   const getMethodLabel = (method: string) => {
     switch (method) {
@@ -71,16 +86,18 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
         ${getEmailHeader({ companyName })}
         
         <div class="email-body">
-          <h2>¡Gracias por tu compra, ${customerName}!</h2>
+          <h2>¡Gracias por tu compra, ${escapeHtml(customerName)}!</h2>
           
-          <p>Hemos procesado tu pago de forma exitosa y debitado el total correspondiente de tu billetera prepago. Tu orden ya se encuentra en nuestro sistema.</p>
+          <p>${paid
+            ? 'Recibimos tu pago y tu pedido ya está en preparación.'
+            : 'Recibimos tu pedido. Te avisaremos apenas confirmemos el pago.'}</p>
           
           <div class="order-details">
-            <p style="margin: 5px 0;"><strong>Número de Pedido:</strong> ${orderNumber}</p>
-            <p style="margin: 5px 0;"><strong>Fecha:</strong> ${orderDate}</p>
-            <p style="margin: 5px 0;"><strong>Método de Pago:</strong> Billetera Prepago (${paymentMethod})</p>
-            <p style="margin: 5px 0;"><strong>Método de Despacho:</strong> ${getMethodLabel(deliveryMethod)}</p>
-            ${deliveryAddress ? `<p style="margin: 10px 0 0 0;"><strong>Dirección de Entrega:</strong><br><span style="color:#6c757d; font-size:13px;">${deliveryAddress}</span></p>` : ''}
+            <p style="margin: 5px 0;"><strong>Número de Pedido:</strong> ${escapeHtml(orderNumber)}</p>
+            <p style="margin: 5px 0;"><strong>Fecha:</strong> ${escapeHtml(orderDate)}</p>
+            <p style="margin: 5px 0;"><strong>Método de Pago:</strong> ${escapeHtml(paymentMethod)}${paid ? '' : ' (por confirmar)'}</p>
+            <p style="margin: 5px 0;"><strong>Método de Despacho:</strong> ${escapeHtml(getMethodLabel(deliveryMethod))}</p>
+            ${deliveryAddress ? `<p style="margin: 10px 0 0 0;"><strong>Dirección de Entrega:</strong><br><span style="color:#6c757d; font-size:13px;">${escapeHtml(deliveryAddress)}</span></p>` : ''}
           </div>
 
           <h3 style="color: #212529; border-bottom: 2px solid #f8f9fa; padding-bottom: 8px; margin-top: 25px;">Recibo Digital</h3>
@@ -101,7 +118,9 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
                 return `
                   <tr style="border-bottom: 1px solid #e9ecef; font-size: 14px;">
                     <td style="padding: 12px 5px; color: #212529;">
-                      <strong>${item.name}</strong>
+                      <strong>${escapeHtml(item.name)}</strong>
+                      ${item.condition ? `<br><span style="display: inline-block; margin-top: 4px; padding: 2px 6px; background-color: #212529; color: #ffffff; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase;">${escapeHtml(item.condition)}</span>
+                      <span style="font-size: 12px; color: #6c757d;">Garantía de la tienda: ${item.warrantyDays ?? 30} días</span>` : ''}
                     </td>
                     <td style="padding: 12px 5px; text-align: center; color: #495057;">${qty}</td>
                     <td style="padding: 12px 5px; text-align: right; font-weight: 600; color: #212529;">${rowTotal.toFixed(2)} ${currency}</td>
@@ -110,6 +129,12 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
               }).join('')}
             </tbody>
           </table>
+
+          ${hasSecondHand ? `
+          <p style="margin-top: 12px; font-size: 12px; color: #6c757d; line-height: 1.5;">
+            Los productos usados, reacondicionados o de caja abierta se venden en el estado descrito en su ficha. Tienen la garantía de la tienda indicada, contada desde la entrega, por fallas de funcionamiento.
+          </p>
+          ` : ''}
           
           <div style="margin-top: 20px; padding: 15px; bg-color: #f8f9fa; background-color: #f8f9fa; border-radius: 8px;">
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
@@ -117,6 +142,12 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
                 <td style="padding: 4px 0; color: #6c757d;">Subtotal:</td>
                 <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #495057;">${subtotal} ${currency}</td>
               </tr>
+              ${hasDiscount ? `
+              <tr>
+                <td style="padding: 4px 0; color: #6c757d;">Descuento:</td>
+                <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #198754;">-${discount} ${currency}</td>
+              </tr>
+              ` : ''}
               ${shipping && shipping !== '0' && shipping !== '0.00' ? `
               <tr>
                 <td style="padding: 4px 0; color: #6c757d;">${etiquetaEnvio}</td>
@@ -128,16 +159,18 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
                 <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #495057;">${tax} ${currency}</td>
               </tr>
               <tr style="border-top: 1.5px solid #dee2e6; font-size: 16px; font-weight: bold;">
-                <td style="padding: 12px 0 0 0; color: #2a63cd;">Total Debitado:</td>
+                <td style="padding: 12px 0 0 0; color: #2a63cd;">${paid ? 'Total pagado:' : 'Total a pagar:'}</td>
                 <td style="padding: 12px 0 0 0; text-align: right; color: #2a63cd;">${total} ${currency}</td>
               </tr>
             </table>
           </div>
 
+          ${deliveryMethod !== ETIQUETA_ENTREGA.DIGITAL ? `
           <div style="margin-top: 20px; padding: 12px; background-color: #eef1f6; border-left: 4px solid #2a63cd; border-radius: 4px; font-size: 12px; color: #495057; line-height: 1.5;">
             <strong>Nota Importante sobre tu Facturación:</strong><br>
-            Para tu total tranquilidad y transparencia, tu factura física original y sellada ha sido impresa, firmada y embalada dentro de la caja de tu paquete junto con tus productos físicos.
+            Tu factura física original, sellada y firmada, va dentro del paquete junto con tus productos físicos.
           </div>
+          ` : ''}
 
           ${trackingUrl ? `
             <div style="text-align: center; margin-top: 25px;">

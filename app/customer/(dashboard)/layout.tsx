@@ -69,6 +69,13 @@ export default function CustomerDashboardLayout({
   const cerrarCajon = useCallback(() => setDrawerPath(null), []);
   useCajonAccesible(isDrawerOpen, 'customer-sidebar', cerrarCajon);
 
+  // C-128: "Más" de la barra inferior abre este mismo menú
+  useEffect(() => {
+    const abrir = () => setDrawerPath(window.location.pathname);
+    window.addEventListener('abrir-menu-cliente', abrir);
+    return () => window.removeEventListener('abrir-menu-cliente', abrir);
+  }, []);
+
   useEffect(() => {
     if (!session?.user) return;
     let cancelado = false;
@@ -243,7 +250,8 @@ export default function CustomerDashboardLayout({
 
         {/* Sin transform ni backdrop-filter en los contenedores: si no, los modales `fixed` de las páginas quedan encerrados aquí */}
         <main className="p-3 pb-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom))] sm:p-4 lg:p-6">
-          <div className="mx-auto max-w-[1600px] rounded-2xl border border-line bg-white p-4 md:p-6">
+          {/* C-128: el inicio arma sus propias tarjetas sobre el fondo gris (antes quedaban tarjetas dentro de otra tarjeta) */}
+          <div className={pathname === '/customer' ? 'mx-auto max-w-6xl' : 'mx-auto max-w-[1600px] rounded-2xl border border-line bg-white p-4 md:p-6'}>
             {children}
           </div>
         </main>

@@ -24,6 +24,30 @@ Producción ya mostraba C-114 el 29/09 (captura de Andrés): el commit exacto de
   4. Una compra de prueba barata con saldo: el correo dice "Recibimos tu pago" y "Total pagado".
   5. Si C-119 entra en este deploy, también: producto **Usado** de prueba en borrador, `/terminos` 3.0 y la página "Garantía" del cliente.
 
+## 0b. Nuevo del 29/09 (tarde): 5 módulos pedidos por Andrés, en ramas, sin mergear
+**Orden de merge obligatorio:** `claude/C-124` → `claude/C-125` → `claude/C-126` → `claude/C-127` → `claude/C-128`.
+- C-127 sale de C-126 y ya integra C-125. C-128 sale de C-127.
+- Probado en una rama temporal con los cinco mezclados: 0 conflictos, `tsc` y `build` pasan, y las pruebas de punta a punta de reseñas, Pago Móvil (24/24) y tiempo real dan lo esperado.
+- **C-124 · Reseñas:** el 500 al aprobar era la columna `isPublished`, que no existe. Ahora hay estado "rechazada" con motivo y un panel de moderación nuevo.
+- **C-125 · Pago Móvil:** el 1010 venía de un céntimo de diferencia entre la pantalla y el banco (3,5 % de los totales) y de la fecha UTC después de las 8 p. m. Además:
+  - Monto congelado con cotización firmada.
+  - Pagos de más al saldo, pagos de menos se completan con otro Pago Móvil, diferencias de hasta Bs. 1 absorbidas.
+  - Formulario nuevo: "Copiar todos los datos" y solo la referencia.
+- **C-126 · Detalle de la orden:**
+  - El pago en palabras ("Billetera Electro Shop", "Pago Móvil · Banesco · Ref.") y la facturación separada del envío.
+  - "Copiar guía" y "Consultar ZOOM ahora". El enlace de ZOOM no toma la guía: se verificó.
+  - **La lista de Órdenes mostraba solo las últimas 25.**
+- **C-127 · Tiempo real (SSE):** órdenes, stock y pagos sin recargar, optimista en el panel y respaldo si se cae la conexión.
+- **C-128 · Panel del cliente:** resumen (saldo, compras activas, garantías), pedidos en curso con stepper en vivo y barra inferior con Saldo. Arregla las misiones que marcaban 0 %.
+- **Cambio de base (todo aditivo), SQL esperado en el deploy:**
+  - `ALTER TABLE "reviews" ADD COLUMN "rejectedAt" TIMESTAMP(3), ADD COLUMN "rejectionReason" TEXT;`
+  - `ALTER TABLE "pago_movil_verificaciones" ADD COLUMN "tasaVES" DECIMAL(65,30);`
+- **Decisiones que esperan a Andrés:**
+  - C-125: el sobrepago va al saldo (regla del 28/09). La tolerancia es Bs. 1,00, fija en el código.
+  - C-125: se quitó "Subir captura", que nunca se guardaba.
+  - C-128: la barra inferior cambia Referidos y Perfil por Saldo y "Más".
+- Detalle y pruebas de cada una en su `estado/C-12X.md`.
+
 ## 1. Estado de las ramas
 - **`main`:** todo hasta C-123 (C-118, C-121, C-122 y C-123 mergeados el 29/09). Las ramas `claude/C-118` a `claude/C-123` ya están en `main`.
 - **Gemini:** R23 (G-69) cerrada y en `main`, con dos arreglos de Claude (resultado al final de `PLAN_GEMINI.md`). **No tiene ronda abierta.** Su carril no tiene deudas de reglas (verificado el 28/09 con `grep`: 0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis).

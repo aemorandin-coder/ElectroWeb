@@ -169,6 +169,13 @@ export default function OrdersPage() {
         setOrders(lista);
         // El detalle abierto toma los datos nuevos (estado, guía, historial)
         setSelectedOrder((prev) => (prev ? lista.find((o) => o.id === prev.id) ?? prev : prev));
+        // C-128: desde el inicio se llega con ?orden=<id> y se abre ese pedido
+        const pedida = silencioso ? null : new URLSearchParams(window.location.search).get('orden');
+        const orden = pedida ? lista.find((o) => o.id === pedida) : null;
+        if (orden) {
+          setSelectedOrder(orden);
+          setShowOrderDetails(true);
+        }
       }
     } catch (error) {
       console.error('Error fetching orders:', error);

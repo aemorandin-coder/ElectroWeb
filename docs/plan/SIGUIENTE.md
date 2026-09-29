@@ -1,30 +1,34 @@
-# Punto de partida (actualizado 2026-09-29)
+# Punto de partida (actualizado 2026-09-29, noche)
 
 Léelo antes de empezar. En GitHub, `main` tiene todo hasta C-123 (subido el 29/09). **Falta el deploy, y lleva cambio de base.**
 Producción ya mostraba C-114 el 29/09 (captura de Andrés): el commit exacto del servidor se anota tras este deploy.
 
-## 0. Urgente: deploy del 29/09 (§2)
-- **Qué lleva** (todo en `main`, deploy pedido por Andrés el 29/09):
-  - **C-114, G-69, C-115, C-116, C-117 y C-119** si todavía no estaban en el servidor (ver el §0 anterior en el historial de git).
-  - **C-118:** Productos → Más → "Importar (.json)" (carga masiva con plantilla para Claude).
-  - **C-121:** el correo de compra dice "Usado", el pago real (pagado o por confirmar) y el descuento.
-  - **C-122:** menú "Garantías" (estados, historial, fotos privadas, devolución al saldo).
-  - **C-123:** en Transacciones, "Es esta orden" y "Ya se atendió" para los Pagos Móvil sin orden.
-- **Cambio de base: solo aditivo.** Sin dependencias nuevas. Contra el esquema de 70093de, el SQL tiene: 6 `CREATE TYPE`, 2 `CREATE TABLE` (`warranty_claims`, `warranty_claim_events`), `ADD COLUMN` en `products`, `order_items` y `pago_movil_verificaciones`, índices y `ADD CONSTRAINT` **solo de las tablas nuevas**. Si C-119 ya estaba aplicado, saldrá menos. **Ningún `DROP` ni `ALTER ... TYPE`**: si aparece alguno, parar y avisar a Claude.
+## 0. Urgente: deploy del 29/09 (noche), C-118 a C-129
+Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pedido de Andrés).
+- **Qué lleva:** lo del deploy anterior si todavía no se hizo (C-114 a C-123), más C-124 a C-129 (§0b).
+- **Cambio de base: solo aditivo.**
+  - Si el deploy de C-118 a C-123 ya se hizo, el SQL son exactamente 3 `ADD COLUMN`:
+    - `reviews`: `rejectedAt` y `rejectionReason`.
+    - `pago_movil_verificaciones`: `tasaVES`.
+  - Si no se hizo, se suman los `CREATE TYPE` y `CREATE TABLE` de garantías y las columnas de C-119 y C-123.
+  - **Ningún `DROP` ni `ALTER ... TYPE`**: si aparece alguno, parar y avisar a Claude.
 - **Pasos en el servidor** (`/var/www/electroshopve`):
   1. `git log -1 --oneline` (para anotar qué había).
-  2. Respaldo de la base: `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-29-09b.dump`
-  3. Respaldo de archivos: `tar czf ~/archivos-29-09b.tgz private-uploads public/uploads`
+  2. Respaldo de la base: `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-29-09c.dump`
+  3. Respaldo de archivos: `tar czf ~/archivos-29-09c.tgz private-uploads public/uploads`
   4. `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL.
   5. Si el SQL es como el de arriba: `npx prisma db push` y `bash scripts/deploy.sh` otra vez.
 - **Después del deploy, en producción:**
-  1. **Transacciones, los 2 pagos de diciembre (ref. 9601 y 189689): NO "Pasar a su saldo".** Si sale una orden con "mismo monto" → "Es esta orden". Si no → "Ya se atendió" con una nota ("Pagado y entregado en diciembre de 2025").
-  2. Menú "Garantías": aparece, vacío, sin error.
-  3. Productos → Más → "Importar (.json)" → "Descargar plantilla": trae las categorías reales.
-  4. Una compra de prueba barata con saldo: el correo dice "Recibimos tu pago" y "Total pagado".
-  5. Si C-119 entra en este deploy, también: producto **Usado** de prueba en borrador, `/terminos` 3.0 y la página "Garantía" del cliente.
+  1. **Reseñas:** aprobar la de Luis Morandin. Sin 500; sale en la ficha del producto.
+  2. **Pago Móvil:** una compra real, barata, copiando el monto con "Copiar monto". Si es de noche, mejor después de las 8 p. m. (el fallo de la fecha). Debe verificar al primer intento.
+  3. **Transacciones → "Consultar Pago Móvil"** con los datos de ese pago: "El banco confirma" y "ya se usó en la tienda: orden …".
+  4. **Tiempo real:** Admin → Órdenes en dos navegadores; avanzar una orden en uno y verla cambiar en el otro sin recargar. Si dice "Reconectando…" todo el tiempo, revisar nginx (§2).
+  5. **Órdenes:** abajo aparece "Cargar más órdenes (50 de N)" si hay más de 50, y "Cobrado" cuenta solo lo pagado.
+  6. **Cliente, en el teléfono:** Inicio con saldo, compras activas y garantías, y los pedidos en curso con su stepper. Barra inferior: Inicio, Pedidos, Saldo, Favoritos y Más.
+  7. Si el deploy anterior no se había hecho, también sus pruebas (en el historial de git de este archivo).
+- **Si algo sale mal:** `git reset --hard 3267cfd && npm install && bash scripts/deploy.sh --sin-pull` vuelve a lo anterior. Las columnas nuevas no molestan al código viejo.
 
-## 0b. Nuevo del 29/09 (tarde): 5 módulos pedidos por Andrés, en ramas, sin mergear
+## 0b. Nuevo del 29/09 (tarde): 6 tareas pedidas por Andrés, ya en `main`
 **Orden de merge obligatorio:** `claude/C-124` → `claude/C-125` → `claude/C-126` → `claude/C-127` → `claude/C-128` → `claude/C-129`.
 - C-127 sale de C-126 y ya integra C-125. C-128 sale de C-127.
 - Probado en una rama temporal con los cinco mezclados: 0 conflictos, `tsc` y `build` pasan, y las pruebas de punta a punta de reseñas, Pago Móvil (24/24) y tiempo real dan lo esperado.
@@ -58,13 +62,14 @@ Producción ya mostraba C-114 el 29/09 (captura de Andrés): el commit exacto de
 - Detalle y pruebas de cada una en su `estado/C-12X.md`.
 
 ## 1. Estado de las ramas
-- **`main`:** todo hasta C-123 (C-118, C-121, C-122 y C-123 mergeados el 29/09). Las ramas `claude/C-118` a `claude/C-123` ya están en `main`.
+- **`main`:** todo hasta C-129 (C-124 a C-129 mergeados y subidos el 29/09 en la noche). Las ramas `claude/C-118` a `claude/C-129` ya están en `main`.
 - **Gemini:** R23 (G-69) cerrada y en `main`, con dos arreglos de Claude (resultado al final de `PLAN_GEMINI.md`). **No tiene ronda abierta.** Su carril no tiene deudas de reglas (verificado el 28/09 con `grep`: 0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis).
 - **ChatGPT:** fuera del equipo desde el 21/09. Limpieza opcional en la máquina de Andrés: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
 - **Historial de tareas:** cada una tiene su `docs/plan/estado/C-XX.md`. Resumen en `PLAN_CLAUDE.md`, "Orden de trabajo".
 
 ## 2. Deploy
 - Servidor `/var/www/electroshopve`, proceso de PM2 `electroshop`. `ecosystem.config.js` está desactualizado y no se usa.
+- **Tiempo real (C-127):** `/api/realtime` usa Server-Sent Events y manda `X-Accel-Buffering: no`, así que nginx no necesita cambios. Si el panel dice "Reconectando…" todo el tiempo, revisar en el `location` de nginx que `proxy_read_timeout` sea de 60 s o más (el latido es cada 25 s) y que no haya `proxy_buffering on` forzado. PM2 debe seguir en **una sola instancia**: el bus de eventos vive en memoria.
 
 **Cada deploy:**
 ```bash

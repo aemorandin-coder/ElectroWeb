@@ -48,7 +48,7 @@ bash scripts/deploy.sh
   (`pg_dump` no acepta el `?schema=` de la URL de Prisma).
 - **Volver atrás:** `git reset --hard <commit> && npm install && bash scripts/deploy.sh --sin-pull`.
 - **Memoria:** el servidor tiene 7,8 GB. El build usa unos 2,7 GB. Andrés agregó 4 GB de swap el 28/09.
-- **Respaldo de archivos:** incluir `private-uploads/signatures/` (constancias firmadas) y `public/uploads/` (fotos de productos y de ElectroStudio).
+- **Respaldo de archivos:** incluir `private-uploads/signatures/` (constancias firmadas), `private-uploads/warranty/` (fotos de garantía, desde C-122) y `public/uploads/` (fotos de productos y de ElectroStudio).
 
 **Deploys hechos:**
 - **26/09:** C-104 a C-40. Respaldos `~/respaldo-antes-deploy-26-09.dump` y `~/firmas-2026-09-26.tgz`.
@@ -67,7 +67,7 @@ bash scripts/deploy.sh
    - Andrés: probarla con 2 o 3 productos reales y claude.ai.
 4b. **C-119 · Productos usados y reacondicionados:** hecha y en `main` el 29/09 (`estado/C-119.md`). Lleva cambio de base (§0).
    - "Usado" en el correo de compra: hecho en C-121 (29/09, rama `claude/C-121`), con 4 arreglos del correo (decía "debitado de tu billetera" también en un Pago Móvil por confirmar, faltaba el descuento, no escapaba el nombre y la dirección).
-   - Pendiente: módulo propio de solicitudes de garantía (C-122).
+   - Módulo de garantías: hecho en C-122 (29/09, rama `claude/C-122`, sobre C-121; **lleva tablas nuevas**). Menú "Garantías" con estados, historial, notas internas, fotos privadas y devolución al saldo de verdad (`estado/C-122.md`).
 4c. **C-120 · Facturación a empresa, IVA y términos** (pedida por Andrés el 29/09 para después, con investigación a fondo):
    - El flujo empieza cuando el cliente cambia a "empresa" en su panel, para facturar.
    - Revisar las leyes venezolanas (IVA, facturación, ventas en línea, protección al consumidor) y los términos y condiciones, pensando en el crecimiento de la empresa.

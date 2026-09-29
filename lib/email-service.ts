@@ -870,3 +870,29 @@ export const sendGiftCardEmail = async (
     html: await getBaseTemplate(content, `${giftCardData.senderName} te regalo una Gift Card de $${giftCardData.amount}`),
   });
 };
+
+// C-122: el equipo respondió o cambió el estado de una solicitud de garantía
+export const sendWarrantyUpdateEmail = async (
+  email: string,
+  data: { customerName: string; code: string; productName: string; status: string; statusHelp: string; message?: string | null },
+) => {
+  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const content = `
+    <h2 style="margin:0 0 10px;color:#212529;font-size:22px;font-weight:600;">Tu solicitud de garantía ${escapeHtml(data.code)}</h2>
+    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 16px;">
+      Hola <strong style="color:#212529;">${escapeHtml(data.customerName)}</strong>, tenemos novedades sobre <strong style="color:#212529;">${escapeHtml(data.productName)}</strong>.
+    </p>
+    <div style="background:#f8f9fa;border-radius:12px;padding:16px 20px;margin:16px 0;border:1px solid #e9ecef;">
+      <p style="margin:0 0 6px;color:#212529;font-size:15px;font-weight:600;">Estado: ${escapeHtml(data.status)}</p>
+      <p style="margin:0;color:#6c757d;font-size:13px;line-height:1.6;">${escapeHtml(data.statusHelp)}</p>
+    </div>
+    ${data.message ? `<div style="border-left:4px solid #2a63cd;padding:8px 14px;margin:16px 0;color:#495057;font-size:14px;line-height:1.6;white-space:pre-line;">${escapeHtml(data.message)}</div>` : ''}
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${appUrl}/customer/warranty" style="display:inline-block;background:#2a63cd;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">Ver mi solicitud</a>
+    </div>`;
+  return sendEmail({
+    to: email,
+    subject: `Garantía ${data.code}: ${data.status}`,
+    html: await getBaseTemplate(content, `Novedades de tu solicitud de garantía ${data.code}`),
+  });
+};

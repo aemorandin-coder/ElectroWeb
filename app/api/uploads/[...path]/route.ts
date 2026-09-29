@@ -4,7 +4,8 @@ import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { authOptions } from '@/lib/auth';
-import { documentOwner, isInside, PRIVATE_DOCUMENTS_DIR } from '@/lib/private-uploads';
+import { documentOwner, isInside, PRIVATE_DOCUMENTS_DIR, WARRANTY_PHOTOS_DIR, warrantyPhotoOwner } from '@/lib/private-uploads';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 const MIME_TYPES: Record<string, string> = {
     '.jpg': 'image/jpeg',
@@ -35,8 +36,21 @@ export async function GET(
         }
 
         const isDocument = pathSegments[0] === 'documents';
+        const isWarranty = pathSegments[0] === 'warranty';
         let filePath: string;
-        if (isDocument) {
+        if (isWarranty) {
+            // C-122: fotos de garantía, solo para su dueño y para quien atiende garantías. Mismo 404 si no es suyo
+            const name = pathSegments.slice(1).join('/');
+            const session = await getServerSession(authOptions);
+            const owner = warrantyPhotoOwner(name);
+            if (!session?.user || pathSegments.length !== 2 || !owner || (owner !== session.user.id && !isAuthorized(session, 'MANAGE_ORDERS'))) {
+                return NextResponse.json({ error: 'File not found' }, { status: 404 });
+            }
+            filePath = path.join(WARRANTY_PHOTOS_DIR, name);
+            if (!isInside(WARRANTY_PHOTOS_DIR, filePath)) {
+                return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
+            }
+        } else if (isDocument) {
             const name = pathSegments.slice(1).join('/');
             const session = await getServerSession(authOptions);
             const role = session?.user?.role;
@@ -72,7 +86,7 @@ export async function GET(
             'Content-Length': buffer.length.toString(),
             // Sin esto el navegador podía "adivinar" HTML dentro de un archivo con otra extensión
             'X-Content-Type-Options': 'nosniff',
-            'Cache-Control': isDocument ? 'private, no-store' : 'public, max-age=31536000, immutable',
+            'Cache-Control': isDocument || isWarranty ? 'private, no-store' : 'public, max-age=31536000, immutable',
         };
         // Un SVG abierto directo puede ejecutar scripts: se sirve aislado (en <img> se sigue viendo igual)
         if (ext === '.svg') headers['Content-Security-Policy'] = "default-src 'none'; style-src 'unsafe-inline'; sandbox";

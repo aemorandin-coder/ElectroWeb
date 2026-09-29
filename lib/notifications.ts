@@ -20,7 +20,9 @@ export type NotificationType =
   | 'NEW_RECHARGE_REQUEST'
   | 'NEW_ORDER'
   | 'PRODUCT_REQUEST'
-  | 'NEW_CREATOR_REQUEST';
+  | 'NEW_CREATOR_REQUEST'
+  // C-122: el equipo respondió o cambió el estado de una solicitud de garantía
+  | 'WARRANTY_UPDATE';
 
 interface CreateNotificationParams {
   userId: string;

@@ -33,6 +33,7 @@ export async function GET() {
       pendingCreators,
       pendingCourses,
       pendingReviews,
+      pendingWarranty,
     ] = await Promise.all([
       // Órdenes pendientes
       prisma.order.count({ where: { status: 'PENDING' } }),
@@ -63,6 +64,9 @@ export async function GET() {
 
       // Reseñas por moderar (menú Reseñas, C-110)
       prisma.review.count({ where: { isApproved: false } }),
+
+      // Garantías por atender: nuevas o con respuesta del cliente (menú Garantías, C-122)
+      prisma.warrantyClaim.count({ where: { awaitingStaff: true, status: { notIn: ['RESOLVED', 'REJECTED'] } } }),
     ]);
 
     // Mensajes y Solicitudes = mensajes + solicitudes de producto (las notificaciones tienen su propio menú desde C-73)
@@ -76,6 +80,7 @@ export async function GET() {
       pendingCreators,
       pendingCourses,
       pendingReviews,
+      pendingWarranty,
       unreadNotifications,
     });
   } catch (error) {

@@ -54,7 +54,8 @@ export const ADMIN_EVENTS = {
   CUSTOMER_REGISTERED: { category: 'clientes', label: 'Cliente nuevo', description: 'Alguien creó una cuenta en la tienda.', defaults: on(true, false, true), silent: true },
   BUSINESS_VERIFICATION: { category: 'clientes', label: 'Verificación de empresa', description: 'Un cliente subió acta y RIF para cuenta de empresa.', defaults: on(true, false, true) },
   CONTACT_MESSAGE: { category: 'clientes', label: 'Mensaje de contacto', description: 'Llegó un mensaje desde el formulario de Contacto.', defaults: on(true, false, true) },
-  WARRANTY_REQUEST: { category: 'clientes', label: 'Solicitud de garantía', description: 'Un cliente pidió garantía de un producto entregado (C-119). Llega a Mensajes y Solicitudes.', defaults: on(true, true, true) },
+  WARRANTY_REQUEST: { category: 'clientes', label: 'Solicitud de garantía', description: 'Un cliente pidió garantía de un producto entregado. Se atiende en Garantías.', defaults: on(true, true, true) },
+  WARRANTY_REPLY: { category: 'clientes', label: 'Respuesta en una garantía', description: 'Un cliente respondió en una solicitud de garantía abierta.', defaults: on(true, false, true) },
   REVIEW_SUBMITTED: { category: 'clientes', label: 'Reseña por aprobar', description: 'Un cliente dejó una reseña de producto.', defaults: on(true, false, false), silent: true },
 
   PRODUCT_REQUESTED: { category: 'solicitudes', label: 'Solicitud de producto', description: 'Un cliente pidió un producto que no está en el catálogo.', defaults: on(true, false, true) },

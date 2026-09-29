@@ -45,6 +45,8 @@ import { useMontado } from '@/lib/hooks/useMontado';
 import { describirEntrega, describirPago, estadoPago, tonoEstadoOrden, type PagoMovilResumen } from '@/lib/order-pago';
 import { formatVES } from '@/lib/currency';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { useTiempoReal } from '@/lib/realtime/hooks';
+import { EnVivo } from '@/components/ui/EnVivo';
 
 
 interface Order {
@@ -124,6 +126,13 @@ interface Order {
 const SHIPPING_CARRIERS = EMPRESAS_GUIA.map((id) => ({ id, name: NOMBRE_EMPRESA[id] }));
 
 const PAGE_SIZE = 50;
+
+/** Lo que la respuesta del PATCH puede cambiar de una fila (sin `user` ni `items`, que vienen incompletos). */
+function pickOrden(datos: Record<string, unknown> | null): Partial<Order> {
+  if (!datos) return {};
+  const campos = ['paymentStatus', 'shippingCarrier', 'trackingNumber', 'trackingUrl', 'shippingNotes', 'estimatedDelivery', 'paidAt', 'shippedAt', 'deliveredAt', 'adminNotes'] as const;
+  return Object.fromEntries(campos.filter((c) => c in datos).map((c) => [c, datos[c]])) as Partial<Order>;
+}
 
 interface OrdersSummary {
   total: number;
@@ -231,7 +240,53 @@ export default function OrdersPage() {
 
   useCargarAlMontar(() => fetchOrders(1), [filterStatus]);
 
+  // C-127: los contadores sin recargar la lista (se pierde lo que el equipo ya cargó con "Cargar más")
+  const refrescarResumen = async () => {
+    try {
+      const response = await fetch(`/api/orders?limit=1${filterStatus !== 'all' ? `&status=${filterStatus}` : ''}`);
+      if (response.ok) setSummary((await response.json()).summary ?? null);
+    } catch { /* se actualiza en la próxima carga */ }
+  };
+
+  // Órdenes nuevas arriba, sin tocar las que ya están en pantalla
+  const traerNuevas = async () => {
+    try {
+      const params = new URLSearchParams({ page: '1', limit: String(PAGE_SIZE) });
+      if (filterStatus !== 'all') params.set('status', filterStatus);
+      const response = await fetch(`/api/orders?${params}`);
+      if (!response.ok) return;
+      const result = await response.json();
+      const recientes: Order[] = (result.orders || []).map(normalizar);
+      setOrders((prev) => [...recientes.filter((o) => !prev.some((p) => p.id === o.id)), ...prev]);
+      if (result.summary) setSummary(result.summary);
+    } catch { /* llega con la próxima carga */ }
+  };
+
+  // C-127: en vivo. Una venta nueva aparece arriba con un aviso; un cambio hecho por otra persona, por el banco o
+  // por ZOOM se ve en su fila y en el detalle abierto. Sin conexión, se recarga cada minuto como respaldo.
+  const enVivo = useTiempoReal((evento) => {
+    if (evento.tipo !== 'order:status_updated') return;
+    if (evento.nueva) {
+      toast.success(`Nueva orden #${evento.orderNumber}`);
+      void traerNuevas();
+      window.dispatchEvent(new Event('refresh-sidebar-counts'));
+      return;
+    }
+    setOrders((prev) => prev.map((o) => (o.id === evento.orderId ? { ...o, status: evento.status, paymentStatus: evento.paymentStatus } : o)));
+    setSelectedOrder((prev) => (prev && prev.id === evento.orderId ? { ...prev, status: evento.status, paymentStatus: evento.paymentStatus } : prev));
+    void refrescarResumen();
+  }, { onReconectar: () => fetchOrders(1), respaldoMs: 60_000 });
+
   const handleStatusUpdate = async (orderId: string, newStatus: string, additionalData?: Record<string, unknown>) => {
+    // C-127: optimista. La fila y el detalle cambian al tocar el botón; si el servidor lo rechaza, vuelven atrás
+    const previa = orders.find((o) => o.id === orderId);
+    const deshacer = () => {
+      if (!previa) return;
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: previa.status, paymentStatus: previa.paymentStatus } : o)));
+      setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, status: previa.status, paymentStatus: previa.paymentStatus } : prev));
+    };
+    setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
+    setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, status: newStatus } : prev));
     try {
       setUpdatingStatus(true);
       const response = await fetch(`/api/orders?id=${orderId}`, {
@@ -244,7 +299,9 @@ export default function OrdersPage() {
 
       if (response.ok) {
         toast.success(`Estado actualizado a: ${getStatusText(newStatus)}`);
-        void fetchOrders(1);
+        // La fila toma lo que respondió el servidor (pago, guía, fechas) sin recargar la lista
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, ...pickOrden(datos), status: newStatus } : o)));
+        void refrescarResumen();
         if (selectedOrder?.id === orderId) {
           // La respuesta trae `user` sin perfil e `items` sin producto: se conservan los del detalle (C-126)
           setSelectedOrder({ ...selectedOrder, ...datos, user: selectedOrder.user, items: selectedOrder.items, pagosMovil: selectedOrder.pagosMovil, status: newStatus });
@@ -256,10 +313,11 @@ export default function OrdersPage() {
         return true;
       }
 
+      deshacer();
       toast.error(datos?.error || 'Error al actualizar el estado');
       return false;
-    } catch (error) {
-      console.error('Error updating status:', error);
+    } catch {
+      deshacer();
       toast.error('Error al actualizar el estado');
       return false;
     } finally {
@@ -386,6 +444,7 @@ export default function OrdersPage() {
         <div>
           <h1 className={adminPageTitle}>Órdenes</h1>
           <p className={adminPageSubtitle}>Pedidos de la tienda</p>
+          <div className="mt-1"><EnVivo estado={enVivo} /></div>
         </div>
       </div>
 

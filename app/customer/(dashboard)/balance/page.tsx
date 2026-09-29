@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTiempoReal } from '@/lib/realtime/hooks';
 import { createPortal } from 'react-dom';
 import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiPlus, FiArrowUpRight, FiArrowDownLeft } from 'react-icons/fi';
 import RechargeModal from '@/components/modals/RechargeModalV2';
@@ -122,6 +123,13 @@ export default function BalancePage() {
       setLoading(false);
     }
   }
+
+  // C-127: cuando el equipo aprueba o rechaza una recarga (o el banco la confirma), el saldo se actualiza solo
+  useTiempoReal((evento) => {
+    if (evento.tipo !== 'payment:verified' || evento.contexto !== 'RECHARGE') return;
+    if (evento.transactionId && !showRechargeModal) toast.success(evento.aprobado ? 'Tu recarga fue aprobada: el saldo ya está disponible.' : 'Tu recarga fue rechazada. Revisa el motivo en tus movimientos.');
+    void fetchBalance();
+  }, { onReconectar: () => void fetchBalance() });
 
   const getTransactionIcon = (type: string) => {
     return isCreditTransaction(type) ? <FiTrendingUp className="w-4 h-4 lg:w-5 lg:h-5" /> : <FiTrendingDown className="w-4 h-4 lg:w-5 lg:h-5" />;

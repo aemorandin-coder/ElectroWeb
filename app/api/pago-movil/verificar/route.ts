@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { publicar } from '@/lib/realtime/bus';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -398,6 +399,7 @@ export async function POST(req: NextRequest) {
                         // No bloquear la respuesta si el email falla
                     }
 
+                    publicar({ tipo: 'payment:verified', userId, contexto: 'RECHARGE', referencia, aprobado: true, transactionId }); // C-127
                     emitAdminEvent({
                         type: 'RECHARGE_AUTO_APPROVED',
                         title: `Recarga aprobada por Pago Móvil · ${formatUSD(montoUsd)}`,
@@ -450,6 +452,8 @@ export async function POST(req: NextRequest) {
 
         // Respuesta normal (sin auto-aprobación)
         if (resultado.verified) {
+            // C-127: Transacciones → "Pagos sin orden" lo muestra sin recargar mientras el cliente termina su compra
+            publicar({ tipo: 'payment:verified', userId, contexto: contexto === 'RECHARGE' ? 'RECHARGE' : 'ORDER', referencia, aprobado: true, transactionId: contexto === 'RECHARGE' ? transactionId ?? null : null });
             return NextResponse.json({
                 success: true,
                 verified: true,

@@ -4,6 +4,7 @@
 // entregada cuando ZOOM lo confirma. MRW no tiene rastreo automatizable: esas órdenes las mueve el panel.
 
 import { OrderStatus } from '@prisma/client';
+import { publicarOrdenes } from '@/lib/realtime/bus';
 import { prisma } from '@/lib/prisma';
 import { createNotification, notifyOrderDelivered } from '@/lib/notifications';
 import { sendOrderDeliveredEmail, sendShipmentUpdateEmail } from '@/lib/email-service';
@@ -85,6 +86,7 @@ export async function actualizarRastreoZoom(opciones: { orderIds?: string[]; int
       });
       if (cerrada.count === 0) continue;
       resultado.entregadas++;
+      void publicarOrdenes([orden.id]); // C-127
       if (orden.userId) await notifyOrderDelivered(orden.userId, orden.orderNumber, orden.id);
       if (orden.user?.email) {
         sendOrderDeliveredEmail(orden.user.email, { orderNumber: orden.orderNumber, customerName: nombre })

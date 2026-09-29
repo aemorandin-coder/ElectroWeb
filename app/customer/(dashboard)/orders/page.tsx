@@ -1,5 +1,6 @@
 'use client';
 import { conditionBadge, warrantyDaysFor, type Condition, type Grade } from '@/lib/product-condition';
+import { useTiempoReal } from '@/lib/realtime/hooks';
 import { formatUSD } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
 
@@ -148,14 +149,14 @@ export default function OrdersPage() {
 
   useBodyScrollLock(showOrderDetails);
 
-  async function fetchOrders() {
-    setLoading(true);
+  async function fetchOrders(silencioso = false) {
+    if (!silencioso) setLoading(true);
     try {
       const response = await fetch('/api/orders?mine=1');
       if (response.ok) {
         const result = await response.json();
         const data = Array.isArray(result) ? result : (result.orders || []);
-        setOrders(data.map((order: RawOrder) => ({
+        const lista: Order[] = data.map((order: RawOrder) => ({
           ...order,
           totalUSD: Number(order.totalUSD) || 0,
           hasDigital: order.items?.some((item: RawOrderItem) => item.product?.productType === 'DIGITAL') || false,
@@ -164,7 +165,10 @@ export default function OrdersPage() {
             priceUSD: Number(item.priceUSD) || 0,
             totalUSD: Number(item.totalUSD) || 0,
           })) || []
-        })));
+        }));
+        setOrders(lista);
+        // El detalle abierto toma los datos nuevos (estado, guía, historial)
+        setSelectedOrder((prev) => (prev ? lista.find((o) => o.id === prev.id) ?? prev : prev));
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -173,6 +177,14 @@ export default function OrdersPage() {
       setLoading(false);
     }
   }
+
+  // C-127: cuando el equipo avanza un pedido (o ZOOM lo entrega), la lista y el detalle se actualizan solos
+  useTiempoReal((evento) => {
+    if (evento.tipo !== 'order:status_updated' || evento.nueva) return;
+    const antes = orders.find((o) => o.id === evento.orderId);
+    if (antes && antes.status !== evento.status) toast.success(`Tu pedido #${evento.orderNumber} ahora está: ${getStatusText(evento.status)}`);
+    void fetchOrders(true);
+  }, { onReconectar: () => void fetchOrders(true), respaldoMs: 120_000 });
 
   const getStatusConfig = (status: string) => {
     const configs: Record<string, { bg: string; text: string; border: string; icon: React.ReactNode }> = {
@@ -316,7 +328,7 @@ export default function OrdersPage() {
               className="w-full pl-10 pr-10 py-2.5 text-sm bg-white border border-line rounded-xl focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 hover:border-line-strong transition-all shadow-sm text-ink"
             />
             <button
-              onClick={fetchOrders}
+              onClick={() => fetchOrders()}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted hover:text-brand-600"
             >
               <FiRefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -500,7 +512,7 @@ export default function OrdersPage() {
             <option value="DELIVERED">Entreg</option>
           </select>
           <button
-            onClick={fetchOrders}
+            onClick={() => fetchOrders()}
             disabled={loading}
             className="p-1.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-50"
           >

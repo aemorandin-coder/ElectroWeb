@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -43,6 +43,8 @@ import {
     } from '@/lib/admin-ui';
 import PagosSinOrden from './_components/PagosSinOrden';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { useTiempoReal } from '@/lib/realtime/hooks';
+import { EnVivo } from '@/components/ui/EnVivo';
 
 
 // ─── Payment method icons (react-icons, no emojis) ──────────────────────────
@@ -191,13 +193,27 @@ export default function TransactionsPage() {
         void fetchStats();
     }, [fetchTransactions, fetchStats]);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            fetchStats();
-            if (filterStatus === 'PENDING' || filterStatus === 'all') fetchTransactions();
-        }, 60000);
-        return () => clearInterval(interval);
+    // C-127: en vivo. Cuando el banco o alguien del equipo resuelve una recarga, la lista y los totales se
+    // actualizan, y si su modal está abierto se cierra (antes: aprobarla dos veces daba "ya fue procesada").
+    // Si la conexión se cae, se vuelve al sondeo de cada minuto que había antes.
+    const recargar = useCallback(() => {
+        void fetchStats();
+        if (filterStatus === 'PENDING' || filterStatus === 'all') void fetchTransactions();
     }, [fetchStats, fetchTransactions, filterStatus]);
+    const enVivo = useTiempoReal((evento) => {
+        if (evento.tipo !== 'payment:verified') return;
+        recargar();
+        if (evento.transactionId && approvingTransaction?.id === evento.transactionId) {
+            setShowApproveModal(false);
+            setApprovingTransaction(null);
+            toast.success(evento.aprobado ? 'Esta recarga ya se aprobó (el banco la confirmó o la aprobó otra persona).' : 'Esta recarga ya se rechazó.');
+        }
+        if (evento.transactionId && rejectingTransaction?.id === evento.transactionId) {
+            setShowRejectModal(false);
+            setRejectingTransaction(null);
+            toast.success(evento.aprobado ? 'Esta recarga ya se aprobó: no hace falta rechazarla.' : 'Esta recarga ya se rechazó.');
+        }
+    }, { onReconectar: recargar, respaldoMs: 60_000 });
 
     const displayed = useMemo(() => {
         if (!searchQuery.trim()) return transactions;
@@ -313,6 +329,7 @@ export default function TransactionsPage() {
 
                     </h1>
                     <p className={adminPageSubtitle}>Recargas y movimientos de saldo · máx. 200 registros</p>
+                    <div className="mt-1"><EnVivo estado={enVivo} /></div>
                 </div>
                 <div className="flex gap-2">
                     <button

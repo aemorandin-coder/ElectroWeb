@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { publicar } from '@/lib/realtime/bus';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -172,6 +173,16 @@ export async function PATCH(request: NextRequest) {
             cliente: transaction.balance.user.id,
             ...(status === 'CANCELLED' && typeof rejectionReason === 'string' ? { motivo: rejectionReason.slice(0, 300) } : {}),
         }, request);
+
+        // C-127: la pantalla de saldo del cliente y el panel se actualizan solos
+        publicar({
+            tipo: 'payment:verified',
+            userId: transaction.balance.user.id,
+            contexto: 'RECHARGE',
+            referencia: transaction.reference ?? '',
+            aprobado: status === 'COMPLETED',
+            transactionId: id,
+        });
 
         // Send notification to customer
         try {

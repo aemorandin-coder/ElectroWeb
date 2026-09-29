@@ -7,6 +7,7 @@ import { adminError, adminHint, adminInput, adminNotice, adminPrimaryButton, adm
 import { formatUSD, formatVES } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { useTiempoReal } from '@/lib/realtime/hooks';
 
 interface OrdenCandidata {
   id: string;
@@ -60,6 +61,10 @@ export default function PagosSinOrden({ onChange }: { onChange?: () => void }) {
     setDiasViejo(data.diasViejo);
   };
   useCargarAlMontar(cargar);
+  // C-127: un Pago Móvil de compra recién verificado aparece aquí; si con él se crea la orden, desaparece
+  useTiempoReal((evento) => {
+    if ((evento.tipo === 'payment:verified' && evento.contexto === 'ORDER') || (evento.tipo === 'order:status_updated' && evento.nueva)) void cargar();
+  }, { onReconectar: () => void cargar() });
 
   const enviar = async (p: PagoSinOrden, cuerpo: Record<string, string>, exito: (data: { montoUSD?: number; orderNumber?: string }) => string) => {
     setEnCurso(p.id);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useStockEnVivo } from '@/lib/realtime/hooks';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
@@ -30,7 +31,10 @@ const MAX_DIGITAL_QUANTITY = 10;
  * - En móvil, mientras los botones no están a la vista aparece una barra fija encima de la barra inferior.
  * El precio real lo vuelve a calcular el servidor al crear la orden (C-01).
  */
-export default function PurchasePanel({ product, exchangeRateVES, lowStockThreshold, afterPrice }: PurchasePanelProps) {
+export default function PurchasePanel({ product: productoInicial, exchangeRateVES, lowStockThreshold, afterPrice }: PurchasePanelProps) {
+  // C-127: stock en vivo. Si otra compra o el panel lo cambian, "Quedan 2" o "Agotado" se ven sin recargar
+  const stockVivo = useStockEnVivo(productoInicial.id, productoInicial.stock);
+  const product = stockVivo === productoInicial.stock ? productoInicial : { ...productoInicial, stock: stockVivo };
   const { addItem, items } = useCart();
   const { data: session } = useSession();
   const router = useRouter();

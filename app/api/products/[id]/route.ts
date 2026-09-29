@@ -6,6 +6,7 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type DigitalVariantInput } from '@/lib/digital-variants';
 import { parseDigitalMargin, specsForUpdate } from '@/lib/product-specs';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
+import { publicarStock } from '@/lib/realtime/bus';
 import { precioValido } from '@/lib/pricing';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { conditionInputSchema, pickConditionInput } from '@/lib/product-condition';
@@ -130,7 +131,12 @@ export async function PATCH(
       if (precio === null) return NextResponse.json({ error: 'Precio inválido' }, { status: 400 });
       updateData.priceUSD = precio;
     }
-    if (body.stock !== undefined) updateData.stock = parseInt(body.stock);
+    // C-127: entero de 0 a 1.000.000. Antes parseInt sin más: "-5" dejaba stock negativo y "abc" daba un 500
+    if (body.stock !== undefined) {
+      const stock = Number(body.stock);
+      if (!Number.isInteger(stock) || stock < 0 || stock > 1_000_000) return NextResponse.json({ error: 'Stock inválido' }, { status: 400 });
+      updateData.stock = stock;
+    }
     if (body.sku !== undefined) updateData.sku = body.sku;
     if (body.categoryId !== undefined) updateData.categoryId = body.categoryId;
 
@@ -254,6 +260,8 @@ export async function PATCH(
     });
 
     revalidateStorefront();
+    // C-127: la ficha abierta muestra el stock nuevo (y "Agotado") sin recargar
+    if (product.stock !== oldProduct.stock) void publicarStock([id]);
 
     // Bitácora (C-104): cambios de precio con el valor anterior y el nuevo
     const precioAntes = Number(oldProduct.priceUSD);

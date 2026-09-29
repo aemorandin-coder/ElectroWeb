@@ -26,6 +26,8 @@ interface PagoSinOrden {
   referencia: string;
   montoVES: number;
   montoUSD: number;
+  /** C-125: el USD sale de la tasa con que se cotizó el pago, no de la de hoy */
+  tasaCongelada?: boolean;
   fechaPago: string;
   verificadoEn: string;
   cliente: { id: string; name: string | null; email: string } | null;
@@ -88,7 +90,7 @@ export default function PagosSinOrden({ onChange }: { onChange?: () => void }) {
     const quien = p.cliente?.name || p.cliente?.email || 'el cliente';
     const ok = await confirm({
       title: 'Pasar el pago a su saldo',
-      message: `Se acreditan ${formatUSD(p.montoUSD)} (${formatVES(p.montoVES)} a la tasa de hoy) al saldo de ${quien}. El pago ya no se podrá usar para una orden.${
+      message: `Se acreditan ${formatUSD(p.montoUSD)} (${formatVES(p.montoVES)} ${p.tasaCongelada ? 'a la tasa del pago' : 'a la tasa de hoy'}) al saldo de ${quien}. El pago ya no se podrá usar para una orden.${
         p.diasDesdePago >= diasViejo ? ` Es un pago de hace ${p.diasDesdePago} días: hazlo solo si el cliente no recibió su pedido.` : ''
       }`,
       confirmText: 'Pasar a saldo',
@@ -132,7 +134,7 @@ export default function PagosSinOrden({ onChange }: { onChange?: () => void }) {
             <li key={p.id} className="rounded-xl border border-line bg-white p-3 text-ink">
               <div className="min-w-0 text-sm">
                 <p className="font-semibold">
-                  {formatVES(p.montoVES)} <span className="font-normal text-muted">≈ {formatUSD(p.montoUSD)} a la tasa de hoy</span>
+                  {formatVES(p.montoVES)} <span className="font-normal text-muted">≈ {formatUSD(p.montoUSD)} {p.tasaCongelada ? 'a la tasa del pago' : 'a la tasa de hoy'}</span>
                 </p>
                 <p className="truncate text-muted">
                   Ref. {p.referencia} · {p.cliente ? `${p.cliente.name || 'Sin nombre'} (${p.cliente.email})` : 'Cliente no encontrado'}

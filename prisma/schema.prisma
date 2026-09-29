@@ -1575,6 +1575,9 @@ model PagoMovilVerificacion {
   
   // Resultado de la verificación
   importeVerificado   Decimal? // Monto devuelto por la API (si fue exitoso)
+  // C-125: tasa Bs/USD con la que se cotizó este pago (la de la cotización firmada del checkout o la del momento).
+  // Lo pagado se pasa a USD con esta tasa, no con la del día en que se crea la orden o se acredita
+  tasaVES             Decimal?
   codigoRespuesta     Int
   mensajeRespuesta    String
   verificado          Boolean  @default(false)

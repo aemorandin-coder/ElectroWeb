@@ -1,730 +1,490 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
-import { formatUSD } from '@/lib/currency';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiCreditCard, FiUpload, FiX, FiShield } from 'react-icons/fi';
-import { HiOutlineQrcode } from 'react-icons/hi';
 import Image from 'next/image';
+import { FiAlertCircle, FiCheck, FiCheckCircle, FiChevronDown, FiCopy, FiEdit2, FiLoader, FiShield, FiX } from 'react-icons/fi';
+import { HiOutlineQrcode } from 'react-icons/hi';
 import toast from 'react-hot-toast';
-import { BANCOS_VENEZUELA, type BancoVenezuela } from '@/lib/pago-movil/bancos-venezuela';
-import { adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody } from '@/lib/admin-ui';
+import { formatUSD, formatVES } from '@/lib/currency';
+import { BANCOS_VENEZUELA } from '@/lib/pago-movil/bancos-venezuela';
+import { aCentimos, conciliar, hoyCaracas, leerMontoBs, montoParaCopiar, type Conciliacion } from '@/lib/pago-movil/monto';
+import { adminModalBody, adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle } from '@/lib/admin-ui';
 import { useMontado } from '@/lib/hooks/useMontado';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+
+// C-125: Pago Móvil del checkout.
+// - Un solo bloque con los datos del comercio y "Copiar todos los datos"; el monto exacto con su propio "Copiar".
+// - El cliente solo escribe la referencia: banco recordado, cédula y teléfono de su perfil, fecha de hoy en Venezuela.
+// - Suma pagos: si transfirió de menos, paga solo lo que falta; si pagó de más, la diferencia va a su saldo al confirmar.
+// El monto en Bs. llega del servidor (cotización firmada): es el mismo que se muestra, se copia y se manda al banco.
+
+export interface PagoMovilVerificado {
+  referencia: string;
+  pagadoBs: number;
+  /** Tasa congelada con la que se cotizó ese pago */
+  tasa: number | null;
+  bancoOrigen: string;
+  telefonoPagador: string;
+  cedulaPagador: string;
+  fechaPago: string;
+}
+
+/** Lo pagado frente al total, con cada pago a su tasa. Null si todavía no hay pagos o no hay tasa. */
+export function conciliarPagos(pagos: PagoMovilVerificado[], totalUSD: number, tasa: number): Conciliacion | null {
+  if (pagos.length === 0 || !(tasa > 0)) return null;
+  const pagadoBs = aCentimos(pagos.reduce((suma, p) => suma + (p.tasa && p.tasa > 0 ? (p.pagadoBs / p.tasa) * tasa : p.pagadoBs), 0)) / 100;
+  return conciliar(pagadoBs, totalUSD, tasa);
+}
 
 interface CheckoutPagoMovilFormProps {
-    /** Monto esperado del pago */
-    montoEsperado: number;
-    /** Monto en bolívares */
-    montoEnBs: number;
-    /** Datos del comercio para mostrar */
-    datosComercio: {
-        telefono?: string;
-        cedula?: string;
-        banco?: string;
-        titular?: string;
-    };
-    /** Callback cuando la verificación es exitosa */
-    onVerified: (data: {
-        verified: boolean;
-        referencia: string;
-        telefonoPagador: string;
-        bancoOrigen: string;
-        fechaPago: string;
-        cedulaPagador: string; // Agregado para trazabilidad
-        comprobante?: string;
-    }) => void;
-    /** Callback para resetear verificación */
-    onReset?: () => void;
-    /** Estado de verificación actual */
-    isVerified?: boolean;
-    /** Clase CSS adicional */
-    className?: string;
+  /** Total de la compra en USD */
+  montoUSD: number;
+  /** Monto exacto en Bs. que cotizó el servidor */
+  montoBs: number;
+  /** Tasa de esa cotización */
+  tasa: number;
+  /** Cotización firmada: la verificación concilia con esta tasa */
+  cotizacion: string | null;
+  datosComercio: { telefono?: string; cedula?: string; banco?: string; titular?: string };
+  /** Cédula y teléfono del perfil del cliente */
+  pagador: { cedula: string; telefono: string };
+  pagos: PagoMovilVerificado[];
+  onPagosChange: (pagos: PagoMovilVerificado[]) => void;
+  className?: string;
 }
 
-interface VerificacionResult {
-    success: boolean;
-    verified: boolean;
-    autoApproved?: boolean;
-    message: string;
-    amount?: string;
-    code?: number;
-    duplicateReference?: boolean;
+interface ErrorVerificacion {
+  message: string;
+  code?: number;
+  montoNoCoincide?: boolean;
+  duplicateReference?: boolean;
 }
+
+const BANCO_GUARDADO = 'electroshop_pm_banco';
+
+function leerBancoGuardado(): string {
+  try {
+    return window.localStorage.getItem(BANCO_GUARDADO) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function guardarBanco(codigo: string) {
+  try {
+    window.localStorage.setItem(BANCO_GUARDADO, codigo);
+  } catch {
+    // Sin almacenamiento (modo privado): la próxima vez se elige de nuevo
+  }
+}
+
+async function copiar(texto: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(texto);
+    return true;
+  } catch {
+    toast.error('No se pudo copiar. Mantén presionado el dato para copiarlo.');
+    return false;
+  }
+}
+
+/** Botón de copiar con "Copiado" durante 2 segundos. */
+function BotonCopiar({ texto, etiqueta, principal = false }: { texto: string; etiqueta: string; principal?: boolean }) {
+  const [copiado, setCopiado] = useState(false);
+  useEffect(() => {
+    if (!copiado) return;
+    const t = window.setTimeout(() => setCopiado(false), 2000);
+    return () => window.clearTimeout(t);
+  }, [copiado]);
+  const base = 'inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors sm:px-4';
+  const tono = copiado
+    ? 'bg-success-strong text-white'
+    : principal ? 'bg-brand-500 text-white hover:bg-brand-600' : 'border border-line bg-white text-ink hover:bg-surface';
+  return (
+    <button type="button" onClick={async () => setCopiado(await copiar(texto))} className={`${base} ${tono}`} aria-live="polite">
+      {copiado ? <FiCheck className="h-4 w-4" aria-hidden="true" /> : <FiCopy className="h-4 w-4" aria-hidden="true" />}
+      {copiado ? 'Copiado' : etiqueta}
+    </button>
+  );
+}
+
+const inputClass =
+  'h-11 w-full rounded-xl border border-line-strong bg-white px-3 text-base text-ink placeholder:text-subtle focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:bg-surface';
 
 export default function CheckoutPagoMovilForm({
-    montoEsperado,
-    montoEnBs,
-    datosComercio,
-    onVerified,
-    onReset,
-    isVerified = false,
-    className = '',
+  montoUSD,
+  montoBs,
+  tasa,
+  cotizacion,
+  datosComercio,
+  pagador,
+  pagos,
+  onPagosChange,
+  className = '',
 }: CheckoutPagoMovilFormProps) {
-    const [formData, setFormData] = useState({
-        telefonoPagador: '',
-        bancoOrigen: '',
-        referencia: '',
-        fechaPago: new Date().toISOString().split('T')[0],
-        cedulaPagador: '', // Requerido para validación de seguridad
-    });
+  const mounted = useMontado();
+  const [referencia, setReferencia] = useState('');
+  const [banco, setBanco] = useState('');
+  // Lo que el cliente escribió; sin escribir nada, vale lo de su perfil (que llega después del primer render)
+  const [cedulaEscrita, setCedula] = useState<string | null>(null);
+  const [telefonoEscrito, setTelefono] = useState<string | null>(null);
+  const cedula = cedulaEscrita ?? pagador.cedula;
+  const telefono = telefonoEscrito ?? pagador.telefono;
+  const [fecha, setFecha] = useState(() => hoyCaracas());
+  const [otroMonto, setOtroMonto] = useState('');
+  const [abrirPagador, setEditarPagador] = useState(false);
+  const editarPagador = abrirPagador || !pagador.cedula || !pagador.telefono;
+  const [mostrarOtroMonto, setMostrarOtroMonto] = useState(false);
+  const [bancosAbiertos, setBancosAbiertos] = useState(false);
+  const [buscarBanco, setBuscarBanco] = useState('');
+  const [verificando, setVerificando] = useState(false);
+  const [error, setError] = useState<ErrorVerificacion | null>(null);
+  const [verQR, setVerQR] = useState(false);
+  useBodyScrollLock(verQR);
 
-    const [verificando, setVerificando] = useState(false);
-    const [resultado, setResultado] = useState<VerificacionResult | null>(null);
-    const [showBankDropdown, setShowBankDropdown] = useState(false);
-        const [bankSearchTerm, setBankSearchTerm] = useState('');
-    // Bancos que coinciden con la búsqueda: derivado, no un estado aparte sincronizado con un efecto (C-111)
-    const filteredBancos = useMemo<BancoVenezuela[]>(() => {
-        const term = bankSearchTerm.toLowerCase();
-        if (!term) return BANCOS_VENEZUELA;
-        return BANCOS_VENEZUELA.filter(
-            banco =>
-                banco.nombre.toLowerCase().includes(term) ||
-                banco.nombreCorto.toLowerCase().includes(term) ||
-                banco.codigo.includes(term)
-        );
-    }, [bankSearchTerm]);
+  // El último banco usado queda elegido (por navegador). Se lee al montar: en el servidor no hay localStorage
+  useCargarAlMontar(() => {
+    const guardado = leerBancoGuardado();
+    if (guardado && BANCOS_VENEZUELA.some((b) => b.codigo === guardado)) setBanco((actual) => actual || guardado);
+  });
 
-    // Image upload state
-    const [comprobante, setComprobante] = useState<string | null>(null);
-    const [uploadingImage, setUploadingImage] = useState(false);
-    const [showQRModal, setShowQRModal] = useState(false);
-    const mounted = useMontado();
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const conciliacion = useMemo(() => conciliarPagos(pagos, montoUSD, tasa), [pagos, montoUSD, tasa]);
+  const cubierto = conciliacion !== null && conciliacion.estado !== 'FALTA';
+  /** Lo que hay que transferir ahora: el total o, si ya hubo un pago, lo que falta */
+  const aPagarBs = conciliacion?.estado === 'FALTA' ? -conciliacion.diferenciaBs : montoBs;
 
+  const bancoComercio = BANCOS_VENEZUELA.find((b) => b.nombre === datosComercio.banco || datosComercio.banco?.includes(b.nombre));
+  const bancoTexto = datosComercio.banco ? `${datosComercio.banco}${bancoComercio ? ` (${bancoComercio.codigo})` : ''}` : 'Banco de Venezuela (0102)';
+  const textoTodo = [
+    'Pago Móvil Electro Shop',
+    `Banco: ${bancoTexto}`,
+    `Teléfono: ${datosComercio.telefono ?? ''}`,
+    `RIF/Cédula: ${datosComercio.cedula ?? ''}`,
+    `Monto: ${montoParaCopiar(aPagarBs)}`,
+  ].join('\n');
 
-    // Obtener banco seleccionado
-    const bancoSeleccionado = BANCOS_VENEZUELA.find(b => b.codigo === formData.bancoOrigen);
+  const bancoElegido = BANCOS_VENEZUELA.find((b) => b.codigo === banco);
+  const bancosFiltrados = useMemo(() => {
+    const t = buscarBanco.trim().toLowerCase();
+    return t ? BANCOS_VENEZUELA.filter((b) => b.nombre.toLowerCase().includes(t) || b.nombreCorto.toLowerCase().includes(t) || b.codigo.includes(t)) : BANCOS_VENEZUELA;
+  }, [buscarBanco]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        // Limpiar resultado anterior
-        if (resultado) setResultado(null);
-    };
+  const refLimpia = referencia.replace(/\D/g, '');
+  const montoDeclarado = mostrarOtroMonto && otroMonto.trim() ? leerMontoBs(otroMonto) : null;
+  const puedeVerificar = !verificando && refLimpia.length >= 4 && Boolean(banco) && Boolean(cedula.trim()) && Boolean(telefono.trim()) && Boolean(fecha)
+    && (!mostrarOtroMonto || !otroMonto.trim() || montoDeclarado !== null);
 
-    const handleSelectBanco = (banco: BancoVenezuela) => {
-        setFormData(prev => ({ ...prev, bancoOrigen: banco.codigo }));
-        setShowBankDropdown(false);
-        setBankSearchTerm('');
-        if (resultado) setResultado(null);
-    };
-
-    // Handle image upload
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            toast.error('Solo se permiten archivos de imagen');
-            return;
-        }
-
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('La imagen no puede superar 5MB');
-            return;
-        }
-
-        setUploadingImage(true);
-
-        try {
-            // Convert to base64 for preview and storage
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setComprobante(reader.result as string);
-                setUploadingImage(false);
-            };
-            reader.onerror = () => {
-                toast.error('Error al cargar la imagen');
-                setUploadingImage(false);
-            };
-            reader.readAsDataURL(file);
-        } catch (error) {
-            console.error('Error uploading image:', error);
-            toast.error('Error al subir la imagen');
-            setUploadingImage(false);
-        }
-    };
-
-    const removeImage = () => {
-        setComprobante(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
-
-    const handleVerificar = async () => {
-        // Validaciones básicas - mismas que en VerificarPagoMovilForm
-        if (!formData.cedulaPagador) {
-            setResultado({ success: false, verified: false, message: 'Ingresa la cédula del titular de la cuenta' });
-            return;
-        }
-
-        // Validar formato de cédula
-        const cedulaRegex = /^[VvEe]?\d{6,9}$/;
-        const cedulaLimpia = formData.cedulaPagador.trim().replace(/[.-]/g, '');
-        if (!cedulaRegex.test(cedulaLimpia)) {
-            setResultado({ success: false, verified: false, message: 'Formato de cédula inválido. Ejemplo: V12345678' });
-            return;
-        }
-
-        if (!formData.telefonoPagador) {
-            setResultado({ success: false, verified: false, message: 'Ingresa el teléfono desde donde realizaste el pago' });
-            return;
-        }
-        if (!formData.bancoOrigen) {
-            setResultado({ success: false, verified: false, message: 'Selecciona el banco desde donde realizaste el pago' });
-            return;
-        }
-        if (!formData.referencia) {
-            setResultado({ success: false, verified: false, message: 'Ingresa el número de referencia del pago' });
-            return;
-        }
-        if (!formData.fechaPago) {
-            setResultado({ success: false, verified: false, message: 'Selecciona la fecha del pago' });
-            return;
-        }
-
-        setVerificando(true);
-        setResultado(null);
-
-        try {
-            const response = await fetch('/api/pago-movil/verificar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    importe: montoEnBs, // Enviar monto en Bs para verificación
-                    contexto: 'ORDER',
-                    reqCed: true, // Validar cédula para mayor seguridad
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                setResultado({
-                    success: false,
-                    verified: false,
-                    message: data.error || data.message || 'Error al verificar el pago',
-                    duplicateReference: data.duplicateReference,
-                });
-                return;
-            }
-
-            setResultado(data);
-
-            if (data.verified) {
-                onVerified({
-                    verified: true,
-                    referencia: formData.referencia,
-                    telefonoPagador: formData.telefonoPagador,
-                    bancoOrigen: formData.bancoOrigen,
-                    fechaPago: formData.fechaPago,
-                    cedulaPagador: formData.cedulaPagador, // Agregado para trazabilidad
-                    comprobante: comprobante || undefined,
-                });
-            }
-        } catch {
-            const message = 'Error de conexion. Por favor, intenta nuevamente.';
-            setResultado({
-                success: false,
-                verified: false,
-                message,
-            });
-        } finally {
-            setVerificando(false);
-        }
-    };
-
-    const handleReset = () => {
-        setFormData({
-            telefonoPagador: '',
-            bancoOrigen: '',
-            referencia: '',
-            fechaPago: new Date().toISOString().split('T')[0],
-            cedulaPagador: '',
-        });
-        setResultado(null);
-        setComprobante(null);
-        onReset?.();
-    };
-
-    const canSubmit =
-        !verificando &&
-        formData.cedulaPagador &&
-        formData.telefonoPagador &&
-        formData.bancoOrigen &&
-        formData.referencia &&
-        formData.fechaPago;
-
-    // Si ya está verificado, mostrar estado de éxito
-    if (isVerified) {
-        return (
-            <div className={`${className}`}>
-                <div className="bg-success/5 border border-success/30 rounded-xl p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-success-strong rounded-full flex items-center justify-center flex-shrink-0 text-white">
-                            <FiCheck className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1">
-                            <h4 className="font-bold text-success-strong">Pago Móvil Verificado</h4>
-                            <p className="text-sm text-ink">
-                                Ref: {formData.referencia} - Banco: {bancoSeleccionado?.nombreCorto || formData.bancoOrigen}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={handleReset}
-                            className="text-brand-600 hover:text-brand-700 text-sm font-semibold underline"
-                        >
-                            Cambiar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
+  const verificar = async () => {
+    if (pagos.some((p) => p.referencia === refLimpia)) {
+      setError({ message: 'Ya verificaste esta referencia en esta compra.' });
+      return;
     }
+    setVerificando(true);
+    setError(null);
+    const importe = montoDeclarado ?? aPagarBs;
+    try {
+      const response = await fetch('/api/pago-movil/verificar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telefonoPagador: telefono.replace(/\D/g, ''),
+          bancoOrigen: banco,
+          referencia: refLimpia,
+          fechaPago: fecha,
+          cedulaPagador: cedula.trim().toUpperCase().replace(/[.\-\s]/g, ''),
+          importe: montoParaCopiar(importe),
+          contexto: 'ORDER',
+          reqCed: true,
+          cotizacion,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.verified) {
+        setError({
+          message: data.error || data.message || 'No se pudo verificar el pago.',
+          code: data.code,
+          montoNoCoincide: Boolean(data.montoNoCoincide),
+          duplicateReference: Boolean(data.duplicateReference),
+        });
+        if (data.montoNoCoincide) setMostrarOtroMonto(true);
+        return;
+      }
+      guardarBanco(banco);
+      const pagadoBs = typeof data.pagadoBs === 'number' && data.pagadoBs > 0 ? data.pagadoBs : importe;
+      const nuevos = [...pagos, {
+        referencia: refLimpia,
+        pagadoBs,
+        tasa: typeof data.tasa === 'number' && data.tasa > 0 ? data.tasa : null,
+        bancoOrigen: banco,
+        telefonoPagador: telefono.replace(/\D/g, ''),
+        cedulaPagador: cedula.trim().toUpperCase(),
+        fechaPago: fecha,
+      }];
+      onPagosChange(nuevos);
+      setReferencia('');
+      setOtroMonto('');
+      setMostrarOtroMonto(false);
+      const resultado = conciliarPagos(nuevos, montoUSD, tasa);
+      if (resultado?.estado === 'FALTA') toast(`Recibimos tu pago. Te faltan ${formatVES(-resultado.diferenciaBs)}.`, { icon: <FiAlertCircle className="h-5 w-5 text-warning-strong" aria-hidden="true" /> });
+      else toast.success('Pago Móvil verificado');
+    } catch {
+      setError({ message: 'Sin conexión. Revisa tu internet e intenta de nuevo.' });
+    } finally {
+      setVerificando(false);
+    }
+  };
 
+  if (!(montoBs > 0) || !(tasa > 0)) {
     return (
-        <div className={`space-y-4 ${className}`}>
-            {/* Header con icono - CENTRADO */}
-            <div className="flex flex-col items-center text-center gap-2 mb-4">
-                <div className="w-12 h-12 bg-brand-500/10 rounded-xl flex items-center justify-center text-brand-600">
-                    <FiShield className="w-6 h-6 text-brand-600" />
-                </div>
-                <div>
-                    <h3 className="text-lg font-bold text-ink">Verificación de Pago Móvil</h3>
-                    <p className="text-xs text-muted">Completa los datos para validar tu pago</p>
-                </div>
-            </div>
-
-            {/* Datos del comercio */}
-            <div className="relative overflow-hidden bg-surface border border-line rounded-2xl p-5">
-                {/* Content */}
-                <div>
-                    {/* Title */}
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="w-2 h-2 bg-success rounded-full" />
-                        <span className="text-xs font-bold text-muted uppercase tracking-widest">Datos para transferir</span>
-                    </div>
-
-                    {/* Grid of payment details */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                        {/* Teléfono */}
-                        <div className="bg-white rounded-xl p-3 border border-line text-center">
-                            <div className="flex items-center justify-center gap-1.5 mb-1">
-                                <FiPhone className="w-3.5 h-3.5 text-brand-600" />
-                                <span className="text-xs font-semibold text-muted uppercase">Teléfono</span>
-                            </div>
-                            <p className="text-base font-bold text-ink tracking-wide">{datosComercio.telefono || '-'}</p>
-                        </div>
-
-                        {/* Cédula/RIF */}
-                        <div className="bg-white rounded-xl p-3 border border-line text-center">
-                            <div className="flex items-center justify-center gap-1.5 mb-1">
-                                <FiCreditCard className="w-3.5 h-3.5 text-brand-600" />
-                                <span className="text-xs font-semibold text-muted uppercase">CI/RIF</span>
-                            </div>
-                            <p className="text-base font-bold text-ink tracking-wide">{datosComercio.cedula || '-'}</p>
-                        </div>
-
-                        {/* Banco */}
-                        <div className="bg-white rounded-xl p-3 border border-line text-center">
-                            <div className="flex items-center justify-center gap-1.5 mb-1">
-                                <svg className="w-3.5 h-3.5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                                <span className="text-xs font-semibold text-muted uppercase">Banco</span>
-                            </div>
-                            <p className="text-sm font-bold text-ink leading-tight">{(datosComercio.banco || 'BDV').replace('Banco de ', '')}</p>
-                        </div>
-
-                        {/* QR Button */}
-                        <button
-                            type="button"
-                            onClick={() => setShowQRModal(true)}
-                            className="bg-white rounded-xl p-3 border border-line hover:bg-surface transition-colors group cursor-pointer text-center"
-                        >
-                            <div className="flex items-center justify-center gap-1.5 mb-1">
-                                <HiOutlineQrcode className="w-3.5 h-3.5 text-brand-600" />
-                                <span className="text-xs font-semibold text-muted uppercase">Código QR</span>
-                            </div>
-                            <p className="text-sm font-bold text-brand-600 group-hover:text-brand-700 transition-colors flex items-center justify-center gap-1">
-                                Ver QR
-                                <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </p>
-                        </button>
-                    </div>
-
-                    {/* Monto destacado */}
-                    <div className="bg-warning/10 border border-warning/30 rounded-xl p-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-warning/20 rounded-xl flex items-center justify-center">
-                                    <span className="text-xl font-bold text-warning-strong">Bs</span>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-semibold text-warning-strong uppercase">Monto a transferir</p>
-                                    <p className="text-2xl font-bold text-ink tracking-tight">{montoEnBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-xs font-semibold text-muted uppercase">Equivalente</p>
-                                <p className="text-lg font-bold text-ink">{formatUSD(montoEsperado)}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Formulario de verificación */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Cédula del pagador */}
-                <div>
-                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Tu Cédula <span className="text-deal">*</span>
-                    </label>
-                    <div className="form-field">
-                        <FiCreditCard className="field-icon text-muted" />
-                        <input
-                            type="text"
-                            name="cedulaPagador"
-                            value={formData.cedulaPagador}
-                            onChange={handleChange}
-                            placeholder="V12345678"
-                            maxLength={10}
-                            autoCapitalize="characters"
-                            disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed"
-                        />
-                    </div>
-                    <p className="text-xs text-muted mt-1">Cédula del titular de la cuenta</p>
-                </div>
-
-                {/* Teléfono del pagador */}
-                <div>
-                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Tu Teléfono <span className="text-deal">*</span>
-                    </label>
-                    <div className="form-field">
-                        <FiPhone className="field-icon text-muted" />
-                        <input
-                            type="tel"
-                            name="telefonoPagador"
-                            value={formData.telefonoPagador}
-                            onChange={handleChange}
-                            placeholder="04121234567"
-                            inputMode="tel"
-                            maxLength={11}
-                            disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed"
-                        />
-                    </div>
-                </div>
-
-                {/* Banco origen */}
-                <div className="relative">
-                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Tu Banco
-                    </label>
-                    <button
-                        type="button"
-                        onClick={() => !verificando && setShowBankDropdown(!showBankDropdown)}
-                        disabled={verificando}
-                        className="w-full flex items-center justify-between px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm bg-white disabled:bg-surface disabled:cursor-not-allowed"
-                    >
-                        <span className={bancoSeleccionado ? 'text-ink' : 'text-muted'}>
-                            {bancoSeleccionado ? bancoSeleccionado.nombreCorto : 'Selecciona...'}
-                        </span>
-                        <FiChevronDown className={`w-4 h-4 text-muted transition-transform ${showBankDropdown ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {showBankDropdown && (
-                        <div className="absolute z-20 mt-1 w-full bg-white border border-line rounded-xl shadow-xl max-h-64 overflow-hidden animate-fadeIn">
-                            <div className="p-2 border-b border-line">
-                                <input
-                                    type="text"
-                                    value={bankSearchTerm}
-                                    onChange={(e) => setBankSearchTerm(e.target.value)}
-                                    placeholder="Buscar banco..."
-                                    className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500"
-                                    autoFocus
-                                />
-                            </div>
-                            <div className="max-h-48 overflow-y-auto">
-                                {filteredBancos.length > 0 ? (
-                                    filteredBancos.map(banco => (
-                                        <button
-                                            key={banco.codigo}
-                                            type="button"
-                                            onClick={() => handleSelectBanco(banco)}
-                                            className={`w-full px-4 py-2.5 text-left text-sm hover:bg-brand-500/5 transition-colors flex items-center justify-between ${formData.bancoOrigen === banco.codigo ? 'bg-brand-500/10 text-brand-600' : 'text-ink'
-                                                }`}
-                                        >
-                                            <span>{banco.nombreCorto}</span>
-                                            <span className="text-xs text-muted">{banco.codigo}</span>
-                                        </button>
-                                    ))
-                                ) : (
-                                    <div className="px-4 py-3 text-sm text-muted text-center">
-                                        No se encontraron bancos
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Referencia */}
-                <div>
-                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Referencia
-                    </label>
-                    <div className="form-field">
-                        <FiHash className="field-icon text-muted" />
-                        <input
-                            type="text"
-                            name="referencia"
-                            value={formData.referencia}
-                            onChange={handleChange}
-                            placeholder="Ej: 12345678"
-                            maxLength={8}
-                            inputMode="numeric"
-                            disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed"
-                        />
-                    </div>
-                    <p className="text-xs text-muted mt-1">4 a 8 dígitos numéricos</p>
-                </div>
-
-                {/* Fecha del pago */}
-                <div>
-                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Fecha del Pago <span className="text-deal">*</span>
-                    </label>
-                    <div className="form-field">
-                        <FiCalendar className="field-icon text-muted" />
-                        <input
-                            type="date"
-                            name="fechaPago"
-                            value={formData.fechaPago}
-                            onChange={handleChange}
-                            max={new Date().toISOString().split('T')[0]}
-                            disabled={verificando}
-                            className="w-full pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed"
-                        />
-                    </div>
-                </div>
-
-                {/* Subida de comprobante */}
-                <div>
-                    <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
-                        Comprobante (Opcional)
-                    </label>
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                    />
-
-                    {!comprobante ? (
-                        <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={uploadingImage}
-                            className="w-full py-2.5 px-4 border-2 border-dashed border-line rounded-xl hover:border-brand-500 hover:bg-brand-500/5/50 transition-all flex items-center justify-center gap-2 group"
-                        >
-                            {uploadingImage ? (
-                                <FiLoader className="w-4 h-4 text-brand-500 animate-spin" />
-                            ) : (
-                                <>
-                                    <FiUpload className="w-4 h-4 text-muted group-hover:text-brand-500" />
-                                    <span className="text-sm text-muted group-hover:text-brand-500">
-                                        Subir captura
-                                    </span>
-                                </>
-                            )}
-                        </button>
-                    ) : (
-                        <div className="relative inline-flex items-center gap-2">
-                            <Image
-                                src={comprobante}
-                                alt="Comprobante"
-                                width={40}
-                                height={40}
-                                className="rounded-lg border border-success/30 object-cover"
-                            />
-                            <span className="text-xs text-success-strong font-medium">Subido</span>
-                            <button
-                                type="button"
-                                onClick={removeImage}
-                                className="w-5 h-5 bg-deal text-white rounded-full flex items-center justify-center hover:bg-deal/90 transition-colors shadow-md"
-                            >
-                                <FiX className="w-3 h-3" />
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Resultado de la verificación */}
-            {resultado && (
-                <div
-                    className={`rounded-2xl p-4 border-2 animate-fadeIn ${resultado.verified
-                        ? 'bg-success/5 border-success/30'
-                        : resultado.duplicateReference
-                            ? 'bg-warning/10 border-warning/30'
-                            : 'bg-deal-bg border-deal/30'
-                        }`}
-                >
-                    <div className="flex items-start gap-3">
-                        <div
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ${resultado.verified
-                                ? 'bg-success-strong'
-                                : resultado.duplicateReference
-                                    ? 'bg-warning'
-                                    : 'bg-deal'
-                                }`}
-                        >
-                            {resultado.verified ? (
-                                <FiCheck className="w-5 h-5 text-white" />
-                            ) : (
-                                <FiAlertCircle className="w-5 h-5 text-white" />
-                            )}
-                        </div>
-                        <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                                <h4
-                                    className={`font-bold ${resultado.verified
-                                        ? 'text-success-strong'
-                                        : resultado.duplicateReference
-                                            ? 'text-warning-strong'
-                                            : 'text-deal'
-                                        }`}
-                                >
-                                    {resultado.verified
-                                        ? 'Pago Verificado Exitosamente'
-                                        : resultado.duplicateReference
-                                            ? 'Referencia Ya Utilizada'
-                                            : 'Verificación Fallida'}
-                                </h4>
-                                {resultado.code && !resultado.verified && (
-                                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-line text-ink-soft">
-                                        Código: {resultado.code}
-                                    </span>
-                                )}
-                            </div>
-                            <p
-                                className={`text-sm mt-1 leading-relaxed ${resultado.verified
-                                    ? 'text-success-strong'
-                                    : resultado.duplicateReference
-                                        ? 'text-warning-strong'
-                                        : 'text-deal'
-                                    }`}
-                            >
-                                {resultado.message}
-                            </p>
-                            {!resultado.verified && !resultado.duplicateReference && (
-                                <div className="mt-3 pt-3 border-t border-deal/30">
-                                    <p className="text-xs text-deal/80 font-medium">
-                                        Sugerencias:
-                                    </p>
-                                    <ul className="mt-1 text-xs text-deal/70 space-y-0.5">
-                                        <li>• Verifica que la referencia sea exacta (revisa tu SMS o app bancaria)</li>
-                                        <li>• Confirma que el monto transferido sea exactamente Bs. {montoEnBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</li>
-                                        <li>• Asegúrate de seleccionar el banco correcto</li>
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Botón de verificar */}
-            <button
-                type="button"
-                onClick={handleVerificar}
-                disabled={!canSubmit}
-                className="w-full py-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors"
-            >
-                {verificando ? (
-                    <>
-                        <FiLoader className="w-5 h-5 animate-spin" />
-                        Verificando con Banco de Venezuela...
-                    </>
-                ) : (
-                    <>
-                        <FiShield className="w-5 h-5" />
-                        Verificar Pago
-                    </>
-                )}
-            </button>
-
-            <p className="text-xs text-center text-muted">
-                La verificacion se realiza en tiempo real. No podras continuar sin verificar el pago.
-            </p>
-
-            {/* QR Modal - Using Portal to render outside of parent constraints */}
-            {showQRModal && mounted && createPortal(
-                <div
-                    className={adminModalOverlay}
-                    onClick={() => setShowQRModal(false)}
-                >
-                    {/* Modal Content */}
-                    <div
-                        className={`${adminModalPanel} max-w-sm`}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Header */}
-                        <div className={adminModalHeader}>
-                            <div className="flex items-center gap-2.5">
-                                <HiOutlineQrcode className="w-5 h-5 text-brand-600" />
-                                <div>
-                                    <h3 className={adminModalTitle}>Código QR Pago Móvil</h3>
-                                    <p className="text-xs text-muted">Escanea con tu banco para pagar</p>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowQRModal(false)}
-                                className="p-1.5 text-muted hover:text-ink rounded-lg transition-colors"
-                                aria-label="Cerrar modal"
-                            >
-                                <FiX className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        {/* QR Image */}
-                        <div className={`${adminModalBody} flex flex-col items-center text-center p-6`}>
-                            <div className="bg-white p-4 rounded-xl border border-line shadow-sm mb-4">
-                                <Image
-                                    src="/images/qrbdv.png"
-                                    alt="Código QR Pago Móvil BDV"
-                                    width={280}
-                                    height={280}
-                                    className="rounded-lg"
-                                />
-                            </div>
-                            <p className="text-xs text-muted text-center mb-3">
-                                Escanea este código QR con tu app bancaria o VeQR para realizar el pago.
-                            </p>
-                            <div className="inline-flex items-center gap-1.5 text-xs text-brand-600 bg-brand-500/10 px-3 py-1.5 rounded-lg font-medium">
-                                <FiShield className="w-3.5 h-3.5" />
-                                <span>Pago seguro con Banco de Venezuela</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-
-            </div>
+      <div className={`rounded-2xl border border-line bg-white p-4 text-sm text-ink-soft ${className}`}>
+        Calculando el monto exacto en bolívares…
+      </div>
     );
+  }
+
+  return (
+    <div className={`space-y-4 ${className}`}>
+      {/* Pagos ya verificados */}
+      {pagos.length > 0 && conciliacion && (
+        <div className={`rounded-2xl border p-4 ${cubierto ? 'border-success/40 bg-success/5' : 'border-warning/40 bg-warning/10'}`} role="status">
+          <div className="flex items-start gap-3">
+            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white ${cubierto ? 'bg-success-strong' : 'bg-warning-strong'}`}>
+              {cubierto ? <FiCheck className="h-5 w-5" aria-hidden="true" /> : <FiAlertCircle className="h-5 w-5" aria-hidden="true" />}
+            </span>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className={`font-semibold ${cubierto ? 'text-success-strong' : 'text-warning-strong'}`}>
+                {cubierto ? 'Pago verificado' : `Te faltan ${formatVES(-conciliacion.diferenciaBs)}`}
+              </p>
+              <p className="text-sm text-ink-soft">
+                {conciliacion.estado === 'EXACTO' && 'El banco confirmó el monto exacto. Ya puedes confirmar tu pedido.'}
+                {conciliacion.estado === 'REDONDEO' && `Hay una diferencia de ${formatVES(Math.abs(conciliacion.diferenciaBs))} por redondeo: no tienes que hacer nada.`}
+                {conciliacion.estado === 'SOBREPAGO' && `Pagaste ${formatVES(conciliacion.diferenciaBs)} de más. Al confirmar tu pedido pasamos ${formatUSD(conciliacion.diferenciaUSD)} a tu saldo.`}
+                {conciliacion.estado === 'FALTA' && `Recibimos ${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}. Haz otro Pago Móvil solo por la diferencia; lo que ya pagaste queda registrado.`}
+              </p>
+              <ul className="space-y-0.5 pt-1 text-xs text-muted">
+                {pagos.map((p) => (
+                  <li key={p.referencia} className="flex items-center gap-1.5">
+                    <FiCheckCircle className="h-3.5 w-3.5 shrink-0 text-success-strong" aria-hidden="true" />
+                    Ref. {p.referencia} · {formatVES(p.pagadoBs)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!cubierto && (
+        <>
+          {/* Paso 1: los datos para pagar, en un solo bloque */}
+          <section className="overflow-hidden rounded-2xl border border-brand-200 bg-white" aria-labelledby="pm-paso-1">
+            <div className="bg-brand-50 px-3 py-3 sm:px-4">
+              <h3 id="pm-paso-1" className="text-sm font-semibold text-ink">
+                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 text-xs text-white">1</span>
+                {pagos.length > 0 ? 'Transfiere lo que falta' : 'Haz el Pago Móvil desde tu banco'}
+              </h3>
+            </div>
+            <div className="space-y-4 p-3 sm:p-4">
+              <div>
+                <p className="text-xs font-medium text-muted">Monto exacto</p>
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-3xl font-bold tabular-nums tracking-tight text-ink">{formatVES(aPagarBs)}</p>
+                  <BotonCopiar texto={montoParaCopiar(aPagarBs)} etiqueta="Copiar monto" />
+                </div>
+                <p className="mt-1 text-xs text-muted">
+                  {pagos.length > 0 ? `De un total de ${formatVES(montoBs)}` : `${formatUSD(montoUSD)} a ${formatVES(tasa)} por dólar`}
+                </p>
+              </div>
+
+              <dl className="grid grid-cols-1 gap-x-4 gap-y-2 border-t border-line pt-3 text-sm sm:grid-cols-3">
+                <div className="flex justify-between gap-2 sm:block">
+                  <dt className="text-muted">Banco</dt>
+                  <dd className="font-semibold text-ink">{bancoTexto}</dd>
+                </div>
+                <div className="flex justify-between gap-2 sm:block">
+                  <dt className="text-muted">Teléfono</dt>
+                  <dd className="font-semibold tabular-nums text-ink">{datosComercio.telefono || '-'}</dd>
+                </div>
+                <div className="flex justify-between gap-2 sm:block">
+                  <dt className="text-muted">RIF o cédula</dt>
+                  <dd className="font-semibold text-ink">{datosComercio.cedula || '-'}</dd>
+                </div>
+              </dl>
+
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="flex-1 [&>button]:w-full">
+                  <BotonCopiar texto={textoTodo} etiqueta="Copiar todos los datos" principal />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setVerQR(true)}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-semibold text-ink hover:bg-surface"
+                >
+                  <HiOutlineQrcode className="h-4 w-4" aria-hidden="true" /> Ver QR
+                </button>
+              </div>
+              <p className="text-xs text-muted">Transfiere el monto exacto: el banco busca tu pago por referencia y monto.</p>
+            </div>
+          </section>
+
+          {/* Paso 2: confirmar con la referencia */}
+          <section className="rounded-2xl border border-line bg-white" aria-labelledby="pm-paso-2">
+            <div className="border-b border-line px-3 py-3 sm:px-4">
+              <h3 id="pm-paso-2" className="text-sm font-semibold text-ink">
+                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 text-xs text-white">2</span>
+                Escribe la referencia de tu pago
+              </h3>
+            </div>
+            <div className="space-y-4 p-3 sm:p-4">
+              <div>
+                <label htmlFor="pm-referencia" className="mb-1.5 block text-sm font-semibold text-ink">Número de referencia</label>
+                <input
+                  id="pm-referencia"
+                  value={referencia}
+                  onChange={(e) => { setReferencia(e.target.value.replace(/\D/g, '').slice(0, 8)); setError(null); }}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="Ej: 123456"
+                  disabled={verificando}
+                  className={`${inputClass} h-12 text-lg tracking-widest`}
+                />
+                <p className="mt-1 text-xs text-muted">Está en el SMS o el comprobante de tu banco (4 a 8 dígitos).</p>
+              </div>
+
+              <div className="relative">
+                <p className="mb-1.5 text-sm font-semibold text-ink" id="pm-banco-label">Banco desde el que pagaste</p>
+                <button
+                  type="button"
+                  onClick={() => setBancosAbiertos((v) => !v)}
+                  disabled={verificando}
+                  aria-labelledby="pm-banco-label"
+                  aria-expanded={bancosAbiertos}
+                  className={`${inputClass} flex items-center justify-between text-left`}
+                >
+                  <span className={bancoElegido ? 'text-ink' : 'text-subtle'}>{bancoElegido ? `${bancoElegido.nombre} (${bancoElegido.codigo})` : 'Elige tu banco'}</span>
+                  <FiChevronDown className={`h-4 w-4 text-muted transition-transform ${bancosAbiertos ? 'rotate-180' : ''}`} aria-hidden="true" />
+                </button>
+                {bancosAbiertos && (
+                  <div className="absolute z-[var(--z-dropdown)] mt-1 w-full overflow-hidden rounded-xl border border-line bg-white shadow-lg">
+                    <div className="border-b border-line p-2">
+                      <input value={buscarBanco} onChange={(e) => setBuscarBanco(e.target.value)} placeholder="Buscar banco" aria-label="Buscar banco" className={inputClass} />
+                    </div>
+                    <ul className="max-h-56 overflow-y-auto" role="listbox" aria-label="Bancos">
+                      {bancosFiltrados.map((b) => (
+                        <li key={b.codigo}>
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={banco === b.codigo}
+                            onClick={() => { setBanco(b.codigo); setBancosAbiertos(false); setBuscarBanco(''); setError(null); }}
+                            className={`flex min-h-11 w-full items-center justify-between px-4 text-left text-sm hover:bg-brand-50 ${banco === b.codigo ? 'bg-brand-50 font-semibold text-brand-600' : 'text-ink'}`}
+                          >
+                            {b.nombre}
+                            <span className="text-xs text-muted">{b.codigo}</span>
+                          </button>
+                        </li>
+                      ))}
+                      {bancosFiltrados.length === 0 && <li className="px-4 py-3 text-sm text-muted">No hay bancos con ese nombre</li>}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* Datos del pagador: vienen del perfil; se cambian solo si pagó otra persona u otro día */}
+              {editarPagador ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div>
+                    <label htmlFor="pm-cedula" className="mb-1.5 block text-sm font-semibold text-ink">Cédula del titular</label>
+                    <input id="pm-cedula" value={cedula} onChange={(e) => setCedula(e.target.value)} placeholder="V12345678" maxLength={11} autoCapitalize="characters" className={inputClass} />
+                  </div>
+                  <div>
+                    <label htmlFor="pm-telefono" className="mb-1.5 block text-sm font-semibold text-ink">Teléfono que pagó</label>
+                    <input id="pm-telefono" value={telefono} onChange={(e) => setTelefono(e.target.value.replace(/[^\d]/g, '').slice(0, 11))} inputMode="tel" placeholder="04121234567" className={inputClass} />
+                  </div>
+                  <div>
+                    <label htmlFor="pm-fecha" className="mb-1.5 block text-sm font-semibold text-ink">Fecha del pago</label>
+                    <input id="pm-fecha" type="date" value={fecha} max={hoyCaracas()} onChange={(e) => setFecha(e.target.value)} className={inputClass} />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-3 rounded-xl bg-surface px-3 py-2 text-sm">
+                  <p className="min-w-0 text-ink-soft">
+                    Pagaste desde <span className="font-semibold text-ink">{cedula}</span> · <span className="font-semibold tabular-nums text-ink">{telefono}</span>
+                    {fecha === hoyCaracas() ? ' · hoy' : ` · ${fecha}`}
+                  </p>
+                  <button type="button" onClick={() => setEditarPagador(true)} className="inline-flex h-11 shrink-0 items-center gap-1.5 px-2 text-sm font-semibold text-brand-600 hover:text-brand-700">
+                    <FiEdit2 className="h-4 w-4" aria-hidden="true" /> Cambiar
+                  </button>
+                </div>
+              )}
+
+              {mostrarOtroMonto ? (
+                <div>
+                  <label htmlFor="pm-otro-monto" className="mb-1.5 block text-sm font-semibold text-ink">Monto que transferiste (Bs.)</label>
+                  <input
+                    id="pm-otro-monto"
+                    value={otroMonto}
+                    onChange={(e) => setOtroMonto(e.target.value)}
+                    inputMode="decimal"
+                    placeholder={montoParaCopiar(aPagarBs)}
+                    className={inputClass}
+                  />
+                  <p className="mt-1 text-xs text-muted">
+                    Escríbelo exacto, como sale en tu comprobante. Si pagaste de más, la diferencia va a tu saldo; si falta algo, pagas solo eso.
+                  </p>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setMostrarOtroMonto(true)} className="h-11 text-sm font-semibold text-brand-600 hover:text-brand-700">
+                  ¿Transferiste otro monto?
+                </button>
+              )}
+
+              {error && (
+                <div className={`rounded-xl border p-3 text-sm ${error.duplicateReference ? 'border-warning/40 bg-warning/10 text-warning-strong' : 'border-deal/30 bg-deal-bg text-deal'}`} role="alert">
+                  <p className="font-semibold">{error.duplicateReference ? 'Referencia ya usada' : 'No pudimos verificar el pago'}</p>
+                  <p className="mt-1">{error.message}</p>
+                  {error.montoNoCoincide && (
+                    <p className="mt-2 text-ink-soft">
+                      Buscamos un pago de {formatVES(montoDeclarado ?? aPagarBs)}. Si en tu comprobante sale otro monto, escríbelo arriba en &quot;Monto que transferiste&quot;.
+                    </p>
+                  )}
+                  {typeof error.code === 'number' && <p className="mt-1 text-xs text-muted">Código del banco: {error.code}</p>}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={verificar}
+                disabled={!puedeVerificar}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-500 font-semibold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {verificando ? <FiLoader className="h-5 w-5 animate-spin" aria-hidden="true" /> : <FiShield className="h-5 w-5" aria-hidden="true" />}
+                {verificando ? 'Consultando al Banco de Venezuela…' : 'Verificar pago'}
+              </button>
+            </div>
+          </section>
+        </>
+      )}
+
+      {verQR && mounted && createPortal(
+        <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setVerQR(false); }}>
+          <div className={`${adminModalPanel} sm:max-w-sm`} role="dialog" aria-modal="true" aria-labelledby="pm-qr-titulo">
+            <div className={adminModalHeader}>
+              <h3 id="pm-qr-titulo" className={adminModalTitle}>Código QR Pago Móvil</h3>
+              <button type="button" onClick={() => setVerQR(false)} className="flex h-11 w-11 items-center justify-center rounded-xl text-muted hover:bg-surface hover:text-ink" aria-label="Cerrar">
+                <FiX className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+            <div className={`${adminModalBody} flex flex-col items-center gap-3 text-center`}>
+              <Image src="/images/qrbdv.png" alt="Código QR de Pago Móvil del Banco de Venezuela" width={280} height={280} className="rounded-lg border border-line" />
+              <p className="text-sm text-ink-soft">Escanéalo con tu app bancaria. Si el QR no trae el monto, escribe {formatVES(aPagarBs)}.</p>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
 }

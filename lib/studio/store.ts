@@ -6,6 +6,8 @@ import { publicProductInclude, toPublicProduct, type PublicProduct } from '@/lib
 import { agotada, conOfertas, vigentes } from '@/lib/promotions';
 import { publicReviewerName } from '@/lib/queries/product';
 import { randomBytes } from 'crypto';
+import { existsSync } from 'fs';
+import path from 'path';
 import { getPublicSettings } from '@/lib/site-settings';
 import { roundMoney } from '@/lib/pricing';
 import {
@@ -36,6 +38,16 @@ const PAYMENT_LABEL: Record<PaymentMethodType, string> = {
 
 /** Rutas de la tienda: solo esas se pueden pintar en el canvas sin bloquear la descarga */
 const localPath = (value: string | null | undefined) => (value && /^\/(?!\/)/.test(value) ? value : null);
+
+/**
+ * C-117: si la foto del producto la armó la tienda con la cinta "ES", su original transparente está al lado
+ * (<nombre>.orig.png). La historia usa ese: sin la cinta y sin fondo que recortar.
+ */
+function studioImage(value: string | null): string | null {
+  const m = value?.match(/^\/api\/uploads\/products\/(product-[\w-]+)\.webp$/);
+  if (!m) return value;
+  return existsSync(path.join(process.cwd(), 'public', 'uploads', 'products', `${m[1]}.orig.png`)) ? `/api/uploads/products/${m[1]}.orig.png` : value;
+}
 
 export async function studioStoreInfo(): Promise<StudioStoreInfo> {
   const [settings, methods, rateRow] = await Promise.all([
@@ -81,7 +93,7 @@ function toStudioProduct(p: PublicProduct, published: boolean, rateVES: number):
     id: p.id,
     name: p.name,
     url: `${BASE_URL}/productos/${p.slug}`,
-    image: localPath(p.mainImage) ?? localPath(p.images[0]),
+    image: studioImage(localPath(p.mainImage) ?? localPath(p.images[0])),
     categoryName: p.category.name,
     priceUSD,
     compareAtPriceUSD: compare,

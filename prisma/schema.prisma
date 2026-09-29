@@ -52,6 +52,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   orders        Order[]
+  warrantyClaims WarrantyClaim[]
   reviews       Review[]
   addresses     Address[]
   reservations  StockReservation[]
@@ -645,6 +646,7 @@ model Order {
   cancelledAt   DateTime?
 
   items         OrderItem[]
+  warrantyClaims WarrantyClaim[]
   promotionRedemptions PromotionRedemption[]
 
   createdAt     DateTime    @default(now())
@@ -717,6 +719,7 @@ model OrderItem {
   productCondition    ProductCondition?
   conditionGrade      ConditionGrade?
   warrantyDays        Int?
+  warrantyClaims      WarrantyClaim[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1755,4 +1758,89 @@ enum ProductPackaging {
   ORIGINAL
   GENERIC
   NONE
+}
+
+// C-122: solicitudes de garantía con estados e historial (antes, un mensaje más en Mensajes y Solicitudes)
+enum WarrantyClaimStatus {
+  RECEIVED
+  IN_REVIEW
+  WAITING_CUSTOMER
+  APPROVED
+  RESOLVED
+  REJECTED
+}
+
+/// Cómo se resolvió: la tienda repara; si no puede, cambia; si tampoco, devuelve al saldo (términos 3.0, §6)
+enum WarrantyResolution {
+  REPAIR
+  REPLACEMENT
+  BALANCE_REFUND
+}
+
+enum WarrantyEventKind {
+  CREATED
+  STATUS
+  MESSAGE
+  NOTE
+}
+
+model WarrantyClaim {
+  id          String    @id @default(cuid())
+  /// Número para hablar con el cliente: "G-0012"
+  number      Int       @unique @default(autoincrement())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id])
+  orderItemId String
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
+
+  /// Clave de WARRANTY_REASONS (lib/product-condition.ts)
+  reason        String
+  description   String
+  status        WarrantyClaimStatus @default(RECEIVED)
+  resolution    WarrantyResolution?
+  /// true si lo último lo hizo el cliente (crear o responder): el contador del menú del admin
+  awaitingStaff Boolean             @default(true)
+  /// Resuelta con devolución al saldo: cuánto y con qué movimiento (una sola vez)
+  refundUSD           Decimal?
+  refundTransactionId String?       @unique
+
+  // Copia al pedirla: el plazo y el producto no cambian si después se edita algo
+  productName      String
+  productCondition ProductCondition?
+  warrantyDays     Int
+  deliveredAt      DateTime
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
+
+  events WarrantyClaimEvent[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([orderItemId])
+  @@map("warranty_claims")
+}
+
+/// Historial: lo que ve el cliente (CREATED, STATUS, MESSAGE) y las notas internas del equipo (NOTE)
+model WarrantyClaimEvent {
+  id         String               @id @default(cuid())
+  claimId    String
+  claim      WarrantyClaim        @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  kind       WarrantyEventKind
+  /// true = lo escribió el cliente; false = el equipo
+  byCustomer Boolean
+  authorId   String?
+  authorName String?
+  /// Estado nuevo (en STATUS)
+  status     WarrantyClaimStatus?
+  message    String?
+  /// JSON: enlaces a fotos privadas (/api/uploads/warranty/...)
+  photos     String?
+  createdAt  DateTime             @default(now())
+
+  @@index([claimId, createdAt])
+  @@map("warranty_claim_events")
 }

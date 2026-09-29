@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { FiPrinter, FiUserX, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiArrowRight, FiCheckCircle, FiLoader, FiMonitor, FiSend } from 'react-icons/fi';
+import { FiPrinter, FiUser, FiUserX, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiArrowRight, FiCheckCircle, FiLoader, FiMonitor, FiSend } from 'react-icons/fi';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -42,6 +42,8 @@ import {
   adminDangerButton,
 } from '@/lib/admin-ui';
 import { useMontado } from '@/lib/hooks/useMontado';
+import { describirEntrega, describirPago, estadoPago, tonoEstadoOrden, type PagoMovilResumen } from '@/lib/order-pago';
+import { formatVES } from '@/lib/currency';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 
@@ -55,8 +57,14 @@ interface Order {
       customerType: string | null;
       companyName: string | null;
       taxId: string | null;
+      phone?: string | null;
+      idNumber?: string | null;
     };
   } | null;
+  /** C-126: Pagos Móvil verificados y vinculados a la orden */
+  pagosMovil?: PagoMovilResumen[];
+  totalVES?: number | string | null;
+  exchangeRateVES?: number | string | null;
   guestName?: string | null;
   guestEmail?: string | null;
   totalUSD: number;
@@ -115,6 +123,17 @@ interface Order {
 // el de MRW apuntaba a www.mrw.com.ve, que ya no existe.
 const SHIPPING_CARRIERS = EMPRESAS_GUIA.map((id) => ({ id, name: NOMBRE_EMPRESA[id] }));
 
+const PAGE_SIZE = 50;
+
+interface OrdersSummary {
+  total: number;
+  revenueUSD: number;
+  byStatus: Record<string, number>;
+  pending: number;
+  inProgress: number;
+  delivered: number;
+}
+
 // Order flow statuses in sequence - PHYSICAL PRODUCTS
 const ORDER_FLOW = [
   { status: 'PENDING', label: 'Pedido', icon: FiPackage },
@@ -164,44 +183,53 @@ export default function OrdersPage() {
   useBodyScrollLock(showShippingModal);
   useBodyScrollLock(showCancelModal);
 
-  const stats = useMemo(() => {
-    const totalRevenue = orders.reduce((sum, o) => o.status !== 'CANCELLED' ? sum + (Number(o.totalUSD) || 0) : sum, 0);
-    const pendingCount = orders.filter(o => o.status === 'PENDING').length;
-    const processingCount = orders.filter(o => ['CONFIRMED', 'PAID', 'PROCESSING'].includes(o.status)).length;
-    const completedCount = orders.filter(o => o.status === 'DELIVERED').length;
-    return { total: orders.length, totalRevenue, pendingCount, processingCount, completedCount };
-  }, [orders]);
+  // C-126: las tarjetas y los contadores vienen del servidor y cuentan todas las órdenes. Antes se calculaban con la
+  // lista cargada, y la lista eran solo las últimas 25 (la API pagina y el panel no pedía más páginas)
+  const [summary, setSummary] = useState<OrdersSummary | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const stats = useMemo(() => ({
+    total: summary?.total ?? orders.length,
+    totalRevenue: summary?.revenueUSD ?? 0,
+    pendingCount: summary?.pending ?? 0,
+    processingCount: summary?.inProgress ?? 0,
+    completedCount: summary?.delivered ?? 0,
+  }), [summary, orders.length]);
 
-  const fetchOrders = async () => {
+  const normalizar = (order: Order): Order => {
+    const digitalCount = order.items?.filter((item) => item.product?.productType === 'DIGITAL').length || 0;
+    const totalCount = order.items?.length || 0;
+    return {
+      ...order,
+      totalUSD: Number(order.totalUSD) || 0,
+      hasDigital: digitalCount > 0,
+      isOnlyDigital: totalCount > 0 && digitalCount === totalCount,
+    };
+  };
+
+  const fetchOrders = async (nextPage = 1) => {
     try {
-      setLoading(true);
-      const url = filterStatus === 'all' ? '/api/orders' : `/api/orders?status=${filterStatus}`;
-      const response = await fetch(url);
-      if (response.ok) {
-        const result = await response.json();
-        // Handle both paginated format { orders: [...] } and legacy array format
-        const data = Array.isArray(result) ? result : (result.orders || []);
-        const normalizedOrders = data.map((order: Order) => {
-          const digitalCount = order.items?.filter((item) => item.product?.productType === 'DIGITAL').length || 0;
-          const totalCount = order.items?.length || 0;
-          return {
-            ...order,
-            totalUSD: Number(order.totalUSD) || 0,
-            hasDigital: digitalCount > 0,
-            isOnlyDigital: totalCount > 0 && digitalCount === totalCount,
-          };
-        });
-        setOrders(normalizedOrders);
-      }
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-        toast.error('No se pudieron cargar las órdenes');
+      if (nextPage === 1) setLoading(true); else setLoadingMore(true);
+      const params = new URLSearchParams({ page: String(nextPage), limit: String(PAGE_SIZE) });
+      if (filterStatus !== 'all') params.set('status', filterStatus);
+      const response = await fetch(`/api/orders?${params}`);
+      if (!response.ok) throw new Error();
+      const result = await response.json();
+      const data: Order[] = (result.orders || []).map(normalizar);
+      setOrders((prev) => (nextPage === 1 ? data : [...prev, ...data.filter((o) => !prev.some((p) => p.id === o.id))]));
+      setPage(nextPage);
+      setHasMore(Boolean(result.pagination?.hasMore));
+      if (result.summary) setSummary(result.summary);
+    } catch {
+      toast.error('No se pudieron cargar las órdenes');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  useCargarAlMontar(fetchOrders, [filterStatus]);
+  useCargarAlMontar(() => fetchOrders(1), [filterStatus]);
 
   const handleStatusUpdate = async (orderId: string, newStatus: string, additionalData?: Record<string, unknown>) => {
     try {
@@ -216,9 +244,10 @@ export default function OrdersPage() {
 
       if (response.ok) {
         toast.success(`Estado actualizado a: ${getStatusText(newStatus)}`);
-        fetchOrders();
+        void fetchOrders(1);
         if (selectedOrder?.id === orderId) {
-          setSelectedOrder({ ...selectedOrder, ...datos, status: newStatus });
+          // La respuesta trae `user` sin perfil e `items` sin producto: se conservan los del detalle (C-126)
+          setSelectedOrder({ ...selectedOrder, ...datos, user: selectedOrder.user, items: selectedOrder.items, pagosMovil: selectedOrder.pagosMovil, status: newStatus });
         }
         setShowShippingModal(false);
         setShowCancelModal(false);
@@ -279,6 +308,9 @@ export default function OrdersPage() {
       if (response.ok) {
         toast.success('Notas guardadas');
         setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, adminNotes } : o));
+        setSelectedOrder((prev) => (prev ? { ...prev, adminNotes } : prev));
+      } else {
+        toast.error('No se pudieron guardar las notas');
       }
     } catch (error) {
       console.error('Error saving notes:', error);
@@ -387,7 +419,7 @@ export default function OrdersPage() {
           </select>
         </div>
         <button
-          onClick={fetchOrders}
+          onClick={() => fetchOrders(1)}
           disabled={loading}
           className={adminSecondaryButton}
         >
@@ -404,7 +436,7 @@ export default function OrdersPage() {
           ].map(([value, label]) => (
             <button key={value} type="button" onClick={() => setFilterStatus(value)} aria-pressed={filterStatus === value} className={`${adminTab(filterStatus === value)} h-11`}>
               {label}
-              {!loading && (filterStatus === 'all' || filterStatus === value) && <span className="tabular-nums">{value === 'all' ? orders.length : orders.filter((order) => order.status === value).length}</span>}
+              {!loading && summary && <span className="tabular-nums">{value === 'all' ? summary.total : summary.byStatus[value] ?? 0}</span>}
             </button>
           ))}
         </div>
@@ -417,7 +449,7 @@ export default function OrdersPage() {
             <FiDollarSign className="w-5 h-5" />
           </span>
           <div>
-            <span className={adminStatLabel}>Ingresos</span>
+            <span className={adminStatLabel}>Cobrado</span>
             <p className={`${adminStatValue} text-lg tabular-nums`}>{formatUSD(stats.totalRevenue)}</p>
           </div>
         </div>
@@ -567,16 +599,37 @@ export default function OrdersPage() {
         </div>
       )}
 
+      {!loading && hasMore && (
+        <div className="flex justify-center">
+          <button type="button" onClick={() => fetchOrders(page + 1)} disabled={loadingMore} className={adminSecondaryButton}>
+            {loadingMore ? <FiLoader className="h-4 w-4 animate-spin" aria-hidden="true" /> : <FiArrowRight className="h-4 w-4 rotate-90" aria-hidden="true" />}
+            {loadingMore ? 'Cargando…' : `Cargar más órdenes (${orders.length} de ${filterStatus === 'all' ? stats.total : summary?.byStatus[filterStatus] ?? '…'})`}
+          </button>
+        </div>
+      )}
+
       {/* Order Details Modal */}
       {mounted && showDetailsModal && selectedOrder && createPortal(
         <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
           <div className={`${adminModalPanel} sm:max-w-4xl`} role="dialog" aria-modal="true" aria-label="Detalle de la orden">
-            {/* Header */}
+            {/* Encabezado (C-126): estado de la orden, del pago y cómo se entrega */}
             <div className={`${adminModalHeader} flex-wrap text-ink`}>
-              <div className="flex w-full flex-wrap items-center justify-between gap-3">
-                <div>
+              <div className="flex w-full flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 space-y-1.5">
                   <h3 className="text-lg font-bold">#{selectedOrder.orderNumber}</h3>
-                  <p className="text-sm opacity-80">{format(new Date(selectedOrder.createdAt), "d 'de' MMMM, yyyy", { locale: es })}</p>
+                  <p className="text-sm text-muted">
+                    {format(new Date(selectedOrder.createdAt), "d 'de' MMMM, yyyy · h:mm a", { locale: es })}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className={adminBadge(tonoEstadoOrden(selectedOrder.status))}>
+                      {ETIQUETA_ESTADO[selectedOrder.status as keyof typeof ETIQUETA_ESTADO] || getStatusText(selectedOrder.status)}
+                      {!selectedOrder.isOnlyDigital && ` · ${describirEntrega(selectedOrder)}`}
+                    </span>
+                    <span className={adminBadge(estadoPago(selectedOrder.paymentStatus).tono)}>
+                      {selectedOrder.paymentStatus === 'PAID' ? <FiCheckCircle className="h-3.5 w-3.5" aria-hidden="true" /> : <FiClock className="h-3.5 w-3.5" aria-hidden="true" />}
+                      {estadoPago(selectedOrder.paymentStatus).label}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => toast('Próximamente')} className={adminSecondaryButton}>
@@ -591,43 +644,80 @@ export default function OrdersPage() {
 
             {/* Content */}
             <div className={adminModalBody}>
-              <div className="grid grid-cols-1 gap-4 mb-5 sm:grid-cols-2">
-                {/* Customer Info */}
-                <div>
-                  <h4 className="text-xs font-bold text-ink uppercase mb-3">Cliente</h4>
-                  <div className="space-y-1 [overflow-wrap:anywhere]">
+              <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {/* Facturación: quién compra (la cuenta). Quién recibe va en Envío */}
+                <section className="rounded-xl border border-line p-4" aria-labelledby="orden-facturacion">
+                  <h4 id="orden-facturacion" className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
+                    <FiUser className="h-4 w-4" aria-hidden="true" /> Facturación
+                  </h4>
+                  <div className="space-y-1 text-sm [overflow-wrap:anywhere]">
                     {selectedOrder.user ? (
                       <>
-                        <p className="font-semibold text-ink">{selectedOrder.user.name || 'Invitado'}</p>
-                        <p className="text-sm text-muted">{selectedOrder.user.email}</p>
+                        <p className="font-semibold text-ink">{selectedOrder.user.name || 'Sin nombre'}</p>
+                        {selectedOrder.user.profile?.customerType === 'BUSINESS' && selectedOrder.user.profile.companyName && (
+                          <p className="text-ink">
+                            {selectedOrder.user.profile.companyName}
+                            {selectedOrder.user.profile.taxId && <span className="text-muted"> · RIF {selectedOrder.user.profile.taxId}</span>}
+                          </p>
+                        )}
+                        {selectedOrder.user.profile?.idNumber && <p className="text-muted">Cédula {selectedOrder.user.profile.idNumber}</p>}
+                        <p><a href={`mailto:${selectedOrder.user.email}`} className="text-brand-600 hover:text-brand-700">{selectedOrder.user.email}</a></p>
+                        {selectedOrder.user.profile?.phone && (
+                          <p><a href={`tel:${selectedOrder.user.profile.phone}`} className="tabular-nums text-brand-600 hover:text-brand-700">{selectedOrder.user.profile.phone}</a></p>
+                        )}
                       </>
                     ) : selectedOrder.guestEmail ? (
                       <>
                         <p className="font-semibold text-ink">Invitado</p>
-                        <p className="text-sm text-muted">{selectedOrder.guestEmail}</p>
+                        <p className="text-muted">{selectedOrder.guestEmail}</p>
                       </>
                     ) : (
-                      <p className="font-semibold text-ink">
-                        <span className={adminBadge('neutral')}><FiUserX className="h-3.5 w-3.5" aria-hidden="true" /> Cliente eliminado</span>
-                      </p>
+                      <span className={adminBadge('neutral')}><FiUserX className="h-3.5 w-3.5" aria-hidden="true" /> Cliente eliminado</span>
                     )}
-                    <p className="text-sm text-muted">Pago: {selectedOrder.paymentMethod} · {selectedOrder.paymentStatus || 'Sin estado'}</p>
-
                   </div>
-                </div>
+                </section>
 
-                {/* Admin Notes */}
-                <div>
-                  <h4 className="text-xs font-bold text-ink uppercase mb-3">Notas Admin</h4>
-                  <div className="rounded-xl border border-line p-3">
-                    <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 text-sm text-ink placeholder:text-muted resize-none" rows={3} placeholder="Agregar notas..." />
-                    <div className="flex justify-end">
-                      <button onClick={handleSaveNotes} disabled={savingNotes} className={adminSecondaryButton}>
-                        {savingNotes ? 'Guardando...' : 'Guardar'}
-                      </button>
-                    </div>
+                {/* Pago: método en palabras, origen de los fondos y estado */}
+                <section className="rounded-xl border border-line p-4" aria-labelledby="orden-pago">
+                  <h4 id="orden-pago" className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
+                    <FiDollarSign className="h-4 w-4" aria-hidden="true" /> Pago
+                  </h4>
+                  {(() => {
+                    const pago = describirPago(selectedOrder.paymentMethod, selectedOrder.pagosMovil);
+                    const ves = Number(selectedOrder.totalVES) || 0;
+                    const tasa = Number(selectedOrder.exchangeRateVES) || 0;
+                    return (
+                      <div className="space-y-1 text-sm">
+                        <p className="font-semibold text-ink">{pago.titulo}</p>
+                        {pago.detalle && <p className="text-muted [overflow-wrap:anywhere]">{pago.detalle}</p>}
+                        <p className="pt-1 text-lg font-bold tabular-nums text-ink">{formatUSD(Number(selectedOrder.totalUSD) || 0)}</p>
+                        {ves > 0 && (
+                          <p className="text-xs text-muted">
+                            {formatVES(ves)}{tasa > 0 ? ` a ${formatVES(tasa)} por dólar` : ''}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </section>
+
+                {/* Notas internas: no las ve el cliente */}
+                <section className="rounded-xl border border-line p-4 md:col-span-2 lg:col-span-1" aria-labelledby="orden-notas">
+                  <label id="orden-notas" htmlFor="orden-notas-texto" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted">Notas internas</label>
+                  <textarea
+                    id="orden-notas-texto"
+                    value={adminNotes}
+                    onChange={(e) => setAdminNotes(e.target.value)}
+                    className="w-full resize-none border-none bg-transparent p-0 text-sm text-ink placeholder:text-muted focus:ring-0"
+                    rows={3}
+                    placeholder="Solo las ve el equipo"
+                  />
+                  <div className="flex justify-end">
+                    <button onClick={handleSaveNotes} disabled={savingNotes || adminNotes === (selectedOrder.adminNotes || '')} className={adminSecondaryButton}>
+                      {savingNotes ? 'Guardando...' : 'Guardar'}
+                    </button>
                   </div>
-                </div>
+                </section>
               </div>
 
               {/* Action Buttons */}
@@ -656,6 +746,19 @@ export default function OrdersPage() {
                   </a>
                 )}
               </div>
+
+              {/* Envío (C-100): destino, quién recibe, flete, guía, rastreo e historial */}
+              {!selectedOrder.isOnlyDigital && (
+                <div className="mb-5">
+                  <EntregaOrden
+                    orden={selectedOrder}
+                    onRastreo={(datos) => {
+                      setSelectedOrder((prev) => (prev ? { ...prev, status: datos.status, shipmentEvents: datos.shipmentEvents } : prev));
+                      setOrders((prev) => prev.map((o) => (o.id === selectedOrder.id ? { ...o, status: datos.status, shipmentEvents: datos.shipmentEvents } : o)));
+                    }}
+                  />
+                </div>
+              )}
 
               {/* Products */}
               <div>
@@ -696,12 +799,6 @@ export default function OrdersPage() {
                   </table>
                 </div>
               </div>
-              {/* Entrega (C-100): destino, quién recibe, flete, guía e historial */}
-              {!selectedOrder.isOnlyDigital && (
-                <div className="mt-5">
-                  <EntregaOrden orden={selectedOrder} />
-                </div>
-              )}
 
               {/* Order Flow Progress */}
               <div className={`mt-5 overflow-x-auto rounded-xl p-4 ${selectedOrder.isOnlyDigital ? 'bg-brand-50' : 'bg-surface'}`}>

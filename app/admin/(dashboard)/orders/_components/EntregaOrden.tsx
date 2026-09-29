@@ -1,7 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiCopy, FiExternalLink, FiMapPin, FiTruck, FiUser } from 'react-icons/fi';
+import { FiCheck, FiCopy, FiExternalLink, FiMapPin, FiRefreshCw, FiTruck, FiUser } from 'react-icons/fi';
 import { adminBadge, adminSecondaryButton } from '@/lib/admin-ui';
 import { ETIQUETA_ENTREGA, NOMBRE_EMPRESA, etiquetaModo, type EmpresaGuia } from '@/lib/envios/empresas';
 
@@ -9,6 +10,8 @@ import { ETIQUETA_ENTREGA, NOMBRE_EMPRESA, etiquetaModo, type EmpresaGuia } from
 // los datos listos para copiar en la guía de ZOOM o MRW, y el historial del envío.
 
 export interface EntregaOrdenDatos {
+  id?: string;
+  status?: string;
   orderNumber: string;
   deliveryMethod?: string | null;
   shippingAddress?: string | null;
@@ -52,16 +55,50 @@ function datosGuia(o: EntregaOrdenDatos): string {
   ].join('\n');
 }
 
-export default function EntregaOrden({ orden }: { orden: EntregaOrdenDatos }) {
+type Evento = NonNullable<EntregaOrdenDatos['shipmentEvents']>[number];
+
+export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrdenDatos; onRastreo?: (datos: { status: string; shipmentEvents: Evento[] }) => void }) {
   const empresa = nombreEmpresa(orden.shippingCarrier);
   const conDatosNuevos = Boolean(orden.recipientName || orden.shippingMode);
   const esEnvio = orden.deliveryMethod === 'SHIPPING' || orden.deliveryMethod === 'HOME_DELIVERY';
   const eventos = orden.shipmentEvents ?? [];
 
-  const copiar = async () => {
+  // C-126: el botón mismo dice "Copiado" dos segundos (antes solo un toast que se perdía detrás del modal)
+  const [copiado, setCopiado] = useState<'datos' | 'guia' | null>(null);
+  useEffect(() => {
+    if (!copiado) return;
+    const t = window.setTimeout(() => setCopiado(null), 2000);
+    return () => window.clearTimeout(t);
+  }, [copiado]);
+
+  // C-126: el rastreo de ZOOM por su API, sin esperar al cron de 2 horas
+  const [consultando, setConsultando] = useState(false);
+  const puedeConsultar = Boolean(onRastreo && orden.id && orden.status === 'SHIPPED' && orden.shippingCarrier === 'ZOOM' && orden.trackingNumber);
+  const consultarZoom = async () => {
+    if (!orden.id || !onRastreo) return;
+    setConsultando(true);
     try {
-      await navigator.clipboard.writeText(datosGuia(orden));
-      toast.success('Datos de la guía copiados');
+      const response = await fetch(`/api/orders/${orden.id}/rastreo`, { method: 'POST' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        toast.error(data.error || 'No pudimos consultar a ZOOM');
+        return;
+      }
+      onRastreo({ status: data.status, shipmentEvents: data.shipmentEvents ?? [] });
+      if (!data.respondio) toast.error('ZOOM no respondió. Intenta en unos minutos.');
+      else if (data.status === 'DELIVERED') toast.success('ZOOM la marca entregada: la orden se cerró y avisamos al cliente.');
+      else toast.success(data.eventosNuevos > 0 ? `${data.eventosNuevos} novedades de ZOOM` : 'Sin novedades en ZOOM');
+    } catch {
+      toast.error('Sin conexión');
+    } finally {
+      setConsultando(false);
+    }
+  };
+
+  const copiar = async (que: 'datos' | 'guia') => {
+    try {
+      await navigator.clipboard.writeText(que === 'datos' ? datosGuia(orden) : orden.trackingNumber ?? '');
+      setCopiado(que);
     } catch {
       toast.error('No se pudo copiar. Selecciona el texto a mano.');
     }
@@ -110,8 +147,9 @@ export default function EntregaOrden({ orden }: { orden: EntregaOrdenDatos }) {
       )}
 
       {esEnvio && conDatosNuevos && (
-        <button type="button" onClick={copiar} className={`${adminSecondaryButton} w-full sm:w-auto`}>
-          <FiCopy className="h-4 w-4" aria-hidden="true" /> Copiar datos para la guía
+        <button type="button" onClick={() => copiar('datos')} className={`${adminSecondaryButton} w-full sm:w-auto ${copiado === 'datos' ? 'border-success-strong text-success-strong' : ''}`} aria-live="polite">
+          {copiado === 'datos' ? <FiCheck className="h-4 w-4" aria-hidden="true" /> : <FiCopy className="h-4 w-4" aria-hidden="true" />}
+          {copiado === 'datos' ? '¡Copiado!' : 'Copiar datos para la guía'}
         </button>
       )}
 
@@ -119,10 +157,20 @@ export default function EntregaOrden({ orden }: { orden: EntregaOrdenDatos }) {
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line pt-3 text-sm">
           <span className="text-muted">Guía:</span>
           <span className="font-mono font-semibold text-ink">{orden.trackingNumber}</span>
+          <button type="button" onClick={() => copiar('guia')} className="inline-flex h-9 items-center gap-1 rounded-lg px-2 font-medium text-brand-600 hover:bg-brand-50" aria-live="polite">
+            {copiado === 'guia' ? <FiCheck className="h-4 w-4" aria-hidden="true" /> : <FiCopy className="h-4 w-4" aria-hidden="true" />}
+            {copiado === 'guia' ? '¡Copiada!' : 'Copiar guía'}
+          </button>
           {orden.trackingUrl && (
             <a href={orden.trackingUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700">
-              <FiExternalLink className="h-4 w-4" aria-hidden="true" /> Rastrear en {empresa || 'la empresa'}
+              <FiExternalLink className="h-4 w-4" aria-hidden="true" /> Abrir {empresa || 'la empresa'}
             </a>
+          )}
+          {puedeConsultar && (
+            <button type="button" onClick={consultarZoom} disabled={consultando} className="inline-flex h-9 items-center gap-1 rounded-lg px-2 font-medium text-brand-600 hover:bg-brand-50 disabled:opacity-60">
+              <FiRefreshCw className={`h-4 w-4 ${consultando ? 'animate-spin' : ''}`} aria-hidden="true" />
+              {consultando ? 'Consultando…' : 'Consultar ZOOM ahora'}
+            </button>
           )}
         </div>
       )}

@@ -41,6 +41,8 @@ export const ETIQUETA_ACCION: Record<string, string> = {
     SECURITY_DUPLICATE_PAYMENT_REFERENCE: 'Referencia de pago repetida',
     BALANCE_RECHARGE_APPROVED: 'Recarga aprobada',
     BALANCE_RECHARGE_REJECTED: 'Recarga rechazada',
+    ORPHAN_PAYMENT_LINKED: 'Pago sin orden vinculado a su orden',
+    ORPHAN_PAYMENT_ARCHIVED: 'Pago sin orden archivado (ya atendido)',
 };
 
 export function etiquetaAccion(accion: string): string {

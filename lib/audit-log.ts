@@ -54,7 +54,10 @@ export type AuditAction =
     | 'SECURITY_DUPLICATE_PAYMENT_REFERENCE'
     // Balance
     | 'BALANCE_RECHARGE_APPROVED'
-    | 'BALANCE_RECHARGE_REJECTED';
+    | 'BALANCE_RECHARGE_REJECTED'
+    // C-123: Pagos Móvil de compra sin orden
+    | 'ORPHAN_PAYMENT_LINKED'
+    | 'ORPHAN_PAYMENT_ARCHIVED';
 
 export type AuditSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
 
@@ -193,6 +196,8 @@ export function getSeverityForAction(action: AuditAction): AuditSeverity {
         'PRODUCT_DELETED',
         'SECURITY_RATE_LIMIT_HIT',
         'SECURITY_ACCESS_DENIED',
+        // C-123: un pago que entró y se cierra sin acreditar ni orden en el sistema
+        'ORPHAN_PAYMENT_ARCHIVED',
     ];
 
     if (criticalActions.includes(action)) return 'CRITICAL';

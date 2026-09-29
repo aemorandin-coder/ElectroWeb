@@ -23,6 +23,10 @@ Léelo antes de empezar. En producción: 70093de (hasta C-113), sirviendo `.next
   6. Crear un producto **Usado** de prueba (en borrador o sin stock): pide grado, empaque, qué incluye y 3 fotos. Revisar su ficha y el filtro "Condición" del catálogo.
   7. Leer `/terminos` (versión 3.0) y la página "Garantía" del cliente.
 
+## 0b. C-123: pagos viejos sin orden (29/09)
+- En Transacciones salen 2 Pagos Móvil de diciembre de 2025 que ya se pagaron y entregaron. **No usar "Pasar a su saldo" en ellos.**
+- Rama `claude/C-123` (sale de `main`, lleva `ADD COLUMN`): "Es esta orden" y "Ya se atendió" (archivar con nota). Mergear y subir con el deploy del §0. Pasos en `estado/C-123.md`.
+
 ## 1. Estado de las ramas
 - **`main`:** todo hasta C-117, subido el 29/09. En producción, hasta C-113.
 - **Gemini:** R23 (G-69) cerrada y en `main`, con dos arreglos de Claude (resultado al final de `PLAN_GEMINI.md`). **No tiene ronda abierta.** Su carril no tiene deudas de reglas (verificado el 28/09 con `grep`: 0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis).

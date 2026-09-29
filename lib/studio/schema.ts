@@ -291,6 +291,8 @@ export interface StudioStoreProduct {
   hasVariants: boolean;
   /** false si lo sacaron de la tienda: el flyer avisa */
   published: boolean;
+  /** C-119: "Usado · Muy bueno" si no es nuevo (va en la frase corta de la historia) */
+  conditionBadge?: string | null;
   /** Solo si hay o no: la cantidad no sale del servidor */
   inStock: boolean;
 }

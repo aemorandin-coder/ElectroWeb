@@ -21,6 +21,7 @@ export const SORT_OPTIONS = [
 export type CatalogSort = (typeof SORT_OPTIONS)[number]['value'];
 
 export type CatalogType = 'digital' | 'fisico';
+export type CatalogCondition = 'nuevo' | 'usado';
 
 export interface CatalogParams {
   search: string;
@@ -31,6 +32,8 @@ export interface CatalogParams {
   offers: boolean;
   inStock: boolean;
   type: CatalogType | null;
+  /** C-119: nuevos, o usados/reacondicionados/caja abierta */
+  condition: CatalogCondition | null;
   page: number;
 }
 
@@ -55,6 +58,7 @@ export function parseCatalogParams(raw: RawSearchParams): CatalogParams {
   let max = parsePrice(first(raw.max));
   if (min !== null && max !== null && min > max) [min, max] = [max, min];
   const typeRaw = first(raw.tipo);
+  const conditionRaw = first(raw.condicion);
   const page = Math.min(1000, Math.max(1, Number.parseInt(first(raw.page), 10) || 1));
   return {
     search,
@@ -65,6 +69,7 @@ export function parseCatalogParams(raw: RawSearchParams): CatalogParams {
     offers: first(raw.oferta) === '1',
     inStock: first(raw.disponible) === '1',
     type: typeRaw === 'digital' || typeRaw === 'fisico' ? typeRaw : null,
+    condition: conditionRaw === 'nuevo' || conditionRaw === 'usado' ? conditionRaw : null,
     page,
   };
 }
@@ -84,6 +89,7 @@ export function catalogHref(params: CatalogParams, changes: Partial<CatalogParam
   if (next.offers) query.set('oferta', '1');
   if (next.inStock) query.set('disponible', '1');
   if (next.type) query.set('tipo', next.type);
+  if (next.condition) query.set('condicion', next.condition);
   if (next.sort !== 'recientes') query.set('sort', next.sort);
   if (next.page > 1) query.set('page', String(next.page));
   const qs = query.toString();
@@ -92,7 +98,7 @@ export function catalogHref(params: CatalogParams, changes: Partial<CatalogParam
 
 /** ¿Hay algún filtro aplicado (sin contar orden ni página)? */
 export function hasActiveFilters(params: CatalogParams): boolean {
-  return Boolean(params.search || params.category || params.min !== null || params.max !== null || params.offers || params.inStock || params.type);
+  return Boolean(params.search || params.category || params.min !== null || params.max !== null || params.offers || params.inStock || params.type || params.condition);
 }
 
 function filterConditions(params: CatalogParams, { withCategory, ofertas }: { withCategory: boolean; ofertas: Prisma.ProductWhereInput }): Prisma.ProductWhereInput[] {
@@ -113,6 +119,8 @@ function filterConditions(params: CatalogParams, { withCategory, ofertas }: { wi
   if (params.max !== null) conditions.push({ priceUSD: { lte: params.max } });
   if (params.offers) conditions.push(ofertas);
   if (params.inStock) conditions.push({ OR: [{ productType: 'DIGITAL' }, { stock: { gt: 0 } }] });
+  if (params.condition === 'nuevo') conditions.push({ condition: 'NEW' });
+  if (params.condition === 'usado') conditions.push({ condition: { not: 'NEW' } });
   if (params.type) conditions.push({ productType: params.type === 'digital' ? 'DIGITAL' : 'PHYSICAL' });
   return conditions;
 }

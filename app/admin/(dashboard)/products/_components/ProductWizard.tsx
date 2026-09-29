@@ -173,6 +173,17 @@ export default function ProductWizard({ productId }: Props) {
           shippingCost: product.shippingCost?.toString() || '',
           freeShipping: product.freeShipping === true,
           specifications: parsedSpecs,
+          condition: product.condition || 'NEW',
+          conditionGrade: product.conditionGrade || '',
+          packaging: product.packaging || '',
+          includedItems: product.includedItems || '',
+          missingItems: product.missingItems || '',
+          usageHours: product.usageHours?.toString() || '',
+          batteryHealth: product.batteryHealth?.toString() || '',
+          cosmeticNotes: product.cosmeticNotes || '',
+          testNotes: product.testNotes || '',
+          warrantyDays: product.warrantyDays?.toString() || '',
+          serialNumber: product.serialNumber || '',
           digitalPlatform: product.digitalPlatform || '',
           digitalRegion: product.digitalRegion || 'GLOBAL',
           deliveryMethod: product.deliveryMethod === 'MANUAL' ? 'MANUAL' : 'INSTANT',
@@ -263,6 +274,20 @@ export default function ProductWizard({ productId }: Props) {
         payload.shippingCost = data.isConsolidable ? 0 : (data.shippingCost ? parseFloat(data.shippingCost) : 0);
         payload.freeShipping = data.freeShipping;
         payload.specifications = Object.keys(data.specifications).length > 0 ? data.specifications : null;
+        // C-119: condición; el servidor la valida y, si es nuevo, guarda vacío lo de usado
+        Object.assign(payload, {
+          condition: data.condition,
+          conditionGrade: data.conditionGrade || null,
+          packaging: data.packaging || null,
+          includedItems: data.includedItems,
+          missingItems: data.missingItems,
+          usageHours: data.usageHours,
+          batteryHealth: data.batteryHealth,
+          cosmeticNotes: data.cosmeticNotes,
+          testNotes: data.testNotes,
+          warrantyDays: data.warrantyDays,
+          serialNumber: data.serialNumber,
+        });
         if (data.dimensionLength || data.dimensionWidth || data.dimensionHeight) {
           payload.dimensions = JSON.stringify({
             length: parseFloat(data.dimensionLength) || 0,
@@ -518,6 +543,7 @@ export default function ProductWizard({ productId }: Props) {
                 images={data.images}
                 onChange={(imgs) => merge({ images: imgs })}
                 error={errors.images}
+                badge={data.productType !== 'PHYSICAL' || data.condition === 'NEW'}
               />
             </div>
           )}

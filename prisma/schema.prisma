@@ -320,6 +320,21 @@ model Product {
   status      ProductStatus @default(DRAFT)
   isFeatured  Boolean       @default(false)
 
+  // C-119: usados y reacondicionados. Nuevo por defecto; lo demás solo cuando no es nuevo
+  condition      ProductCondition  @default(NEW)
+  conditionGrade ConditionGrade?
+  packaging      ProductPackaging?
+  includedItems  String?
+  missingItems   String?
+  usageHours     Int?
+  batteryHealth  Int?
+  cosmeticNotes  String?
+  testNotes      String?
+  /// Garantía de la tienda en días (null = la de su condición, lib/product-condition.ts)
+  warrantyDays   Int?
+  /// Interno, para reclamos de garantía: nunca sale del servidor (no está en lib/dto/product.ts)
+  serialNumber   String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -696,6 +711,12 @@ model OrderItem {
   supplier            String?
   supplierOrderRef    String?
   supplierCostUSD     Decimal?
+
+  // C-119: cómo se vendió (copia): si después se edita el producto, la garantía del cliente no cambia.
+  // null = orden de antes de C-119 (todo era nuevo)
+  productCondition    ProductCondition?
+  conditionGrade      ConditionGrade?
+  warrantyDays        Int?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1714,4 +1735,24 @@ model StudioBrand {
   updatedAt DateTime @updatedAt
 
   @@map("studio_brand")
+}
+
+// C-119: productos usados y reacondicionados
+enum ProductCondition {
+  NEW
+  OPEN_BOX
+  REFURBISHED
+  USED
+}
+
+enum ConditionGrade {
+  EXCELLENT
+  VERY_GOOD
+  GOOD
+}
+
+enum ProductPackaging {
+  ORIGINAL
+  GENERIC
+  NONE
 }

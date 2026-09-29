@@ -6,6 +6,18 @@ import type { Brand, Category, DigitalVariant, Prisma, Product, ProductType } fr
 import { formatFaceValue, guessLegacyUnit, isDigitalUnit, type DigitalUnit } from '@/lib/digital-catalog';
 import { parseProductImages } from '@/lib/product-utils';
 import { INTERNAL_SPEC_KEYS } from '@/lib/product-specs';
+import {
+  CONDITION_LABEL,
+  GRADE_DEFINITION,
+  GRADE_LABEL,
+  PACKAGING_LABEL,
+  conditionBadge,
+  isSecondHand,
+  warrantyDaysFor,
+  type Condition,
+  type Grade,
+  type Packaging,
+} from '@/lib/product-condition';
 
 // category es obligatoria en el esquema: consultar siempre con publicProductInclude
 export type ProductWithPublicRelations = Product & {
@@ -71,6 +83,50 @@ export interface PublicProduct {
   seoImage: string | null;
   /** C-102: lo llena lib/promotions.ts (conOfertas); null sin oferta */
   oferta: PublicOffer | null;
+  /** C-119: estado del equipo; null si es nuevo. El número de serie nunca sale del servidor */
+  condition: PublicCondition | null;
+}
+
+/** C-119: lo que ve el cliente de un producto que no es nuevo */
+export interface PublicCondition {
+  kind: Exclude<Condition, 'NEW'>;
+  label: string;
+  /** "Usado · Muy bueno" */
+  badge: string;
+  grade: Grade | null;
+  gradeLabel: string | null;
+  gradeDefinition: string | null;
+  packaging: string | null;
+  includedItems: string | null;
+  missingItems: string | null;
+  usageHours: number | null;
+  batteryHealth: number | null;
+  cosmeticNotes: string | null;
+  testNotes: string | null;
+  /** Garantía de la tienda en días */
+  warrantyDays: number;
+}
+
+function toPublicCondition(product: Product): PublicCondition | null {
+  const kind = product.condition as Condition;
+  if (!isSecondHand(kind)) return null;
+  const grade = (product.conditionGrade as Grade | null) ?? null;
+  return {
+    kind: kind as Exclude<Condition, 'NEW'>,
+    label: CONDITION_LABEL[kind],
+    badge: conditionBadge(kind, grade) ?? CONDITION_LABEL[kind],
+    grade,
+    gradeLabel: grade ? GRADE_LABEL[grade] : null,
+    gradeDefinition: grade ? GRADE_DEFINITION[grade] : null,
+    packaging: product.packaging ? PACKAGING_LABEL[product.packaging as Packaging] : null,
+    includedItems: product.includedItems,
+    missingItems: product.missingItems,
+    usageHours: product.usageHours,
+    batteryHealth: product.batteryHealth,
+    cosmeticNotes: product.cosmeticNotes,
+    testNotes: product.testNotes,
+    warrantyDays: warrantyDaysFor(kind, product.warrantyDays),
+  };
 }
 
 function toNumberOrNull(value: { toString(): string } | null | undefined): number | null {
@@ -176,6 +232,7 @@ export function toPublicProduct(product: ProductWithPublicRelations): PublicProd
     seoDescription: product.seoDescription,
     seoImage: product.seoImage,
     oferta: null,
+    condition: toPublicCondition(product),
   };
 }
 

@@ -37,9 +37,11 @@ interface Props {
   images: string[];
   onChange: (images: string[]) => void;
   error?: string;
+  /** C-119: un usado lleva fotos reales de la unidad, sin la cinta "ES" (decisión de Andrés) */
+  badge?: boolean;
 }
 
-export default function ImagePanel({ images, onChange, error }: Props) {
+export default function ImagePanel({ images, onChange, error, badge = true }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -63,7 +65,7 @@ export default function ImagePanel({ images, onChange, error }: Props) {
           const fd = new FormData();
           fd.append('file', blob instanceof File ? blob : new File([blob], file.name.replace(/\.\w+$/, blob.type === 'image/webp' ? '.webp' : '.png'), { type: blob.type }));
           // C-117: con fondo transparente, el servidor arma la foto final con fondo blanco y la cinta "ES"
-          fd.append('purpose', 'product');
+          if (badge) fd.append('purpose', 'product');
           const res = await fetch('/api/upload', { method: 'POST', body: fd });
           const data = (await res.json().catch(() => null)) as { url?: string; error?: string; badged?: boolean } | null;
           if (!res.ok || !data?.url) throw new Error(data?.error || `No se pudo subir "${file.name}"`);
@@ -177,7 +179,9 @@ export default function ImagePanel({ images, onChange, error }: Props) {
               <FiImage className="w-8 h-8 text-muted mx-auto mb-2" />
               <p className="text-sm font-medium text-muted">Subir imágenes</p>
               <p className="text-xs text-muted mt-1">JPG, PNG, WEBP</p>
-              <p className="text-xs text-muted mt-1">PNG con fondo transparente: la tienda pone el fondo blanco y la cinta ES</p>
+              <p className="text-xs text-muted mt-1">
+                {badge ? 'PNG con fondo transparente: la tienda pone el fondo blanco y la cinta ES' : 'Fotos reales de esta unidad: frente, atrás y detalles (mínimo 3)'}
+              </p>
             </>
           )}
         </div>
@@ -253,7 +257,7 @@ export default function ImagePanel({ images, onChange, error }: Props) {
       )}
 
       <p className="text-xs text-muted mt-3 text-center">
-        La primera imagen es la imagen principal. Con fondo transparente, la tienda pone el fondo blanco y la cinta ES.
+        La primera imagen es la imagen principal. {badge ? 'Con fondo transparente, la tienda pone el fondo blanco y la cinta ES.' : 'Usado: fotos reales de esta unidad, mínimo 3.'}
       </p>
     </div>
   );

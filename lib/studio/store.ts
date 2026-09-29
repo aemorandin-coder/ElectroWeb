@@ -108,6 +108,7 @@ function toStudioProduct(p: PublicProduct, published: boolean, rateVES: number):
     hasVariants,
     published,
     inStock: p.productType === 'DIGITAL' || p.stock > 0,
+    conditionBadge: p.condition?.badge ?? null,
   };
 }
 

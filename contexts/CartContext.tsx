@@ -61,6 +61,8 @@ interface CartItem {
   digitalVariantId?: string;
   // C-102: precio antes de la oferta, solo para mostrar "Ahorras" (el servidor recalcula todo)
   listPrice?: number;
+  // C-119: "Usado · Muy bueno" para mostrarlo en el carrito (la orden guarda la condición desde el servidor)
+  conditionBadge?: string;
 }
 
 interface CartContextType {

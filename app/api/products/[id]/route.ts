@@ -8,6 +8,7 @@ import { parseDigitalMargin, specsForUpdate } from '@/lib/product-specs';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { precioValido } from '@/lib/pricing';
 import { registrarAccionAdmin } from '@/lib/audit-log';
+import { conditionInputSchema, pickConditionInput } from '@/lib/product-condition';
 
 // Variantes con costo y proveedor: esta ruta es solo para quien administra productos (C-60)
 const adminVariantsInclude = { orderBy: [{ sortOrder: 'asc' as const }] };
@@ -234,6 +235,17 @@ export async function PATCH(
     // C-100: envío gratis (solo booleano; un digital nunca lo lleva)
     if (typeof body.freeShipping === 'boolean') updateData.freeShipping = body.freeShipping;
     if (body.shippingCost !== undefined) updateData.shippingCost = body.shippingCost !== null ? parseFloat(body.shippingCost) : null;
+
+    // C-119: condición del producto. Un digital siempre es nuevo
+    const conditionBody = pickConditionInput(body);
+    const nextType = body.productType ?? oldProduct.productType;
+    if (conditionBody || (nextType === 'DIGITAL' && oldProduct.condition !== 'NEW')) {
+      const parsed = conditionInputSchema.safeParse(nextType === 'DIGITAL' ? {} : conditionBody);
+      if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error.issues[0]?.message || 'Condición inválida' }, { status: 400 });
+      }
+      Object.assign(updateData, parsed.data);
+    }
 
     const product = await prisma.$transaction(async (tx) => {
       await tx.product.update({ where: { id }, data: updateData });

@@ -109,13 +109,27 @@ export default function CatalogFilters({ params, categories, idPrefix }: Catalog
           ))}
         </fieldset>
 
+        <fieldset className="space-y-2">
+          <legend className="mb-2 text-sm font-semibold text-ink">Condición</legend>
+          {[
+            { value: '', label: 'Todos' },
+            { value: 'nuevo', label: 'Nuevos' },
+            { value: 'usado', label: 'Usados y reacondicionados' },
+          ].map((option) => (
+            <label key={option.value || 'todos'} className="flex min-h-10 cursor-pointer items-center gap-3 text-sm text-ink-soft">
+              <input type="radio" name="condicion" value={option.value} defaultChecked={(params.condition ?? '') === option.value} className="h-4 w-4 accent-brand-500" />
+              {option.label}
+            </label>
+          ))}
+        </fieldset>
+
         <div className="flex flex-col gap-2">
           <button type="submit" className="h-11 rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500">
             Aplicar filtros
           </button>
           {hasActiveFilters(params) && (
             <Link
-              href={params.search ? catalogHref({ ...params, category: null, min: null, max: null, offers: false, inStock: false, type: null }) : '/productos'}
+              href={params.search ? catalogHref({ ...params, category: null, min: null, max: null, offers: false, inStock: false, type: null, condition: null }) : '/productos'}
               className="flex h-11 items-center justify-center rounded-lg border border-line bg-white px-4 text-sm font-semibold text-ink-soft hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500"
             >
               Quitar filtros

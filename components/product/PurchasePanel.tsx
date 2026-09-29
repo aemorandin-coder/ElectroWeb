@@ -121,6 +121,7 @@ export default function PurchasePanel({ product, exchangeRateVES, lowStockThresh
         freeShipping: !isDigital && product.freeShipping === true,
         digitalUsername: isManual ? cleanUser : undefined,
         digitalVariantId: selected?.id,
+        conditionBadge: product.condition?.badge,
       },
       quantity
     );

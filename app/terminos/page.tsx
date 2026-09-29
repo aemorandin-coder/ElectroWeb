@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { FiShield, FiCreditCard, FiTruck, FiPackage, FiDollarSign, FiAlertCircle, FiFileText, FiEdit3 } from 'react-icons/fi';
 import PublicHeader from '@/components/public/PublicHeader';
 import Footer from '@/components/Footer';
+import { CONDITION_HELP, DEFAULT_WARRANTY_DAYS, GRADE_DEFINITION, GRADE_LABEL } from '@/lib/product-condition';
 import Container from '@/components/ui/Container';
 import PageHeader from '@/components/ui/PageHeader';
 
@@ -15,7 +16,7 @@ export default function TermsPage() {
           icon={<FiFileText />}
           eyebrow="Legal"
           title="Términos y condiciones"
-          description="Última actualización: diciembre 2024 · Versión 2.0"
+          description="Última actualización: septiembre 2026 · Versión 3.0"
         />
         <Container className="py-6 lg:py-10">
           <article className="mx-auto max-w-3xl space-y-8 rounded-2xl border border-line bg-white p-5 leading-relaxed text-ink-soft sm:p-8 lg:p-10">
@@ -152,7 +153,7 @@ export default function TermsPage() {
             </section>
 
             {/* Shipping */}
-            <section>
+            <section id="envios" className="scroll-mt-28">
               <div className="flex items-center gap-2 mb-3">
                 <FiTruck className="w-5 h-5 text-brand-600" />
                 <h2 className="text-xl font-bold text-ink">5. Envíos y Entregas</h2>
@@ -162,40 +163,109 @@ export default function TermsPage() {
               </p>
               <ul className="list-disc pl-6 space-y-2 text-ink-soft">
                 <li>Los pedidos se procesan dentro de las 24-48 horas hábiles posteriores a la confirmación del pago</li>
-                <li>Los tiempos de entrega varían según la ubicación (2-7 días hábiles)</li>
-                <li>El cliente puede optar por retiro en tienda sin costo adicional</li>
+                <li>
+                  Envíos nacionales por ZOOM o MRW con <strong>cobro a destino</strong>: la tienda cobra el embalaje y el
+                  flete lo paga el cliente a la empresa de envíos al retirar. Los productos marcados con envío gratis viajan sin costo para el cliente
+                </li>
+                <li>Los tiempos de entrega dependen de la empresa de envíos y del destino (en general, 2 a 7 días hábiles)</li>
+                <li>El cliente puede optar por retiro en tienda sin costo adicional, o por delivery en Guanare cuando esté disponible</li>
                 <li>Para retiro en tienda, solo el titular de la cuenta o persona autorizada puede retirar el producto presentando cédula de identidad</li>
-                <li>Los gastos de envío se calculan según el peso, dimensiones y destino del pedido</li>
+                <li>
+                  El monto mínimo de compra, si la tienda lo establece, cuenta solo el valor de los productos: el embalaje y el
+                  envío van aparte. El carrito y el pago lo indican antes de pagar
+                </li>
               </ul>
             </section>
 
             {/* Warranty */}
-            <section>
+            <section id="garantia" className="scroll-mt-28">
               <div className="flex items-center gap-2 mb-3">
                 <FiPackage className="w-5 h-5 text-brand-600" />
                 <h2 className="text-xl font-bold text-ink">6. Garantía y Devoluciones</h2>
               </div>
               <p className="mb-3">
-                Todos nuestros productos cuentan con garantía por defectos de fábrica según las especificaciones del fabricante.
-                Para procesar una garantía:
+                La garantía la presta <strong>la Empresa</strong> y cubre las <strong>fallas de funcionamiento</strong> del
+                producto. El plazo de cada producto aparece en su ficha antes de comprar y queda guardado en el pedido; cuenta
+                desde la entrega. Si la ficha no indica otro plazo: productos nuevos y de caja abierta, {DEFAULT_WARRANTY_DAYS.NEW} días;
+                reacondicionados, {DEFAULT_WARRANTY_DAYS.REFURBISHED} días; usados, {DEFAULT_WARRANTY_DAYS.USED} días. La garantía del
+                fabricante, cuando exista, se suma a la de la Empresa y se tramita según sus condiciones.
               </p>
-              <ul className="list-disc pl-6 space-y-2 text-ink-soft">
-                <li>Es indispensable presentar la factura de compra original</li>
-                <li>El producto debe estar en su empaque original con todos sus accesorios</li>
-                <li>No aplica para daños por mal uso, accidentes o modificaciones no autorizadas</li>
-                <li>El tiempo de respuesta para evaluación de garantía es de 5-10 días hábiles</li>
+              <h3 className="font-semibold text-ink mb-2">6.1 Qué no cubre la garantía</h3>
+              <ul className="list-disc pl-6 space-y-2 text-ink-soft mb-4">
+                <li>Golpes, caídas, humedad, líquidos, fallas eléctricas externas (bajones o picos de voltaje) o mal uso</li>
+                <li>Aperturas, reparaciones o modificaciones hechas por terceros, o sellos de garantía rotos</li>
+                <li>El desgaste normal y el estado estético descrito en la ficha de un producto usado, reacondicionado o de caja abierta</li>
+                <li>Consumibles y accesorios con vida útil propia, salvo que lleguen defectuosos</li>
+                <li>Daños posteriores a la entrega</li>
               </ul>
-              <p className="mt-3 text-warning-strong">
-                <strong>Nota:</strong> Las compras realizadas con saldo de cuenta siguen las mismas políticas de garantía,
-                pero no se realiza devolución del saldo en caso de reembolso.
+              <h3 className="font-semibold text-ink mb-2">6.2 Cómo pedir la garantía</h3>
+              <ul className="list-disc pl-6 space-y-2 text-ink-soft mb-4">
+                <li>Desde &ldquo;Garantía&rdquo; en tu cuenta, dentro del plazo del producto, indicando el pedido y describiendo la falla</li>
+                <li>La Empresa puede pedir fotos, un video o revisar el equipo en la tienda. El cliente entrega el producto con sus accesorios</li>
+                <li>La evaluación tarda de 5 a 10 días hábiles desde que la Empresa recibe el producto</li>
+              </ul>
+              <h3 className="font-semibold text-ink mb-2">6.3 Qué hace la Empresa si procede</h3>
+              <p className="mb-4 text-ink-soft">
+                Repara el producto; si no es posible, lo cambia por uno igual o equivalente; si tampoco es posible, devuelve el
+                monto pagado por ese producto al saldo de la cuenta del cliente en la tienda, en dólares.
               </p>
+              <h3 className="font-semibold text-ink mb-2">6.4 Devoluciones</h3>
+              <p className="mb-4 text-ink-soft">
+                <strong>No se aceptan devoluciones por cambio de opinión.</strong> Si el producto llega con una falla, dañado o
+                distinto a lo publicado (modelo, condición o lo que dice incluir), se atiende como garantía según el punto 6.3.
+                Por eso cada ficha describe el producto, y la de un usado muestra fotos reales de la unidad.
+              </p>
+              <h3 className="font-semibold text-ink mb-2">6.5 Daños en el envío</h3>
+              <p className="text-ink-soft">
+                Revisa el paquete al recibirlo o retirarlo en la agencia. Si llega dañado, avísanos dentro de las <strong>48 horas</strong>
+                siguientes con fotos del empaque y del producto, para reclamar a la empresa de envíos.
+              </p>
+            </section>
+
+            {/* Used */}
+            <section id="usados" className="scroll-mt-28">
+              <div className="flex items-center gap-2 mb-3">
+                <FiPackage className="w-5 h-5 text-brand-600" />
+                <h2 className="text-xl font-bold text-ink">7. Productos Usados, Reacondicionados y de Caja Abierta</h2>
+              </div>
+              <ul className="list-disc pl-6 space-y-2 text-ink-soft">
+                <li>
+                  <strong>Caja abierta:</strong> {CONDITION_HELP.OPEN_BOX} <strong>Reacondicionado:</strong> {CONDITION_HELP.REFURBISHED}{' '}
+                  <strong>Usado:</strong> {CONDITION_HELP.USED}
+                </li>
+                <li>
+                  Estado estético: <strong>{GRADE_LABEL.EXCELLENT}</strong>: {GRADE_DEFINITION.EXCELLENT} <strong>{GRADE_LABEL.VERY_GOOD}</strong>:{' '}
+                  {GRADE_DEFINITION.VERY_GOOD} <strong>{GRADE_LABEL.GOOD}</strong>: {GRADE_DEFINITION.GOOD}
+                </li>
+                <li>
+                  La ficha de cada uno indica su condición, estado estético, empaque (caja original, genérica o sin caja), qué
+                  incluye y qué no, y cuando aplica, horas de uso, salud de la batería, detalles y pruebas hechas. Las fotos son de
+                  la unidad que se vende. <strong>Al comprarlo, el cliente acepta ese estado.</strong>
+                </li>
+                <li>Los accesorios que incluya pueden no ser originales: son compatibles y funcionan</li>
+                <li>La garantía es la de la Empresa por el plazo que indica la ficha (punto 6), por fallas de funcionamiento; no cubre el desgaste descrito</li>
+                <li>Los cupones de descuento no aplican a estos productos. Las ofertas de la tienda sí</li>
+              </ul>
+            </section>
+
+            {/* Digital */}
+            <section id="digitales" className="scroll-mt-28">
+              <div className="flex items-center gap-2 mb-3">
+                <FiPackage className="w-5 h-5 text-brand-600" />
+                <h2 className="text-xl font-bold text-ink">8. Productos Digitales</h2>
+              </div>
+              <ul className="list-disc pl-6 space-y-2 text-ink-soft">
+                <li>Gift cards, códigos y recargas se entregan por la cuenta del cliente o en la cuenta que indique al comprar</li>
+                <li>Una vez entregado el código o hecha la recarga, <strong>no tiene devolución</strong>. Si un código no funciona, avísanos y lo revisamos con el proveedor</li>
+                <li>El cliente es responsable de indicar bien la cuenta, la región y la plataforma: una recarga hecha a los datos indicados no se puede revertir</li>
+              </ul>
             </section>
 
             {/* Legal Responsibility */}
             <section>
               <div className="flex items-center gap-2 mb-3">
                 <FiAlertCircle className="w-5 h-5 text-brand-600" />
-                <h2 className="text-xl font-bold text-ink">7. Responsabilidad Legal</h2>
+                <h2 className="text-xl font-bold text-ink">9. Responsabilidad Legal</h2>
               </div>
               <p className="mb-3">
                 El usuario acepta total responsabilidad legal por cualquier violación de estos términos y exime a la Empresa
@@ -218,7 +288,7 @@ export default function TermsPage() {
             <section>
               <div className="flex items-center gap-2 mb-3">
                 <FiEdit3 className="w-5 h-5 text-brand-600" />
-                <h2 className="text-xl font-bold text-ink">8. Firma Digital y Documentos Electrónicos</h2>
+                <h2 className="text-xl font-bold text-ink">10. Firma Digital y Documentos Electrónicos</h2>
               </div>
               <p>
                 La firma digital proporcionada por el usuario mediante nuestro sistema de canvas electrónico tiene plena
@@ -230,7 +300,7 @@ export default function TermsPage() {
 
             {/* Intellectual Property */}
             <section>
-              <h2 className="text-xl font-bold text-ink mb-3">9. Propiedad Intelectual</h2>
+              <h2 className="text-xl font-bold text-ink mb-3">11. Propiedad Intelectual</h2>
               <p>
                 Todo el contenido incluido en este sitio, como texto, gráficos, logotipos, iconos, imágenes, clips de
                 audio, descargas digitales, compilaciones de datos y software, es propiedad de Electro Shop Morandin C.A.
@@ -241,7 +311,7 @@ export default function TermsPage() {
 
             {/* Contact */}
             <section className="bg-surface rounded-xl p-6 border border-line">
-              <h2 className="text-xl font-bold text-ink mb-3">10. Contacto</h2>
+              <h2 className="text-xl font-bold text-ink mb-3">12. Contacto</h2>
               <p>
                 Para consultas sobre estos términos y condiciones, puede contactarnos a través de:
               </p>

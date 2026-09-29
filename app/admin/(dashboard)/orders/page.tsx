@@ -1,5 +1,6 @@
 'use client';
 
+import { conditionBadge, warrantyDaysFor, type Condition, type Grade } from '@/lib/product-condition';
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -90,6 +91,10 @@ interface Order {
   items: Array<{
     id: string;
     productName?: string;
+    /** C-119: cómo se vendió y su garantía */
+    productCondition?: Condition | null;
+    conditionGrade?: Grade | null;
+    warrantyDays?: number | null;
     quantity?: number;
     priceUSD?: number;
     pricePerUnit?: number;
@@ -670,6 +675,11 @@ export default function OrdersPage() {
                         <tr key={item.id} className={adminRowHover}>
                           <td className={adminTd}>
                             <div className="font-medium text-ink">{item.productName || item.product?.name}</div>
+                            {conditionBadge(item.productCondition, item.conditionGrade) && (
+                              <div className="text-xs font-semibold text-ink-soft">
+                                {conditionBadge(item.productCondition, item.conditionGrade)} · garantía {warrantyDaysFor(item.productCondition, item.warrantyDays)} días
+                              </div>
+                            )}
                           </td>
                           <td className={`${adminTd} text-center`}>{item.quantity}</td>
                           <td className={`${adminTd} whitespace-nowrap text-right`}>{formatUSD(Number(item.priceUSD || item.pricePerUnit) || 0)}</td>

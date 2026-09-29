@@ -1,6 +1,8 @@
 import { formatFaceValue, getPlatform, type DigitalProvider, type DigitalUnit } from '@/lib/digital-catalog';
 
 /** Fila editable de un monto digital (C-60). Los números van como texto mientras se escriben. */
+import { isSecondHand, needsGrade, type Condition, type Grade, type Packaging } from '@/lib/product-condition';
+
 export interface VariantRow {
   /** Clave local para React (las filas nuevas aún no tienen id) */
   key: string;
@@ -82,6 +84,18 @@ export interface WizardData {
   /** C-100: la tienda paga el envío del paquete que lo lleve */
   freeShipping: boolean;
   specifications: Record<string, string>;
+  // C-119: condición (solo físicos). Los números van como texto, como el resto del formulario
+  condition: Condition;
+  conditionGrade: Grade | '';
+  packaging: Packaging | '';
+  includedItems: string;
+  missingItems: string;
+  usageHours: string;
+  batteryHealth: string;
+  cosmeticNotes: string;
+  testNotes: string;
+  warrantyDays: string;
+  serialNumber: string;
   // Digital (C-60)
   digitalPlatform: string;
   digitalRegion: string;
@@ -125,6 +139,17 @@ export const DEFAULT_WIZARD_DATA: WizardData = {
   shippingCost: '',
   freeShipping: false,
   specifications: {},
+  condition: 'NEW',
+  conditionGrade: '',
+  packaging: '',
+  includedItems: '',
+  missingItems: '',
+  usageHours: '',
+  batteryHealth: '',
+  cosmeticNotes: '',
+  testNotes: '',
+  warrantyDays: '',
+  serialNumber: '',
   digitalPlatform: '',
   digitalRegion: 'GLOBAL',
   deliveryMethod: 'INSTANT',
@@ -142,6 +167,18 @@ export function validatePhysicalStep1(data: WizardData): Record<string, string> 
   if (!data.name.trim()) e.name = 'El nombre es obligatorio';
   if (!data.sku.trim()) e.sku = 'El SKU es obligatorio';
   if (!data.categoryId) e.categoryId = 'Selecciona una categoría';
+  // C-119: lo que el cliente necesita saber de un equipo que no es nuevo
+  if (isSecondHand(data.condition)) {
+    if (needsGrade(data.condition) && !data.conditionGrade) e.conditionGrade = 'Elige el estado estético';
+    if (!data.packaging) e.packaging = 'Elige el empaque';
+    if (!data.includedItems.trim()) e.includedItems = 'Escribe qué incluye';
+    const battery = data.batteryHealth.trim();
+    if (battery && !(Number(battery) >= 1 && Number(battery) <= 100)) e.batteryHealth = 'De 1 a 100';
+    const hours = data.usageHours.trim();
+    if (hours && !(Number.isInteger(Number(hours)) && Number(hours) >= 0)) e.usageHours = 'Un número entero';
+  }
+  const days = data.warrantyDays.trim();
+  if (days && !(Number.isInteger(Number(days)) && Number(days) >= 0 && Number(days) <= 1095)) e.warrantyDays = 'De 0 a 1095 días';
   return e;
 }
 
@@ -202,6 +239,10 @@ export function validateDigitalStep3(data: WizardData): Record<string, string> {
 export function validatePublish(data: WizardData): Record<string, string> {
   const e: Record<string, string> = {};
   if (data.images.length === 0) e.images = 'Sube al menos una imagen del producto';
+  // C-119: de un usado se ven fotos de esa unidad, no de catálogo
+  else if (data.productType === 'PHYSICAL' && isSecondHand(data.condition) && data.images.length < 3) {
+    e.images = 'Sube al menos 3 fotos reales de esta unidad (frente, atrás y detalles)';
+  }
   return e;
 }
 

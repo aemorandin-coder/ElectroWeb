@@ -1,4 +1,5 @@
 'use client';
+import { conditionBadge, warrantyDaysFor, type Condition, type Grade } from '@/lib/product-condition';
 import { formatUSD } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
 
@@ -39,6 +40,10 @@ interface OrderItem {
   totalUSD: number;
   productImage?: string;
   product?: { productType?: string; };
+  /** C-119: cómo se vendió y su garantía (copia en el pedido) */
+  productCondition?: Condition | null;
+  conditionGrade?: Grade | null;
+  warrantyDays?: number | null;
 }
 
 interface Order {
@@ -662,6 +667,11 @@ export default function OrdersPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-ink truncate">{item.productName}</p>
+                        {conditionBadge(item.productCondition, item.conditionGrade) && (
+                          <p className="text-xs font-semibold text-ink-soft">
+                            {conditionBadge(item.productCondition, item.conditionGrade)} · garantía {warrantyDaysFor(item.productCondition, item.warrantyDays)} días
+                          </p>
+                        )}
                         <p className="text-xs text-muted">x{item.quantity}</p>
                       </div>
                       <p className="text-xs font-bold text-brand-500">{formatUSD(item.totalUSD)}</p>

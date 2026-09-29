@@ -9,6 +9,7 @@ import ProductGallery from '@/components/product/ProductGallery';
 import ProductReviews from '@/components/product/ProductReviews';
 import PurchasePanel from '@/components/product/PurchasePanel';
 import CouponOffers from '@/components/product/CouponOffers';
+import ConditionDetails, { ConditionNotice } from '@/components/product/ConditionDetails';
 import OfferNote from '@/components/ui/OfferNote';
 import { cuponesParaProducto } from '@/lib/promotions';
 import WishlistButton from '@/components/product/WishlistButton';
@@ -84,7 +85,8 @@ export default async function ProductPage({ params }: PageProps) {
     getPublicReviews(product.id),
     getRelatedProducts(product, 8),
     getActivePaymentMethodKinds(),
-    cuponesParaProducto(product),
+    // C-119: los cupones no aplican a usados (decisión de Andrés): no se ofrecen en su ficha
+    product.condition ? Promise.resolve([]) : cuponesParaProducto(product),
   ]);
 
   const isDigital = product.productType === 'DIGITAL';
@@ -113,6 +115,8 @@ export default async function ProductPage({ params }: PageProps) {
       priceCurrency: 'USD',
       price: product.priceUSD.toFixed(2),
       availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      // C-119: Google distingue nuevo, reacondicionado y usado (caja abierta ya no está sellada: usado)
+      itemCondition: `https://schema.org/${product.condition?.kind === 'REFURBISHED' ? 'RefurbishedCondition' : product.condition ? 'UsedCondition' : 'NewCondition'}`,
     },
     aggregateRating: summary.count > 0 ? { '@type': 'AggregateRating', ratingValue: summary.average.toFixed(1), reviewCount: summary.count } : undefined,
   };
@@ -133,7 +137,9 @@ export default async function ProductPage({ params }: PageProps) {
       }]
       : []),
     ...(!isDigital && settings.pickupEnabled ? [{ Icon: FiMapPin, title: 'Retiro en tienda', text: settings.pickupAddress || 'Coordina el retiro al comprar' }] : []),
-    { Icon: FiShield, title: 'Producto 100% original', text: 'Con respaldo de la tienda' },
+    product.condition
+      ? { Icon: FiShield, title: `Garantía de la tienda: ${product.condition.warrantyDays} días`, text: 'Por fallas de funcionamiento' }
+      : { Icon: FiShield, title: 'Producto 100% original', text: 'Con respaldo de la tienda' },
     ...(paymentKinds.length > 0
       ? [{ Icon: FiCreditCard, title: 'Formas de pago', text: paymentKinds.map((kind) => PAYMENT_LABELS[kind].label).join(' · ') }]
       : []),
@@ -185,6 +191,7 @@ export default async function ProductPage({ params }: PageProps) {
                   <Link href={`/productos?category=${product.category.slug}`} className="text-brand-700 hover:underline">{product.category.name}</Link>
                 </p>
                 <h1 className="mt-1 text-xl font-bold leading-snug text-ink sm:text-2xl lg:text-3xl">{product.name}</h1>
+                {product.condition && <ConditionNotice condition={product.condition} />}
 
                 <a href="#resenas" className="mt-2 inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-brand-700">
                   <span className="flex text-warning" aria-hidden="true">
@@ -253,6 +260,7 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
 
           <div className="mt-8 grid gap-6 lg:mt-10 lg:grid-cols-12 lg:gap-10">
+            {product.condition && <ConditionDetails condition={product.condition} />}
             <section aria-labelledby="descripcion-title" className={`rounded-2xl border border-line bg-white p-4 lg:p-6 ${specs.length > 0 ? 'lg:col-span-7' : 'lg:col-span-12'}`}>
               <h2 id="descripcion-title" className="text-lg font-bold text-ink lg:text-xl">Descripción</h2>
               {product.description ? (

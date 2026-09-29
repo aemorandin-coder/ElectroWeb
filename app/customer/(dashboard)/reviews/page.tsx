@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FiStar, FiPackage, FiClock, FiCheck } from 'react-icons/fi';
+import { FiStar, FiPackage, FiClock, FiCheck, FiX } from 'react-icons/fi';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import {
@@ -11,6 +11,7 @@ import {
   adminBadge,
 } from '@/lib/admin-ui';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { reviewStatus } from '@/lib/review-status';
 
 interface Review {
   id: string;
@@ -18,8 +19,9 @@ interface Review {
   comment: string;
   createdAt: string;
   isApproved: boolean;
-  isPublished: boolean;
-  userName: string;
+  // C-124: antes leía `isPublished`, que la API nunca manda, y ninguna reseña salía como publicada
+  rejectedAt: string | null;
+  rejectionReason: string | null;
   product: {
     name: string;
     slug: string;
@@ -49,17 +51,26 @@ export default function MyReviewsPage() {
   useCargarAlMontar(fetchMyReviews);
 
   const filteredReviews = reviews.filter(review => {
-    if (filter === 'approved') return review.isApproved && review.isPublished;
-    if (filter === 'pending') return !review.isApproved;
+    if (filter === 'approved') return reviewStatus(review) === 'APPROVED';
+    if (filter === 'pending') return reviewStatus(review) === 'PENDING';
     return true;
   });
 
   const getStatusBadge = (review: Review) => {
-    if (review.isApproved && review.isPublished) {
+    const estado = reviewStatus(review);
+    if (estado === 'APPROVED') {
       return (
         <span className={adminBadge('success')}>
           <FiCheck className="w-3 h-3" />
           Publicada
+        </span>
+      );
+    }
+    if (estado === 'REJECTED') {
+      return (
+        <span className={adminBadge('danger')}>
+          <FiX className="w-3 h-3" />
+          No publicada
         </span>
       );
     }
@@ -170,7 +181,14 @@ export default function MyReviewsPage() {
 
               <p className="text-sm text-ink-soft leading-relaxed">{review.comment}</p>
 
-              {!review.isApproved && (
+              {reviewStatus(review) === 'REJECTED' && (
+                <div className="mt-4 p-3 bg-surface border border-line rounded-xl">
+                  <p className="text-xs text-ink-soft">
+                    Nuestro equipo no la publicó{review.rejectionReason ? `: ${review.rejectionReason}` : '.'}
+                  </p>
+                </div>
+              )}
+              {reviewStatus(review) === 'PENDING' && (
                 <div className="mt-4 p-3 bg-surface border border-line rounded-xl">
                   <p className="text-xs text-ink-soft flex items-center gap-2">
                     <FiClock className="w-4 h-4 text-warning-strong flex-shrink-0" />

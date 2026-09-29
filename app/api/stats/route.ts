@@ -65,7 +65,7 @@ export async function GET() {
       prisma.productRequest.count({ where: { status: 'PENDING' } }),
       prisma.contactMessage.count({ where: { status: 'PENDING' } }),
       prisma.referralConversion.count({ where: { status: 'PENDING' } }),
-      prisma.review.count({ where: { isApproved: false } }),
+      prisma.review.count({ where: { isApproved: false, rejectedAt: null } }),
       prisma.profile.count({ where: { businessVerificationStatus: 'PENDING' } }),
     ]);
 

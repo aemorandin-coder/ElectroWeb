@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { publicarOrdenes } from '@/lib/realtime/bus';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
@@ -255,6 +256,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         if (!digitalCode) {
             return NextResponse.json({ error: 'Ya se enviaron todos los códigos de este producto' }, { status: 409 });
         }
+
+        // C-127: si con este código se completó el pedido, la orden pasa a entregada en vivo
+        void publicarOrdenes([orderId]);
 
         // Create notification for customer
         if (order.userId) {

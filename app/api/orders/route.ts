@@ -50,6 +50,7 @@ import { avisarPedidoDigitalPorEntregar } from '@/lib/digital-delivery';
 import { DestinoError, leerDestino, type DestinoOrden } from '@/lib/envios/destino';
 import { actualizarRastreoZoom } from '@/lib/envios/seguimiento';
 import { customerOrderSelect } from '@/lib/dto/order';
+import { publicarOrdenes, publicarStock } from '@/lib/realtime/bus';
 import { ETIQUETA_ENTREGA, NOMBRE_EMPRESA, urlRastreo, usaEmpresa, type EmpresaGuia } from '@/lib/envios/empresas';
 
 
@@ -801,6 +802,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // C-127: la orden nueva aparece sola en el panel; si ya se descontó stock, la ficha muestra lo que queda
+    void publicarOrdenes(orders.map((order) => order.id), { nueva: true });
+    if (isPaymentConfirmed) void publicarStock([...physicalQuantities.keys()]);
+
     // ElectroStudio (C-113): la persona llegó por una historia de Instagram en los últimos 7 días
     void recordStudioOrder(request.cookies.get(STUDIO_COOKIE)?.value, orders.map((order) => order.id), userId);
 
@@ -1098,6 +1103,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { ordenPrevia: oldOrder, orden: order, confirmandoPago, cancelando, motivo, reintegro, cambiosStock } = resultado;
+
+    // C-127: el panel, la cuenta del cliente y la ficha del producto lo ven sin recargar
+    void publicarOrdenes([order.id]);
+    // Confirmar descuenta stock y cancelar lo devuelve: se publica el de todos sus productos
+    if (oldOrder.status !== order.status) void publicarStock(order.items.map((item) => item.productId));
 
     if (cambiosStock.length > 0) {
       notifyStockCrossings(cambiosStock).catch((error) => console.error('Error enviando avisos de stock:', error));

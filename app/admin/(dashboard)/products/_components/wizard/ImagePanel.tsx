@@ -4,34 +4,9 @@ import { useRef, useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { FiImage, FiPlus, FiTrash2, FiStar, FiLink, FiX } from 'react-icons/fi';
+import { uploadProductPhoto } from '@/lib/product-photo-upload';
 
 const MAX_IMAGES = 8;
-/** El servidor acepta hasta 5 MB; se deja margen */
-const MAX_UPLOAD = 4.5 * 1024 * 1024;
-
-function canvasToBlob(c: HTMLCanvasElement, type: string, quality?: number): Promise<Blob | null> {
-  return new Promise((resolve) => c.toBlob(resolve, type, quality));
-}
-
-/**
- * C-117: el PNG que sale de "copiar sujeto" en el teléfono suele pasar de 5 MB. Se achica a 2000 px
- * sin perder la transparencia (PNG o, si sigue pesado, WebP, que también la guarda).
- */
-async function prepareProductPhoto(file: File): Promise<Blob> {
-  if (file.size <= MAX_UPLOAD) return file;
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 2000 / Math.max(bitmap.width, bitmap.height));
-  const c = document.createElement('canvas');
-  c.width = Math.round(bitmap.width * scale);
-  c.height = Math.round(bitmap.height * scale);
-  c.getContext('2d')?.drawImage(bitmap, 0, 0, c.width, c.height);
-  bitmap.close();
-  for (const [type, q] of [['image/png', undefined], ['image/webp', 0.92], ['image/webp', 0.8]] as const) {
-    const blob = await canvasToBlob(c, type, q);
-    if (blob && blob.size <= MAX_UPLOAD) return blob;
-  }
-  throw new Error(`"${file.name}" pesa demasiado aun achicada`);
-}
 
 interface Props {
   images: string[];
@@ -60,19 +35,10 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
     setUploading(true);
     try {
       const results = await Promise.all(
-        Array.from(files).map(async (file) => {
-          const blob = await prepareProductPhoto(file);
-          const fd = new FormData();
-          fd.append('file', blob instanceof File ? blob : new File([blob], file.name.replace(/\.\w+$/, blob.type === 'image/webp' ? '.webp' : '.png'), { type: blob.type }));
-          // C-117: con fondo transparente, el servidor arma la foto final con fondo blanco y la cinta "ES"
-          if (badge) fd.append('purpose', 'product');
-          const res = await fetch('/api/upload', { method: 'POST', body: fd });
-          const data = (await res.json().catch(() => null)) as { url?: string; error?: string; badged?: boolean } | null;
-          if (!res.ok || !data?.url) throw new Error(data?.error || `No se pudo subir "${file.name}"`);
-          return data;
-        })
+        // C-117: con fondo transparente, el servidor arma la foto final con fondo blanco y la cinta "ES"
+        Array.from(files).map((file) => uploadProductPhoto(file, { badge }))
       );
-      onChange([...images, ...results.map((r) => r.url as string)]);
+      onChange([...images, ...results.map((r) => r.url)]);
       const badged = results.filter((r) => r.badged).length;
       if (badged) toast.success(badged === 1 ? 'Foto lista con fondo blanco y la cinta ES' : `${badged} fotos listas con fondo blanco y la cinta ES`);
     } catch (err) {

@@ -11,7 +11,7 @@ import {
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { parseProductImages } from '@/lib/product-utils';
 import ListaProductos, { type CambiosRapidos } from './_components/lista/ListaProductos';
-import { CargaMasiva, EdicionMasiva, VistaRapida } from './_components/lista/Modales';
+import { EdicionMasiva, VistaRapida } from './_components/lista/Modales';
 import SadesPanel from './_components/lista/SadesPanel';
 import { sinStock, type CampoMasivo, type Categoria, type EstadoProducto, type FiltroEstado, type ProductoLista } from './_components/lista/tipos';
 
@@ -81,7 +81,6 @@ export default function ProductsPage() {
 
   const [vista, setVista] = useState<ProductoLista | null>(null);
   const [masivo, setMasivo] = useState<{ campo: CampoMasivo; valor: string } | null>(null);
-  const [carga, setCarga] = useState(false);
   const [masAcciones, setMasAcciones] = useState(false);
   const [duplicando, setDuplicando] = useState<string | null>(null);
 
@@ -253,7 +252,7 @@ export default function ProductsPage() {
                   </button>
                   {masAcciones && (
                     <div className="absolute right-0 z-[var(--z-dropdown)] mt-1 w-52 rounded-xl border border-line bg-white p-1 shadow-lg" role="menu">
-                      <button type="button" role="menuitem" onClick={() => { setMasAcciones(false); setCarga(true); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-surface"><FiUpload className="h-4 w-4" aria-hidden="true" /> Carga masiva</button>
+                      <Link href="/admin/products/importar" role="menuitem" onClick={() => setMasAcciones(false)} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-surface"><FiUpload className="h-4 w-4" aria-hidden="true" /> Importar (.json)</Link>
                       <button type="button" role="menuitem" onClick={() => { setMasAcciones(false); exportar(); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-surface"><FiDownload className="h-4 w-4" aria-hidden="true" /> Exportar CSV</button>
                     </div>
                   )}
@@ -366,7 +365,6 @@ export default function ProductsPage() {
           onAplicar={aplicarMasivo}
         />
       )}
-      {carga && <CargaMasiva onClose={() => setCarga(false)} onCargada={recargar} />}
     </div>
   );
 }

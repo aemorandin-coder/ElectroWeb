@@ -12,6 +12,8 @@ import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-lim
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD, formatVES } from '@/lib/currency';
+import { aCentimos, hoyCaracas, leerMontoBs, montoBs, montoParaCopiar } from '@/lib/pago-movil/monto';
+import { leerCotizacion } from '@/lib/pago-movil/cotizacion';
 
 /**
  * POST /api/pago-movil/verificar
@@ -61,10 +63,14 @@ export async function POST(req: NextRequest) {
             contexto = 'GENERAL', // RECHARGE, ORDER, GENERAL
             transactionId,        // ID de transacción de recarga (si aplica)
             orderId,              // ID de orden (si aplica)
+            cotizacion: cotizacionToken, // C-125: monto y tasa firmados por /api/orders/quote
         } = body;
 
-        // Validaciones básicas
-        if (!telefonoPagador || !bancoOrigen || !referencia || !fechaPago || !importe) {
+        // C-125: compra con cotización firmada. Si falta o venció, se usa la tasa del momento (como antes)
+        const cotizacion = contexto === 'ORDER' ? leerCotizacion(cotizacionToken, userId) : null;
+
+        // Validaciones básicas (el importe de una compra puede venir de la cotización: es el monto exacto que se mostró)
+        if (!telefonoPagador || !bancoOrigen || !referencia || !fechaPago || !(importe || cotizacion)) {
             return NextResponse.json(
                 { error: 'Faltan campos obligatorios: teléfono, banco, referencia, fecha e importe son requeridos' },
                 { status: 400 }
@@ -97,8 +103,14 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Validar monto positivo
-        const montoNumerico = parseFloat(importe);
+        // Monto positivo con céntimos exactos. Acepta "1.115,25" o 1115.25: antes parseFloat("1.115,25") daba 1,115
+        const montoLeido = importe === undefined || importe === null || importe === ''
+            ? cotizacion?.montoBs ?? null
+            : typeof importe === 'number'
+                // Número (formularios de recarga y pestañas de antes de C-125): 1115.2935 → 1115.29, no "miles"
+                ? (Number.isFinite(importe) && importe > 0 ? aCentimos(importe) / 100 : null)
+                : leerMontoBs(String(importe));
+        const montoNumerico = montoLeido ?? NaN;
         if (isNaN(montoNumerico) || montoNumerico <= 0) {
             return NextResponse.json(
                 { error: 'El monto debe ser un número positivo' },
@@ -115,26 +127,27 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // SEGURIDAD: Validar fecha de pago
-        const fechaPagoDate = new Date(fechaPago);
-        const ahora = new Date();
-        const hace30Dias = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000);
+        // SEGURIDAD: Validar fecha de pago. C-125: es un día de Venezuela ("2026-09-29"), sin hora: antes se
+        // pasaba por Date y el formulario proponía la fecha de UTC, que después de las 8 p. m. ya es la de mañana.
+        const fechaTexto = typeof fechaPago === 'string' ? fechaPago.slice(0, 10) : '';
+        const fechaPagoDate = new Date(`${fechaTexto}T12:00:00-04:00`);
+        const hace30Dias = hoyCaracas(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
 
-        if (isNaN(fechaPagoDate.getTime())) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaTexto) || isNaN(fechaPagoDate.getTime())) {
             return NextResponse.json(
                 { error: 'Fecha de pago inválida' },
                 { status: 400 }
             );
         }
 
-        if (fechaPagoDate > ahora) {
+        if (fechaTexto > hoyCaracas()) {
             return NextResponse.json(
                 { error: 'La fecha de pago no puede ser futura' },
                 { status: 400 }
             );
         }
 
-        if (fechaPagoDate < hace30Dias) {
+        if (fechaTexto < hace30Dias) {
             return NextResponse.json(
                 { error: 'Solo se pueden verificar pagos de los últimos 30 días' },
                 { status: 400 }
@@ -148,6 +161,24 @@ export async function POST(req: NextRequest) {
                 verificado: true,
             },
         });
+
+        // C-125: el mismo cliente vuelve a escribir la referencia de un pago de compra suyo que sigue libre (recargó
+        // la página o volvió al checkout): se le devuelve ese pago como verificado. Antes era "referencia ya utilizada",
+        // una alerta de seguridad, y el cliente se quedaba sin poder usar su propio pago
+        if (
+            referenciaExistente && contexto === 'ORDER' && referenciaExistente.userId === userId &&
+            referenciaExistente.contexto === 'ORDER' && !referenciaExistente.orderId && !referenciaExistente.transactionId && !referenciaExistente.archivadoEn
+        ) {
+            return NextResponse.json({
+                success: true,
+                verified: true,
+                reutilizado: true,
+                message: 'Este pago ya estaba verificado y sigue disponible para tu compra.',
+                amount: referenciaExistente.importeVerificado?.toString(),
+                pagadoBs: Number(referenciaExistente.importeVerificado ?? 0),
+                tasa: Number(referenciaExistente.tasaVES ?? 0) || null,
+            });
+        }
 
         if (referenciaExistente) {
             // ALERTA DE SEGURIDAD: Referencia duplicada
@@ -208,11 +239,17 @@ export async function POST(req: NextRequest) {
             telefonoPagador,
             bancoOrigen,
             referencia,
-            fechaPago,
+            fechaPago: fechaTexto,
             importe: montoNumerico,
             cedulaPagador,
             reqCed, // Pasar flag de validación de cédula
         });
+
+        // Lo que confirmó el banco. Como busca por monto exacto, si no devuelve el importe es el que se pidió.
+        // Antes era parseFloat(amount || '0'): sin `amount` la compra quedaba con Bs. 0 pagados y sin confirmar
+        const montoBanco = resultado.verified ? leerMontoBs(String(resultado.amount ?? '')) ?? montoNumerico : null;
+        // Tasa congelada del pago: la de la cotización que vio el cliente o, sin ella, la del momento
+        const tasaPago = cotizacion?.tasa ?? Number((await prisma.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } }))?.exchangeRateVES ?? 0);
 
         // Registrar la verificación en la base de datos
         // SEGURIDAD: Try-catch para manejar constraint único (race condition protection)
@@ -223,9 +260,10 @@ export async function POST(req: NextRequest) {
                     telefonoPagador,
                     bancoOrigen,
                     referencia,
-                    fechaPago: new Date(fechaPago),
+                    fechaPago: fechaPagoDate,
                     importeSolicitado: montoNumerico,
-                    importeVerificado: resultado.verified ? parseFloat(resultado.amount || '0') : null,
+                    importeVerificado: montoBanco,
+                    tasaVES: tasaPago > 0 ? tasaPago : null,
                     codigoRespuesta: resultado.code,
                     mensajeRespuesta: resultado.message,
                     verificado: resultado.verified,
@@ -298,7 +336,7 @@ export async function POST(req: NextRequest) {
 
             if (transaction.status === 'PENDING') {
                 // El monto verificado del BDV está en Bolívares
-                const montoVerificadoBs = parseFloat(resultado.amount || '0');
+                const montoVerificadoBs = montoBanco ?? 0;
                 // El monto en USD de la transacción para actualizar el balance
                 const montoUsd = Number(transaction.amount);
 
@@ -307,7 +345,7 @@ export async function POST(req: NextRequest) {
                 // con un Pago Móvil real de Bs. 1 enviando importe=1.
                 const settings = await prisma.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } });
                 const tasa = settings?.exchangeRateVES ? Number(settings.exchangeRateVES) : 0;
-                const montoSolicitadoBs = Math.round(montoUsd * tasa * 100) / 100;
+                const montoSolicitadoBs = montoBs(montoUsd, tasa);
                 // 1,5 %: redondeo del banco y un cambio pequeño de la tasa entre la solicitud y el pago
                 const tolerancia = montoSolicitadoBs * 0.015;
                 if (tasa > 0 && montoVerificadoBs >= (montoSolicitadoBs - tolerancia)) {
@@ -455,9 +493,15 @@ export async function POST(req: NextRequest) {
                 verified: true,
                 message: 'Pago verificado exitosamente',
                 amount: resultado.amount,
+                // C-125: el checkout concilia con esto (pagado de más, de menos o por redondeo)
+                pagadoBs: montoBanco,
+                tasa: tasaPago > 0 ? tasaPago : null,
             });
         } else {
             const mensajeError = interpretarErrorBDV(resultado.code, resultado.message);
+            // C-125: si el banco dice que el monto no coincide, el cliente pudo transferir otra cantidad: se le pide
+            // que la escriba tal cual la ve en su comprobante (el banco busca por monto exacto)
+            const montoNoCoincide = /monto|importe|amount/i.test(mensajeError);
             return NextResponse.json({
                 success: true,
                 verified: false,
@@ -465,6 +509,8 @@ export async function POST(req: NextRequest) {
                 // Ambos campos para compatibilidad con frontend existente
                 message: mensajeError,
                 error: mensajeError,
+                montoConsultadoBs: montoParaCopiar(montoNumerico),
+                montoNoCoincide,
             });
         }
     } catch (error) {

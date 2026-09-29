@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiMessageCircle, FiUser } from 'react-icons/fi';
 import { BANCOS_VENEZUELA, type BancoVenezuela } from '@/lib/pago-movil/bancos-venezuela';
+import { hoyCaracas } from '@/lib/pago-movil/monto';
 
 interface VerificarPagoMovilFormProps {
     /** Monto esperado del pago */
@@ -67,7 +68,7 @@ export default function VerificarPagoMovilForm({
         telefonoPagador: initialData?.telefonoPagador || '',
         bancoOrigen: initialData?.bancoOrigen || '',
         referencia: initialData?.referencia || '',
-        fechaPago: initialData?.fechaPago || new Date().toISOString().split('T')[0],
+        fechaPago: initialData?.fechaPago || hoyCaracas(), // C-125: fecha de Venezuela (la de UTC ya es mañana después de las 8 p. m.)
         cedulaPagador: initialData?.cedulaPagador || '',
     });
 
@@ -303,7 +304,7 @@ Por favor necesito ayuda para verificar mi pago.
                             name="fechaPago"
                             value={formData.fechaPago}
                             onChange={handleChange}
-                            max={new Date().toISOString().split('T')[0]}
+                            max={hoyCaracas()}
                             disabled={disabled || verificationState === 'verifying'}
                             className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed ${
                                 fieldErrors.fechaPago ? 'border-deal/40 bg-deal-bg' : 'border-line'

@@ -1,3 +1,5 @@
+import { hoyCaracas, montoParaAPI } from './monto';
+
 /**
  * Lista de bancos de Venezuela con sus códigos para Pago Móvil
  * Fuente: Banco Central de Venezuela
@@ -94,8 +96,10 @@ export function validarReferencia(referencia: string): boolean {
  * Formato requerido: YYYY-MM-DD
  */
 export function formatearFechaParaAPI(fecha: Date | string): string {
+  // C-125: "2026-09-29" se manda tal cual. Pasarlo por Date y toISOString lo movía de día según la hora
+  if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}/.test(fecha)) return fecha.slice(0, 10);
   const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
-  return date.toISOString().split('T')[0];
+  return hoyCaracas(date);
 }
 
 /**
@@ -103,5 +107,6 @@ export function formatearFechaParaAPI(fecha: Date | string): string {
  * Formato requerido: "150.00" (string con 2 decimales)
  */
 export function formatearMontoParaAPI(monto: number): string {
-  return monto.toFixed(2);
+  // C-125: céntimos exactos. toFixed(2) redondeaba el binario: 37.595 salía "37.59" y la pantalla decía 37,60
+  return montoParaAPI(monto);
 }

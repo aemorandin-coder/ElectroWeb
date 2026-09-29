@@ -17,7 +17,7 @@ export async function GET() {
       where: pagoSinOrdenWhere,
       orderBy: { createdAt: 'desc' },
       take: 100,
-      select: { id: true, referencia: true, importeVerificado: true, fechaPago: true, createdAt: true, userId: true },
+      select: { id: true, referencia: true, importeVerificado: true, tasaVES: true, fechaPago: true, createdAt: true, userId: true },
     }),
     prisma.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } }),
   ]);
@@ -32,11 +32,14 @@ export async function GET() {
   return NextResponse.json({
     pagos: rows.map((r, i) => {
       const montoVES = Number(r.importeVerificado ?? 0);
+      // C-125: a la tasa congelada del pago, como se acredita; sin ella (pagos viejos), a la de hoy
+      const tasaPago = Number(r.tasaVES ?? 0) || tasa;
       return {
         id: r.id,
         referencia: r.referencia,
         montoVES,
-        montoUSD: tasa > 0 ? roundMoney(montoVES / tasa) : 0,
+        montoUSD: tasaPago > 0 ? roundMoney(montoVES / tasaPago) : 0,
+        tasaCongelada: Number(r.tasaVES ?? 0) > 0,
         fechaPago: r.fechaPago.toISOString(),
         verificadoEn: r.createdAt.toISOString(),
         cliente: byId.get(r.userId) ?? null,

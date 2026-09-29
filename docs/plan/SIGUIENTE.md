@@ -1,6 +1,6 @@
 # Punto de partida (actualizado 2026-09-29)
 
-Léelo antes de empezar. En producción: 70093de (hasta C-113), sirviendo `.next-b`. En GitHub, `main` ya tiene C-114, G-69, C-115, C-116 y C-117: **falta el deploy**.
+Léelo antes de empezar. En producción: 70093de (hasta C-113), sirviendo `.next-b`. En GitHub, `main` ya tiene C-114, G-69, C-115, C-116, C-117 y C-119: **falta el deploy, y lleva cambio de base (C-119)**.
 
 ## 0. Urgente: deploy (§2)
 - **Qué lleva** (todo en `main`, merge y push autorizados por Andrés el 28 y 29/09):
@@ -9,13 +9,19 @@ Léelo antes de empezar. En producción: 70093de (hasta C-113), sirviendo `.next
   - **C-115:** el carrito avisa el mínimo y el máximo. El mínimo cuenta solo los productos.
   - **C-116:** ElectroStudio con inicio, acciones directas, validaciones, asistente y editor paso a paso.
   - **C-117:** la cinta "ES" automática en las fotos de producto transparentes.
-- **Sin cambios de base ni de dependencias.** Deploy normal (§2).
+  - **C-119:** productos usados y reacondicionados, términos 3.0 y el formulario de garantía del cliente, que era falso y ahora funciona.
+- **Cambio de base (C-119):** solo tipos y columnas nuevas, sin borrar nada. Sin dependencias nuevas. Pasos:
+  1. Respaldo: `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-29-09.dump`
+  2. `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL: deben ser solo `CREATE TYPE` y `ADD COLUMN`.
+  3. `npx prisma db push` y `bash scripts/deploy.sh` otra vez.
 - **Después del deploy, en producción:**
   1. Transacciones → "Pagos Móvil de compra sin orden" → "Pasar a su saldo" el pago de prueba de Andrés (C-114).
   2. Configuración → Precios y pagos → Montos por compra: poner el mínimo que se quiera (ya explica qué cuenta) y verlo en `/carrito` con un producto barato.
   3. Productos → Nuevo → subir un PNG transparente sacado del teléfono: debe salir con fondo blanco y la cinta.
   4. ElectroStudio: "Nueva historia" con ese producto. La foto debe salir sin la cinta.
   5. Marketing ya no tiene la pestaña "ElectroStudio".
+  6. Crear un producto **Usado** de prueba (en borrador o sin stock): pide grado, empaque, qué incluye y 3 fotos. Revisar su ficha y el filtro "Condición" del catálogo.
+  7. Leer `/terminos` (versión 3.0) y la página "Garantía" del cliente.
 
 ## 1. Estado de las ramas
 - **`main`:** todo hasta C-117, subido el 29/09. En producción, hasta C-113.
@@ -61,10 +67,9 @@ bash scripts/deploy.sh
    - "Descargar plantilla": campos, categorías y marcas válidas, e instrucciones para Claude en la nube. Claude llena la ficha desde las fotos; **el precio lo da Andrés**.
    - "Importar" el `.json` con las fotos: vista previa con errores por fila, y se crean en borrador.
    - El fondo se quita en el teléfono (iPhone: mantener el dedo sobre el producto; Samsung: "Extraer objeto").
-   - Conviene hacerla después de C-119, para que la plantilla ya traiga la condición. Si no, se agrega luego.
-4b. **C-119 · Productos usados y reacondicionados.** Propuesta lista en `estado/C-119.md`, con Amazon Renewed, eBay y la ley.
-   - Decidido: cupones no, ofertas sí; la garantía la da la tienda; etiqueta "Usado" sin la cinta.
-   - **Falta de Andrés:** qué condiciones usar, los días de garantía por condición, la devolución de usados y el OK de la migración.
+   - La plantilla trae los campos de condición de C-119.
+4b. **C-119 · Productos usados y reacondicionados:** hecha y en `main` el 29/09 (`estado/C-119.md`). Lleva cambio de base (§0).
+   - Pendiente para después: módulo propio de solicitudes de garantía (hoy llegan a Mensajes y Solicitudes) y "Usado" en el correo de compra.
 4c. **C-120 · Facturación a empresa, IVA y términos** (pedida por Andrés el 29/09 para después, con investigación a fondo):
    - El flujo empieza cuando el cliente cambia a "empresa" en su panel, para facturar.
    - Revisar las leyes venezolanas (IVA, facturación, ventas en línea, protección al consumidor) y los términos y condiciones, pensando en el crecimiento de la empresa.
@@ -99,7 +104,8 @@ bash scripts/deploy.sh
   - **Pago Móvil sin orden → al saldo del cliente** (28/09).
   - **Mínimo de compra solo sobre los productos**, sin embalaje ni envío. **Máximo sobre todo lo que paga el cliente** (28/09).
 - **Productos (28/09):** el fondo de las fotos se quita desde el teléfono; los usados llevan etiqueta "Usado" y no el sello "ES".
-- **Usados (28/09):** no aplican cupones, sí ofertas; la garantía la da la tienda.
+- **Usados (28 y 29/09):** cuatro condiciones (Nuevo, Caja abierta, Reacondicionado, Usado); cupones no, ofertas sí; la garantía la da la tienda (30, 30, 90 y 30 días por defecto); **sin devoluciones por cambio de opinión** (falla, daño o producto distinto se atienden como garantía).
+- **Migraciones:** Andrés autorizó siempre (29/09). Aditivas y con respaldo.
 - **IVA (29/09):** se deja para C-120, junto con la facturación a empresa y la revisión legal.
 - **ElectroStudio (28/09):** dos pantallas (inicio y editor); lo agotado o sin publicar avisa y deja descargar; miniaturas reales en la lista.
 - **Descuentos (25/09):**
@@ -143,6 +149,6 @@ bash scripts/deploy.sh
 ## 6. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto.
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
-> 2. Pregúntame si ya hice el deploy del §0 y cómo salieron las pruebas de después, y si decidí lo que falta de C-119 (`estado/C-119.md`, "Decisiones de Andrés").
+> 2. Pregúntame si ya hice el deploy del §0 (con el cambio de base) y cómo salieron las pruebas de después.
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
-> 4. Después sigue el orden de `SIGUIENTE.md` §3: la revisión final, C-119 y C-118, C-107, C-92, el wizard de producto y C-120.
+> 4. Después sigue el orden de `SIGUIENTE.md` §3: la revisión final, C-118, C-107, C-92, el wizard de producto y C-120.

@@ -48,16 +48,21 @@ export async function POST(req: NextRequest) {
     } else {
       return NextResponse.json({ error: 'Formato de datos no válido' }, { status: 400 });
     }
+    // Límite de tamaño: antes se guardaba cualquier cosa y un usuario podía llenar la base con un carrito gigante
+    const serialized = JSON.stringify(cartItems);
+    if (cartItems.length > 100 || serialized.length > 100_000) {
+      return NextResponse.json({ error: 'El carrito es demasiado grande' }, { status: 413 });
+    }
 
     // Save as JSON string using upsert to avoid issues if profile doesn't exist yet
     await prisma.profile.upsert({
       where: { userId: session.user.id },
       update: {
-        savedCart: JSON.stringify(cartItems)
+        savedCart: serialized
       },
       create: {
         userId: session.user.id,
-        savedCart: JSON.stringify(cartItems)
+        savedCart: serialized
       }
     });
 

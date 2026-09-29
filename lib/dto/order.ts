@@ -54,6 +54,10 @@ export const customerOrderSelect = {
       totalUSD: true,
       digitalVariantLabel: true,
       digitalAccount: true,
+      // C-119: cómo se vendió y su garantía (copia en la orden)
+      productCondition: true,
+      conditionGrade: true,
+      warrantyDays: true,
       product: { select: { id: true, name: true, sku: true, mainImage: true, productType: true } },
     },
   },

@@ -58,6 +58,8 @@ export function linkProduct(f: StudioFlyerData, index: number, p: StudioStorePro
     imageUrl: p.image || '',
     cutout: true,
     specs: p.specs.map((s) => ({ icon: guessSpecIcon(`${s.label} ${s.value}`), label: s.label, value: s.value })),
+    // C-119: un usado lo dice en la historia (la frase corta), igual que en la tienda
+    tag: p.conditionBadge ? p.conditionBadge.toUpperCase().slice(0, 40) : f.products[index]?.tag ?? '',
   };
   const products = [...f.products];
   products[index] = prices(base, p);

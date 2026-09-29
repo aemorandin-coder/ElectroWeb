@@ -1546,6 +1546,7 @@ export default function CheckoutPage() {
                             <h4 className="text-sm font-semibold text-ink line-clamp-1">
                               {item.name}
                             </h4>
+                            {item.conditionBadge && <p className="text-xs font-semibold text-ink-soft">{item.conditionBadge}</p>}
                             <div className="flex items-center justify-between mt-1">
                               <span className="text-xs text-muted font-medium">x{item.quantity}</span>
                               <div className="text-right">
@@ -1761,10 +1762,20 @@ export default function CheckoutPage() {
               </div>
 
               <div>
-                <h3 className="font-bold text-base mb-2">6. Política de Cambios y Devoluciones</h3>
-                <p className="leading-relaxed text-ink-soft">
-                  Consulte nuestra política de cambios y devoluciones. No se aceptan devoluciones por datos de envío incorrectos proporcionados por el cliente.
-                </p>
+                <h3 className="font-bold text-base mb-2">6. Garantía, Devoluciones y Productos Usados</h3>
+                <ul className="list-disc ml-6 space-y-2 text-ink-soft">
+                  <li>La garantía la da la tienda, por fallas de funcionamiento y por el plazo que indica la ficha de cada producto, desde la entrega.</li>
+                  <li>No se aceptan devoluciones por cambio de opinión ni por datos de envío incorrectos. Si el producto llega con una falla, dañado o distinto a lo publicado, se atiende como garantía.</li>
+                  <li>Los productos usados, reacondicionados y de caja abierta se venden en el estado descrito en su ficha, con fotos reales de la unidad. Al comprarlos, usted acepta ese estado. No aplican cupones.</li>
+                  <li>Los códigos y recargas digitales entregados no tienen devolución.</li>
+                  <li>
+                    Detalles completos en los{' '}
+                    <a href="/terminos#garantia" target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-700 underline">
+                      términos y condiciones
+                    </a>
+                    .
+                  </li>
+                </ul>
               </div>
             </div>
 

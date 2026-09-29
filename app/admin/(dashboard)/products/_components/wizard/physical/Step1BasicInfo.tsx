@@ -5,6 +5,7 @@ import { FiStar } from 'react-icons/fi';
 import { wizardInput, wizardLabel, wizardSectionTitle, wizardSectionHelp } from '../ui';
 import EpicTooltip from '@/components/EpicTooltip';
 import { StepProps } from '../types';
+import ConditionSection from './ConditionSection';
 
 export default function PhysicalStep1BasicInfo({ data, onChange, errors, categories }: StepProps) {
   const [tagInput, setTagInput] = useState('');
@@ -152,6 +153,8 @@ export default function PhysicalStep1BasicInfo({ data, onChange, errors, categor
           <FiStar className={`w-5 h-5 ${data.isFeatured ? 'text-warning fill-current' : 'text-muted'}`} />
         </label>
       </div>
+
+      <ConditionSection data={data} onChange={onChange} errors={errors} />
     </div>
   );
 }

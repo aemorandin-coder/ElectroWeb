@@ -1,7 +1,8 @@
 // Cotización de una orden en el servidor: precios, stock y descuentos salen de la base de datos.
 // Solo para uso en el servidor (importa Prisma). El cálculo en sí vive en lib/pricing.ts.
 
-import type { CompanySettings } from '@prisma/client';
+import type { CompanySettings, ConditionGrade, ProductCondition } from '@prisma/client';
+import { isSecondHand, warrantyDaysFor } from '@/lib/product-condition';
 import { prisma } from '@/lib/prisma';
 import { legacyDigitalVariants } from '@/lib/dto/product';
 import { parseProductImages } from '@/lib/product-utils';
@@ -55,6 +56,11 @@ export interface QuotedLine extends PricingLine {
   digitalVariantId: string | null;
   digitalVariantLabel: string | null;
   digitalAccount: string | null;
+  /** C-119: cómo se vende (la orden guarda copia para la garantía) */
+  productCondition: ProductCondition;
+  conditionGrade: ConditionGrade | null;
+  /** Garantía de la tienda en días, ya resuelta (la del producto o la de su condición) */
+  warrantyDays: number;
 }
 
 /** Estado del cupón que escribió el cliente (C-102) */
@@ -182,6 +188,9 @@ export async function quoteOrder(
         isConsolidable: true,
         shippingCost: true,
         freeShipping: true,
+        condition: true,
+        conditionGrade: true,
+        warrantyDays: true,
       },
     }),
     prisma.discountRequest.findMany({
@@ -209,7 +218,7 @@ export async function quoteOrder(
   const lines: QuotedLine[] = [];
   const physicalQuantities = new Map<string, number>();
   // Candidatos de descuento por línea: se elige el mayor al final, cuando se conoce el cupón
-  const candidatos: Array<{ oferta: { id: string; usd: number } | null; ofertaUnit: number | null; solicitud: { id: string; usd: number } | null; categoryId: string }> = [];
+  const candidatos: Array<{ oferta: { id: string; usd: number } | null; ofertaUnit: number | null; solicitud: { id: string; usd: number } | null; categoryId: string; secondHand: boolean }> = [];
 
   for (const item of items) {
     const product = productMap.get(item.productId);
@@ -280,6 +289,7 @@ export async function quoteOrder(
       ofertaUnit: oferta ? oferta.unitDiscountUSD : null,
       solicitud: discount && percentSolicitud > 0 ? { id: discount.id, usd: roundMoney(lineTotal * Math.min(percentSolicitud, 100) / 100) } : null,
       categoryId: product.categoryId,
+      secondHand: isSecondHand(product.condition),
     });
     const pricingLine: PricingLine = {
       productId: product.id,
@@ -308,6 +318,9 @@ export async function quoteOrder(
       digitalVariantId,
       digitalVariantLabel,
       digitalAccount,
+      productCondition: product.condition,
+      conditionGrade: product.conditionGrade,
+      warrantyDays: warrantyDaysFor(product.condition, product.warrantyDays),
     });
   }
 
@@ -327,16 +340,19 @@ export async function quoteOrder(
       coupon = { code, applied: false, savingsUSD: 0, message: cupon && !cupon.ok ? cupon.mensaje : 'Ese código no es válido.', promotionId: null };
     } else {
       const regla = toRule(cupon.promo);
-      const lineasCupon: LineaParaCupon[] = lines.map((l, i) => ({
-        key: String(i),
-        producto: { id: l.productId, categoryId: candidatos[i].categoryId, productType: l.productType },
-        lineTotalUSD: l.unitPriceUSD * l.quantity,
-      }));
+      // C-119: los usados, reacondicionados y de caja abierta no llevan cupón (decisión de Andrés); las ofertas sí
+      const lineasCupon: LineaParaCupon[] = lines
+        .map((l, i) => ({
+          key: String(i),
+          producto: { id: l.productId, categoryId: candidatos[i].categoryId, productType: l.productType },
+          lineTotalUSD: l.unitPriceUSD * l.quantity,
+        }))
+        .filter((_, i) => !candidatos[i].secondHand);
       let reparto = repartirCupon(regla, lineasCupon);
       // Monto fijo: primero sobre los productos sin otra rebaja (como Best Buy); si todos tienen una, compite con ellas.
       // Así un cupón de $15 no se diluye en productos donde la oferta ya gana. La compra mínima se revisó con todos.
       if (reparto.ok && regla.amountOffUSD && !regla.percentOff) {
-        const sinRebaja = lineasCupon.filter((_, i) => !candidatos[i].oferta && !candidatos[i].solicitud);
+        const sinRebaja = lineasCupon.filter((l) => !candidatos[Number(l.key)].oferta && !candidatos[Number(l.key)].solicitud);
         const soloSinRebaja = repartirCupon({ ...regla, minSubtotalUSD: null }, sinRebaja);
         if (soloSinRebaja.ok) reparto = soloSinRebaja;
       }
@@ -347,7 +363,7 @@ export async function quoteOrder(
           savingsUSD: 0,
           message: reparto.motivo === 'MINIMO'
             ? `Te faltan ${formatUSD(reparto.faltaUSD ?? 0)} en productos que aplican para usar este cupón.`
-            : 'Este cupón no aplica a los productos de tu carrito (los digitales no llevan cupones).',
+            : 'Este cupón no aplica a los productos de tu carrito (los digitales y los usados no llevan cupones).',
           promotionId: cupon.promo.id,
         };
       } else {

@@ -28,6 +28,7 @@ import {
   adminModalPanel,
 } from '@/lib/admin-ui';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { CONDITION_LABEL, DEFAULT_WARRANTY_DAYS, WARRANTY_REASONS, warrantyDaysFor, type Condition, type WarrantyReason } from '@/lib/product-condition';
 
 interface Order {
   id: string;
@@ -41,18 +42,27 @@ interface Order {
     productName: string;
     productImage?: string;
     quantity: number;
+    /** C-119: copia de cómo se vendió (null en pedidos viejos: nuevo) */
+    productCondition?: Condition | null;
+    warrantyDays?: number | null;
   }[];
 }
 
+/** C-119: solicitud guardada en Mensajes y Solicitudes (antes esta lista era una simulación que no se guardaba) */
 interface WarrantyRequest {
   id: string;
-  orderNumber: string;
-  productName: string;
-  type: 'WARRANTY' | 'RETURN' | 'EXCHANGE';
-  status: 'PENDING' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
+  subject: string;
+  status: string;
   createdAt: string;
-  reason: string;
 }
+
+const REQUEST_STATUS: Record<string, { label: string; tone: 'warning' | 'brand' | 'success' }> = {
+  PENDING: { label: 'Recibida', tone: 'warning' },
+  READ: { label: 'En revisión', tone: 'brand' },
+  RESPONDED: { label: 'Respondida', tone: 'success' },
+};
+
+const itemWarrantyDays = (item: Order['items'][number]) => warrantyDaysFor(item.productCondition, item.warrantyDays);
 
 export default function WarrantyPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -64,16 +74,22 @@ export default function WarrantyPage() {
   const whatsappAyuda = settings?.whatsapp?.replace(/\D/g, '') || '';
   const [showFormModal, setShowFormModal] = useState(false);
   const [selectedOrderForWarranty, setSelectedOrderForWarranty] = useState<Order | null>(null);
-  const [warrantyReason, setWarrantyReason] = useState('');
+  const [selectedItemId, setSelectedItemId] = useState('');
+  const [warrantyReason, setWarrantyReason] = useState<WarrantyReason | ''>('');
   const [warrantyDescription, setWarrantyDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Simulate stored requests
   const [submittedRequests, setSubmittedRequests] = useState<WarrantyRequest[]>([]);
 
   useBodyScrollLock(showFormModal);
 
+  async function fetchRequests() {
+    const res = await fetch('/api/customer/warranty').catch(() => null);
+    if (res?.ok) setSubmittedRequests(((await res.json()) as { requests: WarrantyRequest[] }).requests);
+  }
+
   async function fetchDeliveredOrders() {
+    void fetchRequests();
     try {
       const response = await fetch('/api/orders?status=DELIVERED');
       if (response.ok) {
@@ -98,39 +114,44 @@ export default function WarrantyPage() {
     return Math.floor(diff / (1000 * 60 * 60 * 24));
   };
 
-  const isWithinWarranty = (deliveredAt?: string) => {
-    const days = getDaysSinceDelivery(deliveredAt);
-    return days !== null && days <= 30;
+  // C-119: cada producto tiene su garantía (la que guardó el pedido). Un pedido es elegible si alguno sigue cubierto
+  const coveredItems = (order: Order) => {
+    const days = getDaysSinceDelivery(order.deliveredAt);
+    return days === null ? [] : order.items.filter((item) => days <= itemWarrantyDays(item));
   };
+  const isWithinWarranty = (order: Order) => coveredItems(order).length > 0;
 
   const handleOpenForm = (order: Order) => {
-    if (!isWithinWarranty(order.deliveredAt)) return;
+    const covered = coveredItems(order);
+    if (!covered.length) return;
     setSelectedOrderForWarranty(order);
+    setSelectedItemId(covered.length === 1 ? covered[0].id : '');
     setShowFormModal(true);
   };
 
   const handleSubmitWarranty = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedOrderForWarranty || !warrantyReason || !warrantyDescription) return;
+    if (!selectedOrderForWarranty || !selectedItemId || !warrantyReason || !warrantyDescription) return;
 
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    const newReq: WarrantyRequest = {
-      id: `WAR-${Date.now()}`,
-      orderNumber: selectedOrderForWarranty.orderNumber,
-      productName: selectedOrderForWarranty.items[0]?.productName || 'Producto',
-      type: warrantyReason === 'DEFECT' ? 'WARRANTY' : (warrantyReason === 'RETURN' ? 'RETURN' : 'EXCHANGE'),
-      status: 'PENDING',
-      createdAt: new Date().toISOString(),
-      reason: warrantyDescription,
-    };
-
-    setSubmittedRequests(prev => [newReq, ...prev]);
+    // C-119: antes esto era una simulación (esperaba 1,5 s y no guardaba nada). Ahora llega al equipo de verdad
+    const res = await fetch('/api/customer/warranty', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: selectedOrderForWarranty.id, itemId: selectedItemId, reason: warrantyReason, description: warrantyDescription }),
+    }).catch(() => null);
+    const data = (await res?.json().catch(() => null)) as { error?: string } | null;
+    if (!res?.ok) {
+      setIsSubmitting(false);
+      toast.error(data?.error || 'No se pudo enviar la solicitud. Intenta de nuevo o escríbenos por WhatsApp.');
+      return;
+    }
+    toast.success('Recibimos tu solicitud. Te respondemos por correo o WhatsApp.');
+    await fetchRequests();
     setIsSubmitting(false);
     setShowFormModal(false);
     setSelectedOrderForWarranty(null);
+    setSelectedItemId('');
     setWarrantyReason('');
     setWarrantyDescription('');
     setSelectedTab('requests');
@@ -192,18 +213,18 @@ export default function WarrantyPage() {
               <div className="w-9 h-9 bg-success/10 text-success-strong rounded-lg flex items-center justify-center mb-2">
                 <FiShield className="w-4 h-4" />
               </div>
-              <h3 className="font-bold text-ink text-sm mb-0.5">Garantía de 30 días</h3>
+              <h3 className="font-bold text-ink text-sm mb-0.5">Garantía de la tienda</h3>
               <p className="text-xs text-muted">
-                Todos nuestros productos tienen garantía de 30 días por defectos de fábrica.
+                Cubre fallas de funcionamiento. Nuevos: {DEFAULT_WARRANTY_DAYS.NEW} días; reacondicionados: {DEFAULT_WARRANTY_DAYS.REFURBISHED}; usados: {DEFAULT_WARRANTY_DAYS.USED}. El plazo de cada producto se ve en su ficha y cuenta desde la entrega.
               </p>
             </div>
             <div className={`${adminCard} p-4 transition-colors hover:border-brand-500/40`}>
               <div className="w-9 h-9 bg-brand-50 text-brand-500 rounded-lg flex items-center justify-center mb-2">
                 <FiRefreshCw className="w-4 h-4" />
               </div>
-              <h3 className="font-bold text-ink text-sm mb-0.5">Devoluciones Fáciles</h3>
+              <h3 className="font-bold text-ink text-sm mb-0.5">Sin devoluciones por cambio de opinión</h3>
               <p className="text-xs text-muted">
-                Puedes devolver productos sin usar en su empaque original dentro de 7 días.
+                Si el producto llega dañado, con una falla o distinto a lo publicado, lo atendemos por garantía: lo revisamos y lo reparamos, lo cambiamos o te devolvemos el dinero.
               </p>
             </div>
             <div className={`${adminCard} p-4 transition-colors hover:border-brand-500/40`}>
@@ -224,8 +245,8 @@ export default function WarrantyPage() {
               {[
                 { step: 1, title: 'Inicia tu solicitud', desc: 'Selecciona el pedido y producto afectado' },
                 { step: 2, title: 'Describe el problema', desc: 'Cuéntanos qué sucedió con tu producto' },
-                { step: 3, title: 'Revisión', desc: 'Nuestro equipo evaluará tu caso en 24-48 horas' },
-                { step: 4, title: 'Resolución', desc: 'Te contactaremos con la solución' },
+                { step: 3, title: 'Revisión', desc: 'Te respondemos en 1 a 2 días hábiles. Puede que pidamos fotos, un video o revisar el equipo en la tienda' },
+                { step: 4, title: 'Resolución', desc: 'Reparación, cambio o devolución del dinero, según lo que encontremos' },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <div className="w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
@@ -281,27 +302,18 @@ export default function WarrantyPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {submittedRequests.map((req) => (
-                <div key={req.id} className={`${adminCard} p-4`}>
-                  <div className="flex items-start justify-between mb-2 gap-2">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-ink text-sm">Pedido #{req.orderNumber}</h3>
-                        <span className={adminBadge('warning')}>En Revisión</span>
-                      </div>
-                      <p className="text-xs text-muted">{new Date(req.createdAt).toLocaleDateString()}</p>
+              {submittedRequests.map((req) => {
+                const st = REQUEST_STATUS[req.status] ?? REQUEST_STATUS.PENDING;
+                return (
+                  <div key={req.id} className={`${adminCard} p-4`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="min-w-0 font-bold text-ink text-sm">{req.subject}</h3>
+                      <span className={`${adminBadge(st.tone)} shrink-0`}>{st.label}</span>
                     </div>
-                    <div className="text-right">
-                      <span className="text-xs font-bold text-muted uppercase">{req.type}</span>
-                      <p className="text-xs font-medium text-brand-500 mt-0.5">{req.id}</p>
-                    </div>
+                    <p className="mt-1 text-xs text-muted">{new Date(req.createdAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                   </div>
-                  <div className="bg-surface border border-line rounded-lg p-3 text-xs text-ink">
-                    <p className="font-semibold mb-1">Motivo:</p>
-                    <p className="text-muted">{req.reason}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -324,7 +336,7 @@ export default function WarrantyPage() {
             ) : (
               <div className="space-y-2">
                 {orders.map((order) => {
-                  const withinWarranty = isWithinWarranty(order.deliveredAt);
+                  const withinWarranty = isWithinWarranty(order);
                   const daysSince = getDaysSinceDelivery(order.deliveredAt);
 
                   return (
@@ -355,10 +367,11 @@ export default function WarrantyPage() {
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-muted truncate">
+                          <p className="text-xs text-muted">
                             {order.items.length} producto{order.items.length > 1 ? 's' : ''} •
                             Entregado hace {daysSince} días
                             {!withinWarranty && ' (fuera de garantía)'}
+                            {withinWarranty && ` · garantía hasta ${Math.max(...coveredItems(order).map(itemWarrantyDays))} días`}
                           </p>
                         </div>
                         {withinWarranty && (
@@ -384,8 +397,8 @@ export default function WarrantyPage() {
             <div className="text-xs">
               <p className="font-semibold text-ink mb-0.5">Importante</p>
               <p className="text-muted">
-                Solo los pedidos entregados en los últimos 30 días son elegibles para garantía.
-                Para devoluciones, el producto debe estar sin usar y en su empaque original.
+                Cada producto tiene su plazo de garantía, que cuenta desde la entrega. No cubre golpes, humedad, mal uso,
+                reparaciones de terceros ni el desgaste descrito en la ficha de un usado. Detalles en los términos y condiciones.
               </p>
             </div>
           </div>
@@ -413,18 +426,36 @@ export default function WarrantyPage() {
             <div className="p-5 overflow-y-auto flex-1">
               <form onSubmit={handleSubmitWarranty} className="space-y-4">
                 <div>
-                  <label className={adminLabel}>Motivo</label>
+                  <label htmlFor="w-item" className={adminLabel}>Producto</label>
                   <select
+                    id="w-item"
+                    value={selectedItemId}
+                    onChange={(e) => setSelectedItemId(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2.5 bg-surface border border-line focus:border-brand-500 focus:bg-white rounded-xl outline-none transition-all font-medium text-ink text-sm"
+                  >
+                    <option value="">Elige el producto...</option>
+                    {coveredItems(selectedOrderForWarranty).map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.productName}
+                        {item.productCondition && item.productCondition !== 'NEW' ? ` (${CONDITION_LABEL[item.productCondition]})` : ''} · {itemWarrantyDays(item)} días de garantía
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="w-reason" className={adminLabel}>Motivo</label>
+                  <select
+                    id="w-reason"
                     value={warrantyReason}
-                    onChange={(e) => setWarrantyReason(e.target.value)}
+                    onChange={(e) => setWarrantyReason(e.target.value as WarrantyReason | '')}
                     required
                     className="w-full px-3.5 py-2.5 bg-surface border border-line focus:border-brand-500 focus:bg-white rounded-xl outline-none transition-all font-medium text-ink text-sm"
                   >
                     <option value="">Selecciona un motivo...</option>
-                    <option value="DEFECT">Defecto de fábrica</option>
-                    <option value="RETURN">Devolución (no me gustó)</option>
-                    <option value="EXCHANGE">Cambio por otro producto</option>
-                    <option value="OTHER">Soporte Técnico</option>
+                    {(Object.keys(WARRANTY_REASONS) as WarrantyReason[]).map((r) => (
+                      <option key={r} value={r}>{WARRANTY_REASONS[r]}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -440,13 +471,13 @@ export default function WarrantyPage() {
                 </div>
                 <div className="bg-surface border border-line p-3 rounded-xl">
                   <p className="text-xs text-muted">
-                    <strong className="text-ink">Nota:</strong> Nuestro equipo de soporte revisará tu caso y te responderá en un plazo máximo de 24-48 horas laborables.
+                    <strong className="text-ink">Nota:</strong> Te respondemos en 1 a 2 días hábiles por correo o WhatsApp. Ten a mano fotos o un video de la falla: los podemos pedir.
                   </p>
                 </div>
                 <div className="pt-2">
                   <button
                     type="submit"
-                    disabled={isSubmitting || !warrantyReason || !warrantyDescription}
+                    disabled={isSubmitting || !selectedItemId || !warrantyReason || !warrantyDescription}
                     className={`${adminPrimaryButton} w-full py-3 flex items-center justify-center gap-2`}
                   >
                     {isSubmitting ? (

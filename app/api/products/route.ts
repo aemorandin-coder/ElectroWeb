@@ -8,6 +8,7 @@ import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type D
 import { generateShortCode } from '@/lib/short-code';
 import { parseDigitalMargin, specsForUpdate } from '@/lib/product-specs';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
+import { conditionInputSchema, pickConditionInput } from '@/lib/product-condition';
 
 /** specs de un producto nuevo: especificaciones del formulario y, en digitales, el margen del wizard (C-95). */
 function createSpecs(specifications: unknown, digitalMarginPercent: number | undefined): string | null {
@@ -169,6 +170,12 @@ export async function POST(request: NextRequest) {
       variants = parsed.data;
     }
 
+    // C-119: condición (nuevo, caja abierta, reacondicionado o usado). Los digitales siempre son nuevos
+    const conditionParsed = conditionInputSchema.safeParse(body.productType === 'DIGITAL' ? {} : pickConditionInput(body) ?? {});
+    if (!conditionParsed.success) {
+      return NextResponse.json({ error: conditionParsed.error.issues[0]?.message || 'Condición inválida' }, { status: 400 });
+    }
+
     const stock = parseInt(body.stock) || 0;
     const priceUSD = body.productType === 'DIGITAL' ? minActivePrice(variants) : parseFloat(body.priceUSD);
 
@@ -228,6 +235,7 @@ export async function POST(request: NextRequest) {
         shippingCost: body.productType === 'PHYSICAL' && !body.isConsolidable ? (body.shippingCost || 0) : 0,
         // C-100: la tienda paga el envío de este producto (solo físicos)
         freeShipping: body.productType === 'PHYSICAL' && body.freeShipping === true,
+        ...conditionParsed.data,
       },
       });
       if (variants.length > 0) await syncDigitalVariants(tx, created.id, variants);

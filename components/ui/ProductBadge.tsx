@@ -1,6 +1,6 @@
 import { FiTruck, FiZap } from 'react-icons/fi';
 
-export type ProductBadgeVariant = 'deal' | 'new' | 'digital' | 'soldout' | 'tag' | 'freeShipping';
+export type ProductBadgeVariant = 'deal' | 'new' | 'digital' | 'soldout' | 'tag' | 'freeShipping' | 'used';
 
 const VARIANT_CLASSES: Record<ProductBadgeVariant, string> = {
   // Sólido: rojo sobre rojo claro no llegaba a 4,5:1 de contraste
@@ -11,6 +11,8 @@ const VARIANT_CLASSES: Record<ProductBadgeVariant, string> = {
   tag: 'bg-tag text-ink',
   // C-100: la tienda paga el envío. Blanco sobre verde fuerte: 5,5:1
   freeShipping: 'bg-success-strong text-white',
+  // C-119: usado, reacondicionado o caja abierta. Oscuro para que no se confunda con "NUEVO"
+  used: 'bg-ink text-white',
 };
 
 interface ProductBadgeProps {
@@ -39,6 +41,8 @@ export function getProductBadges(
     productType?: string | null;
     stock: number;
     freeShipping?: boolean | null;
+    /** C-119: null si es nuevo */
+    condition?: { badge: string } | null;
   },
   now: number = Date.now()
 ): Array<{ variant: ProductBadgeVariant; label: string }> {
@@ -49,7 +53,9 @@ export function getProductBadges(
     const percent = Math.round((1 - product.priceUSD / product.compareAtPriceUSD) * 100);
     if (percent > 0) badges.push({ variant: 'deal', label: `-${percent}%` });
   }
-  if (product.createdAt) {
+  // C-119: un usado recién cargado no es "NUEVO": lleva su condición ("USADO · MUY BUENO")
+  if (product.condition) badges.push({ variant: 'used', label: product.condition.badge.toUpperCase() });
+  else if (product.createdAt) {
     const created = new Date(product.createdAt).getTime();
     if (Number.isFinite(created) && now - created <= NEW_PRODUCT_DAYS * 24 * 60 * 60 * 1000) {
       badges.push({ variant: 'new', label: 'NUEVO' });

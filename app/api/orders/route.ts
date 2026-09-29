@@ -563,6 +563,10 @@ export async function POST(request: NextRequest) {
                 digitalVariantId: line.digitalVariantId,
                 digitalVariantLabel: line.digitalVariantLabel,
                 digitalAccount: line.digitalAccount,
+                // C-119: copia de cómo se vendió; la garantía del cliente no cambia si después se edita el producto
+                productCondition: line.productCondition,
+                conditionGrade: line.conditionGrade,
+                warrantyDays: line.warrantyDays,
               })),
             },
           },

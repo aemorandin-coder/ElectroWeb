@@ -259,6 +259,10 @@ export default function CarritoPage() {
                         <h3 className="text-base font-bold text-ink mb-1.5 line-clamp-2 hover:text-brand-600 transition-colors">
                           {item.name}
                         </h3>
+                        {item.conditionBadge && (
+                          // C-119: que se vea que es usado también aquí, no solo en la ficha
+                          <p className="mb-2 inline-flex rounded bg-ink px-1.5 py-0.5 text-xs font-semibold tracking-wide text-white">{item.conditionBadge.toUpperCase()}</p>
+                        )}
                         {item.freeShipping && item.productType !== 'DIGITAL' && (
                           <p className="mb-2 inline-flex items-center gap-1 text-xs font-semibold text-success-strong">
                             <FiTruck className="h-3.5 w-3.5" aria-hidden="true" /> Envío gratis: todo tu pedido viaja sin costo

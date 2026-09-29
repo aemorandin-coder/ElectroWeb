@@ -28,6 +28,8 @@ export interface ProductCardData {
   freeShipping?: boolean;
   /** C-102: oferta de la tienda vigente (priceUSD ya viene rebajado) */
   oferta?: PublicOffer | null;
+  /** C-119: usado, reacondicionado o caja abierta (null si es nuevo) */
+  condition?: { badge: string } | null;
 }
 
 /** Los productos digitales con montos o con recarga directa se compran desde su página (se elige monto o cuenta). */

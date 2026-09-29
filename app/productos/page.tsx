@@ -53,7 +53,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
         : 'Productos';
 
   // Búsquedas, filtros y páginas siguientes no se indexan; la categoría sí
-  const onlyCategory = !params.search && params.min === null && params.max === null && !params.offers && !params.inStock && !params.type && params.page === 1 && params.sort === 'recientes';
+  const onlyCategory = !params.search && params.min === null && params.max === null && !params.offers && !params.inStock && !params.type && !params.condition && params.page === 1 && params.sort === 'recientes';
 
   return {
     title,
@@ -75,6 +75,7 @@ function activeChips(params: CatalogParams, categoryName: string | null): Array<
   if (params.offers) chips.push({ label: 'Ofertas', href: catalogHref(params, { offers: false }) });
   if (params.inStock) chips.push({ label: 'Disponibles', href: catalogHref(params, { inStock: false }) });
   if (params.type) chips.push({ label: params.type === 'digital' ? 'Digitales' : 'Físicos', href: catalogHref(params, { type: null }) });
+  if (params.condition) chips.push({ label: params.condition === 'nuevo' ? 'Nuevos' : 'Usados y reacondicionados', href: catalogHref(params, { condition: null }) });
   return chips;
 }
 

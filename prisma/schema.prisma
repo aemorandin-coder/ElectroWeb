@@ -736,7 +736,11 @@ model Review {
   productId   String
   product     Product  @relation(fields: [productId], references: [id])
   isApproved  Boolean  @default(false)
-  
+  // C-124: rechazada por moderación (antes no había forma de distinguirla de una pendiente).
+  // Pendiente = !isApproved && rejectedAt == null. Editarla la devuelve a pendiente.
+  rejectedAt      DateTime?
+  rejectionReason String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

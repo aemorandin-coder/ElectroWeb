@@ -82,7 +82,7 @@ async function pendingText(): Promise<string> {
     prisma.productRequest.count({ where: { status: 'PENDING' } }),
     prisma.discountRequest.count({ where: { status: 'PENDING' } }),
     prisma.courseCreator.count({ where: { status: 'PENDING' } }),
-    prisma.review.count({ where: { isApproved: false } }),
+    prisma.review.count({ where: { isApproved: false, rejectedAt: null } }),
     prisma.profile.count({ where: { businessVerificationStatus: 'PENDING' } }),
     prisma.course.count({ where: { isActive: false, creatorId: { not: null } } }),
   ]);

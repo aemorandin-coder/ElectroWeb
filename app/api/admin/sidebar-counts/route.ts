@@ -63,7 +63,7 @@ export async function GET() {
       prisma.course.count({ where: { isActive: false, creatorId: { not: null } } }),
 
       // Reseñas por moderar (menú Reseñas, C-110)
-      prisma.review.count({ where: { isApproved: false } }),
+      prisma.review.count({ where: { isApproved: false, rejectedAt: null } }),
 
       // Garantías por atender: nuevas o con respuesta del cliente (menú Garantías, C-122)
       prisma.warrantyClaim.count({ where: { awaitingStaff: true, status: { notIn: ['RESOLVED', 'REJECTED'] } } }),

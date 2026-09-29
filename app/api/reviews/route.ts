@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { Prisma } from '@prisma/client';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
+import { motivoRechazo, reviewStatus } from '@/lib/review-status';
 import { sendEmail } from '@/lib/email-service';
 import { generateReviewApprovedEmail } from '@/lib/email-templates/ReviewApproved';
 import { notifyReviewApproved } from '@/lib/notifications';
@@ -148,158 +151,153 @@ export async function POST(request: NextRequest) {
     }
 }
 
+type ReviewAction = 'approve' | 'reject';
+
+/** Error de la API de reseñas: siempre `{ success: false, error }` con el código HTTP que corresponde. */
+function reviewError(error: string, status: number, extra?: Record<string, unknown>) {
+    return NextResponse.json({ success: false, error, ...extra }, { status });
+}
+
+/**
+ * PATCH /api/reviews (C-124)
+ * - Moderación (MANAGE_CONTENT o admin): `{ id, action: 'approve' | 'reject', reason? }`.
+ *   Se acepta también `{ id, isApproved: boolean }` (pestañas del panel abiertas antes del deploy).
+ * - Dueño: `{ id, rating?, comment? }`. Editada vuelve a moderación.
+ * Cualquier otro campo se ignora. Antes el panel mandaba `isPublished`, que no es columna de `reviews`:
+ * Prisma lanzaba "Unknown argument" y cada aprobación terminaba en un 500.
+ * El promedio de estrellas no se guarda: `getReviewSummary` lo calcula de las aprobadas, así que aprobar
+ * es un solo UPDATE y no hace falta transacción.
+ */
 export async function PATCH(request: NextRequest) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return reviewError('No autorizado', 401);
+
+    const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+    const id = typeof body?.id === 'string' ? body.id : '';
+    if (!body || !id) return reviewError('ID de reseña requerido', 400);
+
+    const canModerate = hasPermission(session, 'MANAGE_CONTENT');
+    const action: ReviewAction | null = body.action === 'approve' || body.action === 'reject'
+        ? body.action
+        : typeof body.isApproved === 'boolean' ? (body.isApproved ? 'approve' : 'reject') : null;
+
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-        }
+        const review = await prisma.review.findUnique({ where: { id } });
+        if (!review) return reviewError('Reseña no encontrada', 404);
 
-        const body = await request.json();
-        const { id, rating, comment, isApproved } = body;
-
-        if (!id) {
-            return NextResponse.json({ error: 'ID de reseña requerido' }, { status: 400 });
-        }
-
-        const review = await prisma.review.findUnique({
-            where: { id },
-        });
-
-        if (!review) {
-            return NextResponse.json({ error: 'Reseña no encontrada' }, { status: 404 });
-        }
-
-        const user = session.user as { role?: string; permissions?: string[]; id?: string };
-        const userRole = user.role;
-        const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || user.permissions?.includes('MANAGE_CONTENT');
         const isOwner = review.userId === session.user.id;
+        let data: Prisma.ReviewUpdateInput;
 
-        if (!isAdmin && !isOwner) {
-            return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-        }
-
-        const updateData: Record<string, unknown> = {};
-
-        if (isOwner && !isAdmin) {
-            if (rating !== undefined) {
-                const nota = notaValida(rating);
-                if (nota === null) return NextResponse.json({ error: 'La calificación debe ser de 1 a 5 estrellas' }, { status: 400 });
-                updateData.rating = nota;
+        if (action && canModerate) {
+            if (action === 'approve') {
+                data = { isApproved: true, rejectedAt: null, rejectionReason: null };
+            } else {
+                const reason = motivoRechazo(body.reason);
+                if (reason === undefined) return reviewError('El motivo debe tener entre 3 y 300 caracteres', 400);
+                data = { isApproved: false, rejectedAt: new Date(), rejectionReason: reason };
             }
-            if (comment !== undefined) {
-                const texto = comentarioValido(comment);
-                if (texto === null) return NextResponse.json({ error: 'El comentario debe tener entre 3 y 2.000 caracteres' }, { status: 400 });
-                updateData.comment = texto;
+        } else if (isOwner && (body.rating !== undefined || body.comment !== undefined)) {
+            data = {};
+            if (body.rating !== undefined) {
+                const nota = notaValida(body.rating);
+                if (nota === null) return reviewError('La calificación debe ser de 1 a 5 estrellas', 400);
+                data.rating = nota;
+            }
+            if (body.comment !== undefined) {
+                const texto = comentarioValido(body.comment);
+                if (texto === null) return reviewError('El comentario debe tener entre 3 y 2.000 caracteres', 400);
+                data.comment = texto;
             }
             // Editada vuelve a moderación: antes el texto nuevo de una reseña aprobada salía publicado sin revisión
-            if (Object.keys(updateData).length > 0) updateData.isApproved = false;
-        }
-
-        if (isAdmin) {
-            if (isApproved !== undefined) updateData.isApproved = isApproved;
-            // Also handle isPublished if sent
-            if (body.isPublished !== undefined) updateData.isPublished = body.isPublished;
+            data.isApproved = false;
+            data.rejectedAt = null;
+            data.rejectionReason = null;
+        } else if (!canModerate && !isOwner) {
+            return reviewError('No autorizado', 403);
+        } else {
+            return reviewError(action ? 'No tienes permiso para moderar reseñas' : 'No hay cambios para guardar', action ? 403 : 400);
         }
 
         const updatedReview = await prisma.review.update({
             where: { id },
-            data: updateData,
+            data,
             include: {
-                user: {
-                    select: {
-                        name: true,
-                        email: true,
-                    },
-                },
-                product: {
-                    select: {
-                        name: true,
-                        slug: true,
-                    },
-                },
+                user: { select: { name: true, email: true } },
+                product: { select: { name: true, slug: true } },
             },
         });
 
-        if (isAdmin && isApproved && !review.isApproved && updatedReview.user.email) {
-            try {
-                const companySettings = await prisma.companySettings.findFirst();
-                const productUrl = `${process.env.NEXTAUTH_URL}/productos/${updatedReview.product.slug}#reviews`;
+        // Las estrellas salen en las tarjetas del home (ISR): se regeneran con la reseña nueva o sin la retirada
+        if (review.isApproved !== updatedReview.isApproved) revalidateStorefront();
 
-                const emailHtml = generateReviewApprovedEmail({
-                    companyName: companySettings?.companyName || 'Electro Shop',
-                    companyLogo: companySettings?.logo || '',
-                    customerName: updatedReview.user.name || 'Cliente',
-                    productName: updatedReview.product.name,
-                    productUrl,
-                    rating: updatedReview.rating,
-                });
-
-                await sendEmail({
-                    to: updatedReview.user.email,
-                    subject: `¡Tu reseña ha sido publicada! - ${updatedReview.product.name}`,
-                    html: emailHtml,
-                });
-            } catch (emailError) {
-                console.error('Error sending review approved email:', emailError);
-            }
-
-            try {
-                await notifyReviewApproved(
-                    updatedReview.userId,
-                    updatedReview.product.name,
-                    updatedReview.product.slug
-                );
-            } catch (notifError) {
-                console.error('Error creating notification:', notifError);
-            }
+        // Aviso al cliente después de responder: un SMTP lento ya no demora ni tumba la aprobación
+        if (action === 'approve' && !review.isApproved && updatedReview.user.email) {
+            const to = updatedReview.user.email;
+            after(async () => {
+                try {
+                    const companySettings = await prisma.companySettings.findFirst({ select: { companyName: true, logo: true } });
+                    await sendEmail({
+                        to,
+                        subject: `Tu reseña ya está publicada - ${updatedReview.product.name}`,
+                        html: generateReviewApprovedEmail({
+                            companyName: companySettings?.companyName || 'Electro Shop',
+                            companyLogo: companySettings?.logo || '',
+                            customerName: updatedReview.user.name || 'Cliente',
+                            productName: updatedReview.product.name,
+                            productUrl: `${process.env.NEXTAUTH_URL}/productos/${updatedReview.product.slug}#reviews`,
+                            rating: updatedReview.rating,
+                        }),
+                    });
+                } catch (emailError) {
+                    console.error('[reviews] correo de reseña aprobada:', emailError);
+                }
+                try {
+                    await notifyReviewApproved(updatedReview.userId, updatedReview.product.name, updatedReview.product.slug);
+                } catch (notifError) {
+                    console.error('[reviews] notificación de reseña aprobada:', notifError);
+                }
+            });
         }
 
-        return NextResponse.json(updatedReview);
+        return NextResponse.json({
+            success: true,
+            review: { ...updatedReview, user: { name: updatedReview.user.name, ...(canModerate ? { email: updatedReview.user.email } : {}) } },
+            status: reviewStatus(updatedReview),
+        });
     } catch (error) {
-        console.error('Error updating review:', error);
-        return NextResponse.json({ error: 'Error al actualizar reseña' }, { status: 500 });
+        const prismaCode = error instanceof Prisma.PrismaClientKnownRequestError ? error.code : undefined;
+        console.error('[reviews] PATCH', { id, action, prismaCode, error });
+        if (prismaCode === 'P2025') return reviewError('Reseña no encontrada', 404);
+        return reviewError(
+            action === 'approve' ? 'No se pudo aprobar la reseña' : action === 'reject' ? 'No se pudo rechazar la reseña' : 'No se pudo actualizar la reseña',
+            500,
+            // El detalle técnico solo para el equipo: al cliente no se le muestran nombres de tablas ni columnas
+            canModerate ? { detail: error instanceof Error ? error.message.slice(0, 300) : String(error), prismaCode } : undefined,
+        );
     }
 }
 
 export async function DELETE(request: NextRequest) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return reviewError('No autorizado', 401);
+
+    const id = new URL(request.url).searchParams.get('id');
+    if (!id) return reviewError('ID de reseña requerido', 400);
+
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        const review = await prisma.review.findUnique({ where: { id }, select: { userId: true, isApproved: true } });
+        if (!review) return reviewError('Reseña no encontrada', 404);
+
+        if (!hasPermission(session, 'MANAGE_CONTENT') && review.userId !== session.user.id) {
+            return reviewError('No autorizado', 403);
         }
 
-        const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        await prisma.review.delete({ where: { id } });
+        if (review.isApproved) revalidateStorefront();
 
-        if (!id) {
-            return NextResponse.json({ error: 'ID de reseña requerido' }, { status: 400 });
-        }
-
-        const review = await prisma.review.findUnique({
-            where: { id },
-        });
-
-        if (!review) {
-            return NextResponse.json({ error: 'Reseña no encontrada' }, { status: 404 });
-        }
-
-        const user = session.user as { role?: string; permissions?: string[] };
-        const userRole = user.role;
-        const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || user.permissions?.includes('MANAGE_CONTENT');
-        const isOwner = review.userId === session.user.id;
-
-        if (!isAdmin && !isOwner) {
-            return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-        }
-
-        await prisma.review.delete({
-            where: { id },
-        });
-
-        return NextResponse.json({ message: 'Reseña eliminada' });
+        return NextResponse.json({ success: true, message: 'Reseña eliminada' });
     } catch (error) {
-        console.error('Error deleting review:', error);
-        return NextResponse.json({ error: 'Error al eliminar reseña' }, { status: 500 });
+        console.error('[reviews] DELETE', { id, error });
+        return reviewError('No se pudo eliminar la reseña', 500);
     }
 }

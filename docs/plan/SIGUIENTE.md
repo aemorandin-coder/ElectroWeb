@@ -63,11 +63,8 @@ bash scripts/deploy.sh
    - Firmar los términos desde "Recargar saldo".
    - Reportes → Seguridad con la IP real.
 3. **Hechas y en `main`:** C-115 (mínimo en el carrito), C-116 (ElectroStudio, fases 1 y 2) y C-117 (cinta "ES" automática). Detalle en sus `estado/C-XX.md`.
-4. **C-118 · Carga masiva con plantilla `.json`** (idea de Andrés, 28/09). Sigue ahora: ya tiene la cinta (C-117).
-   - "Descargar plantilla": campos, categorías y marcas válidas, e instrucciones para Claude en la nube. Claude llena la ficha desde las fotos; **el precio lo da Andrés**.
-   - "Importar" el `.json` con las fotos: vista previa con errores por fila, y se crean en borrador.
-   - El fondo se quita en el teléfono (iPhone: mantener el dedo sobre el producto; Samsung: "Extraer objeto").
-   - La plantilla trae los campos de condición de C-119.
+4. **C-118 · Carga masiva con plantilla `.json`:** hecha el 29/09 (rama `claude/C-118`, `estado/C-118.md`). Productos → Más → "Importar (.json)". Sin cambio de base.
+   - Andrés: probarla con 2 o 3 productos reales y claude.ai.
 4b. **C-119 · Productos usados y reacondicionados:** hecha y en `main` el 29/09 (`estado/C-119.md`). Lleva cambio de base (§0).
    - Pendiente para después: módulo propio de solicitudes de garantía (hoy llegan a Mensajes y Solicitudes) y "Usado" en el correo de compra.
 4c. **C-120 · Facturación a empresa, IVA y términos** (pedida por Andrés el 29/09 para después, con investigación a fondo):

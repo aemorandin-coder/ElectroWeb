@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiAlertCircle, FiBox, FiCheckCircle, FiDownload, FiExternalLink, FiStar, FiUpload, FiX, FiZap, FiPackage } from 'react-icons/fi';
+import { FiBox, FiExternalLink, FiStar, FiX, FiZap, FiPackage } from 'react-icons/fi';
 import {
-  adminBadge, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter, adminModalHeader,
+  adminBadge, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter, adminModalHeader,
   adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPrimaryButton, adminSecondaryButton,
 } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
@@ -137,126 +137,6 @@ export function EdicionMasiva({ cantidad, digitales, campoInicial, valorInicial,
           <p className={adminNotice('warning')}>{digitales} {digitales === 1 ? 'digital no cambia' : 'digitales no cambian'} de precio: su precio sale de sus montos (edítalos en el producto).</p>
         )}
       </div>
-    </Modal>
-  );
-}
-
-/** CSV con comillas: "a, b" es una sola celda y "" es una comilla (antes se partía en cada coma) */
-export function leerCSV(texto: string): Record<string, string>[] {
-  const filas: string[][] = [];
-  let fila: string[] = [];
-  let celda = '';
-  let comillas = false;
-  const limpio = texto.replace(/^﻿/, '');
-  for (let i = 0; i < limpio.length; i++) {
-    const ch = limpio[i];
-    if (comillas) {
-      if (ch === '"' && limpio[i + 1] === '"') { celda += '"'; i++; }
-      else if (ch === '"') comillas = false;
-      else celda += ch;
-    } else if (ch === '"') comillas = true;
-    else if (ch === ',') { fila.push(celda.trim()); celda = ''; }
-    else if (ch === '\n' || ch === '\r') {
-      if (ch === '\r' && limpio[i + 1] === '\n') i++;
-      fila.push(celda.trim()); celda = '';
-      if (fila.some((c) => c !== '')) filas.push(fila);
-      fila = [];
-    } else celda += ch;
-  }
-  fila.push(celda.trim());
-  if (fila.some((c) => c !== '')) filas.push(fila);
-  if (filas.length < 2) return [];
-  const [cabecera, ...resto] = filas;
-  return resto.map((f) => Object.fromEntries(cabecera.map((h, i) => [h, f[i] ?? ''])));
-}
-
-export function CargaMasiva({ onClose, onCargada }: { onClose: () => void; onCargada: () => void }) {
-  const [filas, setFilas] = useState<Record<string, string>[]>([]);
-  const [error, setError] = useState('');
-  const [enviando, setEnviando] = useState(false);
-  const [resultado, setResultado] = useState<{ ok: boolean; message: string; details?: string } | null>(null);
-
-  const plantilla = async () => {
-    const r = await fetch('/api/products/bulk/template');
-    if (!r.ok) { setError('No se pudo descargar la plantilla'); return; }
-    const url = URL.createObjectURL(await r.blob());
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'plantilla_productos.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const procesar = async () => {
-    setEnviando(true);
-    try {
-      const r = await fetch('/api/products/bulk/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csvData: filas }) });
-      const data = await r.json().catch(() => ({}));
-      // Antes un error del servidor dejaba el modal igual, sin decir nada
-      setResultado({ ok: r.ok && !data.error, message: data.message || data.error || (r.ok ? 'Carga lista' : 'No se pudo cargar'), details: data.details });
-      if (r.ok) onCargada();
-    } catch {
-      setResultado({ ok: false, message: 'Error de conexión' });
-    } finally {
-      setEnviando(false);
-    }
-  };
-
-  return (
-    <Modal titulo="Carga masiva" onClose={onClose} ancho="max-w-2xl" pie={resultado ? (
-      <button type="button" onClick={onClose} className={adminPrimaryButton}>Cerrar</button>
-    ) : filas.length > 0 ? (
-      <>
-        <button type="button" onClick={() => setFilas([])} className={adminSecondaryButton}>Descartar</button>
-        <button type="button" onClick={procesar} disabled={enviando} className={adminPrimaryButton}>{enviando ? 'Procesando…' : `Cargar ${filas.length} productos`}</button>
-      </>
-    ) : undefined}>
-      {resultado ? (
-        <div className={`flex items-start gap-3 ${adminNotice(resultado.ok ? 'success' : 'danger')}`}>
-          {resultado.ok ? <FiCheckCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" /> : <FiAlertCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />}
-          <div><p className="font-semibold">{resultado.message}</p>{resultado.details && <p className="mt-1 whitespace-pre-line text-sm">{resultado.details}</p>}</div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className={adminNotice('brand')}>
-            <ul className="list-disc space-y-1 pl-5">
-              <li>Usa la plantilla CSV (se abre con Excel).</li>
-              <li>Las imágenes van como enlaces públicos o rutas que ya estén en el servidor.</li>
-              <li>El SKU no se puede repetir.</li>
-            </ul>
-            <button type="button" onClick={plantilla} className={`${adminSecondaryButton} mt-3`}><FiDownload className="h-4 w-4" aria-hidden="true" /> Descargar plantilla</button>
-          </div>
-          <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-line p-6 text-center hover:border-brand-500">
-            <FiUpload className="h-8 w-8 text-subtle" aria-hidden="true" />
-            <span className="text-sm font-semibold text-ink">Elegir archivo CSV</span>
-            <span className="text-xs text-muted">Solo archivos .csv</span>
-            <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              file.text().then((t) => {
-                const datos = leerCSV(t);
-                setError(datos.length === 0 ? 'El archivo no tiene filas de productos' : '');
-                setFilas(datos);
-              });
-            }} />
-          </label>
-          {error && <p className={adminError}>{error}</p>}
-          {filas.length > 0 && (
-            <div>
-              <p className="mb-2 text-sm font-semibold text-ink">Vista previa ({filas.length} productos)</p>
-              <div className="overflow-x-auto rounded-lg border border-line">
-                <table className="w-full text-xs">
-                  <thead><tr className="bg-surface">{Object.keys(filas[0]).slice(0, 5).map((k) => <th key={k} className="px-2 py-1.5 text-left font-semibold text-muted">{k}</th>)}</tr></thead>
-                  <tbody>
-                    {filas.slice(0, 5).map((f, i) => <tr key={i} className="border-t border-line">{Object.values(f).slice(0, 5).map((v, j) => <td key={j} className="max-w-40 truncate px-2 py-1.5 text-ink">{v}</td>)}</tr>)}
-                  </tbody>
-                </table>
-              </div>
-              {filas.length > 5 && <p className="mt-1 text-xs text-muted">… y {filas.length - 5} más</p>}
-            </div>
-          )}
-        </div>
-      )}
     </Modal>
   );
 }

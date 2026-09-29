@@ -1,34 +1,31 @@
 # Punto de partida (actualizado 2026-09-29)
 
-Léelo antes de empezar. En producción: 70093de (hasta C-113), sirviendo `.next-b`. En GitHub, `main` ya tiene C-114, G-69, C-115, C-116, C-117 y C-119: **falta el deploy, y lleva cambio de base (C-119)**.
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta C-123 (subido el 29/09). **Falta el deploy, y lleva cambio de base.**
+Producción ya mostraba C-114 el 29/09 (captura de Andrés): el commit exacto del servidor se anota tras este deploy.
 
-## 0. Urgente: deploy (§2)
-- **Qué lleva** (todo en `main`, merge y push autorizados por Andrés el 28 y 29/09):
-  - **C-114:** el checkout no deja pagar si la orden no se puede crear. Un Pago Móvil sin orden va al saldo del cliente.
-  - **G-69:** filtro "Reembolsos" en Mi saldo.
-  - **C-115:** el carrito avisa el mínimo y el máximo. El mínimo cuenta solo los productos.
-  - **C-116:** ElectroStudio con inicio, acciones directas, validaciones, asistente y editor paso a paso.
-  - **C-117:** la cinta "ES" automática en las fotos de producto transparentes.
-  - **C-119:** productos usados y reacondicionados, términos 3.0 y el formulario de garantía del cliente, que era falso y ahora funciona.
-- **Cambio de base (C-119):** solo tipos y columnas nuevas, sin borrar nada. Sin dependencias nuevas. Pasos:
-  1. Respaldo: `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-29-09.dump`
-  2. `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL: deben ser solo `CREATE TYPE` y `ADD COLUMN`.
-  3. `npx prisma db push` y `bash scripts/deploy.sh` otra vez.
+## 0. Urgente: deploy del 29/09 (§2)
+- **Qué lleva** (todo en `main`, deploy pedido por Andrés el 29/09):
+  - **C-114, G-69, C-115, C-116, C-117 y C-119** si todavía no estaban en el servidor (ver el §0 anterior en el historial de git).
+  - **C-118:** Productos → Más → "Importar (.json)" (carga masiva con plantilla para Claude).
+  - **C-121:** el correo de compra dice "Usado", el pago real (pagado o por confirmar) y el descuento.
+  - **C-122:** menú "Garantías" (estados, historial, fotos privadas, devolución al saldo).
+  - **C-123:** en Transacciones, "Es esta orden" y "Ya se atendió" para los Pagos Móvil sin orden.
+- **Cambio de base: solo aditivo.** Sin dependencias nuevas. Contra el esquema de 70093de, el SQL tiene: 6 `CREATE TYPE`, 2 `CREATE TABLE` (`warranty_claims`, `warranty_claim_events`), `ADD COLUMN` en `products`, `order_items` y `pago_movil_verificaciones`, índices y `ADD CONSTRAINT` **solo de las tablas nuevas**. Si C-119 ya estaba aplicado, saldrá menos. **Ningún `DROP` ni `ALTER ... TYPE`**: si aparece alguno, parar y avisar a Claude.
+- **Pasos en el servidor** (`/var/www/electroshopve`):
+  1. `git log -1 --oneline` (para anotar qué había).
+  2. Respaldo de la base: `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-29-09b.dump`
+  3. Respaldo de archivos: `tar czf ~/archivos-29-09b.tgz private-uploads public/uploads`
+  4. `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL.
+  5. Si el SQL es como el de arriba: `npx prisma db push` y `bash scripts/deploy.sh` otra vez.
 - **Después del deploy, en producción:**
-  1. Transacciones → "Pagos Móvil de compra sin orden" → "Pasar a su saldo" el pago de prueba de Andrés (C-114).
-  2. Configuración → Precios y pagos → Montos por compra: poner el mínimo que se quiera (ya explica qué cuenta) y verlo en `/carrito` con un producto barato.
-  3. Productos → Nuevo → subir un PNG transparente sacado del teléfono: debe salir con fondo blanco y la cinta.
-  4. ElectroStudio: "Nueva historia" con ese producto. La foto debe salir sin la cinta.
-  5. Marketing ya no tiene la pestaña "ElectroStudio".
-  6. Crear un producto **Usado** de prueba (en borrador o sin stock): pide grado, empaque, qué incluye y 3 fotos. Revisar su ficha y el filtro "Condición" del catálogo.
-  7. Leer `/terminos` (versión 3.0) y la página "Garantía" del cliente.
-
-## 0b. C-123: pagos viejos sin orden (29/09)
-- En Transacciones salen 2 Pagos Móvil de diciembre de 2025 que ya se pagaron y entregaron. **No usar "Pasar a su saldo" en ellos.**
-- Rama `claude/C-123` (sale de `main`, lleva `ADD COLUMN`): "Es esta orden" y "Ya se atendió" (archivar con nota). Mergear y subir con el deploy del §0. Pasos en `estado/C-123.md`.
+  1. **Transacciones, los 2 pagos de diciembre (ref. 9601 y 189689): NO "Pasar a su saldo".** Si sale una orden con "mismo monto" → "Es esta orden". Si no → "Ya se atendió" con una nota ("Pagado y entregado en diciembre de 2025").
+  2. Menú "Garantías": aparece, vacío, sin error.
+  3. Productos → Más → "Importar (.json)" → "Descargar plantilla": trae las categorías reales.
+  4. Una compra de prueba barata con saldo: el correo dice "Recibimos tu pago" y "Total pagado".
+  5. Si C-119 entra en este deploy, también: producto **Usado** de prueba en borrador, `/terminos` 3.0 y la página "Garantía" del cliente.
 
 ## 1. Estado de las ramas
-- **`main`:** todo hasta C-117, subido el 29/09. En producción, hasta C-113.
+- **`main`:** todo hasta C-123 (C-118, C-121, C-122 y C-123 mergeados el 29/09). Las ramas `claude/C-118` a `claude/C-123` ya están en `main`.
 - **Gemini:** R23 (G-69) cerrada y en `main`, con dos arreglos de Claude (resultado al final de `PLAN_GEMINI.md`). **No tiene ronda abierta.** Su carril no tiene deudas de reglas (verificado el 28/09 con `grep`: 0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis).
 - **ChatGPT:** fuera del equipo desde el 21/09. Limpieza opcional en la máquina de Andrés: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
 - **Historial de tareas:** cada una tiene su `docs/plan/estado/C-XX.md`. Resumen en `PLAN_CLAUDE.md`, "Orden de trabajo".

@@ -1,171 +1,69 @@
 'use client';
 
-// [MOBILE ONLY] Cliente Panel - Premium Floating Bottom Navigation Bar
-// Uses Portal to render outside the layout DOM tree for proper fixed positioning
-// Same style as homepage MobileNavBar
+// Barra inferior del panel del cliente (solo teléfono y tablet: se oculta desde lg).
+// C-128: Inicio, Pedidos, Saldo, Favoritos y "Más", que abre el menú completo (Direcciones, Garantía, Referidos,
+// Perfil…). Antes eran Inicio, Pedidos, Favoritos, Referidos y Perfil: el saldo, lo que más se consulta, no estaba.
+// Colores con tokens (antes hex y rgba dentro de `style`).
 
-import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { IconType } from 'react-icons';
+import { FiCreditCard, FiHeart, FiHome, FiMenu, FiPackage } from 'react-icons/fi';
 import { useMontado } from '@/lib/hooks/useMontado';
 
-// [MOBILE ONLY] Premium SVG Icons with BLUE theme (same as homepage)
-const PremiumDashboardIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}
-    >
-        <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={active ? 2.5 : 2} fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
-        <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={active ? 2.5 : 2} fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
-        <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={active ? 2.5 : 2} fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
-        <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={active ? 2.5 : 2} fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
-    </svg>
-);
-
-
-const PremiumOrdersIcon = ({ active }: { active: boolean }) => (
-    <svg viewBox="0 0 24 24" fill="none" className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}>
-        <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.15)' : 'none'} />
-    </svg>
-);
-
-const PremiumWishlistIcon = ({ active }: { active: boolean }) => (
-    <svg viewBox="0 0 24 24" fill="none" className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}>
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
-    </svg>
-);
-
-const PremiumProfileIcon = ({ active }: { active: boolean }) => (
-    <svg viewBox="0 0 24 24" fill="none" className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}>
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth={active ? 2.5 : 2} fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
-    </svg>
-);
-
-
-const PremiumReferralIcon = ({ active }: { active: boolean }) => (
-    <svg viewBox="0 0 24 24" fill="none" className={`w-6 h-6 transition-all duration-300 ${active ? 'drop-shadow-[0_0_8px_rgba(42,99,205,0.8)]' : ''}`}>
-        <polyline points="20 12 20 22 4 22 4 12" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.15)' : 'none'} />
-        <rect x="1" y="7" width="22" height="5" rx="1" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.25)' : 'none'} />
-        <line x1="12" y1="22" x2="12" y2="7" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" />
-        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.1)' : 'none'} />
-        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" fill={active ? 'rgba(42, 99, 205, 0.1)' : 'none'} />
-    </svg>
-);
-
-// Navigation items (Simplified for Mobile UX)
-const customerNavItems = [
-    { href: '/customer', label: 'Inicio', Icon: PremiumDashboardIcon },
-    { href: '/customer/orders', label: 'Pedidos', Icon: PremiumOrdersIcon },
-    { href: '/customer/wishlist', label: 'Favoritos', Icon: PremiumWishlistIcon },
-    { href: '/customer/referrals', label: 'Referidos', Icon: PremiumReferralIcon },
-    { href: '/customer/profile', label: 'Perfil', Icon: PremiumProfileIcon },
+const ITEMS: Array<{ href: string; label: string; Icono: IconType }> = [
+  { href: '/customer', label: 'Inicio', Icono: FiHome },
+  { href: '/customer/orders', label: 'Pedidos', Icono: FiPackage },
+  { href: '/customer/balance', label: 'Saldo', Icono: FiCreditCard },
+  { href: '/customer/wishlist', label: 'Favoritos', Icono: FiHeart },
 ];
 
+const base = 'flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-semibold transition-colors';
+
 export default function CustomerMobileNavBar() {
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [activeItem, setActiveItem] = useState<string | null>(null);
-    const mounted = useMontado();
-    const pathname = usePathname();
-    const navRef = useRef<HTMLElement>(null);
+  const mounted = useMontado();
+  const pathname = usePathname();
 
-    // Scroll detection
-    const handleScroll = useCallback(() => {
-        setIsScrolled(window.scrollY > 100);
-    }, []);
+  if (!mounted) return null;
 
-    useEffect(() => {
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        // Posición inicial fuera del cuerpo del efecto (C-111): la página pudo abrirse ya desplazada
-        const inicial = requestAnimationFrame(handleScroll);
-        return () => {
-            cancelAnimationFrame(inicial);
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, [handleScroll]);
+  const activo = (href: string) => (href === '/customer' ? pathname === '/customer' : pathname.startsWith(href));
 
-    const isActive = (href: string) => {
-        if (href === '/customer') return pathname === '/customer';
-        return pathname.startsWith(href);
-    };
-
-    const handleTouchStart = (href: string) => setActiveItem(href);
-    const handleTouchEnd = () => setTimeout(() => setActiveItem(null), 150);
-
-
-    // Don't render until mounted (for portal)
-    if (!mounted) return null;
-
-    // The actual nav bar content
-    const navContent = (
-        <nav
-            ref={navRef}
-            id="customer-floating-nav"
-            className="lg:hidden"
-            style={{
-                position: 'fixed',
-                bottom: '12px',
-                left: '12px',
-                right: '12px',
-                zIndex: 'var(--z-bottomnav)',
-                borderRadius: '20px',
-                background: isScrolled
-                    ? 'rgba(255, 255, 255, 0.92)'
-                    : 'rgba(255, 255, 255, 0.82)',
-                boxShadow: isScrolled
-                    ? '0 8px 32px rgba(42, 99, 205, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-                    : '0 8px 32px rgba(42, 99, 205, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                transition: 'all 0.3s ease-in-out',
-                border: '1px solid rgba(42, 99, 205, 0.15)',
-            }}
-        >
-            <div className="grid grid-cols-5 h-16 w-full items-center px-1">
-                {customerNavItems.map((item) => {
-                    const { Icon } = item;
-                    const active = isActive(item.href);
-                    const isTouched = activeItem === item.href;
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            onTouchStart={() => handleTouchStart(item.href)}
-                            onTouchEnd={handleTouchEnd}
-                            className="flex flex-col items-center justify-center h-14 relative"
-                            style={{
-                                color: active ? '#2a63cd' : 'rgba(71, 85, 105, 0.85)',
-                                transform: isTouched ? 'scale(0.92)' : 'scale(1)',
-                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                            }}
-                        >
-                            {active && (
-                                <div
-                                    className="absolute inset-0 rounded-xl"
-                                    style={{
-                                        background: 'radial-gradient(ellipse at center, rgba(42, 99, 205, 0.15) 0%, transparent 70%)',
-                                        pointerEvents: 'none',
-                                    }}
-                                />
-                            )}
-                            <div className="relative">
-                                <Icon active={active} />
-                            </div>
-                            <span
-                                className="text-xs mt-1 relative z-10 text-center truncate font-bold"
-                                style={{ letterSpacing: active ? '0.01em' : '0' }}
-                            >
-                                {item.label}
-                            </span>
-                        </Link>
-                    );
-                })}
-            </div>
-        </nav>
-    );
-
-    // Use Portal to render outside the layout's DOM tree
-    return createPortal(navContent, document.body);
+  return createPortal(
+    <nav
+      id="customer-floating-nav"
+      aria-label="Mi panel"
+      className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[var(--z-bottomnav)] rounded-2xl border border-line bg-white/95 shadow-lg lg:hidden"
+    >
+      <ul className="grid h-16 grid-cols-5 items-center px-1">
+        {ITEMS.map(({ href, label, Icono }) => {
+          const esActivo = activo(href);
+          return (
+            <li key={href}>
+              <Link
+                href={href}
+                aria-current={esActivo ? 'page' : undefined}
+                className={`${base} ${esActivo ? 'bg-brand-50 text-brand-600' : 'text-ink-soft active:bg-surface'}`}
+              >
+                <Icono className="h-5 w-5" aria-hidden="true" />
+                {label}
+              </Link>
+            </li>
+          );
+        })}
+        <li>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event('abrir-menu-cliente'))}
+            aria-controls="customer-sidebar"
+            className={`${base} w-full text-ink-soft active:bg-surface`}
+          >
+            <FiMenu className="h-5 w-5" aria-hidden="true" />
+            Más
+          </button>
+        </li>
+      </ul>
+    </nav>,
+    document.body,
+  );
 }

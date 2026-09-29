@@ -3,6 +3,12 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { parseSavedAddresses } from '@/lib/saved-addresses';
+import { warrantyDaysFor } from '@/lib/product-condition';
+import { eventoEsEnOficina } from '@/lib/envios/zoom';
+
+// C-128: pedidos en curso (el stepper del inicio) y garantías vigentes
+const ACTIVOS = ['PENDING', 'CONFIRMED', 'PAID', 'PROCESSING', 'READY_FOR_PICKUP', 'SHIPPED'] as const;
+const DIA_MS = 24 * 60 * 60 * 1000;
 
 export async function GET() {
     try {
@@ -75,6 +81,8 @@ export async function GET() {
                 userId,
                 createdAt: { gte: startOfMonth },
                 paymentStatus: 'PAID',
+                // C-128: una orden pagada y después cancelada no es gasto del mes
+                status: { notIn: ['CANCELLED', 'REFUNDED'] },
             },
             select: {
                 totalUSD: true,
@@ -201,6 +209,44 @@ export async function GET() {
             });
         });
 
+        // C-128: pedidos en curso con lo que necesita el stepper (ZOOM avisa cuándo llegó a la oficina)
+        const [pedidosEnCurso, enCursoTotal, entregadas, reclamosAbiertos, comprado] = await Promise.all([
+            prisma.order.findMany({
+                where: { userId, status: { in: [...ACTIVOS] } },
+                orderBy: { createdAt: 'desc' },
+                take: 5,
+                select: {
+                    id: true, orderNumber: true, status: true, paymentStatus: true, deliveryMethod: true, shippingCarrier: true,
+                    shippingMode: true, courierOfficeName: true, trackingNumber: true, totalUSD: true, createdAt: true,
+                    items: { select: { productName: true, quantity: true } },
+                    shipmentEvents: { where: { source: 'ZOOM' }, select: { description: true } },
+                },
+            }),
+            prisma.order.count({ where: { userId, status: { in: [...ACTIVOS] } } }),
+            // La garantía más larga es de 90 días (C-119): con 400 días de margen alcanza aunque cambie
+            prisma.order.findMany({
+                where: { userId, status: 'DELIVERED', deliveredAt: { gte: new Date(Date.now() - 400 * DIA_MS) } },
+                select: { deliveredAt: true, items: { select: { productCondition: true, warrantyDays: true, quantity: true, product: { select: { productType: true } } } } },
+            }),
+            prisma.warrantyClaim.count({ where: { userId, status: { notIn: ['RESOLVED', 'REJECTED'] } } }),
+            prisma.order.aggregate({ where: { userId, paymentStatus: 'PAID', status: { notIn: ['CANCELLED', 'REFUNDED'] } }, _sum: { totalUSD: true } }),
+        ]);
+
+        // Productos físicos entregados que siguen en garantía, y cuándo vence la primera
+        const ahora = Date.now();
+        let garantiasVigentes = 0;
+        let proximoVencimiento: number | null = null;
+        for (const orden of entregadas) {
+            if (!orden.deliveredAt) continue;
+            for (const item of orden.items) {
+                if (item.product?.productType === 'DIGITAL') continue;
+                const vence = orden.deliveredAt.getTime() + warrantyDaysFor(item.productCondition, item.warrantyDays) * DIA_MS;
+                if (vence <= ahora) continue;
+                garantiasVigentes += item.quantity;
+                proximoVencimiento = proximoVencimiento === null ? vence : Math.min(proximoVencimiento, vence);
+            }
+        }
+
         // Sort by date and limit to 5
         recentActivity.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         const limitedActivity = recentActivity.slice(0, 5);
@@ -225,6 +271,30 @@ export async function GET() {
                 items: order.items.slice(0, 3),
             })),
             recentActivity: limitedActivity,
+            // C-128
+            activeCount: enCursoTotal,
+            activeOrders: pedidosEnCurso.map((o) => ({
+                id: o.id,
+                orderNumber: o.orderNumber,
+                status: o.status,
+                paymentStatus: o.paymentStatus,
+                deliveryMethod: o.deliveryMethod,
+                shippingCarrier: o.shippingCarrier,
+                shippingMode: o.shippingMode,
+                courierOfficeName: o.courierOfficeName,
+                trackingNumber: o.trackingNumber,
+                total: Number(o.totalUSD),
+                createdAt: o.createdAt,
+                itemCount: o.items.reduce((n, i) => n + i.quantity, 0),
+                firstItem: o.items[0]?.productName ?? null,
+                enOficina: o.shipmentEvents.some((e) => eventoEsEnOficina(e.description)),
+            })),
+            warranties: {
+                active: garantiasVigentes,
+                nextExpiry: proximoVencimiento ? new Date(proximoVencimiento).toISOString() : null,
+                openClaims: reclamosAbiertos,
+            },
+            totalPurchased: Number(comprado._sum.totalUSD ?? 0),
         });
     } catch (error) {
         console.error('Error fetching dashboard data:', error);

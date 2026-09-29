@@ -75,6 +75,9 @@ export function useBucleAnimacion(paso: (dt: number) => boolean) {
   useEffect(
     () => () => {
       if (frame.current !== null) cancelAnimationFrame(frame.current);
+      // C-128: sin esto, al volver a montarse (StrictMode, o React que reactiva la vista) `iniciar` creía que el bucle
+      // seguía corriendo y no arrancaba: el anillo de misiones del cliente se quedaba en "0%" con 3 de 4 hechas
+      frame.current = null;
     },
     []
   );

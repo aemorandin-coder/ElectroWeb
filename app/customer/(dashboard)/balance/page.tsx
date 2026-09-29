@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useTiempoReal } from '@/lib/realtime/hooks';
 import { createPortal } from 'react-dom';
 import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiPlus, FiArrowUpRight, FiArrowDownLeft } from 'react-icons/fi';
@@ -91,6 +92,11 @@ export default function BalancePage() {
   useEffect(() => {
     fetchBalance();
   }, []);
+
+  // C-128: "Recargar" del inicio llega con ?recargar=1 y abre el modal directo
+  useCargarAlMontar(() => {
+    if (new URLSearchParams(window.location.search).get('recargar') === '1') setShowRechargeModal(true);
+  });
 
   // Trigger balance animation after data loads
   useEffect(() => {

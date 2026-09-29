@@ -1,16 +1,27 @@
 'use client';
-import { formatUSD } from '@/lib/currency';
-import { toast } from 'react-hot-toast';
-import { useSession } from 'next-auth/react';
-import Link from 'next/link';
-import { FiShoppingBag, FiDollarSign, FiHeart, FiTrendingUp, FiPackage, FiClock, FiActivity, FiArrowUp, FiArrowDown, FiChevronRight, FiTag, FiCheck, FiTruck, FiUser, FiLogIn } from 'react-icons/fi';
-import { useState } from 'react';
-import CustomerOnboarding from '@/components/customer/CustomerOnboarding';
-import { adminPrimaryButton } from '@/lib/admin-ui';
 
-import type { IconType } from 'react-icons';
+import { useState } from 'react';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import { toast } from 'react-hot-toast';
+import {
+  FiActivity, FiArrowDown, FiArrowUp, FiChevronRight, FiCreditCard, FiHeart, FiInfo, FiLogIn, FiPackage, FiPlus,
+  FiShield, FiTag, FiTruck, FiUser, FiXCircle,
+} from 'react-icons/fi';
+import CustomerOnboarding from '@/components/customer/CustomerOnboarding';
+import OrderStepper from '@/components/customer/OrderStepper';
+import { EnVivo } from '@/components/ui/EnVivo';
+import { formatUSD } from '@/lib/currency';
+import { adminBadge, adminPrimaryButton, type AdminTone } from '@/lib/admin-ui';
+import { ETIQUETA_ESTADO } from '@/lib/order-admin';
+import { pasosPedido } from '@/lib/order-pasos';
 import { useDelNavegador } from '@/lib/hooks/useMontado';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { useTiempoReal } from '@/lib/realtime/hooks';
+
+// C-128: inicio de la cuenta del cliente. Arriba lo que más se consulta (saldo, compras activas, garantías), después
+// los pedidos en curso con su avance paso a paso, y al final el historial. Antes: un banner con contadores sin
+// etiqueta (12, 1, 1), tarjetas dentro de tarjetas y el avance de un pedido solo dentro de "Mis pedidos".
 
 interface RecentOrder {
   id: string;
@@ -19,6 +30,23 @@ interface RecentOrder {
   itemCount: number;
   total: number;
   createdAt: string;
+}
+
+interface ActiveOrder {
+  id: string;
+  orderNumber: string;
+  status: string;
+  paymentStatus: string;
+  deliveryMethod: string | null;
+  shippingCarrier: string | null;
+  shippingMode: string | null;
+  courierOfficeName: string | null;
+  trackingNumber: string | null;
+  total: number;
+  createdAt: string;
+  itemCount: number;
+  firstItem: string | null;
+  enOficina: boolean;
 }
 
 interface RecentActivity {
@@ -39,8 +67,43 @@ interface DashboardStats {
   tieneDireccion?: boolean;
   datosCompletos?: boolean;
   totalSpentThisMonth: number;
+  totalPurchased: number;
   recentOrders: RecentOrder[];
   recentActivity: RecentActivity[];
+  activeCount: number;
+  activeOrders: ActiveOrder[];
+  warranties: { active: number; nextExpiry: string | null; openClaims: number };
+}
+
+const fechaCorta = new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'short', timeZone: 'America/Caracas' });
+
+function tonoEstado(status: string): AdminTone {
+  if (status === 'DELIVERED') return 'success';
+  if (status === 'CANCELLED' || status === 'REFUNDED') return 'danger';
+  if (status === 'PENDING') return 'warning';
+  return 'brand';
+}
+
+function Movimiento({ actividad }: { actividad: RecentActivity }) {
+  const entra = actividad.type === 'RECHARGE' || actividad.type === 'DEPOSIT' || actividad.type === 'REFUND';
+  const sale = actividad.type === 'PURCHASE';
+  const Icono = actividad.type === 'LOGIN' ? FiLogIn : actividad.type === 'ORDER' ? FiPackage : actividad.type === 'ACCOUNT' ? FiUser : entra ? FiArrowUp : sale ? FiArrowDown : FiActivity;
+  return (
+    <li className="flex items-center gap-3 py-2.5">
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${entra ? 'bg-success-strong/10 text-success-strong' : sale ? 'bg-deal-bg text-deal' : 'bg-brand-50 text-brand-600'}`}>
+        <Icono className="h-4 w-4" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm text-ink">{actividad.description}</span>
+        <span className="block text-xs text-muted">{fechaCorta.format(new Date(actividad.createdAt))}</span>
+      </span>
+      {typeof actividad.amount === 'number' && actividad.amount > 0 && (
+        <span className={`shrink-0 text-sm font-semibold tabular-nums ${entra ? 'text-success-strong' : sale ? 'text-deal' : 'text-ink'}`}>
+          {entra ? '+' : sale ? '−' : ''}{formatUSD(actividad.amount)}
+        </span>
+      )}
+    </li>
+  );
 }
 
 export default function CustomerDashboard() {
@@ -56,12 +119,8 @@ export default function CustomerDashboard() {
   async function fetchDashboardData() {
     try {
       const response = await fetch('/api/customer/dashboard');
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
-    } catch (error) {
-      console.error('Error fetching dashboard:', error);
+      if (response.ok) setStats(await response.json());
+    } catch {
       toast.error('No se pudieron cargar los datos del panel');
     } finally {
       setLoading(false);
@@ -72,237 +131,205 @@ export default function CustomerDashboard() {
     void fetchDashboardData();
   }, []);
 
-  const getStatusConfig = (status: string) => {
-    const configs: Record<string, { bg: string; text: string; label: string; icon: IconType }> = {
-      PENDING: { bg: 'bg-warning/15', text: 'text-warning-strong', label: 'Pendiente', icon: FiClock },
-      CONFIRMED: { bg: 'bg-brand-50', text: 'text-brand-700', label: 'Confirmado', icon: FiCheck },
-      PAID: { bg: 'bg-success-strong/10', text: 'text-success-strong', label: 'Pagado', icon: FiDollarSign },
-      PROCESSING: { bg: 'bg-brand-50', text: 'text-brand-700', label: 'Preparando', icon: FiPackage },
-      SHIPPED: { bg: 'bg-brand-50', text: 'text-brand-700', label: 'Enviado', icon: FiTruck },
-      DELIVERED: { bg: 'bg-success-strong/10', text: 'text-success-strong', label: 'Entregado', icon: FiCheck },
-    };
-    return configs[status] || configs.PENDING;
-  };
+  // C-127: el avance de los pedidos y el saldo se actualizan solos
+  const enVivo = useTiempoReal((evento) => {
+    if (evento.tipo === 'order:status_updated' || evento.tipo === 'payment:verified') void fetchDashboardData();
+  }, { onReconectar: () => void fetchDashboardData(), respaldoMs: 120_000 });
+
+  const nombre = session?.user?.name?.split(' ')[0] || 'Cliente';
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-64">
-        <div className="relative w-12 h-12 lg:w-16 lg:h-16">
-          <div className="absolute inset-0 rounded-full border-4 border-line" />
-          <div className="absolute inset-0 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
+      <div className="space-y-4" aria-busy="true" aria-label="Cargando tu cuenta">
+        <div className="h-16 w-48 animate-pulse rounded-xl bg-line" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2].map((i) => <div key={i} className="h-36 animate-pulse rounded-2xl bg-line" />)}
         </div>
-        <p className="mt-3 text-xs lg:text-sm text-muted">Cargando tu dashboard...</p>
+        <div className="h-48 animate-pulse rounded-2xl bg-line" />
       </div>
     );
   }
 
+  const activos = stats?.activeOrders ?? [];
+  const garantias = stats?.warranties ?? { active: 0, nextExpiry: null, openClaims: 0 };
+
   return (
-    <div className="h-full flex flex-col gap-2 lg:gap-3">
-      {/* Hero Welcome Section - Compact with icon stats */}
-      <div className="relative bg-brand-600 rounded-lg lg:rounded-xl p-3 lg:p-4 text-white overflow-hidden flex-shrink-0">
-        <div className="flex flex-col gap-3">
-          {/* Greeting - Title */}
-          <div className="flex-shrink-0">
-            <h1 className="text-xl lg:text-2xl font-bold mb-0.5 leading-tight">
-              {greeting},<br className="sm:hidden" /> {session?.user?.name?.split(' ')[0] || 'Cliente'}
-            </h1>
-            <p className="text-white/80 text-xs lg:text-sm hidden sm:block">Gestiona tus pedidos y preferencias</p>
-          </div>
-
-          {/* Stats - Icons under text on mobile, responsive row */}
-          <div className="flex items-center justify-between gap-2 overflow-x-auto scrollbar-hide">
-            <div className="flex items-center gap-2">
-              {/* Pedidos */}
-              <div className="relative flex-shrink-0">
-                <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center border border-white/10">
-                  <FiShoppingBag className="w-5 h-5 text-white" />
-                </div>
-                <span className="absolute -top-1 -right-1 bg-white text-brand-500 text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center shadow">
-                  {stats?.orders || 0}
-                </span>
-              </div>
-
-              {/* En Proceso */}
-              <div className="relative flex-shrink-0">
-                <div className="w-10 h-10 bg-warning-strong/30 rounded-xl flex items-center justify-center border border-white/20">
-                  <FiClock className="w-5 h-5 text-white" />
-                </div>
-                <span className="absolute -top-1 -right-1 bg-warning-strong text-white text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center shadow">
-                  {stats?.pending || 0}
-                </span>
-              </div>
-
-              {/* Favoritos */}
-              <div className="relative flex-shrink-0">
-                <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center border border-white/20">
-                  <FiHeart className="w-5 h-5 text-white" />
-                </div>
-                <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center shadow">
-                  {stats?.wishlist || 0}
-                </span>
-              </div>
-            </div>
-
-            {/* Saldo - Right aligned on mobile */}
-            <div className="bg-white/20 rounded-xl px-3 py-1.5 border border-white/20 text-right min-w-[80px]">
-              <p className="text-white/80 text-xs uppercase font-bold tracking-tighter">Saldo</p>
-              <p className="text-base lg:text-xl font-bold">{formatUSD(stats?.balance || 0)}</p>
-            </div>
-          </div>
+    <div className="space-y-6 lg:space-y-8">
+      <header className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <p className="text-sm text-muted">{greeting},</p>
+          <h1 className="text-2xl font-bold text-ink lg:text-3xl">{nombre}</h1>
         </div>
-      </div>
+        <EnVivo estado={enVivo} />
+      </header>
 
-      {/* Customer Onboarding Section */}
-      <CustomerOnboarding stats={stats} />
-
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6 flex-1 min-h-0">
-        {/* Recent Orders */}
-        <div className="xl:col-span-2 bg-white border border-line rounded-2xl overflow-hidden flex flex-col shadow-sm">
-          <div className="px-4 lg:px-5 py-3 lg:py-4 border-b border-line flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 lg:w-7 lg:h-7 bg-brand-50 rounded-lg flex items-center justify-center">
-                <FiPackage className="w-3 h-3 lg:w-4 lg:h-4 text-brand-600" />
-              </div>
-              <h2 className="font-bold text-ink text-sm lg:text-base">Pedidos Recientes</h2>
-            </div>
-            <Link href="/customer/orders" className="text-xs text-brand-600 hover:underline font-semibold flex items-center gap-0.5">
-              Ver todos <FiChevronRight className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
+      {/* Resumen: saldo, compras activas y garantías */}
+      <section aria-label="Resumen de tu cuenta" className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <div className="col-span-2 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 p-5 text-white lg:col-span-1">
+          <p className="flex items-center gap-2 text-sm text-white/80">
+            <FiCreditCard className="h-4 w-4" aria-hidden="true" /> Saldo en tu billetera
+          </p>
+          <p className="mt-1 text-3xl font-bold tabular-nums">{formatUSD(stats?.balance ?? 0)}</p>
+          <div className="mt-4 flex gap-2">
+            <Link href="/customer/balance?recargar=1" className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-brand-700 hover:bg-brand-50">
+              <FiPlus className="h-4 w-4" aria-hidden="true" /> Recargar
+            </Link>
+            <Link href="/customer/balance" className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-white/40 px-4 text-sm font-semibold text-white hover:bg-white/10">
+              Movimientos
             </Link>
           </div>
-          <div className="p-3 lg:p-4 flex-1 overflow-y-auto">
-            {stats?.recentOrders && stats.recentOrders.length > 0 ? (
-              <div className="space-y-2">
-                {stats.recentOrders.slice(0, 3).map((order) => {
-                  const statusConfig = getStatusConfig(order.status);
-                  const StatusIcon = statusConfig.icon;
-                  return (
-                    <Link href="/customer/orders" key={order.id} className="flex items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-xl hover:bg-surface border border-transparent hover:border-line transition-all">
-                      <div className="w-9 h-9 lg:w-11 lg:h-11 bg-brand-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <FiPackage className="w-4 h-4 lg:w-5 lg:h-5 text-brand-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-bold text-ink text-xs lg:text-sm">#{order.orderNumber}</p>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusConfig.bg} ${statusConfig.text} flex items-center gap-0.5 lg:gap-1`}>
-                            <StatusIcon className="w-2 h-2 lg:w-2.5 lg:h-2.5" />
-                            {statusConfig.label}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted">{order.itemCount} productos</p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="font-bold text-ink text-sm lg:text-base">{formatUSD(order.total)}</p>
-                        <p className="text-xs text-muted">
-                          {new Date(order.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+        </div>
+
+        <Link href="/customer/orders" className="group rounded-2xl border border-line bg-white p-4 transition-colors hover:border-brand-200 lg:p-5">
+          <p className="flex items-center gap-2 text-sm text-muted">
+            <FiTruck className="h-4 w-4 text-brand-600" aria-hidden="true" /> Compras activas
+          </p>
+          <p className="mt-1 text-2xl font-bold tabular-nums text-ink lg:text-3xl">{stats?.activeCount ?? 0}</p>
+          <p className="mt-2 flex items-center justify-between gap-1 text-xs text-ink-soft lg:text-sm">
+            {stats?.pending ? `${stats.pending} con el pago por validar` : 'En preparación o en camino'}
+            <FiChevronRight className="h-4 w-4 shrink-0 text-muted group-hover:text-brand-600" aria-hidden="true" />
+          </p>
+        </Link>
+
+        <Link href="/customer/warranty" className="group rounded-2xl border border-line bg-white p-4 transition-colors hover:border-brand-200 lg:p-5">
+          <p className="flex items-center gap-2 text-sm text-muted">
+            <FiShield className="h-4 w-4 text-brand-600" aria-hidden="true" /> Garantías vigentes
+          </p>
+          <p className="mt-1 text-2xl font-bold tabular-nums text-ink lg:text-3xl">{garantias.active}</p>
+          <p className="mt-2 flex items-center justify-between gap-1 text-xs text-ink-soft lg:text-sm">
+            {garantias.openClaims > 0
+              ? `${garantias.openClaims} ${garantias.openClaims === 1 ? 'solicitud' : 'solicitudes'} en revisión`
+              : garantias.nextExpiry ? `La primera vence el ${fechaCorta.format(new Date(garantias.nextExpiry))}` : 'Productos cubiertos por la tienda'}
+            <FiChevronRight className="h-4 w-4 shrink-0 text-muted group-hover:text-brand-600" aria-hidden="true" />
+          </p>
+        </Link>
+      </section>
+
+      <CustomerOnboarding stats={stats} />
+
+      {/* Pedidos en curso, con su avance */}
+      <section aria-labelledby="pedidos-en-curso">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 id="pedidos-en-curso" className="text-lg font-semibold text-ink lg:text-xl">Pedidos en curso</h2>
+          <Link href="/customer/orders" className="inline-flex h-11 items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
+            Ver todos <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
+        {activos.length > 0 ? (
+          <ul className="space-y-3">
+            {activos.slice(0, 3).map((orden) => {
+              const { pasos, nota } = pasosPedido(orden);
+              return (
+                <li key={orden.id}>
+                  <Link href={`/customer/orders?orden=${orden.id}`} className="block rounded-2xl border border-line bg-white p-4 transition-colors hover:border-brand-200 lg:p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-ink">#{orden.orderNumber}</p>
+                        <p className="truncate text-sm text-muted">
+                          {orden.firstItem ?? 'Pedido'}{orden.itemCount > 1 ? ` y ${orden.itemCount - 1} más` : ''} · {fechaCorta.format(new Date(orden.createdAt))}
                         </p>
                       </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-8 lg:py-12">
-                <div className="w-14 h-14 lg:w-16 lg:h-16 bg-surface border border-line rounded-2xl flex items-center justify-center mx-auto mb-3">
-                  <FiPackage className="w-6 h-6 lg:w-8 lg:h-8 text-subtle" />
-                </div>
-                <h3 className="text-sm lg:text-base font-bold text-ink mb-1">Empieza tu aventura</h3>
-                <p className="text-muted text-xs lg:text-sm mb-4">Aún no tienes pedidos. ¡Es hora de armar tu setup!</p>
-                <Link href="/" className={`${adminPrimaryButton} inline-flex items-center gap-2`}>
-                  <FiTag className="w-4 h-4" />
-                  Ver Ofertas de Hoy
+                      <p className="shrink-0 text-lg font-bold tabular-nums text-ink">{formatUSD(orden.total)}</p>
+                    </div>
+                    <div className="mt-4">
+                      <OrderStepper pasos={pasos} />
+                    </div>
+                    {nota && (
+                      <p className="mt-4 flex items-start gap-2 rounded-xl bg-surface px-3 py-2 text-sm text-ink-soft">
+                        <FiInfo className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+                        <span>
+                          {nota}
+                          {orden.trackingNumber && orden.status === 'SHIPPED' ? ` · Guía ${orden.trackingNumber}` : ''}
+                        </span>
+                      </p>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+            {(stats?.activeCount ?? 0) > 3 && (
+              <li>
+                <Link href="/customer/orders" className="flex h-11 items-center justify-center rounded-xl text-sm font-semibold text-brand-600 hover:bg-brand-50">
+                  Ver los otros {(stats?.activeCount ?? 0) - 3} pedidos en curso
                 </Link>
-              </div>
+              </li>
             )}
+          </ul>
+        ) : (
+          <div className="flex flex-col items-center rounded-2xl border border-dashed border-line-strong bg-white px-6 py-10 text-center">
+            <FiPackage className="h-8 w-8 text-subtle" aria-hidden="true" />
+            <p className="mt-3 font-semibold text-ink">No tienes pedidos en camino</p>
+            <p className="mt-1 text-sm text-muted">Cuando compres, aquí verás cada paso hasta que lo recibas.</p>
+            <Link href="/productos" className={`${adminPrimaryButton} mt-4`}>
+              <FiTag className="h-4 w-4" aria-hidden="true" /> Ver ofertas de hoy
+            </Link>
           </div>
-        </div>
+        )}
+      </section>
 
-        {/* Activity & Stats */}
-        <div className="flex flex-col gap-4">
-          {/* Activity Feed */}
-          <div className="bg-white border border-line rounded-2xl overflow-hidden flex flex-col flex-1 shadow-sm">
-            <div className="px-4 lg:px-5 py-3 lg:py-4 border-b border-line flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 lg:w-7 lg:h-7 bg-brand-50 rounded-lg flex items-center justify-center">
-                  <FiActivity className="w-3 h-3 lg:w-4 lg:h-4 text-brand-600" />
-                </div>
-                <h2 className="font-bold text-ink text-sm lg:text-base">Actividad</h2>
-              </div>
-            </div>
-            <div className="p-3 lg:p-4 flex-1 overflow-y-auto">
-              {stats?.recentActivity && stats.recentActivity.length > 0 ? (
-                <div className="space-y-1.5 lg:space-y-2">
-                  {stats.recentActivity.slice(0, 4).map((activity) => {
-                    const getActivityStyle = (type: string) => {
-                      switch (type) {
-                        case 'LOGIN':
-                          return { bg: 'bg-brand-50', icon: <FiLogIn className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-brand-600" />, color: 'text-brand-600' };
-                        case 'ORDER':
-                          return { bg: 'bg-brand-50', icon: <FiPackage className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-brand-600" />, color: 'text-brand-600' };
-                        case 'ACCOUNT':
-                          return { bg: 'bg-brand-50', icon: <FiUser className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-brand-600" />, color: 'text-brand-600' };
-                        case 'RECHARGE':
-                        case 'DEPOSIT':
-                          return { bg: 'bg-success-strong/10', icon: <FiArrowUp className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-success-strong" />, color: 'text-success-strong' };
-                        case 'PURCHASE':
-                          return { bg: 'bg-deal-bg', icon: <FiArrowDown className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-deal" />, color: 'text-deal' };
-                        default:
-                          return { bg: 'bg-surface', icon: <FiActivity className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-muted" />, color: 'text-muted' };
-                      }
-                    };
-                    const style = getActivityStyle(activity.type);
-
-                    return (
-                      <div key={activity.id} className="flex items-center gap-2 lg:gap-3 p-1.5 lg:p-2 rounded-lg hover:bg-surface transition-colors">
-                        <div className={`w-5 h-5 lg:w-7 lg:h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${style.bg}`}>
-                          {style.icon}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-ink truncate">{activity.description}</p>
-                          <p className="text-xs text-muted">
-                            {new Date(activity.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                          </p>
-                        </div>
-                        {activity.amount && (
-                          <span className={`text-xs font-bold ${style.color} flex-shrink-0`}>
-                            {activity.type === 'RECHARGE' || activity.type === 'DEPOSIT' ? '+' : activity.type === 'PURCHASE' ? '-' : ''}{formatUSD(activity.amount || 0)}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-3 lg:py-4">
-                  <FiActivity className="w-6 h-6 lg:w-8 lg:h-8 text-subtle mx-auto mb-1.5 lg:mb-2" />
-                  <p className="text-xs text-muted">Sin actividad reciente</p>
-                </div>
-              )}
-            </div>
+      {/* Historial */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section aria-labelledby="ultimos-pedidos" className="rounded-2xl border border-line bg-white p-4 lg:p-5">
+          <div className="mb-1 flex items-center justify-between">
+            <h2 id="ultimos-pedidos" className="font-semibold text-ink">Últimos pedidos</h2>
+            <span className="text-xs text-muted">{stats?.orders ?? 0} en total</span>
           </div>
+          {stats?.recentOrders?.length ? (
+            <ul className="divide-y divide-line">
+              {stats.recentOrders.slice(0, 4).map((order) => (
+                <li key={order.id}>
+                  <Link href={`/customer/orders?orden=${order.id}`} className="flex min-h-11 items-center gap-3 py-2.5 hover:text-brand-700">
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold text-ink">#{order.orderNumber}</span>
+                        <span className={adminBadge(tonoEstado(order.status))}>
+                          {order.status === 'CANCELLED' && <FiXCircle className="h-3 w-3" aria-hidden="true" />}
+                          {ETIQUETA_ESTADO[order.status as keyof typeof ETIQUETA_ESTADO] ?? order.status}
+                        </span>
+                      </span>
+                      <span className="block text-xs text-muted">
+                        {order.itemCount} {order.itemCount === 1 ? 'producto' : 'productos'} · {fechaCorta.format(new Date(order.createdAt))}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-sm font-semibold tabular-nums text-ink">{formatUSD(order.total)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="py-6 text-center text-sm text-muted">Todavía no tienes pedidos.</p>
+          )}
+          {(stats?.wishlist ?? 0) > 0 && (
+            <Link href="/customer/wishlist" className="mt-2 flex min-h-11 items-center gap-2 border-t border-line pt-3 text-sm font-medium text-brand-600 hover:text-brand-700">
+              <FiHeart className="h-4 w-4" aria-hidden="true" /> {stats?.wishlist} en tu lista de deseos
+            </Link>
+          )}
+        </section>
 
-          {/* Stats Summary */}
-          <div className="bg-surface rounded-xl p-3 lg:p-4 border border-line flex-shrink-0">
-            <h3 className="font-bold text-ink text-sm lg:text-base mb-2 lg:mb-3 flex items-center gap-1.5 lg:gap-2">
-              <FiTrendingUp className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-brand-500" />
-              Resumen
-            </h3>
-            <div className="space-y-1.5 lg:space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted">Total Recargado</span>
-                <span className="font-bold text-success-strong text-xs lg:text-sm">{formatUSD(stats?.totalRecharges || 0)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted">Total Gastado</span>
-                <span className="font-bold text-ink text-xs lg:text-sm">{formatUSD(stats?.totalSpent || 0)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted">Este Mes</span>
-                <span className="font-bold text-brand-600 text-xs lg:text-sm">{formatUSD(stats?.totalSpentThisMonth || 0)}</span>
-              </div>
+        <section aria-labelledby="movimientos" className="rounded-2xl border border-line bg-white p-4 lg:p-5">
+          <h2 id="movimientos" className="mb-1 font-semibold text-ink">Movimientos</h2>
+          {stats?.recentActivity?.length ? (
+            <ul className="divide-y divide-line">
+              {stats.recentActivity.slice(0, 4).map((actividad) => <Movimiento key={actividad.id} actividad={actividad} />)}
+            </ul>
+          ) : (
+            <p className="py-6 text-center text-sm text-muted">Sin movimientos recientes.</p>
+          )}
+          <dl className="mt-2 grid grid-cols-3 gap-2 border-t border-line pt-3 text-center">
+            <div>
+              <dt className="text-xs text-muted">Recargado</dt>
+              <dd className="text-sm font-semibold tabular-nums text-success-strong">{formatUSD(stats?.totalRecharges ?? 0)}</dd>
             </div>
-          </div>
-        </div>
+            <div>
+              <dt className="text-xs text-muted">En compras</dt>
+              <dd className="text-sm font-semibold tabular-nums text-ink">{formatUSD(stats?.totalPurchased ?? 0)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted">Este mes</dt>
+              <dd className="text-sm font-semibold tabular-nums text-brand-600">{formatUSD(stats?.totalSpentThisMonth ?? 0)}</dd>
+            </div>
+          </dl>
+        </section>
       </div>
     </div>
   );

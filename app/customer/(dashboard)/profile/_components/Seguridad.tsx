@@ -5,9 +5,9 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiArchive, FiCheck, FiClock, FiCircle, FiEye, FiEyeOff, FiLogIn, FiLogOut, FiMonitor, FiSlash, FiTrash2, FiX, FiXCircle, FiKey } from 'react-icons/fi';
+import { FiAlertTriangle, FiArchive, FiCheck, FiClock, FiCircle, FiEye, FiEyeOff, FiLogIn, FiLogOut, FiMonitor, FiSlash, FiSmartphone, FiTrash2, FiX, FiXCircle, FiKey } from 'react-icons/fi';
 import {
-  adminDangerButton, adminError, adminInput, adminLabel, adminModalBody, adminModalFooter, adminModalHeader,
+  adminBadge, adminDangerButton, adminError, adminInput, adminLabel, adminModalBody, adminModalFooter, adminModalHeader,
   adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPrimaryButton, adminSecondaryButton, adminIconButton,
 } from '@/lib/admin-ui';
 import { REGLAS_CONTRASENA } from '@/lib/validations/registro';
@@ -15,6 +15,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 import { useMontado } from '@/lib/hooks/useMontado';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { Seccion, fechaCorta } from './comun';
 import type { Actividad, Ajustes } from './tipos';
 
@@ -32,6 +33,8 @@ export default function Seguridad({ ajustes, onCambio }: { ajustes: Ajustes; onC
   const { confirm } = useConfirm();
   const { seguridad, cuenta } = ajustes;
   const [eliminar, setEliminar] = useState(false);
+  // Sube al cerrar las demás sesiones desde el cambio de contraseña: la lista se vuelve a pedir
+  const [versionLista, setVersionLista] = useState(0);
 
   const cerrarTodas = async () => {
     const ok = await confirm({
@@ -105,7 +108,7 @@ export default function Seguridad({ ajustes, onCambio }: { ajustes: Ajustes; onC
 
       <Seccion titulo="Contraseña">
         {seguridad.tieneContrasena ? (
-          <CambiarContrasena />
+          <CambiarContrasena onOtrasCerradas={() => setVersionLista((v) => v + 1)} />
         ) : (
           <p className="text-sm text-ink-soft">
             Entras con Google y tu cuenta no tiene contraseña. Si quieres crear una para entrar también con tu correo, usa{' '}
@@ -117,13 +120,10 @@ export default function Seguridad({ ajustes, onCambio }: { ajustes: Ajustes; onC
         )}
       </Seccion>
 
-      <Seccion
-        titulo="Sesiones"
-        descripcion={seguridad.ultimoAcceso ? <>Último inicio de sesión: {fechaCorta(seguridad.ultimoAcceso)}{seguridad.ultimoDispositivo ? ` · ${seguridad.ultimoDispositivo}` : ''}</> : undefined}
-      >
-        <p className="text-sm text-ink-soft">Si entraste en un teléfono o una computadora que no es tuya, o ves un acceso que no reconoces, cierra todas las sesiones y cambia tu contraseña.</p>
-        <button type="button" onClick={cerrarTodas} className={`${adminSecondaryButton} mt-3 w-full sm:w-auto`}>
-          <FiLogOut className="h-4 w-4" aria-hidden="true" /> Cerrar sesión en todos los dispositivos
+      <Seccion titulo="Dónde tienes tu sesión abierta" descripcion="Si ves un dispositivo que no reconoces, ciérralo y cambia tu contraseña.">
+        <SesionesAbiertas key={versionLista} />
+        <button type="button" onClick={cerrarTodas} className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-ink-soft hover:text-ink">
+          <FiLogOut className="h-4 w-4" aria-hidden="true" /> Cerrar sesión en todos, también aquí
         </button>
       </Seccion>
 
@@ -187,7 +187,121 @@ function FilaActividad({ actividad }: { actividad: Actividad }) {
   );
 }
 
-function CambiarContrasena() {
+interface SesionAbierta {
+  id: string;
+  dispositivo: string;
+  metodo: string | null;
+  createdAt: string;
+  lastSeenAt: string;
+  actual: boolean;
+}
+
+/** C-140: cada sesión con su dispositivo y "Cerrar". La actual primero y sin botón (para eso está "Salir"). */
+function SesionesAbiertas() {
+  const { confirm } = useConfirm();
+  const [sesiones, setSesiones] = useState<SesionAbierta[] | null>(null);
+  const [actualConNombre, setActualConNombre] = useState(true);
+  const [ocupado, setOcupado] = useState<string | null>(null);
+
+  const cargar = async () => {
+    const res = await fetch('/api/customer/sesiones').catch(() => null);
+    if (!res?.ok) {
+      setSesiones([]);
+      return;
+    }
+    const data = await res.json();
+    setActualConNombre(data.actualConNombre);
+    setSesiones([...data.sesiones].sort((a: SesionAbierta, b: SesionAbierta) => Number(b.actual) - Number(a.actual)));
+  };
+  useCargarAlMontar(() => void cargar(), []);
+
+  const cerrar = async (s: SesionAbierta) => {
+    setOcupado(s.id);
+    const res = await fetch(`/api/customer/sesiones?id=${encodeURIComponent(s.id)}`, { method: 'DELETE' }).catch(() => null);
+    setOcupado(null);
+    if (!res?.ok) {
+      toast.error('No se pudo cerrar esa sesión');
+      return;
+    }
+    toast.success(`Cerramos la sesión de ${s.dispositivo}`);
+    await cargar();
+  };
+
+  const cerrarOtras = async () => {
+    const ok = await confirm({
+      title: 'Cerrar las demás sesiones',
+      message: actualConNombre
+        ? 'Se cierra tu sesión en cualquier otro teléfono o computadora. Aquí sigues conectado.'
+        : 'Se cierra tu sesión en todos los dispositivos, también aquí: vuelve a entrar para seguir.',
+      confirmText: 'Cerrar las demás',
+      cancelText: 'Cancelar',
+      type: 'warning',
+    });
+    if (!ok) return;
+    setOcupado('otras');
+    const res = await fetch('/api/customer/sesiones', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accion: 'cerrar_otras' }),
+    }).catch(() => null);
+    setOcupado(null);
+    if (!res?.ok) {
+      toast.error('No se pudieron cerrar las sesiones');
+      return;
+    }
+    const data = await res.json();
+    if (data.actualCerrada) {
+      await signOut({ callbackUrl: '/login' });
+      return;
+    }
+    toast.success('Cerramos las demás sesiones');
+    await cargar();
+  };
+
+  if (!sesiones) return <div className="h-20 animate-pulse rounded-xl bg-surface" aria-label="Cargando sesiones" />;
+  const otras = sesiones.filter((s) => !s.actual).length;
+
+  return (
+    <div>
+      {sesiones.length === 0 ? (
+        <p className="text-sm text-muted">No hay otras sesiones abiertas.</p>
+      ) : (
+        <ul className="divide-y divide-line">
+          {sesiones.map((s) => {
+            const Icono = /^(Android|iPhone|iPad)/.test(s.dispositivo) ? FiSmartphone : FiMonitor;
+            return (
+              <li key={s.id} className="flex items-center gap-3 py-3">
+                <Icono className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <p className="flex flex-wrap items-center gap-x-2 text-sm font-semibold text-ink">
+                    {s.dispositivo === 'Desconocido' ? 'Dispositivo desconocido' : s.dispositivo}
+                    {s.actual && <span className={adminBadge('success')}>Este dispositivo</span>}
+                  </p>
+                  <p className="text-xs text-muted">
+                    {s.actual ? 'Activa ahora' : `Último uso: ${fechaCorta(s.lastSeenAt)}`}
+                    {' · '}Entró {s.metodo === 'google' ? 'con Google' : 'con contraseña'} el {new Date(s.createdAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })}
+                  </p>
+                </div>
+                {!s.actual && (
+                  <button type="button" onClick={() => cerrar(s)} disabled={ocupado !== null} className={`${adminSecondaryButton} h-10 shrink-0 px-3`}>
+                    {ocupado === s.id ? 'Cerrando…' : 'Cerrar'}
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {(otras > 0 || !actualConNombre) && (
+        <button type="button" onClick={cerrarOtras} disabled={ocupado !== null} className={`${adminSecondaryButton} mt-3 w-full sm:w-auto`}>
+          <FiLogOut className="h-4 w-4" aria-hidden="true" /> {ocupado === 'otras' ? 'Cerrando…' : 'Cerrar las demás sesiones'}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function CambiarContrasena({ onOtrasCerradas }: { onOtrasCerradas: () => void }) {
   const [actual, setActual] = useState('');
   const [nueva, setNueva] = useState('');
   const [repetir, setRepetir] = useState('');
@@ -221,7 +335,8 @@ function CambiarContrasena() {
         await signOut({ callbackUrl: '/login' });
         return;
       }
-      toast.success('Contraseña cambiada');
+      toast.success(cerrarOtras ? 'Contraseña cambiada. Cerramos tus otras sesiones.' : 'Contraseña cambiada');
+      if (cerrarOtras) onOtrasCerradas();
       setActual('');
       setNueva('');
       setRepetir('');
@@ -269,7 +384,7 @@ function CambiarContrasena() {
       </ul>
       <label className="flex cursor-pointer items-start gap-3">
         <input type="checkbox" checked={cerrarOtras} onChange={(e) => setCerrarOtras(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 rounded border-line text-brand-500 focus:ring-brand-500" />
-        <span className="text-sm text-ink-soft">Cerrar sesión en todos los dispositivos (recomendado si alguien más la conocía)</span>
+        <span className="text-sm text-ink-soft">Cerrar mi sesión en los demás dispositivos (recomendado si alguien más la conocía)</span>
       </label>
       {error && <p className={adminError} role="alert">{error}</p>}
       <button type="submit" disabled={!listo || enviando} className={`${adminPrimaryButton} w-full sm:w-auto`}>

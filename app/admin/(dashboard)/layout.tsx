@@ -13,6 +13,7 @@ import { MdAdminPanelSettings } from 'react-icons/md';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
+import ControlSesionAdmin, { cerrarSesionAdmin } from '@/components/admin/ControlSesionAdmin';
 
 interface NavigationItem {
   name: string;
@@ -78,6 +79,11 @@ export default function AdminLayout({
   const fetchSidebarCounts = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/sidebar-counts?t=${Date.now()}`, { cache: 'no-store' });
+      // C-140: la sesión se cerró en el servidor (12 h, otra sesión o cerrada por un super admin)
+      if (res.status === 401) {
+        cerrarSesionAdmin('sesion-cerrada');
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setSidebarCounts(data);
@@ -306,6 +312,8 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-dvh bg-surface">
+      {/* C-140: se cierra tras 1 hora sin uso, con aviso 5 minutos antes */}
+      <ControlSesionAdmin />
       {isDrawerOpen && (
         <div className="fixed inset-0 z-[var(--z-drawer)] bg-ink/50 lg:hidden" onClick={() => setDrawerPath(null)} aria-hidden="true" />
       )}

@@ -25,6 +25,9 @@ const ERRORES_DE_ACCESO: Record<string, string> = {
   'google-correo-no-verificado': 'Tu correo de Google no está verificado. Verifícalo en Google o entra con tu correo.',
   'google-sin-correo': 'Google no nos compartió tu correo. Intenta de nuevo o entra con tu correo.',
   'cuenta-suspendida': 'Esta cuenta está desactivada por la tienda. Escríbenos por WhatsApp o desde Contacto si crees que es un error.',
+  // C-140: sesiones del panel
+  'sesion-inactiva': 'Cerramos tu sesión del panel después de 1 hora sin uso. Vuelve a entrar.',
+  'sesion-cerrada': 'Tu sesión se cerró: pasaron 12 horas, entraste desde otro dispositivo o la cerraron. Vuelve a entrar.',
 };
 const ERROR_ACCESO_GENERICO = 'No pudimos iniciar sesión con Google. Intenta de nuevo o entra con tu correo.';
 const MENSAJE_CUENTA_SOCIAL = 'Esta cuenta no tiene contraseña. Entra con Google o crea una con "¿La olvidaste?".';

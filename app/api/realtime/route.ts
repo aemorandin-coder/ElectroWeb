@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { getToken } from 'next-auth/jwt';
+import { sesionValida } from '@/lib/sesiones';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { ipParaRegistro } from '@/lib/ip';
@@ -20,6 +22,8 @@ export const runtime = 'nodejs';
 const LATIDO_MS = 25_000; // nginx corta a los 60 s sin datos
 const DURACION_MAX_MS = 30 * 60_000; // se reconecta y vuelve a leer la sesión (un permiso quitado deja de valer)
 const MAX_CONEXIONES = 2_000;
+// C-140: con sesión, se revisa cada 2 min que siga abierta (cerrada, otra sesión de admin, 1 h sin uso)
+const REVISAR_SESION_MS = 2 * 60_000;
 
 export async function GET(request: NextRequest) {
   // Límite por IP holgado: con el CGNAT de las operadoras muchos clientes comparten IP
@@ -32,6 +36,7 @@ export async function GET(request: NextRequest) {
 
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
+  const token = userId ? await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET }) : null;
   const equipo = isAuthorized(session, 'MANAGE_ORDERS');
 
   const pedidos = new URL(request.url).searchParams.get('tipos')?.split(',').filter((t): t is TipoEvento => TIPOS_EVENTO.includes(t as TipoEvento));
@@ -68,6 +73,11 @@ export async function GET(request: NextRequest) {
       });
       const latido = setInterval(() => enviar(': ping\n\n'), LATIDO_MS);
       const limite = setTimeout(() => cerrar(), DURACION_MAX_MS);
+      const revision = token
+        ? setInterval(() => {
+            void sesionValida(token).then((vale) => { if (!vale) cerrar(); }).catch(() => undefined);
+          }, REVISAR_SESION_MS)
+        : null;
 
       cerrar = () => {
         if (!abierto) return;
@@ -75,6 +85,7 @@ export async function GET(request: NextRequest) {
         quitar();
         clearInterval(latido);
         clearTimeout(limite);
+        if (revision) clearInterval(revision);
         try {
           controller.close();
         } catch {

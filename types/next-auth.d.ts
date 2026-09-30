@@ -32,5 +32,7 @@ declare module 'next-auth/jwt' {
     image?: string | null;
     emailVerified?: boolean;
     sessionVersion?: number;
+    /** C-140: id de la fila en user_sessions */
+    sid?: string;
   }
 }

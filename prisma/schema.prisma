@@ -51,6 +51,8 @@ model User {
 
   accounts      Account[]
   sessions      Session[]
+  // C-140: cada inicio de sesión con nombre (dispositivo, fecha, cierre). Session de arriba es del adaptador de NextAuth y no se usa (JWT)
+  sesiones      UserSession[]
   orders        Order[]
   warrantyClaims WarrantyClaim[]
   reviews       Review[]
@@ -1056,6 +1058,28 @@ model TelegramChat {
   updatedAt   DateTime  @updatedAt
 
   @@map("telegram_chats")
+}
+
+// C-140: una fila por inicio de sesión. El JWT lleva su id (`sid`) y el servidor lo revisa en cada petición:
+// cerrada, vencida, versión vieja (cerrar todas o las demás) o, en el admin, sin uso por más de 1 hora.
+model UserSession {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dispositivo  String    // "Android (Chrome)"
+  ip           String?
+  metodo       String?   // contraseña | google
+  esAdmin      Boolean   @default(false)
+  // sessionVersion del usuario con la que vale: "cerrar las demás" sube la del usuario y copia la nueva solo aquí
+  version      Int       @default(0)
+  createdAt    DateTime  @default(now())
+  lastSeenAt   DateTime  @default(now())
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  motivoCierre String?   // CERRADA | OTRA_SESION | INACTIVIDAD
+
+  @@index([userId])
+  @@map("user_sessions")
 }
 
 model NotificationPreference {

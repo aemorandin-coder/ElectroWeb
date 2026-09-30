@@ -81,7 +81,8 @@ export const ADMIN_EVENTS = {
   EXCHANGE_RATE_UPDATED: { category: 'sistema', label: 'Tasa BCV actualizada', description: 'La tasa automática cambió.', defaults: on(false, false, true), silent: true },
   EXCHANGE_RATE_FAILED: { category: 'sistema', label: 'Tasa BCV sin actualizar', description: 'La fuente no respondió o mandó una tasa que no cuadra.', defaults: on(true, false, true) },
   MAINTENANCE_CHANGED: { category: 'sistema', label: 'Modo mantenimiento', description: 'Alguien activó o apagó el modo mantenimiento.', defaults: on(true, false, true) },
-  ADMIN_LOGIN: { category: 'sistema', label: 'Inicio de sesión en el panel', description: 'Un administrador entró al panel, con dispositivo e IP.', defaults: on(false, false, true), silent: true },
+  ADMIN_SESSION_REPORTED: { category: 'sistema', label: '"No fui yo" en el panel', description: 'Un admin reportó un inicio de sesión que no hizo: se cerraron sus sesiones y se bloqueó su contraseña.', defaults: on(true, true, true) },
+  ADMIN_LOGIN: { category: 'sistema', label: 'Inicio de sesión en el panel', description: 'Un administrador entró al panel, con dispositivo, IP y el botón "No fui yo" para cerrar y bloquear esa sesión.', defaults: on(true, false, true), silent: true },
 } satisfies Record<string, AdminEventDefinition>;
 
 export type AdminEventType = keyof typeof ADMIN_EVENTS;

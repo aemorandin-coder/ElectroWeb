@@ -92,7 +92,12 @@ export function isMaintenanceExemptPath(pathname: string): boolean {
     pathname.startsWith('/admin/') ||
     pathname.startsWith('/api/auth/') ||
     pathname.startsWith('/api/webhooks/') ||
-    pathname.startsWith('/api/cron/')
+    pathname.startsWith('/api/cron/') ||
+    // C-140: "No fui yo" y crear la contraseña nueva tienen que funcionar también en mantenimiento
+    pathname === '/sesion/no-fui-yo' ||
+    pathname.startsWith('/api/public/sesion/') ||
+    pathname === '/recuperar-contrasena' ||
+    pathname.startsWith('/recuperar-contrasena/')
   );
 }
 

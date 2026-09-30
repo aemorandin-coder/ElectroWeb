@@ -231,7 +231,7 @@ export default function WishlistPage() {
                             return (
                                 <li key={p.id} className={`flex flex-col overflow-hidden rounded-2xl border border-line bg-white ${removingId === p.id ? 'opacity-50' : ''}`}>
                                     <div className="relative aspect-square bg-white">
-                                        {src ? <Image src={src} alt={p.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-contain p-3" /> : (
+                                        {src ? <Image src={src} alt={p.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-contain" /> : (
                                             <div className="flex h-full items-center justify-center text-subtle"><FiPackage className="h-10 w-10" aria-hidden="true" /></div>
                                         )}
                                         {p.compareAtPriceUSD && p.compareAtPriceUSD > p.priceUSD && (

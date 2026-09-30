@@ -11,5 +11,5 @@ export {
   adminSecondaryButton as wizardSecondaryButton,
 } from '@/lib/admin-ui';
 
-export const wizardSectionTitle = 'text-xl font-bold text-ink';
+export const wizardSectionTitle = 'text-lg font-bold text-ink';
 export const wizardSectionHelp = 'mt-1 text-sm text-muted';

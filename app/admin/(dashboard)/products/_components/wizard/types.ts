@@ -43,6 +43,24 @@ export function rowsFromPlatform(platformValue: string): VariantRow[] {
 
 const num = (value: string) => Number.parseFloat(value.replace(',', '.'));
 
+/**
+ * C-134: número escrito en el formulario, con coma o punto ("12,50" o "12.50"). NaN si no es solo un número:
+ * antes parseFloat("12abc") daba 12 y el stock "abc" pasaba la validación (NaN < 0 es falso).
+ */
+export function leerNumero(value: string): number {
+  const limpio = (value ?? '').trim().replace(',', '.');
+  return /^\d+(\.\d+)?$/.test(limpio) ? Number(limpio) : Number.NaN;
+}
+
+/**
+ * SKU: letras, números, espacio, punto, barra, guion y guion bajo, de 2 a 60. Deja pasar los SKU que ya existen
+ * (algunos con minúsculas o espacios, ligados a SADES) y frena comillas, emojis o símbolos.
+ */
+export const SKU_VALIDO = /^[A-Za-z0-9][A-Za-z0-9 ._\/-]{1,59}$/;
+/** Topes de las medidas del envío: más que esto es un error de tipeo (kg y cm) */
+export const PESO_MAXIMO_KG = 1000;
+export const MEDIDA_MAXIMA_CM = 500;
+
 /** Margen sobre el costo, en %. null si no hay costo. */
 export function rowMargin(row: VariantRow): number | null {
   const cost = num(row.costUSD);
@@ -165,8 +183,11 @@ export const DEFAULT_WIZARD_DATA: WizardData = {
 export function validatePhysicalStep1(data: WizardData): Record<string, string> {
   const e: Record<string, string> = {};
   if (!data.name.trim()) e.name = 'El nombre es obligatorio';
+  else if (data.name.trim().length > 150) e.name = 'Máximo 150 caracteres';
   if (!data.sku.trim()) e.sku = 'El SKU es obligatorio';
+  else if (!SKU_VALIDO.test(data.sku.trim())) e.sku = 'Solo letras, números, punto y guion (2 a 60), por ejemplo LAPTOP-ASUS-001';
   if (!data.categoryId) e.categoryId = 'Selecciona una categoría';
+  if (data.barcode.trim() && !/^[0-9A-Za-z-]{4,30}$/.test(data.barcode.trim())) e.barcode = 'Solo números y letras, de 4 a 30';
   // C-119: lo que el cliente necesita saber de un equipo que no es nuevo
   if (isSecondHand(data.condition)) {
     if (needsGrade(data.condition) && !data.conditionGrade) e.conditionGrade = 'Elige el estado estético';
@@ -184,19 +205,35 @@ export function validatePhysicalStep1(data: WizardData): Record<string, string> 
 
 export function validatePhysicalStep2(data: WizardData): Record<string, string> {
   const e: Record<string, string> = {};
-  if (!data.priceUSD || parseFloat(data.priceUSD) <= 0) e.priceUSD = 'Ingresa un precio válido';
-  if (data.stock === '' || parseInt(data.stock) < 0) e.stock = 'El stock no puede ser negativo';
-  if (!data.weightKg || parseFloat(data.weightKg) <= 0) e.weightKg = 'El peso es obligatorio';
-  if (!data.dimensionLength && !data.dimensionWidth && !data.dimensionHeight) {
-    e.dimensions = 'Ingresa al menos una dimensión del producto';
+  const precio = leerNumero(data.priceUSD);
+  if (!(precio > 0) || precio > 1_000_000) e.priceUSD = 'Escribe el precio de venta, por ejemplo 49,90';
+  if (data.compareAtPriceUSD.trim()) {
+    const antes = leerNumero(data.compareAtPriceUSD);
+    if (!(antes > 0)) e.compareAtPriceUSD = 'Escribe un precio válido o déjalo vacío';
+    // Un tachado igual o menor que el precio no es una oferta: la tienda mostraría "antes" más barato
+    else if (precio > 0 && antes <= precio) e.compareAtPriceUSD = 'Tiene que ser mayor que el precio de venta';
   }
+  if (data.costPerItem.trim() && !(leerNumero(data.costPerItem) >= 0)) e.costPerItem = 'Escribe un costo válido o déjalo vacío';
+  const stock = leerNumero(data.stock);
+  if (!Number.isInteger(stock) || stock > 1_000_000) e.stock = 'Un número entero, 0 si no hay';
+  const peso = leerNumero(data.weightKg);
+  if (!(peso > 0)) e.weightKg = 'El peso es obligatorio (sirve para el envío)';
+  else if (peso > PESO_MAXIMO_KG) e.weightKg = `Máximo ${PESO_MAXIMO_KG} kg: revisa el número`;
+  // C-134: las tres medidas. Con una sola no hay volumen, y el flete de referencia de ZOOM usa el peso volumétrico
+  const medidas = [data.dimensionLength, data.dimensionWidth, data.dimensionHeight].map(leerNumero);
+  if (medidas.some((m) => !(m > 0))) e.dimensions = 'Escribe largo, ancho y alto en cm';
+  else if (medidas.some((m) => m > MEDIDA_MAXIMA_CM)) e.dimensions = `Máximo ${MEDIDA_MAXIMA_CM} cm por lado: revisa los números`;
   return e;
 }
 
+/**
+ * C-134: las especificaciones se recomiendan y no se exigen. Exigir 3 obligaba a inventarlas en un cable o un
+ * accesorio (y las "sugerencias rápidas" ponían valores de laptop a cualquier producto).
+ */
 export function validatePhysicalStep3(data: WizardData): Record<string, string> {
   const e: Record<string, string> = {};
-  if (Object.keys(data.specifications).length < 3) {
-    e.specifications = 'Se requieren al menos 3 especificaciones técnicas';
+  if (Object.entries(data.specifications).some(([k, v]) => !k.trim() || !String(v).trim())) {
+    e.specifications = 'Cada especificación lleva nombre y valor';
   }
   return e;
 }
@@ -205,7 +242,9 @@ export function validateDigitalStep1(data: WizardData): Record<string, string> {
   const e: Record<string, string> = {};
   if (!data.digitalPlatform) e.digitalPlatform = 'Selecciona una plataforma';
   if (!data.name.trim()) e.name = 'El nombre es obligatorio';
+  else if (data.name.trim().length > 150) e.name = 'Máximo 150 caracteres';
   if (!data.sku.trim()) e.sku = 'El SKU es obligatorio';
+  else if (!SKU_VALIDO.test(data.sku.trim())) e.sku = 'Solo letras, números, punto y guion (2 a 60), por ejemplo LAPTOP-ASUS-001';
   if (!data.categoryId) e.categoryId = 'Selecciona una categoría';
   return e;
 }

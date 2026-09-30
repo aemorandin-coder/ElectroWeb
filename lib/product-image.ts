@@ -1,6 +1,6 @@
 // Foto de producto con el sello de la tienda (C-117). Solo en el servidor (usa sharp y el disco).
-// Si Andrés sube un PNG con fondo transparente, la tienda arma la foto final: fondo blanco, el producto
-// centrado y la cinta "ES" en la esquina inferior derecha, como las que antes armaba a mano.
+// Si Andrés sube una foto con fondo transparente (o, desde C-133, con fondo blanco liso), la tienda arma la foto
+// final: fondo blanco, el producto centrado y la cinta "ES" en la esquina inferior derecha, como las que antes armaba a mano.
 
 import { readFile } from 'fs/promises';
 import path from 'path';
@@ -47,6 +47,36 @@ export async function hasTransparency(buffer: Buffer): Promise<boolean> {
   if (!meta.hasAlpha) return false;
   const { channels } = await img.stats();
   return (channels[3]?.min ?? 255) < 250;
+}
+
+/**
+ * C-133: ¿la foto ya viene con fondo blanco liso? (la del proveedor, o una exportada sin transparencia)
+ * Se mira el borde de una copia chica: casi todo tiene que ser blanco. Una foto que ya trae la cinta hecha a mano no
+ * pasa, porque la cinta toca el borde de abajo y el de la derecha (~17 % del borde); una foto sobre una mesa o de
+ * ambiente tampoco. Antes solo se armaba la foto con fondo transparente y la de Andrés del 30/09 (Audífonos Piston,
+ * PNG sin transparencia y fondo blanco) quedó sin cinta.
+ */
+export async function hasPlainWhiteBackground(buffer: Buffer): Promise<boolean> {
+  const LADO = 200;
+  const ANILLO = 3;
+  const { data, info } = await sharp(buffer)
+    .rotate()
+    .flatten({ background: '#ffffff' })
+    .resize(LADO, LADO, { fit: 'fill' })
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  let borde = 0;
+  let blancos = 0;
+  for (let y = 0; y < info.height; y++) {
+    for (let x = 0; x < info.width; x++) {
+      if (x >= ANILLO && y >= ANILLO && x < info.width - ANILLO && y < info.height - ANILLO) continue;
+      const i = (y * info.width + x) * info.channels;
+      borde++;
+      if (Math.min(data[i], data[i + 1], data[i + 2]) >= 240) blancos++;
+    }
+  }
+  return borde > 0 && blancos / borde >= 0.97;
 }
 
 /** Foto final: fondo blanco, producto centrado (sin el borde transparente que traiga) y la cinta. WebP. */

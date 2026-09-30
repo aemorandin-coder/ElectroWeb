@@ -4,7 +4,6 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { cookies } from 'next/headers';
 import { entrarConProveedor, googleHabilitado } from '@/lib/auth-social';
-import { emitAdminEvent } from '@/lib/admin-events';
 import { prisma } from '@/lib/prisma';
 import { buscarUsuarioPorCorreo, normalizarCorreo } from '@/lib/correo';
 import { verifyCaptcha } from '@/lib/captcha';
@@ -14,6 +13,7 @@ import { headers } from 'next/headers';
 import { ipParaRegistro } from '@/lib/ip';
 import { createAuditLog, getSeverityForAction, type AuditAction } from '@/lib/audit-log';
 import { describirDispositivo } from '@/lib/dispositivo';
+import { abrirSesion, sesionValida } from '@/lib/sesiones';
 
 /** Inicios de sesión en la bitácora (C-104): Reportes → Seguridad cuenta aciertos, fallos y bloqueos por IP. */
 async function registrarEnBitacora(action: AuditAction, datos: { userId?: string; email?: string | null; details?: Record<string, unknown> }) {
@@ -39,8 +39,8 @@ async function registrarEnBitacora(action: AuditAction, datos: { userId?: string
   });
 }
 
-/** Último acceso (dispositivo e IP) y aviso al equipo si entra un admin. Lo usan el login con correo y el de Google. */
-async function registrarAcceso(userId: string, nombre: string, isAdmin: boolean, role: string, email: string | null, metodo: 'contraseña' | 'google') {
+/** Último acceso (dispositivo e IP). Lo usan el login con correo y el de Google. */
+async function registrarAcceso(userId: string, isAdmin: boolean, email: string | null, metodo: 'contraseña' | 'google') {
   await registrarEnBitacora('AUTH_LOGIN_SUCCESS', { userId, email, details: { metodo, panel: isAdmin } });
   try {
     const reqHeaders = await headers();
@@ -54,15 +54,7 @@ async function registrarAcceso(userId: string, nombre: string, isAdmin: boolean,
       create: { userId, lastLoginAt: new Date(), lastLoginDevice: deviceString, lastLoginIp: ip },
       update: { lastLoginAt: new Date(), lastLoginDevice: deviceString, lastLoginIp: ip },
     });
-    if (isAdmin) {
-      emitAdminEvent({
-        type: 'ADMIN_LOGIN',
-        title: `Inicio de sesión · ${nombre}`,
-        summary: 'Entró al panel de administración',
-        fields: [['Dispositivo', deviceString], ['IP', ip], ['Rol', role === 'SUPER_ADMIN' ? 'Super admin' : 'Admin']],
-        link: '/admin',
-      });
-    }
+    // El aviso de entrada al panel (con "No fui yo") lo manda lib/sesiones.ts, que ya conoce la sesión (C-140)
   } catch (err) {
     console.error('Failed to update last login info:', err);
   }
@@ -150,7 +142,7 @@ export const authOptions: NextAuthOptions = {
               });
             }
 
-            await registrarAcceso(user.id, user.name || user.email || '', isAdmin, user.role, user.email, 'contraseña');
+            await registrarAcceso(user.id, isAdmin, user.email, 'contraseña');
 
             return {
               id: user.id,
@@ -239,10 +231,10 @@ export const authOptions: NextAuthOptions = {
         permissions: [],
         sessionVersion: dbUser.sessionVersion,
       });
-      await registrarAcceso(dbUser.id, dbUser.name || dbUser.email || '', false, dbUser.role, dbUser.email, 'google');
+      await registrarAcceso(dbUser.id, false, dbUser.email, 'google');
       return true;
     },
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user, trigger, account }) {
       if (user) {
         token.id = user.id;
         token.image = user.image;
@@ -251,18 +243,17 @@ export const authOptions: NextAuthOptions = {
         token.userType = user.userType;
         token.emailVerified = Boolean(user.emailVerified);
         token.sessionVersion = user.sessionVersion;
-      } else if (token.id) {
-        // Validate sessionVersion is still valid on subsequent requests.
-        // Una cuenta suspendida por la tienda (C-80/C-92) pierde también la sesión que ya tenía abierta.
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { sessionVersion: true, profile: { select: { accountStatus: true } } }
+        // C-140: cada inicio de sesión tiene su fila (dispositivo, vencimiento, cierre); el token lleva su id
+        token.sid = await abrirSesion({
+          userId: user.id,
+          esAdmin: user.userType === 'admin',
+          metodo: account?.provider === 'google' ? 'google' : 'contraseña',
+          version: user.sessionVersion ?? 0,
         });
-        const tokenVersion = token.sessionVersion !== undefined ? token.sessionVersion : 0;
-        if (!dbUser || dbUser.sessionVersion !== tokenVersion || dbUser.profile?.accountStatus === 'SUSPENDED') {
-          // Token vacío = sesión inválida: NextAuth la cierra en el próximo pedido
-          return {} as unknown as JWT;
-        }
+      } else if (token.id) {
+        // Cerrada, vencida, versión vieja, admin sin uso o cuenta suspendida (lib/sesiones.ts).
+        // Token vacío = sesión inválida: NextAuth la cierra en el próximo pedido
+        if (!(await sesionValida(token))) return {} as unknown as JWT;
       }
 
       // Refresh token on each request to keep session alive

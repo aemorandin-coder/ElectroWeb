@@ -20,6 +20,8 @@ export interface AdminEventInput {
   fields?: [string, string | number | null | undefined][];
   /** Ruta del panel: "/admin/orders" */
   link?: string;
+  /** Texto del botón de Telegram (por defecto "Abrir en el panel") */
+  boton?: string;
   /** Evita repetir el mismo aviso: se ignora si ya salió uno con esta clave dentro de `throttleMs` */
   throttleKey?: string;
   throttleMs?: number;
@@ -129,7 +131,7 @@ export async function notifyAdmins(input: AdminEventInput): Promise<DeliveryRepo
     tasks.push(
       sendToTelegramChats(formatTelegramEvent(input), {
         silent: definition.silent,
-        button: absoluteLink ? { text: 'Abrir en el panel', url: absoluteLink } : undefined,
+        button: absoluteLink ? { text: input.boton ?? 'Abrir en el panel', url: absoluteLink } : undefined,
       }).then((deliveries) => {
         report.telegram = deliveries;
       })

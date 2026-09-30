@@ -9,6 +9,8 @@ import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 import { describirDispositivo } from '@/lib/dispositivo';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatPuntos } from '@/lib/currency';
+import { getToken } from 'next-auth/jwt';
+import { cerrarLasDemas } from '@/lib/sesiones';
 
 // Seguridad, notificaciones y estado de la cuenta del cliente (Mi perfil, C-138).
 // C-138 quitó lo que se guardaba sin efecto: encuestas, datos anónimos, sonidos, avisos de pedidos en la tienda y
@@ -298,12 +300,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'La contraseña nueva es igual a la actual' }, { status: 400 });
         }
 
-        // C-138: si el cliente lo pide, cierra también las demás sesiones (y esta: vuelve a entrar con la nueva)
         const hashedPassword = await bcrypt.hash(newPassword, 12);
-        await prisma.user.update({
-            where: { id: userId },
-            data: { password: hashedPassword, ...(cerrarOtras === true ? { sessionVersion: { increment: 1 } } : {}) },
-        });
+        await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
+        // C-140: si el cliente lo pide, cierra las demás sesiones y conserva esta (antes, C-138, cerraba también esta)
+        let sesionCerrada = false;
+        if (cerrarOtras === true) {
+            const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+            const sid = typeof token?.sid === 'string' ? token.sid : undefined;
+            await cerrarLasDemas(userId, sid);
+            sesionCerrada = !sid;
+        }
         await createAuditLog({
             action: 'AUTH_PASSWORD_CHANGED',
             userId,
@@ -313,7 +319,7 @@ export async function POST(request: NextRequest) {
             ...getRequestMetadata(request),
         });
 
-        return NextResponse.json({ message: 'Contraseña actualizada exitosamente', sesionCerrada: cerrarOtras === true });
+        return NextResponse.json({ message: 'Contraseña actualizada exitosamente', sesionCerrada });
     } catch (error) {
         console.error('Error changing password:', error);
         return NextResponse.json(

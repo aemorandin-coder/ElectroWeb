@@ -3,6 +3,24 @@
 Léelo antes de empezar. En GitHub, `main` tiene todo hasta C-138, **y ya está en producción**: el servidor sirve `d53d5b4` (deploy de Andrés del 30/09 en la noche, con el cambio de base de C-138 y los dos crons).
 Falta que Andrés cuente cómo salieron las pruebas de después del deploy (§00, "Después del deploy").
 
+## 0000. C-140 (30/09, noche): en `main`, falta el deploy
+- **C-140 · Sesiones con nombre, una sola sesión de admin y "No fui yo"**. Detalle y pruebas en `estado/C-140.md`.
+  - **Clientes:** Mi perfil → Seguridad lista cada sesión (dispositivo, último uso) con "Cerrar" y "Cerrar las demás". Correo al entrar desde un dispositivo nuevo.
+  - **Admin:** una sola sesión (la nueva cierra la anterior), 12 horas, y cierre tras 1 hora sin uso con aviso a los 55 min.
+  - **"No fui yo":** el aviso de entrada al panel (Telegram y campana) trae un botón que cierra todas las sesiones de esa cuenta, bloquea la contraseña y manda al correo el enlace para crear una nueva.
+- **Cambio de base (aditivo): una tabla nueva**, `user_sessions` (SQL en `estado/C-140.md`). Ningún `DROP` ni `ALTER ... TYPE`.
+- **Deploy (Andrés, en el servidor):**
+  1. `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-c140.dump`
+  2. `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL: debe ser solo `CREATE TABLE "user_sessions"`, su índice y su llave.
+  3. `npx prisma db push` y `bash scripts/deploy.sh` otra vez.
+  4. **Después del deploy los admin tienen que volver a entrar una vez** (sus sesiones viejas no tienen nombre). Los clientes no.
+- **Pruebas después del deploy:**
+  1. Admin: entrar en la computadora y después en el teléfono → la computadora vuelve al login con el aviso.
+  2. Telegram: llega "Inicio de sesión en el panel" con el botón "No fui yo". Abrirlo muestra la confirmación; **no confirmar** (bloquearía tu cuenta).
+  3. Admin → Notificaciones: "Inicio de sesión en el panel" con Panel y Telegram activos (si la tabla ya estaba guardada, el valor nuevo por defecto no se aplica solo).
+  4. Cliente: entrar desde el teléfono y la computadora; en Mi perfil → Seguridad aparecen las dos; "Cerrar" la otra.
+- **Propuesto y sin decidir: C-141 · Equipo, roles y verificación en dos pasos** (ver §3).
+
 ## 000. C-138 (30/09, noche): en `main` y en producción
 - **C-138 · Mi perfil en pestañas y avisos de favoritos** (`claude/C-138`, sale de `main`). Detalle y pruebas en `estado/C-138.md`.
   - Perfil y Configuración en una página: **Datos personales · Seguridad · Notificaciones · Empresa**. `/customer/settings` redirige.
@@ -162,7 +180,12 @@ bash scripts/deploy.sh
   - Hubo dos fallos del build: los tipos de una ruta borrada y la falta de memoria. Los dos se arreglaron en `deploy.sh` y `next.config.js`.
 
 ## 3. Qué sigue (Claude, en orden)
-1. **C-140** (sesiones) y **C-139** (Puntos ES), sobre C-138 (§000). Antes, las pruebas del deploy del 30/09 (§00).
+1. Deploy de **C-140** (§0000) y sus pruebas. Después **C-139** (Puntos ES).
+1b. **C-141 · Equipo, roles y verificación en dos pasos** (propuesta del 30/09, espera las decisiones de Andrés):
+   - Verificación en dos pasos obligatoria para el admin con app de códigos (Google Authenticator o Authy) y códigos de respaldo.
+   - Pantalla "Equipo": invitar admins por correo (cada uno crea su contraseña), roles con permisos guardados, desactivar a quien sale y cerrar sus sesiones.
+   - Hoy: solo Admin y Super admin con acceso a todo; Soporte no entra; admins solo por el guion `create-master-admin.ts`.
+   - Borrar `scripts/update-admin-role.js` (hace super admin a todos) y `/api/admin/promote-super-admin`.
 2. **Revisión final con Andrés** (`REVISION_FINAL.md`), y arreglar lo que salga. En producción:
    - Checkout: con el mínimo de compra activo, el aviso aparece antes de pagar. Una compra real con saldo y otra con Pago Móvil.
    - Una compra con cupón.

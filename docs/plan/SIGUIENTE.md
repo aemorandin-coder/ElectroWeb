@@ -1,16 +1,16 @@
 # Punto de partida (actualizado 2026-09-30)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta C-137 (merge `1333928`, 30/09), **y ya está en producción** (deploy de Andrés del 30/09, con el cambio de base de C-132).
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta C-138, **y ya está en producción**: el servidor sirve `d53d5b4` (deploy de Andrés del 30/09 en la noche, con el cambio de base de C-138 y los dos crons).
 Falta que Andrés cuente cómo salieron las pruebas de después del deploy (§00, "Después del deploy").
 
-## 000. Nuevo del 30/09 (noche): C-138, rama lista sin mergear
+## 000. C-138 (30/09, noche): en `main` y en producción
 - **C-138 · Mi perfil en pestañas y avisos de favoritos** (`claude/C-138`, sale de `main`). Detalle y pruebas en `estado/C-138.md`.
   - Perfil y Configuración en una página: **Datos personales · Seguridad · Notificaciones · Empresa**. `/customer/settings` redirige.
   - Solo lo que funciona (decisión de Andrés del 30/09): se quitaron 6 interruptores sin efecto, las estadísticas falsas y las promesas de la cuenta de empresa.
   - **Nuevo:** avisos cuando un favorito baja de precio, entra en oferta o vuelve a haber (en la tienda y por correo, con cron cada hora).
   - "Eliminar cuenta" ahora llega al equipo (Mensajes y Solicitudes + aviso) en vez de prometer un borrado que nadie hacía.
   - Actividad reciente, cambiar la contraseña cerrando las demás sesiones, y desactivar cierra también los otros dispositivos.
-- **Merge:** `git merge --no-ff claude/C-138`.
+- **Hecho el 30/09:** merge y push (Claude, `64e8043`), deploy con el SQL (Andrés) y los crons (ver §2).
 - **Cambio de base (aditivo):**
   ```sql
   ALTER TABLE "notification_preferences" ADD COLUMN "inAppFavoritos" BOOLEAN NOT NULL DEFAULT true, ADD COLUMN "emailFavoritos" BOOLEAN NOT NULL DEFAULT true;
@@ -19,7 +19,7 @@ Falta que Andrés cuente cómo salieron las pruebas de después del deploy (§00
 - **Cron nuevo** (con `crontab -e` en el servidor; `CRON_SECRET` es la misma del cron de envíos de C-100):
   `0 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" https://electroshopve.com/api/cron/favoritos`
   La primera corrida solo anota los precios; los avisos empiezan con el primer cambio.
-- **Después del deploy, en producción:**
+- **Pruebas pendientes en producción** (Andrés):
   1. Mi perfil en el teléfono: las 4 pestañas; cambiar el teléfono y guardar; tocar un interruptor de Notificaciones.
   2. Guardar un producto en Favoritos, bajarle el precio desde el admin y esperar la hora del cron (o correr el `curl` a mano): aviso en la campana y correo.
   3. Con una cuenta de prueba: "Eliminar" → llega a Mensajes y Solicitudes y como aviso; "Cancelar el pedido".
@@ -129,7 +129,11 @@ Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pe
 - **Historial de tareas:** cada una tiene su `docs/plan/estado/C-XX.md`. Resumen en `PLAN_CLAUDE.md`, "Orden de trabajo".
 
 ## 2. Deploy
-- Servidor `/var/www/electroshopve`, proceso de PM2 `electroshop`. `ecosystem.config.js` está desactualizado y no se usa.
+- Servidor `/var/www/electroshopve`, proceso de PM2 `electroshop`, usuario `luami`. `ecosystem.config.js` está desactualizado y no se usa.
+- **Crons del servidor** (`crontab -l` de `luami`, puestos el 30/09). Cada guion lee `CRON_SECRET` del `.env`:
+  - `0 * * * * /home/luami/cron-favoritos.sh`: avisos de favoritos (C-138).
+  - `15 */2 * * * /home/luami/cron-envios.sh`: rastreo de las guías ZOOM (C-100). **No existía hasta el 30/09:** desde el 22/09 el rastreo solo avanzaba con "Consultar ZOOM ahora".
+  - Para probar uno a mano, se corre el guion: responde JSON (`revisados`, `avisos`…).
 - **Tiempo real (C-127):** `/api/realtime` usa Server-Sent Events y manda `X-Accel-Buffering: no`, así que nginx no necesita cambios. Si el panel dice "Reconectando…" todo el tiempo, revisar en el `location` de nginx que `proxy_read_timeout` sea de 60 s o más (el latido es cada 25 s) y que no haya `proxy_buffering on` forzado. PM2 debe seguir en **una sola instancia**: el bus de eventos vive en memoria.
 
 **Cada deploy:**
@@ -151,6 +155,8 @@ bash scripts/deploy.sh
 - **Respaldo de archivos:** incluir `private-uploads/signatures/` (constancias firmadas), `private-uploads/warranty/` (fotos de garantía, desde C-122) y `public/uploads/` (fotos de productos y de ElectroStudio).
 
 **Deploys hechos:**
+- **30/09 (noche):** C-138 (`d53d5b4`). `ADD COLUMN` en `notification_preferences` y `wishlist_items`. Respaldo `~/respaldo-antes-deploy-30-09-c138.dump`. Crons de favoritos y envíos.
+- **30/09:** C-130 a C-137 (`1333928`), con el cambio de base de C-132.
 - **26/09:** C-104 a C-40. Respaldos `~/respaldo-antes-deploy-26-09.dump` y `~/firmas-2026-09-26.tgz`.
 - **28/09:** ElectroStudio (C-112 + C-113). Tablas `studio_flyers` y `studio_brand`. Respaldo `~/respaldo-antes-deploy-28-09.dump`.
   - Hubo dos fallos del build: los tipos de una ruta borrada y la falta de memoria. Los dos se arreglaron en `deploy.sh` y `next.config.js`.

@@ -1,7 +1,22 @@
-# Punto de partida (actualizado 2026-09-30)
+# Punto de partida (actualizado 2026-09-30, cierre de la conversación larga del 30/09)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta C-138, **y ya está en producción**: el servidor sirve `d53d5b4` (deploy de Andrés del 30/09 en la noche, con el cambio de base de C-138 y los dos crons).
-Falta que Andrés cuente cómo salieron las pruebas de después del deploy (§00, "Después del deploy").
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-140** (`86bc22d`).
+- **Producción:** C-138 confirmado (`d53d5b4`, con los dos crons). Andrés mandó después una captura de un build con la advertencia "Dynamic filesystem access": **preguntarle si era el deploy de C-140 y si terminó con "Listo: sirviendo…"**.
+- **En curso: C-141** en la rama `claude/C-141`, sin mergear y **sin poder mergearse todavía** (§00000).
+- Falta que Andrés cuente cómo salieron las pruebas de los deploys del 30/09 (§00, §000 y §0000).
+
+## 00000. C-141 · Equipo, roles y dos pasos: EN CURSO (rama `claude/C-141`)
+- **Leer `docs/plan/estado/C-141.md` completo:** tiene las decisiones de Andrés, lo hecho y **la lista de lo que falta, en orden**.
+- Para seguir: `git checkout claude/C-141`. El commit `103bf4c` está a medias.
+  - Hecho: TOTP verificado con el RFC, el código en el login, los roles Super admin y Administrador, y los permisos atados a los dos pasos.
+  - Falta: la pantalla de configuración, el `proxy`, el paso del código en el login, la pantalla Equipo con invitaciones, el guion de emergencia y las pruebas.
+- **No mergear hasta terminar:** sin la pantalla de configuración ningún admin tendría permisos.
+- **Decidido por Andrés el 30/09:**
+  - Dos pasos con app de códigos, obligatorios para todo el panel.
+  - Roles: Super admin (él) y Administrador (todo menos Configuración sensible y Equipo).
+  - Admins nuevos por invitación al correo.
+  - C-141 va antes que C-139.
+- **Primer punto de C-141:** quitar la advertencia del build "Dynamic filesystem access" de `app/api/uploads/[...path]` (`/*turbopackIgnore: true*/`; la ruta ya se valida con `isInside`). No es un error ni un riesgo de seguridad: hace el build más pesado.
 
 ## 0000. C-140 (30/09, noche): en `main`, falta el deploy
 - **C-140 · Sesiones con nombre, una sola sesión de admin y "No fui yo"**. Detalle y pruebas en `estado/C-140.md`.
@@ -19,7 +34,7 @@ Falta que Andrés cuente cómo salieron las pruebas de después del deploy (§00
   2. Telegram: llega "Inicio de sesión en el panel" con el botón "No fui yo". Abrirlo muestra la confirmación; **no confirmar** (bloquearía tu cuenta).
   3. Admin → Notificaciones: "Inicio de sesión en el panel" con Panel y Telegram activos (si la tabla ya estaba guardada, el valor nuevo por defecto no se aplica solo).
   4. Cliente: entrar desde el teléfono y la computadora; en Mi perfil → Seguridad aparecen las dos; "Cerrar" la otra.
-- **Propuesto y sin decidir: C-141 · Equipo, roles y verificación en dos pasos** (ver §3).
+- **C-141 · Equipo, roles y verificación en dos pasos:** decidido y en curso (§00000).
 
 ## 000. C-138 (30/09, noche): en `main` y en producción
 - **C-138 · Mi perfil en pestañas y avisos de favoritos** (`claude/C-138`, sale de `main`). Detalle y pruebas en `estado/C-138.md`.
@@ -180,8 +195,8 @@ bash scripts/deploy.sh
   - Hubo dos fallos del build: los tipos de una ruta borrada y la falta de memoria. Los dos se arreglaron en `deploy.sh` y `next.config.js`.
 
 ## 3. Qué sigue (Claude, en orden)
-1. Deploy de **C-140** (§0000) y sus pruebas. Después **C-139** (Puntos ES).
-1b. **C-141 · Equipo, roles y verificación en dos pasos** (propuesta del 30/09, espera las decisiones de Andrés):
+1. **C-141 · Equipo, roles y verificación en dos pasos**: en curso (§00000, `estado/C-141.md`). Antes, confirmar el deploy de C-140 (§0000). Después **C-139** (Puntos ES).
+1b. Resumen de C-141 (decidido el 30/09):
    - Verificación en dos pasos obligatoria para el admin con app de códigos (Google Authenticator o Authy) y códigos de respaldo.
    - Pantalla "Equipo": invitar admins por correo (cada uno crea su contraseña), roles con permisos guardados, desactivar a quien sale y cerrar sus sesiones.
    - Hoy: solo Admin y Super admin con acceso a todo; Soporte no entra; admins solo por el guion `create-master-admin.ts`.
@@ -282,6 +297,7 @@ bash scripts/deploy.sh
 ## 6. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto.
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
-> 2. Pregúntame si ya mergeé y subí C-138 (§000, con su SQL y su cron) y cómo salieron las pruebas del deploy del 30/09.
+> 2. Pregúntame si el deploy de C-140 terminó bien (§0000) y cómo salieron las pruebas de los deploys del 30/09.
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
-> 4. Después sigue el orden de `SIGUIENTE.md` §3: C-140, C-139, la revisión final, C-107, C-92, el wizard de producto y C-120.
+> 4. Sigue **C-141** en la rama `claude/C-141` según la lista de `docs/plan/estado/C-141.md` ("Falta, en este orden"). Al terminar: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
+> 5. Después: C-139 (Puntos ES), la revisión final, C-107, C-92, el wizard de producto y C-120 (`SIGUIENTE.md` §3).

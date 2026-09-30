@@ -602,6 +602,10 @@ model Order {
   shippingUSD   Decimal
   totalUSD      Decimal
   discountUSD   Decimal     @default(0)
+  // C-132: parte del total pagada con Puntos ES (todo en WALLET; una parte en el pago mixto con Pago Móvil)
+  pointsUSD     Decimal     @default(0)
+  // C-132: referencia que escribió el cliente en un pago manual (Binance Pay, PayPal, Zelle…), para verificarla
+  paymentReference String?
 
   exchangeRate  Decimal
   totalVES      Decimal
@@ -980,6 +984,8 @@ model ContactMessage {
 model StockReservation {
   id        String   @id @default(cuid())
   userId    String
+  // C-132: la orden que aparta el stock (pago manual por verificar). Null en las reservas de antes
+  orderId   String?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -989,6 +995,7 @@ model StockReservation {
 
   @@index([userId])
   @@index([productId])
+  @@index([orderId])
   @@index([expiresAt])
 
   @@map("stock_reservations")

@@ -147,20 +147,25 @@ export async function devolverStock(tx: Prisma.TransactionClient, lineas: LineaO
 }
 
 /**
- * Libera las reservas de esta orden (las de 5 minutos del pago directo).
- * `StockReservation` no guarda el id de la orden, así que se borra una reserva por línea
- * que coincida en producto y cantidad; antes se borraban **todas** las del cliente y otras
- * órdenes pendientes suyas perdían la suya.
+ * Libera las reservas de esta orden.
+ * C-132: las reservas nuevas guardan el id de la orden y se borran por ese id. Las de antes (sin orden) se buscan por
+ * producto y cantidad, solo entre las que no tienen orden: antes se borraban **todas** las del cliente (C-74) y
+ * otras órdenes pendientes suyas perdían la suya.
  */
 export async function liberarReservas(
   tx: Prisma.TransactionClient,
   userId: string | null,
-  lineas: LineaOrden[]
+  lineas: LineaOrden[],
+  orderId?: string
 ): Promise<void> {
+  if (orderId) {
+    const borradas = await tx.stockReservation.deleteMany({ where: { orderId } });
+    if (borradas.count > 0) return;
+  }
   if (!userId) return;
   for (const linea of lineas) {
     const reserva = await tx.stockReservation.findFirst({
-      where: { userId, productId: linea.productId, quantity: linea.quantity },
+      where: { userId, productId: linea.productId, quantity: linea.quantity, orderId: null },
       orderBy: { expiresAt: 'asc' },
       select: { id: true },
     });

@@ -27,6 +27,13 @@ export function formatPaymentMethod(method: string | null | undefined): string {
     return PAYMENT_METHOD_LABELS[method] || method.replace(/_/g, ' ');
 }
 
+/** El método de una orden: "Puntos ES + Pago Móvil" si una parte se pagó con Puntos ES (pago mixto, C-132). */
+export function formatOrderPaymentMethod(order: { paymentMethod?: string | null; pointsUSD?: unknown }): string {
+    const base = formatPaymentMethod(order.paymentMethod);
+    const conPuntos = Number(order.pointsUSD ?? 0) > 0 && order.paymentMethod !== 'WALLET' && order.paymentMethod !== 'BALANCE';
+    return conPuntos ? `Puntos ES + ${base}` : base;
+}
+
 /**
  * Formatea estados de transacción
  */

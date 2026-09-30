@@ -1,7 +1,7 @@
 // Cómo se pagó una orden, en palabras (C-126). Módulo puro: panel de órdenes y panel del cliente.
 // Antes el modal decía "Pago: WALLET · PAID", con los códigos de la base.
 
-import { formatVES } from '@/lib/currency';
+import { formatUSD, formatVES } from '@/lib/currency';
 import { PAYMENT_METHOD_LABELS } from '@/lib/format-helpers';
 import { getBancoPorCodigo } from '@/lib/pago-movil/bancos-venezuela';
 import { ETIQUETA_ENTREGA, NOMBRE_EMPRESA, esRetiro, etiquetaModo, usaEmpresa, type EmpresaGuia } from '@/lib/envios/empresas';
@@ -47,8 +47,23 @@ export interface DescripcionPago {
   detalle: string | null;
 }
 
-/** El método de pago en palabras, con el origen de los fondos cuando se conoce. */
-export function describirPago(method: string | null | undefined, pagosMovil: PagoMovilResumen[] = []): DescripcionPago {
+/**
+ * El método de pago en palabras, con el origen de los fondos cuando se conoce.
+ * C-132: `puntosUSD` es la parte pagada con Puntos ES en un pago mixto; `referencia`, la de un pago manual.
+ */
+export function describirPago(
+  method: string | null | undefined,
+  pagosMovil: PagoMovilResumen[] = [],
+  extra: { puntosUSD?: number | string | null; referencia?: string | null } = {}
+): DescripcionPago {
+  const puntos = Number(extra.puntosUSD ?? 0);
+  if (puntos > 0 && method !== 'WALLET' && method !== 'BALANCE') {
+    const resto = describirPago(method, pagosMovil, { referencia: extra.referencia });
+    return {
+      titulo: `Puntos ES + ${resto.titulo}`,
+      detalle: [`${formatUSD(puntos)} en Puntos ES`, resto.detalle].filter(Boolean).join(' + '),
+    };
+  }
   switch (method) {
     case 'WALLET':
     case 'BALANCE':
@@ -63,7 +78,10 @@ export function describirPago(method: string | null | undefined, pagosMovil: Pag
       };
     }
     default:
-      return { titulo: method ? PAYMENT_METHOD_LABELS[method] ?? method.replace(/_/g, ' ') : 'Sin método', detalle: null };
+      return {
+        titulo: method ? PAYMENT_METHOD_LABELS[method] ?? method.replace(/_/g, ' ') : 'Sin método',
+        detalle: extra.referencia ? `Ref. ${extra.referencia}` : null,
+      };
   }
 }
 

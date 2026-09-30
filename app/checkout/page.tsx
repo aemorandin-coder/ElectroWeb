@@ -15,12 +15,12 @@ import RechargeModal from '@/components/modals/RechargeModalV2';
 import CheckoutPagoMovilForm, { conciliarPagos, type PagoMovilVerificado } from '@/components/checkout/CheckoutPagoMovilForm';
 import { montoBs } from '@/lib/pago-movil/monto';
 import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverlay';
-import { FiDollarSign, FiPlus, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiPackage, FiInfo, FiCheckCircle, FiGift, FiShield, FiAlertTriangle } from 'react-icons/fi';
-import { FaMobileScreen } from 'react-icons/fa6';
-import { FaCheck } from 'react-icons/fa';
+import { FiDollarSign, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiPackage, FiInfo, FiCheckCircle, FiGift, FiShield, FiAlertTriangle } from 'react-icons/fi';
 import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWallet } from '@fortawesome/free-solid-svg-icons';
+import PaymentMethodSelector, { opcionesDePago, type MetodoCheckout, type MetodoPagoEmpresa } from '@/components/checkout/PaymentMethodSelector';
+import PagoManualPanel from '@/components/checkout/PagoManualPanel';
+import PagoPuntosPanel from '@/components/checkout/PagoPuntosPanel';
+import { esPagoManual, leerReferenciaManual, repartirPuntos, type TipoPagoManual } from '@/lib/checkout-pago';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -46,25 +46,16 @@ export default function CheckoutPage() {
   const { settings: companySettings } = useSettings();
   const [userBalance, setUserBalance] = useState<number>(0);
   const [showRechargeModal, setShowRechargeModal] = useState(false);
-  const [paymentMode, setPaymentMode] = useState<'WALLET' | 'PAGO_MOVIL' | 'GIFT_CARD' | 'DIRECT'>('WALLET');
+  // C-132: Puntos ES, Pago Móvil o un método manual (Binance Pay, PayPal…) por su id
+  const [paymentMode, setPaymentMode] = useState<'WALLET' | 'PAGO_MOVIL' | 'MANUAL'>('WALLET');
+  const [metodoManualId, setMetodoManualId] = useState<string | null>(null);
+  const [referenciaManual, setReferenciaManual] = useState('');
+  // Pago mixto: Puntos ES + Pago Móvil por lo que falta
+  const [usarPuntos, setUsarPuntos] = useState(false);
+  const [mostrarGiftCard, setMostrarGiftCard] = useState(false);
 
   // Dynamic payment methods from database
-  const [paymentMethods, setPaymentMethods] = useState<Array<{
-    id: string;
-    type: string;
-    name: string;
-    bankName?: string;
-    phone?: string;
-    holderId?: string;
-    holderName?: string;
-    email?: string;
-    walletAddress?: string;
-    network?: string;
-    payId?: string;
-    displayNote?: string;
-    qrCodeImage?: string;
-    isActive: boolean;
-  }>>([]);
+  const [paymentMethods, setPaymentMethods] = useState<MetodoPagoEmpresa[]>([]);
 
   const [formData, setFormData] = useState({
     customerName: '',
@@ -133,7 +124,7 @@ export default function CheckoutPage() {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setPaymentMethods(data.filter((m: { isActive?: boolean }) => m.isActive));
+          setPaymentMethods(data.filter((m: MetodoPagoEmpresa & { isActive?: boolean }) => m.isActive));
         }
       })
       .catch(err => console.error('Error loading payment methods:', err));
@@ -259,8 +250,14 @@ export default function CheckoutPage() {
   // Cotización del servidor: es lo que realmente se cobra (precios y pesos actualizados).
   // Se guarda con la clave del carrito para no mostrar una cotización vieja.
   const quoteBody = useMemo(
-    () => JSON.stringify({ items: items.map(toOrderItem), deliveryMethod: envio.deliveryMethod, couponCode }),
-    [items, envio.deliveryMethod, couponCode]
+    () => JSON.stringify({
+      items: items.map(toOrderItem),
+      deliveryMethod: envio.deliveryMethod,
+      couponCode,
+      // C-132: con pago mixto el monto en Bs. firmado es solo lo que falta después de los Puntos ES
+      ...(paymentMode === 'PAGO_MOVIL' && usarPuntos ? { usarPuntos: true } : {}),
+    }),
+    [items, envio.deliveryMethod, couponCode, paymentMode, usarPuntos]
   );
   type CuponCotizado = { code: string; applied: boolean; message: string; savingsUSD: number };
   // C-114: la cotización también dice si la orden se podrá crear (mínimo, máximo, entrega, productos). Mientras haya
@@ -270,6 +267,8 @@ export default function CheckoutPage() {
     calculation: OrderCalculation;
     coupon: CuponCotizado | null;
     problems: string[];
+    /** C-132: reparto del pago mixto que calculó el servidor con los Puntos ES reales */
+    mixto: { puntosUSD: number; restanteUSD: number } | null;
   } | null>(null);
   // C-125: monto exacto en Bs. y tasa firmados por el servidor. Se guarda la última cotización buena: si después
   // aparece un problema, el cliente que ya pagó sigue viendo el monto que se le pidió
@@ -297,7 +296,11 @@ export default function CheckoutPage() {
               calculation: data.calculation,
               coupon: data.coupon ?? null,
               problems: [...(Array.isArray(data.errors) ? data.errors : []), ...(Array.isArray(data.blockers) ? data.blockers : [])],
+              mixto: data.puntosES?.mixto ?? null,
             });
+          }
+          if (typeof data?.puntosES?.disponibleUSD === 'number') {
+            setUserBalance(data.puntosES.disponibleUSD);
           }
         })
         .catch(() => { });
@@ -320,7 +323,10 @@ export default function CheckoutPage() {
   const [pagoMovilVisto, setPagoMovilVisto] = useState(false);
   if (paymentMode === 'PAGO_MOVIL' && canPay && !pagoMovilVisto) setPagoMovilVisto(true);
   // C-125: cubierto = lo pagado alcanza (exacto, redondeo o de más). Cada pago cuenta a su tasa congelada
-  const conciliacionPM = conciliarPagos(pagosMovil, orderCalculation.totalUSD, cotizacionBs?.tasa ?? 0);
+  // C-132: pago mixto activo solo si el servidor lo confirmó para este mismo carrito
+  const mixto = paymentMode === 'PAGO_MOVIL' && usarPuntos && quoteReady ? serverQuote.mixto : null;
+  const montoPagoMovilUSD = mixto ? mixto.restanteUSD : orderCalculation.totalUSD;
+  const conciliacionPM = conciliarPagos(pagosMovil, montoPagoMovilUSD, cotizacionBs?.tasa ?? 0);
   const mobilePaymentVerified = conciliacionPM !== null && conciliacionPM.estado !== 'FALTA';
   const mobilePaymentData = pagosMovil.length > 0
     ? { ...pagosMovil[0], referencias: pagosMovil.map((p) => p.referencia) }
@@ -335,6 +341,20 @@ export default function CheckoutPage() {
   const fleteAparte = hasPhysicalItems && envio.deliveryMethod === 'SHIPPING' && !shippingBreakdown.isFreeShipping;
   // Pago Móvil directo solo con la conciliación del BDV configurada en el servidor (C-101)
   const pagoMovilDirecto = companySettings?.pagoMovilDirecto === true;
+  const metodoManual = paymentMode === 'MANUAL' ? paymentMethods.find((m) => m.id === metodoManualId && esPagoManual(m.type)) ?? null : null;
+  const opcionesPago = opcionesDePago({ totalUSD: finalTotal, puntosUSD: userBalance, tasa: cotizacionBs?.tasa ?? 0, pagoMovilDirecto, metodos: paymentMethods });
+  const metodoElegido: MetodoCheckout = paymentMode === 'MANUAL' && metodoManualId ? `MANUAL:${metodoManualId}` : paymentMode === 'MANUAL' ? 'WALLET' : paymentMode;
+  const elegirMetodo = (m: MetodoCheckout) => {
+    if (m.startsWith('MANUAL:')) {
+      setPaymentMode('MANUAL');
+      setMetodoManualId(m.slice('MANUAL:'.length));
+    } else {
+      setPaymentMode(m as 'WALLET' | 'PAGO_MOVIL');
+    }
+    setError('');
+  };
+  // Se puede combinar si los Puntos ES alcanzan para una parte y no para todo
+  const puedeMixto = pagoMovilDirecto && repartirPuntos(userBalance, finalTotal).mixto;
   const orderItemsBody = useMemo(() => items.map(toOrderItem), [items]);
   const clienteEnvio = useMemo(
     () => ({ nombre: formData.customerName, cedula: formData.customerIdNumber, telefono: formData.customerPhone }),
@@ -376,15 +396,17 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!paymentMode) {
-      setError('Debes seleccionar un modo de pago');
+    if (!paymentMode || (paymentMode === 'MANUAL' && !metodoManual)) {
+      setError('Elige cómo deseas pagar.');
       setLoading(false);
       return;
     }
 
-    if ((paymentMode === 'DIRECT' || paymentMode === 'GIFT_CARD') && userBalance < finalTotal) {
-      setError('Canjea una gift card para tener Puntos ES suficientes, o elige "Pagar con Puntos ES"');
+    // C-132: pago manual con su referencia (el servidor la vuelve a validar y no deja repetirla)
+    if (paymentMode === 'MANUAL' && !leerReferenciaManual(referenciaManual)) {
+      setError('Escribe la referencia de tu pago para que el equipo lo confirme.');
       setLoading(false);
+      document.getElementById('referencia-pago')?.focus();
       return;
     }
 
@@ -408,7 +430,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    const finalPaymentMethod = paymentMode === 'PAGO_MOVIL' ? 'MOBILE_PAYMENT' : 'WALLET';
+    const finalPaymentMethod = paymentMode === 'PAGO_MOVIL' ? 'MOBILE_PAYMENT' : paymentMode === 'MANUAL' && metodoManual ? metodoManual.type : 'WALLET';
 
     // Show processing overlay
     setShowProcessingOverlay(true);
@@ -431,6 +453,9 @@ export default function CheckoutPage() {
           shipping: hasPhysicalItems ? envioParaServidor(envio, clienteEnvio) : undefined,
           paymentMethod: finalPaymentMethod,
           mobilePaymentData: paymentMode === 'PAGO_MOVIL' ? mobilePaymentData : null,
+          usarPuntos: paymentMode === 'PAGO_MOVIL' && mixto !== null,
+          companyPaymentMethodId: paymentMode === 'MANUAL' ? metodoManual?.id : undefined,
+          paymentReference: paymentMode === 'MANUAL' ? referenciaManual : undefined,
           notes: formData.notes,
           couponCode,
           expectedTotalUSD: finalTotal,
@@ -441,7 +466,7 @@ export default function CheckoutPage() {
 
       if (!orderResponse.ok) {
         if (orderResponse.status === 409 && orderData.calculation) {
-          setServerQuote({ key: quoteBody, calculation: orderData.calculation, coupon: orderData.coupon ?? null, problems: [] });
+          setServerQuote({ key: quoteBody, calculation: orderData.calculation, coupon: orderData.coupon ?? null, problems: [], mixto: null });
         }
         // C-114: la orden no se pudo crear y el Pago Móvil pasó al saldo: ese pago ya no sirve, ahora se paga con saldo
         if (typeof orderData.creditedUSD === 'number') {
@@ -450,6 +475,12 @@ export default function CheckoutPage() {
           void fetchBalance();
         }
         // C-125: el pago no alcanzó (cambió el total o la tasa): los pagos siguen registrados y el formulario pide la diferencia
+        // C-132: los Puntos ES cambiaron (o ya cubren el total): se recotiza y el cliente revisa
+        if (orderData.puntosCambiaron) {
+          setUsarPuntos(false);
+          void fetchBalance();
+        }
+        if (orderData.field === 'referencia-pago') document.getElementById('referencia-pago')?.focus();
         if (orderResponse.status === 402 && orderData.pagoIncompleto) {
           document.getElementById('metodo-de-pago')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -489,7 +520,9 @@ export default function CheckoutPage() {
       // Build success URL with order data as query params
       const orderNumbers = createdOrders.map(o => o.orderNumber).join(',');
       const total = Number(orderData.totalUSD ?? finalTotal).toFixed(2);
-      router.push(`/checkout/success?orders=${encodeURIComponent(orderNumbers)}&total=${total}`);
+      // C-132: pago manual: la confirmación dice que el pago se está verificando y hasta cuándo se aparta
+      const porVerificar = orderData.porVerificar ? `&verificar=1&metodo=${encodeURIComponent(metodoManual?.name ?? '')}` : '';
+      router.push(`/checkout/success?orders=${encodeURIComponent(orderNumbers)}&total=${total}${porVerificar}`);
 
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
@@ -621,8 +654,9 @@ export default function CheckoutPage() {
         // Update user balance
         const newBalance = userBalance + (data.amountRedeemed || 0);
         setUserBalance(newBalance);
-        // Auto switch to WALLET payment mode
+        // Vuelve a Puntos ES con el valor ya sumado
         setPaymentMode('WALLET');
+        setMostrarGiftCard(false);
         // Clear gift card form for potential additional redemption
         setGiftCardCode('');
         setGiftCardPin('');
@@ -840,97 +874,36 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* Payment Mode Selection */}
-                <div className={`grid grid-cols-1 gap-4 mb-6 ${pagoMovilDirecto ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMode('WALLET')}
-                    className={`relative p-5 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'WALLET'
-                      ? 'border-brand-500 bg-brand-500/5 shadow-sm'
-                      : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
-                      }`}
-                  >
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-3 transition-colors ${paymentMode === 'WALLET'
-                      ? 'bg-brand-500 text-white'
-                      : 'bg-brand-500/10 text-brand-600'
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faWallet} className="w-5 h-5" />
-                    </div>
-                    <h3 className={`font-bold text-base mb-1 ${paymentMode === 'WALLET' ? 'text-brand-600' : 'text-ink'}`}>
-                      Pagar con Puntos ES
-                    </h3>
-                    <p className="text-xs text-muted leading-relaxed">
-                      Usa tus Puntos ES o recárgalos con Transferencia, Binance o Zelle
-                    </p>
-                    {paymentMode === 'WALLET' && (
-                      <div className="absolute top-3 right-3 w-5 h-5 bg-brand-500 rounded-full flex items-center justify-center">
-                        <FiCheck className="w-3.5 h-3.5 text-white" />
-                      </div>
-                    )}
-                  </button>
-
-                  {pagoMovilDirecto && (
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMode('PAGO_MOVIL')}
-                    className={`relative p-5 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'PAGO_MOVIL'
-                      ? 'border-brand-500 bg-brand-500/5 shadow-sm'
-                      : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
-                      }`}
-                  >
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-3 transition-colors ${paymentMode === 'PAGO_MOVIL'
-                      ? 'bg-brand-500 text-white'
-                      : 'bg-brand-500/10 text-brand-600'
-                      }`}>
-                      <FaMobileScreen className="w-5 h-5" />
-                    </div>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <h3 className={`font-bold text-base ${paymentMode === 'PAGO_MOVIL' ? 'text-brand-600' : 'text-ink'}`}>
-                        Pago Móvil BDV
-                      </h3>
-                      <span className="px-1.5 py-0.5 text-[11px] font-semibold tracking-wide bg-success-strong/10 text-success-strong rounded-full">
-                        Directo
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted leading-relaxed">
-                      Verificación automática e instantánea 24/7 con Banco de Venezuela
-                    </p>
-                    {paymentMode === 'PAGO_MOVIL' && (
-                      <div className="absolute top-3 right-3 w-5 h-5 bg-brand-500 rounded-full flex items-center justify-center">
-                        <FiCheck className="w-3.5 h-3.5 text-white" />
-                      </div>
-                    )}
-                  </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMode('GIFT_CARD')}
-                    className={`relative p-5 rounded-xl border-2 transition-all text-left group overflow-hidden ${paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT'
-                      ? 'border-brand-500 bg-brand-500/5 shadow-sm'
-                      : 'border-line bg-white hover:border-brand-500/50 hover:bg-surface'
-                      }`}
-                  >
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-3 transition-colors ${paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT'
-                      ? 'bg-brand-500 text-white'
-                      : 'bg-brand-500/10 text-brand-600'
-                      }`}>
-                      <FiGift className="w-5 h-5" />
-                    </div>
-                    <h3 className={`font-bold text-base mb-1 ${paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT' ? 'text-brand-600' : 'text-ink'}`}>
-                      Canjear Gift Card
-                    </h3>
-                    <p className="text-xs text-muted leading-relaxed">
-                      Pasa el valor de una tarjeta de regalo a tus Puntos ES
-                    </p>
-                    {(paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT') && (
-                      <div className="absolute top-3 right-3 w-5 h-5 bg-brand-500 rounded-full flex items-center justify-center">
-                        <FiCheck className="w-3.5 h-3.5 text-white" />
-                      </div>
-                    )}
-                  </button>
+                {/* C-132: "¿Cómo deseas pagar?" con los métodos activos del panel y su panel debajo */}
+                <div className="mb-4">
+                  <PaymentMethodSelector opciones={opcionesPago} value={metodoElegido} onChange={elegirMetodo} />
                 </div>
+
+                {paymentMode === 'WALLET' && (
+                  <div className="mb-6">
+                    <PagoPuntosPanel
+                      disponibleUSD={userBalance}
+                      totalUSD={finalTotal}
+                      pagoMovilDisponible={pagoMovilDirecto}
+                      onPagarRestoConPagoMovil={() => { setUsarPuntos(true); setPaymentMode('PAGO_MOVIL'); }}
+                      onRecargar={() => setShowRechargeModal(true)}
+                      onGiftCard={() => setMostrarGiftCard((v) => !v)}
+                    />
+                  </div>
+                )}
+
+                {paymentMode === 'MANUAL' && metodoManual && (
+                  <div className="mb-6">
+                    <PagoManualPanel
+                      metodo={metodoManual as MetodoPagoEmpresa & { type: TipoPagoManual }}
+                      totalUSD={finalTotal}
+                      tasa={cotizacionBs?.tasa ?? 0}
+                      referencia={referenciaManual}
+                      onReferencia={setReferenciaManual}
+                      listo={canPay}
+                    />
+                  </div>
+                )}
 
                 {/* Sin cotización del servidor (o con problemas) no se muestran los datos para transferir */}
                 {paymentMode === 'PAGO_MOVIL' && !mostrarPagoMovil && (
@@ -954,26 +927,42 @@ export default function CheckoutPage() {
                         Conciliación BDV
                       </span>
                     </div>
+                    {/* C-132: pago mixto. Con puntos que no alcanzan, el Pago Móvil es solo por la diferencia */}
+                    {puedeMixto && (
+                      <label className="mb-4 flex cursor-pointer items-start gap-3 rounded-xl border border-brand-200 bg-white p-3">
+                        <input
+                          type="checkbox"
+                          checked={usarPuntos}
+                          onChange={(e) => setUsarPuntos(e.target.checked)}
+                          className="mt-0.5 h-5 w-5 shrink-0 rounded text-brand-500 focus:ring-2 focus:ring-brand-500"
+                        />
+                        <span className="text-sm text-ink-soft">
+                          <strong className="font-semibold text-ink">Usar mis {formatUSD(userBalance)} en Puntos ES</strong>
+                          {' '}y pagar solo {formatUSD(repartirPuntos(userBalance, finalTotal).restanteUSD)} por Pago Móvil.
+                          {usarPuntos && !mixto && <span className="block text-xs text-muted">Calculando el monto en bolívares…</span>}
+                        </span>
+                      </label>
+                    )}
                     <CheckoutPagoMovilForm
-                      montoUSD={orderCalculation.totalUSD}
-                      montoBs={montoBs(orderCalculation.totalUSD, cotizacionBs?.tasa ?? 0)}
+                      montoUSD={montoPagoMovilUSD}
+                      montoBs={montoBs(montoPagoMovilUSD, cotizacionBs?.tasa ?? 0)}
                       tasa={cotizacionBs?.tasa ?? 0}
                       cotizacion={cotizacionBs?.token ?? null}
                       pagador={{ cedula: formData.customerIdNumber, telefono: formData.customerPhone }}
                       pagos={pagosMovil}
                       onPagosChange={setPagosMovil}
                       datosComercio={{
-                        telefono: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.phone,
-                        cedula: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderId,
-                        banco: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.bankName,
-                        titular: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderName,
+                        telefono: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.phone ?? undefined,
+                        cedula: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderId ?? undefined,
+                        banco: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.bankName ?? undefined,
+                        titular: paymentMethods.find(m => m.type === 'MOBILE_PAYMENT')?.holderName ?? undefined,
                       }}
                     />
                   </div>
                 )}
 
                 {/* Gift Card Redemption Section */}
-                {(paymentMode === 'DIRECT' || paymentMode === 'GIFT_CARD') && (
+                {paymentMode === 'WALLET' && mostrarGiftCard && (
                   <div className="bg-surface rounded-2xl p-6 border border-line shadow-sm overflow-hidden relative">
 
                     <div className="relative">
@@ -1178,143 +1167,6 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* Wallet Payment Options - Premium Circle Progress Design */}
-                {paymentMode === 'WALLET' && (
-                  <div className="bg-surface rounded-2xl p-6 border border-line shadow-sm overflow-hidden relative">
-                    {/* Main Content - Circle + Info */}
-                    <div className="flex flex-col md:flex-row items-center gap-6">
-                      <div className="relative flex-shrink-0">
-
-                        <svg className="w-36 h-36 transform -rotate-90 relative z-10" viewBox="0 0 100 100">
-                          {/* Background circle with subtle gradient */}
-                          <defs>
-                            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" stopColor="#2a63cd" />
-                              <stop offset="100%" stopColor="#1e4ba3" />
-                            </linearGradient>
-                          </defs>
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="42"
-                            fill="none"
-                            stroke="#e9ecef"
-                            strokeWidth="8"
-                          />
-                          {/* Progress circle with gradient and animation */}
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="42"
-                            fill="none"
-                            stroke="url(#progressGradient)"
-                            strokeWidth="8"
-                            strokeLinecap="round"
-                            strokeDasharray={`${Math.min((userBalance / finalTotal) * 264, 264)} 264`}
-                            className="transition-all duration-1000 ease-out"
-                            style={{
-                              filter: 'drop-shadow(0 0 8px rgba(42, 99, 205, 0.4))'
-                            }}
-                          />
-                        </svg>
-
-                        <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-                          <div className="w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-all duration-500 bg-brand-500/10 text-brand-600">
-                            {userBalance >= finalTotal ? (
-                              <FiCheckCircle className="w-6 h-6" />
-                            ) : (
-                              <FontAwesomeIcon icon={faWallet} className="w-5 h-5" />
-                            )}
-                          </div>
-                          <span className="text-sm font-bold text-brand-500">
-                            {Math.min(Math.round((userBalance / finalTotal) * 100), 100)}%
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Balance Info */}
-                      <div className="flex-1 text-center md:text-left">
-                        <p className="text-sm text-muted font-medium mb-1">Tus Puntos ES</p>
-                        <p className="text-4xl font-bold text-ink mb-3 tracking-tight">
-                          {formatPrice(userBalance)}
-                        </p>
-
-                        {/* Status Badge */}
-                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${userBalance >= finalTotal
-                          ? 'bg-brand-500/10 text-brand-500 border border-brand-500/20'
-                          : 'bg-warning/10 text-warning-strong border border-warning/30'
-                          }`}>
-                          {userBalance >= finalTotal ? (
-                            <>
-                              <FiCheck className="w-4 h-4" />
-                              Puntos ES suficientes
-                            </>
-                          ) : (
-                            <>
-                              <FiAlertCircle className="w-4 h-4" />
-                              Faltan {formatPrice(finalTotal - userBalance)}
-                            </>
-                          )}
-                        </div>
-
-                        {/* Order Total & Remaining Balance */}
-                        <div className="mt-4 space-y-2">
-                          <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-muted">
-                            <FiPackage className="w-4 h-4" />
-                            <span>Total del pedido: <strong className="text-ink">{formatPrice(finalTotal)}</strong></span>
-                          </div>
-                          {userBalance >= finalTotal && (
-                            <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-brand-500 font-medium animate-fadeIn">
-                              <FiDollarSign className="w-4 h-4" />
-                              <span>Te quedan después de la compra: <strong className="text-ink">{formatPrice(userBalance - finalTotal)}</strong></span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Section */}
-                    {userBalance < finalTotal ? (
-                      <div className="relative mt-6 pt-6 border-t border-line">
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                          <p className="text-sm text-muted">
-                            Recarga Puntos ES para completar esta compra
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => setShowRechargeModal(true)}
-                            className={`inline-flex items-center gap-2 ${adminPrimaryButton} px-5 py-2.5 font-bold`}
-                          >
-                            <FiPlus className="w-5 h-5" />
-                            Recargar Puntos ES
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="relative mt-6 pt-6 border-t border-line">
-                        <div className="flex items-center gap-4 p-4 bg-brand-500/5 border border-brand-500/20 rounded-xl">
-                          <div className="w-10 h-10 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center flex-shrink-0">
-                            <FaCheck className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-brand-500 text-lg">Listo para pagar</p>
-                            <p className="text-sm text-muted">
-                              Tus Puntos ES cubren el total. Completa el pedido ahora.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {/* Notice for manual recharge methods */}
-                    <div className="mt-4 p-3.5 bg-brand-50/70 border border-brand-200 rounded-xl text-xs text-brand-900 flex items-start gap-2.5">
-                      <FiInfo className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
-                      <div className="leading-relaxed">
-                        <span className="font-bold block text-brand-700 mb-0.5">¿Deseas pagar con Transferencia, Binance Pay, Zelle o Zinli?</span>
-                        Por seguridad de la plataforma, estos métodos se procesan recargando Puntos ES a tu cuenta. Haz clic en <strong>Recargar Puntos ES</strong>, ingresa tu pago y una vez acreditado tu pedido se completará al instante.
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Notes - Collapsible */}
@@ -1390,8 +1242,8 @@ export default function CheckoutPage() {
                   !paymentMode ||
                   (!canPay && !(paymentMode === 'PAGO_MOVIL' && mobilePaymentVerified)) ||
                   (paymentMode === 'WALLET' && userBalance < finalTotal) ||
-                  ((paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT') && userBalance < finalTotal) ||
-                  (paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified)
+                  (paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified) ||
+                  (paymentMode === 'MANUAL' && (!metodoManual || !leerReferenciaManual(referenciaManual)))
                 }
                 className={`w-full flex items-center justify-center gap-2 ${adminPrimaryButton} py-3.5 text-base font-bold disabled:opacity-50`}
               >
@@ -1421,6 +1273,12 @@ export default function CheckoutPage() {
                 <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
                   <FiAlertCircle className="w-3 h-3" />
                   Debes verificar tu Pago Móvil antes de completar el pedido
+                </p>
+              )}
+              {paymentMode === 'MANUAL' && metodoManual && !leerReferenciaManual(referenciaManual) && (
+                <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
+                  <FiAlertCircle className="w-3 h-3" />
+                  Escribe la referencia de tu pago para completar el pedido
                 </p>
               )}
               {paymentMode === 'WALLET' && userBalance < finalTotal && (

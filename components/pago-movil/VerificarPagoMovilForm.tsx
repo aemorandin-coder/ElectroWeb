@@ -4,7 +4,14 @@ import { formatUSD, formatVES } from '@/lib/currency';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiMessageCircle, FiUser } from 'react-icons/fi';
-import { BANCOS_VENEZUELA, type BancoVenezuela } from '@/lib/pago-movil/bancos-venezuela';
+import {
+    BANCOS_VENEZUELA,
+    mascaraTelefonoVE,
+    normalizarCedulaVE,
+    validarCedulaVenezolana,
+    validarTelefonoVenezolano,
+    type BancoVenezuela,
+} from '@/lib/pago-movil/bancos-venezuela';
 import { hoyCaracas } from '@/lib/pago-movil/monto';
 
 interface VerificarPagoMovilFormProps {
@@ -65,11 +72,12 @@ export default function VerificarPagoMovilForm({
 }: VerificarPagoMovilFormProps) {
     const router = useRouter();
     const [formData, setFormData] = useState({
-        telefonoPagador: initialData?.telefonoPagador || '',
+        // C-130: lo del perfil ("+58 4121234567", "V-12345678") llega en el formato del banco
+        telefonoPagador: mascaraTelefonoVE(initialData?.telefonoPagador || ''),
         bancoOrigen: initialData?.bancoOrigen || '',
         referencia: initialData?.referencia || '',
         fechaPago: initialData?.fechaPago || hoyCaracas(), // C-125: fecha de Venezuela (la de UTC ya es mañana después de las 8 p. m.)
-        cedulaPagador: initialData?.cedulaPagador || '',
+        cedulaPagador: initialData?.cedulaPagador ? normalizarCedulaVE(initialData.cedulaPagador) : '',
     });
 
     const [verificationState, setVerificationState] = useState<VerificationState>('idle');
@@ -95,7 +103,8 @@ export default function VerificarPagoMovilForm({
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        // Pegar "+58 412 123 4567" también sirve: se convierte a 04121234567
+        setFormData(prev => ({ ...prev, [name]: name === 'telefonoPagador' ? mascaraTelefonoVE(value) : value }));
         // Limpiar resultado anterior
         if (resultado) {
             setResultado(null);
@@ -152,12 +161,11 @@ Por favor necesito ayuda para verificar mi pago.
 
     const validateFields = (): boolean => {
         const errors: Record<string, string> = {};
-        const cedulaRegex = /^[VvEe]?\d{6,9}$/;
-        const cedulaLimpia = formData.cedulaPagador.trim().replace(/[.-]/g, '');
-        if (!cedulaLimpia || !cedulaRegex.test(cedulaLimpia))
+        // Las mismas reglas que el servidor (C-130)
+        if (!validarCedulaVenezolana(formData.cedulaPagador))
             errors.cedulaPagador = 'Formato requerido: V12345678 o E12345678';
-        if (!formData.telefonoPagador.match(/^04[0-9]{9}$/))
-            errors.telefonoPagador = 'Formato: 04121234567 (11 dígitos)';
+        if (!validarTelefonoVenezolano(formData.telefonoPagador))
+            errors.telefonoPagador = 'Un celular de 11 dígitos, por ejemplo 04121234567';
         if (!formData.bancoOrigen)
             errors.bancoOrigen = 'Debes seleccionar tu banco';
         if (!formData.referencia.match(/^\d{4,8}$/))
@@ -184,6 +192,7 @@ Por favor necesito ayuda para verificar mi pago.
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...formData,
+                    cedulaPagador: normalizarCedulaVE(formData.cedulaPagador),
                     importe: montoEnBs || montoEsperado, // Monto en Bs para verificar con BDV
                     importeUsd: montoEsperado, // Monto en USD para la transacción
                     contexto,
@@ -394,8 +403,8 @@ Por favor necesito ayuda para verificar mi pago.
                             value={formData.telefonoPagador}
                             onChange={handleChange}
                             placeholder="04121234567"
-                            inputMode="tel"
-                            maxLength={11}
+                            inputMode="numeric"
+                            autoComplete="tel-national"
                             disabled={disabled || verificationState === 'verifying'}
                             className={`w-full pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all text-sm disabled:bg-surface disabled:cursor-not-allowed ${
                                 fieldErrors.telefonoPagador ? 'border-deal/40 bg-deal-bg' : 'border-line'

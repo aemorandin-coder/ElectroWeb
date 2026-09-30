@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { verificarPagoMovil, interpretarErrorBDV } from '@/lib/pago-movil/verificar-pago';
-import { getBancoPorCodigo, validarReferencia, validarTelefonoVenezolano } from '@/lib/pago-movil/bancos-venezuela';
+import { getBancoPorCodigo, normalizarCedulaVE, normalizarTelefonoVE, validarReferencia, validarTelefonoVenezolano } from '@/lib/pago-movil/bancos-venezuela';
 import { hoyCaracas, leerMontoBs, montoParaAPI } from '@/lib/pago-movil/monto';
 
 // POST /api/admin/pago-movil/consultar (C-129): el equipo le pregunta al BDV por un Pago Móvil que un cliente dice
@@ -25,14 +25,15 @@ export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const referencia = typeof body?.referencia === 'string' ? body.referencia.replace(/\D/g, '') : '';
   const bancoOrigen = typeof body?.bancoOrigen === 'string' ? body.bancoOrigen.trim() : '';
-  const telefonoPagador = typeof body?.telefonoPagador === 'string' ? body.telefonoPagador.replace(/\D/g, '') : '';
-  const cedulaPagador = typeof body?.cedulaPagador === 'string' ? body.cedulaPagador.trim().toUpperCase().replace(/[.\-\s]/g, '') : '';
+  // C-130: "+58 0412…" o "v-19.855.597" pegados desde la ficha del cliente llegan en el formato del BDV
+  const telefonoPagador = typeof body?.telefonoPagador === 'string' ? normalizarTelefonoVE(body.telefonoPagador) : '';
+  const cedulaPagador = typeof body?.cedulaPagador === 'string' ? normalizarCedulaVE(body.cedulaPagador) : '';
   const fechaPago = typeof body?.fechaPago === 'string' ? body.fechaPago.slice(0, 10) : '';
   const importe = typeof body?.importe === 'number' ? body.importe : leerMontoBs(String(body?.importe ?? ''));
 
   if (!validarReferencia(referencia)) return NextResponse.json({ error: 'La referencia lleva de 4 a 8 dígitos' }, { status: 400 });
   if (!getBancoPorCodigo(bancoOrigen)) return NextResponse.json({ error: 'Elige el banco desde el que se pagó' }, { status: 400 });
-  if (!validarTelefonoVenezolano(telefonoPagador)) return NextResponse.json({ error: 'Teléfono inválido. Ejemplo: 04121234567' }, { status: 400 });
+  if (!validarTelefonoVenezolano(telefonoPagador)) return NextResponse.json({ error: 'Teléfono inválido: un celular venezolano de 11 dígitos, por ejemplo 04121234567' }, { status: 400 });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaPago) || fechaPago > hoyCaracas()) return NextResponse.json({ error: 'Fecha inválida' }, { status: 400 });
   if (!importe || !(importe > 0)) return NextResponse.json({ error: 'Escribe el monto exacto en Bs.' }, { status: 400 });
 

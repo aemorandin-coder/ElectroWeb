@@ -6,6 +6,9 @@ import { prisma } from '@/lib/prisma';
 import { montoDecimal } from '@/lib/pricing';
 import { verificarPagoMovil, interpretarErrorBDV } from '@/lib/pago-movil/verificar-pago';
 import {
+    normalizarCedulaVE,
+    normalizarTelefonoVE,
+    validarCedulaVenezolana,
     validarTelefonoVenezolano,
     validarReferencia,
 } from '@/lib/pago-movil/bancos-venezuela';
@@ -54,12 +57,12 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
 
         const {
-            telefonoPagador,
+            telefonoPagador: telefonoRecibido,
             bancoOrigen,
             referencia,
             fechaPago,
             importe,           // Monto en Bs para verificar con BDV
-            cedulaPagador,
+            cedulaPagador: cedulaRecibida,
             reqCed = true,      // Validar cédula por defecto para mayor seguridad
             // Contexto de la verificación
             contexto = 'GENERAL', // RECHARGE, ORDER, GENERAL
@@ -67,6 +70,11 @@ export async function POST(req: NextRequest) {
             // orderId del navegador: se ignora desde C-129 (lo pone POST /api/orders)
             cotizacion: cotizacionToken, // C-125: monto y tasa firmados por /api/orders/quote
         } = body;
+
+        // C-130: teléfono y cédula en el formato del BDV, vengan como vengan ("+58 0412…", "v-19.855.597").
+        // Antes el checkout mandaba el teléfono del perfil como "584121234567" y el banco lo rechazaba.
+        const telefonoPagador = typeof telefonoRecibido === 'string' ? normalizarTelefonoVE(telefonoRecibido) : '';
+        const cedulaPagador = typeof cedulaRecibida === 'string' ? normalizarCedulaVE(cedulaRecibida) : '';
 
         // C-125: compra con cotización firmada. Si falta o venció, se usa la tasa del momento (como antes)
         const cotizacion = contexto === 'ORDER' ? leerCotizacion(cotizacionToken, userId) : null;
@@ -79,20 +87,17 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // SEGURIDAD: Validar cédula con formato correcto (V/E + 6-9 dígitos)
-        const cedulaRegex = /^[VvEe]?\d{6,9}$/;
-        const cedulaLimpia = cedulaPagador?.trim().replace(/[.-]/g, '') || '';
-        if (!cedulaLimpia || !cedulaRegex.test(cedulaLimpia)) {
+        // SEGURIDAD: cédula V o E con 6 a 9 dígitos
+        if (!validarCedulaVenezolana(cedulaPagador)) {
             return NextResponse.json(
-                { error: 'Formato de cédula inválido. Debe ser V o E seguido de 6-9 dígitos. Ejemplo: V12345678' },
+                { error: 'Revisa la cédula del titular: V o E y el número, por ejemplo V12345678.' },
                 { status: 400 }
             );
         }
 
-        // Validar formato de teléfono
         if (!validarTelefonoVenezolano(telefonoPagador)) {
             return NextResponse.json(
-                { error: 'Formato de teléfono inválido. Ejemplo: 04121234567' },
+                { error: 'Revisa el teléfono que pagó: un celular venezolano de 11 dígitos, por ejemplo 04121234567.' },
                 { status: 400 }
             );
         }

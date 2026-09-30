@@ -46,40 +46,57 @@ export function getBancoPorCodigo(codigo: string): BancoVenezuela | undefined {
   return BANCOS_VENEZUELA.find(banco => banco.codigo === codigo);
 }
 
+/** Celulares venezolanos: Movilnet (0416, 0426), Movistar (0414, 0424) y Digitel (0412, 0422). */
+const CELULAR_VE = /^04(12|14|16|22|24|26)\d{7}$/;
+
 /**
- * Validar formato de teléfono venezolano
- * Formato esperado: 04XX-XXXXXXX o 04XXXXXXXXX
+ * Teléfono venezolano en el formato del BDV: 11 dígitos con el 0 inicial ("04121234567").
+ * C-130: el perfil guarda "+58 4121234567" (a veces "+58 04121234567") y el checkout mandaba
+ * "584121234567" al banco, que respondía "Formato de teléfono inválido".
+ * Acepta "+58 0412…", "58412…", "0058412…", "0412-123.45.67" y "4121234567". No valida: ver validarTelefonoVenezolano.
  */
+export function normalizarTelefonoVE(telefono: string): string {
+  let digitos = String(telefono ?? '').replace(/\D/g, '');
+  if (digitos.startsWith('0058')) digitos = digitos.slice(2);
+  if (digitos.startsWith('580')) digitos = digitos.slice(2);
+  else if (digitos.startsWith('58')) digitos = `0${digitos.slice(2)}`;
+  else if (digitos.startsWith('4')) digitos = `0${digitos}`;
+  return digitos;
+}
+
+/** Para un campo de texto: normaliza mientras se escribe o se pega, con 11 dígitos como máximo. */
+export function mascaraTelefonoVE(valor: string): string {
+  return normalizarTelefonoVE(valor).slice(0, 11);
+}
+
+/** Celular venezolano válido para Pago Móvil, en cualquiera de los formatos de normalizarTelefonoVE. */
 export function validarTelefonoVenezolano(telefono: string): boolean {
-  const telefonoLimpio = telefono.replace(/[-\s]/g, '');
-  return /^04\d{9}$/.test(telefonoLimpio);
+  return CELULAR_VE.test(normalizarTelefonoVE(telefono));
 }
 
-/**
- * Formatear teléfono para API (sin guiones ni espacios)
- */
+/** Teléfono para la API del BDV: "04121234567". */
 export function formatearTelefonoParaAPI(telefono: string): string {
-  return telefono.replace(/[-\s]/g, '');
+  return normalizarTelefonoVE(telefono);
 }
 
 /**
- * Validar formato de cédula venezolana
- * Formato esperado: V12345678 o E12345678
+ * Cédula en el formato del BDV: letra y dígitos, sin guiones, puntos ni espacios ("v-19.855.597" → "V19855597").
+ * Sin letra se asume V. No valida: ver validarCedulaVenezolana.
  */
+export function normalizarCedulaVE(cedula: string): string {
+  // Solo salen separadores: quitar letras convertiría un RIF "J-…" en una cédula "V…"
+  const limpia = String(cedula ?? '').toUpperCase().replace(/[\s.\-_/]/g, '');
+  return /^\d/.test(limpia) ? `V${limpia}` : limpia;
+}
+
+/** Cédula venezolana: V o E y 6 a 9 dígitos, en cualquiera de los formatos de normalizarCedulaVE. */
 export function validarCedulaVenezolana(cedula: string): boolean {
-  return /^[VvEe]\d{6,9}$/.test(cedula.toUpperCase().replace(/[-\s]/g, ''));
+  return /^[VE]\d{6,9}$/.test(normalizarCedulaVE(cedula));
 }
 
-/**
- * Formatear cédula para API
- */
+/** Cédula para la API del BDV: "V12345678". */
 export function formatearCedulaParaAPI(cedula: string): string {
-  const cedulaLimpia = cedula.toUpperCase().replace(/[-\s]/g, '');
-  // Asegurar que comience con V o E
-  if (/^\d/.test(cedulaLimpia)) {
-    return 'V' + cedulaLimpia;
-  }
-  return cedulaLimpia;
+  return normalizarCedulaVE(cedula);
 }
 
 /**

@@ -329,7 +329,7 @@ export default function TransactionsPage() {
                         Transacciones
 
                     </h1>
-                    <p className={adminPageSubtitle}>Recargas y movimientos de saldo · máx. 200 registros</p>
+                    <p className={adminPageSubtitle}>Recargas y movimientos de Puntos ES · máx. 200 registros</p>
                     <div className="mt-1"><EnVivo estado={enVivo} /></div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -745,7 +745,7 @@ export default function TransactionsPage() {
                                 <p className="text-3xl font-bold text-success-strong">
                                     +{fmtAmount(Number(approvingTransaction.amount))}
                                 </p>
-                                <p className="text-xs text-success-strong mt-1">USD · se acreditará al saldo del cliente</p>
+                                <p className="text-xs text-success-strong mt-1">USD · se acreditará a los Puntos ES del cliente</p>
                             </div>
 
                             {/* Details */}

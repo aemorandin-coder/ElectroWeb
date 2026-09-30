@@ -1049,12 +1049,12 @@ export default function OrdersPage() {
               <div className={adminNotice('warning')}>
                 {selectedOrder.paymentStatus === 'PAID' ? (
                   selectedOrder.paymentMethod === 'WALLET' ? (
-                    <>Se devolverá <strong>{formatUSD(Number(selectedOrder.totalUSD) || 0)}</strong> al saldo del cliente para comprar en la tienda, y el stock volverá al inventario.</>
+                    <>Se devolverá <strong>{formatUSD(Number(selectedOrder.totalUSD) || 0)}</strong> a los Puntos ES del cliente para comprar en la tienda, y el stock volverá al inventario.</>
                   ) : (
-                    <>El stock volverá al inventario. Este pago no fue con saldo: si hay que devolver algo, se gestiona aparte.</>
+                    <>El stock volverá al inventario. Este pago no fue con Puntos ES: si hay que devolver algo, se gestiona aparte.</>
                   )
                 ) : (
-                  <>La orden no está pagada: no se devuelve stock ni saldo, solo se libera la reserva.</>
+                  <>La orden no está pagada: no se devuelve stock ni Puntos ES, solo se libera la reserva.</>
                 )}
               </div>
 

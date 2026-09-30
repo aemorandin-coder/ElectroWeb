@@ -844,7 +844,7 @@ export const sendGiftCardEmail = async (
         <li>Ingresa a Electro Shop y crea una cuenta o inicia sesión</li>
         <li>Ve a la página de <strong>Canjear Gift Card</strong></li>
         <li>Ingresa el código mostrado arriba${giftCardData.pin ? ' y el PIN' : ''}</li>
-        <li>¡El saldo se acreditará al instante en tu cuenta!</li>
+        <li>¡Los Puntos ES se acreditan al instante en tu cuenta!</li>
       </ol>
     </div>
     

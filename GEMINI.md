@@ -431,4 +431,4 @@ Andrés pidió el 29/09 cinco módulos, y algunos tocan tu carril. **No revierta
   - `components/customer/OrderStepper.tsx` (nuevo).
   - El layout: el inicio va sin tarjeta envolvente y escucha el evento `abrir-menu-cliente`.
   - Los pasos de un pedido salen de `pasosPedido()` (`lib/order-pasos.ts`): no hagas otro mapeo de estados.
-- **Palabras (C-129):** nunca "billetera", "wallet" ni "monedero" para el saldo de la tienda. SUDEBAN sancionó a Yummy por un servicio de "billeteras", y el saldo de ElectroShop se mantiene como pago anticipado que solo compra en la tienda. Tampoco escribas que el saldo se puede retirar o transferir.
+- **Palabras (C-129, C-131):** el saldo de la tienda se llama **"Puntos ES"** en todo texto visible (regla de Andrés del 30/09). Nunca "saldo", "billetera", "wallet" ni "monedero". SUDEBAN sancionó a Yummy por un servicio de "billeteras", y el saldo de ElectroShop se mantiene como pago anticipado que solo compra en la tienda. Tampoco escribas que el saldo se puede retirar o transferir.

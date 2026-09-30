@@ -58,7 +58,7 @@ Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pe
   - El sobrepago va al saldo.
   - Sin subir capturas: se usa la verificación con el BDV.
   - La barra inferior del cliente queda aprobada.
-- **Pendiente de Andrés:** ¿"saldo" se queda o pasa a "anticipo" / "abono" en toda la tienda? (ver `estado/C-129.md`).
+- **Decidido por Andrés (29 y 30/09):** el saldo se llama **"Puntos ES"** en toda la tienda; nunca "saldo" ni "billetera" (ley venezolana). Hecho en C-131. Falta publicar la versión 2 de los términos de recarga desde Admin → Legal (texto en `estado/C-131.md`).
 - Detalle y pruebas de cada una en su `estado/C-12X.md`.
 
 ## 1. Estado de las ramas

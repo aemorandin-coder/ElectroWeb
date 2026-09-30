@@ -240,8 +240,8 @@ export default function CustomerOnboarding({ stats }: { stats: Stats }) {
           <div className="overflow-hidden" inert={!verGuia || undefined}>
             <ol className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-3">
               {[
-                { Icono: FiCreditCard, titulo: '1. Recarga saldo', texto: 'Con Pago Móvil desde Saldo y pagos. La tasa es la de la tienda.' },
-                { Icono: FiShoppingBag, titulo: '2. Paga al instante', texto: 'Usa tu saldo en el checkout, sin esperar confirmaciones.' },
+                { Icono: FiCreditCard, titulo: '1. Recarga Puntos ES', texto: 'Con Pago Móvil desde Puntos ES. La tasa es la de la tienda.' },
+                { Icono: FiShoppingBag, titulo: '2. Paga al instante', texto: 'Usa tus Puntos ES en el checkout, sin esperar confirmaciones.' },
                 { Icono: FiTruck, titulo: '3. Recibe tu pedido', texto: 'Envío por MRW o ZOOM, o retiro en tienda.' },
               ].map(({ Icono, titulo, texto }) => (
                 <li key={titulo} className="flex gap-3 rounded-xl border border-line bg-surface p-3">

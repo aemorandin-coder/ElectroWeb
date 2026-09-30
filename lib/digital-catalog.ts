@@ -33,9 +33,9 @@ export const DELIVERY_MODES = {
   },
   MANUAL: {
     admin: 'Recarga directa a la cuenta',
-    adminHelp: 'Recargas el saldo directamente en la cuenta del cliente. Al comprar se le pide el dato de su cuenta.',
+    adminHelp: 'Haces la recarga directo en la cuenta del cliente. Al comprar se le pide el dato de su cuenta.',
     store: 'Recarga directa a tu cuenta',
-    storeHelp: 'Recargamos el saldo en tu cuenta cuando confirmamos tu pago',
+    storeHelp: 'Hacemos la recarga en tu cuenta cuando confirmamos tu pago',
   },
 } as const;
 export type DeliveryMode = keyof typeof DELIVERY_MODES;
@@ -58,12 +58,12 @@ export const DIGITAL_PLATFORMS: DigitalPlatform[] = [
   {
     value: 'PLAYSTATION', label: 'PlayStation', featured: true, unit: 'USD', presetValues: [10, 25, 50, 75, 100], delivery: 'INSTANT', region: 'USA',
     accountFieldLabel: 'Correo de tu cuenta PSN', accountFieldHint: 'El correo con el que entras a PlayStation Network',
-    instructions: '1. Entra a PlayStation Store desde tu consola o en store.playstation.com.\n2. Abre tu perfil y elige "Canjear códigos".\n3. Escribe el código de 12 caracteres.\n4. El saldo queda en tu billetera de PSN.',
+    instructions: '1. Entra a PlayStation Store desde tu consola o en store.playstation.com.\n2. Abre tu perfil y elige "Canjear códigos".\n3. Escribe el código de 12 caracteres.\n4. El monto queda en tu cuenta de PSN.',
   },
   {
     value: 'XBOX', label: 'Xbox', featured: true, unit: 'USD', presetValues: [10, 15, 25, 50, 100], delivery: 'INSTANT', region: 'USA',
     accountFieldLabel: 'Correo de tu cuenta Microsoft', accountFieldHint: 'El correo de tu cuenta Xbox / Microsoft',
-    instructions: '1. Entra a redeem.microsoft.com con tu cuenta Microsoft.\n2. Escribe el código de 25 caracteres.\n3. Confirma y el saldo queda en tu cuenta.',
+    instructions: '1. Entra a redeem.microsoft.com con tu cuenta Microsoft.\n2. Escribe el código de 25 caracteres.\n3. Confirma y el monto queda en tu cuenta.',
   },
   {
     value: 'ROBLOX', label: 'Roblox', featured: true, unit: 'ROBUX', presetValues: [400, 800, 1700, 4500, 10000], delivery: 'INSTANT', region: 'GLOBAL',

@@ -27,7 +27,7 @@ export interface AdminEventDefinition {
 
 export const CATEGORY_LABELS: Record<AdminEventCategory, string> = {
   ventas: 'Ventas',
-  pagos: 'Saldo y pagos',
+  pagos: 'Puntos ES y pagos',
   clientes: 'Clientes',
   solicitudes: 'Solicitudes',
   cursos: 'Cursos y creadores',
@@ -46,9 +46,9 @@ export const ADMIN_EVENTS = {
   DIGITAL_ORDER_PENDING: { category: 'ventas', label: 'Pedido digital por entregar', description: 'Una orden pagada trae códigos o recargas que hay que comprar y enviar desde el pedido.', defaults: on(true, true, true) },
   ORDER_CANCELLED: { category: 'ventas', label: 'Orden cancelada', description: 'Una orden pasó a cancelada, con el motivo.', defaults: on(true, false, true) },
 
-  RECHARGE_REQUESTED: { category: 'pagos', label: 'Recarga por aprobar', description: 'Un cliente pidió recargar saldo y espera aprobación.', defaults: on(true, true, true) },
-  RECHARGE_AUTO_APPROVED: { category: 'pagos', label: 'Recarga aprobada por Pago Móvil', description: 'El banco confirmó el pago y el saldo se acreditó solo.', defaults: on(true, false, true) },
-  ORDER_PAYMENT_ORPHAN: { category: 'pagos', label: 'Pago sin orden', description: 'Un cliente pagó por Pago Móvil y la orden no se pudo crear: el dinero pasó a su saldo o espera que lo revises.', defaults: on(true, true, true) },
+  RECHARGE_REQUESTED: { category: 'pagos', label: 'Recarga por aprobar', description: 'Un cliente pidió recargar Puntos ES y espera aprobación.', defaults: on(true, true, true) },
+  RECHARGE_AUTO_APPROVED: { category: 'pagos', label: 'Recarga aprobada por Pago Móvil', description: 'El banco confirmó el pago y los Puntos ES se acreditaron solos.', defaults: on(true, false, true) },
+  ORDER_PAYMENT_ORPHAN: { category: 'pagos', label: 'Pago sin orden', description: 'Un cliente pagó por Pago Móvil y la orden no se pudo crear: el dinero pasó a sus Puntos ES o espera que lo revises.', defaults: on(true, true, true) },
   PAYMENT_REFERENCE_DUPLICATE: { category: 'pagos', label: 'Referencia de pago repetida', description: 'Alguien intentó usar una referencia de Pago Móvil que ya se usó.', defaults: on(true, true, true) },
 
   CUSTOMER_REGISTERED: { category: 'clientes', label: 'Cliente nuevo', description: 'Alguien creó una cuenta en la tienda.', defaults: on(true, false, true), silent: true },
@@ -70,7 +70,7 @@ export const ADMIN_EVENTS = {
   EMAIL_CAMPAIGN_STARTED: { category: 'marketing', label: 'Campaña de correo enviándose', description: 'Alguien empezó a enviar una campaña a los clientes que aceptan promociones.', defaults: on(true, false, true), silent: true },
 
   GIFT_CARD_PURCHASED: { category: 'giftcards', label: 'Gift card comprada', description: 'Un cliente compró una gift card digital.', defaults: on(true, false, true) },
-  GIFT_CARD_REDEEMED: { category: 'giftcards', label: 'Gift card canjeada', description: 'Una gift card se canjeó a saldo.', defaults: on(true, false, false), silent: true },
+  GIFT_CARD_REDEEMED: { category: 'giftcards', label: 'Gift card canjeada', description: 'Una gift card se canjeó a Puntos ES.', defaults: on(true, false, false), silent: true },
   GIFT_CARD_SOLD_IN_STORE: { category: 'giftcards', label: 'Gift card vendida en tienda', description: 'Un administrador activó una gift card impresa al venderla.', defaults: on(false, false, true), silent: true },
   GIFT_CARD_PIN_LOCKED: { category: 'giftcards', label: 'Gift card bloqueada por PIN', description: 'Una tarjeta llegó al límite de PIN equivocados.', defaults: on(true, true, true) },
 

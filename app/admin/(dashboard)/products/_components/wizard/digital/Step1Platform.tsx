@@ -142,7 +142,7 @@ export default function DigitalStep1Platform({ data, onChange, errors, categorie
             value={data.description}
             onChange={(e) => onChange({ description: e.target.value })}
             rows={3}
-            placeholder="¿Qué puede comprar el cliente con este saldo o tarjeta?"
+            placeholder="¿Qué puede comprar el cliente con esta recarga o tarjeta?"
             className={`${wizardInput()} h-auto resize-none py-2.5`}
           />
         </div>

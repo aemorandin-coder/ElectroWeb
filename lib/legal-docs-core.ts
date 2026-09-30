@@ -38,7 +38,7 @@ export function parsearDocumento(contenido: string): BloqueDoc[] {
 
 /** Para qué se exige la firma. null: documento informativo que se firma una vez. */
 export const REQUERIDO_PARA: Record<string, string> = {
-  RECHARGE: 'Recargar saldo',
+  RECHARGE: 'Recargar Puntos ES',
 };
 
 /** Cédula venezolana: V o E y 6 a 9 dígitos (sin puntos ni guiones). */

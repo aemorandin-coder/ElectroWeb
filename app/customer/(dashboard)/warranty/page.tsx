@@ -366,7 +366,7 @@ export default function WarrantyPage() {
               </div>
               <h3 className="font-bold text-ink text-sm mb-0.5">Sin devoluciones por cambio de opinión</h3>
               <p className="text-xs text-muted">
-                Si el producto llega dañado, con una falla o distinto a lo publicado, lo atendemos por garantía: lo revisamos y lo reparamos, lo cambiamos o te devolvemos el dinero a tu saldo.
+                Si el producto llega dañado, con una falla o distinto a lo publicado, lo atendemos por garantía: lo revisamos y lo reparamos, lo cambiamos o te devolvemos el dinero en Puntos ES.
               </p>
             </div>
             <div className={`${adminCard} p-4`}>
@@ -388,7 +388,7 @@ export default function WarrantyPage() {
                 { step: 1, title: 'Inicia tu solicitud', desc: 'Selecciona el pedido y producto afectado, y si puedes agrega fotos' },
                 { step: 2, title: 'Describe el problema', desc: 'Cuéntanos qué sucedió con tu producto' },
                 { step: 3, title: 'Revisión', desc: 'Te respondemos en 1 a 2 días hábiles, aquí y por correo. Puede que pidamos fotos, un video o revisar el equipo en la tienda' },
-                { step: 4, title: 'Resolución', desc: 'Reparación, cambio o devolución del dinero a tu saldo, según lo que encontremos' },
+                { step: 4, title: 'Resolución', desc: 'Reparación, cambio o devolución del dinero en Puntos ES, según lo que encontremos' },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-3">
                   <div className="w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">

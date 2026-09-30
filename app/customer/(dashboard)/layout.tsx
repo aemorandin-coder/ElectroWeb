@@ -30,7 +30,7 @@ import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 
 const MENU = [
   { href: '/customer', icon: FiHome, label: 'Inicio' },
-  { href: '/customer/balance', icon: FaMoneyCheckAlt, label: 'Saldo y Pagos' },
+  { href: '/customer/balance', icon: FaMoneyCheckAlt, label: 'Puntos ES' },
   { href: '/customer/orders', icon: FiShoppingBag, label: 'Mis Pedidos' },
   { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Lista de Deseos' },
   { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },

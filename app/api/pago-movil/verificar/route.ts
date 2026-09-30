@@ -435,7 +435,7 @@ export async function POST(req: NextRequest) {
                             userId,
                             type: 'RECHARGE_APPROVED',
                             title: 'Recarga Aprobada Automaticamente',
-                            message: `Tu recarga de $${montoUsd.toFixed(2)} ha sido verificada y aprobada automaticamente. El saldo ya esta disponible.`,
+                            message: `Tu recarga de $${montoUsd.toFixed(2)} ha sido verificada y aprobada automáticamente. Tus Puntos ES ya están disponibles.`,
                             link: '/customer/balance',
                             icon: 'check-circle',
                         },
@@ -455,7 +455,7 @@ export async function POST(req: NextRequest) {
                                     <h2 style="margin:0 0 8px;color:#212529;font-size:22px;font-weight:700;">¡Recarga Aprobada!</h2>
                                     <p style="color:#6a6c6b;font-size:15px;line-height:1.7;">
                                         Tu recarga de <strong style="color:#10b981;">$${montoUsd.toFixed(2)} USD</strong>
-                                        fue verificada automáticamente con el Banco de Venezuela y ya está disponible en tu saldo.
+                                        fue verificada automáticamente con el Banco de Venezuela y ya está disponible en tus Puntos ES.
                                     </p>
                                 </div>
                                 <div style="background:#ecfdf5;border-radius:12px;padding:20px;margin:20px 0;border:1px solid #10b981;">
@@ -465,7 +465,7 @@ export async function POST(req: NextRequest) {
                                 <div style="text-align:center;margin:24px 0;">
                                     <a href="${process.env.NEXTAUTH_URL}/customer/balance"
                                        style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">
-                                        Ver Mi Saldo
+                                        Ver mis Puntos ES
                                     </a>
                                 </div>`,
                                 'Tu recarga fue procesada automáticamente'
@@ -480,7 +480,7 @@ export async function POST(req: NextRequest) {
                     emitAdminEvent({
                         type: 'RECHARGE_AUTO_APPROVED',
                         title: `Recarga aprobada por Pago Móvil · ${formatUSD(montoUsd)}`,
-                        summary: `El banco confirmó el pago de ${session.user.name || session.user.email || 'un cliente'} y el saldo se acreditó solo`,
+                        summary: `El banco confirmó el pago de ${session.user.name || session.user.email || 'un cliente'} y los Puntos ES se acreditaron solos`,
                         fields: [['Pagado', formatVES(montoVerificadoBs)], ['Tasa aplicada', formatVES(tasa)], ['Referencia', String(referencia).slice(0, 30)]],
                         link: '/admin/transactions',
                     });

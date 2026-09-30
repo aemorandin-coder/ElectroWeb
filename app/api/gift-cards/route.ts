@@ -149,7 +149,7 @@ export async function POST(request: Request) {
                 select: { id: true },
             });
             if (!payment && !payWithBalance) {
-                return NextResponse.json({ error: 'No encontramos el pago con saldo de esta gift card' }, { status: 402 });
+                return NextResponse.json({ error: 'No encontramos el pago con Puntos ES de esta gift card' }, { status: 402 });
             }
         }
 
@@ -268,7 +268,7 @@ export async function POST(request: Request) {
                 title: `Gift card comprada · ${formatUSD(amountUSD)}`,
                 summary: `${session.user.name || session.user.email || 'Un cliente'} compró una gift card${recipientName ? ` para ${String(recipientName).slice(0, 60)}` : ''}`,
                 fields: [
-                    ['Pago', payWithBalance ? 'Saldo' : payment ? 'Saldo (pago previo)' : null],
+                    ['Pago', payWithBalance ? 'Puntos ES' : payment ? 'Puntos ES (pago previo)' : null],
                     ['Diseño', giftCard.design?.name],
                     ['Para', recipientEmail ? String(recipientEmail).slice(0, 120) : null],
                 ],
@@ -311,7 +311,7 @@ export async function POST(request: Request) {
 
     } catch (error) {
         if (error instanceof InsufficientBalanceError) {
-            return NextResponse.json({ error: 'Saldo insuficiente para esta gift card' }, { status: 402 });
+            return NextResponse.json({ error: 'No te alcanzan los Puntos ES para esta gift card' }, { status: 402 });
         }
         if (error instanceof PaymentAlreadyUsedError) {
             return NextResponse.json({ error: 'Ese pago ya se usó para otra gift card' }, { status: 409 });

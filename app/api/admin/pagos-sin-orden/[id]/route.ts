@@ -59,10 +59,10 @@ export async function POST(request: NextRequest, { params }: Params) {
   if (v.createdAt.getTime() > Date.now() - MINUTOS_ANTES_DE_ACREDITAR * 60_000) {
     return NextResponse.json({ error: `Espera ${MINUTOS_ANTES_DE_ACREDITAR} minutos desde el pago: el cliente puede estar terminando su compra.` }, { status: 409 });
   }
-  const resultado = await acreditarPagoSinOrden(id, 'Pasado al saldo desde el panel', who);
+  const resultado = await acreditarPagoSinOrden(id, 'Pasado a Puntos ES desde el panel', who);
   if (!resultado.ok) return NextResponse.json({ error: resultado.mensaje }, { status: 409 });
   await registrarAccionAdmin(session, 'USER_BALANCE_MODIFIED', { type: 'USER', id: resultado.userId }, {
-    motivo: 'Pago Móvil sin orden pasado al saldo',
+    motivo: 'Pago Móvil sin orden pasado a Puntos ES',
     referencia: resultado.referencia,
     montoUSD: resultado.montoUSD,
   }, request);

@@ -15,11 +15,11 @@ import { useMontado } from '@/lib/hooks/useMontado';
 const ITEMS: Array<{ href: string; label: string; Icono: IconType }> = [
   { href: '/customer', label: 'Inicio', Icono: FiHome },
   { href: '/customer/orders', label: 'Pedidos', Icono: FiPackage },
-  { href: '/customer/balance', label: 'Saldo', Icono: FiCreditCard },
+  { href: '/customer/balance', label: 'Puntos ES', Icono: FiCreditCard },
   { href: '/customer/wishlist', label: 'Favoritos', Icono: FiHeart },
 ];
 
-const base = 'flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-semibold transition-colors';
+const base = 'flex h-14 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-xl text-xs font-semibold transition-colors';
 
 export default function CustomerMobileNavBar() {
   const mounted = useMontado();

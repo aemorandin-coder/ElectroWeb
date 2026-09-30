@@ -226,7 +226,7 @@ export default function ProcessingOverlay({
 
 // Pre-defined step configurations for common use cases
 export const GIFT_CARD_STEPS: ProcessingStep[] = [
-    { id: 1, title: 'Verificando Pago', description: 'Confirmando saldo disponible', icon: 'payment' },
+    { id: 1, title: 'Verificando Pago', description: 'Confirmando el pago', icon: 'payment' },
     { id: 2, title: 'Creando Gift Card', description: 'Generando código único', icon: 'gift' },
     { id: 3, title: 'Enviando al correo', description: 'A la velocidad de la luz', icon: 'email' },
     { id: 4, title: 'Redirigiendo', description: 'Al panel de usuario', icon: 'rocket' },

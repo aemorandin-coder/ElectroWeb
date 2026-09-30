@@ -228,7 +228,7 @@ function RegistroContenido({ google }: { google: boolean }) {
     >
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-ink">Crea tu cuenta</h1>
-        <p className="mt-1 text-sm text-muted">Para comprar, seguir tus pedidos y usar tu saldo.</p>
+        <p className="mt-1 text-sm text-muted">Para comprar, seguir tus pedidos y usar tus Puntos ES.</p>
       </div>
 
       {google && <BotonGoogle destino={destino ?? '/'} deshabilitado={enviando} />}

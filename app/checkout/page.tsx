@@ -383,13 +383,13 @@ export default function CheckoutPage() {
     }
 
     if ((paymentMode === 'DIRECT' || paymentMode === 'GIFT_CARD') && userBalance < finalTotal) {
-      setError('Debes canjear una Gift Card para tener saldo suficiente, o usa "Pagar con Saldo"');
+      setError('Canjea una gift card para tener Puntos ES suficientes, o elige "Pagar con Puntos ES"');
       setLoading(false);
       return;
     }
 
     if (paymentMode === 'WALLET' && userBalance < finalTotal) {
-      setError('Saldo insuficiente. Recarga tu saldo antes de completar el pedido.');
+      setError('No te alcanzan los Puntos ES. Recárgalos antes de completar el pedido.');
       setLoading(false);
       return;
     }
@@ -459,7 +459,7 @@ export default function CheckoutPage() {
       const createdOrders: Array<{ orderNumber: string }> = orderData.orders || [];
       // C-125: pagó de más con Pago Móvil: la diferencia ya está en su saldo
       if (orderData.sobrepago && typeof orderData.creditedUSD === 'number') {
-        toast.success(`Pagaste de más: ${formatUSD(orderData.creditedUSD)} pasaron a tu saldo.`, { duration: 6000 });
+        toast.success(`Pagaste de más: ${formatUSD(orderData.creditedUSD)} pasaron a tus Puntos ES.`, { duration: 6000 });
       }
       setProcessingStep(3);
 
@@ -602,7 +602,7 @@ export default function CheckoutPage() {
   // Redeem Gift Card
   const handleRedeemGiftCard = async () => {
     if (!giftCardInfo || Number(giftCardInfo.balanceUSD) <= 0) {
-      setGiftCardError('Esta Gift Card no tiene saldo disponible');
+      setGiftCardError('Esta gift card ya no tiene valor disponible');
       return;
     }
     setGiftCardLoading(true);
@@ -858,10 +858,10 @@ export default function CheckoutPage() {
                       <FontAwesomeIcon icon={faWallet} className="w-5 h-5" />
                     </div>
                     <h3 className={`font-bold text-base mb-1 ${paymentMode === 'WALLET' ? 'text-brand-600' : 'text-ink'}`}>
-                      Pagar con Saldo
+                      Pagar con Puntos ES
                     </h3>
                     <p className="text-xs text-muted leading-relaxed">
-                      Usa tu saldo en cuenta o recarga con Transferencia, Binance o Zelle
+                      Usa tus Puntos ES o recárgalos con Transferencia, Binance o Zelle
                     </p>
                     {paymentMode === 'WALLET' && (
                       <div className="absolute top-3 right-3 w-5 h-5 bg-brand-500 rounded-full flex items-center justify-center">
@@ -922,7 +922,7 @@ export default function CheckoutPage() {
                       Canjear Gift Card
                     </h3>
                     <p className="text-xs text-muted leading-relaxed">
-                      Aplica el saldo de una tarjeta de regalo a tu cuenta
+                      Pasa el valor de una tarjeta de regalo a tus Puntos ES
                     </p>
                     {(paymentMode === 'GIFT_CARD' || paymentMode === 'DIRECT') && (
                       <div className="absolute top-3 right-3 w-5 h-5 bg-brand-500 rounded-full flex items-center justify-center">
@@ -1045,11 +1045,11 @@ export default function CheckoutPage() {
                                   ? 'bg-success-strong text-white'
                                   : 'bg-subtle text-white'}`}
                                 >
-                                  {giftCardInfo.status === 'ACTIVE' ? 'Activa' : giftCardInfo.status === 'DEPLETED' ? 'Sin saldo' : giftCardInfo.status}
+                                  {giftCardInfo.status === 'ACTIVE' ? 'Activa' : giftCardInfo.status === 'DEPLETED' ? 'Usada' : giftCardInfo.status}
                                 </span>
                               </div>
                               <div className="text-center py-4">
-                                <p className="text-sm text-muted mb-1">Saldo disponible</p>
+                                <p className="text-sm text-muted mb-1">Valor disponible</p>
                                 <p className="text-3xl font-bold text-ink">
                                   {formatUSD(giftCardInfo.balanceUSD)}
                                 </p>
@@ -1111,16 +1111,16 @@ export default function CheckoutPage() {
 
                               {/* Balance Info */}
                               <div className="flex-1 text-center md:text-left">
-                                <p className="text-sm text-muted mb-1">Tu saldo disponible</p>
+                                <p className="text-sm text-muted mb-1">Tus Puntos ES</p>
                                 <p className="text-3xl font-bold text-ink mb-3">
                                   {formatUSD(userBalance)}
                                 </p>
 
-                                {/* Saldo suficiente badge */}
+                                {/* Puntos ES suficientes badge */}
                                 {userBalance >= finalTotal && (
                                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-success/15 text-success-strong text-xs font-bold rounded-full mb-3">
                                     <FiCheck className="w-3.5 h-3.5" />
-                                    Saldo suficiente
+                                    Puntos ES suficientes
                                   </span>
                                 )}
 
@@ -1134,7 +1134,7 @@ export default function CheckoutPage() {
                                   {userBalance >= finalTotal && (
                                     <div className="flex items-center justify-center md:justify-start gap-2 text-sm">
                                       <FiDollarSign className="w-4 h-4 text-success-strong" />
-                                      <span className="text-muted">Saldo restante después de la compra:</span>
+                                      <span className="text-muted">Te quedan después de la compra:</span>
                                       <span className="font-bold text-success-strong">{formatUSD(userBalance - finalTotal)}</span>
                                     </div>
                                   )}
@@ -1150,7 +1150,7 @@ export default function CheckoutPage() {
                                 </div>
                                 <div>
                                   <p className="font-bold text-ink">¡Gift Card canjeada!</p>
-                                  <p className="text-sm text-muted">El saldo se ha agregado a tu cuenta</p>
+                                  <p className="text-sm text-muted">El valor pasó a tus Puntos ES</p>
                                 </div>
                               </div>
                             </div>
@@ -1234,7 +1234,7 @@ export default function CheckoutPage() {
 
                       {/* Balance Info */}
                       <div className="flex-1 text-center md:text-left">
-                        <p className="text-sm text-muted font-medium mb-1">Tu saldo disponible</p>
+                        <p className="text-sm text-muted font-medium mb-1">Tus Puntos ES</p>
                         <p className="text-4xl font-bold text-ink mb-3 tracking-tight">
                           {formatPrice(userBalance)}
                         </p>
@@ -1247,7 +1247,7 @@ export default function CheckoutPage() {
                           {userBalance >= finalTotal ? (
                             <>
                               <FiCheck className="w-4 h-4" />
-                              Saldo suficiente
+                              Puntos ES suficientes
                             </>
                           ) : (
                             <>
@@ -1266,7 +1266,7 @@ export default function CheckoutPage() {
                           {userBalance >= finalTotal && (
                             <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-brand-500 font-medium animate-fadeIn">
                               <FiDollarSign className="w-4 h-4" />
-                              <span>Saldo restante después de la compra: <strong className="text-ink">{formatPrice(userBalance - finalTotal)}</strong></span>
+                              <span>Te quedan después de la compra: <strong className="text-ink">{formatPrice(userBalance - finalTotal)}</strong></span>
                             </div>
                           )}
                         </div>
@@ -1278,7 +1278,7 @@ export default function CheckoutPage() {
                       <div className="relative mt-6 pt-6 border-t border-line">
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                           <p className="text-sm text-muted">
-                            Recarga tu saldo para completar esta compra
+                            Recarga Puntos ES para completar esta compra
                           </p>
                           <button
                             type="button"
@@ -1286,7 +1286,7 @@ export default function CheckoutPage() {
                             className={`inline-flex items-center gap-2 ${adminPrimaryButton} px-5 py-2.5 font-bold`}
                           >
                             <FiPlus className="w-5 h-5" />
-                            Recargar Saldo
+                            Recargar Puntos ES
                           </button>
                         </div>
                       </div>
@@ -1299,7 +1299,7 @@ export default function CheckoutPage() {
                           <div>
                             <p className="font-bold text-brand-500 text-lg">Listo para pagar</p>
                             <p className="text-sm text-muted">
-                              Tu saldo cubre el total. Completa el pedido ahora.
+                              Tus Puntos ES cubren el total. Completa el pedido ahora.
                             </p>
                           </div>
                         </div>
@@ -1310,7 +1310,7 @@ export default function CheckoutPage() {
                       <FiInfo className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
                       <div className="leading-relaxed">
                         <span className="font-bold block text-brand-700 mb-0.5">¿Deseas pagar con Transferencia, Binance Pay, Zelle o Zinli?</span>
-                        Por seguridad de la plataforma, estos métodos se procesan recargando saldo a tu cuenta. Haz clic en <strong>Recargar Saldo</strong>, ingresa tu pago y una vez acreditado tu pedido se completará al instante.
+                        Por seguridad de la plataforma, estos métodos se procesan recargando Puntos ES a tu cuenta. Haz clic en <strong>Recargar Puntos ES</strong>, ingresa tu pago y una vez acreditado tu pedido se completará al instante.
                       </div>
                     </div>
                   </div>
@@ -1426,7 +1426,7 @@ export default function CheckoutPage() {
               {paymentMode === 'WALLET' && userBalance < finalTotal && (
                 <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
                   <FiAlertCircle className="w-3 h-3" />
-                  Saldo insuficiente. Recarga tu saldo para completar el pedido.
+                  No te alcanzan los Puntos ES. Recárgalos para completar el pedido.
                 </p>
               )}
             </form>
@@ -1764,7 +1764,7 @@ export default function CheckoutPage() {
               <div>
                 <h3 className="font-bold text-base mb-2">5. Métodos de Pago</h3>
                 <p className="leading-relaxed text-ink-soft">
-                  Aceptamos transferencias bancarias, pago móvil, criptomonedas y tu saldo para compras. Los pedidos se procesan una vez confirmado el pago.
+                  Aceptamos transferencias bancarias, pago móvil, criptomonedas y tus Puntos ES. Los pedidos se procesan una vez confirmado el pago.
                 </p>
               </div>
 

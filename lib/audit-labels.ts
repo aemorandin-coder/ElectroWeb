@@ -12,7 +12,7 @@ export const ETIQUETA_ACCION: Record<string, string> = {
     USER_UPDATED: 'Usuario modificado',
     USER_DELETED: 'Usuario eliminado',
     USER_ROLE_CHANGED: 'Rol cambiado',
-    USER_BALANCE_MODIFIED: 'Saldo cargado a mano',
+    USER_BALANCE_MODIFIED: 'Puntos ES cargados a mano',
     PRODUCT_CREATED: 'Producto creado',
     PRODUCT_UPDATED: 'Producto modificado',
     PRODUCT_DELETED: 'Producto eliminado',

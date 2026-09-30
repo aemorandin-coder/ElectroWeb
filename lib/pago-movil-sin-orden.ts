@@ -51,7 +51,7 @@ export async function acreditarPagoSinOrden(verificacionId: string, motivo: stri
         status: 'COMPLETED',
         amount: montoDecimal(montoUSD),
         currency: 'USD',
-        description: `Pago Móvil sin orden (ref. ${v.referencia}): pasado a tu saldo`,
+        description: `Pago Móvil sin orden (ref. ${v.referencia}): pasado a tus Puntos ES`,
         reference: v.referencia,
         paymentMethod: 'MOBILE_PAYMENT',
         metadata: JSON.stringify({ pagoMovilVerificacionId: v.id, montoVES, tasa, motivo: motivo.slice(0, 300), porAdmin: porAdmin ?? null }),
@@ -74,14 +74,14 @@ export async function acreditarPagoSinOrden(verificacionId: string, motivo: stri
     void createNotification({
       userId: resultado.userId,
       type: 'BALANCE_RECHARGED',
-      title: 'Tu pago pasó a tu saldo',
-      message: `No pudimos crear tu pedido, así que tu Pago Móvil (ref. ${resultado.referencia}) quedó como saldo: ${formatUSD(resultado.montoUSD)}. Puedes usarlo en tu próxima compra.`,
+      title: 'Tu pago pasó a tus Puntos ES',
+      message: `No pudimos crear tu pedido, así que tu Pago Móvil (ref. ${resultado.referencia}) quedó en tus Puntos ES: ${formatUSD(resultado.montoUSD)}. Puedes usarlo en tu próxima compra.`,
       link: '/customer/balance',
     });
     emitAdminEvent({
       type: 'ORDER_PAYMENT_ORPHAN',
       title: `Pago sin orden · ref. ${resultado.referencia}`,
-      summary: `Un Pago Móvil de compra no llegó a ser orden y se pasó al saldo del cliente${porAdmin ? ' desde el panel' : ''}.`,
+      summary: `Un Pago Móvil de compra no llegó a ser orden y se pasó a los Puntos ES del cliente${porAdmin ? ' desde el panel' : ''}.`,
       fields: [
         ['Acreditado', formatUSD(resultado.montoUSD)],
         ['Motivo', motivo],
@@ -97,7 +97,7 @@ export function avisarPagoSinOrden(referencia: string, montoVES: number, motivo:
   emitAdminEvent({
     type: 'ORDER_PAYMENT_ORPHAN',
     title: `Pago sin orden · ref. ${referencia}`,
-    summary: 'Un cliente pagó por Pago Móvil y la orden no se creó todavía. Si no la completa, pásalo a su saldo desde Transacciones.',
+    summary: 'Un cliente pagó por Pago Móvil y la orden no se creó todavía. Si no la completa, pásalo a sus Puntos ES desde Transacciones.',
     fields: [
       ['Monto', formatVES(montoVES)],
       ['Motivo', motivo],

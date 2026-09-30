@@ -291,7 +291,7 @@ Por favor necesito ayuda para verificar mi pago.
                 return (
                     <>
                         <FiCheck className="w-5 h-5" />
-                        <span>Verificar Pago y Confirmar Saldo</span>
+                        <span>Verificar pago y acreditar Puntos ES</span>
                     </>
                 );
         }
@@ -537,7 +537,7 @@ Por favor necesito ayuda para verificar mi pago.
                         >
                             {verificationState === 'success'
                                 ? resultado.autoApproved
-                                    ? 'Pago Verificado y Saldo Acreditado'
+                                    ? 'Pago verificado y Puntos ES acreditados'
                                     : 'Pago Verificado'
                                 : verificationState === 'duplicate'
                                     ? 'Referencia Ya Utilizada'

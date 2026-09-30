@@ -193,7 +193,7 @@ export function validateAndSanitizePaymentMethod(input: unknown): {
       const walletAddress = typeof raw.walletAddress === 'string' ? raw.walletAddress.trim() : '';
       const network = typeof raw.network === 'string' ? raw.network.trim() : '';
 
-      if (!walletAddress) return { success: false, error: 'Indica la dirección de la billetera (wallet)' };
+      if (!walletAddress) return { success: false, error: 'Indica la dirección de depósito cripto' };
       if (!network) return { success: false, error: 'Indica la red de la criptomoneda (ej. USDT TRC20, BEP20)' };
 
       cleaned.walletAddress = walletAddress;

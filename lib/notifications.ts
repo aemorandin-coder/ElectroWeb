@@ -138,7 +138,7 @@ export async function notifyRechargeApproved(userId: string, amount: number) {
     userId,
     type: 'RECHARGE_APPROVED',
     title: 'Recarga Aprobada',
-    message: `Tu recarga de $${amount.toFixed(2)} ha sido aprobada. El saldo ya está disponible en tu cuenta.`,
+    message: `Tu recarga de $${amount.toFixed(2)} ha sido aprobada. Tus Puntos ES ya están disponibles.`,
     link: '/customer/balance',
     icon: 'dollar-sign',
   });

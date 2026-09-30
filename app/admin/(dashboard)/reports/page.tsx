@@ -541,7 +541,7 @@ export default function ReportsPage() {
                                     <div>
                                         <p className="text-sm font-semibold text-deal">{criticas} {criticas === 1 ? 'evento crítico' : 'eventos críticos'} en el período</p>
                                         <p className="text-sm text-ink-soft">
-                                            Referencias de pago repetidas, intentos de fraude con saldo o gift cards, cambios de rol y borrado de usuarios.
+                                            Referencias de pago repetidas, intentos de fraude con Puntos ES o gift cards, cambios de rol y borrado de usuarios.
                                             Filtra por &quot;Alertas&quot; para verlos.
                                         </p>
                                     </div>
@@ -557,7 +557,7 @@ export default function ReportsPage() {
                                 ))}
                             </div>
                             <p className="text-xs text-muted">
-                                Normal: trabajo del día (inicios de sesión, precios, aprobaciones). Atención: contraseñas incorrectas, bloqueos, cancelaciones, saldo cargado a mano.
+                                Normal: trabajo del día (inicios de sesión, precios, aprobaciones). Atención: contraseñas incorrectas, bloqueos, cancelaciones, Puntos ES cargados a mano.
                                 Crítica: lo que alguien debe revisar hoy.
                             </p>
 
@@ -637,7 +637,7 @@ export default function ReportsPage() {
                                 <Stat label="Ventas por referidos" icon={FiShoppingCart} value={formatUSD(referrals.approvedRevenue.gross)}
                                     source="Monto de las compras con comisión aprobada en el período." />
                                 <Stat label="Comisiones aprobadas" icon={FiDollarSign} value={formatUSD(referrals.approvedRevenue.commission)}
-                                    source="Comisiones acreditadas como saldo en el período." />
+                                    source="Comisiones acreditadas como Puntos ES en el período." />
                             </div>
                             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                                 <Panel title="Comisiones por promotor (USD)" icon={FiAward} source="Comisiones aprobadas, desde siempre.">

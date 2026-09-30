@@ -39,7 +39,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   ]);
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
-  const description = settings?.productsMetaDescription || 'Tecnología, gaming, gift cards y saldo digital con envíos a toda Venezuela. Precios en dólares y bolívares.';
+  const description = settings?.productsMetaDescription || 'Tecnología, gaming, gift cards y recargas digitales con envíos a toda Venezuela. Precios en dólares y bolívares.';
   const shareImage = settings?.productsMetaImage || settings?.logo || null;
   const absoluteShareImage = shareImage && (shareImage.startsWith('http') ? shareImage : `${baseUrl}${shareImage.startsWith('/') ? '' : '/'}${shareImage}`);
 

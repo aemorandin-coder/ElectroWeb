@@ -272,7 +272,7 @@ export default function CheckoutPagoMovilForm({
               <p className="text-sm text-ink-soft">
                 {conciliacion.estado === 'EXACTO' && 'El banco confirmó el monto exacto. Ya puedes confirmar tu pedido.'}
                 {conciliacion.estado === 'REDONDEO' && `Hay una diferencia de ${formatVES(Math.abs(conciliacion.diferenciaBs))}: es muy pequeña, no tienes que hacer nada.`}
-                {conciliacion.estado === 'SOBREPAGO' && `Pagaste ${formatVES(conciliacion.diferenciaBs)} de más. Al confirmar tu pedido pasamos ${formatUSD(conciliacion.diferenciaUSD)} a tu saldo.`}
+                {conciliacion.estado === 'SOBREPAGO' && `Pagaste ${formatVES(conciliacion.diferenciaBs)} de más. Al confirmar tu pedido pasamos ${formatUSD(conciliacion.diferenciaUSD)} a tus Puntos ES.`}
                 {conciliacion.estado === 'FALTA' && `Recibimos ${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}. Haz otro Pago Móvil solo por la diferencia; lo que ya pagaste queda registrado.`}
               </p>
               <ul className="space-y-0.5 pt-1 text-xs text-muted">
@@ -472,7 +472,7 @@ export default function CheckoutPagoMovilForm({
                     className={inputClass}
                   />
                   <p className="mt-1 text-xs text-muted">
-                    Escríbelo exacto, como sale en tu comprobante. Si pagaste de más, la diferencia va a tu saldo; si falta algo, pagas solo eso.
+                    Escríbelo exacto, como sale en tu comprobante. Si pagaste de más, la diferencia va a tus Puntos ES; si falta algo, pagas solo eso.
                   </p>
                 </div>
               ) : (

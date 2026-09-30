@@ -150,7 +150,7 @@ export default function ConsultarPagoMovil() {
                         {resultado.usos.map((u, i) => (
                           <li key={i}>
                             {u.cliente?.name || u.cliente?.email || 'Cliente'} · {formatVES(u.montoBs)} ·{' '}
-                            {u.orden ? `orden ${u.orden}` : u.recarga ? 'recarga de saldo' : u.archivado ? `archivado: ${u.archivado}` : 'sin orden todavía'}
+                            {u.orden ? `orden ${u.orden}` : u.recarga ? 'recarga de Puntos ES' : u.archivado ? `archivado: ${u.archivado}` : 'sin orden todavía'}
                             <span className="block text-xs opacity-80">{fecha.format(new Date(u.fecha))}</span>
                           </li>
                         ))}

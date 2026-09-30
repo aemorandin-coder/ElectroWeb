@@ -272,7 +272,7 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
       userId,
       type: 'ORDER_PAID',
       title: 'Pago Confirmado',
-      message: `El pago de tu orden #${order.orderNumber} quedó pagado con tu saldo.`,
+      message: `El pago de tu orden #${order.orderNumber} quedó pagado con tus Puntos ES.`,
       link: `/customer/orders`,
       icon: 'payment'
     });
@@ -417,7 +417,7 @@ export async function POST(request: NextRequest) {
       if (!(creditedUSD > 0)) return NextResponse.json({ error, details }, { status: 400 });
       return NextResponse.json(
         {
-          error: `No pudimos crear tu pedido: ${[error, ...(details ?? [])].join(' ')} Tu Pago Móvil no se perdió: pasamos ${formatUSD(creditedUSD)} a tu saldo para que lo uses en tu compra.`,
+          error: `No pudimos crear tu pedido: ${[error, ...(details ?? [])].join(' ')} Tu Pago Móvil no se perdió: pasamos ${formatUSD(creditedUSD)} a tus Puntos ES para que los uses en tu compra.`,
           creditedUSD,
         },
         { status: 400 }
@@ -581,7 +581,7 @@ export async function POST(request: NextRequest) {
           : { count: 0 };
 
         if (!userBalance || debited.count === 0) {
-          throw new OrderInputError('Saldo insuficiente para esta compra');
+          throw new OrderInputError('No te alcanzan los Puntos ES para esta compra');
         }
         balanceId = userBalance.id;
       }
@@ -750,7 +750,7 @@ export async function POST(request: NextRequest) {
       // de Andrés del 28/09 para los Pagos Móvil sin orden). Lo absorbido por redondeo queda anotado en la orden
       if (conciliacion && conciliacion.estado !== 'EXACTO') {
         const nota = conciliacion.estado === 'SOBREPAGO'
-          ? `Pago Móvil: pagó ${formatVES(conciliacion.diferenciaBs)} de más (${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}). ${formatUSD(sobranteUSD)} pasaron a su saldo.`
+          ? `Pago Móvil: pagó ${formatVES(conciliacion.diferenciaBs)} de más (${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}). ${formatUSD(sobranteUSD)} pasaron a sus Puntos ES.`
           : `Pago Móvil: diferencia de ${formatVES(conciliacion.diferenciaBs)} absorbida (menor que la comisión mínima de un Pago Móvil; ${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}).`;
         await tx.order.update({ where: { id: orders[0].id }, data: { adminNotes: nota } });
       }
@@ -763,7 +763,7 @@ export async function POST(request: NextRequest) {
             status: 'COMPLETED',
             amount: montoDecimal(sobranteUSD),
             currency: 'USD',
-            description: `Pagaste de más en ${orders[0].orderNumber} (ref. ${refsTexto}): pasado a tu saldo`,
+            description: `Pagaste de más en ${orders[0].orderNumber} (ref. ${refsTexto}): pasado a tus Puntos ES`,
             reference: referencia,
             paymentMethod: 'MOBILE_PAYMENT',
             metadata: JSON.stringify({ sobrepago: true, orderId: orders[0].id, orderNumber: orders[0].orderNumber, pagoMovilVerificacionIds: mobilePaymentVerificationIds, conciliacion }),
@@ -796,8 +796,8 @@ export async function POST(request: NextRequest) {
       void createNotification({
         userId,
         type: 'BALANCE_RECHARGED',
-        title: 'Pagaste de más: lo pasamos a tu saldo',
-        message: `En tu pedido ${orders[0].orderNumber} transferiste ${formatVES(conciliacion.diferenciaBs)} de más. Ya tienes ${formatUSD(sobranteUSD)} en tu saldo para tu próxima compra.`,
+        title: 'Pagaste de más: lo pasamos a tus Puntos ES',
+        message: `En tu pedido ${orders[0].orderNumber} transferiste ${formatVES(conciliacion.diferenciaBs)} de más. Ya tienes ${formatUSD(sobranteUSD)} en tus Puntos ES para tu próxima compra.`,
         link: '/customer/balance',
       });
     }
@@ -1039,7 +1039,7 @@ export async function PATCH(request: NextRequest) {
                 status: 'COMPLETED',
                 amount: montoDecimal(total),
                 currency: 'USD',
-                description: `Saldo devuelto por la cancelación de la orden #${orden.orderNumber}`,
+                description: `Puntos ES devueltos por la cancelación de la orden #${orden.orderNumber}`,
                 reference: orden.orderNumber,
                 paymentMethod: 'WALLET',
               },
@@ -1255,7 +1255,7 @@ export async function PATCH(request: NextRequest) {
 
         case 'CANCELLED': {
           const avisoSaldo = reintegro > 0
-            ? ` Devolvimos ${formatUSD(reintegro)} a tu saldo para tu próxima compra.`
+            ? ` Devolvimos ${formatUSD(reintegro)} a tus Puntos ES para tu próxima compra.`
             : '';
           await createNotification({
             userId: oldOrder.userId,
@@ -1270,9 +1270,9 @@ export async function PATCH(request: NextRequest) {
             const bloqueSaldo = reintegro > 0
               ? `
               <div style="background:#f0f7f4;border-left:4px solid #047857;padding:15px 20px;margin:20px 0;border-radius:0 8px 8px 0;">
-                <p style="margin:0;color:#047857;font-size:14px;font-weight:600;">Saldo devuelto</p>
+                <p style="margin:0;color:#047857;font-size:14px;font-weight:600;">Puntos ES devueltos</p>
                 <p style="margin:8px 0 0;color:#047857;font-size:14px;">
-                  Devolvimos ${escaparHtml(formatUSD(reintegro))} a tu saldo de la tienda para tu próxima compra.
+                  Devolvimos ${escaparHtml(formatUSD(reintegro))} a tus Puntos ES para tu próxima compra.
                 </p>
               </div>`
               : '';
@@ -1374,7 +1374,7 @@ export async function PATCH(request: NextRequest) {
           ['Total', formatUSD(Number(oldOrder.totalUSD))],
           ['Motivo', motivo.slice(0, 300)],
           ['Cliente', order.user?.name || order.user?.email],
-          ['Saldo devuelto', reintegro > 0 ? formatUSD(reintegro) : null],
+          ['Puntos ES devueltos', reintegro > 0 ? formatUSD(reintegro) : null],
         ],
         link: '/admin/orders',
       });

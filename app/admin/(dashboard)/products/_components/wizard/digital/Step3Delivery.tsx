@@ -66,7 +66,7 @@ export default function DigitalStep3Delivery({ data, onChange, errors }: StepPro
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Vista previa</p>
             <p className="mb-1.5 text-sm font-semibold text-ink">{data.accountFieldLabel || 'Nombre del campo'} <span className="text-deal">*</span></p>
             <div className="flex h-11 items-center rounded-lg border border-line bg-white px-3 text-sm text-muted">{data.accountFieldLabel || 'Nombre del campo'}</div>
-            <p className="mt-1 text-xs text-muted">{data.accountFieldHint || 'Recargamos el saldo directo a esta cuenta. Revisa que esté bien escrita.'}</p>
+            <p className="mt-1 text-xs text-muted">{data.accountFieldHint || 'Hacemos la recarga directo en esta cuenta. Revisa que esté bien escrita.'}</p>
           </div>
         </div>
       )}

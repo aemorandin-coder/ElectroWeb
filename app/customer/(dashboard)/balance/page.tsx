@@ -124,7 +124,7 @@ export default function BalancePage() {
       }
     } catch (error) {
       console.error('Error fetching balance:', error);
-      toast.error('No se pudo cargar el saldo');
+      toast.error('No se pudieron cargar tus Puntos ES');
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ export default function BalancePage() {
   // C-127: cuando el equipo aprueba o rechaza una recarga (o el banco la confirma), el saldo se actualiza solo
   useTiempoReal((evento) => {
     if (evento.tipo !== 'payment:verified' || evento.contexto !== 'RECHARGE') return;
-    if (evento.transactionId && !showRechargeModal) toast.success(evento.aprobado ? 'Tu recarga fue aprobada: el saldo ya está disponible.' : 'Tu recarga fue rechazada. Revisa el motivo en tus movimientos.');
+    if (evento.transactionId && !showRechargeModal) toast.success(evento.aprobado ? 'Tu recarga fue aprobada: tus Puntos ES ya están disponibles.' : 'Tu recarga fue rechazada. Revisa el motivo en tus movimientos.');
     void fetchBalance();
   }, { onReconectar: () => void fetchBalance() });
 
@@ -181,7 +181,7 @@ export default function BalancePage() {
             <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
               <FiDollarSign className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="text-white/80 text-xs font-medium tracking-wide uppercase">Saldo Disponible</span>
+            <span className="text-white/80 text-xs font-medium tracking-wide uppercase">Puntos ES disponibles</span>
           </div>
 
           <div className="mb-3">
@@ -217,7 +217,7 @@ export default function BalancePage() {
             className="w-full py-3 rounded-xl font-bold text-sm bg-white text-brand-700 shadow-sm flex items-center justify-center gap-2 hover:bg-surface active:scale-[0.98] transition-all"
           >
             <FiPlus className="w-4 h-4" />
-            Recargar Saldo
+            Recargar Puntos ES
           </button>
         </div>
 
@@ -322,9 +322,9 @@ export default function BalancePage() {
                 <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <FiDollarSign className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-white" />
                 </div>
-                <h1 className="text-lg lg:text-xl font-bold">Saldo y Pagos</h1>
+                <h1 className="text-lg lg:text-xl font-bold">Puntos ES</h1>
               </div>
-              <p className="text-white/80 text-xs lg:text-sm hidden sm:block">Gestiona tu saldo y realiza recargas</p>
+              <p className="text-white/80 text-xs lg:text-sm hidden sm:block">Tus Puntos ES para comprar en la tienda y sus recargas</p>
             </div>
             <button
               onClick={() => setShowRechargeModal(true)}
@@ -332,7 +332,7 @@ export default function BalancePage() {
             >
               <FiPlus className="w-4 h-4" />
               <span className="sm:hidden">Recargar</span>
-              <span className="hidden sm:inline">Recargar Saldo</span>
+              <span className="hidden sm:inline">Recargar Puntos ES</span>
             </button>
           </div>
         </div>
@@ -340,7 +340,7 @@ export default function BalancePage() {
         {/* Balance Cards */}
         <div className="grid grid-cols-3 gap-2 lg:gap-3">
           <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-line shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
-            <p className="text-xs font-bold text-muted uppercase tracking-widest mb-1">Saldo</p>
+            <p className="text-xs font-bold text-muted uppercase tracking-widest mb-1">Puntos ES</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
               <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap">
                 {formatUSD(userBalance?.balance || 0)}

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     type: 'ORDER_CREATED',
     title: 'Mensaje de prueba',
     summary: `${session.user.name || session.user.email} probó la conexión desde el panel. Así se ven los avisos.`,
-    fields: [['Total', '$289,00 (ejemplo)'], ['Pago', 'Saldo · confirmado'], ['Entrega', 'Retiro en tienda']],
+    fields: [['Total', '$289,00 (ejemplo)'], ['Pago', 'Puntos ES · confirmado'], ['Entrega', 'Retiro en tienda']],
   });
   const deliveries = await sendToTelegramChats(html, {}, chatDbId);
   if (deliveries.length === 0) return NextResponse.json({ error: 'No hay chats activos. Conecta uno primero.' }, { status: 409 });

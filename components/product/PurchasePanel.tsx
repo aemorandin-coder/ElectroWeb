@@ -44,7 +44,7 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
   const isManual = isDigital && product.deliveryMethod === 'MANUAL';
   const platform = getPlatform(product.digitalPlatform);
   const accountLabel = product.accountFieldLabel || platform?.accountFieldLabel || 'Usuario o cuenta a recargar';
-  const accountHint = product.accountFieldHint || platform?.accountFieldHint || 'Recargamos el saldo directo a esta cuenta. Revisa que esté bien escrita.';
+  const accountHint = product.accountFieldHint || platform?.accountFieldHint || 'Hacemos la recarga directo en esta cuenta. Revisa que esté bien escrita.';
 
   const [selected, setSelected] = useState<PublicDigitalVariant | null>(variants[0] ?? null);
   const [quantity, setQuantity] = useState(1);

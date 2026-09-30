@@ -158,6 +158,6 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('Error adding balance:', error);
-        return NextResponse.json({ error: 'Error al agregar saldo' }, { status: 500 });
+        return NextResponse.json({ error: 'Error al agregar Puntos ES' }, { status: 500 });
     }
 }

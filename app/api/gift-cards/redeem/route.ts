@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
         // Check balance
         const balance = Number(giftCard.balanceUSD);
         if (balance <= 0) {
-            return NextResponse.json({ error: 'Esta Gift Card no tiene saldo disponible' }, { status: 400 });
+            return NextResponse.json({ error: 'Esta gift card ya no tiene valor disponible' }, { status: 400 });
         }
 
         // ATÓMICO (C-71): la tarjeta se marca canjeada con una actualización condicional, y el saldo se incrementa.
@@ -335,14 +335,14 @@ export async function POST(request: NextRequest) {
         emitAdminEvent({
             type: 'GIFT_CARD_REDEEMED',
             title: `Gift card canjeada · ${formatUSD(balance)}`,
-            summary: `${session.user.name || session.user.email || 'Un cliente'} pasó una gift card a su saldo`,
-            fields: [['Tarjeta', `termina en ${giftCard.code.slice(-4)}`], ['Saldo nuevo del cliente', formatUSD(newBalance)]],
+            summary: `${session.user.name || session.user.email || 'Un cliente'} pasó una gift card a sus Puntos ES`,
+            fields: [['Tarjeta', `termina en ${giftCard.code.slice(-4)}`], ['Puntos ES del cliente ahora', formatUSD(newBalance)]],
             link: '/admin/gift-cards',
         });
 
         return NextResponse.json({
             success: true,
-            message: `¡Gift Card canjeada exitosamente! Se acreditaron $${balance.toFixed(2)} a tu saldo.`,
+            message: `Gift card canjeada: se acreditaron ${formatUSD(balance)} a tus Puntos ES.`,
             amountRedeemed: balance,
             newBalance: newBalance,
             transactionId: result.walletTransaction.id
@@ -361,7 +361,7 @@ export async function POST(request: NextRequest) {
 
         if (error.message === 'NO_BALANCE') {
             return NextResponse.json({
-                error: 'Esta Gift Card no tiene saldo disponible'
+                error: 'Esta gift card ya no tiene valor disponible'
             }, { status: 400 });
         }
 

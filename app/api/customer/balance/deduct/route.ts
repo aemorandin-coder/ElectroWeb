@@ -84,14 +84,14 @@ export async function POST(request: NextRequest) {
         });
 
         if (!userBalance) {
-            return NextResponse.json({ error: 'No tienes saldo disponible' }, { status: 400 });
+            return NextResponse.json({ error: 'No tienes Puntos ES disponibles' }, { status: 400 });
         }
 
         const previousBalance = Number(userBalance.balance);
 
         if (previousBalance < amount) {
             return NextResponse.json({
-                error: 'Saldo insuficiente',
+                error: 'No te alcanzan los Puntos ES',
                 currentBalance: previousBalance,
                 required: amount,
             }, { status: 400 });
@@ -143,11 +143,11 @@ export async function POST(request: NextRequest) {
         // Handle optimistic locking failure (balance changed during transaction)
         if ((error as { code?: string })?.code === 'P2025') {
             return NextResponse.json({
-                error: 'El saldo cambió durante la operación. Por favor, intenta de nuevo.',
+                error: 'Tus Puntos ES cambiaron durante la operación. Por favor, intenta de nuevo.',
                 retry: true,
             }, { status: 409 }); // Conflict
         }
 
-        return NextResponse.json({ error: 'Error al deducir saldo' }, { status: 500 });
+        return NextResponse.json({ error: 'Error al descontar Puntos ES' }, { status: 500 });
     }
 }

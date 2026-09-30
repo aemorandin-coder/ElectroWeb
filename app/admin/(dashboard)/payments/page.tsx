@@ -367,7 +367,7 @@ export default function PaymentsPage() {
         <div className="space-y-6">
             <PageHeader
                 title="Métodos de Pago"
-                description="Administra las cuentas y métodos para recargas de saldo y pagos directos."
+                description="Administra las cuentas y métodos para recargas de Puntos ES y pagos directos."
                 actions={
                     <button
                         type="button"
@@ -537,7 +537,7 @@ export default function PaymentsPage() {
                                         )}
                                         {method.walletAddress && (
                                             <div className="flex justify-between">
-                                                <span className="text-muted">Wallet:</span>
+                                                <span className="text-muted">Dirección:</span>
                                                 <span className="font-mono text-ink truncate ml-2 max-w-[160px]">{method.walletAddress}</span>
                                             </div>
                                         )}
@@ -681,7 +681,7 @@ export default function PaymentsPage() {
                                             <option value="BANK_TRANSFER">Transferencia Bancaria (Venezuela)</option>
                                             <option value="BINANCE_PAY">Binance Pay (Cripto sin comisión)</option>
                                             <option value="ZELLE">Zelle (Estados Unidos)</option>
-                                            <option value="ZINLI">Zinli (Billetera USD)</option>
+                                            <option value="ZINLI">Zinli (USD)</option>
                                             <option value="PAYPAL">PayPal</option>
                                             <option value="MERCANTIL_PANAMA">Mercantil Panamá</option>
                                             <option value="CRYPTO">Criptomonedas (USDT-TRC20, etc.)</option>
@@ -1006,10 +1006,10 @@ export default function PaymentsPage() {
                                     {formData.type === 'CRYPTO' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
                                             <h4 className="text-xs font-bold text-warning-strong uppercase tracking-wider">
-                                                Datos de Billetera Cripto
+                                                Datos cripto
                                             </h4>
                                             <div>
-                                                <label className="block text-xs font-medium text-ink mb-1">Dirección de Wallet</label>
+                                                <label className="block text-xs font-medium text-ink mb-1">Dirección de depósito</label>
                                                 <input
                                                     type="text"
                                                     value={formData.walletAddress || ''}
@@ -1288,7 +1288,7 @@ export default function PaymentsPage() {
                                                 )}
                                                 {formData.walletAddress && (
                                                     <div className="flex items-center justify-between py-0.5 border-b border-line">
-                                                        <span className="text-muted">Wallet:</span>
+                                                        <span className="text-muted">Dirección:</span>
                                                         <span className="font-mono text-ink truncate ml-2 max-w-[130px]">{formData.walletAddress}</span>
                                                     </div>
                                                 )}

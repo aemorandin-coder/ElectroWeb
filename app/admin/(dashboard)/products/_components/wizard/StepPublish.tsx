@@ -4,14 +4,16 @@ import Image from 'next/image';
 import { FiAlertCircle, FiCheck, FiMonitor, FiTruck, FiZap } from 'react-icons/fi';
 import { formatUSD } from '@/lib/currency';
 import { DELIVERY_MODES, getPlatform } from '@/lib/digital-catalog';
-import type { WizardData } from './types';
-import { wizardCard, wizardPrimaryButton, wizardSecondaryButton, wizardSectionHelp, wizardSectionTitle } from './ui';
+import { SPECS_RECOMENDADAS, leerNumero, type WizardData } from './types';
+import { wizardPrimaryButton, wizardSecondaryButton, wizardSectionHelp, wizardSectionTitle } from './ui';
 
 interface Props {
   data: WizardData;
   errors: Record<string, string>;
   isLoading: boolean;
   isEditing: boolean;
+  /** Estado con el que se cargó el producto (al editar): cambia qué dicen los botones */
+  estadoActual?: 'PUBLISHED' | 'DRAFT' | 'ARCHIVED';
   onPublish: () => void;
   onDraft: () => void;
 }
@@ -19,7 +21,7 @@ interface Props {
 const num = (value: string) => Number.parseFloat((value || '').replace(',', '.'));
 
 /** Último paso: vista previa como tarjeta de la tienda, lista de verificación y publicar o guardar borrador. */
-export default function StepPublish({ data, errors, isLoading, isEditing, onPublish, onDraft }: Props) {
+export default function StepPublish({ data, errors, isLoading, isEditing, estadoActual, onPublish, onDraft }: Props) {
   const mainImage = data.images[0] ?? null;
   const isPhysical = data.productType === 'PHYSICAL';
   const activeVariants = data.digitalVariants.filter((v) => v.isActive && num(v.priceUSD) > 0);
@@ -28,15 +30,17 @@ export default function StepPublish({ data, errors, isLoading, isEditing, onPubl
   const hasDeal = isPhysical && comparePrice > displayPrice && displayPrice > 0;
   const platform = getPlatform(data.digitalPlatform);
 
-  const checks = isPhysical
+  // C-134: "recomendado" no frena la publicación (las especificaciones); lo demás sí
+  const checks: Array<{ ok: boolean; label: string; recomendado?: boolean }> = isPhysical
     ? [
         { ok: Boolean(data.name.trim()), label: 'Nombre del producto' },
         { ok: Boolean(data.sku.trim()), label: 'SKU' },
         { ok: Boolean(data.categoryId), label: 'Categoría' },
         { ok: data.images.length > 0, label: 'Al menos una imagen' },
         { ok: displayPrice > 0, label: 'Precio de venta' },
-        { ok: num(data.weightKg) > 0, label: 'Peso (para calcular el envío)' },
-        { ok: Object.keys(data.specifications).length >= 3, label: 'Al menos 3 especificaciones' },
+        { ok: leerNumero(data.weightKg) > 0, label: 'Peso (para calcular el envío)' },
+        { ok: [data.dimensionLength, data.dimensionWidth, data.dimensionHeight].every((m) => leerNumero(m) > 0), label: 'Medidas de la caja' },
+        { ok: Object.keys(data.specifications).length >= SPECS_RECOMENDADAS, label: `${SPECS_RECOMENDADAS} especificaciones o más`, recomendado: true },
       ]
     : [
         { ok: Boolean(data.name.trim()), label: 'Nombre del producto' },
@@ -47,7 +51,8 @@ export default function StepPublish({ data, errors, isLoading, isEditing, onPubl
         { ok: activeVariants.length > 0, label: 'Al menos un monto activo con precio' },
         { ok: data.deliveryMethod !== 'MANUAL' || Boolean(data.accountFieldLabel.trim()), label: 'Dato de cuenta para la recarga directa' },
       ];
-  const missing = checks.filter((c) => !c.ok).length;
+  const missing = checks.filter((c) => !c.ok && !c.recomendado).length;
+  const publicado = estadoActual === 'PUBLISHED';
 
   return (
     <div className="space-y-8">
@@ -62,7 +67,7 @@ export default function StepPublish({ data, errors, isLoading, isEditing, onPubl
           <article className="max-w-xs overflow-hidden rounded-xl border border-line bg-white">
             <div className="relative aspect-square bg-white">
               {mainImage ? (
-                <Image src={mainImage} alt={data.name || 'Producto'} fill sizes="320px" className="object-contain p-3" />
+                <Image src={mainImage} alt={data.name || 'Producto'} fill sizes="320px" className="object-contain" />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center text-muted">
                   {isPhysical ? <FiTruck className="mb-2 h-10 w-10" aria-hidden="true" /> : <FiMonitor className="mb-2 h-10 w-10" aria-hidden="true" />}
@@ -110,11 +115,11 @@ export default function StepPublish({ data, errors, isLoading, isEditing, onPubl
             </p>
             <ul className="space-y-2">
               {checks.map((c) => (
-                <li key={c.label} className={`flex items-center gap-2 text-sm ${c.ok ? 'text-ink' : 'text-warning-strong'}`}>
-                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.ok ? 'bg-success-strong text-white' : 'bg-warning/30'}`}>
+                <li key={c.label} className={`flex items-center gap-2 text-sm ${c.ok ? 'text-ink' : c.recomendado ? 'text-muted' : 'text-warning-strong'}`}>
+                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.ok ? 'bg-success-strong text-white' : c.recomendado ? 'bg-line' : 'bg-warning/30'}`}>
                     {c.ok ? <FiCheck className="h-3 w-3" aria-hidden="true" /> : <FiAlertCircle className="h-3 w-3" aria-hidden="true" />}
                   </span>
-                  {c.label}
+                  {c.label}{!c.ok && c.recomendado && ' (recomendado)'}
                 </li>
               ))}
             </ul>
@@ -122,35 +127,22 @@ export default function StepPublish({ data, errors, isLoading, isEditing, onPubl
 
           {errors.images && <p className="rounded-xl border border-deal/30 bg-deal-bg p-3 text-sm font-semibold text-deal">{errors.images}</p>}
 
-          {data.name && (
-            <dl className={`${wizardCard} space-y-2 text-sm`}>
-              <div className="flex justify-between gap-3"><dt className="text-muted">Tipo</dt><dd className="font-semibold text-ink">{isPhysical ? 'Físico' : `Digital · ${platform?.label ?? '—'}`}</dd></div>
-              <div className="flex justify-between gap-3"><dt className="text-muted">SKU</dt><dd className="font-mono text-xs text-ink">{data.sku || '—'}</dd></div>
-              {isPhysical ? (
-                <div className="flex justify-between gap-3"><dt className="text-muted">Precio</dt><dd className="font-semibold text-ink">{displayPrice > 0 ? formatUSD(displayPrice) : '—'}</dd></div>
-              ) : (
-                <>
-                  <div className="flex justify-between gap-3"><dt className="text-muted">Montos activos</dt><dd className="font-semibold text-ink">{activeVariants.length} de {data.digitalVariants.length}</dd></div>
-                  <div className="flex justify-between gap-3"><dt className="text-muted">Entrega</dt><dd className="font-semibold text-ink">{DELIVERY_MODES[data.deliveryMethod].admin}</dd></div>
-                </>
-              )}
-              <div className="flex justify-between gap-3"><dt className="text-muted">Imágenes</dt><dd className={`font-semibold ${data.images.length > 0 ? 'text-success-strong' : 'text-deal'}`}>{data.images.length} / 8</dd></div>
-            </dl>
-          )}
         </div>
       </div>
 
+      {/* sm:flex-1: en columna, flex-1 les quitaba la altura y los botones salían aplastados en el teléfono (C-134) */}
       <div className="flex flex-col gap-3 border-t border-line pt-6 sm:flex-row">
-        <button type="button" onClick={onDraft} disabled={isLoading} className={`${wizardSecondaryButton} h-12 flex-1`}>
-          Guardar como borrador
+        {/* C-134: al editar un borrador, el botón principal decía "Guardar cambios" y lo publicaba */}
+        <button type="button" onClick={onDraft} disabled={isLoading} className={`${wizardSecondaryButton} h-12 sm:flex-1`}>
+          {isEditing && publicado ? 'Pasar a borrador' : 'Guardar como borrador'}
         </button>
-        <button type="button" onClick={onPublish} disabled={isLoading || missing > 0} className={`${wizardPrimaryButton} h-12 flex-1`}>
+        <button type="button" onClick={onPublish} disabled={isLoading || missing > 0} className={`${wizardPrimaryButton} h-12 sm:flex-1`}>
           {isLoading ? (
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" aria-label="Guardando" />
           ) : (
             <>
               <FiCheck className="h-5 w-5" aria-hidden="true" />
-              {isEditing ? 'Guardar cambios' : 'Publicar producto'}
+              {isEditing && publicado ? 'Guardar cambios' : 'Publicar producto'}
             </>
           )}
         </button>

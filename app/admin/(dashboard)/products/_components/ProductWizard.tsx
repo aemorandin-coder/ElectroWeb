@@ -19,6 +19,7 @@ import {
   validateDigitalStep2,
   validateDigitalStep3,
   validatePublish,
+  leerNumero,
   type VariantRow,
 } from './wizard/types';
 import { formatFaceValue, guessLegacyUnit, isDigitalUnit, type DigitalProvider } from '@/lib/digital-catalog';
@@ -285,7 +286,7 @@ export default function ProductWizard({ productId }: Props) {
         description: data.description.trim(),
         categoryId: data.categoryId,
         images: data.images,
-        isActive: publishStatus === 'PUBLISHED',
+        // Solo el estado: el servidor prefiere isActive y un producto archivado volvía a borrador al editarlo (C-134)
         status: publishStatus,
         isFeatured: data.isFeatured,
         barcode: data.barcode || null,
@@ -296,13 +297,14 @@ export default function ProductWizard({ productId }: Props) {
       };
 
       if (data.productType === 'PHYSICAL') {
-        payload.priceUSD = parseFloat(data.priceUSD);
-        payload.compareAtPriceUSD = data.compareAtPriceUSD ? parseFloat(data.compareAtPriceUSD) : null;
-        payload.costPerItem = data.costPerItem ? parseFloat(data.costPerItem) : null;
-        payload.stock = parseInt(data.stock) || 0;
-        payload.weightKg = data.weightKg ? parseFloat(data.weightKg) : 0;
+        // C-134: con coma o punto ("12,50"). Antes parseFloat("12,50") mandaba 12
+        payload.priceUSD = leerNumero(data.priceUSD);
+        payload.compareAtPriceUSD = data.compareAtPriceUSD.trim() ? leerNumero(data.compareAtPriceUSD) : null;
+        payload.costPerItem = data.costPerItem.trim() ? leerNumero(data.costPerItem) : null;
+        payload.stock = leerNumero(data.stock);
+        payload.weightKg = data.weightKg.trim() ? leerNumero(data.weightKg) : 0;
         payload.isConsolidable = data.isConsolidable;
-        payload.shippingCost = data.isConsolidable ? 0 : (data.shippingCost ? parseFloat(data.shippingCost) : 0);
+        payload.shippingCost = data.isConsolidable ? 0 : (data.shippingCost.trim() ? leerNumero(data.shippingCost) : 0);
         payload.freeShipping = data.freeShipping;
         payload.specifications = Object.keys(data.specifications).length > 0 ? data.specifications : null;
         // C-119: condición; el servidor la valida y, si es nuevo, guarda vacío lo de usado
@@ -321,9 +323,9 @@ export default function ProductWizard({ productId }: Props) {
         });
         if (data.dimensionLength || data.dimensionWidth || data.dimensionHeight) {
           payload.dimensions = JSON.stringify({
-            length: parseFloat(data.dimensionLength) || 0,
-            width: parseFloat(data.dimensionWidth) || 0,
-            height: parseFloat(data.dimensionHeight) || 0,
+            length: leerNumero(data.dimensionLength) || 0,
+            width: leerNumero(data.dimensionWidth) || 0,
+            height: leerNumero(data.dimensionHeight) || 0,
           });
         }
       } else {
@@ -427,6 +429,7 @@ export default function ProductWizard({ productId }: Props) {
         errors={errors}
         isLoading={isLoading}
         isEditing={isEditing}
+        estadoActual={isEditing ? estadoGuardado : undefined}
         onPublish={() => handleSubmit('PUBLISHED')}
         onDraft={() => handleSubmit('DRAFT')}
       />
@@ -478,18 +481,6 @@ export default function ProductWizard({ productId }: Props) {
               </div>
             </div>
 
-            {/* Center: progress */}
-            {step >= 0 && (
-              <div className="hidden sm:block">
-                <WizardProgress
-                  steps={steps}
-                  current={step}
-                  onStepClick={(i) => { setErrors({}); setStep(i as WizardStep); }}
-                  freeNavigation={isEditing}
-                />
-              </div>
-            )}
-
             {/* Right: descartar y, al editar, guardar desde cualquier paso */}
             <div className="flex shrink-0 items-center gap-2">
               {/* En el teléfono la flecha de la izquierda ya vuelve: al editar, "Descartar" sobra y no cabía con "Guardar" */}
@@ -510,9 +501,9 @@ export default function ProductWizard({ productId }: Props) {
             </div>
           </div>
 
-          {/* Mobile progress */}
+          {/* Pasos en su propia fila (C-134: en escritorio compartían fila con el título, que se cortaba en "Edita…") */}
           {step >= 0 && (
-            <div className="sm:hidden mt-2 pb-1">
+            <div className="mt-2 pb-1">
               <WizardProgress
                 steps={steps}
                 current={step}
@@ -525,7 +516,7 @@ export default function ProductWizard({ productId }: Props) {
       </div>
 
       {/* ── Body ───────────────────────────────────────────────────────────── */}
-      <div className="max-w-[1300px] mx-auto px-2 sm:px-4 md:px-8 py-6 sm:py-8">
+      <div className="max-w-[1300px] mx-auto px-2 sm:px-4 md:px-8 py-4 sm:py-6">
 
         {errors.general && (
           <div className="mb-6 flex items-center gap-3 rounded-xl border border-deal/30 bg-deal-bg p-4 text-sm font-semibold text-deal" role="alert">
@@ -534,15 +525,15 @@ export default function ProductWizard({ productId }: Props) {
           </div>
         )}
 
-        <div className={showSidebar ? 'grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start' : ''}>
+        <div className={showSidebar ? 'grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 lg:gap-6 items-start' : ''}>
 
           {/* Step content */}
-          <div className="min-w-0 rounded-2xl border border-line bg-white p-4 sm:p-6 md:p-8">
+          <div className="min-w-0 rounded-2xl border border-line bg-white p-4 sm:p-6">
             {renderStep()}
 
             {/* Navigation — not on publish step (it has its own buttons) */}
             {step >= 0 && step < PUBLISH_STEP && (
-              <div className="mt-10 flex items-center justify-between border-t border-line pt-6">
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
                 {/* Al editar no se cambia el tipo: el paso 0 no tiene "Anterior" */}
                 {isEditing && step === 0 ? <span /> : (
                   <button
@@ -555,17 +546,12 @@ export default function ProductWizard({ productId }: Props) {
                   </button>
                 )}
 
+                {/* Al editar, "Guardar cambios" está fijo arriba: aquí solo se navega (C-134: antes el pie se partía en dos filas) */}
                 {isEditing ? (
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={handleNext} className={wizardSecondaryButton}>
-                      Siguiente
-                      <FiArrowRight className="w-4 h-4" />
-                    </button>
-                    <button type="button" onClick={guardarCambios} disabled={isLoading || sinCambios} className={`${wizardPrimaryButton} disabled:opacity-50`}>
-                      <FiSave className="w-4 h-4" aria-hidden="true" />
-                      {isLoading ? 'Guardando…' : sinCambios ? 'Sin cambios' : 'Guardar'}
-                    </button>
-                  </div>
+                  <button type="button" onClick={handleNext} className={wizardSecondaryButton}>
+                    Siguiente
+                    <FiArrowRight className="w-4 h-4" />
+                  </button>
                 ) : (
                   <button
                     type="button"

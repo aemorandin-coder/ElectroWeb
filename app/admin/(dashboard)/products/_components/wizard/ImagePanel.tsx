@@ -141,7 +141,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
         <div
           onClick={() => fileInputRef.current?.click()}
           className={[
-            'border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors',
+            'border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors',
             error ? 'border-deal bg-deal-bg' : 'border-line hover:border-brand-500 hover:bg-brand-50',
           ].join(' ')}
         >

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { FiCheck } from 'react-icons/fi';
 
 interface Props {
@@ -12,8 +13,20 @@ interface Props {
 
 /** Pasos del asistente. Se puede volver a los ya completados (o ir a cualquiera al editar). */
 export default function WizardProgress({ steps, current, onStepClick, freeNavigation = false }: Props) {
+  // C-134: en el teléfono la barra se desliza; el paso actual se trae a la vista (el último quedaba fuera)
+  const lista = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    const activo = lista.current?.querySelector<HTMLElement>('[aria-current="step"]');
+    const barra = lista.current;
+    if (activo && barra && barra.scrollWidth > barra.clientWidth) {
+      const a = activo.getBoundingClientRect();
+      const b = barra.getBoundingClientRect();
+      barra.scrollTo({ left: barra.scrollLeft + (a.left - b.left) - (b.width - a.width) / 2, behavior: 'smooth' });
+    }
+  }, [current]);
+
   return (
-    <ol className="flex items-center overflow-x-auto py-1 sm:justify-center" aria-label="Pasos">
+    <ol ref={lista} className="flex items-center overflow-x-auto py-1 sm:justify-center" aria-label="Pasos">
       {steps.map((label, i) => {
         const done = i < current;
         const active = i === current;

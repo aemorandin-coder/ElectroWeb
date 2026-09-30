@@ -9,6 +9,7 @@ import { generateShortCode } from '@/lib/short-code';
 import { parseDigitalMargin, specsForUpdate } from '@/lib/product-specs';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { conditionInputSchema, pickConditionInput } from '@/lib/product-condition';
+import { precioValido } from '@/lib/pricing';
 
 /** specs de un producto nuevo: especificaciones del formulario y, en digitales, el margen del wizard (C-95). */
 function createSpecs(specifications: unknown, digitalMarginPercent: number | undefined): string | null {
@@ -176,8 +177,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: conditionParsed.error.issues[0]?.message || 'Condición inválida' }, { status: 400 });
     }
 
-    const stock = parseInt(body.stock) || 0;
-    const priceUSD = body.productType === 'DIGITAL' ? minActivePrice(variants) : parseFloat(body.priceUSD);
+    // C-134: las mismas reglas que al editar (PATCH). Antes el alta aceptaba precio negativo, "abc" como stock
+    // (quedaba 0), cualquier estado (500 de Prisma) y más de 8 fotos
+    const stockLeido = body.stock === undefined || body.stock === '' ? 0 : Number(body.stock);
+    if (!Number.isInteger(stockLeido) || stockLeido < 0 || stockLeido > 1_000_000) {
+      return NextResponse.json({ error: 'Stock inválido: un número entero de 0 a 1.000.000' }, { status: 400 });
+    }
+    const stock = stockLeido;
+    const precioFisico = body.productType === 'DIGITAL' ? null : precioValido(body.priceUSD);
+    if (body.productType !== 'DIGITAL' && !(precioFisico !== null && precioFisico > 0)) {
+      return NextResponse.json({ error: 'Precio inválido' }, { status: 400 });
+    }
+    const priceUSD = body.productType === 'DIGITAL' ? minActivePrice(variants) : (precioFisico as number);
+    const tachado = body.compareAtPriceUSD ? precioValido(body.compareAtPriceUSD) : null;
+    if (body.compareAtPriceUSD && tachado === null) {
+      return NextResponse.json({ error: 'Precio anterior inválido' }, { status: 400 });
+    }
+    if (body.status !== undefined && !['PUBLISHED', 'DRAFT', 'ARCHIVED'].includes(body.status)) {
+      return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
+    }
 
     // Validar y procesar imágenes
     let imageArray: string[] = [];
@@ -193,6 +211,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (imageArray.length > 8) {
+      return NextResponse.json({ error: 'Máximo 8 imágenes permitidas por producto' }, { status: 400 });
+    }
+
     const product = await prisma.$transaction(async (tx) => {
       const created = await tx.product.create({
       data: {
@@ -202,7 +224,7 @@ export async function POST(request: NextRequest) {
         shortCode,
         description: body.description || '',
         priceUSD,
-        compareAtPriceUSD: body.compareAtPriceUSD ? parseFloat(body.compareAtPriceUSD) : null,
+        compareAtPriceUSD: tachado,
         costPerItem: body.costPerItem ? parseFloat(body.costPerItem) : null,
         stock,
         minStock: parseInt(body.minStock) || 0,

@@ -32,7 +32,7 @@ const MENU = [
   { href: '/customer', icon: FiHome, label: 'Inicio' },
   { href: '/customer/balance', icon: FaMoneyCheckAlt, label: 'Puntos ES' },
   { href: '/customer/orders', icon: FiShoppingBag, label: 'Mis Pedidos' },
-  { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Lista de Deseos' },
+  { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Favoritos' },
   { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },
   { href: '/customer/warranty', icon: FiShield, label: 'Garantía' },
   { href: '/customer/documentos', icon: FiFileText, label: 'Mis documentos' },

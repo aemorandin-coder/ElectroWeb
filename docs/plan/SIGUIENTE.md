@@ -1,7 +1,42 @@
-# Punto de partida (actualizado 2026-09-29, noche)
+# Punto de partida (actualizado 2026-09-30)
 
 Léelo antes de empezar. En GitHub, `main` tiene todo hasta C-123 (subido el 29/09). **Falta el deploy, y lleva cambio de base.**
 Producción ya mostraba C-114 el 29/09 (captura de Andrés): el commit exacto del servidor se anota tras este deploy.
+
+## 00. Nuevo del 30/09: C-130 a C-137 (ramas listas, sin mergear)
+Pedidos de Andrés del 29 y 30/09.
+- **Merge más simple: `git merge --no-ff claude/C-137`** trae todo (C-130 a C-137): C-137 sale de las dos cadenas. Probado: build, `tsc` y ESLint.
+- Si se quiere subir solo lo de productos antes: `claude/C-136` (trae C-133, C-134 y C-136, sin cambio de base).
+- **Dos cadenas independientes** (para saber qué trae cada una):
+- **Cadena A (dinero):** `claude/C-130` → `claude/C-131` → `claude/C-132` → `claude/C-135`. Cada una sale de la anterior.
+  - **C-130 · Teléfono y cédula del BDV:** el checkout mandaba `584121234567` y el banco decía "Formato de teléfono inválido". Arreglado en el checkout, la recarga, la verificación y "Consultar Pago Móvil".
+  - **C-131 · "Puntos ES":** regla legal de Andrés, nunca "saldo" ni "billetera" en textos. 186 textos.
+  - **C-132 · Checkout:** "¿Cómo deseas pagar?" con los métodos activos, Binance Pay y PayPal manuales con reserva de 2 h, pago mixto Puntos ES + Pago Móvil, reservas que apartan de verdad. **Lleva cambio de base (aditivo):**
+    ```sql
+    ALTER TABLE "orders" ADD COLUMN "paymentReference" TEXT, ADD COLUMN "pointsUSD" DECIMAL(65,30) NOT NULL DEFAULT 0;
+    ALTER TABLE "stock_reservations" ADD COLUMN "orderId" TEXT;
+    CREATE INDEX "stock_reservations_orderId_idx" ON "stock_reservations"("orderId");
+    ```
+  - **C-135 · "$12,50 Puntos ES":** el formato en todo lo que ve el cliente y la explicación en los términos. **Los términos "de los Puntos ES" se publican solos** con el deploy (Andrés pidió que lo hiciera Claude): la primera visita crea la versión siguiente si la vigente aún dice "saldo". Cada cliente la firma en su próxima recarga.
+- **Cadena B (productos, se puede subir sola y ya):** `claude/C-133` → `claude/C-134` → `claude/C-136`. Sin cambio de base.
+  - **C-133 · Cinta ES:** también con fondo blanco liso (la foto de los audífonos Piston del 30/09 no la tenía), la cinta en la esquina de la foto en la ficha, el catálogo y la vitrina, guardar sin la espera de 2,5 s, y al editar "Guardar cambios" en cada paso.
+  - **C-134 · Asistente de productos:** menos espacio, sin redundancia, validaciones iguales en el formulario y el servidor.
+  - **C-136 · Especificaciones:** sugerencias según la categoría (lo que ya usan sus productos y una lista base por tipo), valores con un toque, ninguna obligatoria.
+- **C-137 · Panel del cliente** (sobre las dos cadenas):
+  - Mis pedidos con fotos, estado en palabras, paso a paso, "Rastrear en" con logo y recibo imprimible (no fiscal).
+  - Favoritos en grilla de 2 a 4 columnas, con precio en Bs., disponibilidad y "Mover al carrito".
+  - Direcciones con agencias ZOOM y MRW elegidas de la lista real y quién recibe (con cédula). El checkout trae la agencia predeterminada ya elegida. Editar una dirección fallaba siempre: arreglado.
+- **Probado junto:** rama temporal con C-130 a C-134 mezcladas: 0 conflictos, `tsc`, `build` y ESLint (0 errores). C-135 y C-136: `tsc` y ESLint. Pruebas de cada una en su `estado/C-13X.md`.
+- **Después del deploy, en producción:**
+  1. Una compra con Pago Móvil desde un perfil con teléfono `+58 …`: debe verificar al primer intento.
+  2. Volver a subir la foto de los audífonos Piston (la de `~/Escritorio/AUDIFONOS-PISTON-con-cinta.png` o la original: ahora la cinta sale sola). Editar un producto cambiando solo el precio.
+  3. Activar Binance Pay y PayPal en Métodos de pago (con su QR si hay) y hacer una compra de prueba con cada uno: queda "Por validar" y se confirma con "Marcar pagado".
+  4. Una compra con pago mixto (algo de Puntos ES y el resto por Pago Móvil) y cancelarla: vuelven los Puntos ES.
+  5. Admin → Legal: aparece "Términos y condiciones de los Puntos ES" como vigente después de la primera visita a una recarga.
+  6. **Panel del cliente, en el teléfono:** Mis pedidos (tocar "Detalle y recibo" e imprimir), Favoritos ("Mover al carrito") y Direcciones: agregar tu agencia ZOOM de la lista como predeterminada y abrir el checkout: debe venir elegida.
+  7. En producción hay un **"Producto Test" publicado** en Consolas y productos digitales con **"(SALDO)" en el nombre**: pasarlo a borrador y renombrarlos (ver `estado/C-136.md`).
+- **Decidido por Andrés el 30/09:** "$12,50 Puntos ES" explicado en los términos (C-135); especificaciones sin mínimo y sugeridas por categoría (C-136); **el taller espera a SADES** (está caído; los datos de los equipos en reparación están ahí).
+- **Siguen del pedido del 29/09 (en este orden):** perfil en pestañas (datos personales, seguridad y notificaciones) y la página de Puntos ES; el taller cuando SADES vuelva.
 
 ## 0. Urgente: deploy del 29/09 (noche), C-118 a C-129
 Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pedido de Andrés).
@@ -58,7 +93,7 @@ Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pe
   - El sobrepago va al saldo.
   - Sin subir capturas: se usa la verificación con el BDV.
   - La barra inferior del cliente queda aprobada.
-- **Pendiente de Andrés:** ¿"saldo" se queda o pasa a "anticipo" / "abono" en toda la tienda? (ver `estado/C-129.md`).
+- **Decidido por Andrés (29 y 30/09):** el saldo se llama **"Puntos ES"** en toda la tienda; nunca "saldo" ni "billetera" (ley venezolana). Hecho en C-131. Falta publicar la versión 2 de los términos de recarga desde Admin → Legal (texto en `estado/C-131.md`).
 - Detalle y pruebas de cada una en su `estado/C-12X.md`.
 
 ## 1. Estado de las ramas

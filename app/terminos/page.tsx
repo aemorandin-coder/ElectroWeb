@@ -54,7 +54,7 @@ export default function TermsPage() {
               </ul>
               <p className="mt-3">
                 La Empresa puede requerir verificación de identidad mediante cédula y firma digital para ciertas operaciones,
-                especialmente relacionadas con el sistema de saldo y transacciones financieras.
+                especialmente relacionadas con los Puntos ES y transacciones financieras.
               </p>
             </section>
 
@@ -62,10 +62,12 @@ export default function TermsPage() {
             <section className="bg-surface rounded-xl p-6 border border-line">
               <div className="flex items-center gap-2 mb-3">
                 <FiDollarSign className="w-5 h-5 text-warning-strong" />
-                <h2 className="text-xl font-bold text-ink">3. Sistema de Saldo y Recargas</h2>
+                <h2 className="text-xl font-bold text-ink">3. Puntos ES y Recargas</h2>
               </div>
               <p className="mb-3">
-                Electro Shop ofrece un sistema de saldo interno que permite a los usuarios recargar fondos para realizar compras.
+                Los Puntos ES (Puntos ElectroShop) son un pago anticipado que el usuario hace a Electro Shop para comprar en la tienda. Cada Punto ES equivale a un dólar estadounidense (USD). No son dinero electrónico ni una cuenta de pago: solo sirven para comprar productos y servicios de Electro Shop.
+                Por eso se escriben con el signo de dólar: <strong className="text-ink">&quot;$12,50 Puntos ES&quot;</strong> son 12,50 Puntos ES, que pagan
+                12,50 dólares de compras en la tienda. Los precios en bolívares se muestran a la tasa del Banco Central de Venezuela del día.
                 Al utilizar este servicio, el usuario acepta las siguientes condiciones:
               </p>
 
@@ -73,16 +75,16 @@ export default function TermsPage() {
                 <div className="bg-deal-bg border border-deal/30 rounded-lg p-4">
                   <h3 className="font-bold text-deal mb-2">3.1 Política de No Reembolso</h3>
                   <p className="text-ink-soft">
-                    <strong className="text-deal">EL SALDO RECARGADO NO ES REEMBOLSABLE BAJO NINGUNA CIRCUNSTANCIA.</strong> Una vez
-                    acreditado, el saldo no podrá ser retirado, transferido a terceros, ni convertido en dinero en efectivo.
-                    El saldo únicamente puede utilizarse para compras dentro de la plataforma.
+                    <strong className="text-deal">LOS PUNTOS ES RECARGADOS NO SON REEMBOLSABLES BAJO NINGUNA CIRCUNSTANCIA.</strong> Una vez
+                    acreditados, los Puntos ES no podrán ser retirados, transferidos a terceros, ni convertidos en dinero en efectivo.
+                    Los Puntos ES únicamente pueden utilizarse para compras dentro de la plataforma.
                   </p>
                 </div>
 
                 <div>
                   <h3 className="font-bold text-ink mb-2">3.2 Origen Lícito de Fondos</h3>
                   <p className="text-ink-soft">
-                    El usuario declara bajo juramento que todos los fondos utilizados para recargar saldo provienen de
+                    El usuario declara bajo juramento que todos los fondos utilizados para recargar Puntos ES provienen de
                     actividades lícitas y legales. Queda estrictamente prohibido el uso de fondos provenientes de:
                   </p>
                   <ul className="list-disc pl-6 mt-2 space-y-1 text-ink-soft">
@@ -115,8 +117,8 @@ export default function TermsPage() {
                 <div>
                   <h3 className="font-bold text-ink mb-2">3.4 Aceptación de Términos de Recarga</h3>
                   <p className="text-ink-soft">
-                    Antes de realizar su primera recarga, el usuario debe aceptar los términos específicos del sistema
-                    de saldo mediante firma digital. Esta aceptación incluye:
+                    Antes de realizar su primera recarga, el usuario debe aceptar los términos específicos de los
+                    Puntos ES mediante firma digital. Esta aceptación incluye:
                   </p>
                   <ul className="list-disc pl-6 mt-2 space-y-1 text-ink-soft">
                     <li>Lectura completa de los términos y condiciones de recarga</li>
@@ -143,7 +145,7 @@ export default function TermsPage() {
                 <li>Zelle (pagos internacionales)</li>
                 <li>Binance Pay y criptomonedas seleccionadas</li>
                 <li>Efectivo en tienda</li>
-                <li>Saldo de cuenta (previamente recargado)</li>
+                <li>Puntos ES (previamente recargados)</li>
               </ul>
               <p>
                 Todos los precios están expresados en <strong>Dólares Americanos (USD)</strong> y pueden ser pagados
@@ -207,7 +209,7 @@ export default function TermsPage() {
               <h3 className="font-semibold text-ink mb-2">6.3 Qué hace la Empresa si procede</h3>
               <p className="mb-4 text-ink-soft">
                 Repara el producto; si no es posible, lo cambia por uno igual o equivalente; si tampoco es posible, devuelve el
-                monto pagado por ese producto al saldo de la cuenta del cliente en la tienda, en dólares.
+                monto pagado por ese producto en Puntos ES a la cuenta del cliente en la tienda.
               </p>
               <h3 className="font-semibold text-ink mb-2">6.4 Devoluciones</h3>
               <p className="mb-4 text-ink-soft">

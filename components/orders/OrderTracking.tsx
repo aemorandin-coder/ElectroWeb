@@ -1,11 +1,17 @@
 'use client';
 
 import { toast } from 'react-hot-toast';
-import { FiFileText, FiCheckCircle, FiCreditCard, FiPackage, FiTruck, FiGift, FiShoppingBag, FiClock, FiExternalLink, FiMapPin, FiCalendar, FiCopy, FiUser } from 'react-icons/fi';
+import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
+import { FiCheckCircle, FiCreditCard, FiPackage, FiTruck, FiGift, FiShoppingBag, FiClock, FiExternalLink, FiMapPin, FiCalendar, FiCopy, FiUser } from 'react-icons/fi';
 import { NOMBRE_EMPRESA, esRetiro, type EmpresaGuia } from '@/lib/envios/empresas';
+import { eventoEsEnOficina } from '@/lib/envios/zoom';
+import { pasosPedido } from '@/lib/order-pasos';
+import OrderStepper from '@/components/customer/OrderStepper';
 
 interface OrderTrackingProps {
     status: string;
+    /** C-137: con el pago sin validar, el primer paso dice "Pago por validar" */
+    paymentStatus?: string | null;
     createdAt: string;
     paidAt?: string | null;
     shippedAt?: string | null;
@@ -27,25 +33,9 @@ interface OrderTrackingProps {
     shipmentEvents?: Array<{ id: string; description: string; occurredAt: string }>;
 }
 
-const statusSteps = [
-    { key: 'PENDING', label: 'Pedido', IconComponent: FiFileText },
-    { key: 'CONFIRMED', label: 'Confirmado', IconComponent: FiCheckCircle },
-    { key: 'PAID', label: 'Pagado', IconComponent: FiCreditCard },
-    { key: 'PROCESSING', label: 'Preparando', IconComponent: FiPackage },
-    { key: 'SHIPPED', label: 'Enviado', IconComponent: FiTruck },
-    { key: 'DELIVERED', label: 'Entregado', IconComponent: FiGift },
-];
-
-const pickupSteps = [
-    { key: 'PENDING', label: 'Pedido', IconComponent: FiFileText },
-    { key: 'CONFIRMED', label: 'Confirmado', IconComponent: FiCheckCircle },
-    { key: 'PAID', label: 'Pagado', IconComponent: FiCreditCard },
-    { key: 'READY_FOR_PICKUP', label: 'Listo', IconComponent: FiShoppingBag },
-    { key: 'DELIVERED', label: 'Recogido', IconComponent: FiGift },
-];
-
 export default function OrderTracking({
     status,
+    paymentStatus,
     deliveryMethod,
     shippingCarrier,
     trackingNumber,
@@ -61,7 +51,12 @@ export default function OrderTracking({
     shipmentEvents = [],
 }: OrderTrackingProps) {
     const retiro = esRetiro(deliveryMethod);
-    const steps = retiro ? pickupSteps : statusSteps;
+    // C-137: el mismo paso a paso de 4 etapas del inicio y de cada pedido (C-128). Antes había aquí otro de 6
+    // ("Pedido, Confirmado, Pagado…") con las etiquetas encimadas a 360 px
+    const { pasos } = pasosPedido({
+        status, paymentStatus, deliveryMethod, shippingCarrier, shippingMode, courierOfficeName,
+        enOficina: shipmentEvents.some((e) => eventoEsEnOficina(e.description)),
+    });
     const empresa = shippingCarrier ? NOMBRE_EMPRESA[shippingCarrier as EmpresaGuia] ?? shippingCarrier : '';
     const enOficina = shippingMode === 'OFFICE';
     const local = deliveryMethod === 'LOCAL_DELIVERY';
@@ -81,100 +76,12 @@ export default function OrderTracking({
         }
     };
 
-    const getCurrentStepIndex = () => {
-        const index = steps.findIndex(step => step.key === status);
-        return index >= 0 ? index : 0;
-    };
-
-    const currentStepIndex = getCurrentStepIndex();
-    const progress = ((currentStepIndex) / (steps.length - 1)) * 100;
-
-    const getStepStatus = (index: number) => {
-        if (index < currentStepIndex) return 'completed';
-        if (index === currentStepIndex) return 'current';
-        return 'pending';
-    };
-
     const isDelivered = status === 'DELIVERED';
     const isCancelled = status === 'CANCELLED';
 
     return (
         <div className="relative">
-            {/* Compact Horizontal Timeline */}
-            <div className="relative flex items-center justify-between">
-                {/* Progress Line Background */}
-                <div className="absolute top-4 left-4 right-4 h-1 bg-line rounded-full" />
-
-                {/* Progress Line Filled */}
-                <div
-                    className={`absolute top-4 left-4 h-1 rounded-full transition-all duration-1000 ease-out overflow-hidden ${
-                        isDelivered
-                            ? 'bg-success-strong'
-                            : isCancelled
-                                ? 'bg-deal'
-                                : 'bg-brand-500'
-                    }`}
-                    style={{
-                        width: `calc(${progress}% - 16px)`
-                    }}
-                />
-
-                {/* Steps */}
-                {steps.map((step, index) => {
-                    const stepStatus = getStepStatus(index);
-                    const isCompleted = stepStatus === 'completed';
-                    const isCurrent = stepStatus === 'current';
-                    const StepIcon = step.IconComponent;
-
-                    return (
-                        <div key={step.key} className="relative z-10 flex flex-col items-center">
-                            {/* Icon Circle */}
-                            <div
-                                className={`
-                                    relative w-8 h-8 rounded-full flex items-center justify-center
-                                    transition-all duration-300
-                                    ${isCompleted
-                                        ? 'bg-success-strong text-white shadow-sm'
-                                        : isCurrent
-                                            ? `${isDelivered ? 'bg-success-strong' : 'bg-brand-500'} text-white shadow-sm`
-                                            : 'bg-line text-subtle'
-                                    }
-                                `}
-                            >
-                                {isCompleted ? (
-                                    <svg
-                                        className="w-4 h-4 text-white"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                        style={{ strokeDasharray: 30, strokeDashoffset: 0 }}
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                ) : (
-                                    <StepIcon
-                                        className={`w-3.5 h-3.5 transition-all duration-300 ${isCurrent
-                                            ? 'text-white'
-                                            : 'text-subtle'
-                                            }`}
-                                    />
-                                )}
-                            </div>
-
-                            {/* Label */}
-                            <p
-                                className={`
-                                    mt-1.5 text-xs font-semibold text-center leading-tight max-w-[50px]
-                                    transition-all duration-300
-                                    ${isCompleted || isCurrent ? 'text-ink' : 'text-muted'}
-                                `}
-                            >
-                                {step.label}
-                            </p>
-                        </div>
-                    );
-                })}
-            </div>
+            {pasos.length > 0 && <OrderStepper pasos={pasos} />}
 
             {/* Status Message - Compact */}
             <div
@@ -247,7 +154,10 @@ export default function OrderTracking({
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-ink">
-                                    {empresa || 'Envío'}
+                                    {/* C-137: logo oficial de ZOOM o MRW */}
+                                    {shippingCarrier === 'ZOOM' || shippingCarrier === 'MRW'
+                                        ? <LogoEmpresa empresa={shippingCarrier} className="h-4" />
+                                        : empresa || 'Envío'}
                                 </p>
                                 <p className="text-xs text-muted">
                                     Guía: <span className="font-mono font-bold text-ink">{trackingNumber}</span>

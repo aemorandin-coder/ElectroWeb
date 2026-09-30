@@ -96,7 +96,7 @@ export async function POST(
     const userBalance = await prisma.userBalance.findUnique({ where: { userId } });
     if (!userBalance || roundMoney(Number(userBalance.balance)) < roundMoney(Number(course.priceUSD))) {
       return NextResponse.json(
-        { error: 'Saldo insuficiente. Recarga tu saldo para inscribirte.' },
+        { error: 'No te alcanzan los Puntos ES. Recárgalos para inscribirte.' },
         { status: 402 }
       );
     }
@@ -153,7 +153,7 @@ export async function POST(
       });
     } catch (error) {
       if (error instanceof InsufficientBalanceError) {
-        return NextResponse.json({ error: 'Saldo insuficiente. Recarga tu saldo para inscribirte.' }, { status: 402 });
+        return NextResponse.json({ error: 'No te alcanzan los Puntos ES. Recárgalos para inscribirte.' }, { status: 402 });
       }
       throw error;
     }
@@ -161,7 +161,7 @@ export async function POST(
     emitAdminEvent({
       type: 'COURSE_ENROLLED',
       title: `Inscripción · ${course.title}`.slice(0, 150),
-      summary: `${userName} compró el curso con saldo`,
+      summary: `${userName} compró el curso con Puntos ES`,
       fields: [['Precio', formatUSD(price)], ['Para el creador', creatorCut > 0 ? formatUSD(creatorCut) : null], ['Instructor', instructorName], ['Correo', userEmail]],
       link: '/admin/cursos',
     });

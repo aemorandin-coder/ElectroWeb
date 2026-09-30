@@ -167,9 +167,9 @@ export default function CustomerDashboard() {
       <section aria-label="Resumen de tu cuenta" className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <div className="col-span-2 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 p-5 text-white lg:col-span-1">
           <p className="flex items-center gap-2 text-sm text-white/80">
-            <FiCreditCard className="h-4 w-4" aria-hidden="true" /> Tu saldo para compras
+            <FiCreditCard className="h-4 w-4" aria-hidden="true" /> Tus Puntos ES
           </p>
-          <p className="mt-1 text-3xl font-bold tabular-nums">{formatUSD(stats?.balance ?? 0)}</p>
+          <p className="mt-1 text-3xl font-bold tabular-nums">{formatUSD(stats?.balance ?? 0)} <span className="text-base font-semibold opacity-80">Puntos ES</span></p>
           <div className="mt-4 flex gap-2">
             <Link href="/customer/balance?recargar=1" className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-brand-700 hover:bg-brand-50">
               <FiPlus className="h-4 w-4" aria-hidden="true" /> Recargar

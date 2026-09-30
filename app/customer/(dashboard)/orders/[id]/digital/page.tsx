@@ -343,7 +343,7 @@ export default function DigitalCodesPage() {
                                                 <div className="space-y-1">
                                                     <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider">Recarga Directa en Proceso</h4>
                                                     <p className="text-xs text-brand-700 max-w-xs mx-auto leading-relaxed">
-                                                        Esta compra se procesa por recarga manual directa a la cuenta ingresada. Nuestro equipo administrativo está acreditando tu saldo en este momento.
+                                                        Esta compra se procesa por recarga manual directa a la cuenta ingresada. Nuestro equipo está haciendo la recarga en tu cuenta en este momento.
                                                     </p>
                                                 </div>
                                                 <div className="py-1 px-3 bg-white border border-brand-200 rounded-lg inline-block">

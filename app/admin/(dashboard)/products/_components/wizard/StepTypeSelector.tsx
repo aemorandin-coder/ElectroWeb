@@ -25,7 +25,7 @@ const TYPES = [
     value: 'DIGITAL' as const,
     Icon: FiMonitor,
     title: 'Producto digital',
-    text: 'Gift cards y saldo. Eliges los montos (en dólares, Robux…) y cómo se entrega.',
+    text: 'Gift cards y recargas. Eliges los montos (en dólares, Robux…) y cómo se entrega.',
     examples: 'PlayStation, Xbox, Roblox, Steam',
   },
 ];

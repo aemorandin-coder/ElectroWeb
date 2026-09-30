@@ -45,7 +45,7 @@ const PASOS: Paso[] = [
     id: 'cuenta',
     objetivo: '[data-tour="cuenta"]',
     titulo: 'Tu cuenta',
-    texto: 'Tus pedidos, tu saldo y tus datos. Recarga saldo con Pago Móvil y paga al instante.',
+    texto: 'Tus pedidos, tus Puntos ES y tus datos. Recarga Puntos ES con Pago Móvil y paga al instante.',
     Icono: FiUser,
   },
 ];

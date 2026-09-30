@@ -183,7 +183,7 @@ export default function Promotores() {
       const data = await res.json().catch(() => null);
       if (!res.ok) return toast.error(data?.error || 'No se pudo procesar');
       if (action === 'approve_conversions') {
-        if (data.approved > 0) toast.success(`${data.approved} comisión(es) aprobada(s) y acreditada(s) como saldo`);
+        if (data.approved > 0) toast.success(`${data.approved} comisión(es) aprobada(s) y acreditada(s) como Puntos ES`);
         if (data.failed > 0) toast.error(data.errores?.join(' · ') || `${data.failed} no se pudieron aprobar`);
       } else {
         toast.success(`${data.rejected} comisión(es) rechazada(s)`);
@@ -206,7 +206,7 @@ export default function Promotores() {
         <FiInfo className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <p>
           El promotor comparte su enlace. Quien se registre con él en los siguientes 30 días queda asociado. Cada <strong>compra pagada</strong> de ese
-          cliente crea una comisión pendiente; al aprobarla se acredita como <strong>saldo de la tienda</strong>. Si la orden se cancela, la comisión
+          cliente crea una comisión pendiente; al aprobarla se acredita como <strong>Puntos ES</strong>. Si la orden se cancela, la comisión
           se rechaza sola. Las recargas no generan comisión.
         </p>
       </div>

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -41,46 +41,5 @@ export async function GET() {
   }
 }
 
-// PATCH /api/customer/profile - Update customer profile
-export async function PATCH(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { name, phone } = body;
-
-    // Update user name if provided
-    if (name) {
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: { name },
-      });
-    }
-
-    // Update or create profile
-    const profile = await prisma.profile.upsert({
-      where: { userId: session.user.id },
-      update: {
-        phone: phone || null,
-      },
-      create: {
-        userId: session.user.id,
-        phone: phone || null,
-      },
-    });
-
-    return NextResponse.json({
-      message: 'Perfil actualizado exitosamente',
-      profile,
-    });
-  } catch (error) {
-    console.error('Error updating customer profile:', error);
-    return NextResponse.json(
-      { error: 'Error al actualizar perfil' },
-      { status: 500 }
-    );
-  }
-}
+// C-130: sin PATCH. Guardaba nombre y teléfono sin validar (se saltaba las reglas de C-84) y la tienda no lo usa:
+// el perfil se edita con PATCH /api/user/profile.

@@ -136,7 +136,7 @@ export default function GarantiaDetallePage({ params }: { params: Promise<{ id: 
           <form onSubmit={guardar} className={`${adminCard} space-y-4`} aria-labelledby="responder">
             <h2 id="responder" className="text-base font-semibold text-ink">Responder o cambiar el estado</h2>
             {devuelto && (
-              <p className={adminNotice('success')}>Se devolvieron {formatUSD(claim.refundUSD ?? 0)} al saldo del cliente. El estado ya no se cambia; puedes escribirle o dejar notas.</p>
+              <p className={adminNotice('success')}>Se devolvieron {formatUSD(claim.refundUSD ?? 0)} en Puntos ES al cliente. El estado ya no se cambia; puedes escribirle o dejar notas.</p>
             )}
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
@@ -157,7 +157,7 @@ export default function GarantiaDetallePage({ params }: { params: Promise<{ id: 
             </div>
             {devolviendo && (
               <div>
-                <label htmlFor="g-monto" className={adminLabel}>Monto a devolver al saldo (USD)</label>
+                <label htmlFor="g-monto" className={adminLabel}>Monto a devolver en Puntos ES (USD)</label>
                 <input id="g-monto" inputMode="decimal" className={adminInput()} value={monto} onChange={(e) => setMonto(e.target.value.replace(/[^0-9.,]/g, ''))} />
                 <p className={adminHint}>
                   Se acredita al guardar, una sola vez. Precio de la unidad: {formatUSD(claim.orderItem.priceUSD)}; máximo {formatUSD(tope)}. Si el pedido tuvo cupón, devuelve lo que pagó el cliente.
@@ -176,7 +176,7 @@ export default function GarantiaDetallePage({ params }: { params: Promise<{ id: 
             </div>
             {errorForm && <p className={adminError} role="alert">{errorForm}</p>}
             <div className="flex justify-end">
-              <button type="submit" disabled={guardando} className={adminPrimaryButton}>{guardando ? 'Guardando…' : devolviendo ? 'Guardar y devolver al saldo' : 'Guardar'}</button>
+              <button type="submit" disabled={guardando} className={adminPrimaryButton}>{guardando ? 'Guardando…' : devolviendo ? 'Guardar y devolver en Puntos ES' : 'Guardar'}</button>
             </div>
           </form>
         </div>

@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { orderBlockers, parseDeliveryMethod, parseOrderItems, quoteOrder, OrderInputError } from '@/lib/order-quote';
 import { emitirCotizacion } from '@/lib/pago-movil/cotizacion';
+import { prisma } from '@/lib/prisma';
+import { repartirPuntos } from '@/lib/checkout-pago';
 
 // POST - Cotiza el carrito con precios, envío y descuentos del servidor (no crea nada).
 // El checkout lo usa para mostrar el mismo total que cobrará POST /api/orders y, con `blockers` y `errors`,
@@ -34,9 +36,28 @@ export async function POST(request: NextRequest) {
     // C-125: el monto exacto en Bs. para el Pago Móvil sale de aquí (céntimos redondeados una sola vez) y va firmado:
     // el checkout lo muestra, lo copia y lo manda al banco tal cual, y la verificación usa esta misma tasa
     const tasa = Number(settings?.exchangeRateVES ?? 0);
-    const pagoMovil = errors.length === 0 && blockers.length === 0 ? emitirCotizacion(session.user.id, calculation.totalUSD, tasa) : null;
+    const sePuedePagar = errors.length === 0 && blockers.length === 0;
 
-    return NextResponse.json({ calculation, errors, coupon, blockers, pagoMovil });
+    // C-132: Puntos ES del cliente y, con `usarPuntos`, el pago mixto: el Pago Móvil se cotiza solo por lo que falta.
+    // El reparto sale del saldo real; POST /api/orders lo vuelve a calcular al crear la orden.
+    const cuenta = await prisma.userBalance.findUnique({ where: { userId: session.user.id }, select: { balance: true } });
+    const reparto = repartirPuntos(Number(cuenta?.balance ?? 0), calculation.totalUSD);
+    const mixto = body?.usarPuntos === true && reparto.mixto;
+    const pagoMovil = sePuedePagar
+      ? emitirCotizacion(session.user.id, mixto ? reparto.restanteUSD : calculation.totalUSD, tasa)
+      : null;
+
+    return NextResponse.json({
+      calculation,
+      errors,
+      coupon,
+      blockers,
+      pagoMovil,
+      puntosES: {
+        disponibleUSD: Number(cuenta?.balance ?? 0),
+        ...(mixto ? { mixto: { puntosUSD: reparto.puntosUSD, restanteUSD: reparto.restanteUSD } } : {}),
+      },
+    });
   } catch (error) {
     if (error instanceof OrderInputError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

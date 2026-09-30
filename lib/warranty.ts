@@ -51,7 +51,7 @@ export const CLAIM_STATUS_TONE: Record<ClaimStatus, ClaimTone> = {
 export const RESOLUTION_LABEL: Record<Resolution, string> = {
   REPAIR: 'Reparado',
   REPLACEMENT: 'Cambiado por otro',
-  BALANCE_REFUND: 'Devuelto al saldo',
+  BALANCE_REFUND: 'Devuelto en Puntos ES',
 };
 
 export const isClosedStatus = (s: ClaimStatus): boolean => s === 'RESOLVED' || s === 'REJECTED';

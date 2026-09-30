@@ -89,20 +89,20 @@ export default function PagosSinOrden({ onChange }: { onChange?: () => void }) {
   const acreditar = async (p: PagoSinOrden) => {
     const quien = p.cliente?.name || p.cliente?.email || 'el cliente';
     const ok = await confirm({
-      title: 'Pasar el pago a su saldo',
-      message: `Se acreditan ${formatUSD(p.montoUSD)} (${formatVES(p.montoVES)} ${p.tasaCongelada ? 'a la tasa del pago' : 'a la tasa de hoy'}) al saldo de ${quien}. El pago ya no se podrá usar para una orden.${
+      title: 'Pasar el pago a sus Puntos ES',
+      message: `Se acreditan ${formatUSD(p.montoUSD)} (${formatVES(p.montoVES)} ${p.tasaCongelada ? 'a la tasa del pago' : 'a la tasa de hoy'}) a los Puntos ES de ${quien}. El pago ya no se podrá usar para una orden.${
         p.diasDesdePago >= diasViejo ? ` Es un pago de hace ${p.diasDesdePago} días: hazlo solo si el cliente no recibió su pedido.` : ''
       }`,
-      confirmText: 'Pasar a saldo',
+      confirmText: 'Pasar a Puntos ES',
       cancelText: 'Cancelar',
     });
-    if (ok) await enviar(p, { accion: 'saldo' }, (d) => `${formatUSD(d.montoUSD ?? 0)} pasaron al saldo de ${quien}`);
+    if (ok) await enviar(p, { accion: 'saldo' }, (d) => `${formatUSD(d.montoUSD ?? 0)} pasaron a los Puntos ES de ${quien}`);
   };
 
   const vincular = async (p: PagoSinOrden, o: OrdenCandidata) => {
     const ok = await confirm({
       title: `Vincular a la orden #${o.orderNumber}`,
-      message: `El pago ref. ${p.referencia} queda registrado como el de esa orden. No cambia la orden ni el saldo del cliente.`,
+      message: `El pago ref. ${p.referencia} queda registrado como el de esa orden. No cambia la orden ni los Puntos ES del cliente.`,
       confirmText: 'Vincular',
       cancelText: 'Cancelar',
     });
@@ -124,7 +124,7 @@ export default function PagosSinOrden({ onChange }: { onChange?: () => void }) {
       </p>
       <p className="mt-1 text-ink-soft">
         El banco confirmó el pago, pero no quedó enlazado a un pedido. Si el pedido se hizo o se entregó por otro camino, vincúlalo a su orden o archívalo.
-        Pásalo al saldo solo si el cliente no recibió nada.
+        Pásalo a sus Puntos ES solo si el cliente no recibió nada.
       </p>
       <ul className="mt-3 flex flex-col gap-2">
         {pagos.map((p) => {
@@ -144,7 +144,7 @@ export default function PagosSinOrden({ onChange }: { onChange?: () => void }) {
                 </p>
                 {viejo && (
                   <p className="mt-1 text-xs font-semibold text-warning-strong">
-                    Pago viejo: revisa si ya se atendió antes de pasarlo al saldo.
+                    Pago viejo: revisa si ya se atendió antes de pasarlo a Puntos ES.
                   </p>
                 )}
               </div>
@@ -193,7 +193,7 @@ export default function PagosSinOrden({ onChange }: { onChange?: () => void }) {
                   {p.puedeAcreditar ? (
                     <button type="button" onClick={() => void acreditar(p)} disabled={ocupado} className={viejo ? adminSecondaryButton : adminPrimaryButton}>
                       <FiCornerDownRight className="h-4 w-4" aria-hidden="true" />
-                      {ocupado ? 'Acreditando…' : 'Pasar a su saldo'}
+                      {ocupado ? 'Acreditando…' : 'Pasar a sus Puntos ES'}
                     </button>
                   ) : (
                     <p className={`${adminHint} sm:max-w-56`}>Pagado hace poco: el cliente puede estar terminando la compra. Se podrá acreditar a los {minutos} minutos.</p>

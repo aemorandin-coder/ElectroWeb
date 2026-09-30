@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
         status: 'PENDING',
         amount: montoDecimal(amount), // texto exacto (C-96)
         currency: 'USD',
-        description: description || `Recarga de saldo - ${resolvedMethodName}`,
+        description: description || `Recarga de Puntos ES - ${resolvedMethodName}`,
         reference: reference || null,
         paymentMethod: companyMethod.type,
         companyPaymentMethodId: companyMethod.id,
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
       emitAdminEvent({
         type: 'RECHARGE_REQUESTED',
         title: `Recarga por aprobar · ${formatUSD(amount)}`,
-        summary: `${userName} pidió recargar saldo`,
+        summary: `${userName} pidió recargar Puntos ES`,
         fields: [
           ['Monto', formatUSD(amount)],
           ['Método', resolvedMethodName],

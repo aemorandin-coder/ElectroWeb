@@ -6,8 +6,15 @@ import Image from 'next/image';
 import { FiAlertCircle, FiCheck, FiCheckCircle, FiChevronDown, FiCopy, FiEdit2, FiLoader, FiShield, FiX } from 'react-icons/fi';
 import { HiOutlineQrcode } from 'react-icons/hi';
 import toast from 'react-hot-toast';
-import { formatUSD, formatVES } from '@/lib/currency';
-import { BANCOS_VENEZUELA } from '@/lib/pago-movil/bancos-venezuela';
+import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
+import {
+  BANCOS_VENEZUELA,
+  mascaraTelefonoVE,
+  normalizarCedulaVE,
+  normalizarTelefonoVE,
+  validarCedulaVenezolana,
+  validarTelefonoVenezolano,
+} from '@/lib/pago-movil/bancos-venezuela';
 import { aCentimos, conciliar, hoyCaracas, leerMontoBs, montoParaCopiar, type Conciliacion } from '@/lib/pago-movil/monto';
 import { adminModalBody, adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle } from '@/lib/admin-ui';
 import { useMontado } from '@/lib/hooks/useMontado';
@@ -130,12 +137,17 @@ export default function CheckoutPagoMovilForm({
   // Lo que el cliente escribió; sin escribir nada, vale lo de su perfil (que llega después del primer render)
   const [cedulaEscrita, setCedula] = useState<string | null>(null);
   const [telefonoEscrito, setTelefono] = useState<string | null>(null);
-  const cedula = cedulaEscrita ?? pagador.cedula;
-  const telefono = telefonoEscrito ?? pagador.telefono;
+  // C-130: lo del perfil llega en el formato del banco. El perfil guarda "+58 4121234567" (o "+58 0412…")
+  // y "V-12345678": antes se mandaba "584121234567" y el BDV respondía "Formato de teléfono inválido".
+  const cedula = cedulaEscrita ?? normalizarCedulaVE(pagador.cedula);
+  const telefono = telefonoEscrito ?? mascaraTelefonoVE(pagador.telefono);
+  const cedulaValida = validarCedulaVenezolana(cedula);
+  const telefonoValido = validarTelefonoVenezolano(telefono);
   const [fecha, setFecha] = useState(() => hoyCaracas());
   const [otroMonto, setOtroMonto] = useState('');
   const [abrirPagador, setEditarPagador] = useState(false);
-  const editarPagador = abrirPagador || !pagador.cedula || !pagador.telefono;
+  // Si lo del perfil no sirve para el banco (teléfono de otro país, cédula incompleta), se abre para corregirlo antes
+  const editarPagador = abrirPagador || !validarCedulaVenezolana(pagador.cedula) || !validarTelefonoVenezolano(pagador.telefono);
   const [mostrarOtroMonto, setMostrarOtroMonto] = useState(false);
   const [bancosAbiertos, setBancosAbiertos] = useState(false);
   const [buscarBanco, setBuscarBanco] = useState('');
@@ -173,7 +185,7 @@ export default function CheckoutPagoMovilForm({
 
   const refLimpia = referencia.replace(/\D/g, '');
   const montoDeclarado = mostrarOtroMonto && otroMonto.trim() ? leerMontoBs(otroMonto) : null;
-  const puedeVerificar = !verificando && refLimpia.length >= 4 && Boolean(banco) && Boolean(cedula.trim()) && Boolean(telefono.trim()) && Boolean(fecha)
+  const puedeVerificar = !verificando && refLimpia.length >= 4 && Boolean(banco) && cedulaValida && telefonoValido && Boolean(fecha)
     && (!mostrarOtroMonto || !otroMonto.trim() || montoDeclarado !== null);
 
   const verificar = async () => {
@@ -189,11 +201,11 @@ export default function CheckoutPagoMovilForm({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          telefonoPagador: telefono.replace(/\D/g, ''),
+          telefonoPagador: normalizarTelefonoVE(telefono),
           bancoOrigen: banco,
           referencia: refLimpia,
           fechaPago: fecha,
-          cedulaPagador: cedula.trim().toUpperCase().replace(/[.\-\s]/g, ''),
+          cedulaPagador: normalizarCedulaVE(cedula),
           importe: montoParaCopiar(importe),
           contexto: 'ORDER',
           reqCed: true,
@@ -218,8 +230,8 @@ export default function CheckoutPagoMovilForm({
         pagadoBs,
         tasa: typeof data.tasa === 'number' && data.tasa > 0 ? data.tasa : null,
         bancoOrigen: banco,
-        telefonoPagador: telefono.replace(/\D/g, ''),
-        cedulaPagador: cedula.trim().toUpperCase(),
+        telefonoPagador: normalizarTelefonoVE(telefono),
+        cedulaPagador: normalizarCedulaVE(cedula),
         fechaPago: fecha,
       }];
       onPagosChange(nuevos);
@@ -260,7 +272,7 @@ export default function CheckoutPagoMovilForm({
               <p className="text-sm text-ink-soft">
                 {conciliacion.estado === 'EXACTO' && 'El banco confirmó el monto exacto. Ya puedes confirmar tu pedido.'}
                 {conciliacion.estado === 'REDONDEO' && `Hay una diferencia de ${formatVES(Math.abs(conciliacion.diferenciaBs))}: es muy pequeña, no tienes que hacer nada.`}
-                {conciliacion.estado === 'SOBREPAGO' && `Pagaste ${formatVES(conciliacion.diferenciaBs)} de más. Al confirmar tu pedido pasamos ${formatUSD(conciliacion.diferenciaUSD)} a tu saldo.`}
+                {conciliacion.estado === 'SOBREPAGO' && `Pagaste ${formatVES(conciliacion.diferenciaBs)} de más. Al confirmar tu pedido te acreditamos ${formatPuntos(conciliacion.diferenciaUSD)}.`}
                 {conciliacion.estado === 'FALTA' && `Recibimos ${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}. Haz otro Pago Móvil solo por la diferencia; lo que ya pagaste queda registrado.`}
               </p>
               <ul className="space-y-0.5 pt-1 text-xs text-muted">
@@ -397,11 +409,39 @@ export default function CheckoutPagoMovilForm({
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div>
                     <label htmlFor="pm-cedula" className="mb-1.5 block text-sm font-semibold text-ink">Cédula del titular</label>
-                    <input id="pm-cedula" value={cedula} onChange={(e) => setCedula(e.target.value)} placeholder="V12345678" maxLength={11} autoCapitalize="characters" className={inputClass} />
+                    <input
+                      id="pm-cedula"
+                      value={cedula}
+                      onChange={(e) => setCedula(e.target.value.toUpperCase())}
+                      onBlur={() => setCedula(normalizarCedulaVE(cedula))}
+                      placeholder="V12345678"
+                      maxLength={14}
+                      autoCapitalize="characters"
+                      aria-invalid={Boolean(cedula) && !cedulaValida}
+                      aria-describedby={cedula && !cedulaValida ? 'pm-cedula-error' : undefined}
+                      className={inputClass}
+                    />
+                    {cedula && !cedulaValida && (
+                      <p id="pm-cedula-error" className="mt-1 text-xs font-medium text-deal">V o E y el número, por ejemplo V12345678</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="pm-telefono" className="mb-1.5 block text-sm font-semibold text-ink">Teléfono que pagó</label>
-                    <input id="pm-telefono" value={telefono} onChange={(e) => setTelefono(e.target.value.replace(/[^\d]/g, '').slice(0, 11))} inputMode="tel" placeholder="04121234567" className={inputClass} />
+                    {/* Pegar "+58 412 123 4567" también sirve: se convierte a 04121234567 */}
+                    <input
+                      id="pm-telefono"
+                      value={telefono}
+                      onChange={(e) => setTelefono(mascaraTelefonoVE(e.target.value))}
+                      inputMode="numeric"
+                      autoComplete="tel-national"
+                      placeholder="04121234567"
+                      aria-invalid={telefono.length === 11 && !telefonoValido}
+                      aria-describedby={telefono.length === 11 && !telefonoValido ? 'pm-telefono-error' : undefined}
+                      className={inputClass}
+                    />
+                    {telefono.length === 11 && !telefonoValido && (
+                      <p id="pm-telefono-error" className="mt-1 text-xs font-medium text-deal">Debe ser un celular: 0412, 0414, 0416, 0422, 0424 o 0426</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="pm-fecha" className="mb-1.5 block text-sm font-semibold text-ink">Fecha del pago</label>
@@ -432,7 +472,7 @@ export default function CheckoutPagoMovilForm({
                     className={inputClass}
                   />
                   <p className="mt-1 text-xs text-muted">
-                    Escríbelo exacto, como sale en tu comprobante. Si pagaste de más, la diferencia va a tu saldo; si falta algo, pagas solo eso.
+                    Escríbelo exacto, como sale en tu comprobante. Si pagaste de más, la diferencia va a tus Puntos ES; si falta algo, pagas solo eso.
                   </p>
                 </div>
               ) : (

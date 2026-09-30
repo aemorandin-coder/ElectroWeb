@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     if (type === 'CRYPTO' && (!walletAddress || !network)) {
       return NextResponse.json(
-        { error: 'Para criptomoneda: dirección de wallet y red son requeridos' },
+        { error: 'Para criptomoneda: dirección de depósito y red son requeridas' },
         { status: 400 }
       );
     }

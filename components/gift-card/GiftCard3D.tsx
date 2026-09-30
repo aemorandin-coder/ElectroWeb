@@ -188,7 +188,7 @@ export default function GiftCard3D({
             <div />
             <div className={styles.valueRow}>
               <div>
-                <div className={styles.label}>Saldo</div>
+                <div className={styles.label}>Valor</div>
                 <div className={styles.amount}><span ref={amountRef}>{amountLabel ?? formatUSD(amountUSD)}</span><small>USD</small></div>
               </div>
               {recipientName && <div className={styles.to}>Para<b>{recipientName}</b></div>}

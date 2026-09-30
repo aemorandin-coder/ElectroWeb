@@ -1,5 +1,6 @@
 'use client';
 
+import { RESERVA_PAGO_MANUAL_HORAS } from '@/lib/checkout-pago';
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -62,6 +63,9 @@ function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const ordersParam = searchParams.get('orders') ?? '';
   const totalParam = searchParams.get('total') ?? '0';
+  // C-132: pago manual (Binance Pay, PayPal…): el equipo lo verifica y los productos quedan apartados
+  const porVerificar = searchParams.get('verificar') === '1';
+  const metodo = (searchParams.get('metodo') ?? '').slice(0, 40);
 
   const orderNumbers = ordersParam ? decodeURIComponent(ordersParam).split(',').filter(Boolean) : [];
   const total = parseFloat(totalParam) || 0;
@@ -96,10 +100,12 @@ function CheckoutSuccessContent() {
 
             {/* Título */}
             <h1 className="text-2xl sm:text-3xl font-bold text-ink mb-2">
-              ¡Gracias por tu compra!
+              {porVerificar ? '¡Recibimos tu pedido!' : '¡Gracias por tu compra!'}
             </h1>
             <p className="text-muted text-base mb-6 max-w-md mx-auto">
-              Tu pedido ha sido recibido y ya lo estamos procesando.
+              {porVerificar
+                ? `Estamos verificando tu pago${metodo ? ` por ${metodo}` : ''}. Te apartamos los productos ${RESERVA_PAGO_MANUAL_HORAS} horas y te avisamos al confirmarlo.`
+                : 'Tu pedido ha sido recibido y ya lo estamos procesando.'}
             </p>
 
             {/* ── Números de Orden ── */}
@@ -142,7 +148,7 @@ function CheckoutSuccessContent() {
                 {/* Total */}
                 {total > 0 && (
                   <div className="mt-4 pt-4 border-t border-line flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted">Total pagado:</span>
+                    <span className="text-sm font-medium text-muted">{porVerificar ? 'Total por verificar:' : 'Total pagado:'}</span>
                     <span className="text-2xl font-bold text-ink">{formatUSD(total)}</span>
                   </div>
                 )}

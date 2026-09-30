@@ -1,23 +1,42 @@
 'use client';
 
-import { useState } from 'react';
-import { FiPlus, FiTrash2, FiInfo } from 'react-icons/fi';
+import { useEffect, useRef, useState } from 'react';
+import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import { StepProps } from '../types';
 import { wizardInput, wizardError, wizardSectionTitle, wizardSectionHelp } from '../ui';
+import { claveNombre, combinarSugerencias, type SugerenciasSpecs } from '@/lib/spec-sugerencias';
 
-const SUGGESTED_SPECS: Record<string, string[]> = {
-  Procesador: ['Intel Core i5-12ª Gen', 'AMD Ryzen 5 5600X', 'Intel Core i7-13ª Gen'],
-  RAM: ['8 GB DDR4', '16 GB DDR4', '32 GB DDR5'],
-  Almacenamiento: ['256 GB SSD NVMe', '512 GB SSD NVMe', '1 TB HDD'],
-  Pantalla: ['15.6" Full HD IPS', '14" Full HD TN', '27" 4K IPS'],
-  'Sistema Operativo': ['Windows 11 Home', 'Windows 11 Pro', 'Sin SO'],
-  Conectividad: ['WiFi 6, Bluetooth 5.2', 'WiFi 5, Bluetooth 4.2'],
-  'Puertos USB': ['2x USB-A 3.0, 1x USB-C', '3x USB-A 2.0, 1x HDMI'],
-};
+// C-134:
+// - Las sugerencias ponen solo el NOMBRE y llevan al valor. Antes un clic en "+ Procesador" agregaba
+//   "Intel Core i5-12ª Gen" a cualquier producto: datos inventados en la ficha.
+// - Ninguna es obligatoria: hay productos con una sola (Andrés, 30/09).
+// - "Quitar" se ve siempre: antes solo aparecía con el mouse encima y en el teléfono no se podía borrar.
+// C-136: las sugerencias salen de la categoría (lo que ya usan sus productos, y una lista base por tipo). Al elegir un
+// nombre aparecen los valores más usados para completarlo con un toque.
 
-export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps) {
+export default function PhysicalStep3Specs({ data, onChange, errors, categories }: StepProps) {
   const [key, setKey] = useState('');
   const [value, setValue] = useState('');
+  const valorRef = useRef<HTMLInputElement>(null);
+  const nombreCategoria = categories.find((c) => c.id === data.categoryId)?.name ?? '';
+  // La lista base se ve al instante; lo aprendido de la categoría llega del servidor
+  const [aprendidas, setAprendidas] = useState<{ categoryId: string; datos: SugerenciasSpecs } | null>(null);
+  const sugerencias = aprendidas?.categoryId === data.categoryId ? aprendidas.datos : combinarSugerencias(nombreCategoria, []);
+
+  useEffect(() => {
+    if (!data.categoryId) return;
+    const control = new AbortController();
+    fetch(`/api/admin/products/spec-sugerencias?categoryId=${encodeURIComponent(data.categoryId)}`, { signal: control.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((datos: SugerenciasSpecs | null) => { if (datos) setAprendidas({ categoryId: data.categoryId, datos }); })
+      .catch(() => {});
+    return () => control.abort();
+  }, [data.categoryId]);
+
+  const entradas = Object.entries(data.specifications);
+  const count = entradas.length;
+  const usadas = new Set(entradas.map(([k]) => claveNombre(k)));
+  const valoresSugeridos = key.trim() ? sugerencias.valores[claveNombre(key)] ?? [] : [];
 
   const handleAdd = () => {
     if (!key.trim() || !value.trim()) return;
@@ -32,130 +51,112 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
     onChange({ specifications: next });
   };
 
-  const handleSuggestion = (k: string, v: string) => {
-    if (data.specifications[k]) return;
-    onChange({ specifications: { ...data.specifications, [k]: v } });
+  const usarSugerencia = (nombre: string) => {
+    setKey(nombre);
+    valorRef.current?.focus();
   };
 
-  const count = Object.keys(data.specifications).length;
-  const needed = Math.max(0, 3 - count);
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <h2 className={wizardSectionTitle}>Especificaciones técnicas</h2>
+        <h2 className={wizardSectionTitle}>Especificaciones</h2>
         <p className={wizardSectionHelp}>
-          Detalla las características técnicas del producto. Mínimo <strong>3 especificaciones</strong>.
+          {count === 0
+            ? 'Agrega las que apliquen a este producto. Ninguna es obligatoria: hay productos con una sola.'
+            : `${count} ${count === 1 ? 'especificación' : 'especificaciones'} en la ficha técnica.`}
         </p>
       </div>
 
-      {/* Progress indicator */}
-      <div className={[
-        'flex items-center gap-3 p-3 rounded-xl border',
-        count >= 3 ? 'bg-success-strong/10 border-success-strong/30' : 'bg-warning/10 border-warning-strong/30',
-      ].join(' ')}>
-        <div className={`text-2xl font-bold ${count >= 3 ? 'text-success-strong' : 'text-warning-strong'}`}>{count}</div>
-        <div>
-          <p className={`text-sm font-semibold ${count >= 3 ? 'text-success-strong' : 'text-warning-strong'}`}>
-            {count >= 3 ? '¡Mínimo cumplido!' : `Faltan ${needed} especificaciones`}
-          </p>
-          <p className={`text-xs ${count >= 3 ? 'text-success-strong' : 'text-warning-strong'}`}>
-            {count >= 3 ? 'Puedes agregar más para una ficha técnica completa.' : 'Se requieren al menos 3 para publicar.'}
-          </p>
-        </div>
-      </div>
-
-      {/* Current specs table */}
       {count > 0 && (
-        <div className="border border-line rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <tbody className="divide-y divide-line">
-              {Object.entries(data.specifications).map(([k, v]) => (
-                <tr key={k} className="group hover:bg-surface transition-colors">
-                  <td className="px-4 py-3 font-semibold text-ink w-2/5">{k}</td>
-                  <td className="px-4 py-3 text-ink-soft">{v}</td>
-                  <td className="px-4 py-3 text-right w-10">
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(k)}
-                      className="p-1.5 text-muted hover:text-deal opacity-0 group-hover:opacity-100 transition-all hover:bg-deal-bg rounded-lg"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ul className="divide-y divide-line rounded-xl border border-line" aria-label="Especificaciones agregadas">
+          {entradas.map(([k, v]) => (
+            <li key={k} className="flex items-center gap-3 py-1.5 pl-3 pr-1 text-sm">
+              <span className="w-2/5 shrink-0 font-semibold text-ink [overflow-wrap:anywhere]">{k}</span>
+              <span className="min-w-0 flex-1 text-ink-soft [overflow-wrap:anywhere]">{v}</span>
+              <button
+                type="button"
+                onClick={() => handleRemove(k)}
+                aria-label={`Quitar ${k}`}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-deal-bg hover:text-deal"
+              >
+                <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
 
-      {/* Add new spec */}
-      <div className="bg-surface rounded-xl p-4 border border-line">
-        <p className="text-xs font-bold text-muted uppercase tracking-wide mb-3">Agregar especificación</p>
-        <div className="flex gap-3">
-          <div className="flex-1">
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-ink">Agregar</p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
+          <label className="min-w-0">
+            <span className="sr-only">Nombre de la especificación</span>
             <input
               type="text"
               value={key}
+              maxLength={60}
               onChange={(e) => setKey(e.target.value)}
-              placeholder="Nombre (ej: Procesador)"
+              placeholder="Nombre (ej: Conexión)"
               className={wizardInput()}
-              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); valorRef.current?.focus(); } }}
               list="spec-keys"
             />
-            <datalist id="spec-keys">
-              {Object.keys(SUGGESTED_SPECS).map((k) => <option key={k} value={k} />)}
-            </datalist>
-          </div>
-          <div className="flex-1">
+          </label>
+          <datalist id="spec-keys">
+            {sugerencias.nombres.map((k) => <option key={k} value={k} />)}
+          </datalist>
+          <label className="min-w-0">
+            <span className="sr-only">Valor</span>
             <input
+              ref={valorRef}
               type="text"
               value={value}
+              maxLength={200}
               onChange={(e) => setValue(e.target.value)}
-              placeholder="Valor (ej: Intel Core i5)"
+              placeholder="Valor (ej: USB-C)"
               className={wizardInput()}
-              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
             />
-          </div>
+          </label>
           <button
             type="button"
             onClick={handleAdd}
             disabled={!key.trim() || !value.trim()}
-            className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <FiPlus className="w-4 h-4" />
+            <FiPlus className="h-4 w-4" aria-hidden="true" /> Agregar
           </button>
         </div>
-      </div>
-
-      {/* Suggestions */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <FiInfo className="w-4 h-4 text-brand-600" />
-          <p className="text-xs font-bold text-muted uppercase tracking-wide">Sugerencias rápidas</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(SUGGESTED_SPECS).map(([k, vals]) => (
-            !data.specifications[k] && (
+        {valoresSugeridos.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5" aria-label={`Valores usados para ${key}`}>
+            <span className="text-xs text-muted">Usados en la categoría:</span>
+            {valoresSugeridos.map((v) => (
               <button
-                key={k}
+                key={v}
                 type="button"
-                onClick={() => handleSuggestion(k, vals[0])}
-                className="px-3 py-1.5 bg-white border border-line rounded-full text-xs text-ink-soft hover:border-brand-500 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+                onClick={() => { setValue(v); valorRef.current?.focus(); }}
+                className="h-9 rounded-full bg-brand-50 px-3 text-xs font-medium text-brand-700 hover:bg-brand-100"
               >
-                + {k}
+                {v}
               </button>
-            )
+            ))}
+          </div>
+        )}
+        <div className="flex flex-wrap gap-1.5" aria-label={nombreCategoria ? `Sugeridas para ${nombreCategoria}` : 'Nombres sugeridos'}>
+          {sugerencias.nombres.filter((k) => !usadas.has(claveNombre(k))).map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => usarSugerencia(k)}
+              className="h-9 rounded-full border border-line bg-white px-3 text-xs text-ink-soft hover:border-brand-500 hover:text-brand-600"
+            >
+              {k}
+            </button>
           ))}
         </div>
       </div>
 
-      {errors.specifications && (
-        <div className="p-3 bg-deal-bg border border-deal/30 rounded-xl">
-          <p className={wizardError}>{errors.specifications}</p>
-        </div>
-      )}
+      {errors.specifications && <p className={wizardError}>{errors.specifications}</p>}
     </div>
   );
 }

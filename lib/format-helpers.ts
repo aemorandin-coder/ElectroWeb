@@ -13,8 +13,8 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
     CRYPTO: 'Criptomonedas',
     CASH: 'Efectivo',
     CREDIT_CARD: 'Tarjeta de Crédito',
-    BALANCE: 'Saldo de Cuenta',
-    WALLET: 'Saldo de Cuenta',
+    BALANCE: 'Puntos ES',
+    WALLET: 'Puntos ES',
     MERCANTIL_PANAMA: 'Mercantil Panamá',
     OTHER: 'Otro',
 };
@@ -25,6 +25,13 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
 export function formatPaymentMethod(method: string | null | undefined): string {
     if (!method) return 'No especificado';
     return PAYMENT_METHOD_LABELS[method] || method.replace(/_/g, ' ');
+}
+
+/** El método de una orden: "Puntos ES + Pago Móvil" si una parte se pagó con Puntos ES (pago mixto, C-132). */
+export function formatOrderPaymentMethod(order: { paymentMethod?: string | null; pointsUSD?: unknown }): string {
+    const base = formatPaymentMethod(order.paymentMethod);
+    const conPuntos = Number(order.pointsUSD ?? 0) > 0 && order.paymentMethod !== 'WALLET' && order.paymentMethod !== 'BALANCE';
+    return conPuntos ? `Puntos ES + ${base}` : base;
 }
 
 /**

@@ -1,5 +1,5 @@
 'use client';
-import { formatUSD } from '@/lib/currency';
+import { formatPuntos, formatUSD } from '@/lib/currency';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -512,7 +512,7 @@ function EnrollCard({
         <div className="space-y-3">
           {!isFree && userBalance !== null && (
             <p className="text-xs text-muted text-center">
-              Tu saldo: <span className={`font-bold ${hasBalance ? 'text-success-strong' : 'text-deal'}`}>{formatUSD(userBalance)}</span>
+              Tienes <span className={`font-bold ${hasBalance ? 'text-success-strong' : 'text-deal'}`}>{formatPuntos(userBalance)}</span>
               {!hasBalance && ' — insuficiente'}
             </p>
           )}
@@ -527,7 +527,7 @@ function EnrollCard({
           </button>
           {!isFree && !hasBalance && (
             <Link href="/customer/balance" className="block w-full py-2.5 text-center text-sm font-semibold text-brand-500 border border-brand-500 rounded-xl hover:bg-brand-500/5 transition-colors">
-              Recargar Saldo
+              Recargar Puntos ES
             </Link>
           )}
         </div>

@@ -39,7 +39,8 @@ export default function ProductCard({ product, exchangeRateVES, lowStockThreshol
           fill
           priority={priority}
           sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-          className="object-contain p-3"
+          // C-133: de borde a borde, para que la cinta ES caiga en la esquina de la tarjeta
+          className="object-contain"
         />
         {badges.length > 0 && (
           <div className="absolute left-2 right-12 top-2 flex flex-wrap gap-1">

@@ -103,7 +103,7 @@ export async function POST() {
                 email: '',
                 phone: '',
                 holderName: '',
-                instructions: 'Pago vía Zinli (Billetera Digital USD)',
+                instructions: 'Pago vía Zinli (USD)',
                 displayNote: 'Envía el pago al correo o teléfono Zinli indicado',
                 sortOrder: 7,
                 isActive: false, // Inactivo por defecto

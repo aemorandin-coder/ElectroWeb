@@ -66,7 +66,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error fetching balance:', error);
-    return NextResponse.json({ error: 'Error al obtener el saldo' }, { status: 500 });
+    return NextResponse.json({ error: 'Error al obtener tus Puntos ES' }, { status: 500 });
   }
 }
 

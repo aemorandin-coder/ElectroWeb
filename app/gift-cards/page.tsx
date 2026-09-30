@@ -1,5 +1,5 @@
 'use client';
-import { formatUSD, formatVES } from '@/lib/currency';
+import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
@@ -273,7 +273,7 @@ export default function GiftCardsPage() {
                 icon={<FiGift />}
                 eyebrow="Gift Cards"
                 title="Regala tecnología"
-                description="Elige el diseño y el monto. La tarjeta llega al correo de quien la recibe y la canjea como saldo en la tienda."
+                description="Elige el diseño y el monto. La tarjeta llega al correo de quien la recibe y la canjea como Puntos ES en la tienda."
                 actions={
                     <Link href="/canjear-gift-card" className="inline-flex h-11 items-center gap-2 rounded-lg border border-brand-200 bg-white px-4 text-sm font-semibold text-brand-700 hover:bg-brand-100">
                         Canjear una gift card
@@ -609,7 +609,7 @@ export default function GiftCardsPage() {
                             </div>
                             {session && (
                                 <div className="flex justify-between pt-2 border-t border-line">
-                                    <span className="text-muted text-sm">Tu saldo</span>
+                                    <span className="text-muted text-sm">Tus Puntos ES</span>
                                     <span className={`font-bold text-sm ${canPayWithBalance ? 'text-success-strong' : 'text-warning-strong'}`}>
                                         {formatUSD(typeof userBalance === 'number' ? userBalance : 0)}
                                     </span>
@@ -626,7 +626,7 @@ export default function GiftCardsPage() {
                         {/* C-87: sin saldo suficiente se recarga aquí mismo; la gift card no pasa por el carrito */}
                         {session && saldoCargado && finalAmount >= 5 && !canPayWithBalance && (
                             <p className={`${adminNotice('warning')} mb-3`}>
-                                Te faltan <strong>{formatUSD(faltaSaldo)}</strong> de saldo. Recarga y envía tu gift card desde esta misma página.
+                                Te faltan <strong>{formatPuntos(faltaSaldo)}</strong>. Recarga y envía tu gift card desde esta misma página.
                             </p>
                         )}
 
@@ -642,10 +642,10 @@ export default function GiftCardsPage() {
                         >
                             {!session ? (
                                 <><FiLogIn className="w-4 h-4" /> Inicia sesión para comprar</>
-                            ) : isLoading ? 'Procesando' : !saldoCargado ? 'Cargando tu saldo' : canPayWithBalance ? (
-                                <><FiCreditCard className="w-4 h-4" /> Pagar con saldo</>
+                            ) : isLoading ? 'Procesando' : !saldoCargado ? 'Cargando tus Puntos ES' : canPayWithBalance ? (
+                                <><FiCreditCard className="w-4 h-4" /> Pagar con Puntos ES</>
                             ) : (
-                                <><FiPlusCircle className="w-4 h-4" /> Recargar saldo</>
+                                <><FiPlusCircle className="w-4 h-4" /> Recargar Puntos ES</>
                             )}
                         </button>
                     </div>

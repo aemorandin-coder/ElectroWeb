@@ -44,6 +44,7 @@ import {
 import { useMontado } from '@/lib/hooks/useMontado';
 import { describirEntrega, describirPago, estadoPago, tonoEstadoOrden, type PagoMovilResumen } from '@/lib/order-pago';
 import { formatVES } from '@/lib/currency';
+import { formatPaymentMethod } from '@/lib/format-helpers';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useTiempoReal } from '@/lib/realtime/hooks';
 import { EnVivo } from '@/components/ui/EnVivo';
@@ -65,6 +66,9 @@ interface Order {
   } | null;
   /** C-126: Pagos Móvil verificados y vinculados a la orden */
   pagosMovil?: PagoMovilResumen[];
+  /** C-132: parte pagada con Puntos ES (pago mixto) y referencia de un pago manual */
+  pointsUSD?: number | string | null;
+  paymentReference?: string | null;
   totalVES?: number | string | null;
   exchangeRateVES?: number | string | null;
   guestName?: string | null;
@@ -742,7 +746,7 @@ export default function OrdersPage() {
                     <FiDollarSign className="h-4 w-4" aria-hidden="true" /> Pago
                   </h4>
                   {(() => {
-                    const pago = describirPago(selectedOrder.paymentMethod, selectedOrder.pagosMovil);
+                    const pago = describirPago(selectedOrder.paymentMethod, selectedOrder.pagosMovil, { puntosUSD: selectedOrder.pointsUSD, referencia: selectedOrder.paymentReference });
                     const ves = Number(selectedOrder.totalVES) || 0;
                     const tasa = Number(selectedOrder.exchangeRateVES) || 0;
                     return (
@@ -1049,12 +1053,14 @@ export default function OrdersPage() {
               <div className={adminNotice('warning')}>
                 {selectedOrder.paymentStatus === 'PAID' ? (
                   selectedOrder.paymentMethod === 'WALLET' ? (
-                    <>Se devolverá <strong>{formatUSD(Number(selectedOrder.totalUSD) || 0)}</strong> al saldo del cliente para comprar en la tienda, y el stock volverá al inventario.</>
+                    <>Se devolverá <strong>{formatUSD(Number(selectedOrder.totalUSD) || 0)}</strong> a los Puntos ES del cliente para comprar en la tienda, y el stock volverá al inventario.</>
+                  ) : Number(selectedOrder.pointsUSD) > 0 ? (
+                    <>Se devolverá <strong>{formatUSD(Number(selectedOrder.pointsUSD) || 0)}</strong> a los Puntos ES del cliente (la parte que pagó con puntos) y el stock volverá al inventario. Lo que pagó por {formatPaymentMethod(selectedOrder.paymentMethod)} se gestiona aparte.</>
                   ) : (
-                    <>El stock volverá al inventario. Este pago no fue con saldo: si hay que devolver algo, se gestiona aparte.</>
+                    <>El stock volverá al inventario. Este pago no fue con Puntos ES: si hay que devolver algo, se gestiona aparte.</>
                   )
                 ) : (
-                  <>La orden no está pagada: no se devuelve stock ni saldo, solo se libera la reserva.</>
+                  <>La orden no está pagada: no se devuelve stock ni Puntos ES, solo se suelta lo que tenía apartado.</>
                 )}
               </div>
 

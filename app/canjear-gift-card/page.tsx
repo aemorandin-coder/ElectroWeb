@@ -10,7 +10,7 @@ import Footer from '@/components/Footer';
 import Container from '@/components/ui/Container';
 import PageHeader from '@/components/ui/PageHeader';
 import GiftCard3D, { type GiftCardFace } from '@/components/gift-card/GiftCard3D';
-import { formatUSD } from '@/lib/currency';
+import { formatPuntos, formatUSD } from '@/lib/currency';
 import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
 
 interface CardInfo {
@@ -110,7 +110,7 @@ export default function RedeemGiftCardPage() {
       }
       setRedeemed({ amount: Number(data.amountRedeemed) || 0, newBalance: Number(data.newBalance) || 0 });
       setFace('front');
-      toast.success(`Listo: ${formatUSD(Number(data.amountRedeemed) || 0)} en tu saldo`);
+      toast.success(`Listo: te acreditamos ${formatPuntos(Number(data.amountRedeemed) || 0)}`);
     } catch {
       setError('No se pudo canjear la gift card. Revisa tu conexión e intenta de nuevo.');
     } finally {
@@ -132,7 +132,7 @@ export default function RedeemGiftCardPage() {
           icon={<FiGift />}
           eyebrow="Gift Cards"
           title="Canjear gift card"
-          description="Escribe el código de tu tarjeta. El saldo pasa a tu cuenta y lo usas en cualquier compra de la tienda."
+          description="Escribe el código de tu tarjeta. Su valor pasa a tus Puntos ES y lo usas en cualquier compra de la tienda."
         />
         <Container className="py-6 lg:py-10">
           <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:gap-12">
@@ -149,7 +149,7 @@ export default function RedeemGiftCardPage() {
                 onFaceChange={setFace}
               />
               <p className="text-center text-sm text-muted">
-                {redeemed ? 'Saldo acreditado. Puedes girarla para ver el código.' : 'Así se ve tu tarjeta. Arrástrala de lado para girarla.'}
+                {redeemed ? 'Puntos ES acreditados. Puedes girarla para ver el código.' : 'Así se ve tu tarjeta. Arrástrala de lado para girarla.'}
               </p>
             </section>
 
@@ -162,7 +162,7 @@ export default function RedeemGiftCardPage() {
                     </span>
                     <div>
                       <h2 className="text-lg font-bold text-ink">Gift card canjeada</h2>
-                      <p className="text-sm text-muted">El saldo ya está en tu cuenta.</p>
+                      <p className="text-sm text-muted">Ya está en tus Puntos ES.</p>
                     </div>
                   </div>
                   <dl className="grid grid-cols-2 gap-3">
@@ -171,7 +171,7 @@ export default function RedeemGiftCardPage() {
                       <dd className="mt-1 text-2xl font-bold text-success-strong">{formatUSD(redeemed.amount)}</dd>
                     </div>
                     <div className="rounded-xl bg-surface p-4">
-                      <dt className="text-xs font-medium text-muted">Tu saldo ahora</dt>
+                      <dt className="text-xs font-medium text-muted">Tus Puntos ES ahora</dt>
                       <dd className="mt-1 text-2xl font-bold text-ink">{formatUSD(redeemed.newBalance)}</dd>
                     </div>
                   </dl>
@@ -180,7 +180,7 @@ export default function RedeemGiftCardPage() {
                       Ir a comprar <FiArrowRight className="h-4 w-4" aria-hidden="true" />
                     </Link>
                     <Link href="/customer/balance" className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-line px-5 text-sm font-semibold text-ink hover:bg-surface">
-                      <FiCreditCard className="h-4 w-4" aria-hidden="true" /> Ver mi saldo
+                      <FiCreditCard className="h-4 w-4" aria-hidden="true" /> Ver mis Puntos ES
                     </Link>
                   </div>
                 </div>
@@ -219,7 +219,7 @@ export default function RedeemGiftCardPage() {
                       <div>
                         <p className="text-xs font-medium text-muted">Tarjeta terminada en {cardInfo.codeLast4}</p>
                         <p className="mt-0.5 text-lg font-bold text-ink">
-                          {cardInfo.balanceUSD !== undefined ? formatUSD(cardInfo.balanceUSD) : session ? '—' : 'Inicia sesión para ver el saldo'}
+                          {cardInfo.balanceUSD !== undefined ? formatUSD(cardInfo.balanceUSD) : session ? '—' : 'Inicia sesión para ver su valor'}
                         </p>
                       </div>
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${cardInfo.isValid ? 'bg-success-strong/10 text-success-strong' : 'bg-warning/15 text-warning-strong'}`}>

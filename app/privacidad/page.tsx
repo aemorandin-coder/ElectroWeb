@@ -43,7 +43,7 @@ export default function PrivacyPage() {
                 <li><strong>Registrarse:</strong> Nombre completo, correo electrónico, contraseña (encriptada)</li>
                 <li><strong>Completar su perfil:</strong> Número de cédula, teléfono, dirección de envío</li>
                 <li><strong>Realizar compras:</strong> Historial de pedidos, métodos de pago utilizados</li>
-                <li><strong>Recargar saldo:</strong> Referencias de pago, montos, método de pago</li>
+                <li><strong>Recargar Puntos ES:</strong> Referencias de pago, montos, método de pago</li>
                 <li><strong>Aceptar términos de recarga:</strong> Cédula de identidad, firma digital, fecha y hora de aceptación, dirección IP</li>
                 <li><strong>Comunicarse con nosotros:</strong> Mensajes, solicitudes de soporte, comentarios</li>
               </ul>
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
               <ul className="list-disc pl-6 space-y-2 text-ink-soft">
                 <li>Procesar y gestionar sus pedidos y transacciones</li>
                 <li>Verificar su identidad para operaciones financieras</li>
-                <li>Gestionar su saldo de cuenta y solicitudes de recarga</li>
+                <li>Gestionar sus Puntos ES y solicitudes de recarga</li>
                 <li>Enviar notificaciones sobre el estado de sus pedidos y transacciones</li>
                 <li>Prevenir fraudes y actividades sospechosas</li>
                 <li>Generar documentos legales como constancias de aceptación de términos</li>
@@ -95,7 +95,7 @@ export default function PrivacyPage() {
                 <h2 className="text-xl font-bold text-ink">4. Datos de Firma Digital</h2>
               </div>
               <p className="mb-3">
-                Para cumplir con requisitos legales y anti-lavado de dinero, al aceptar los términos de recarga de saldo,
+                Para cumplir con requisitos legales y anti-lavado de dinero, al aceptar los términos de recarga de Puntos ES,
                 almacenamos:
               </p>
               <ul className="list-disc pl-6 space-y-2 text-ink-soft">
@@ -202,7 +202,7 @@ export default function PrivacyPage() {
               <ul className="list-disc pl-6 space-y-2 text-ink-soft">
                 <li><strong>Datos de cuenta:</strong> Mientras su cuenta esté activa, más 2 años adicionales tras la eliminación</li>
                 <li><strong>Historial de pedidos:</strong> Mínimo 5 años por requisitos fiscales</li>
-                <li><strong>Transacciones de saldo:</strong> Mínimo 10 años por requisitos anti-lavado</li>
+                <li><strong>Movimientos de Puntos ES:</strong> Mínimo 10 años por requisitos anti-lavado</li>
                 <li><strong>Documentos de aceptación de términos:</strong> Indefinidamente como evidencia legal</li>
                 <li><strong>Firmas digitales:</strong> Indefinidamente como evidencia legal</li>
               </ul>

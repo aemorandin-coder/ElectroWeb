@@ -26,8 +26,9 @@ export default function FeaturedHeroCard({ product, exchangeRateVES, lowStockThr
 
   return (
     <article className="relative flex h-full min-h-96 overflow-hidden rounded-2xl border border-line bg-white transition-shadow hover:shadow-md">
-      <div className="relative w-[55%] shrink-0 bg-white">
-        <Image src={image} alt={product.name} fill priority sizes="360px" className="object-contain p-3" />
+      {/* C-133: la foto cuadrada y de borde a borde, pegada a la esquina de abajo: la cinta ES cae en la esquina de la foto */}
+      <div className="relative aspect-square w-[55%] shrink-0 self-end bg-white">
+        <Image src={image} alt={product.name} fill priority sizes="360px" className="object-contain" />
         {badges.length > 0 && (
           <div className="absolute left-3 top-3 flex flex-wrap gap-1">
             {badges.map((badge) => (

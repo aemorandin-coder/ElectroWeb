@@ -7,6 +7,7 @@ import { createHash, randomUUID } from 'crypto';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
+import { leerDocumento } from '@/lib/validations/registro';
 
 export const ADDRESS_TYPES = ['HOME', 'WORK', 'ZOOM', 'MRW'] as const;
 export type AddressType = (typeof ADDRESS_TYPES)[number];
@@ -25,10 +26,19 @@ export const addressInputSchema = z
     state: text(80).min(1, 'El estado es obligatorio'),
     postalCode: text(12).default(''),
     country: text(60).default('Venezuela'),
-    phone: text(30).default(''),
+    // C-137: teléfono y cédula de quien recibe (la agencia pide la cédula al entregar)
+    phone: text(30).default('').refine((v) => !v || /^\+?[\d\s().-]{10,20}$/.test(v), 'Escribe un teléfono válido, por ejemplo 04121234567'),
+    recipientIdNumber: text(20).default('').transform((v, ctx) => {
+      if (!v) return '';
+      const doc = leerDocumento(v);
+      if (!doc.ok) { ctx.addIssue({ code: 'custom', message: doc.error }); return z.NEVER; }
+      return doc.valor;
+    }),
     isDefault: z.boolean().default(false),
     agencyName: text(100).default(''),
-    agencyCode: text(30).default(''),
+    // Código de la oficina de ZOOM o de la agencia de MRW (el checkout la preselecciona) y de la ciudad de ZOOM
+    agencyCode: text(30).default('').refine((v) => !v || /^[0-9A-Za-z-]{1,20}$/.test(v), 'Código de oficina inválido'),
+    cityCode: text(12).default('').refine((v) => !v || /^\d{1,6}$/.test(v), 'Código de ciudad inválido'),
   })
   .refine((data) => (data.type === 'ZOOM' || data.type === 'MRW' ? data.agencyName.length > 0 : true), {
     message: 'Indica el nombre de la agencia',
@@ -75,6 +85,8 @@ function normalizeEntry(raw: unknown): SavedAddress | null {
     isDefault: entry.isDefault === true,
     agencyName: str(entry.agencyName),
     agencyCode: str(entry.agencyCode),
+    cityCode: str(entry.cityCode),
+    recipientIdNumber: str(entry.recipientIdNumber),
     address: addressLine1,
     createdAt: str(entry.createdAt),
     ...(str(entry.updatedAt) ? { updatedAt: str(entry.updatedAt) } : {}),

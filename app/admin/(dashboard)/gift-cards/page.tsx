@@ -287,7 +287,7 @@ export default function GiftCardsAdminPage() {
           { label: 'Total', value: String(stats.total), icon: FiHash, tone: 'neutral' as AdminTone },
           { label: 'Por activar', value: String(stats.toActivate), icon: FiAlertTriangle, tone: 'warning' as AdminTone },
           { label: 'Activas', value: String(stats.active), icon: FiCheck, tone: 'success' as AdminTone },
-          { label: 'Saldo activo', value: formatUSD(stats.activeBalance), icon: FiDollarSign, tone: 'brand' as AdminTone },
+          { label: 'Valor sin canjear', value: formatUSD(stats.activeBalance), icon: FiDollarSign, tone: 'brand' as AdminTone },
           { label: 'Canjeado', value: formatUSD(stats.redeemed), icon: FiGift, tone: 'brand' as AdminTone },
         ].map(({ label, value, icon: Icon, tone }) => (
           <div key={label} className={`${adminStatCard} min-w-max shrink-0 p-3`}>
@@ -337,7 +337,7 @@ export default function GiftCardsAdminPage() {
                   <p className="text-xs text-muted">{isPrinted(card) ? 'Impresa' : 'Digital'} · {new Date(card.createdAt).toLocaleDateString('es-VE')}</p>
                   <dl className="my-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
                     <div><dt className="text-muted">Monto</dt><dd className="whitespace-nowrap font-semibold tabular-nums">{formatUSD(Number(card.amountUSD))}</dd></div>
-                    <div><dt className="text-muted">Saldo</dt><dd className="whitespace-nowrap font-semibold tabular-nums">{formatUSD(Number(card.balanceUSD))}</dd></div>
+                    <div><dt className="text-muted">Disponible</dt><dd className="whitespace-nowrap font-semibold tabular-nums">{formatUSD(Number(card.balanceUSD))}</dd></div>
                   </dl>
                   {card.recipientEmail && <div className="mb-3 text-sm [overflow-wrap:anywhere]"><p className="font-medium text-ink">{card.recipientName}</p><p className="text-muted">{card.recipientEmail}</p></div>}
                   <div className="flex flex-wrap gap-2">
@@ -355,7 +355,7 @@ export default function GiftCardsAdminPage() {
                 <th className={adminTh}>Código</th>
                 <th className={adminTh}>Tipo</th>
                 <th className={adminTh}>Monto</th>
-                <th className={adminTh}>Saldo</th>
+                <th className={adminTh}>Disponible</th>
                 <th className={adminTh}>Estado</th>
                 <th className={adminTh}>Destinatario</th>
                 <th className={adminTh}>Fecha</th>
@@ -543,7 +543,7 @@ export default function GiftCardsAdminPage() {
               />
               <dl className="grid grid-cols-2 gap-3 text-sm">
                 <div className="border-b border-line py-2"><dt className="text-muted">Monto</dt><dd className="font-semibold text-ink">{formatUSD(Number(details.amountUSD))}</dd></div>
-                <div className="border-b border-line py-2"><dt className="text-muted">Saldo</dt><dd className="font-semibold text-ink">{formatUSD(Number(details.balanceUSD))}</dd></div>
+                <div className="border-b border-line py-2"><dt className="text-muted">Disponible</dt><dd className="font-semibold text-ink">{formatUSD(Number(details.balanceUSD))}</dd></div>
                 <div className="border-b border-line py-2"><dt className="text-muted">Estado</dt><dd><span className={adminBadge((STATUS[details.status] ?? STATUS.EXPIRED).tone)}>{STATUS[details.status]?.label ?? details.status}</span></dd></div>
                 <div className="border-b border-line py-2"><dt className="text-muted">Creada</dt><dd className="font-semibold text-ink">{new Date(details.createdAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>
                 {details.activatedAt && <div className="border-b border-line py-2"><dt className="text-muted">Activada</dt><dd className="font-semibold text-ink">{new Date(details.activatedAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>}

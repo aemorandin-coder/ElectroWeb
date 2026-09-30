@@ -6,13 +6,16 @@ import { prisma } from '@/lib/prisma';
 import { montoDecimal } from '@/lib/pricing';
 import { verificarPagoMovil, interpretarErrorBDV } from '@/lib/pago-movil/verificar-pago';
 import {
+    normalizarCedulaVE,
+    normalizarTelefonoVE,
+    validarCedulaVenezolana,
     validarTelefonoVenezolano,
     validarReferencia,
 } from '@/lib/pago-movil/bancos-venezuela';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 import { emitAdminEvent } from '@/lib/admin-events';
-import { formatUSD, formatVES } from '@/lib/currency';
+import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { aCentimos, hoyCaracas, leerMontoBs, montoBs, montoParaCopiar } from '@/lib/pago-movil/monto';
 import { leerCotizacion } from '@/lib/pago-movil/cotizacion';
 import { clavePago, unaALaVez } from '@/lib/pago-movil/candado';
@@ -54,12 +57,12 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
 
         const {
-            telefonoPagador,
+            telefonoPagador: telefonoRecibido,
             bancoOrigen,
             referencia,
             fechaPago,
             importe,           // Monto en Bs para verificar con BDV
-            cedulaPagador,
+            cedulaPagador: cedulaRecibida,
             reqCed = true,      // Validar cédula por defecto para mayor seguridad
             // Contexto de la verificación
             contexto = 'GENERAL', // RECHARGE, ORDER, GENERAL
@@ -67,6 +70,11 @@ export async function POST(req: NextRequest) {
             // orderId del navegador: se ignora desde C-129 (lo pone POST /api/orders)
             cotizacion: cotizacionToken, // C-125: monto y tasa firmados por /api/orders/quote
         } = body;
+
+        // C-130: teléfono y cédula en el formato del BDV, vengan como vengan ("+58 0412…", "v-19.855.597").
+        // Antes el checkout mandaba el teléfono del perfil como "584121234567" y el banco lo rechazaba.
+        const telefonoPagador = typeof telefonoRecibido === 'string' ? normalizarTelefonoVE(telefonoRecibido) : '';
+        const cedulaPagador = typeof cedulaRecibida === 'string' ? normalizarCedulaVE(cedulaRecibida) : '';
 
         // C-125: compra con cotización firmada. Si falta o venció, se usa la tasa del momento (como antes)
         const cotizacion = contexto === 'ORDER' ? leerCotizacion(cotizacionToken, userId) : null;
@@ -79,20 +87,17 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // SEGURIDAD: Validar cédula con formato correcto (V/E + 6-9 dígitos)
-        const cedulaRegex = /^[VvEe]?\d{6,9}$/;
-        const cedulaLimpia = cedulaPagador?.trim().replace(/[.-]/g, '') || '';
-        if (!cedulaLimpia || !cedulaRegex.test(cedulaLimpia)) {
+        // SEGURIDAD: cédula V o E con 6 a 9 dígitos
+        if (!validarCedulaVenezolana(cedulaPagador)) {
             return NextResponse.json(
-                { error: 'Formato de cédula inválido. Debe ser V o E seguido de 6-9 dígitos. Ejemplo: V12345678' },
+                { error: 'Revisa la cédula del titular: V o E y el número, por ejemplo V12345678.' },
                 { status: 400 }
             );
         }
 
-        // Validar formato de teléfono
         if (!validarTelefonoVenezolano(telefonoPagador)) {
             return NextResponse.json(
-                { error: 'Formato de teléfono inválido. Ejemplo: 04121234567' },
+                { error: 'Revisa el teléfono que pagó: un celular venezolano de 11 dígitos, por ejemplo 04121234567.' },
                 { status: 400 }
             );
         }
@@ -430,7 +435,7 @@ export async function POST(req: NextRequest) {
                             userId,
                             type: 'RECHARGE_APPROVED',
                             title: 'Recarga Aprobada Automaticamente',
-                            message: `Tu recarga de $${montoUsd.toFixed(2)} ha sido verificada y aprobada automaticamente. El saldo ya esta disponible.`,
+                            message: `Tu recarga de ${formatPuntos(montoUsd)} se verificó y se aprobó sola: ya está disponible.`,
                             link: '/customer/balance',
                             icon: 'check-circle',
                         },
@@ -450,7 +455,7 @@ export async function POST(req: NextRequest) {
                                     <h2 style="margin:0 0 8px;color:#212529;font-size:22px;font-weight:700;">¡Recarga Aprobada!</h2>
                                     <p style="color:#6a6c6b;font-size:15px;line-height:1.7;">
                                         Tu recarga de <strong style="color:#10b981;">$${montoUsd.toFixed(2)} USD</strong>
-                                        fue verificada automáticamente con el Banco de Venezuela y ya está disponible en tu saldo.
+                                        fue verificada automáticamente con el Banco de Venezuela y ya está disponible en tus Puntos ES.
                                     </p>
                                 </div>
                                 <div style="background:#ecfdf5;border-radius:12px;padding:20px;margin:20px 0;border:1px solid #10b981;">
@@ -460,7 +465,7 @@ export async function POST(req: NextRequest) {
                                 <div style="text-align:center;margin:24px 0;">
                                     <a href="${process.env.NEXTAUTH_URL}/customer/balance"
                                        style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">
-                                        Ver Mi Saldo
+                                        Ver mis Puntos ES
                                     </a>
                                 </div>`,
                                 'Tu recarga fue procesada automáticamente'
@@ -475,7 +480,7 @@ export async function POST(req: NextRequest) {
                     emitAdminEvent({
                         type: 'RECHARGE_AUTO_APPROVED',
                         title: `Recarga aprobada por Pago Móvil · ${formatUSD(montoUsd)}`,
-                        summary: `El banco confirmó el pago de ${session.user.name || session.user.email || 'un cliente'} y el saldo se acreditó solo`,
+                        summary: `El banco confirmó el pago de ${session.user.name || session.user.email || 'un cliente'} y los Puntos ES se acreditaron solos`,
                         fields: [['Pagado', formatVES(montoVerificadoBs)], ['Tasa aplicada', formatVES(tasa)], ['Referencia', String(referencia).slice(0, 30)]],
                         link: '/admin/transactions',
                     });

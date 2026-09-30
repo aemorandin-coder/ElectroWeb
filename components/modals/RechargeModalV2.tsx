@@ -195,7 +195,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         if (method.phone) details['Teléfono'] = method.phone;
         if (method.holderName) details['Titular'] = method.holderName;
         if (method.email) details['Correo'] = method.email;
-        if (method.walletAddress) details['Dirección de Wallet'] = method.walletAddress;
+        if (method.walletAddress) details['Dirección de depósito'] = method.walletAddress;
         if (method.network) details['Red'] = method.network;
         return details;
     };
@@ -368,7 +368,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     // Handle verification success
     const handleVerificationSuccess = (data: { verified: boolean; autoApproved?: boolean; amount?: string }) => {
         if (data.autoApproved) {
-            toast.success('Tu recarga ha sido verificada y aprobada automaticamente. El saldo ya esta disponible.', {
+            toast.success('Tu recarga se verificó y se aprobó sola. Tus Puntos ES ya están disponibles.', {
                 duration: 5000,
                 icon: <FiCheckCircle className="h-5 w-5 text-success-strong" />
             });

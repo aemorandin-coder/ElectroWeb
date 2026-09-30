@@ -9,6 +9,9 @@ export const customerOrderSelect = {
   status: true,
   paymentStatus: true,
   paymentMethod: true,
+  // C-132: parte pagada con Puntos ES (pago mixto) y referencia de un pago manual, para "Mis pedidos"
+  pointsUSD: true,
+  paymentReference: true,
   deliveryMethod: true,
   subtotalUSD: true,
   taxUSD: true,
@@ -16,6 +19,8 @@ export const customerOrderSelect = {
   discountUSD: true,
   totalUSD: true,
   totalVES: true,
+  // C-137: tasa del día de la compra, para el recibo
+  exchangeRateVES: true,
   notes: true,
   createdAt: true,
   paidAt: true,

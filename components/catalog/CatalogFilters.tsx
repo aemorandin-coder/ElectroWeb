@@ -100,7 +100,7 @@ export default function CatalogFilters({ params, categories, idPrefix }: Catalog
           {[
             { value: '', label: 'Todos' },
             { value: 'fisico', label: 'Físicos (envío o retiro)' },
-            { value: 'digital', label: 'Digitales (gift cards y saldo)' },
+            { value: 'digital', label: 'Digitales (gift cards y recargas)' },
           ].map((option) => (
             <label key={option.value || 'todos'} className="flex min-h-10 cursor-pointer items-center gap-3 text-sm text-ink-soft">
               <input type="radio" name="tipo" value={option.value} defaultChecked={(params.type ?? '') === option.value} className="h-4 w-4 accent-brand-500" />

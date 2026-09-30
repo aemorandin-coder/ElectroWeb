@@ -30,6 +30,7 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 - Nada que solo funcione con hover. Nada de `<button>` dentro de `<Link>` (usa *stretched link*).
 - Precios con `lib/currency.ts` (`formatUSD`, `formatVES`).
 - Sin `<style jsx>`, `console.log` ni `any` nuevos. Sin animaciones infinitas en la tienda.
+- **"Puntos ES", nunca "saldo" ni "billetera"** (ley venezolana; regla de Andrés del 2026-09-30). El saldo del cliente se llama **Puntos ES** (Puntos ElectroShop) en todo texto visible: tienda, panel, correos, toasts y admin. Tampoco "wallet" ni "monedero", ni decir que se retira o se transfiere. Si un pedido usa esas palabras, se traduce a "Puntos ES". El código interno (`WALLET`, `userBalance`, `/customer/balance`) no se renombra.
 - **Sin emojis** en la web ni en el código (textos, toasts, badges, comentarios): usa íconos de `react-icons` (`Fi*`). Regla vieja del proyecto que Andrés reafirmó el 2026-09-14.
 - Cambios mínimos y del estilo del código que los rodea. No reformatees archivos enteros.
 

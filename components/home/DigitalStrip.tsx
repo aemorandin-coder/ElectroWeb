@@ -21,7 +21,7 @@ export default function DigitalStrip() {
         <div className="rounded-2xl bg-gradient-to-r from-brand-700 via-brand-600 to-brand-500 p-4 lg:p-6">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
             <div>
-              <h2 id="digital-title" className="text-xl font-bold text-white lg:text-2xl">Gift cards y saldo digital</h2>
+              <h2 id="digital-title" className="text-xl font-bold text-white lg:text-2xl">Gift cards y recargas digitales</h2>
               <p className="mt-1 text-sm text-white/80">Códigos para tus plataformas favoritas</p>
             </div>
             <Link href="/gift-cards" className="rounded-md text-sm font-semibold text-white underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-white">

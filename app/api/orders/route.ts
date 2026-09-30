@@ -10,8 +10,8 @@ import {
 } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { registrarAccionAdmin } from '@/lib/audit-log';
-import { formatUSD, formatVES } from '@/lib/currency';
-import { formatPaymentMethod } from '@/lib/format-helpers';
+import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
+import { formatOrderPaymentMethod, formatPaymentMethod } from '@/lib/format-helpers';
 import { conditionBadge, warrantyDaysFor } from '@/lib/product-condition';
 import { notifyStockCrossings } from '@/lib/stock-alerts';
 import { OrderStatus, PaymentStatus, PaymentMethodType, Prisma } from '@prisma/client';
@@ -51,6 +51,8 @@ import { DestinoError, leerDestino, type DestinoOrden } from '@/lib/envios/desti
 import { actualizarRastreoZoom } from '@/lib/envios/seguimiento';
 import { customerOrderSelect } from '@/lib/dto/order';
 import { publicarOrdenes, publicarStock } from '@/lib/realtime/bus';
+import { RESERVA_PAGO_MANUAL_HORAS, claveReferencia, esPagoManual, leerReferenciaManual, repartirPuntos } from '@/lib/checkout-pago';
+import { descontarDisponible, hayDisponible } from '@/lib/reservas';
 import { ETIQUETA_ENTREGA, NOMBRE_EMPRESA, urlRastreo, usaEmpresa, type EmpresaGuia } from '@/lib/envios/empresas';
 
 
@@ -247,6 +249,14 @@ function isOrderNumberConflict(error: unknown): boolean {
 
 const DELIVERY_LABELS = ETIQUETA_ENTREGA;
 
+/** C-132: "Marcar pagado" sin stock suficiente para la orden (sin contar lo apartado por otras). */
+class StockInsuficiente extends Error {
+  constructor(producto: string, pide: number, hay: number) {
+    super(`No hay stock de "${producto}" para esta orden: lleva ${pide} y quedan ${hay} (contando lo apartado por otros pedidos). Repón el stock, o cancela la orden y devuelve el pago, antes de marcarla pagada.`);
+    this.name = 'StockInsuficiente';
+  }
+}
+
 async function sendNewOrderNotifications(order: CreatedOrder, userId: string, paymentMethod: string) {
   await notifyOrderConfirmed(userId, order.orderNumber, order.id);
 
@@ -259,7 +269,7 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
     summary: `${order.user?.name || order.user?.email || 'Un cliente'} compró ${units} ${units === 1 ? 'producto' : 'productos'}`,
     fields: [
       ['Total', `${formatUSD(Number(order.totalUSD))} (${formatVES(Number(order.totalVES))})`],
-      ['Pago', `${formatPaymentMethod(paymentMethod)} · ${order.paymentStatus === 'PAID' || paymentMethod === 'WALLET' ? 'confirmado' : 'por verificar'}`],
+      ['Pago', `${formatOrderPaymentMethod(order)} · ${order.paymentStatus === 'PAID' ? 'confirmado' : 'por verificar'}${order.paymentReference ? ` · ref. ${order.paymentReference}` : ''}`],
       ['Entrega', DELIVERY_LABELS[order.deliveryMethod || ''] || order.deliveryMethod],
       ['Productos', products],
       ['Cliente', order.user?.email],
@@ -272,7 +282,7 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
       userId,
       type: 'ORDER_PAID',
       title: 'Pago Confirmado',
-      message: `El pago de tu orden #${order.orderNumber} quedó pagado con tu saldo.`,
+      message: `El pago de tu orden #${order.orderNumber} quedó pagado con tus Puntos ES.`,
       link: `/customer/orders`,
       icon: 'payment'
     });
@@ -301,7 +311,7 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
       tax: order.taxUSD.toString(),
       total: order.totalUSD.toString(),
       currency: 'USD',
-      paymentMethod: formatPaymentMethod(order.paymentMethod),
+      paymentMethod: formatOrderPaymentMethod(order),
       paid: order.paymentStatus === 'PAID',
       deliveryMethod: DELIVERY_LABELS[order.deliveryMethod || ''] || 'Entrega',
       deliveryAddress: order.shippingAddress || undefined,
@@ -313,8 +323,9 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
       html: emailHtml,
     });
 
-    // Si el pago no es con billetera, también se envía el correo de pago pendiente
-    if (paymentMethod !== 'WALLET' && order.user?.email) {
+    // Pago por verificar: también el correo de pago pendiente. C-132: antes salía en todo pago que no fuera con Puntos ES,
+    // también en un Pago Móvil ya confirmado por el banco (orden pagada)
+    if (order.paymentStatus !== 'PAID' && order.user?.email) {
       try {
         await sendOrderPendingPaymentEmail(order.user.email, {
           orderNumber: order.orderNumber,
@@ -334,7 +345,9 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
 // POST - Create new order
 // Contrato: { items: [{ productId, quantity, digitalVariantId?, digitalAmount?, digitalUsername? }], deliveryMethod,
 //   shipping?: { carrier, mode, state, cityCode, city, officeCode, address, reference, recipient: { name, idNumber, phone } },
-//   paymentMethod, mobilePaymentData?, notes?, expectedTotalUSD? }
+//   paymentMethod, mobilePaymentData?, usarPuntos?, companyPaymentMethodId?, paymentReference?, notes?, expectedTotalUSD? }
+// C-132: `usarPuntos` con MOBILE_PAYMENT = pago mixto (Puntos ES + Pago Móvil por lo que falta). Un método manual
+// (BINANCE_PAY, PAYPAL, ZELLE…) exige el id de un método activo de ese tipo y la referencia del pago.
 // C-100: la dirección legible y los datos de la oficina los arma el servidor (lib/envios/destino.ts).
 // Precios, envío, descuentos, total y dueño de la orden se calculan aquí; el resto del body se ignora.
 export async function POST(request: NextRequest) {
@@ -384,6 +397,32 @@ export async function POST(request: NextRequest) {
 
     const notes = typeof body.notes === 'string' ? body.notes.trim().slice(0, 1000) : '';
 
+    // C-132: pago mixto y pagos manuales. Antes cualquier tipo del enum (p. ej. ZELLE) creaba una orden pendiente,
+    // aunque la tienda no ofreciera ese método
+    const usarPuntos = paymentMethod === 'MOBILE_PAYMENT' && body.usarPuntos === true;
+    let metodoManual: { id: string; name: string; minAmount: Prisma.Decimal | null; maxAmount: Prisma.Decimal | null } | null = null;
+    let referenciaManual: string | null = null;
+    if (paymentMethod !== 'WALLET' && paymentMethod !== 'MOBILE_PAYMENT') {
+      if (!esPagoManual(paymentMethod)) {
+        return NextResponse.json({ error: 'Ese método de pago no está disponible en el checkout.' }, { status: 400 });
+      }
+      const metodoId = typeof body.companyPaymentMethodId === 'string' ? body.companyPaymentMethodId : '';
+      metodoManual = metodoId
+        ? await prisma.companyPaymentMethod.findFirst({
+            where: { id: metodoId, type: paymentMethod, isActive: true },
+            select: { id: true, name: true, minAmount: true, maxAmount: true },
+          })
+        : null;
+      if (!metodoManual) {
+        return NextResponse.json({ error: 'Ese método de pago ya no está disponible. Elige otro.' }, { status: 400 });
+      }
+      const leida = leerReferenciaManual(body.paymentReference);
+      if (!leida) {
+        return NextResponse.json({ error: 'Escribe la referencia de tu pago: de 4 a 100 letras o números.', field: 'referencia-pago' }, { status: 400 });
+      }
+      referenciaManual = claveReferencia(leida);
+    }
+
     // Pago Móvil de compra ya verificado por el banco y todavía libre (sin orden ni crédito). C-114: si la orden no se
     // puede crear, ese dinero ya entró: o pasa al saldo del cliente (rechazo definitivo) o sigue libre para reintentar.
     const mobilePaymentData = (body.mobilePaymentData && typeof body.mobilePaymentData === 'object'
@@ -417,7 +456,7 @@ export async function POST(request: NextRequest) {
       if (!(creditedUSD > 0)) return NextResponse.json({ error, details }, { status: 400 });
       return NextResponse.json(
         {
-          error: `No pudimos crear tu pedido: ${[error, ...(details ?? [])].join(' ')} Tu Pago Móvil no se perdió: pasamos ${formatUSD(creditedUSD)} a tu saldo para que lo uses en tu compra.`,
+          error: `No pudimos crear tu pedido: ${[error, ...(details ?? [])].join(' ')} Tu Pago Móvil no se perdió: te acreditamos ${formatPuntos(creditedUSD)} para que los uses en tu compra.`,
           creditedUSD,
         },
         { status: 400 }
@@ -471,12 +510,57 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // C-132: mínimo y máximo del método manual, y una referencia no sirve para dos compras
+    if (metodoManual && referenciaManual) {
+      const min = metodoManual.minAmount !== null ? Number(metodoManual.minAmount) : null;
+      const max = metodoManual.maxAmount !== null ? Number(metodoManual.maxAmount) : null;
+      if (min !== null && calculation.totalUSD < min) {
+        return NextResponse.json({ error: `Con ${metodoManual.name} el mínimo es ${formatUSD(min)}. Elige otro método.` }, { status: 400 });
+      }
+      if (max !== null && calculation.totalUSD > max) {
+        return NextResponse.json({ error: `Con ${metodoManual.name} el máximo es ${formatUSD(max)}. Elige otro método.` }, { status: 400 });
+      }
+      const repetida = await prisma.order.findFirst({
+        where: { paymentMethod, paymentReference: referenciaManual, status: { not: OrderStatus.CANCELLED } },
+        select: { orderNumber: true, userId: true },
+      });
+      if (repetida) {
+        return NextResponse.json(
+          { error: repetida.userId === userId
+            ? `Esa referencia ya está en tu pedido ${repetida.orderNumber}. Si es otro pago, revisa el número.`
+            : 'Esa referencia ya se usó en otra compra. Revisa el número o escríbenos por WhatsApp.', field: 'referencia-pago' },
+          { status: 409 }
+        );
+      }
+    }
+
     // =============================================
     // SEGURIDAD: Verificar pago móvil en servidor
     // =============================================
     // NUNCA confiar en body.mobilePaymentData.verified del cliente: la verificación debe existir
     // en la base de datos, no estar usada y cubrir el total calculado aquí.
     const exchangeRateVES = settings?.exchangeRateVES ? Number(settings.exchangeRateVES) : 0;
+
+    // C-132: pago mixto. Los puntos salen del saldo real del servidor; el Pago Móvil tiene que cubrir lo que falta
+    let puntosMixto = 0;
+    let aCubrirPagoMovil = calculation.totalUSD;
+    if (usarPuntos) {
+      const cuenta = await prisma.userBalance.findUnique({ where: { userId }, select: { balance: true } });
+      const reparto = repartirPuntos(Number(cuenta?.balance ?? 0), calculation.totalUSD);
+      if (!reparto.mixto) {
+        return NextResponse.json(
+          {
+            error: conPagoRegistrado(reparto.puntosUSD > 0
+              ? 'Tus Puntos ES ya cubren el total: elige "Pagar con Puntos ES".'
+              : 'Ya no tienes Puntos ES para combinar con el Pago Móvil. Paga el total por Pago Móvil.'),
+            puntosCambiaron: true,
+          },
+          { status: 409 }
+        );
+      }
+      puntosMixto = reparto.puntosUSD;
+      aCubrirPagoMovil = reparto.restanteUSD;
+    }
 
     let mobilePaymentVerificationIds: string[] = [];
     let isPaymentConfirmed = paymentMethod === 'WALLET';
@@ -493,7 +577,7 @@ export async function POST(request: NextRequest) {
           const tasa = Number(v.tasaVES ?? 0) || exchangeRateVES;
           return suma + (tasa > 0 ? (Number(v.importeVerificado ?? 0) / tasa) * tasaConciliacion : 0);
         }, 0)) / 100;
-        conciliacion = tasaConciliacion > 0 ? conciliar(pagadoBs, calculation.totalUSD, tasaConciliacion) : null;
+        conciliacion = tasaConciliacion > 0 ? conciliar(pagadoBs, aCubrirPagoMovil, tasaConciliacion) : null;
 
         if (conciliacion && conciliacion.estado !== 'FALTA') {
           isPaymentConfirmed = true;
@@ -517,6 +601,11 @@ export async function POST(request: NextRequest) {
       } else {
         console.warn(`[SECURITY] Intento de orden con pago móvil no verificado: ${referencia} por usuario ${userId}`);
       }
+    }
+    // C-132: sin un Pago Móvil verificado no hay orden. Antes se creaba igual, "pendiente", con una referencia que el
+    // banco nunca confirmó
+    if (paymentMethod === 'MOBILE_PAYMENT' && !isPaymentConfirmed) {
+      return NextResponse.json({ error: 'Verifica tu Pago Móvil antes de completar el pedido.' }, { status: 400 });
     }
     /** Pagó de más (fuera del redondeo): la diferencia pasa a su saldo en USD a la tasa congelada del pago */
     const sobranteUSD = conciliacion?.estado === 'SOBREPAGO' ? conciliacion.diferenciaUSD : 0;
@@ -581,10 +670,30 @@ export async function POST(request: NextRequest) {
           : { count: 0 };
 
         if (!userBalance || debited.count === 0) {
-          throw new OrderInputError('Saldo insuficiente para esta compra');
+          throw new OrderInputError('No te alcanzan los Puntos ES para esta compra');
         }
         balanceId = userBalance.id;
+      } else if (puntosMixto > 0) {
+        // C-132: la parte en Puntos ES del pago mixto, solo si todavía alcanza (cambió desde la cotización: se reintenta)
+        const cuenta = await tx.userBalance.findUnique({ where: { userId }, select: { id: true } });
+        const debitado = cuenta
+          ? await tx.userBalance.updateMany({
+            where: { id: cuenta.id, balance: { gte: montoDecimal(puntosMixto) } },
+            data: { balance: { decrement: montoDecimal(puntosMixto) }, totalSpent: { increment: montoDecimal(puntosMixto) } },
+          })
+          : { count: 0 };
+        if (!cuenta || debitado.count === 0) {
+          throw new OrderInputError('Tus Puntos ES cambiaron mientras pagabas. Revisa el total y confirma de nuevo.', 409);
+        }
+        balanceId = cuenta.id;
       }
+      /** Puntos ES que le tocan a cada orden (física y digital), en céntimos exactos */
+      let puntosPorRepartir = paymentMethod === 'WALLET' ? calculation.totalUSD : puntosMixto;
+      const puntosDe = groups.map((g) => {
+        const tomado = Math.min(aCentimos(puntosPorRepartir), aCentimos(g.totals.totalUSD)) / 100;
+        puntosPorRepartir = (aCentimos(puntosPorRepartir) - aCentimos(tomado)) / 100;
+        return tomado;
+      });
 
       const orders: CreatedOrder[] = [];
 
@@ -592,15 +701,15 @@ export async function POST(request: NextRequest) {
         const orderNumber = orderNumbers[index];
         const { totals } = group;
 
-        if (balanceId) {
+        if (balanceId && puntosDe[index] > 0) {
           await tx.transaction.create({
             data: {
               balanceId,
               type: 'PURCHASE',
               status: 'COMPLETED',
-              amount: montoDecimal(totals.totalUSD),
+              amount: montoDecimal(puntosDe[index]),
               currency: 'USD',
-              description: `Compra Orden #${orderNumber}`,
+              description: paymentMethod === 'WALLET' ? `Compra Orden #${orderNumber}` : `Compra Orden #${orderNumber} (parte en Puntos ES)`,
               reference: orderNumber,
               paymentMethod: 'WALLET',
             },
@@ -625,6 +734,8 @@ export async function POST(request: NextRequest) {
             exchangeRateVES: settings?.exchangeRateVES ?? null,
             exchangeRateEUR: settings?.exchangeRateEUR ?? null,
             paymentMethod,
+            pointsUSD: montoDecimal(puntosDe[index]),
+            paymentReference: referenciaManual,
             // WALLET y MOBILE_PAYMENT verificado (en BD y por monto) se tratan como pagados
             status: isPaymentConfirmed ? OrderStatus.PROCESSING : OrderStatus.PENDING,
             paymentStatus: isPaymentConfirmed ? PaymentStatus.PAID : PaymentStatus.PENDING,
@@ -663,26 +774,25 @@ export async function POST(request: NextRequest) {
         orders.push(order);
       }
 
-      // STOCK SEGÚN EL PAGO:
-      // - Confirmado (WALLET o pago móvil verificado): se descuenta ya, solo si alcanza
-      // - Sin confirmar: reserva de 5 minutos mientras el admin verifica el pago
+      // STOCK SEGÚN EL PAGO (C-132: lo apartado por otras órdenes ya no se vende dos veces):
+      // - Confirmado (Puntos ES o Pago Móvil verificado): se descuenta ya, solo si alcanza sin tocar lo apartado
+      // - Pago manual por verificar: se aparta RESERVA_PAGO_MANUAL_HORAS para la orden física (antes eran 5 minutos
+      //   que no apartaban nada)
       if (isPaymentConfirmed) {
         for (const [productId, quantity] of physicalQuantities) {
-          const updated = await tx.product.updateMany({
-            where: { id: productId, stock: { gte: quantity } },
-            data: { stock: { decrement: quantity } },
-          });
-          if (updated.count === 0) {
+          if (!(await descontarDisponible(tx, productId, quantity))) {
             throw new OrderInputError('Uno de los productos se agotó mientras procesábamos tu compra. Revisa tu carrito.');
           }
         }
-      } else {
-        const expiresAt = new Date();
-        expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 minutos de reservación
-
+      } else if (physicalQuantities.size > 0) {
+        const ordenFisica = orders[groups.findIndex((g) => g.deliveryMethod !== 'DIGITAL')];
+        const expiresAt = new Date(Date.now() + RESERVA_PAGO_MANUAL_HORAS * 60 * 60 * 1000);
         for (const [productId, quantity] of physicalQuantities) {
+          if (!(await hayDisponible(tx, productId, quantity))) {
+            throw new OrderInputError('Uno de los productos se agotó mientras procesábamos tu compra. Revisa tu carrito.');
+          }
           await tx.stockReservation.create({
-            data: { userId, productId, quantity, expiresAt },
+            data: { userId, productId, quantity, expiresAt, orderId: ordenFisica.id },
           });
         }
       }
@@ -750,7 +860,7 @@ export async function POST(request: NextRequest) {
       // de Andrés del 28/09 para los Pagos Móvil sin orden). Lo absorbido por redondeo queda anotado en la orden
       if (conciliacion && conciliacion.estado !== 'EXACTO') {
         const nota = conciliacion.estado === 'SOBREPAGO'
-          ? `Pago Móvil: pagó ${formatVES(conciliacion.diferenciaBs)} de más (${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}). ${formatUSD(sobranteUSD)} pasaron a su saldo.`
+          ? `Pago Móvil: pagó ${formatVES(conciliacion.diferenciaBs)} de más (${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}). ${formatUSD(sobranteUSD)} pasaron a sus Puntos ES.`
           : `Pago Móvil: diferencia de ${formatVES(conciliacion.diferenciaBs)} absorbida (menor que la comisión mínima de un Pago Móvil; ${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}).`;
         await tx.order.update({ where: { id: orders[0].id }, data: { adminNotes: nota } });
       }
@@ -763,7 +873,7 @@ export async function POST(request: NextRequest) {
             status: 'COMPLETED',
             amount: montoDecimal(sobranteUSD),
             currency: 'USD',
-            description: `Pagaste de más en ${orders[0].orderNumber} (ref. ${refsTexto}): pasado a tu saldo`,
+            description: `Pagaste de más en ${orders[0].orderNumber} (ref. ${refsTexto}): pasado a tus Puntos ES`,
             reference: referencia,
             paymentMethod: 'MOBILE_PAYMENT',
             metadata: JSON.stringify({ sobrepago: true, orderId: orders[0].id, orderNumber: orders[0].orderNumber, pagoMovilVerificacionIds: mobilePaymentVerificationIds, conciliacion }),
@@ -796,8 +906,8 @@ export async function POST(request: NextRequest) {
       void createNotification({
         userId,
         type: 'BALANCE_RECHARGED',
-        title: 'Pagaste de más: lo pasamos a tu saldo',
-        message: `En tu pedido ${orders[0].orderNumber} transferiste ${formatVES(conciliacion.diferenciaBs)} de más. Ya tienes ${formatUSD(sobranteUSD)} en tu saldo para tu próxima compra.`,
+        title: 'Pagaste de más: lo pasamos a tus Puntos ES',
+        message: `En tu pedido ${orders[0].orderNumber} transferiste ${formatVES(conciliacion.diferenciaBs)} de más. Te acreditamos ${formatPuntos(sobranteUSD)} para tu próxima compra.`,
         link: '/customer/balance',
       });
     }
@@ -836,7 +946,14 @@ export async function POST(request: NextRequest) {
         .catch((error) => console.error('Error enviando avisos de stock:', error));
     }
 
-    return NextResponse.json({ orders, totalUSD: calculation.totalUSD, ...(sobranteUSD > 0 ? { creditedUSD: sobranteUSD, sobrepago: true } : {}) }, { status: 201 });
+    return NextResponse.json({
+      orders,
+      totalUSD: calculation.totalUSD,
+      ...(sobranteUSD > 0 ? { creditedUSD: sobranteUSD, sobrepago: true } : {}),
+      ...(puntosMixto > 0 ? { puntosUSD: puntosMixto } : {}),
+      // C-132: pago manual: el equipo lo verifica; el stock queda apartado hasta esta hora
+      ...(metodoManual ? { porVerificar: true, apartadoHasta: new Date(Date.now() + RESERVA_PAGO_MANUAL_HORAS * 60 * 60 * 1000).toISOString() } : {}),
+    }, { status: 201 });
   } catch (error) {
     if (error instanceof OrderInputError) {
       return NextResponse.json({ error: error.message, details: error.details }, { status: error.status });
@@ -979,22 +1096,20 @@ export async function PATCH(request: NextRequest) {
         data.paymentStatus = PaymentStatus.PAID;
         data.paidAt = new Date();
 
+        // C-132: primero se suelta lo que apartó esta orden y se descuenta sin tocar lo apartado por otras. Antes, sin
+        // stock suficiente, se descontaba menos sin avisar y la orden quedaba pagada con un producto que no había
+        await liberarReservas(tx, orden.userId, orden.items, orden.id);
         for (const item of orden.items) {
           const producto = await tx.product.findUnique({
             where: { id: item.productId },
             select: { stock: true, productType: true },
           });
           if (!producto || producto.productType === 'DIGITAL') continue;
-          const descuento = Math.min(item.quantity, producto.stock); // nunca stock negativo
-          if (descuento > 0) {
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { stock: { decrement: descuento } },
-            });
+          if (!(await descontarDisponible(tx, item.productId, item.quantity, orden.id))) {
+            throw new StockInsuficiente(item.productName || 'un producto', item.quantity, producto.stock);
           }
-          cambiosStock.push({ productId: item.productId, quantity: descuento });
+          cambiosStock.push({ productId: item.productId, quantity: item.quantity });
         }
-        await liberarReservas(tx, orden.userId, orden.items);
       }
 
       // Cancelar: devolver stock solo si se había descontado, y una sola vez
@@ -1003,7 +1118,7 @@ export async function PATCH(request: NextRequest) {
         if (stockYaDescontado(orden.paymentStatus)) {
           await devolverStock(tx, orden.items);
         }
-        await liberarReservas(tx, orden.userId, orden.items);
+        await liberarReservas(tx, orden.userId, orden.items, orden.id);
 
         // La comisión pendiente del promotor por esta orden se rechaza (C-75)
         await rejectOrderConversions(orden.id, tx);
@@ -1015,16 +1130,19 @@ export async function PATCH(request: NextRequest) {
         }
         if (usos.length > 0) await tx.promotionRedemption.deleteMany({ where: { orderId: orden.id } });
 
-        // Pago con saldo: el total vuelve al saldo de la tienda (nunca sale dinero de la empresa).
+        // Lo pagado con Puntos ES vuelve a los Puntos ES (nunca sale dinero de la empresa).
         // Decisión de Andrés (2026-09-15): es crédito para comprar aquí, no un reembolso.
-        const pagoConSaldo = orden.paymentMethod === 'WALLET' && orden.paymentStatus === PaymentStatus.PAID;
+        // C-132: en un pago mixto vuelve la parte en Puntos ES; lo del Pago Móvil se gestiona aparte, como antes
+        const todoConPuntos = orden.paymentMethod === 'WALLET';
+        const puntosPagados = todoConPuntos ? Number(orden.totalUSD) : Number(orden.pointsUSD ?? 0);
+        const pagoConSaldo = puntosPagados > 0 && orden.paymentStatus === PaymentStatus.PAID;
         if (pagoConSaldo && orden.userId) {
           const saldo = await tx.userBalance.findUnique({
             where: { userId: orden.userId },
             select: { id: true },
           });
           if (saldo) {
-            const total = Number(orden.totalUSD);
+            const total = puntosPagados;
             await tx.userBalance.update({
               where: { id: saldo.id },
               data: {
@@ -1039,12 +1157,12 @@ export async function PATCH(request: NextRequest) {
                 status: 'COMPLETED',
                 amount: montoDecimal(total),
                 currency: 'USD',
-                description: `Saldo devuelto por la cancelación de la orden #${orden.orderNumber}`,
+                description: `Puntos ES devueltos por la cancelación de la orden #${orden.orderNumber}`,
                 reference: orden.orderNumber,
                 paymentMethod: 'WALLET',
               },
             });
-            data.paymentStatus = PaymentStatus.REFUNDED;
+            if (todoConPuntos) data.paymentStatus = PaymentStatus.REFUNDED;
             reintegro = total;
           }
         }
@@ -1255,7 +1373,7 @@ export async function PATCH(request: NextRequest) {
 
         case 'CANCELLED': {
           const avisoSaldo = reintegro > 0
-            ? ` Devolvimos ${formatUSD(reintegro)} a tu saldo para tu próxima compra.`
+            ? ` Te devolvimos ${formatPuntos(reintegro)} para tu próxima compra.`
             : '';
           await createNotification({
             userId: oldOrder.userId,
@@ -1270,9 +1388,9 @@ export async function PATCH(request: NextRequest) {
             const bloqueSaldo = reintegro > 0
               ? `
               <div style="background:#f0f7f4;border-left:4px solid #047857;padding:15px 20px;margin:20px 0;border-radius:0 8px 8px 0;">
-                <p style="margin:0;color:#047857;font-size:14px;font-weight:600;">Saldo devuelto</p>
+                <p style="margin:0;color:#047857;font-size:14px;font-weight:600;">Puntos ES devueltos</p>
                 <p style="margin:8px 0 0;color:#047857;font-size:14px;">
-                  Devolvimos ${escaparHtml(formatUSD(reintegro))} a tu saldo de la tienda para tu próxima compra.
+                  Te devolvimos ${escaparHtml(formatPuntos(reintegro))} para tu próxima compra.
                 </p>
               </div>`
               : '';
@@ -1374,7 +1492,7 @@ export async function PATCH(request: NextRequest) {
           ['Total', formatUSD(Number(oldOrder.totalUSD))],
           ['Motivo', motivo.slice(0, 300)],
           ['Cliente', order.user?.name || order.user?.email],
-          ['Saldo devuelto', reintegro > 0 ? formatUSD(reintegro) : null],
+          ['Puntos ES devueltos', reintegro > 0 ? formatUSD(reintegro) : null],
         ],
         link: '/admin/orders',
       });
@@ -1382,6 +1500,9 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json(order);
   } catch (error) {
+    if (error instanceof StockInsuficiente) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     console.error('Error updating order:', error);
     return NextResponse.json({ error: 'Error al actualizar orden' }, { status: 500 });
   }

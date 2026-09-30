@@ -856,7 +856,7 @@ export default function CheckoutPage() {
                         Revisa tu bandeja de entrada
                       </p>
                       <Link
-                        href="/customer/settings"
+                        href="/customer/profile?tab=datos"
                         className={`inline-flex items-center justify-center gap-2 ${adminPrimaryButton} px-5 py-2 text-xs font-bold`}
                       >
                         <FiUser className="w-4 h-4" />

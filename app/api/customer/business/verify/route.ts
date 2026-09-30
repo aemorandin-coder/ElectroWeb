@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import { detectFileType } from '@/lib/file-signature';
 import { PRIVATE_DOCUMENTS_DIR } from '@/lib/private-uploads';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { leerDocumento } from '@/lib/validations/registro';
 
 export async function POST(request: NextRequest) {
     try {
@@ -29,6 +30,21 @@ export async function POST(request: NextRequest) {
         if (typeof companyName !== 'string' || typeof taxId !== 'string' || companyName.length > 150 || taxId.length > 20
             || !(actaFile instanceof File) || !(rifFile instanceof File)) {
             return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
+        }
+        const empresa = companyName.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        if (empresa.length < 3) {
+            return NextResponse.json({ error: 'Escribe el nombre de la empresa' }, { status: 400 });
+        }
+        // C-138: el RIF con la misma regla de la cédula ("j123456789" → "J-123456789")
+        const rifLeido = leerDocumento(taxId);
+        if (!rifLeido.ok || rifLeido.valor.startsWith('P-')) {
+            return NextResponse.json({ error: 'Escribe el RIF, por ejemplo J-12345678-9' }, { status: 400 });
+        }
+
+        // C-138: antes se podía reenviar en revisión o ya aprobada, y eso le quitaba la aprobación a la empresa
+        const actual = await prisma.profile.findUnique({ where: { userId: session.user.id }, select: { businessVerificationStatus: true } });
+        if (actual?.businessVerificationStatus === 'PENDING' || actual?.businessVerificationStatus === 'APPROVED') {
+            return NextResponse.json({ error: 'Tu empresa ya está en revisión o verificada' }, { status: 409 });
         }
 
         // Validate file types
@@ -76,32 +92,33 @@ export async function POST(request: NextRequest) {
         const actaUrl = await saveFile(acta, 'acta');
         const rifUrl = await saveFile(rif, 'rif');
 
-        // Update profile
-        const updatedProfile = await prisma.profile.update({
+        // Upsert: un cliente sin fila de perfil daba 500 (C-138)
+        const datosEmpresa = {
+            companyName: empresa,
+            taxId: rifLeido.valor,
+            businessConstitutiveAct: actaUrl,
+            businessRIFDocument: rifUrl,
+            businessVerificationStatus: 'PENDING',
+            businessVerificationNotes: null,
+            isBusinessAccount: true, // Intent to be business
+            businessVerified: false,
+        };
+        await prisma.profile.upsert({
             where: { userId: session.user.id },
-            data: {
-                companyName,
-                taxId,
-                businessConstitutiveAct: actaUrl,
-                businessRIFDocument: rifUrl,
-                businessVerificationStatus: 'PENDING',
-                isBusinessAccount: true, // Intent to be business
-                businessVerified: false,
-            },
+            update: datosEmpresa,
+            create: { userId: session.user.id, ...datosEmpresa },
         });
 
         emitAdminEvent({
             type: 'BUSINESS_VERIFICATION',
-            title: `Verificación de empresa · ${companyName}`.slice(0, 150),
+            title: `Verificación de empresa · ${empresa}`.slice(0, 150),
             summary: `${session.user.name || session.user.email || 'Un cliente'} subió acta constitutiva y RIF`,
-            fields: [['Empresa', companyName], ['RIF', taxId], ['Correo', session.user.email]],
+            fields: [['Empresa', empresa], ['RIF', rifLeido.valor], ['Correo', session.user.email]],
             link: '/admin/verifications',
         });
 
-        return NextResponse.json({
-            success: true,
-            profile: updatedProfile
-        });
+        // Sin la fila del perfil: antes salía entera (IP del último acceso, motivo de eliminación…)
+        return NextResponse.json({ success: true, businessVerificationStatus: 'PENDING' });
 
     } catch (error) {
         console.error('Error processing verification request:', error);

@@ -105,6 +105,8 @@ export async function POST(req: NextRequest) {
             wishlistId: wishlist.id,
             productId,
             priceAtSaveUSD: montoDecimal(actual.priceUSD),
+            // C-138: el primer aviso de favoritos cuenta desde hoy (los digitales no tienen avisos)
+            ...(row.productType === 'PHYSICAL' ? { avisoPrecioUSD: montoDecimal(actual.priceUSD), avisoAgotado: row.stock <= 0 } : {}),
           },
         });
       }

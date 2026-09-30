@@ -131,8 +131,9 @@ export default withAuth(
           pathname.startsWith('/api/uploads') ||
           pathname.startsWith('/api/analytics') ||
           pathname.startsWith('/api/webhooks') ||
-          // El cron del servidor: se autoriza con CRON_SECRET dentro del handler (C-100)
+          // El cron del servidor: se autoriza con CRON_SECRET dentro del handler (C-100, C-138)
           pathname === '/api/cron/envios' ||
+          pathname === '/api/cron/favoritos' ||
           // Tiempo real (C-127): sin sesión solo recibe el stock; el handler filtra por sesión y permisos
           pathname === '/api/realtime';
 

@@ -1,7 +1,7 @@
 // Ícono y tono de cada notificación (C-73). Avisos del equipo por categoría del catálogo; las del cliente por tipo.
 import type { IconType } from 'react-icons';
 import {
-  FiAlertTriangle, FiBell, FiBookOpen, FiBox, FiCheckCircle, FiCreditCard, FiDollarSign, FiGift, FiLogIn,
+  FiAlertTriangle, FiBell, FiBookOpen, FiBox, FiBriefcase, FiCheckCircle, FiCreditCard, FiDollarSign, FiGift, FiHeart, FiLogIn,
   FiMail, FiPackage, FiPercent, FiRefreshCw, FiSend, FiShoppingBag, FiStar, FiTag, FiTool, FiTruck, FiUserPlus, FiUsers, FiXCircle,
 } from 'react-icons/fi';
 import type { AdminTone } from '@/lib/admin-ui';
@@ -32,6 +32,7 @@ const EVENT_META: Partial<Record<string, Meta>> = {
   GIFT_CARD_PIN_LOCKED: { Icon: FiAlertTriangle, tone: 'danger' },
   STOCK_OUT: { Icon: FiPackage, tone: 'danger' },
   CUSTOMER_REGISTERED: { Icon: FiUserPlus, tone: 'neutral' },
+  ACCOUNT_DELETION_REQUESTED: { Icon: FiAlertTriangle, tone: 'warning' },
   REVIEW_SUBMITTED: { Icon: FiStar, tone: 'warning' },
   DISCOUNT_REQUESTED: { Icon: FiPercent, tone: 'brand' },
   EXCHANGE_RATE_UPDATED: { Icon: FiRefreshCw, tone: 'neutral' },
@@ -48,6 +49,9 @@ const EVENT_META: Partial<Record<string, Meta>> = {
   RECHARGE_REJECTED: { Icon: FiXCircle, tone: 'danger' },
   BALANCE_PENDING: { Icon: FiCreditCard, tone: 'warning' },
   DISCOUNT_REQUEST: { Icon: FiPercent, tone: 'brand' },
+  FAVORITE_PRICE_DROP: { Icon: FiTag, tone: 'brand' },
+  FAVORITE_BACK_IN_STOCK: { Icon: FiHeart, tone: 'success' },
+  BUSINESS_VERIFIED: { Icon: FiBriefcase, tone: 'brand' },
 };
 
 export function notificationMeta(type: string): Meta {

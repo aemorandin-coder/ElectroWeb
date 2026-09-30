@@ -71,19 +71,24 @@ function secreto(): string {
   return valor;
 }
 
+/** Qué correo se deja de recibir: las campañas (C-75) o los avisos de favoritos (C-138). */
+export type TipoBaja = 'promociones' | 'favoritos';
+
 /** Enlace de baja firmado: no hace falta iniciar sesión y no se puede dar de baja a otra persona. */
-export function firmaBaja(userId: string): string {
-  return createHmac('sha256', secreto()).update(`baja-promociones:${userId}`).digest('base64url');
+export function firmaBaja(userId: string, tipo: TipoBaja = 'promociones'): string {
+  return createHmac('sha256', secreto()).update(`baja-${tipo}:${userId}`).digest('base64url');
 }
 
-export function firmaBajaValida(userId: string, firma: string): boolean {
-  const esperada = Buffer.from(firmaBaja(userId));
+export function firmaBajaValida(userId: string, firma: string, tipo: TipoBaja = 'promociones'): boolean {
+  const esperada = Buffer.from(firmaBaja(userId, tipo));
   const recibida = Buffer.from(firma);
   return esperada.length === recibida.length && timingSafeEqual(esperada, recibida);
 }
 
-export function enlaceBaja(userId: string): string {
-  return `${urlBase()}/api/public/email/baja?u=${encodeURIComponent(userId)}&t=${firmaBaja(userId)}`;
+// Los enlaces de promociones ya enviados no llevan "tipo": siguen valiendo igual
+export function enlaceBaja(userId: string, tipo: TipoBaja = 'promociones'): string {
+  const extra = tipo === 'promociones' ? '' : `&tipo=${tipo}`;
+  return `${urlBase()}/api/public/email/baja?u=${encodeURIComponent(userId)}&t=${firmaBaja(userId, tipo)}${extra}`;
 }
 
 /* ── Render ─────────────────────────────────────────────────────────────── */

@@ -77,16 +77,26 @@ export async function GET() {
 
     // Lista blanca (C-80): antes salía la fila entera (IP y dispositivo del último acceso, carrito guardado,
     // motivo de eliminación…). Solo lo que leen el perfil, el checkout, los términos del saldo y el panel.
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        profile: { select: PERFIL_PUBLICO },
-      },
-    });
+    const [user, pagados] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          emailVerified: true,
+          createdAt: true,
+          profile: { select: PERFIL_PUBLICO },
+        },
+      }),
+      // C-138: la cabecera de Mi perfil (antes "Miembro desde" era siempre el mes actual y "Gastado" solo contaba Puntos ES)
+      prisma.order.aggregate({
+        where: { userId: session.user.id, paymentStatus: 'PAID' },
+        _count: true,
+        _sum: { totalUSD: true },
+      }),
+    ]);
 
     if (!user) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
@@ -98,8 +108,11 @@ export async function GET() {
         name: user.name,
         email: user.email,
         image: user.image,
+        emailVerified: Boolean(user.emailVerified),
+        createdAt: user.createdAt,
       },
       profile: user.profile,
+      resumen: { pedidosPagados: pagados._count, totalComprado: Number(pagados._sum.totalUSD ?? 0) },
     });
   } catch (error) {
     console.error('Error fetching profile:', error);

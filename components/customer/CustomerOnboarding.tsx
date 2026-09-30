@@ -60,7 +60,7 @@ export default function CustomerOnboarding({ stats }: { stats: Stats }) {
       id: 'correo',
       titulo: 'Verifica tu correo',
       texto: 'Para comprar y recuperar tu cuenta',
-      href: '/customer/settings',
+      href: '/customer/profile?tab=datos',
       Icono: FiMail,
       hecha: Boolean((session?.user as { emailVerified?: boolean } | undefined)?.emailVerified),
     },

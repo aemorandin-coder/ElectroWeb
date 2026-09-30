@@ -19,6 +19,8 @@ export const customerOrderSelect = {
   discountUSD: true,
   totalUSD: true,
   totalVES: true,
+  // C-137: tasa del día de la compra, para el recibo
+  exchangeRateVES: true,
   notes: true,
   createdAt: true,
   paidAt: true,

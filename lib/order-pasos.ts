@@ -82,3 +82,45 @@ export function pasosPedido(o: PedidoParaPasos): PasosPedido {
 
   return { pasos, nota, cancelado: false };
 }
+
+export type TonoEstado = 'warning' | 'brand' | 'success' | 'danger' | 'neutral';
+
+/**
+ * C-137: el estado del pedido en palabras del cliente, con su color. "Verificando pago" si pagó por un método manual
+ * y dejó la referencia (C-132); "Por pagar" si todavía no hay pago.
+ */
+export function estadoParaCliente(o: { status: string; paymentStatus?: string | null; paymentReference?: string | null }): { label: string; tono: TonoEstado } {
+  switch (o.status) {
+    case 'CANCELLED': return { label: 'Cancelado', tono: 'danger' };
+    case 'REFUNDED': return { label: 'Reembolsado', tono: 'neutral' };
+    case 'DELIVERED': return { label: 'Entregado', tono: 'success' };
+    case 'SHIPPED': return { label: 'Despachado', tono: 'brand' };
+    case 'READY_FOR_PICKUP': return { label: 'Listo para retirar', tono: 'brand' };
+    case 'PENDING':
+      if (o.paymentStatus !== 'PAID') return o.paymentReference ? { label: 'Verificando pago', tono: 'warning' } : { label: 'Por pagar', tono: 'warning' };
+      return { label: 'En preparación', tono: 'brand' };
+    default: return { label: 'En preparación', tono: 'brand' };
+  }
+}
+
+/** Filtros de "Mis pedidos": cada uno junta los estados que el cliente ve con el mismo nombre. */
+export const FILTROS_PEDIDOS = [
+  { id: 'TODOS', label: 'Todos' },
+  { id: 'POR_PAGAR', label: 'Por pagar' },
+  { id: 'PREPARACION', label: 'En preparación' },
+  { id: 'DESPACHADO', label: 'Despachados' },
+  { id: 'ENTREGADO', label: 'Entregados' },
+  { id: 'CANCELADO', label: 'Cancelados' },
+] as const;
+export type FiltroPedidos = (typeof FILTROS_PEDIDOS)[number]['id'];
+
+export function pasaFiltro(o: { status: string; paymentStatus?: string | null }, filtro: FiltroPedidos): boolean {
+  switch (filtro) {
+    case 'TODOS': return true;
+    case 'POR_PAGAR': return o.status === 'PENDING' && o.paymentStatus !== 'PAID';
+    case 'PREPARACION': return ['CONFIRMED', 'PAID', 'PROCESSING'].includes(o.status) || (o.status === 'PENDING' && o.paymentStatus === 'PAID');
+    case 'DESPACHADO': return o.status === 'SHIPPED' || o.status === 'READY_FOR_PICKUP';
+    case 'ENTREGADO': return o.status === 'DELIVERED';
+    case 'CANCELADO': return o.status === 'CANCELLED' || o.status === 'REFUNDED';
+  }
+}

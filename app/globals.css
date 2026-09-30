@@ -731,3 +731,10 @@ html, body { overflow-x: clip; }
   box-shadow: 0 12px 30px -10px var(--platform-color) !important;
   background-color: rgba(255, 255, 255, 0.08) !important;
 }
+
+/* C-137: "Imprimir recibo" en Mis pedidos. Con el recibo abierto se imprime solo él (la página y el menú quedan fuera) */
+@media print {
+  body:has(.recibo-portal) > *:not(.recibo-portal) {
+    display: none !important;
+  }
+}

@@ -3,8 +3,11 @@
 Léelo antes de empezar. En GitHub, `main` tiene todo hasta C-123 (subido el 29/09). **Falta el deploy, y lleva cambio de base.**
 Producción ya mostraba C-114 el 29/09 (captura de Andrés): el commit exacto del servidor se anota tras este deploy.
 
-## 00. Nuevo del 30/09: C-130 a C-136 (ramas listas, sin mergear)
-Pedidos de Andrés del 29 y 30/09. **Dos cadenas independientes**; cada una se mergea en su orden:
+## 00. Nuevo del 30/09: C-130 a C-137 (ramas listas, sin mergear)
+Pedidos de Andrés del 29 y 30/09.
+- **Merge más simple: `git merge --no-ff claude/C-137`** trae todo (C-130 a C-137): C-137 sale de las dos cadenas. Probado: build, `tsc` y ESLint.
+- Si se quiere subir solo lo de productos antes: `claude/C-136` (trae C-133, C-134 y C-136, sin cambio de base).
+- **Dos cadenas independientes** (para saber qué trae cada una):
 - **Cadena A (dinero):** `claude/C-130` → `claude/C-131` → `claude/C-132` → `claude/C-135`. Cada una sale de la anterior.
   - **C-130 · Teléfono y cédula del BDV:** el checkout mandaba `584121234567` y el banco decía "Formato de teléfono inválido". Arreglado en el checkout, la recarga, la verificación y "Consultar Pago Móvil".
   - **C-131 · "Puntos ES":** regla legal de Andrés, nunca "saldo" ni "billetera" en textos. 186 textos.
@@ -19,6 +22,10 @@ Pedidos de Andrés del 29 y 30/09. **Dos cadenas independientes**; cada una se m
   - **C-133 · Cinta ES:** también con fondo blanco liso (la foto de los audífonos Piston del 30/09 no la tenía), la cinta en la esquina de la foto en la ficha, el catálogo y la vitrina, guardar sin la espera de 2,5 s, y al editar "Guardar cambios" en cada paso.
   - **C-134 · Asistente de productos:** menos espacio, sin redundancia, validaciones iguales en el formulario y el servidor.
   - **C-136 · Especificaciones:** sugerencias según la categoría (lo que ya usan sus productos y una lista base por tipo), valores con un toque, ninguna obligatoria.
+- **C-137 · Panel del cliente** (sobre las dos cadenas):
+  - Mis pedidos con fotos, estado en palabras, paso a paso, "Rastrear en" con logo y recibo imprimible (no fiscal).
+  - Favoritos en grilla de 2 a 4 columnas, con precio en Bs., disponibilidad y "Mover al carrito".
+  - Direcciones con agencias ZOOM y MRW elegidas de la lista real y quién recibe (con cédula). El checkout trae la agencia predeterminada ya elegida. Editar una dirección fallaba siempre: arreglado.
 - **Probado junto:** rama temporal con C-130 a C-134 mezcladas: 0 conflictos, `tsc`, `build` y ESLint (0 errores). C-135 y C-136: `tsc` y ESLint. Pruebas de cada una en su `estado/C-13X.md`.
 - **Después del deploy, en producción:**
   1. Una compra con Pago Móvil desde un perfil con teléfono `+58 …`: debe verificar al primer intento.
@@ -26,9 +33,10 @@ Pedidos de Andrés del 29 y 30/09. **Dos cadenas independientes**; cada una se m
   3. Activar Binance Pay y PayPal en Métodos de pago (con su QR si hay) y hacer una compra de prueba con cada uno: queda "Por validar" y se confirma con "Marcar pagado".
   4. Una compra con pago mixto (algo de Puntos ES y el resto por Pago Móvil) y cancelarla: vuelven los Puntos ES.
   5. Admin → Legal: aparece "Términos y condiciones de los Puntos ES" como vigente después de la primera visita a una recarga.
-  6. En producción hay un **"Producto Test" publicado** en Consolas y productos digitales con **"(SALDO)" en el nombre**: pasarlo a borrador y renombrarlos (ver `estado/C-136.md`).
+  6. **Panel del cliente, en el teléfono:** Mis pedidos (tocar "Detalle y recibo" e imprimir), Favoritos ("Mover al carrito") y Direcciones: agregar tu agencia ZOOM de la lista como predeterminada y abrir el checkout: debe venir elegida.
+  7. En producción hay un **"Producto Test" publicado** en Consolas y productos digitales con **"(SALDO)" en el nombre**: pasarlo a borrador y renombrarlos (ver `estado/C-136.md`).
 - **Decidido por Andrés el 30/09:** "$12,50 Puntos ES" explicado en los términos (C-135); especificaciones sin mínimo y sugeridas por categoría (C-136); **el taller espera a SADES** (está caído; los datos de los equipos en reparación están ahí).
-- **Siguen del pedido del 29/09 (en este orden):** panel del cliente (Mis pedidos con miniaturas y ZOOM, favoritos en grilla con "Mover al carrito", direcciones con el selector de oficinas ZOOM y MRW del checkout y cédula del receptor), perfil en pestañas y la página de Puntos ES, y el taller cuando SADES vuelva.
+- **Siguen del pedido del 29/09 (en este orden):** perfil en pestañas (datos personales, seguridad y notificaciones) y la página de Puntos ES; el taller cuando SADES vuelva.
 
 ## 0. Urgente: deploy del 29/09 (noche), C-118 a C-129
 Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pedido de Andrés).

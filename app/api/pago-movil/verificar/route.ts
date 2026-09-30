@@ -15,7 +15,7 @@ import {
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 import { emitAdminEvent } from '@/lib/admin-events';
-import { formatUSD, formatVES } from '@/lib/currency';
+import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { aCentimos, hoyCaracas, leerMontoBs, montoBs, montoParaCopiar } from '@/lib/pago-movil/monto';
 import { leerCotizacion } from '@/lib/pago-movil/cotizacion';
 import { clavePago, unaALaVez } from '@/lib/pago-movil/candado';
@@ -435,7 +435,7 @@ export async function POST(req: NextRequest) {
                             userId,
                             type: 'RECHARGE_APPROVED',
                             title: 'Recarga Aprobada Automaticamente',
-                            message: `Tu recarga de $${montoUsd.toFixed(2)} ha sido verificada y aprobada automáticamente. Tus Puntos ES ya están disponibles.`,
+                            message: `Tu recarga de ${formatPuntos(montoUsd)} se verificó y se aprobó sola: ya está disponible.`,
                             link: '/customer/balance',
                             icon: 'check-circle',
                         },

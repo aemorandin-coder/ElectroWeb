@@ -13,7 +13,7 @@ import {
 } from '@/lib/rate-limit';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 import { emitAdminEvent } from '@/lib/admin-events';
-import { formatUSD } from '@/lib/currency';
+import { formatPuntos, formatUSD } from '@/lib/currency';
 import {
     hashGiftCardCode,
     verifyPin,
@@ -342,7 +342,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            message: `Gift card canjeada: se acreditaron ${formatUSD(balance)} a tus Puntos ES.`,
+            message: `Gift card canjeada: te acreditamos ${formatPuntos(balance)}.`,
             amountRedeemed: balance,
             newBalance: newBalance,
             transactionId: result.walletTransaction.id

@@ -67,6 +67,14 @@ export function formatUSD(amount: number): string {
   return text.startsWith('-') ? `-$${text.slice(1)}` : `$${text}`;
 }
 
+/**
+ * Puntos ES (C-135): "$12,50 Puntos ES". Cada Punto ES vale un dólar; el formato lo pidió Andrés el 30/09 y los
+ * términos lo explican. Nunca "saldo" ni "billetera" (C-131).
+ */
+export function formatPuntos(amount: number): string {
+  return `${formatUSD(amount)} Puntos ES`;
+}
+
 export function formatVES(amount: number): string {
   return `Bs. ${formatAmount(amount)}`;
 }

@@ -10,7 +10,7 @@ import {
 } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { registrarAccionAdmin } from '@/lib/audit-log';
-import { formatUSD, formatVES } from '@/lib/currency';
+import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { formatOrderPaymentMethod, formatPaymentMethod } from '@/lib/format-helpers';
 import { conditionBadge, warrantyDaysFor } from '@/lib/product-condition';
 import { notifyStockCrossings } from '@/lib/stock-alerts';
@@ -456,7 +456,7 @@ export async function POST(request: NextRequest) {
       if (!(creditedUSD > 0)) return NextResponse.json({ error, details }, { status: 400 });
       return NextResponse.json(
         {
-          error: `No pudimos crear tu pedido: ${[error, ...(details ?? [])].join(' ')} Tu Pago Móvil no se perdió: pasamos ${formatUSD(creditedUSD)} a tus Puntos ES para que los uses en tu compra.`,
+          error: `No pudimos crear tu pedido: ${[error, ...(details ?? [])].join(' ')} Tu Pago Móvil no se perdió: te acreditamos ${formatPuntos(creditedUSD)} para que los uses en tu compra.`,
           creditedUSD,
         },
         { status: 400 }
@@ -907,7 +907,7 @@ export async function POST(request: NextRequest) {
         userId,
         type: 'BALANCE_RECHARGED',
         title: 'Pagaste de más: lo pasamos a tus Puntos ES',
-        message: `En tu pedido ${orders[0].orderNumber} transferiste ${formatVES(conciliacion.diferenciaBs)} de más. Ya tienes ${formatUSD(sobranteUSD)} en tus Puntos ES para tu próxima compra.`,
+        message: `En tu pedido ${orders[0].orderNumber} transferiste ${formatVES(conciliacion.diferenciaBs)} de más. Te acreditamos ${formatPuntos(sobranteUSD)} para tu próxima compra.`,
         link: '/customer/balance',
       });
     }
@@ -1373,7 +1373,7 @@ export async function PATCH(request: NextRequest) {
 
         case 'CANCELLED': {
           const avisoSaldo = reintegro > 0
-            ? ` Devolvimos ${formatUSD(reintegro)} a tus Puntos ES para tu próxima compra.`
+            ? ` Te devolvimos ${formatPuntos(reintegro)} para tu próxima compra.`
             : '';
           await createNotification({
             userId: oldOrder.userId,
@@ -1390,7 +1390,7 @@ export async function PATCH(request: NextRequest) {
               <div style="background:#f0f7f4;border-left:4px solid #047857;padding:15px 20px;margin:20px 0;border-radius:0 8px 8px 0;">
                 <p style="margin:0;color:#047857;font-size:14px;font-weight:600;">Puntos ES devueltos</p>
                 <p style="margin:8px 0 0;color:#047857;font-size:14px;">
-                  Devolvimos ${escaparHtml(formatUSD(reintegro))} a tus Puntos ES para tu próxima compra.
+                  Te devolvimos ${escaparHtml(formatPuntos(reintegro))} para tu próxima compra.
                 </p>
               </div>`
               : '';

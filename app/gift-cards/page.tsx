@@ -1,5 +1,5 @@
 'use client';
-import { formatUSD, formatVES } from '@/lib/currency';
+import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
@@ -626,7 +626,7 @@ export default function GiftCardsPage() {
                         {/* C-87: sin saldo suficiente se recarga aquí mismo; la gift card no pasa por el carrito */}
                         {session && saldoCargado && finalAmount >= 5 && !canPayWithBalance && (
                             <p className={`${adminNotice('warning')} mb-3`}>
-                                Te faltan <strong>{formatUSD(faltaSaldo)}</strong> en Puntos ES. Recarga y envía tu gift card desde esta misma página.
+                                Te faltan <strong>{formatPuntos(faltaSaldo)}</strong>. Recarga y envía tu gift card desde esta misma página.
                             </p>
                         )}
 

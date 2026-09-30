@@ -21,7 +21,7 @@ import PaymentMethodSelector, { opcionesDePago, type MetodoCheckout, type Metodo
 import PagoManualPanel from '@/components/checkout/PagoManualPanel';
 import PagoPuntosPanel from '@/components/checkout/PagoPuntosPanel';
 import { esPagoManual, leerReferenciaManual, repartirPuntos, type TipoPagoManual } from '@/lib/checkout-pago';
-import { formatUSD, formatVES } from '@/lib/currency';
+import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import DatosDelCliente from '@/components/checkout/DatosDelCliente';
@@ -490,7 +490,7 @@ export default function CheckoutPage() {
       const createdOrders: Array<{ orderNumber: string }> = orderData.orders || [];
       // C-125: pagó de más con Pago Móvil: la diferencia ya está en su saldo
       if (orderData.sobrepago && typeof orderData.creditedUSD === 'number') {
-        toast.success(`Pagaste de más: ${formatUSD(orderData.creditedUSD)} pasaron a tus Puntos ES.`, { duration: 6000 });
+        toast.success(`Pagaste de más: te acreditamos ${formatPuntos(orderData.creditedUSD)}.`, { duration: 6000 });
       }
       setProcessingStep(3);
 
@@ -937,7 +937,7 @@ export default function CheckoutPage() {
                           className="mt-0.5 h-5 w-5 shrink-0 rounded text-brand-500 focus:ring-2 focus:ring-brand-500"
                         />
                         <span className="text-sm text-ink-soft">
-                          <strong className="font-semibold text-ink">Usar mis {formatUSD(userBalance)} en Puntos ES</strong>
+                          <strong className="font-semibold text-ink">Usar mis {formatPuntos(userBalance)}</strong>
                           {' '}y pagar solo {formatUSD(repartirPuntos(userBalance, finalTotal).restanteUSD)} por Pago Móvil.
                           {usarPuntos && !mixto && <span className="block text-xs text-muted">Calculando el monto en bolívares…</span>}
                         </span>

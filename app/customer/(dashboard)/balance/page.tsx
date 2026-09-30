@@ -186,7 +186,7 @@ export default function BalancePage() {
 
           <div className="mb-3">
             <h1 className="text-4xl font-bold text-white tracking-tight">
-              {formatUSD(userBalance?.balance || 0)}
+              {formatUSD(userBalance?.balance || 0)} <span className="text-base font-semibold text-white/80">Puntos ES</span>
             </h1>
           </div>
 
@@ -343,7 +343,7 @@ export default function BalancePage() {
             <p className="text-xs font-bold text-muted uppercase tracking-widest mb-1">Puntos ES</p>
             <div className="flex items-center justify-center w-full overflow-hidden">
               <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap">
-                {formatUSD(userBalance?.balance || 0)}
+                {formatUSD(userBalance?.balance || 0)} <span className="text-sm font-semibold text-ink-soft">Puntos ES</span>
               </span>
             </div>
             <div className="mt-1 w-6 h-1 bg-success-strong rounded-full opacity-20" />

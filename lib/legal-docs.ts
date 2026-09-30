@@ -50,16 +50,80 @@ Al marcar la casilla de aceptación y estampar tu firma digital, confirmas que h
   requiredFor: 'RECHARGE',
 };
 
+/**
+ * Términos de los Puntos ES (C-131 y C-135): "saldo" pasa a "Puntos ES" (regla legal de Andrés, 29 y 30/09) y se
+ * explica cómo se muestran ("$12,50 Puntos ES"). La publica la tienda sola una vez (publicarTerminosDelCodigo):
+ * Andrés pidió que la publicara Claude. Cada cliente la firma en su próxima recarga.
+ */
+export const TERMINOS_PUNTOS_V2 = {
+  title: 'Términos y condiciones de los Puntos ES',
+  content: `!! IMPORTANTE: Lee cuidadosamente estos términos antes de recargar. Al continuar, aceptas legalmente todas las condiciones aquí descritas.
+
+## 1. Qué son los Puntos ES
+Los Puntos ES (Puntos ElectroShop) son un pago anticipado que haces a Electro Shop Morandin C.A. para comprar en la tienda. No son dinero electrónico ni una cuenta de pago: solo sirven para comprar productos y servicios de Electro Shop.
+
+## 2. Cómo se muestran
+Cada Punto ES vale un dólar estadounidense (USD). Por eso los Puntos ES se escriben con el signo de dólar: "$12,50 Puntos ES" son 12,50 Puntos ES, que pagan 12,50 dólares de compras en la tienda.
+- Los precios de la tienda están en dólares; en bolívares se muestran a la tasa del Banco Central de Venezuela del día.
+- Cuando recargas en bolívares, se acreditan los Puntos ES que corresponden a la tasa del día del pago.
+
+## 3. Cómo se obtienen
+- Recargas con los métodos de pago de la tienda.
+- Gift cards de Electro Shop canjeadas.
+- Devoluciones de la tienda: garantías, pedidos cancelados y pagos hechos de más.
+- Comisiones de promotores aprobadas.
+
+## 4. Origen lícito de fondos
+El usuario declara bajo juramento que todos los fondos utilizados para recargar Puntos ES provienen de actividades lícitas y legales. Queda estrictamente prohibido el uso de fondos provenientes de:
+- Actividades de lavado de dinero o activos
+- Financiamiento del terrorismo
+- Narcotráfico o actividades ilícitas relacionadas
+- Fraude, estafa o cualquier otra actividad criminal
+- Evasión fiscal o fondos no declarados
+
+## 5. Uso y no reembolso
+!! LOS PUNTOS ES NO SE CONVIERTEN EN DINERO.
+Una vez acreditados, los Puntos ES no se retiran, no se transfieren a otra persona ni se cambian por efectivo o transferencia bancaria. Se usan solo para comprar en esta tienda. Las devoluciones que haga la tienda (garantía, cancelación o pago de más) se acreditan en Puntos ES.
+
+## 6. Veracidad de la información
+El usuario se compromete a proporcionar información veraz, exacta y actualizada en todas sus transacciones, incluyendo pero no limitado a:
+- Número de referencia de pago correcto
+- Monto exacto transferido
+- Datos bancarios propios (no de terceros)
+- Comprobantes de pago legítimos y sin alteraciones
+
+## 7. Sanciones por incumplimiento
+Cualquier intento de fraude, uso de comprobantes falsificados o suministro de información engañosa resultará en:
+- Suspensión inmediata y definitiva de la cuenta
+- Pérdida de los Puntos ES obtenidos con el fraude
+- Reporte a las autoridades financieras y judiciales competentes
+- Acciones legales pertinentes según las leyes de la República Bolivariana de Venezuela
+
+## 8. Aceptación expresa
+Al marcar la casilla de aceptación y estampar tu firma digital, confirmas que has leído, comprendido y aceptado en su totalidad estos Términos y Condiciones, los cuales tienen plena validez legal como contrato de adhesión.`,
+  requiredFor: 'RECHARGE',
+};
+
 export function hashContenido(title: string, content: string): string {
   return createHash('sha256').update(`${title}\n\n${content}`, 'utf8').digest('hex');
 }
 
-/** Versión vigente de un documento. Los términos del saldo se crean solos la primera vez (versión 1). */
+/** La vigente todavía habla de "saldo" o "billetera" (anterior a C-131): toca publicar la de Puntos ES. */
+function necesitaPuntosES(doc: LegalDocument): boolean {
+  return /\b(saldo|billetera)\b/i.test(`${doc.title}\n${doc.content}`);
+}
+
+/**
+ * Versión vigente de un documento. Los términos de los Puntos ES se crean solos la primera vez (versión 1) y, si la
+ * vigente todavía dice "saldo" o "billetera", se publica la de Puntos ES (C-135).
+ */
 export async function documentoVigente(slug: string): Promise<LegalDocument | null> {
   const doc = await prisma.legalDocument.findFirst({ where: { slug, isCurrent: true }, orderBy: { version: 'desc' } });
-  if (doc || slug !== SLUG_TERMINOS_SALDO) return doc;
+  if (slug !== SLUG_TERMINOS_SALDO) return doc;
+  if (doc) return necesitaPuntosES(doc) ? publicarTerminosDelCodigo(doc) : doc;
   try {
-    return await prisma.legalDocument.create({
+    // La 1 queda en el historial (las aceptaciones de antes de C-103 cuentan como firma de la 1) y se pasa a la 2
+    const v1 = await prisma.legalDocument.create({
       data: {
         slug,
         version: 1,
@@ -69,9 +133,38 @@ export async function documentoVigente(slug: string): Promise<LegalDocument | nu
         requiredFor: TERMINOS_SALDO_V1.requiredFor,
       },
     });
+    return publicarTerminosDelCodigo(v1);
   } catch {
     // Otra petición la creó al mismo tiempo (slug + versión es único)
     return prisma.legalDocument.findFirst({ where: { slug, isCurrent: true } });
+  }
+}
+
+/**
+ * C-135: publica los términos de los Puntos ES como la versión siguiente, igual que el botón "Publicar versión" del
+ * panel: la anterior deja de estar vigente. Solo si la vigente todavía dice "saldo" (en el esquema de ejemplo había una
+ * versión 2 hecha a mano con ese texto): una versión de Andrés sin esas palabras se respeta.
+ * Dos peticiones a la vez chocan en slug + versión (único): la segunda lee la que creó la primera.
+ */
+async function publicarTerminosDelCodigo(actual: LegalDocument): Promise<LegalDocument> {
+  const v2 = TERMINOS_PUNTOS_V2;
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const ultima = await tx.legalDocument.findFirst({ where: { slug: actual.slug }, orderBy: { version: 'desc' }, select: { version: true } });
+      await tx.legalDocument.updateMany({ where: { slug: actual.slug, isCurrent: true }, data: { isCurrent: false } });
+      return tx.legalDocument.create({
+        data: {
+          slug: actual.slug,
+          version: (ultima?.version ?? actual.version) + 1,
+          title: v2.title,
+          content: v2.content,
+          contentHash: hashContenido(v2.title, v2.content),
+          requiredFor: v2.requiredFor,
+        },
+      });
+    });
+  } catch {
+    return (await prisma.legalDocument.findFirst({ where: { slug: actual.slug, isCurrent: true }, orderBy: { version: 'desc' } })) ?? actual;
   }
 }
 

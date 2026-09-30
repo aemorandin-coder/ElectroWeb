@@ -4,7 +4,7 @@ import type { IconType } from 'react-icons';
 import { FiCheck, FiCreditCard, FiDollarSign, FiGlobe, FiHash } from 'react-icons/fi';
 import { FaMobileScreen } from 'react-icons/fa6';
 import { SiBinance, SiPaypal, SiZelle } from 'react-icons/si';
-import { formatUSD, formatVES } from '@/lib/currency';
+import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { montoBs } from '@/lib/pago-movil/monto';
 import { esPagoManual, monedaPagoManual, type TipoPagoManual } from '@/lib/checkout-pago';
 
@@ -90,7 +90,7 @@ export function opcionesDePago(p: {
     {
       id: 'WALLET',
       titulo: 'Puntos ES',
-      detalle: p.puntosUSD >= p.totalUSD && p.totalUSD > 0 ? `Tienes ${formatUSD(p.puntosUSD)}: pagas con 1 clic` : `Tienes ${formatUSD(p.puntosUSD)}`,
+      detalle: p.puntosUSD >= p.totalUSD && p.totalUSD > 0 ? `Tienes ${formatPuntos(p.puntosUSD)}: pagas con 1 clic` : `Tienes ${formatPuntos(p.puntosUSD)}`,
       etiqueta: 'Al instante',
       Icono: FiDollarSign,
     },

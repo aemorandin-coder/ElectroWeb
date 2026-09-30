@@ -1,5 +1,5 @@
 'use client';
-import { formatUSD } from '@/lib/currency';
+import { formatPuntos, formatUSD } from '@/lib/currency';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -512,7 +512,7 @@ function EnrollCard({
         <div className="space-y-3">
           {!isFree && userBalance !== null && (
             <p className="text-xs text-muted text-center">
-              Tus Puntos ES: <span className={`font-bold ${hasBalance ? 'text-success-strong' : 'text-deal'}`}>{formatUSD(userBalance)}</span>
+              Tienes <span className={`font-bold ${hasBalance ? 'text-success-strong' : 'text-deal'}`}>{formatPuntos(userBalance)}</span>
               {!hasBalance && ' — insuficiente'}
             </p>
           )}

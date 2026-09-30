@@ -10,7 +10,7 @@ import Footer from '@/components/Footer';
 import Container from '@/components/ui/Container';
 import PageHeader from '@/components/ui/PageHeader';
 import GiftCard3D, { type GiftCardFace } from '@/components/gift-card/GiftCard3D';
-import { formatUSD } from '@/lib/currency';
+import { formatPuntos, formatUSD } from '@/lib/currency';
 import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
 
 interface CardInfo {
@@ -110,7 +110,7 @@ export default function RedeemGiftCardPage() {
       }
       setRedeemed({ amount: Number(data.amountRedeemed) || 0, newBalance: Number(data.newBalance) || 0 });
       setFace('front');
-      toast.success(`Listo: ${formatUSD(Number(data.amountRedeemed) || 0)} en tus Puntos ES`);
+      toast.success(`Listo: te acreditamos ${formatPuntos(Number(data.amountRedeemed) || 0)}`);
     } catch {
       setError('No se pudo canjear la gift card. Revisa tu conexión e intenta de nuevo.');
     } finally {

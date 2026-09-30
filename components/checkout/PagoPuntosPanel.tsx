@@ -2,7 +2,7 @@
 
 import { FiCheckCircle, FiGift, FiPlus } from 'react-icons/fi';
 import { FaMobileScreen } from 'react-icons/fa6';
-import { formatUSD } from '@/lib/currency';
+import { formatPuntos, formatUSD } from '@/lib/currency';
 import { repartirPuntos } from '@/lib/checkout-pago';
 import { adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 
@@ -33,7 +33,7 @@ export default function PagoPuntosPanel({
       <div className="flex items-end justify-between gap-3">
         <div>
           <p className="text-xs font-medium text-muted">Tus Puntos ES</p>
-          <p className="text-2xl font-bold tabular-nums text-ink">{formatUSD(disponibleUSD)}</p>
+          <p className="text-2xl font-bold tabular-nums text-ink">{formatUSD(disponibleUSD)} <span className="text-sm font-semibold text-ink-soft">Puntos ES</span></p>
         </div>
         <div className="text-right">
           <p className="text-xs font-medium text-muted">Total</p>
@@ -55,7 +55,7 @@ export default function PagoPuntosPanel({
         <p className="flex items-start gap-2 text-sm text-ink-soft">
           <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-success-strong" aria-hidden="true" />
           <span>
-            <strong className="font-semibold text-ink">Te alcanza.</strong> Completa el pedido y listo: te quedan {formatUSD(disponibleUSD - totalUSD)}.
+            <strong className="font-semibold text-ink">Te alcanza.</strong> Completa el pedido y listo: te quedan {formatPuntos(disponibleUSD - totalUSD)}.
           </span>
         </p>
       ) : (

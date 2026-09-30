@@ -1,3 +1,4 @@
+import { formatPuntos } from '@/lib/currency';
 import { prisma } from './prisma';
 
 export type NotificationType =
@@ -138,7 +139,7 @@ export async function notifyRechargeApproved(userId: string, amount: number) {
     userId,
     type: 'RECHARGE_APPROVED',
     title: 'Recarga Aprobada',
-    message: `Tu recarga de $${amount.toFixed(2)} ha sido aprobada. Tus Puntos ES ya están disponibles.`,
+    message: `Tu recarga de ${formatPuntos(amount)} fue aprobada: ya está disponible.`,
     link: '/customer/balance',
     icon: 'dollar-sign',
   });

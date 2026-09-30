@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { FiAlertCircle, FiCheck, FiCheckCircle, FiChevronDown, FiCopy, FiEdit2, FiLoader, FiShield, FiX } from 'react-icons/fi';
 import { HiOutlineQrcode } from 'react-icons/hi';
 import toast from 'react-hot-toast';
-import { formatUSD, formatVES } from '@/lib/currency';
+import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import {
   BANCOS_VENEZUELA,
   mascaraTelefonoVE,
@@ -272,7 +272,7 @@ export default function CheckoutPagoMovilForm({
               <p className="text-sm text-ink-soft">
                 {conciliacion.estado === 'EXACTO' && 'El banco confirmó el monto exacto. Ya puedes confirmar tu pedido.'}
                 {conciliacion.estado === 'REDONDEO' && `Hay una diferencia de ${formatVES(Math.abs(conciliacion.diferenciaBs))}: es muy pequeña, no tienes que hacer nada.`}
-                {conciliacion.estado === 'SOBREPAGO' && `Pagaste ${formatVES(conciliacion.diferenciaBs)} de más. Al confirmar tu pedido pasamos ${formatUSD(conciliacion.diferenciaUSD)} a tus Puntos ES.`}
+                {conciliacion.estado === 'SOBREPAGO' && `Pagaste ${formatVES(conciliacion.diferenciaBs)} de más. Al confirmar tu pedido te acreditamos ${formatPuntos(conciliacion.diferenciaUSD)}.`}
                 {conciliacion.estado === 'FALTA' && `Recibimos ${formatVES(conciliacion.pagadoBs)} de ${formatVES(conciliacion.esperadoBs)}. Haz otro Pago Móvil solo por la diferencia; lo que ya pagaste queda registrado.`}
               </p>
               <ul className="space-y-0.5 pt-1 text-xs text-muted">

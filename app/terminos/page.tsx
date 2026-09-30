@@ -66,6 +66,8 @@ export default function TermsPage() {
               </div>
               <p className="mb-3">
                 Los Puntos ES (Puntos ElectroShop) son un pago anticipado que el usuario hace a Electro Shop para comprar en la tienda. Cada Punto ES equivale a un dólar estadounidense (USD). No son dinero electrónico ni una cuenta de pago: solo sirven para comprar productos y servicios de Electro Shop.
+                Por eso se escriben con el signo de dólar: <strong className="text-ink">&quot;$12,50 Puntos ES&quot;</strong> son 12,50 Puntos ES, que pagan
+                12,50 dólares de compras en la tienda. Los precios en bolívares se muestran a la tasa del Banco Central de Venezuela del día.
                 Al utilizar este servicio, el usuario acepta las siguientes condiciones:
               </p>
 

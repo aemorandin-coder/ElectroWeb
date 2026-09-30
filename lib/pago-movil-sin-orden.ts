@@ -7,7 +7,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { roundMoney, montoDecimal } from '@/lib/pricing';
-import { formatUSD, formatVES } from '@/lib/currency';
+import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { createNotification } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { ETIQUETA_ESTADO } from '@/lib/order-admin';
@@ -75,7 +75,7 @@ export async function acreditarPagoSinOrden(verificacionId: string, motivo: stri
       userId: resultado.userId,
       type: 'BALANCE_RECHARGED',
       title: 'Tu pago pasó a tus Puntos ES',
-      message: `No pudimos crear tu pedido, así que tu Pago Móvil (ref. ${resultado.referencia}) quedó en tus Puntos ES: ${formatUSD(resultado.montoUSD)}. Puedes usarlo en tu próxima compra.`,
+      message: `No pudimos crear tu pedido, así que tu Pago Móvil (ref. ${resultado.referencia}) quedó en tu cuenta: ${formatPuntos(resultado.montoUSD)}. Puedes usarlo en tu próxima compra.`,
       link: '/customer/balance',
     });
     emitAdminEvent({

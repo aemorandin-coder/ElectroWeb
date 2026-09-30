@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
-import { formatUSD } from '@/lib/currency';
+import { formatPuntos, formatUSD } from '@/lib/currency';
 import { montoDecimal, roundMoney } from '@/lib/pricing';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { CLAIM_STATUSES, claimCode, isClosedStatus, RESOLUTIONS, WARRANTY_MESSAGE_MAX } from '@/lib/warranty';
@@ -116,7 +116,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     ...(note ? [{ kind: 'NOTE' as const, byCustomer: false, authorId, authorName, message: note }] : []),
   ];
 
-  const refundText = refunding ? `Devolvimos ${formatUSD(refundAmount)} en tus Puntos ES.` : null;
+  const refundText = refunding ? `Te devolvimos ${formatPuntos(refundAmount)}.` : null;
   if (refundText) events.push({ kind: 'MESSAGE' as const, byCustomer: false, authorId, authorName, message: refundText });
   const resolutionChanged = finalResolution !== claim.resolution;
   if (events.length === 0 && !resolutionChanged) return NextResponse.json({ error: 'No hay cambios' }, { status: 400 });

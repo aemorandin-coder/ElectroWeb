@@ -11,7 +11,10 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 **ChatGPT salió del equipo el 2026-09-21** (orden de Andrés). No se le asigna nada. Su carril y sus tarjetas pendientes pasaron a Claude (tabla en `docs/plan/PLAN_CHATGPT.md`, "Salida del 21/09"). `CHATGPT.md` y `PLAN_CHATGPT.md` quedan solo como historial.
 
 1. Solo edita archivos del **carril Claude** (`PLAN.md` §4). Los archivos del carril Gemini no se tocan salvo que Andrés lo pida explícitamente.
-2. Una tarea = rama `claude/<ID>` = commits con prefijo `[C-XX]`. No se hace merge a `main`: eso lo hace Andrés.
+2. Una tarea = rama `claude/<ID>` = commits con prefijo `[C-XX]`. **Claude hace el merge a `main` y el push** cuando la tarea está verificada (regla de Andrés del 2026-09-30):
+   - `git merge --no-ff --no-edit claude/C-XX` (sin `--no-edit` git abre un editor que no existe y la fusión queda a medias).
+   - Antes de subir: `git diff main claude/C-XX` vacío después de la fusión (entra exactamente lo revisado) y sin credenciales en lo que se sube (el repositorio es público).
+   - El deploy en el servidor lo sigue haciendo Andrés: dale los pasos (SQL, cron, pruebas) en `SIGUIENTE.md`.
 3. Al terminar, crea `docs/plan/estado/C-XX.md` con `Estado: HECHO` (o `BLOQUEADO — motivo`) en el mismo commit: qué cambió, cómo se verificó y qué queda pendiente.
 4. Si una tarea C cambia algo que Gemini usa (tokens, `<PublicHeader />`, `Footer`, rutas), mantén la compatibilidad o deja una nota en el estado **y** actualiza `GEMINI.md`.
 5. Si una tarjeta de Gemini queda desactualizada (líneas que se movieron, tokens que cambiaron), actualiza `GEMINI.md` antes de que Gemini la tome.
@@ -40,4 +43,4 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 - Cambios en órdenes, carrito o saldo: probar el caso normal **y** el caso manipulado.
 
 ## Prohibido sin confirmación de Andrés
-Migraciones de Prisma, borrar datos, `git push`, force push, cambiar variables de entorno de producción y decisiones de negocio listadas en `PLAN.md` §7.
+Borrar datos, force push, cambiar variables de entorno de producción y decisiones de negocio listadas en `PLAN.md` §7. Las migraciones aditivas están autorizadas (29/09) y el merge con push a `main` también (30/09, ver regla 2).

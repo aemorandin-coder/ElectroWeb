@@ -13,6 +13,7 @@ import * as bcrypt from 'bcryptjs';
 import { headers } from 'next/headers';
 import { ipParaRegistro } from '@/lib/ip';
 import { createAuditLog, getSeverityForAction, type AuditAction } from '@/lib/audit-log';
+import { describirDispositivo } from '@/lib/dispositivo';
 
 /** Inicios de sesión en la bitácora (C-104): Reportes → Seguridad cuenta aciertos, fallos y bloqueos por IP. */
 async function registrarEnBitacora(action: AuditAction, datos: { userId?: string; email?: string | null; details?: Record<string, unknown> }) {
@@ -46,21 +47,7 @@ async function registrarAcceso(userId: string, nombre: string, isAdmin: boolean,
     const userAgent = reqHeaders.get('user-agent') || 'Desconocido';
     const ip = ipParaRegistro(reqHeaders);
 
-    let device = 'Desconocido';
-    if (userAgent.includes('Windows')) device = 'Windows';
-    else if (userAgent.includes('Macintosh')) device = 'macOS';
-    else if (userAgent.includes('iPhone')) device = 'iPhone';
-    else if (userAgent.includes('iPad')) device = 'iPad';
-    else if (userAgent.includes('Android')) device = 'Android';
-    else if (userAgent.includes('Linux')) device = 'Linux';
-
-    let browser = '';
-    if (userAgent.includes('Chrome')) browser = 'Chrome';
-    else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) browser = 'Safari';
-    else if (userAgent.includes('Firefox')) browser = 'Firefox';
-    else if (userAgent.includes('Edge')) browser = 'Edge';
-
-    const deviceString = browser ? `${device} (${browser})` : device;
+    const deviceString = describirDispositivo(userAgent);
 
     await prisma.profile.upsert({
       where: { userId },

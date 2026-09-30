@@ -11,7 +11,6 @@ import {
   FiShoppingBag,
   FiMapPin,
   FiUser,
-  FiSettings,
   FiLogOut,
   FiMenu,
   FiX,
@@ -38,8 +37,7 @@ const MENU = [
   { href: '/customer/documentos', icon: FiFileText, label: 'Mis documentos' },
   { href: '/customer/mis-cursos', icon: FiBook, label: 'Mis Cursos' },
   { href: '/customer/referrals', icon: FiGift, label: 'Programa de Referidos' },
-  { href: '/customer/profile', icon: FiUser, label: 'Mi Perfil' },
-  { href: '/customer/settings', icon: FiSettings, label: 'Configuración' },
+  { href: '/customer/profile', icon: FiUser, label: 'Mi perfil' },
 ];
 
 export default function CustomerDashboardLayout({

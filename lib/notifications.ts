@@ -23,7 +23,12 @@ export type NotificationType =
   | 'PRODUCT_REQUEST'
   | 'NEW_CREATOR_REQUEST'
   // C-122: el equipo respondió o cambió el estado de una solicitud de garantía
-  | 'WARRANTY_UPDATE';
+  | 'WARRANTY_UPDATE'
+  // C-138: un favorito bajó de precio o volvió a estar disponible
+  | 'FAVORITE_PRICE_DROP'
+  | 'FAVORITE_BACK_IN_STOCK'
+  // C-138: el equipo aprobó o rechazó la verificación de la empresa
+  | 'BUSINESS_VERIFIED';
 
 interface CreateNotificationParams {
   userId: string;

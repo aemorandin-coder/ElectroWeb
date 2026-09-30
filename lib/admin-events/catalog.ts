@@ -56,6 +56,7 @@ export const ADMIN_EVENTS = {
   CONTACT_MESSAGE: { category: 'clientes', label: 'Mensaje de contacto', description: 'Llegó un mensaje desde el formulario de Contacto.', defaults: on(true, false, true) },
   WARRANTY_REQUEST: { category: 'clientes', label: 'Solicitud de garantía', description: 'Un cliente pidió garantía de un producto entregado. Se atiende en Garantías.', defaults: on(true, true, true) },
   WARRANTY_REPLY: { category: 'clientes', label: 'Respuesta en una garantía', description: 'Un cliente respondió en una solicitud de garantía abierta.', defaults: on(true, false, true) },
+  ACCOUNT_DELETION_REQUESTED: { category: 'clientes', label: 'Pedido de eliminar la cuenta', description: 'Un cliente pidió eliminar su cuenta desde Mi perfil. Llega también a Mensajes y Solicitudes.', defaults: on(true, true, true) },
   REVIEW_SUBMITTED: { category: 'clientes', label: 'Reseña por aprobar', description: 'Un cliente dejó una reseña de producto.', defaults: on(true, false, false), silent: true },
 
   PRODUCT_REQUESTED: { category: 'solicitudes', label: 'Solicitud de producto', description: 'Un cliente pidió un producto que no está en el catálogo.', defaults: on(true, false, true) },

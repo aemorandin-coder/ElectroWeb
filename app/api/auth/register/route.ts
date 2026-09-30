@@ -126,20 +126,20 @@ export async function POST(request: NextRequest) {
           type: 'SYSTEM',
           title: 'Bienvenido a Electro Shop',
           message: `Hola ${name}, tu cuenta está lista. Para comprar, confirma tu correo con el enlace que te enviamos.`,
-          link: '/customer/settings',
+          link: '/customer/profile?tab=datos',
           icon: 'FiMail',
         },
       });
 
-      // Notification about wishlist discount feature
+      // C-138: antes ofrecía "solicitar descuentos" en la lista de deseos, que se quitó en C-102
       await prisma.notification.create({
         data: {
           userId: user.id,
           type: 'PROMOTION',
-          title: 'Descubre los descuentos exclusivos',
-          message: 'Guarda productos en tu Lista de Deseos y solicita descuentos especiales. Nuestro equipo revisará tu solicitud y te notificará cuando sea aprobada.',
+          title: 'Guarda tus favoritos',
+          message: 'Toca el corazón en los productos que te gustan: te avisamos cuando bajen de precio, entren en oferta o vuelvan a estar disponibles.',
           link: '/customer/wishlist',
-          icon: 'FiPercent',
+          icon: 'FiHeart',
         },
       });
     } catch (notifError) {

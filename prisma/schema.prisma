@@ -1068,6 +1068,9 @@ model NotificationPreference {
   inAppReviews      Boolean @default(true)
   inAppPromotions   Boolean @default(true)
   soundEnabled      Boolean @default(false)
+  // C-138: avisos de favoritos (bajó de precio o volvió a estar disponible), en la tienda y por correo
+  inAppFavoritos    Boolean @default(true)
+  emailFavoritos    Boolean @default(true)
 
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1318,6 +1321,9 @@ model WishlistItem {
   product    Product  @relation(fields: [productId], references: [id])
   // C-102: precio (con oferta) cuando se guardó; Favoritos avisa "Bajó de precio"
   priceAtSaveUSD Decimal?
+  // C-138: precio y disponibilidad de la última revisión del cron de avisos (null = aún no revisado)
+  avisoPrecioUSD Decimal?
+  avisoAgotado   Boolean  @default(false)
   createdAt  DateTime @default(now())
   
   @@unique([wishlistId, productId])

@@ -1,9 +1,35 @@
 # Punto de partida (actualizado 2026-09-30)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta C-123 (subido el 29/09). **Falta el deploy, y lleva cambio de base.**
-Producción ya mostraba C-114 el 29/09 (captura de Andrés): el commit exacto del servidor se anota tras este deploy.
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta C-137 (merge `1333928`, 30/09), **y ya está en producción** (deploy de Andrés del 30/09, con el cambio de base de C-132).
+Falta que Andrés cuente cómo salieron las pruebas de después del deploy (§00, "Después del deploy").
 
-## 00. Nuevo del 30/09: C-130 a C-137 (ramas listas, sin mergear)
+## 000. Nuevo del 30/09 (noche): C-138, rama lista sin mergear
+- **C-138 · Mi perfil en pestañas y avisos de favoritos** (`claude/C-138`, sale de `main`). Detalle y pruebas en `estado/C-138.md`.
+  - Perfil y Configuración en una página: **Datos personales · Seguridad · Notificaciones · Empresa**. `/customer/settings` redirige.
+  - Solo lo que funciona (decisión de Andrés del 30/09): se quitaron 6 interruptores sin efecto, las estadísticas falsas y las promesas de la cuenta de empresa.
+  - **Nuevo:** avisos cuando un favorito baja de precio, entra en oferta o vuelve a haber (en la tienda y por correo, con cron cada hora).
+  - "Eliminar cuenta" ahora llega al equipo (Mensajes y Solicitudes + aviso) en vez de prometer un borrado que nadie hacía.
+  - Actividad reciente, cambiar la contraseña cerrando las demás sesiones, y desactivar cierra también los otros dispositivos.
+- **Merge:** `git merge --no-ff claude/C-138`.
+- **Cambio de base (aditivo):**
+  ```sql
+  ALTER TABLE "notification_preferences" ADD COLUMN "inAppFavoritos" BOOLEAN NOT NULL DEFAULT true, ADD COLUMN "emailFavoritos" BOOLEAN NOT NULL DEFAULT true;
+  ALTER TABLE "wishlist_items" ADD COLUMN "avisoPrecioUSD" DECIMAL(65,30), ADD COLUMN "avisoAgotado" BOOLEAN NOT NULL DEFAULT false;
+  ```
+- **Cron nuevo** (con `crontab -e` en el servidor; `CRON_SECRET` es la misma del cron de envíos de C-100):
+  `0 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" https://electroshopve.com/api/cron/favoritos`
+  La primera corrida solo anota los precios; los avisos empiezan con el primer cambio.
+- **Después del deploy, en producción:**
+  1. Mi perfil en el teléfono: las 4 pestañas; cambiar el teléfono y guardar; tocar un interruptor de Notificaciones.
+  2. Guardar un producto en Favoritos, bajarle el precio desde el admin y esperar la hora del cron (o correr el `curl` a mano): aviso en la campana y correo.
+  3. Con una cuenta de prueba: "Eliminar" → llega a Mensajes y Solicitudes y como aviso; "Cancelar el pedido".
+  4. Admin → Verificaciones: rechazar una empresa de prueba con motivo → el cliente recibe el aviso.
+- **Falta de Andrés:** qué pasa con los Puntos ES de quien cierra su cuenta (los términos no lo dicen).
+- **Aprobado el 30/09 y en fila:**
+  - **C-140 · Sesiones con nombre.** Cliente: varias sesiones, cada una visible y con "Cerrar", y correo al entrar desde un dispositivo nuevo. Admin: una sola sesión (la nueva cierra la anterior), 12 h y cierre tras 1 h sin uso. Tabla de sesiones nueva (aditiva). Va en la pestaña Seguridad de C-138.
+  - **C-139 · Página de Puntos ES:** historial completo con "Cargar más", recargas pendientes y rechazadas claras (con el motivo), "Cómo funcionan" con enlace a los términos y enlace al pedido en cada compra o devolución.
+
+## 00. C-130 a C-137 (en `main` y en producción desde el 30/09)
 Pedidos de Andrés del 29 y 30/09.
 - **Merge más simple: `git merge --no-ff claude/C-137`** trae todo (C-130 a C-137): C-137 sale de las dos cadenas. Probado: build, `tsc` y ESLint.
 - Si se quiere subir solo lo de productos antes: `claude/C-136` (trae C-133, C-134 y C-136, sin cambio de base).
@@ -36,7 +62,7 @@ Pedidos de Andrés del 29 y 30/09.
   6. **Panel del cliente, en el teléfono:** Mis pedidos (tocar "Detalle y recibo" e imprimir), Favoritos ("Mover al carrito") y Direcciones: agregar tu agencia ZOOM de la lista como predeterminada y abrir el checkout: debe venir elegida.
   7. En producción hay un **"Producto Test" publicado** en Consolas y productos digitales con **"(SALDO)" en el nombre**: pasarlo a borrador y renombrarlos (ver `estado/C-136.md`).
 - **Decidido por Andrés el 30/09:** "$12,50 Puntos ES" explicado en los términos (C-135); especificaciones sin mínimo y sugeridas por categoría (C-136); **el taller espera a SADES** (está caído; los datos de los equipos en reparación están ahí).
-- **Siguen del pedido del 29/09 (en este orden):** perfil en pestañas (datos personales, seguridad y notificaciones) y la página de Puntos ES; el taller cuando SADES vuelva.
+- **Siguen del pedido del 29/09:** perfil en pestañas (hecho en C-138), la página de Puntos ES (C-139, después de C-140) y el taller cuando SADES vuelva.
 
 ## 0. Urgente: deploy del 29/09 (noche), C-118 a C-129
 Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pedido de Andrés).
@@ -97,7 +123,7 @@ Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pe
 - Detalle y pruebas de cada una en su `estado/C-12X.md`.
 
 ## 1. Estado de las ramas
-- **`main`:** todo hasta C-129 (C-124 a C-129 mergeados y subidos el 29/09 en la noche). Las ramas `claude/C-118` a `claude/C-129` ya están en `main`.
+- **`main`:** todo hasta C-137 (merge del 30/09, en producción). `claude/C-138` lista sin mergear (§000).
 - **Gemini:** R23 (G-69) cerrada y en `main`, con dos arreglos de Claude (resultado al final de `PLAN_GEMINI.md`). **No tiene ronda abierta.** Su carril no tiene deudas de reglas (verificado el 28/09 con `grep`: 0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis).
 - **ChatGPT:** fuera del equipo desde el 21/09. Limpieza opcional en la máquina de Andrés: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
 - **Historial de tareas:** cada una tiene su `docs/plan/estado/C-XX.md`. Resumen en `PLAN_CLAUDE.md`, "Orden de trabajo".
@@ -130,7 +156,7 @@ bash scripts/deploy.sh
   - Hubo dos fallos del build: los tipos de una ruta borrada y la falta de memoria. Los dos se arreglaron en `deploy.sh` y `next.config.js`.
 
 ## 3. Qué sigue (Claude, en orden)
-1. **Deploy** (§0) y las pruebas de después.
+1. **C-140** (sesiones) y **C-139** (Puntos ES), sobre C-138 (§000). Antes, las pruebas del deploy del 30/09 (§00).
 2. **Revisión final con Andrés** (`REVISION_FINAL.md`), y arreglar lo que salga. En producción:
    - Checkout: con el mínimo de compra activo, el aviso aparece antes de pagar. Una compra real con saldo y otra con Pago Móvil.
    - Una compra con cupón.
@@ -152,7 +178,7 @@ bash scripts/deploy.sh
    - Lleva una migración de `onDelete`, con su OK.
 7. **Wizard de producto** (crear y editar): rediseño paso a paso, lo que quedó de C-51.
 8. **Menores:**
-   - Aviso cuando un favorito entra en oferta.
+   - ~~Aviso cuando un favorito entra en oferta~~: hecho en C-138.
    - Ordenar el catálogo por el precio de oferta.
    - Ocultar el formulario de reseña a quien no puede reseñar.
    - `/terminos` y `/privacidad` como documentos editables.
@@ -227,6 +253,6 @@ bash scripts/deploy.sh
 ## 6. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto.
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
-> 2. Pregúntame si ya hice el deploy del §0 (con el cambio de base) y cómo salieron las pruebas de después.
+> 2. Pregúntame si ya mergeé y subí C-138 (§000, con su SQL y su cron) y cómo salieron las pruebas del deploy del 30/09.
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
-> 4. Después sigue el orden de `SIGUIENTE.md` §3: la revisión final, C-118, C-107, C-92, el wizard de producto y C-120.
+> 4. Después sigue el orden de `SIGUIENTE.md` §3: C-140, C-139, la revisión final, C-107, C-92, el wizard de producto y C-120.

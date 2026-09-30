@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { registrarAccionAdmin } from '@/lib/audit-log';
+import { createNotification } from '@/lib/notifications';
+import { getBaseTemplate, sendEmail } from '@/lib/email-service';
+import { escapeHtml } from '@/lib/html';
 
 export async function GET(request: NextRequest) {
     try {
@@ -98,7 +101,36 @@ export async function PATCH(request: NextRequest) {
             ...(notes ? { notas: String(notes).slice(0, 300) } : {}),
         }, request);
 
-        // TODO: Send email notification to user about status change
+        // C-138: el cliente se entera en la campana y por correo (antes era un TODO y Mi perfil decía "te avisaremos")
+        if (status === 'APPROVED' || status === 'REJECTED') {
+            const aprobada = status === 'APPROVED';
+            const motivo = typeof notes === 'string' && notes.trim() ? notes.trim().slice(0, 300) : null;
+            // "Demo C.A." ya trae su punto: sin "C.A.." ni un motivo sin punto final
+            const conPunto = (texto: string) => (/[.!?]$/.test(texto) ? texto : `${texto}.`);
+            const empresa = updatedProfile.companyName || 'tu empresa';
+            const mensaje = aprobada
+                ? conPunto(`Verificamos ${empresa}`)
+                : `${conPunto(`No pudimos verificar ${empresa}`)}${motivo ? ` Motivo: ${conPunto(motivo)}` : ''} Puedes enviar los documentos de nuevo.`;
+            await createNotification({
+                userId: updatedProfile.userId,
+                type: 'BUSINESS_VERIFIED',
+                title: aprobada ? 'Tu empresa está verificada' : 'Revisa los datos de tu empresa',
+                message: mensaje,
+                link: '/customer/profile?tab=empresa',
+            });
+            if (updatedProfile.user.email) {
+                const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+                const contenido = `
+    <h2 style="margin:0 0 10px;color:#212529;font-size:22px;font-weight:600;">${aprobada ? 'Tu empresa está verificada' : 'Revisa los datos de tu empresa'}</h2>
+    <p style="color:#495057;font-size:15px;line-height:1.6;margin:0 0 16px;">${escapeHtml(mensaje)}</p>
+    <div style="text-align:center;margin:28px 0;"><a href="${appUrl}/customer/profile?tab=empresa" style="display:inline-block;background:#2a63cd;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">Ver mi cuenta de empresa</a></div>`;
+                void sendEmail({
+                    to: updatedProfile.user.email,
+                    subject: aprobada ? 'Tu empresa está verificada' : 'No pudimos verificar tu empresa',
+                    html: await getBaseTemplate(contenido, mensaje),
+                }).catch((error) => console.error('Error enviando el correo de verificación de empresa:', error));
+            }
+        }
 
         return NextResponse.json(updatedProfile);
     } catch (error) {

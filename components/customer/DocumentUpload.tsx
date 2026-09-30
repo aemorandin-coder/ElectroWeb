@@ -66,7 +66,7 @@ export default function DocumentUpload({
 
   return (
     <div className="space-y-2">
-      <label className="block text-xs font-bold text-ink uppercase tracking-wider">{label}</label>
+      <span className="block text-sm font-semibold text-ink">{label}</span>
 
       {!file && !preview ? (
         <div className="relative">
@@ -89,9 +89,10 @@ export default function DocumentUpload({
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
               <FiUpload className={`w-8 h-8 mb-2 ${disabled ? 'text-subtle' : 'text-brand-500'}`} />
               <p className={`text-sm ${disabled ? 'text-subtle' : 'text-muted'}`}>
-                <span className="font-semibold text-ink">Click para subir</span> o arrastra aquí
+                {/* C-138: decía "o arrastra aquí", pero soltar un archivo no hace nada */}
+                <span className="font-semibold text-ink">Toca para elegir el archivo</span>
               </p>
-              <p className="text-xs text-muted mt-1">{accept.replace(/\./g, '').toUpperCase()} (max 5MB)</p>
+              <p className="text-xs text-muted mt-1">{accept.replace(/\./g, '').toUpperCase().split(',').join(', ')} · hasta 5 MB</p>
             </div>
           </label>
         </div>

@@ -25,7 +25,7 @@ import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import DatosDelCliente from '@/components/checkout/DatosDelCliente';
-import EntregaEnvio, { ENVIO_INICIAL, ResumenEnvio, envioParaServidor, validarEnvio, type EnvioForm } from '@/components/checkout/EntregaEnvio';
+import EntregaEnvio, { ENVIO_INICIAL, ResumenEnvio, envioDesdeDireccion, envioParaServidor, validarEnvio, type DireccionGuardada, type EnvioForm } from '@/components/checkout/EntregaEnvio';
 import { ConfianzaEnvio } from '@/components/envios/ConfianzaEnvio';
 import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalculation, type PricingLine } from '@/lib/pricing';
 
@@ -174,11 +174,18 @@ export default function CheckoutPage() {
 
               if (Array.isArray(addresses)) {
                 // Claves de antes de C-24: address o addressLine1
+                // Las agencias (ZOOM, MRW) no son direcciones para un envío a domicilio (C-137)
                 setSavedAddresses(addresses
+                  .filter((a: { type?: string }) => a?.type !== 'ZOOM' && a?.type !== 'MRW')
                   .map((a: { address?: string; addressLine1?: string; city?: string; state?: string }) => ({
                     address: a.address || a.addressLine1 || '', city: a.city, state: a.state,
                   }))
                   .filter((a: { address: string }) => a.address));
+                // C-137: la agencia predeterminada de "Mis direcciones" queda propuesta (si no eligió empresa todavía)
+                const predeterminada = (addresses as DireccionGuardada[]).find((a) => a?.isDefault);
+                if (predeterminada && companySettings?.deliveryEnabled !== false) {
+                  setEnvio((prev) => (prev.carrier ? prev : envioDesdeDireccion(predeterminada, prev) ?? prev));
+                }
               }
             } catch (e) {
               console.error('Error parsing saved addresses', e);

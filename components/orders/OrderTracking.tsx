@@ -1,6 +1,7 @@
 'use client';
 
 import { toast } from 'react-hot-toast';
+import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import { FiCheckCircle, FiCreditCard, FiPackage, FiTruck, FiGift, FiShoppingBag, FiClock, FiExternalLink, FiMapPin, FiCalendar, FiCopy, FiUser } from 'react-icons/fi';
 import { NOMBRE_EMPRESA, esRetiro, type EmpresaGuia } from '@/lib/envios/empresas';
 import { eventoEsEnOficina } from '@/lib/envios/zoom';
@@ -153,7 +154,10 @@ export default function OrderTracking({
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-ink">
-                                    {empresa || 'Envío'}
+                                    {/* C-137: logo oficial de ZOOM o MRW */}
+                                    {shippingCarrier === 'ZOOM' || shippingCarrier === 'MRW'
+                                        ? <LogoEmpresa empresa={shippingCarrier} className="h-4" />
+                                        : empresa || 'Envío'}
                                 </p>
                                 <p className="text-xs text-muted">
                                     Guía: <span className="font-mono font-bold text-ink">{trackingNumber}</span>

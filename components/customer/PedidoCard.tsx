@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { FiChevronRight, FiExternalLink, FiPackage } from 'react-icons/fi';
@@ -105,9 +106,13 @@ export default function PedidoCard({ pedido, onDetalle }: { pedido: PedidoClient
               target="_blank"
               rel="noopener noreferrer"
               onClick={rastrear}
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-brand-500 px-3 text-sm font-semibold text-white hover:bg-brand-600"
+              // Fondo blanco: el logo azul de ZOOM no se ve sobre el azul de la tienda
+              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-brand-200 bg-white px-3 text-sm font-semibold text-ink hover:bg-brand-50"
             >
-              <FiExternalLink className="h-4 w-4" aria-hidden="true" /> Rastrear en {empresa}
+              <FiExternalLink className="h-4 w-4 text-brand-600" aria-hidden="true" /> Rastrear en{' '}
+              {pedido.shippingCarrier === 'ZOOM' || pedido.shippingCarrier === 'MRW'
+                ? <LogoEmpresa empresa={pedido.shippingCarrier} className="h-4" />
+                : empresa}
             </a>
           ) : (
             <button type="button" onClick={rastrear} className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface">

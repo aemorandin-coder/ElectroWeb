@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { FiCheckCircle, FiExternalLink, FiHome, FiInfo, FiMapPin, FiPackage, FiTruck, FiUser } from 'react-icons/fi';
 import { AYUDA_DOCUMENTO, ControlDocumento, ControlTelefono } from '@/components/forms/ControlesDatos';
 import { adminCard, adminChoice, adminError, adminHint, adminInput, adminLabel, adminNotice } from '@/lib/admin-ui';
@@ -136,6 +137,49 @@ function partirTelefono(valor: string): { codigo: string; numero: string } {
   return m ? { codigo: m[1], numero: m[2] } : { codigo: '+58', numero: '' };
 }
 
+/** Una dirección de "Mis direcciones" (lib/saved-addresses.ts), lo que hace falta para el envío. */
+export interface DireccionGuardada {
+  type?: string;
+  isDefault?: boolean;
+  state?: string;
+  city?: string;
+  cityCode?: string;
+  agencyCode?: string;
+  firstName?: string;
+  lastName?: string;
+  recipientIdNumber?: string;
+  phone?: string;
+}
+
+/**
+ * C-137: la agencia predeterminada de "Mis direcciones" como formulario de envío: ZOOM o MRW, retiro en oficina y quién
+ * recibe (si la dirección lo trae completo). Null si no es una agencia elegida de la lista (las escritas a mano no
+ * tienen código de oficina).
+ */
+export function envioDesdeDireccion(d: DireccionGuardada, base: EnvioForm): EnvioForm | null {
+  if ((d.type !== 'ZOOM' && d.type !== 'MRW') || !d.agencyCode || !d.state) return null;
+  if (d.type === 'ZOOM' && !d.cityCode) return null;
+  const nombre = [d.firstName, d.lastName].map((x) => (x ?? '').trim()).filter(Boolean).join(' ');
+  let recipient: DestinatarioForm | null = null;
+  if (nombre && d.recipientIdNumber && d.phone) {
+    const doc = partirDocumento(d.recipientIdNumber);
+    const soloDigitos = d.phone.replace(/[^\d+]/g, '');
+    const tel = soloDigitos.startsWith('+') ? partirTelefono(d.phone.trim()) : { codigo: '+58', numero: soloDigitos.replace(/^0/, '') };
+    recipient = { name: nombre, docTipo: doc.tipo, docNumero: doc.numero, telCodigo: tel.codigo, telNumero: tel.numero };
+  }
+  return {
+    ...base,
+    deliveryMethod: 'SHIPPING',
+    carrier: d.type,
+    mode: 'OFFICE',
+    state: d.state,
+    cityCode: d.type === 'ZOOM' ? d.cityCode ?? '' : '',
+    city: d.city ?? '',
+    officeCode: d.agencyCode,
+    recipient,
+  };
+}
+
 export default function EntregaEnvio({
   value,
   onChange,
@@ -214,6 +258,35 @@ export default function EntregaEnvio({
       if (ultimaTarifa.current === clave) setTarifa(null);
     }
   }
+
+  // C-137: la empresa y la oficina pueden venir elegidas de antes (la agencia predeterminada de "Mis direcciones"):
+  // se cargan sus listas para que los selectores las muestren, y se pide la tarifa de referencia
+  const pidiendo = useRef(new Set<string>());
+  useCargarAlMontar(() => {
+    const pedir = async (clave: string, fn: () => Promise<void>) => {
+      if (pidiendo.current.has(clave)) return;
+      pidiendo.current.add(clave);
+      try { await fn(); } finally { pidiendo.current.delete(clave); }
+    };
+    if (value.carrier === 'ZOOM' && !zoom) {
+      void pedir('ZOOM', async () => { const d = await cargarJson<DestinosZoom>('/api/envios/destinos?empresa=ZOOM', 'destinos'); if (d) setZoom(d); });
+    }
+    if (value.carrier === 'MRW' && !mrw) {
+      void pedir('MRW', async () => { const d = await cargarJson<DestinosMrw>('/api/envios/destinos?empresa=MRW', 'destinos'); if (d) setMrw(d); });
+    }
+    if (value.carrier === 'ZOOM' && value.cityCode && !oficinasZoom[value.cityCode]) {
+      const ciudad = value.cityCode;
+      void pedir(`of-${ciudad}`, async () => {
+        const d = await cargarJson<{ oficinas: Oficina[] }>(`/api/envios/oficinas?ciudad=${ciudad}`, 'oficinas');
+        if (d) setOficinasZoom((prev) => ({ ...prev, [ciudad]: d.oficinas }));
+      });
+    }
+  }, [value.carrier, value.cityCode]);
+
+  // Tarifa de referencia de una oficina de ZOOM que llegó elegida (elegirOficina la pide al tocarla)
+  useCargarAlMontar(() => {
+    if (value.carrier === 'ZOOM' && value.mode === 'OFFICE' && value.officeCode && tarifa?.clave !== claveTarifa(value)) void cotizar(value);
+  }, [value.officeCode, itemsClave]);
 
   async function elegirEmpresa(carrier: Empresa) {
     const siguiente: EnvioForm = { ...value, carrier, state: '', cityCode: '', city: '', officeCode: '' };

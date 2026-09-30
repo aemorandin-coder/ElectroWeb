@@ -1,7 +1,33 @@
-# Punto de partida (actualizado 2026-09-29, noche)
+# Punto de partida (actualizado 2026-09-30)
 
 Léelo antes de empezar. En GitHub, `main` tiene todo hasta C-123 (subido el 29/09). **Falta el deploy, y lleva cambio de base.**
 Producción ya mostraba C-114 el 29/09 (captura de Andrés): el commit exacto del servidor se anota tras este deploy.
+
+## 00. Nuevo del 30/09: C-130 a C-134 (ramas listas, sin mergear)
+Pedidos de Andrés del 29 y 30/09. **Dos cadenas independientes**; cada una se mergea en su orden:
+- **Cadena A (dinero):** `claude/C-130` → `claude/C-131` → `claude/C-132`. C-131 sale de C-130 y C-132 de C-131.
+  - **C-130 · Teléfono y cédula del BDV:** el checkout mandaba `584121234567` y el banco decía "Formato de teléfono inválido". Arreglado en el checkout, la recarga, la verificación y "Consultar Pago Móvil".
+  - **C-131 · "Puntos ES":** regla legal de Andrés, nunca "saldo" ni "billetera" en textos. 186 textos. **Falta que Andrés publique la versión 2 de los términos de recarga desde Admin → Legal** (texto en `estado/C-131.md`; al publicarla, cada cliente la firma en su próxima recarga).
+  - **C-132 · Checkout:** "¿Cómo deseas pagar?" con los métodos activos, Binance Pay y PayPal manuales con reserva de 2 h, pago mixto Puntos ES + Pago Móvil, reservas que apartan de verdad. **Lleva cambio de base (aditivo):**
+    ```sql
+    ALTER TABLE "orders" ADD COLUMN "paymentReference" TEXT, ADD COLUMN "pointsUSD" DECIMAL(65,30) NOT NULL DEFAULT 0;
+    ALTER TABLE "stock_reservations" ADD COLUMN "orderId" TEXT;
+    CREATE INDEX "stock_reservations_orderId_idx" ON "stock_reservations"("orderId");
+    ```
+- **Cadena B (productos, se puede subir sola y ya):** `claude/C-133` → `claude/C-134`. Sin cambio de base.
+  - **C-133 · Cinta ES:** también con fondo blanco liso (la foto de los audífonos Piston del 30/09 no la tenía), la cinta en la esquina de la foto en la ficha, el catálogo y la vitrina, guardar sin la espera de 2,5 s, y al editar "Guardar cambios" en cada paso.
+  - **C-134 · Asistente de productos:** menos espacio, sin redundancia, validaciones iguales en el formulario y el servidor.
+- **Probado junto:** rama temporal con las 5 mezcladas: 0 conflictos, `tsc`, `build` y ESLint (0 errores). Pruebas de cada una en su `estado/C-13X.md`.
+- **Después del deploy, en producción:**
+  1. Una compra con Pago Móvil desde un perfil con teléfono `+58 …`: debe verificar al primer intento.
+  2. Volver a subir la foto de los audífonos Piston (la de `~/Escritorio/AUDIFONOS-PISTON-con-cinta.png` o la original: ahora la cinta sale sola). Editar un producto cambiando solo el precio.
+  3. Activar Binance Pay y PayPal en Métodos de pago (con su QR si hay) y hacer una compra de prueba con cada uno: queda "Por validar" y se confirma con "Marcar pagado".
+  4. Una compra con pago mixto (algo de Puntos ES y el resto por Pago Móvil) y cancelarla: vuelven los Puntos ES.
+- **Pendiente de Andrés:**
+  - ¿Los Puntos ES se muestran como dinero ("$12,50 en Puntos ES", como ahora) o como número de puntos?
+  - Servicio técnico en taller: "viene de otro sistema". ¿Cuál es, y tiene API o exportación?
+  - Especificaciones: C-134 las dejó recomendadas (3), no obligatorias. ¿Está bien?
+- **Siguen del pedido del 29/09 (en este orden):** panel del cliente (Mis pedidos con miniaturas y ZOOM, favoritos en grilla con "Mover al carrito", direcciones con el selector de oficinas ZOOM y MRW del checkout y cédula del receptor), perfil en pestañas y la página de Puntos ES, y el taller cuando Andrés diga de dónde salen los datos.
 
 ## 0. Urgente: deploy del 29/09 (noche), C-118 a C-129
 Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pedido de Andrés).

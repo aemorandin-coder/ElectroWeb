@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { esAdminVerificado } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 
 // Get conversation with messages
@@ -27,7 +28,7 @@ export async function GET(
 
     // SEGURIDAD (C-70): solo el dueño de la conversación o un admin (antes cualquier sesión leía chats ajenos)
     const role = session.user.role;
-    const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+    const isAdmin = esAdminVerificado(session);
     if (!conversation || (!isAdmin && conversation.userId !== session.user.id)) {
       return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }

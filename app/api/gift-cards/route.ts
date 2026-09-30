@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { esAdminVerificado } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { montoDecimal } from '@/lib/pricing';
 import { sendGiftCardEmail } from '@/lib/email-service';
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
 
         // Admin access
         if (type === 'admin') {
-            if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
+            if (!esAdminVerificado(session)) {
                 return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
             }
 
@@ -101,7 +102,7 @@ export async function POST(request: Request) {
         if (!session?.user) {
             return NextResponse.json({ error: 'Debes iniciar sesión' }, { status: 401 });
         }
-        const isAdmin = session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN';
+        const isAdmin = esAdminVerificado(session);
         const body = await request.json();
 
         // Support both field naming conventions for backwards compatibility

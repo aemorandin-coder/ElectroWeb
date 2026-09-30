@@ -5,7 +5,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import { authOptions } from '@/lib/auth';
 import { documentOwner, isInside, PRIVATE_DOCUMENTS_DIR, WARRANTY_PHOTOS_DIR, warrantyPhotoOwner } from '@/lib/private-uploads';
-import { isAuthorized } from '@/lib/auth-helpers';
+import { isAuthorized, esAdminVerificado } from '@/lib/auth-helpers';
 
 const MIME_TYPES: Record<string, string> = {
     '.jpg': 'image/jpeg',
@@ -54,7 +54,7 @@ export async function GET(
             const name = pathSegments.slice(1).join('/');
             const session = await getServerSession(authOptions);
             const role = session?.user?.role;
-            const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+            const isAdmin = esAdminVerificado(session);
             // Mismo 404 para "no existe" y "no es tuyo": no se revela qué documentos hay
             if (!session?.user || pathSegments.length !== 2 || (!isAdmin && documentOwner(name) !== session.user.id)) {
                 return NextResponse.json({ error: 'File not found' }, { status: 404 });

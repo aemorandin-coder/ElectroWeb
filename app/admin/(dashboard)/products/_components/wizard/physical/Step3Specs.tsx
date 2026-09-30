@@ -1,25 +1,42 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
-import { StepProps, SPECS_RECOMENDADAS } from '../types';
+import { StepProps } from '../types';
 import { wizardInput, wizardError, wizardSectionTitle, wizardSectionHelp } from '../ui';
+import { claveNombre, combinarSugerencias, type SugerenciasSpecs } from '@/lib/spec-sugerencias';
 
 // C-134:
 // - Las sugerencias ponen solo el NOMBRE y llevan al valor. Antes un clic en "+ Procesador" agregaba
 //   "Intel Core i5-12ª Gen" a cualquier producto: datos inventados en la ficha.
-// - 3 especificaciones se recomiendan, no se exigen (un cable no tiene 3).
+// - Ninguna es obligatoria: hay productos con una sola (Andrés, 30/09).
 // - "Quitar" se ve siempre: antes solo aparecía con el mouse encima y en el teléfono no se podía borrar.
-const SUGERENCIAS = ['Marca', 'Modelo', 'Color', 'Conexión', 'Compatibilidad', 'Capacidad', 'Procesador', 'RAM', 'Almacenamiento', 'Pantalla', 'Batería', 'Garantía del fabricante'];
+// C-136: las sugerencias salen de la categoría (lo que ya usan sus productos, y una lista base por tipo). Al elegir un
+// nombre aparecen los valores más usados para completarlo con un toque.
 
-export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps) {
+export default function PhysicalStep3Specs({ data, onChange, errors, categories }: StepProps) {
   const [key, setKey] = useState('');
   const [value, setValue] = useState('');
   const valorRef = useRef<HTMLInputElement>(null);
+  const nombreCategoria = categories.find((c) => c.id === data.categoryId)?.name ?? '';
+  // La lista base se ve al instante; lo aprendido de la categoría llega del servidor
+  const [aprendidas, setAprendidas] = useState<{ categoryId: string; datos: SugerenciasSpecs } | null>(null);
+  const sugerencias = aprendidas?.categoryId === data.categoryId ? aprendidas.datos : combinarSugerencias(nombreCategoria, []);
+
+  useEffect(() => {
+    if (!data.categoryId) return;
+    const control = new AbortController();
+    fetch(`/api/admin/products/spec-sugerencias?categoryId=${encodeURIComponent(data.categoryId)}`, { signal: control.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((datos: SugerenciasSpecs | null) => { if (datos) setAprendidas({ categoryId: data.categoryId, datos }); })
+      .catch(() => {});
+    return () => control.abort();
+  }, [data.categoryId]);
 
   const entradas = Object.entries(data.specifications);
   const count = entradas.length;
-  const faltan = Math.max(0, SPECS_RECOMENDADAS - count);
+  const usadas = new Set(entradas.map(([k]) => claveNombre(k)));
+  const valoresSugeridos = key.trim() ? sugerencias.valores[claveNombre(key)] ?? [] : [];
 
   const handleAdd = () => {
     if (!key.trim() || !value.trim()) return;
@@ -44,9 +61,9 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
       <div>
         <h2 className={wizardSectionTitle}>Especificaciones</h2>
         <p className={wizardSectionHelp}>
-          {faltan > 0
-            ? `Recomendado: ${SPECS_RECOMENDADAS} o más para una ficha completa (te faltan ${faltan}). No es obligatorio.`
-            : `${count} especificaciones: la ficha técnica se ve completa.`}
+          {count === 0
+            ? 'Agrega las que apliquen a este producto. Ninguna es obligatoria: hay productos con una sola.'
+            : `${count} ${count === 1 ? 'especificación' : 'especificaciones'} en la ficha técnica.`}
         </p>
       </div>
 
@@ -86,7 +103,7 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
             />
           </label>
           <datalist id="spec-keys">
-            {SUGERENCIAS.map((k) => <option key={k} value={k} />)}
+            {sugerencias.nombres.map((k) => <option key={k} value={k} />)}
           </datalist>
           <label className="min-w-0">
             <span className="sr-only">Valor</span>
@@ -110,8 +127,23 @@ export default function PhysicalStep3Specs({ data, onChange, errors }: StepProps
             <FiPlus className="h-4 w-4" aria-hidden="true" /> Agregar
           </button>
         </div>
-        <div className="flex flex-wrap gap-1.5" aria-label="Nombres sugeridos">
-          {SUGERENCIAS.filter((k) => !data.specifications[k]).map((k) => (
+        {valoresSugeridos.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5" aria-label={`Valores usados para ${key}`}>
+            <span className="text-xs text-muted">Usados en la categoría:</span>
+            {valoresSugeridos.map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => { setValue(v); valorRef.current?.focus(); }}
+                className="h-9 rounded-full bg-brand-50 px-3 text-xs font-medium text-brand-700 hover:bg-brand-100"
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="flex flex-wrap gap-1.5" aria-label={nombreCategoria ? `Sugeridas para ${nombreCategoria}` : 'Nombres sugeridos'}>
+          {sugerencias.nombres.filter((k) => !usadas.has(claveNombre(k))).map((k) => (
             <button
               key={k}
               type="button"

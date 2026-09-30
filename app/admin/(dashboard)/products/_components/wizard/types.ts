@@ -60,8 +60,6 @@ export const SKU_VALIDO = /^[A-Za-z0-9][A-Za-z0-9 ._\/-]{1,59}$/;
 /** Topes de las medidas del envío: más que esto es un error de tipeo (kg y cm) */
 export const PESO_MAXIMO_KG = 1000;
 export const MEDIDA_MAXIMA_CM = 500;
-/** Especificaciones recomendadas para una ficha completa (no se exigen: un cable no tiene 3) */
-export const SPECS_RECOMENDADAS = 3;
 
 /** Margen sobre el costo, en %. null si no hay costo. */
 export function rowMargin(row: VariantRow): number | null {

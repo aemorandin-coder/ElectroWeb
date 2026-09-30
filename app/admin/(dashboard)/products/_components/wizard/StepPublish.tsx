@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { FiAlertCircle, FiCheck, FiMonitor, FiTruck, FiZap } from 'react-icons/fi';
 import { formatUSD } from '@/lib/currency';
 import { DELIVERY_MODES, getPlatform } from '@/lib/digital-catalog';
-import { SPECS_RECOMENDADAS, leerNumero, type WizardData } from './types';
+import { leerNumero, type WizardData } from './types';
 import { wizardPrimaryButton, wizardSecondaryButton, wizardSectionHelp, wizardSectionTitle } from './ui';
 
 interface Props {
@@ -30,7 +30,7 @@ export default function StepPublish({ data, errors, isLoading, isEditing, estado
   const hasDeal = isPhysical && comparePrice > displayPrice && displayPrice > 0;
   const platform = getPlatform(data.digitalPlatform);
 
-  // C-134: "recomendado" no frena la publicación (las especificaciones); lo demás sí
+  // C-134: "recomendado" no frena la publicación; lo demás sí. C-136: las especificaciones ya no se cuentan (hay productos con una)
   const checks: Array<{ ok: boolean; label: string; recomendado?: boolean }> = isPhysical
     ? [
         { ok: Boolean(data.name.trim()), label: 'Nombre del producto' },
@@ -40,7 +40,6 @@ export default function StepPublish({ data, errors, isLoading, isEditing, estado
         { ok: displayPrice > 0, label: 'Precio de venta' },
         { ok: leerNumero(data.weightKg) > 0, label: 'Peso (para calcular el envío)' },
         { ok: [data.dimensionLength, data.dimensionWidth, data.dimensionHeight].every((m) => leerNumero(m) > 0), label: 'Medidas de la caja' },
-        { ok: Object.keys(data.specifications).length >= SPECS_RECOMENDADAS, label: `${SPECS_RECOMENDADAS} especificaciones o más`, recomendado: true },
       ]
     : [
         { ok: Boolean(data.name.trim()), label: 'Nombre del producto' },

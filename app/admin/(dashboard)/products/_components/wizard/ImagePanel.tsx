@@ -35,12 +35,19 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
     setUploading(true);
     try {
       const results = await Promise.all(
-        // C-117: con fondo transparente, el servidor arma la foto final con fondo blanco y la cinta "ES"
+        // C-117 y C-133: con fondo transparente o blanco liso, el servidor arma la foto final con la cinta "ES"
         Array.from(files).map((file) => uploadProductPhoto(file, { badge }))
       );
       onChange([...images, ...results.map((r) => r.url)]);
       const badged = results.filter((r) => r.badged).length;
       if (badged) toast.success(badged === 1 ? 'Foto lista con fondo blanco y la cinta ES' : `${badged} fotos listas con fondo blanco y la cinta ES`);
+      // C-133: la que no lleva cinta se dice al momento (el 30/09 una foto quedó sin cinta y nadie avisó)
+      const sinCinta = badge ? results.length - badged : 0;
+      if (sinCinta > 0) {
+        toast(sinCinta === 1
+          ? 'Esta foto quedó sin la cinta ES: el fondo no es transparente ni blanco liso. Si es la principal, súbela con el fondo quitado.'
+          : `${sinCinta} fotos quedaron sin la cinta ES: el fondo no es transparente ni blanco liso.`, { duration: 8000 });
+      }
     } catch (err) {
       // Antes el error se tragaba en silencio y la foto simplemente no aparecía
       toast.error(err instanceof Error ? err.message : 'No se pudo subir la foto');
@@ -146,7 +153,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
               <p className="text-sm font-medium text-muted">Subir imágenes</p>
               <p className="text-xs text-muted mt-1">JPG, PNG, WEBP</p>
               <p className="text-xs text-muted mt-1">
-                {badge ? 'PNG con fondo transparente: la tienda pone el fondo blanco y la cinta ES' : 'Fotos reales de esta unidad: frente, atrás y detalles (mínimo 3)'}
+                {badge ? 'Con fondo transparente o blanco liso: la tienda pone la cinta ES' : 'Fotos reales de esta unidad: frente, atrás y detalles (mínimo 3)'}
               </p>
             </>
           )}
@@ -223,7 +230,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
       )}
 
       <p className="text-xs text-muted mt-3 text-center">
-        La primera imagen es la imagen principal. {badge ? 'Con fondo transparente, la tienda pone el fondo blanco y la cinta ES.' : 'Usado: fotos reales de esta unidad, mínimo 3.'}
+        La primera imagen es la imagen principal. {badge ? 'Con fondo transparente o blanco liso, la tienda pone la cinta ES.' : 'Usado: fotos reales de esta unidad, mínimo 3.'}
       </p>
     </div>
   );

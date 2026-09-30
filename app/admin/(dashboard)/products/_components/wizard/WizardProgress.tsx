@@ -25,6 +25,7 @@ export default function WizardProgress({ steps, current, onStepClick, freeNaviga
               onClick={() => { if (reachable) onStepClick(i); }}
               disabled={!reachable}
               aria-current={active ? 'step' : undefined}
+              aria-label={label}
               className={[
                 'flex items-center gap-2 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-brand-500',
                 active ? 'text-brand-700' : reachable ? 'cursor-pointer text-ink hover:bg-surface' : 'cursor-default text-muted',
@@ -38,7 +39,8 @@ export default function WizardProgress({ steps, current, onStepClick, freeNaviga
               >
                 {done ? <FiCheck className="h-3 w-3" aria-hidden="true" /> : i + 1}
               </span>
-              <span className="hidden sm:block">{label}</span>
+              {/* En el teléfono, el nombre del paso en el que estás (antes solo números) */}
+              <span className={active ? 'block' : 'hidden sm:block'}>{label}</span>
             </button>
             {i < steps.length - 1 && <span className={`mx-1 h-px w-5 shrink-0 ${done ? 'bg-success-strong' : 'bg-line'}`} aria-hidden="true" />}
           </li>

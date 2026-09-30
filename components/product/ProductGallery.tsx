@@ -42,14 +42,16 @@ export default function ProductGallery({ images, name, badges, actions }: Produc
           className="scrollbar-hide flex snap-x snap-mandatory overflow-x-auto"
         >
           {list.map((src, index) => (
-            <li key={`${src}-${index}`} className="relative aspect-[4/3] w-full shrink-0 snap-center lg:aspect-square">
+            <li key={`${src}-${index}`} className="relative aspect-square w-full shrink-0 snap-center">
               <Image
                 src={src}
                 alt={list.length > 1 ? `${name}, foto ${index + 1} de ${list.length}` : name}
                 fill
                 priority={index === 0}
                 sizes="(min-width: 1024px) 50vw, 100vw"
-                className="object-contain p-3 lg:p-8"
+                // C-133: de borde a borde. Las fotos de la tienda ya traen su aire blanco y la cinta ES va en la esquina:
+                // con margen y en una caja 4:3, la cinta quedaba cortada en medio de la tarjeta
+                className="object-contain"
               />
             </li>
           ))}

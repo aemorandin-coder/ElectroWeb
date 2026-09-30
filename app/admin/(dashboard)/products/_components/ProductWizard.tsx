@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiAlertTriangle, FiArrowLeft, FiArrowRight, FiCheck } from 'react-icons/fi';
+import { FiAlertTriangle, FiArrowLeft, FiArrowRight, FiSave } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
 import {
   WizardData,
@@ -76,6 +77,8 @@ import StepPublish from './wizard/StepPublish';
 // Digital:   0=Platform, 1=Denominations, 2=Delivery, 3=SEO, 4=Publish
 const PUBLISH_STEP = 4;
 
+type EstadoProducto = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED';
+
 interface Props {
   productId?: string;
 }
@@ -92,10 +95,21 @@ export default function ProductWizard({ productId }: Props) {
   // En edición arranca cargando (C-111: antes se ponía en true dentro del efecto)
   const [isFetching, setIsFetching] = useState(isEditing);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  // C-133: al editar se guarda desde cualquier paso, con el estado que ya tenía el producto (publicado, borrador…)
+  const [estadoGuardado, setEstadoGuardado] = useState<EstadoProducto>('DRAFT');
+  /** Los datos tal como se cargaron: sin cambios, "Guardar cambios" no hace nada */
+  const [datosCargados, setDatosCargados] = useState<string | null>(null);
+  const sinCambios = isEditing && datosCargados !== null && JSON.stringify(data) === datosCargados;
+  /**
+   * C-133: pasos donde se cambió algo. Al editar solo se validan esos: antes, para cambiar el precio de un producto
+   * viejo había que completar todo lo que hoy pide el alta (3 especificaciones, peso, dimensiones…) en todos los pasos.
+   * Lo esencial (precio, stock, categoría, SKU) lo sigue validando el servidor.
+   */
+  const [pasosTocados, setPasosTocados] = useState<Set<number>>(() => new Set());
 
   const merge = (updates: Partial<WizardData>) => {
     setData((prev) => ({ ...prev, ...updates }));
+    if (step >= 0 && !pasosTocados.has(step)) setPasosTocados((prev) => new Set(prev).add(step));
     const cleared: Record<string, string> = {};
     Object.keys(updates).forEach((k) => { if (errors[k]) cleared[k] = ''; });
     if (Object.keys(cleared).length > 0) setErrors((prev) => ({ ...prev, ...cleared }));
@@ -148,7 +162,7 @@ export default function ProductWizard({ productId }: Props) {
 
         const productType: 'PHYSICAL' | 'DIGITAL' = product.productType === 'DIGITAL' ? 'DIGITAL' : 'PHYSICAL';
 
-        setData({
+        const cargado: WizardData = {
           productType,
           name: product.name || '',
           sku: product.sku || '',
@@ -192,7 +206,10 @@ export default function ProductWizard({ productId }: Props) {
           accountFieldLabel: product.accountFieldLabel || '',
           accountFieldHint: product.accountFieldHint || '',
           redemptionInstructions: product.redemptionInstructions || '',
-        });
+        };
+        setData(cargado);
+        setDatosCargados(JSON.stringify(cargado));
+        setEstadoGuardado(product.status === 'PUBLISHED' || product.status === 'ARCHIVED' ? product.status : 'DRAFT');
 
         // Skip type selector in edit mode, start at step 0
         setStep(0);
@@ -205,7 +222,7 @@ export default function ProductWizard({ productId }: Props) {
   }, [productId, isEditing, router]);
 
   // ─── Step validation ───────────────────────────────────────────────────────
-  const validate = (s: number): boolean => {
+  const validate = (s: number): Record<string, string> | null => {
     let errs: Record<string, string> = {};
 
     if (data.productType === 'PHYSICAL') {
@@ -221,11 +238,12 @@ export default function ProductWizard({ productId }: Props) {
     if (s === PUBLISH_STEP) errs = { ...errs, ...validatePublish(data) };
 
     setErrors(errs);
-    return Object.keys(errs).length === 0;
+    return Object.keys(errs).length === 0 ? null : errs;
   };
 
   const handleNext = () => {
-    if (!validate(step)) return;
+    // Al editar, pasar de largo por un paso que no se tocó no pide completarlo
+    if ((!isEditing || pasosTocados.has(step)) && validate(step)) return;
     setStep((prev) => (prev + 1) as WizardStep);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -238,12 +256,25 @@ export default function ProductWizard({ productId }: Props) {
   };
 
   // ─── Submit ────────────────────────────────────────────────────────────────
-  const handleSubmit = async (publishStatus: 'PUBLISHED' | 'DRAFT') => {
-    // Al editar se puede saltar pasos desde la barra: si alguno quedó incompleto, se vuelve a él
+  const handleSubmit = async (publishStatus: EstadoProducto) => {
+    // Al editar se puede saltar pasos desde la barra: si alguno de los que se tocaron quedó incompleto, se vuelve a él
     for (let s = 0; s < PUBLISH_STEP; s++) {
-      if (!validate(s)) { setStep(s as WizardStep); return; }
+      if (isEditing && !pasosTocados.has(s)) continue;
+      const errs = validate(s);
+      if (errs) {
+        setStep(s as WizardStep);
+        // C-133: se dice por qué no se guardó (antes solo cambiaba de paso y había que buscar el campo en rojo)
+        const primero = Object.values(errs).find((m) => m && m !== '*');
+        toast.error(`Falta completar "${steps[s]}"${primero ? `: ${primero}` : ''}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
     }
-    if (!validate(PUBLISH_STEP)) return;
+    const errsFinal = validate(PUBLISH_STEP);
+    if (errsFinal) {
+      toast.error(Object.values(errsFinal).find(Boolean) ?? 'Revisa los datos del producto');
+      return;
+    }
     setIsLoading(true);
     setErrors({});
 
@@ -327,8 +358,23 @@ export default function ProductWizard({ productId }: Props) {
       });
 
       if (res.ok) {
-        setShowSuccess(true);
-        setTimeout(() => router.push('/admin/products'), 2500);
+        // C-133: sin cuadro ni espera. Antes se esperaban 2,5 s a propósito, y el cuadro decía "¡Producto Publicado!
+        // Ya está disponible en la tienda" también al guardar un borrador
+        const guardado = (await res.json().catch(() => null)) as { slug?: string } | null;
+        const texto = isEditing
+          ? 'Cambios guardados'
+          : publishStatus === 'PUBLISHED' ? 'Producto publicado' : 'Guardado como borrador: no se ve en la tienda';
+        toast.success((t) => (
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            {texto}
+            {publishStatus === 'PUBLISHED' && guardado?.slug && (
+              <a href={`/productos/${guardado.slug}`} target="_blank" rel="noopener" onClick={() => toast.dismiss(t.id)} className="font-semibold text-brand-600 underline">
+                Ver en la tienda
+              </a>
+            )}
+          </span>
+        ), { duration: 6000 });
+        router.push('/admin/products');
       } else {
         const body = await res.json();
         const msg = body.details ? `${body.error}: ${body.details}` : (body.error || 'Error al guardar el producto.');
@@ -339,6 +385,12 @@ export default function ProductWizard({ productId }: Props) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  /** C-133: guardar lo editado desde cualquier paso, sin cambiar si estaba publicado o en borrador */
+  const guardarCambios = () => {
+    if (sinCambios || isLoading) return;
+    void handleSubmit(estadoGuardado);
   };
 
   // ─── Step labels ────────────────────────────────────────────────────────────
@@ -400,32 +452,12 @@ export default function ProductWizard({ productId }: Props) {
   return (
     <div className="min-h-dvh bg-surface pb-24">
 
-      {/* ── Success Modal ──────────────────────────────────────────────────── */}
-      {showSuccess && (
-        <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-ink/40" role="status">
-          <div className="mx-4 w-full max-w-sm rounded-2xl border border-line bg-white p-12 text-center shadow-lg">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success-strong/10">
-              <FiCheck className="h-10 w-10 text-success-strong" />
-            </div>
-            <h3 className="mb-3 text-2xl font-bold text-ink">
-              {isEditing ? '¡Producto Actualizado!' : '¡Producto Publicado!'}
-            </h3>
-            <p className="mb-6 text-muted">
-              {isEditing ? 'Los cambios han sido guardados.' : 'Tu producto ya está disponible en la tienda.'}
-            </p>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-line">
-              <div className="h-full w-full bg-success-strong" />
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── Top bar ────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-white">
         <div className="max-w-[1300px] mx-auto px-4 md:px-8 py-3">
           <div className="flex items-center justify-between">
             {/* Left: back + title */}
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
                 onClick={() => router.back()}
@@ -434,8 +466,8 @@ export default function ProductWizard({ productId }: Props) {
               >
                 <FiArrowLeft className="w-5 h-5" />
               </button>
-              <div>
-                <h1 className="text-base font-bold leading-tight text-ink">
+              <div className="min-w-0">
+                <h1 className="truncate text-base font-bold leading-tight text-ink">
                   {isEditing ? 'Editar producto' : 'Nuevo producto'}
                 </h1>
                 {data.productType && step >= 0 && (
@@ -458,14 +490,24 @@ export default function ProductWizard({ productId }: Props) {
               </div>
             )}
 
-            {/* Right: discard */}
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted hover:bg-surface hover:text-ink"
-            >
-              Descartar
-            </button>
+            {/* Right: descartar y, al editar, guardar desde cualquier paso */}
+            <div className="flex shrink-0 items-center gap-2">
+              {/* En el teléfono la flecha de la izquierda ya vuelve: al editar, "Descartar" sobra y no cabía con "Guardar" */}
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className={`${isEditing ? 'hidden sm:inline-flex' : 'inline-flex'} rounded-lg px-3 py-1.5 text-sm font-medium text-muted hover:bg-surface hover:text-ink`}
+              >
+                {sinCambios ? 'Volver' : 'Descartar'}
+              </button>
+              {isEditing && (
+                <button type="button" onClick={guardarCambios} disabled={isLoading || sinCambios} className={`${wizardPrimaryButton} disabled:opacity-50`}>
+                  <FiSave className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">{isLoading ? 'Guardando…' : 'Guardar cambios'}</span>
+                  <span className="sm:hidden">{isLoading ? '…' : 'Guardar'}</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Mobile progress */}
@@ -501,23 +543,39 @@ export default function ProductWizard({ productId }: Props) {
             {/* Navigation — not on publish step (it has its own buttons) */}
             {step >= 0 && step < PUBLISH_STEP && (
               <div className="mt-10 flex items-center justify-between border-t border-line pt-6">
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className={wizardSecondaryButton}
-                >
-                  <FiArrowLeft className="w-4 h-4" />
-                  {step === 0 ? 'Cambiar tipo' : 'Anterior'}
-                </button>
+                {/* Al editar no se cambia el tipo: el paso 0 no tiene "Anterior" */}
+                {isEditing && step === 0 ? <span /> : (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className={wizardSecondaryButton}
+                  >
+                    <FiArrowLeft className="w-4 h-4" />
+                    {step === 0 ? 'Cambiar tipo' : 'Anterior'}
+                  </button>
+                )}
 
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className={wizardPrimaryButton}
-                >
-                  {step === steps.length - 2 ? 'Revisar y publicar' : 'Continuar'}
-                  <FiArrowRight className="w-4 h-4" />
-                </button>
+                {isEditing ? (
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={handleNext} className={wizardSecondaryButton}>
+                      Siguiente
+                      <FiArrowRight className="w-4 h-4" />
+                    </button>
+                    <button type="button" onClick={guardarCambios} disabled={isLoading || sinCambios} className={`${wizardPrimaryButton} disabled:opacity-50`}>
+                      <FiSave className="w-4 h-4" aria-hidden="true" />
+                      {isLoading ? 'Guardando…' : sinCambios ? 'Sin cambios' : 'Guardar'}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className={wizardPrimaryButton}
+                  >
+                    {step === steps.length - 2 ? 'Revisar y publicar' : 'Continuar'}
+                    <FiArrowRight className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             )}
 

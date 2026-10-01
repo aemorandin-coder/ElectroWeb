@@ -46,6 +46,10 @@ export default function BusinessSection({ form, set, errors }: SectionProps) {
         </div>
       </SettingsCard>
 
+      <SettingsCard title="Sello y firma de los presupuestos" description="Opcional. Reemplaza al sello de la tienda sobre la línea de la empresa en cada presupuesto, en pantalla y al imprimirlo. Lo ve quien reciba el enlace de un presupuesto.">
+        <ImageField label="Sello con la firma" uploadType="quoteStamp" value={form.quoteStamp} onChange={(v) => set('quoteStamp', v)} error={errors.quoteStamp} hint="Foto o escaneo del sello húmedo firmado. Mejor en PNG con fondo transparente o sobre papel blanco, hasta 2 MB. Sin imagen, sale el sello de la tienda (logo, RIF, teléfono y ciudad), sin firma." />
+      </SettingsCard>
+
       <SettingsCard title="Contacto" description="Se muestra en Contacto y en el pie de página. El WhatsApp es el del botón flotante.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField label="Correo" type="email" value={form.email} onChange={(v) => set('email', v)} error={errors.email} placeholder="ventas@electroshopve.com" />

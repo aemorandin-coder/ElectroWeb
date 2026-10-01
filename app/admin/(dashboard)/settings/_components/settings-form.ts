@@ -16,7 +16,7 @@ export const DAY_LABELS: Record<WeekDay, string> = {
 /** Números como texto: el campo puede quedar vacío mientras se escribe. */
 export interface SettingsForm {
   companyName: string; tagline: string; legalName: string; rif: string;
-  logo: string; favicon: string;
+  logo: string; favicon: string; quoteStamp: string;
   email: string; phone: string; whatsapp: string; address: string; city: string; state: string;
   instagram: string; facebook: string; twitter: string; youtube: string; telegram: string; tiktok: string;
   businessHours: Record<WeekDay, DayHours>;
@@ -60,7 +60,7 @@ export const SECTIONS: { id: SectionId; label: string; description: string; icon
   {
     id: 'negocio', label: 'Negocio', icon: FiBriefcase,
     description: 'Nombre, logo, contacto, redes y horario. Se ven en el pie de página, Contacto y los correos.',
-    fields: ['companyName', 'tagline', 'legalName', 'rif', 'logo', 'favicon', 'email', 'phone', 'whatsapp', 'address', 'city', 'state',
+    fields: ['companyName', 'tagline', 'legalName', 'rif', 'logo', 'favicon', 'quoteStamp', 'email', 'phone', 'whatsapp', 'address', 'city', 'state',
       'instagram', 'facebook', 'twitter', 'youtube', 'telegram', 'tiktok', 'businessHours'],
   },
   {
@@ -144,7 +144,7 @@ function toHours(value: unknown): Record<WeekDay, DayHours> {
 export function toSettingsForm(data: Record<string, unknown>): SettingsForm {
   return {
     companyName: text(data.companyName), tagline: text(data.tagline), legalName: text(data.legalName), rif: text(data.rif),
-    logo: text(data.logo), favicon: text(data.favicon),
+    logo: text(data.logo), favicon: text(data.favicon), quoteStamp: text(data.quoteStamp),
     email: text(data.email), phone: text(data.phone), whatsapp: text(data.whatsapp), address: text(data.address),
     city: text(data.city), state: text(data.state),
     instagram: text(data.instagram), facebook: text(data.facebook), twitter: text(data.twitter), youtube: text(data.youtube),

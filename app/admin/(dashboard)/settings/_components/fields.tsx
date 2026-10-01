@@ -169,19 +169,19 @@ export function SwitchRow({ label, description, checked, onChange, error }: {
   );
 }
 
-/** Imagen subida a /api/upload/settings. `type` es el tipo que acepta esa ruta (logo, favicon, SEO). */
+/** Imagen subida a /api/upload/settings. `type` es el tipo que acepta esa ruta (logo, favicon, sello, SEO). */
 export function ImageField({ label, hint, value, onChange, uploadType, aspect = 'square', error }: {
   label: string;
   hint?: ReactNode;
   value: string;
   onChange: (value: string) => void;
-  uploadType: 'logo' | 'favicon' | 'homeMetaImage' | 'productsMetaImage' | 'servicesMetaImage' | 'coursesMetaImage';
+  uploadType: 'logo' | 'favicon' | 'quoteStamp' | 'homeMetaImage' | 'productsMetaImage' | 'servicesMetaImage' | 'coursesMetaImage';
   aspect?: 'square' | 'wide';
   error?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const maxMb = uploadType === 'logo' || uploadType === 'favicon' ? 2 : 5;
+  const maxMb = uploadType === 'logo' || uploadType === 'favicon' || uploadType === 'quoteStamp' ? 2 : 5;
 
   const upload = async (file: File) => {
     if (file.size > maxMb * 1024 * 1024) {

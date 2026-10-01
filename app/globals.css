@@ -747,5 +747,28 @@ html, body { overflow-x: clip; }
   .documento-imprimible {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    /* C-148b: la hoja del presupuesto lleva sus propios márgenes (abajo) */
+    page: presupuesto;
   }
+  /* Con el presupuesto abierto, nada alrededor ocupa hoja. El cuerpo reserva abajo el alto de la barra del teléfono
+     (body:has(#mobile-bottom-nav)): al imprimir, ese espacio empujaba una segunda hoja en blanco. */
+  html:has(.documento-imprimible),
+  body:has(.documento-imprimible) {
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  /* Un punto menos de letra y de espacios (todo va en rem): un presupuesto normal, con sus formas de pago y sus
+     firmas, cabe en una hoja carta */
+  html:has(.documento-imprimible) {
+    font-size: 15px;
+  }
+}
+
+/* C-148b: márgenes de la hoja del presupuesto. No se fija el tamaño: el documento se acomoda a la hoja que elija
+   quien imprime (carta, A4 u oficio). Con márgenes propios, el navegador deja de usar los suyos, que cambiaban de
+   un equipo a otro (y en algunos pegaban el texto al borde). */
+@page presupuesto {
+  margin: 12mm 13mm 13mm;
 }

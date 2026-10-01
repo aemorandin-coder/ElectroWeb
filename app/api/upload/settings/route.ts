@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
 
         const seoImageTypes = ['homeMetaImage', 'productsMetaImage', 'servicesMetaImage', 'coursesMetaImage'];
         // campaign: imágenes de las campañas de correo de Marketing (C-75). studio: fotos y logos de ElectroStudio (C-112)
-        const allowedAssetTypes = ['logo', 'favicon', 'heroBackground', 'hotAd', 'campaign', 'studio', ...seoImageTypes];
+        // quoteStamp: el sello con la firma de los presupuestos (C-148b)
+        const allowedAssetTypes = ['logo', 'favicon', 'quoteStamp', 'heroBackground', 'hotAd', 'campaign', 'studio', ...seoImageTypes];
 
         if (!type || !allowedAssetTypes.includes(type)) {
             return NextResponse.json({ error: 'Tipo de asset no válido' }, { status: 400 });

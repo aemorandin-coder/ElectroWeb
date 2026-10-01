@@ -1,6 +1,22 @@
-# Punto de partida (actualizado 2026-09-30, cierre de C-141 a C-148)
+# Punto de partida (actualizado 2026-10-01, cierre de C-148b)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-148**.
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-148b**.
+- **C-148b** (01/10, en `main`, falta el deploy, **tres columnas nuevas**): segunda parte de las cotizaciones (`estado/C-148b.md`).
+  - Al aprobarse descuenta del inventario lo cotizado (y lo devuelve con "No se concretó"); "Marcar como aprobada" desde el panel.
+  - El documento muestra los datos de los métodos de pago activos.
+  - **Buscador de productos del editor rehecho:** en vivo, sin acentos, varias palabras, por código, marca o categoría, con lo disponible.
+  - **Sello de la tienda** dibujado con el logo largo, el RIF, el teléfono y la ciudad; opcional, subir el sello firmado en Configuración → Negocio.
+  - **Aprobación:** es digital (nombre, cédula o RIF, fecha y hora). La página lo explica, avisa al imprimir sin aprobar y la hoja sin aprobar trae un QR.
+  - **Impresión:** márgenes propios, se acomoda a carta, A4 u oficio, y cabe en una hoja.
+  - SQL del deploy: `ALTER TABLE "company_settings" ADD COLUMN "quoteStamp"` y, en `quote_items`, `stockDeducted` y `stockMissing` (dentro del `CREATE TABLE` si C-148 no se había desplegado).
+  - **Pruebas después del deploy (Andrés):**
+    1. Configuración → Negocio: que estén el logo, el RIF, el teléfono, la ciudad y el estado (salen en el sello).
+    2. Cotizaciones → Nueva: escribir en "Agregar del catálogo" sin acentos y con dos palabras; agregar dos productos y pedir de uno más de lo que hay (debe avisar).
+    3. Enviarla, abrir el enlace en el teléfono: el aviso de cómo se aprueba, el sello y "Pendiente de aprobación".
+    4. "Imprimir o guardar en PDF" sin aprobar: avisa. Con "Imprimir así": una hoja, con márgenes, el sello y el QR.
+    5. Aprobar con nombre y cédula: el inventario de esos productos baja, y el panel dice qué se descontó. Imprimir de nuevo: sale "Aprobado".
+    6. En el panel, "No se concretó: devolver al inventario": el inventario vuelve.
+  - **Pregunta abierta para Andrés:** si además quiere una firma dibujada con el dedo al aprobar (hoy no hace falta).
 - **Producción: C-141 desplegada el 30/09** (Andrés configuró sus dos pasos). No se sabe con qué commit exacto: preguntarle si el deploy incluyó C-139 y C-142.
 - **Incidente del deploy (C-143):** la cuenta de Andrés era ADMIN, no SUPER_ADMIN, y quedó sin Configuración, Métodos de Pago ni Equipo. Arreglo: `npx tsx scripts/create-master-admin.ts <su correo>` en el servidor y volver a entrar. **Resuelto el 30/09 (10:46 p. m.):** Andrés mandó la captura de Equipo con su cuenta como Super admin, con dos pasos activos. Es la única cuenta del equipo en producción; va a invitar al resto desde ahí.
 - **Decidido por Andrés (30/09, después del incidente):** él es el super admin y desde ahí da los roles y los usuarios en Equipo. El rol Administrador queda como está (sin Configuración, Métodos de Pago ni Equipo). Todavía no corrió el diagnóstico de C-92.
@@ -50,7 +66,7 @@ Detalle, hallazgos y pruebas en `estado/C-141.md`.
 - Ten a mano dónde guardar 10 códigos fuera del teléfono (papel, o un archivo en otra computadora).
 - Hazlo cuando puedas terminar los pasos de una vez: entre el deploy y tu configuración, quien tenga tu contraseña podría registrar su propia app.
 
-**Deploy siguiente (C-139, C-142 a C-148; C-141 ya está en producción):** igual que abajo, con el respaldo como `~/respaldo-antes-deploy-c148.dump`. El guion para y muestra el SQL: debe ser solo `CREATE TABLE "quotes"`, `CREATE TABLE "quote_items"`, sus índices y su llave (`estado/C-148.md`). Después: poner 16 en Configuración → Precios → IVA (C-146) y las pruebas de `estado/C-148.md`.
+**Deploy siguiente (C-139, C-142 a C-148b; C-141 ya está en producción):** igual que abajo, con el respaldo como `~/respaldo-antes-deploy-c148.dump`. El guion para y muestra el SQL: debe ser solo `CREATE TABLE "quotes"`, `CREATE TABLE "quote_items"` (ya con `stockDeducted` y `stockMissing`), sus índices y su llave, y `ALTER TABLE "company_settings" ADD COLUMN "quoteStamp"` (`estado/C-148.md` y `estado/C-148b.md`). Si C-148 ya estaba desplegada, en vez de los `CREATE TABLE` salen dos `ADD COLUMN` en `quote_items`. Después: poner 16 en Configuración → Precios → IVA (C-146) y las pruebas de `estado/C-148.md` y de C-148b (arriba).
 
 **Deploy (Andrés, en el servidor):**
 1. `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-c141.dump`

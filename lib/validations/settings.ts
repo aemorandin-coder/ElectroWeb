@@ -71,6 +71,7 @@ export const settingsUpdateSchema = z.object({
   rif: optionalText(20),
   logo: optionalImage,
   favicon: optionalImage,
+  quoteStamp: optionalImage,
   email: z
     .string()
     .trim()

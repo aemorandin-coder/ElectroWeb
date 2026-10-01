@@ -3,7 +3,7 @@
 // Solo servidor: el secreto se guarda cifrado y los códigos de respaldo como HMAC.
 
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'crypto';
-import qrcode from 'qrcode-generator';
+import { qrSvg } from '@/lib/qr';
 import { prisma } from '@/lib/prisma';
 
 const PASO_S = 30;
@@ -187,17 +187,4 @@ export async function regenerarRespaldo(userId: string, codigo: string): Promise
 /** Borra la configuración: la próxima vez que entre tendrá que configurarla otra vez. */
 export async function reiniciarDosPasos(userId: string): Promise<void> {
   await prisma.segundoFactor.deleteMany({ where: { userId } });
-}
-
-/** QR como SVG (sin servicios externos: el secreto no sale del servidor). */
-function qrSvg(texto: string): { tamano: number; camino: string } {
-  const q = qrcode(0, 'M');
-  q.addData(texto);
-  q.make();
-  const n = q.getModuleCount();
-  let camino = '';
-  for (let f = 0; f < n; f++) {
-    for (let c = 0; c < n; c++) if (q.isDark(f, c)) camino += `M${c + 4} ${f + 4}h1v1h-1z`;
-  }
-  return { tamano: n + 8, camino };
 }

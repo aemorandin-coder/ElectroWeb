@@ -32,6 +32,8 @@ export function Providers({
               position="top-right"
               // Capa de toasts (PLAN.md §1.3): encima de modales y barra móvil, debajo del popup
               containerStyle={{ zIndex: 'var(--z-toast)' }}
+              // Un aviso abierto no sale en lo que se imprime (C-148b: tapaba el membrete del presupuesto)
+              containerClassName="print:hidden"
               toastOptions={{
                 duration: 4000,
                 style: {

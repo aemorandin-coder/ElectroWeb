@@ -1,6 +1,7 @@
 # Revisión final con Andrés (C-40)
 
-Cómo: en el teléfono real y en DevTools a **360 · 768 · 1024 · 1440 px**, con el deploy del 26/09 ya hecho. Marca cada punto; lo que falle se anota abajo con el ancho y una captura.
+Cómo: en el teléfono real y en DevTools a **360 · 768 · 1024 · 1440 px**, en producción. Marca cada punto; lo que falle se anota abajo con el ancho y una captura.
+Las pruebas de lo último que se subió (cotizaciones, datos de la factura, Dashboard, embalaje y la ficha) están en el bloque de deploy de `SIGUIENTE.md` y en `HISTORIAL.md`.
 
 ## Tienda
 - [ ] **Inicio (360):** el primer pantallazo muestra al menos un producto con precio y "Agregar".
@@ -59,7 +60,7 @@ Cómo: en el teléfono real y en DevTools a **360 · 768 · 1024 · 1440 px**, c
 - [ ] **Consultas:** mensajes y solicitudes. Marcar una solicitud "Cumplida" le llega al cliente como aviso.
 
 ## Seguridad (antes de dar por cerrado)
-- [x] `SADES_WEBHOOK_SECRET` y la cuenta `masteradmin@electroshopve.com`: revisado en producción el 26/09, no había nada que cambiar (`SIGUIENTE.md` §4).
+- [x] `SADES_WEBHOOK_SECRET` y la cuenta `masteradmin@electroshopve.com`: revisado en producción el 26/09, no había nada que cambiar (`PLAN.md` §7.2).
 - [ ] **Dos pasos (C-141):** entrar al panel pide el código de la app. Un código de respaldo sirve una sola vez.
 - [ ] **Equipo (C-141):** todas las cuentas con "Dos pasos activos" o sin acceso. Un Administrador no ve Configuración, Métodos de Pago ni Equipo.
 - [ ] **Una sola sesión de admin (C-140):** entrar en el teléfono cierra la de la computadora.
@@ -67,4 +68,6 @@ Cómo: en el teléfono real y en DevTools a **360 · 768 · 1024 · 1440 px**, c
 ## Anotaciones
 | Punto | Ancho | Qué pasa |
 |---|---|---|
+| Equipo (C-141) | — | 01/10: Andrés confirma que invitó al resto del equipo y que funciona. Falta marcar los dos puntos de arriba al verlos. |
+| IP real (C-105) | — | 01/10: Andrés confirma que el nginx ya pasa la IP real. Falta verlo en Reportes → Seguridad. |
 | | | |

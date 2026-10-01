@@ -3,6 +3,21 @@
 Pedido de Andrés (22/09, con captura del panel): "Métodos de pago no está construido correctamente: no puedo crear mi Binance Pay con correo ni pasarelas de pago directas".
 Solo lectura: no se cambió código. Es el plan para decidir.
 
+## Cierre (2026-10-01, C-156)
+**Los 9 hallazgos y las fases 0 y 1 están resueltos y en producción.** Lo de "Cómo funciona hoy" describe la tienda del 22/09.
+
+| Hallazgos | Cerrado en | Cómo quedó |
+|---|---|---|
+| P1 a P8 | C-101 | Tipo `BINANCE_PAY` con correo y Pay ID, validación por tipo, permiso en el panel, lista blanca para el cliente y la recarga por id del método con su mínimo y su máximo. |
+| P9 (rediseño de la pantalla) | C-110 | Activar un método sin datos dice qué falta. |
+| Fase 1 · Pago directo en el checkout | C-114, C-125, C-129, C-130 y C-132 | Pago Móvil verificado con el BDV, Binance Pay y PayPal manuales, pago mixto con Puntos ES y reservas que apartan de verdad. |
+
+**Decisiones:** D-P1 = sí, pago directo. D-P2 = el stock se aparta 2 horas en los pagos manuales (29/09). D-P3 = Binance con la cuenta personal, verificación manual. D-P4 = migración hecha. Además (29/09): sin subir capturas, se usa la verificación con el BDV.
+
+**Lo que sigue abierto (sin fecha, `PLAN.md` §5.2):** la fase 2, pasarelas automáticas. Binance Pay para comercios pide la cuenta de comercio con KYB; PayPal Checkout, una cuenta Business que pueda cobrar desde Venezuela.
+
+---
+
 ## 1. Cómo funciona hoy
 - **Métodos de pago** (`app/admin/(dashboard)/payments/page.tsx`, 1.083 líneas; API `app/api/admin/payments/route.ts`) guarda cuentas de la empresa en `CompanyPaymentMethod`.
 - **El cliente no paga pedidos con esos métodos.** El checkout cobra **siempre con saldo** (`finalPaymentMethod = 'WALLET'`). Los métodos solo sirven para **recargar saldo** (`components/modals/RechargeModalV2.tsx`): el cliente paga fuera de la web y el equipo aprueba la recarga en Transacciones. Pago Móvil del BDV se aprueba solo (`/api/pago-movil/verificar`).

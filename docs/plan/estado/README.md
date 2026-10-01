@@ -7,6 +7,8 @@ Un archivo por tarea, creado por el agente dueño **en el mismo commit** que ter
 
 Una dependencia está cumplida únicamente si su archivo existe **en `main`** y dice `Estado: HECHO`.
 
+Un estado es el registro de cómo quedó la tarea el día que se cerró. Si algo de lo que dejó pendiente se resuelve después, se anota debajo de la línea `Estado:` como `**Actualización del <fecha> (<tarea>):** …`, sin reescribir lo anterior. La lista viva de pendientes es `PLAN.md` §5.2.
+
 Plantilla:
 ```
 # <ID>

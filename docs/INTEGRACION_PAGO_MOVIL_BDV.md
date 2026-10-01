@@ -1,5 +1,11 @@
 # 🏦 Guía de Integración: Verificación de Pago Móvil - Banco de Venezuela
 
+> **Guía original, anterior al plan (septiembre de 2026).** Sirve como referencia de la API de Conciliación del BDV. Lo que la tienda hace hoy cambió y está en los estados:
+> - `docs/plan/estado/C-125.md`: el código 1010 venía de un céntimo de diferencia y de la fecha en UTC, no de la afiliación; monto congelado con cotización firmada; pagos de más y de menos.
+> - `docs/plan/estado/C-129.md`: lo legal, la comisión P2C, `reqCed` solo de BDV a BDV y una verificación a la vez por referencia.
+> - `docs/plan/estado/C-130.md`: el formato de teléfono y cédula que acepta el banco.
+> - `docs/plan/estado/C-114.md` y `C-123.md`: qué pasa con un pago que no llega a ser orden.
+
 ## Propósito de este Documento
 
 Este documento proporciona toda la información técnica necesaria para integrar la **verificación de pagos móviles (P2C)** del Banco de Venezuela en cualquier aplicación web de comercio electrónico. Permite validar automáticamente que un cliente ha realizado un pago móvil antes de procesar su compra.

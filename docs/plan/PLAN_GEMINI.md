@@ -1,5 +1,8 @@
 # Plan de Gemini — orden de trabajo por rondas
 
+> **Al 01/10/2026: no hay ronda abierta.** R1 a R23 (G-01 a G-69) están cerradas y en `main`. La próxima ronda la escribe Claude al final de este archivo.
+> Este archivo es el registro de las rondas tal como se escribieron. Donde diga "Andrés mergea" o "`SIGUIENTE.md` §5": desde el 30/09 el merge lo hace Claude y el prompt de arranque lo da Andrés al abrir la ronda (`GEMINI.md` §12).
+
 > Reglas obligatorias: [`/GEMINI.md`](../../GEMINI.md). Tarjetas G-01 a G-08: `GEMINI.md` §5. Tarjetas G-09 a G-14: **este archivo**, §4.
 > Lo que hace Claude al mismo tiempo: [`PLAN_CLAUDE.md`](./PLAN_CLAUDE.md).
 > Última revisión de Claude: [`revisiones/R1-R3.md`](./revisiones/R1-R3.md) — R1, R2 y R3 **aprobadas**.

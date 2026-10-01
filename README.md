@@ -62,7 +62,7 @@ lib/                  Lógica del servidor y reglas puras
   hooks/              useBodyScrollLock, useMontado, useCargarAlMontar, useCajonAccesible
 prisma/schema.prisma  Modelos
 private-uploads/      Archivos que no se sirven públicamente (fuera de git; respaldarlo)
-docs/plan/            Plan, auditorías y estado de cada tarea
+docs/plan/            Plan maestro (PLAN.md), lo de ahora (SIGUIENTE.md), operación, historial, auditorías y estado de cada tarea
 ```
 
 ## Reglas del proyecto
@@ -80,7 +80,7 @@ Ver `.env.example`. Las imprescindibles: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAU
 
 ## Producción
 
-Servidor con nginx y PM2 (proceso `electroshop`) en `/var/www/electroshopve`. Pasos de cada deploy, qué cambia en la base y qué revisar después: `docs/plan/SIGUIENTE.md`.
+Servidor con nginx y PM2 (proceso `electroshop`) en `/var/www/electroshopve`. Qué falta subir, con su SQL y sus pruebas: `docs/plan/SIGUIENTE.md`. Cómo se sube, se respalda y se vuelve atrás: `docs/plan/OPERACION.md`. Lo ya subido: `docs/plan/HISTORIAL.md`.
 
 ```bash
 bash scripts/deploy.sh

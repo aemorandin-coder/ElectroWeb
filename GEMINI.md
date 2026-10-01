@@ -3,9 +3,9 @@
 Lee este archivo COMPLETO antes de cada tarea. Si una instrucción de aquí choca con tu criterio, **gana este archivo**.
 
 Proyecto: tienda online (Next.js 16 App Router, React 19, Tailwind CSS 4, Prisma, NextAuth). Idioma de la interfaz: español de Venezuela.
-**Tu orden de trabajo (rondas, prompts y tarjetas desde G-09): `docs/plan/PLAN_GEMINI.md`. La ronda vigente (R20) está al final.**
+**Tu orden de trabajo (rondas, prompts y tarjetas desde G-09): `docs/plan/PLAN_GEMINI.md`. Hoy no hay ronda abierta (la última fue R23, cerrada el 28/09): la próxima la escribe Claude al final de ese archivo. Sin una tarjeta abierta no se edita nada.**
 **Desde el 21/09 el equipo es Claude + Gemini:** ChatGPT salió. Todo lo que diga "carril ChatGPT" ahora es de Claude.
-Contexto: `docs/plan/PLAN.md` (diseño) y `docs/plan/AUDITORIA.md` (problemas). Lo que hace Claude en paralelo: `docs/plan/PLAN_CLAUDE.md`.
+Contexto: `docs/plan/PLAN.md` (plan maestro: diseño en §1, carriles en §4, decisiones en §7) y `docs/plan/AUDITORIA.md` (problemas, con su cierre). Lo que hace Claude: `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md`.
 
 ---
 
@@ -106,9 +106,9 @@ git worktree add "../ElectroShopVe-gemini" -b gemini/base
 ln -s "$PWD/node_modules" "../ElectroShopVe-gemini/node_modules"   # reutiliza dependencias, sin npm install
 cp .env "../ElectroShopVe-gemini/.env"                              # solo si Gemini va a levantar el servidor
 # Si Gemini levanta el servidor, que use otro puerto: npm run dev -- -p 3001
-# Si no puede levantarlo, anota "QA visual pendiente" y Andrés lo revisa tras el merge.
+# Si no puede levantarlo, anota "QA visual pendiente" y Claude lo revisa antes del merge.
 
-# Inicio de ronda (dentro de ../ElectroShopVe-gemini), solo cuando Andrés mergeó la ronda anterior:
+# Inicio de ronda (dentro de ../ElectroShopVe-gemini), solo cuando la ronda anterior ya está en main (el merge lo hace Claude):
 git status                                   # debe estar limpio
 git switch -c gemini/R1 main                 # R1, R2, R3… según la ronda
 
@@ -452,3 +452,10 @@ Mueven datos de facturación: **no los cambies ni los "limpies".**
 - **A nombre de quién va la factura** lo decide el servidor (`lib/facturacion.ts`, `resolverFactura`) con los datos de la cuenta. Ninguna pantalla manda el nombre, la cédula, la razón social ni el RIF en el pedido: solo la elección (`billing.type`).
 - **La razón social y el RIF de una empresa en revisión o verificada no se editan.** No agregues campos para cambiarlos.
 - **Textos:** la web no emite facturas (las hace la tienda en SADES o en el talonario). Nunca escribas "factura fiscal automática", "descarga tu factura" ni nada parecido. El recibo del pedido sigue diciendo "Este recibo no es una factura fiscal".
+
+## 12. Documentos reordenados el 01/10 (C-156)
+- **`docs/plan/PLAN.md` es el plan maestro**, y sus secciones conservan el número: diseño (§1), carriles (§4), lista de pendientes (§5), QA (§6) y decisiones de Andrés (§7).
+- `docs/plan/SIGUIENTE.md` quedó solo con lo vigente. Los pasos de deploy y el entorno de pruebas están en `docs/plan/OPERACION.md`; lo ya subido, en `docs/plan/HISTORIAL.md`.
+- Donde una tarjeta vieja diga "`SIGUIENTE.md` §5" (el prompt de arranque): ya no existe. El prompt lo da Andrés al abrir la ronda.
+- **No edites ninguno de esos archivos** (regla 4): son carril de Claude, igual que `README.md`.
+- El merge a `main` y el push los hace Claude desde el 30/09. Tú terminas la ronda con commits en tu rama y avisas.

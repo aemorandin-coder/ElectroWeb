@@ -2,6 +2,10 @@
 
 Autor: Claude (auditoría sin tocar código) · Para: Andrés, y las tareas para el equipo
 
+## Cierre parcial (2026-10-01, C-156)
+- **Hecho:** `scripts/reset-customers.ts` borrado (G-52), "Cliente eliminado" en las órdenes del panel (G-57), el login rechaza las cuentas suspendidas (C-80) y la API de clientes ya no deja tocar cuentas del equipo (C-141).
+- **Abierto: C-92** (desactivar en vez de borrar, y la migración de `onDelete`). Espera que Andrés corra el diagnóstico: el comando está en `SIGUIENTE.md`, sección 3, y solo lee.
+
 ## Qué pasó
 Andrés pidió unas tarjetas de saldo en una compra de prueba. Con los pedidos en proceso borró a los clientes, y ahora 3 productos quedaron en pedidos cuyo cliente ya no existe.
 

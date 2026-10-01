@@ -1629,7 +1629,7 @@ export default function CheckoutPage() {
               <div>
                 <h3 className="font-bold text-base mb-2">5. Métodos de Pago</h3>
                 <p className="leading-relaxed text-ink-soft">
-                  Aceptamos transferencias bancarias, pago móvil, criptomonedas y tus Puntos ES. Los pedidos se procesan una vez confirmado el pago.
+                  Solo se aceptan los métodos de pago que la tienda muestra en este paso, además de tus Puntos ES. Los pedidos se procesan una vez confirmado el pago.
                 </p>
               </div>
 

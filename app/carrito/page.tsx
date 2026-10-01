@@ -17,7 +17,8 @@ import { toast } from 'react-hot-toast';
 import { HiTrash } from 'react-icons/hi';
 import { adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
-import { orderAmountProblems } from '@/lib/pricing';
+import { ivaIncluido, orderAmountProblems } from '@/lib/pricing';
+import IvaIncluido from '@/components/ui/IvaIncluido';
 import { getGiftCardDesign } from '@/lib/gift-card-designs';
 import { useSettings } from '@/contexts/SettingsContext';
 import CouponBox from '@/components/cart/CouponBox';
@@ -118,7 +119,8 @@ export default function CarritoPage() {
   const subtotal = server ? server.subtotalUSD : localTotal;
   const discount = server ? server.discountUSD : 0;
   const total = server ? server.totalUSD : localTotal;
-  const tax = 0; // Exento para saldos y códigos digitales
+  // C-146: los precios ya llevan el IVA. Se dice cuánto del total es IVA; nunca se suma nada
+  const iva = settings?.taxEnabled ? ivaIncluido(total, Number(settings.taxPercent) || 0) : null;
   // C-106: el total aún no lleva la entrega; se avisa aquí para que el embalaje del checkout no sorprenda
   const hasPhysical = items.some(item => item.productType !== 'DIGITAL');
   const envioGratis = items.some(item => item.freeShipping && item.productType !== 'DIGITAL');
@@ -408,18 +410,6 @@ export default function CarritoPage() {
                     pendingText={status !== 'authenticated' ? 'Se verifica cuando inicies sesión para pagar.' : quoteBody ? 'Verificando…' : 'Se verifica al pagar.'}
                   />
 
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted">Impuestos (Exento):</span>
-                    <div className="text-right">
-                      <span className="font-bold text-ink block">{formatUSD(tax)}</span>
-                      {settings?.exchangeRateVES && (
-                        <span className="text-xs text-brand-600 font-medium block">
-                          {formatVES(tax * settings.exchangeRateVES)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
                   <div className="pt-4 border-t border-line">
                     <div className="flex justify-between items-baseline">
                       <span className="text-base font-bold text-ink">Total:</span>
@@ -432,6 +422,7 @@ export default function CarritoPage() {
                         )}
                       </div>
                     </div>
+                    {iva && <IvaIncluido totalUSD={total} ivaUSD={iva.ivaUSD} className="mt-2 text-right" />}
                     {localSavings > 0.004 && (
                       <p className="mt-2 text-sm font-semibold text-success-strong">Ahorras {formatUSD(localSavings)} con las ofertas de hoy</p>
                     )}

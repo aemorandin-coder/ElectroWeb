@@ -37,7 +37,7 @@ const PLANTILLAS: { id: string; name: string; description: string; render: () =>
                         { name: 'Audífonos inalámbricos', quantity: 1, price: '49.90' },
                         { name: 'Control DualSense PS5', quantity: 1, price: '45.00', condition: 'Usado · Muy bueno', warrantyDays: 30 },
                     ],
-                    subtotal: '94.90', discount: '5.00', shipping: '3.00', tax: '0.00', total: '92.90', currency: 'USD',
+                    subtotal: '94.90', discount: '5.00', shipping: '3.00', tax: '12.81', total: '92.90', currency: 'USD',
                     paymentMethod: 'Pago Móvil', paid: true, deliveryMethod: 'Delivery en Guanare', deliveryAddress: 'Av. Principal, Guanare',
                 }),
             };

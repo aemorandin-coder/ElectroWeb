@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
+import IvaIncluido from '@/components/ui/IvaIncluido';
 import { ETIQUETA_ESTADO } from '@/lib/order-admin';
 import { EMPRESAS_GUIA, NOMBRE_EMPRESA, siguientePaso, type PasoOrden } from '@/lib/envios/empresas';
 import EntregaOrden from './_components/EntregaOrden';
@@ -75,6 +76,8 @@ interface Order {
   guestEmail?: string | null;
   totalUSD: number;
   subtotalUSD?: number;
+  /** C-146: la parte del total que es IVA */
+  taxUSD?: number | string | null;
   status: string;
   paymentStatus?: string;
   deliveryMethod?: string;
@@ -856,7 +859,10 @@ export default function OrdersPage() {
                     <tfoot className="bg-surface">
                       <tr>
                         <td colSpan={3} className="px-4 py-3 text-right font-bold text-ink">Total</td>
-                        <td className="px-4 py-3 text-right text-xl font-bold text-brand-600">{formatUSD(Number(selectedOrder.totalUSD) || 0)}</td>
+                        <td className="px-4 py-3 text-right text-xl font-bold text-brand-600">
+                          {formatUSD(Number(selectedOrder.totalUSD) || 0)}
+                          <IvaIncluido totalUSD={Number(selectedOrder.totalUSD) || 0} ivaUSD={Number(selectedOrder.taxUSD) || 0} className="mt-1 font-normal" />
+                        </td>
                       </tr>
                     </tfoot>
                   </table>

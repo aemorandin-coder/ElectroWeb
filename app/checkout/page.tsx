@@ -33,6 +33,7 @@ import { parseCartItemId, toOrderItem } from '@/lib/cart-items';
 import CouponBox from '@/components/cart/CouponBox';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useSettings } from '@/contexts/SettingsContext';
+import IvaIncluido from '@/components/ui/IvaIncluido';
 import { trackInitiateCheckout, trackPurchase } from '@/components/AnalyticsTracker';
 
 export default function CheckoutPage() {
@@ -1528,6 +1529,8 @@ export default function CheckoutPage() {
                           )}
                         </div>
                       </div>
+                      {/* C-146: los precios ya llevan el IVA; aquí se dice cuánto del total es */}
+                      <IvaIncluido totalUSD={finalTotal} ivaUSD={orderCalculation.taxUSD} className="mt-2 text-right" />
                       {fleteAparte && (
                         <p className="mt-2 text-right text-xs text-muted">
                           No incluye el flete: se lo pagas a {envio.carrier || 'la empresa de envíos'} al {envio.mode === 'DOOR' ? 'recibir' : 'retirar'}.

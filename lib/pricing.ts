@@ -10,9 +10,23 @@ export type DeliveryMethod = 'SHIPPING' | 'LOCAL_DELIVERY' | 'PICKUP';
 
 export const DELIVERY_METHODS: readonly DeliveryMethod[] = ['SHIPPING', 'LOCAL_DELIVERY', 'PICKUP'];
 
-// La tienda no cobra IVA aparte (decisión de Andrés, C-01). El switch del admin se respeta
-// solo cuando esto pase a true.
-export const STORE_CHARGES_TAX = false;
+/**
+ * IVA (C-146, decisión de Andrés del 30/09): **los precios publicados ya llevan el IVA**. La tienda nunca suma nada
+ * al total (C-01): dice cuánto del total es IVA, con el porcentaje de Configuración → Precios.
+ * El IVA va sobre todo lo que cobra la tienda en la orden: productos menos descuentos, más embalaje o delivery.
+ */
+export function ivaIncluido(totalUSD: number, percent: number): { baseUSD: number; ivaUSD: number } {
+  if (!(totalUSD > 0) || !(percent > 0)) return { baseUSD: Math.max(totalUSD, 0), ivaUSD: 0 };
+  const ivaUSD = Math.round((totalUSD - totalUSD / (1 + percent / 100)) * 100) / 100;
+  return { baseUSD: Math.round((totalUSD - ivaUSD) * 100) / 100, ivaUSD };
+}
+
+/** El porcentaje con el que se calculó un IVA incluido ya guardado (órdenes): 16 para $8,28 dentro de $60. */
+export function porcentajeIva(totalUSD: number, ivaUSD: number): number {
+  if (!(ivaUSD > 0) || !(totalUSD > ivaUSD)) return 0;
+  // Entero: el IVA guardado está redondeado al céntimo, y en montos chicos el cociente da 16,3 en vez de 16
+  return Math.round((ivaUSD / (totalUSD - ivaUSD)) * 100);
+}
 
 export interface PricingLine {
   productId: string;
@@ -43,6 +57,7 @@ export interface PricingSettings {
   packagingFeeUSD: number;
   localDeliveryFeeUSD: number;
   freeDeliveryThresholdUSD: number | null;
+  /** Los precios incluyen IVA: el total no cambia, se informa cuánto es IVA (C-146) */
   taxEnabled: boolean;
   taxPercent: number;
 }
@@ -161,8 +176,8 @@ export function toPricingSettings(raw: {
     packagingFeeUSD: packaging,
     localDeliveryFeeUSD: Math.max(toNumber(s.deliveryFeeUSD), 0),
     freeDeliveryThresholdUSD: toNumber(s.freeDeliveryThresholdUSD) || null,
-    taxEnabled: STORE_CHARGES_TAX && Boolean(s.taxEnabled),
-    taxPercent: toNumber(s.taxPercent),
+    taxEnabled: Boolean(s.taxEnabled) && toNumber(s.taxPercent) > 0,
+    taxPercent: Math.max(toNumber(s.taxPercent), 0),
   };
 }
 
@@ -250,9 +265,9 @@ function calculateGroup(lines: PricingLine[], shippingUSD: number, settings: Pri
 
   const subtotalUSD = roundMoney(subtotal);
   const discountUSD = roundMoney(discount);
-  const taxUSD = settings.taxEnabled && settings.taxPercent > 0
-    ? roundMoney((subtotalUSD - discountUSD) * (settings.taxPercent / 100))
-    : 0;
+  // El IVA no se suma: ya está dentro de los precios. `taxUSD` es la parte del total que es IVA (C-146)
+  const totalUSD = roundMoney(subtotalUSD - discountUSD + shippingUSD);
+  const taxUSD = settings.taxEnabled ? ivaIncluido(totalUSD, settings.taxPercent).ivaUSD : 0;
 
   return {
     lines,
@@ -260,7 +275,7 @@ function calculateGroup(lines: PricingLine[], shippingUSD: number, settings: Pri
     discountUSD,
     shippingUSD,
     taxUSD,
-    totalUSD: roundMoney(subtotalUSD - discountUSD + shippingUSD + taxUSD),
+    totalUSD,
   };
 }
 

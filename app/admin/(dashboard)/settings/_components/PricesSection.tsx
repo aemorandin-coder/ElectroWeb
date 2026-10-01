@@ -140,13 +140,13 @@ export default function PricesSection({ form, set, errors, savedAutoExchangeRate
       <SettingsCard title="IVA">
         <div className="space-y-4">
           <SwitchRow
-            label="Cobrar IVA"
-            description="Se suma al total de cada orden en el checkout."
+            label="Los precios incluyen IVA"
+            description="No se suma nada al total. El carrito, el pago, el recibo y el correo dicen cuánto del total es IVA y cuál es la base imponible."
             checked={form.taxEnabled}
             onChange={(v) => set('taxEnabled', v)}
           />
           {form.taxEnabled && (
-            <NumberField label="Porcentaje" suffix="%" value={form.taxPercent} onChange={(v) => set('taxPercent', v)} error={errors.taxPercent} min={0} max={100} step={0.01} className="max-w-xs" />
+            <NumberField label="Porcentaje" suffix="%" value={form.taxPercent} onChange={(v) => set('taxPercent', v)} error={errors.taxPercent} min={0} max={100} step={0.01} className="max-w-xs" hint="La alícuota general hoy es 16. Con 0 la tienda no muestra el IVA." />
           )}
         </div>
       </SettingsCard>

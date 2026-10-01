@@ -128,6 +128,9 @@ export interface PublicSettings {
     shippingCostPerKg: number;
     minConsolidatedShipping: number;
     packagingFeeUSD: number;
+    /** C-146: los precios incluyen IVA y con qué porcentaje (0 = no se muestra) */
+    taxEnabled: boolean;
+    taxPercent: number;
     pickupEnabled: boolean;
     pickupAddress: string | null;
     pickupInstructions: string | null;
@@ -182,7 +185,7 @@ const PUBLIC_SETTINGS_SELECT = {
     socialMedia: true, businessHours: true,
     primaryCurrency: true, exchangeRateVES: true, exchangeRateEUR: true,
     deliveryEnabled: true, localDeliveryEnabled: true, deliveryFeeUSD: true, freeDeliveryThresholdUSD: true, shippingCostPerKg: true,
-    minConsolidatedShipping: true, packagingFeeUSD: true,
+    minConsolidatedShipping: true, packagingFeeUSD: true, taxEnabled: true, taxPercent: true,
     pickupEnabled: true, pickupAddress: true, pickupInstructions: true,
     minOrderAmountUSD: true, maxOrderAmountUSD: true,
     heroVideoEnabled: true, heroVideoUrl: true, heroVideoTitle: true, heroVideoDescription: true,
@@ -207,7 +210,7 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     socialMedia: [], businessHours: null,
     primaryCurrency: 'USD', exchangeRateVES: 36.5, exchangeRateEUR: 0.92,
     deliveryEnabled: false, localDeliveryEnabled: false, deliveryFeeUSD: 0, freeDeliveryThresholdUSD: null, shippingCostPerKg: 2,
-    minConsolidatedShipping: 3, packagingFeeUSD: 2.5,
+    minConsolidatedShipping: 3, packagingFeeUSD: 2.5, taxEnabled: false, taxPercent: 0,
     pickupEnabled: false, pickupAddress: null, pickupInstructions: null,
     minOrderAmountUSD: null, maxOrderAmountUSD: null,
     heroVideoEnabled: false, heroVideoUrl: null, heroVideoTitle: null, heroVideoDescription: null,
@@ -248,6 +251,8 @@ function toPublicSettings(row: PublicSettingsRow): PublicSettings {
         shippingCostPerKg: num(row.shippingCostPerKg, 2),
         minConsolidatedShipping: num(row.minConsolidatedShipping, 3),
         packagingFeeUSD: num(row.packagingFeeUSD, 2.5),
+        taxEnabled: Boolean(row.taxEnabled) && num(row.taxPercent, 0) > 0,
+        taxPercent: num(row.taxPercent, 0),
         minOrderAmountUSD: row.minOrderAmountUSD ? Number(row.minOrderAmountUSD) : null,
         maxOrderAmountUSD: row.maxOrderAmountUSD ? Number(row.maxOrderAmountUSD) : null,
         maintenanceStartTime: row.maintenanceStartTime ? row.maintenanceStartTime.toISOString() : null,

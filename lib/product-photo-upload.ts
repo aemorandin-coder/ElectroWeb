@@ -31,19 +31,22 @@ async function prepareProductPhoto(file: File): Promise<File> {
 
 export interface UploadedPhoto {
   url: string;
+  /** Lleva la cinta ES */
   badged: boolean;
+  /** El servidor la armó con fondo blanco y aire alrededor (con cinta o sin ella) */
+  framed: boolean;
 }
 
 /**
  * Sube una foto de producto. Con `badge`, una transparente vuelve con fondo blanco y la cinta "ES" (C-117);
- * un usado va sin ella (C-119). Si el servidor pide esperar (429, 20 fotos por minuto), espera y reintenta.
+ * un usado va sin ella (C-119) pero con el mismo marco (C-161). Si el servidor pide esperar (429, 20 fotos por minuto), espera y reintenta.
  */
 export async function uploadProductPhoto(file: File, { badge, onWait }: { badge: boolean; onWait?: (seconds: number) => void }): Promise<UploadedPhoto> {
   const prepared = await prepareProductPhoto(file);
   for (let attempt = 0; attempt < 4; attempt++) {
     const fd = new FormData();
     fd.append('file', prepared);
-    if (badge) fd.append('purpose', 'product');
+    fd.append('purpose', badge ? 'product' : 'product-used');
     const res = await fetch('/api/upload', { method: 'POST', body: fd });
     if (res.status === 429 && onWait) {
       const seconds = Math.min(70, Math.max(5, Number(res.headers.get('X-RateLimit-Reset')) || 30));
@@ -51,9 +54,9 @@ export async function uploadProductPhoto(file: File, { badge, onWait }: { badge:
       await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
       continue;
     }
-    const data = (await res.json().catch(() => null)) as { url?: string; error?: string; badged?: boolean } | null;
+    const data = (await res.json().catch(() => null)) as { url?: string; error?: string; badged?: boolean; framed?: boolean } | null;
     if (!res.ok || !data?.url) throw new Error(data?.error || `No se pudo subir "${file.name}"`);
-    return { url: data.url, badged: data.badged === true };
+    return { url: data.url, badged: data.badged === true, framed: data.framed === true };
   }
   throw new Error(`No se pudo subir "${file.name}": el servidor sigue ocupado`);
 }

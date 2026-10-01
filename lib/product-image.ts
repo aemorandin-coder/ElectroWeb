@@ -79,20 +79,22 @@ export async function hasPlainWhiteBackground(buffer: Buffer): Promise<boolean> 
   return borde > 0 && blancos / borde >= 0.97;
 }
 
-/** Foto final: fondo blanco, producto centrado (sin el borde transparente que traiga) y la cinta. WebP. */
-export async function composeProductImage(buffer: Buffer): Promise<Buffer> {
+/**
+ * Foto final: fondo blanco, producto centrado (sin el borde transparente que traiga) y la cinta. WebP.
+ * C-161: con `cinta: false` se arma el mismo marco sin la cinta, para los productos usados (que no la llevan, C-119).
+ * Antes un usado con la foto recortada quedaba tal cual: pegada a los bordes de la tarjeta y sin aire alrededor.
+ */
+export async function composeProductImage(buffer: Buffer, { cinta = true }: { cinta?: boolean } = {}): Promise<Buffer> {
   const S = PRODUCT_IMAGE_SIZE;
   const inner = Math.round(S * (1 - 2 * MARGIN));
   // trim() quita el borde del color de la esquina: en un PNG transparente, el aire transparente alrededor
   const trimmed = await sharp(buffer).rotate().trim().png().toBuffer();
   const product = await sharp(trimmed).resize(inner, inner, { fit: 'inside', withoutEnlargement: false }).png().toBuffer();
   const { width = inner, height = inner } = await sharp(product).metadata();
-  const badge = await badgeOverlay();
+  const capas: sharp.OverlayOptions[] = [{ input: product, left: Math.round((S - width) / 2), top: Math.round((S - height) / 2) }];
+  if (cinta) capas.push(await badgeOverlay());
   return sharp({ create: { width: S, height: S, channels: 3, background: '#ffffff' } })
-    .composite([
-      { input: product, left: Math.round((S - width) / 2), top: Math.round((S - height) / 2) },
-      badge,
-    ])
+    .composite(capas)
     .webp({ quality: 90 })
     .toBuffer();
 }

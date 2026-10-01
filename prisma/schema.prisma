@@ -665,6 +665,8 @@ model Order {
   shippedAt     DateTime?
   deliveredAt   DateTime?
   cancelledAt   DateTime?
+  // C-157: cuándo se revisó si pedirle la reseña al cliente (una sola vez por orden, haya salido el correo o no)
+  reviewRequestedAt DateTime?
 
   items         OrderItem[]
   warrantyClaims WarrantyClaim[]

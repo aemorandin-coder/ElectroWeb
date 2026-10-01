@@ -117,7 +117,7 @@ export async function notifyReviewApproved(userId: string, productName: string, 
     type: 'REVIEW_APPROVED',
     title: 'Reseña Publicada',
     message: `Tu reseña de "${productName}" ha sido aprobada y ahora es visible para otros clientes.`,
-    link: `/productos/${productSlug}#reviews`,
+    link: `/productos/${productSlug}#resenas`,
     icon: 'star',
   });
 }

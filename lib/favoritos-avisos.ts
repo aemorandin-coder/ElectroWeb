@@ -154,7 +154,7 @@ async function avisarCliente(userId: string, lista: Aviso[]): Promise<{ avisos: 
 }
 
 /** `images` es un JSON con la lista de fotos: la primera sirve si no hay foto principal. */
-function primeraImagen(images: string): string | null {
+export function primeraImagen(images: string): string | null {
   try {
     const lista: unknown = JSON.parse(images);
     return Array.isArray(lista) && typeof lista[0] === 'string' ? lista[0] : null;

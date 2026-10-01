@@ -36,7 +36,7 @@ export async function GET() {
                     emailVerified: true,
                     createdAt: true,
                     profile: { select: { lastLoginAt: true, lastLoginDevice: true, accountStatus: true, deletionRequestedAt: true } },
-                    notificationPreferences: { select: { emailPromotions: true, inAppFavoritos: true, emailFavoritos: true } },
+                    notificationPreferences: { select: { emailPromotions: true, inAppFavoritos: true, emailFavoritos: true, emailReviews: true } },
                 },
             }),
             prisma.account.count({ where: { userId, provider: 'google' } }),
@@ -77,6 +77,7 @@ export async function GET() {
                 emailPromotions: user.notificationPreferences?.emailPromotions ?? false,
                 inAppFavoritos: user.notificationPreferences?.inAppFavoritos ?? true,
                 emailFavoritos: user.notificationPreferences?.emailFavoritos ?? true,
+                emailReviews: user.notificationPreferences?.emailReviews ?? true,
             },
         });
     } catch (error) {
@@ -111,6 +112,7 @@ const patchSchema = z.union([
             emailPromotions: z.boolean().optional(),
             inAppFavoritos: z.boolean().optional(),
             emailFavoritos: z.boolean().optional(),
+            emailReviews: z.boolean().optional(),
         }).strict(),
     }),
 ]);

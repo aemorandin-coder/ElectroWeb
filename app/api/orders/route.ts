@@ -23,7 +23,6 @@ import {
   sendOrderPendingPaymentEmail
 } from '@/lib/email-service';
 import { generateOrderConfirmationEmail } from '@/lib/email-templates/OrderConfirmation';
-import { generateReviewReminderEmail } from '@/lib/email-templates/ReviewReminder';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
@@ -1374,43 +1373,7 @@ export async function PATCH(request: NextRequest) {
             }
           }
 
-          // Recordatorio de reseña con el primer producto de la orden
-          try {
-            const orderWithUser = await prisma.order.findUnique({
-              where: { id },
-              include: {
-                user: { select: { name: true, email: true } },
-                items: {
-                  include: {
-                    product: { select: { name: true, mainImage: true, slug: true } }
-                  }
-                }
-              },
-            });
-
-            if (orderWithUser && orderWithUser.items.length > 0 && orderWithUser.user) {
-              const companySettings = await prisma.companySettings.findFirst();
-              const firstProduct = orderWithUser.items[0].product;
-
-              const emailHtml = generateReviewReminderEmail({
-                companyName: companySettings?.companyName || 'Electro Shop',
-                companyLogo: companySettings?.logo || undefined,
-                customerName: orderWithUser.user?.name || 'Cliente',
-                orderNumber: orderWithUser.orderNumber,
-                productName: firstProduct.name,
-                productImage: firstProduct.mainImage || undefined,
-                reviewUrl: `${process.env.NEXTAUTH_URL}/productos/${firstProduct.slug}#reviews`,
-              });
-
-              await sendEmail({
-                to: orderWithUser.user?.email || '',
-                subject: `¿Qué te pareció tu compra? - ${orderWithUser.orderNumber}`,
-                html: emailHtml,
-              });
-            }
-          } catch (emailError) {
-            console.error('Error sending review reminder email:', emailError);
-          }
+          // La reseña se pide unos días después, por correo (C-157, /api/cron/resenas)
           break;
 
         case 'CANCELLED': {

@@ -52,8 +52,9 @@ Al marcar la casilla de aceptación y estampar tu firma digital, confirmas que h
 
 /**
  * Términos de los Puntos ES (C-131 y C-135): "saldo" pasa a "Puntos ES" (regla legal de Andrés, 29 y 30/09) y se
- * explica cómo se muestran ("$12,50 Puntos ES"). La publica la tienda sola una vez (publicarTerminosDelCodigo):
- * Andrés pidió que la publicara Claude. Cada cliente la firma en su próxima recarga.
+ * explica cómo se muestran ("$12,50 Puntos ES"). La publicó la tienda sola (publicarTerminosDelCodigo): Andrés pidió
+ * que la publicara Claude. Desde C-142 queda como historia: se conserva letra por letra porque su huella dice qué
+ * tiendas tienen todavía esta versión y deben pasar a la siguiente (TERMINOS_PUNTOS_V3).
  */
 export const TERMINOS_PUNTOS_V2 = {
   title: 'Términos y condiciones de los Puntos ES',
@@ -104,23 +105,44 @@ Al marcar la casilla de aceptación y estampar tu firma digital, confirmas que h
   requiredFor: 'RECHARGE',
 };
 
+/**
+ * C-142 (decisión de Andrés del 30/09): quien cierra su cuenta pierde sus Puntos ES; no son reembolsables. La versión
+ * anterior decía que no se convierten en dinero, pero no qué pasa al cerrar la cuenta. Es el mismo texto con esa
+ * cláusula en la sección 5. Publicarla pide la firma otra vez a cada cliente en su próxima recarga: Andrés lo aceptó.
+ */
+const CLAUSULA_CIERRE = `!! SI CIERRAS TU CUENTA, PIERDES LOS PUNTOS ES QUE TE QUEDEN.
+Los Puntos ES no son reembolsables. Si pides cerrar tu cuenta, los que te queden se pierden: no se devuelven en dinero ni pasan a otra cuenta. Antes de cerrarla puedes usarlos en productos de la tienda. Al pedir el cierre, la tienda te muestra cuántos tienes y te pide confirmarlo.`;
+const FIN_SECCION_5 = 'Las devoluciones que haga la tienda (garantía, cancelación o pago de más) se acreditan en Puntos ES.';
+
+export const TERMINOS_PUNTOS_V3 = {
+  title: TERMINOS_PUNTOS_V2.title,
+  content: TERMINOS_PUNTOS_V2.content.replace(FIN_SECCION_5, `${FIN_SECCION_5}\n\n${CLAUSULA_CIERRE}`),
+  requiredFor: TERMINOS_PUNTOS_V2.requiredFor,
+};
+
 export function hashContenido(title: string, content: string): string {
   return createHash('sha256').update(`${title}\n\n${content}`, 'utf8').digest('hex');
 }
 
-/** La vigente todavía habla de "saldo" o "billetera" (anterior a C-131): toca publicar la de Puntos ES. */
-function necesitaPuntosES(doc: LegalDocument): boolean {
-  return /\b(saldo|billetera)\b/i.test(`${doc.title}\n${doc.content}`);
+const HASH_V2 = hashContenido(TERMINOS_PUNTOS_V2.title, TERMINOS_PUNTOS_V2.content);
+
+/**
+ * ¿Toca publicar la versión del código? Sí, si la vigente todavía habla de "saldo" o "billetera" (anterior a C-131)
+ * o si es, letra por letra, la versión anterior del código (sin la cláusula del cierre de cuenta).
+ * Una versión que Andrés haya escrito en el panel no entra en ninguno de los dos casos y se respeta.
+ */
+function necesitaVersionDelCodigo(doc: LegalDocument): boolean {
+  return /\b(saldo|billetera)\b/i.test(`${doc.title}\n${doc.content}`) || doc.contentHash === HASH_V2;
 }
 
 /**
  * Versión vigente de un documento. Los términos de los Puntos ES se crean solos la primera vez (versión 1) y, si la
- * vigente todavía dice "saldo" o "billetera", se publica la de Puntos ES (C-135).
+ * vigente todavía dice "saldo" o "billetera" (C-135) o es la anterior del código (C-142), se publica la del código.
  */
 export async function documentoVigente(slug: string): Promise<LegalDocument | null> {
   const doc = await prisma.legalDocument.findFirst({ where: { slug, isCurrent: true }, orderBy: { version: 'desc' } });
   if (slug !== SLUG_TERMINOS_SALDO) return doc;
-  if (doc) return necesitaPuntosES(doc) ? publicarTerminosDelCodigo(doc) : doc;
+  if (doc) return necesitaVersionDelCodigo(doc) ? publicarTerminosDelCodigo(doc) : doc;
   try {
     // La 1 queda en el historial (las aceptaciones de antes de C-103 cuentan como firma de la 1) y se pasa a la 2
     const v1 = await prisma.legalDocument.create({
@@ -141,13 +163,12 @@ export async function documentoVigente(slug: string): Promise<LegalDocument | nu
 }
 
 /**
- * C-135: publica los términos de los Puntos ES como la versión siguiente, igual que el botón "Publicar versión" del
- * panel: la anterior deja de estar vigente. Solo si la vigente todavía dice "saldo" (en el esquema de ejemplo había una
- * versión 2 hecha a mano con ese texto): una versión de Andrés sin esas palabras se respeta.
+ * C-135 y C-142: publica los términos de los Puntos ES del código como la versión siguiente, igual que el botón
+ * "Publicar versión" del panel: la anterior deja de estar vigente. Solo en los casos de `necesitaVersionDelCodigo`.
  * Dos peticiones a la vez chocan en slug + versión (único): la segunda lee la que creó la primera.
  */
 async function publicarTerminosDelCodigo(actual: LegalDocument): Promise<LegalDocument> {
-  const v2 = TERMINOS_PUNTOS_V2;
+  const v2 = TERMINOS_PUNTOS_V3;
   try {
     return await prisma.$transaction(async (tx) => {
       const ultima = await tx.legalDocument.findFirst({ where: { slug: actual.slug }, orderBy: { version: 'desc' }, select: { version: true } });

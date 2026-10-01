@@ -1,11 +1,11 @@
-# Punto de partida (actualizado 2026-09-30, cierre de C-141 y C-139)
+# Punto de partida (actualizado 2026-09-30, cierre de C-141, C-139 y C-142)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-141 y C-139**.
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-141, C-139 y C-142**.
 - **Producción:** C-138 confirmado (`d53d5b4`, con los dos crons). **Falta el deploy de C-141** (§00000), que es urgente por lo que cambia: al terminar, el panel pide configurar los dos pasos.
-- Andrés dijo el 30/09 que las pruebas de los deploys del 30/09 salieron "excelentes", con algunos ajustes para más adelante. **No confirmó expresamente el deploy de C-140**: los pasos de C-141 sirven igual si ese deploy no se hizo (§00000).
+- Andrés dijo el 30/09 que las pruebas de los deploys del 30/09 salieron "excelentes", con algunos ajustes para más adelante. Sobre el deploy de C-140 respondió "recuerda que necesito probar": **no está confirmado**. Los pasos de C-141 sirven igual si ese deploy no se hizo (§00000).
 - **C-139** (Puntos ES) hecha y en `main`: va en el mismo deploy que C-141 y no cambia la base (§000000).
-- **Falta una decisión de Andrés:** publicar ya, o con C-120, los términos de los Puntos ES con la regla del cierre de cuenta (§000000).
-- **C-120** (facturación, IVA y términos): investigación hecha, con decisiones para Andrés y preguntas para su contador (`estado/C-120.md`).
+- **C-142:** los términos de los Puntos ES que se firman ya traen la regla del cierre de cuenta (decisión de Andrés del 30/09). Se publican solos con el deploy y cada cliente los firma en su próxima recarga (`estado/C-142.md`).
+- **C-120** (facturación, IVA y términos): investigación hecha (`estado/C-120.md`). **Andrés pidió rediseñarla: la web no factura** (tiene SADES y facturación manual; en la web hace ticket de caja). Claude le hizo 5 preguntas sobre el flujo de la empresa: **esperar sus respuestas antes de proponer nada.**
 - **Sigue:** la revisión final con Andrés (§3). C-107 y C-92 esperan datos suyos.
 
 ## 000000. C-139 · Página de Puntos ES: en `main`, va con el deploy de C-141
@@ -21,9 +21,8 @@ Detalle y pruebas en `estado/C-139.md`. **Sin cambio de base.**
 3. Con una cuenta de prueba con Puntos ES: Mi perfil → Seguridad → "Eliminar". El modal dice cuántos tiene y no deja seguir sin marcar la casilla. En Mensajes y Solicitudes llega con "(aceptó que los pierde al cerrar la cuenta)". Después, "Cancelar el pedido".
 4. Movimientos viejos (de antes del 30/09): deben decir "Puntos ES", nunca "saldo" ni "billetera". Si alguno se ve raro, avisar a Claude con el texto.
 
-**Decisión pendiente de Andrés:** los términos que se firman (versión 2) no dicen qué pasa con los Puntos ES al cerrar la cuenta.
-- Publicar una versión 3 obliga a todos los clientes a firmar otra vez en su próxima recarga.
-- **Recomendación de Claude:** publicarla con C-120 (la revisión legal), una sola vez. Mientras tanto la regla ya está en `/terminos`, en "Cómo funcionan" y en la casilla del cierre.
+**Términos firmados (C-142, decisión de Andrés del 30/09):** la versión nueva, con la regla del cierre de cuenta en la sección 5, se publica sola con este mismo deploy.
+5. Prueba: abrir "Recargar Puntos ES" con una cuenta de cliente pide firmar de nuevo, y Admin → Legal muestra una versión más como vigente.
 
 ## 00000. C-141 · Equipo, roles y dos pasos: en `main`, falta el deploy
 Detalle, hallazgos y pruebas en `estado/C-141.md`.
@@ -259,12 +258,10 @@ bash scripts/deploy.sh
 4b. **C-119 · Productos usados y reacondicionados:** hecha y en `main` el 29/09 (`estado/C-119.md`). Lleva cambio de base (§0).
    - "Usado" en el correo de compra: hecho en C-121 (29/09, rama `claude/C-121`), con 4 arreglos del correo (decía "debitado de tu billetera" también en un Pago Móvil por confirmar, faltaba el descuento, no escapaba el nombre y la dirección).
    - Módulo de garantías: hecho en C-122 (29/09, rama `claude/C-122`, sobre C-121; **lleva tablas nuevas**). Menú "Garantías" con estados, historial, notas internas, fotos privadas y devolución al saldo de verdad (`estado/C-122.md`).
-4c. **C-120 · Facturación a empresa, IVA y términos: investigación hecha el 30/09** (`estado/C-120.md`, con fuentes). Sin código todavía.
-   - **Lo principal:** las ventas por web necesitan **factura digital con una imprenta digital autorizada por el SENIAT** (Providencia SNAT/2024/000102, art. 5), con el IVA discriminado y, para empresas, su razón social, RIF y domicilio fiscal.
-   - Un contribuyente especial le retiene a la tienda el 75 % del IVA: el checkout no lo contempla.
-   - El carrito y el correo de compra dicen "Impuestos (Exento)": no es cierto para electrónica.
-   - **Faltan las decisiones de Andrés** (D1 a D7: si la empresa es contribuyente especial, si los precios incluyen el IVA, cómo se factura hoy la web, qué imprenta digital) **y las 8 preguntas para su contador.**
-   - Propuesta en tres fases. La Fase 1 (datos fiscales, "factura a nombre de", IVA en el resumen, RIF en ElectroStudio y correos, privacidad y términos) no necesita proveedor: se puede empezar cuando Andrés responda D1 a D3.
+4c. **C-120 · Facturación a empresa, IVA y términos: investigación hecha el 30/09** (`estado/C-120.md`, con fuentes). Sin código.
+   - **Dirección de Andrés (30/09): la web no factura.** Tiene SADES y facturación manual; en la web hace un ticket de caja y lleva la relación de ventas a su manera. **No construir un facturador ni integrar una imprenta digital.**
+   - Pidió rediseñar la tarea estudiando la ley, a partir de 5 preguntas sobre el flujo de la empresa (están en `estado/C-120.md`). **Sin sus respuestas no se propone nada.**
+   - Lo que la investigación deja claro igual: la ley pide factura digital para las ventas por web (Providencia SNAT/2024/000102, art. 5) y el carrito y el correo dicen "Impuestos (Exento)". Cómo lo resuelve la empresa es decisión de Andrés y de su contador.
    - Mientras tanto, el interruptor "Cobrar IVA" de Configuración queda como está: no tiene efecto (`STORE_CHARGES_TAX = false`).
 5. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
 6. **C-92:** desactivar clientes en vez de borrarlos. Detalle en `AUDITORIA_CLIENTES_BORRADOS.md`.
@@ -354,7 +351,7 @@ bash scripts/deploy.sh
 ## 6. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto.
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
-> 2. Pregúntame si el deploy de C-141 y C-139 terminó bien (§00000 y §000000): si configuré mis dos pasos, si llegó el correo de invitación, qué cuentas quedaron en Equipo y cómo se ve la página de Puntos ES. Y qué decidí sobre los términos de los Puntos ES (§000000).
+> 2. Pregúntame si el deploy de C-141, C-139 y C-142 terminó bien (§00000 y §000000): si configuré mis dos pasos, si llegó el correo de invitación, qué cuentas quedaron en Equipo, cómo se ve la página de Puntos ES y si la recarga pide firmar los términos nuevos. Y mis respuestas a las 5 preguntas de C-120 (`estado/C-120.md`).
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
 > 4. Sigue con la **revisión final** conmigo (`REVISION_FINAL.md`) y arregla lo que salga. Al terminar cada tarea: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
-> 5. Después: C-107 (faltan los costos de ZOOM y MRW), C-92 (faltan tus 4 consultas) y la Fase 1 de C-120 cuando respondas D1 a D3 (`estado/C-120.md` §5).
+> 5. Después: C-107 (faltan los costos de ZOOM y MRW), C-92 (faltan tus 4 consultas) y C-120, rediseñada con mis respuestas (la web no factura).

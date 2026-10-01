@@ -3,6 +3,7 @@
 // Módulo puro: no importa Prisma ni APIs del navegador.
 
 import { formatUSD } from '@/lib/currency';
+import { armarPaquetes, reglasEmbalajeActivas, type PlanEmbalaje, type ReglasEmbalaje } from '@/lib/embalaje';
 
 // C-100: SHIPPING = ZOOM o MRW (oficina o puerta a puerta), LOCAL_DELIVERY = delivery propio en Guanare.
 // Las órdenes viejas pueden decir HOME_DELIVERY o STORE_PICKUP; el checkout ya no los manda.
@@ -54,7 +55,12 @@ export function lineDiscountUSD(line: Pick<PricingLine, 'unitPriceUSD' | 'quanti
 }
 
 export interface PricingSettings {
+  /** Embalaje de precio único: lo que se cobra si no hay empaques configurados */
   packagingFeeUSD: number;
+  /** C-153: empaques de la tienda. Con ellos el embalaje sale del paquete que se arma (lib/embalaje.ts); `null` = precio único */
+  packagingRules: ReglasEmbalaje | null;
+  /** C-153: compra física desde la que el embalaje no se cobra. El flete sigue con cobro a destino (no es "envío gratis") */
+  freePackagingThresholdUSD: number | null;
   localDeliveryFeeUSD: number;
   freeDeliveryThresholdUSD: number | null;
   /** Los precios incluyen IVA: el total no cambia, se informa cuánto es IVA (C-146) */
@@ -75,6 +81,8 @@ export function llevaIva(settings: Pick<PricingSettings, 'taxEnabled' | 'taxPerc
  * - **Envío gratis**: si el paquete lleva un producto con envío gratis, o la compra física llega al monto de
  *   Configuración, no se cobra nada y la tienda paga la guía.
  * - Delivery en Guanare: tarifa fija de Configuración (gratis en los mismos casos).
+ * - C-153: el embalaje sale del paquete que se arma con las medidas de los productos (o el precio único si la
+ *   tienda no configuró empaques) y puede ser gratis desde un monto sin que la tienda pague el flete.
  */
 export interface ShippingBreakdown {
   /** Lo que la tienda cobra por el envío en esta compra. */
@@ -83,6 +91,13 @@ export interface ShippingBreakdown {
   localDeliveryFee: number;
   isFreeShipping: boolean;
   freeReason: 'PRODUCT' | 'THRESHOLD' | null;
+  /** C-153: el embalaje no se cobra porque la compra llegó al monto; el flete lo sigue pagando el cliente */
+  packagingFreeByThreshold: boolean;
+  /** C-153: en qué viaja el pedido (solo con empaques configurados y envío por empresa) */
+  packaging: PlanEmbalaje | null;
+  /** C-153: lo que falta en productos físicos para el embalaje gratis y para el envío gratis (`null`: no aplica o ya llegó) */
+  missingFreePackagingUSD: number | null;
+  missingFreeShippingUSD: number | null;
   /** Quién le paga el flete a ZOOM o MRW. `null` si no hay envío por empresa. */
   paidBy: 'CUSTOMER' | 'STORE' | null;
   /** Kilos que cobra la empresa (el mayor entre el peso real y el volumétrico), para la tarifa de referencia. */
@@ -177,6 +192,9 @@ export function toPricingSettings(raw: {
   /** Nombre de la columna (Prisma) o el del ajuste público */
   taxDigitalProducts?: boolean | null;
   taxDigital?: boolean | null;
+  /** Texto JSON de la columna (Prisma) o el objeto del ajuste público */
+  packagingRules?: unknown;
+  freePackagingThresholdUSD?: NumberLike;
 } | null | undefined): PricingSettings {
   const s = raw ?? {};
   const packaging = s.packagingFeeUSD === null || s.packagingFeeUSD === undefined || s.packagingFeeUSD === ''
@@ -184,6 +202,8 @@ export function toPricingSettings(raw: {
     : Math.max(toNumber(s.packagingFeeUSD), 0);
   return {
     packagingFeeUSD: packaging,
+    packagingRules: reglasEmbalajeActivas(s.packagingRules),
+    freePackagingThresholdUSD: toNumber(s.freePackagingThresholdUSD) || null,
     localDeliveryFeeUSD: Math.max(toNumber(s.deliveryFeeUSD), 0),
     freeDeliveryThresholdUSD: toNumber(s.freeDeliveryThresholdUSD) || null,
     taxEnabled: Boolean(s.taxEnabled) && toNumber(s.taxPercent) > 0,
@@ -213,6 +233,10 @@ function emptyBreakdown(): ShippingBreakdown {
     localDeliveryFee: 0,
     isFreeShipping: false,
     freeReason: null,
+    packagingFreeByThreshold: false,
+    packaging: null,
+    missingFreePackagingUSD: null,
+    missingFreeShippingUSD: null,
     paidBy: null,
     totalWeight: 0,
     pieces: 0,
@@ -251,6 +275,10 @@ function calculateShipping(
   if (physical.some(line => line.freeShipping)) breakdown.freeReason = 'PRODUCT';
   else if (threshold && roundMoney(physicalSubtotal) >= threshold) breakdown.freeReason = 'THRESHOLD';
   breakdown.isFreeShipping = breakdown.freeReason !== null;
+  // C-153: cuánto falta para cada umbral, para avisarlo en el carrito y en el pago
+  const falta = (umbral: number | null) =>
+    umbral && umbral > 0 && roundMoney(physicalSubtotal) < umbral ? roundMoney(umbral - physicalSubtotal) : null;
+  if (!breakdown.isFreeShipping) breakdown.missingFreeShippingUSD = falta(threshold);
 
   if (deliveryMethod === 'LOCAL_DELIVERY') {
     breakdown.localDeliveryFee = breakdown.isFreeShipping ? 0 : roundMoney(settings.localDeliveryFeeUSD);
@@ -259,7 +287,24 @@ function calculateShipping(
   }
 
   breakdown.paidBy = breakdown.isFreeShipping ? 'STORE' : 'CUSTOMER';
-  breakdown.packagingFee = breakdown.isFreeShipping ? 0 : roundMoney(settings.packagingFeeUSD);
+
+  // C-153: con empaques configurados, el paquete se arma con las medidas de cada producto y de ahí sale el embalaje
+  // y las piezas de la guía. Sin empaques, el precio único de siempre.
+  const plan = settings.packagingRules
+    ? armarPaquetes(
+      physical.map(line => ({ nombre: line.name, cantidad: line.quantity, pesoKg: line.weightKg, dimensions: line.dimensions, consolidable: line.isConsolidable })),
+      settings.packagingRules
+    )
+    : null;
+  if (plan) {
+    breakdown.packaging = plan;
+    breakdown.pieces = plan.piezas;
+  }
+  const fee = roundMoney(plan ? plan.totalUSD : settings.packagingFeeUSD);
+  const packagingThreshold = settings.freePackagingThresholdUSD;
+  breakdown.packagingFreeByThreshold = !breakdown.isFreeShipping && fee > 0 && Boolean(packagingThreshold) && roundMoney(physicalSubtotal) >= (packagingThreshold ?? 0);
+  breakdown.packagingFee = breakdown.isFreeShipping || breakdown.packagingFreeByThreshold ? 0 : fee;
+  if (breakdown.packagingFee > 0) breakdown.missingFreePackagingUSD = falta(packagingThreshold);
   breakdown.total = breakdown.packagingFee;
   return breakdown;
 }

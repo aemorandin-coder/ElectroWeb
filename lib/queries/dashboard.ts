@@ -72,7 +72,7 @@ export async function getDashboard(): Promise<DashboardData> {
     ordenes, productos, publicados, clientes,
     pagosPorConfirmar, porPreparar, recargas, pagosSinOrden, facturasEmpresa, cotizaciones, garantias, mensajes, solicitudes,
     resenas, descuentos, verificaciones, creadores, cursos, referidos, sinStock,
-    recientes, pocos, pocosTotal, metodosActivos, sinMarca, sinFoto, conCosto, variantesConCosto,
+    recientes, pocos, pocosTotal, metodosActivos, sinMarca, sinFoto, sinMedidas, conCosto, variantesConCosto,
   ] = await Promise.all([
     prisma.order.aggregate({ where: { ...VENTA, paidAt: { gte: desdeHoy } }, _sum: { totalUSD: true }, _count: true }),
     prisma.order.aggregate({ where: { ...VENTA, paidAt: { gte: desdeMes } }, _sum: { totalUSD: true }, _count: true }),
@@ -113,6 +113,8 @@ export async function getDashboard(): Promise<DashboardData> {
     prisma.companyPaymentMethod.count({ where: { isActive: true } }),
     prisma.product.count({ where: { ...FISICO_PUBLICADO, brandId: null } }),
     prisma.product.count({ where: { status: 'PUBLISHED', mainImage: null, images: { in: ['', '[]'] } } }),
+    // C-153: sin peso o sin medidas, el empaque y la tarifa de referencia del envío se estiman
+    prisma.product.count({ where: { ...FISICO_PUBLICADO, OR: [{ weightKg: null }, { weightKg: { lte: 0 } }, { dimensions: null }, { dimensions: '' }] } }),
     // C-146b: precio y costo de lo publicado, para avisar de lo que se vende sin ganancia. No sale del servidor
     prisma.product.findMany({ where: { ...FISICO_PUBLICADO, costPerItem: { gt: 0 } }, select: { id: true, priceUSD: true, costPerItem: true } }),
     prisma.digitalVariant.findMany({ where: { isActive: true, costUSD: { gt: 0 }, product: { status: 'PUBLISHED' } }, select: { productId: true, priceUSD: true, costUSD: true } }),
@@ -142,6 +144,7 @@ export async function getDashboard(): Promise<DashboardData> {
   if (sinGanancia.size > 0) tienda.push({ clave: 'ganancia', texto: `${sinGanancia.size} ${sinGanancia.size === 1 ? 'producto publicado se vende' : 'productos publicados se venden'} al costo o por debajo${iva > 0 ? ', quitando el IVA' : ''}.`, href: '/admin/products', soloDueno: true });
   if (sinMarca > 0) tienda.push({ clave: 'marca', texto: `${sinMarca} ${sinMarca === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} marca (Google y el catálogo de Meta la piden).`, href: '/admin/products', soloDueno: false });
   if (sinFoto > 0) tienda.push({ clave: 'foto', texto: `${sinFoto} ${sinFoto === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} foto.`, href: '/admin/products', soloDueno: false });
+  if (sinMedidas > 0) tienda.push({ clave: 'medidas', texto: `${sinMedidas} ${sinMedidas === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} peso o medidas: su empaque y su envío se estiman.`, href: '/admin/products', soloDueno: false });
   if (!ajustes?.homeMetaImage) tienda.push({ clave: 'compartir', texto: 'Falta la imagen para compartir (1200 × 630): al pegar el enlace de la tienda sale el logo cuadrado.', href: '/admin/settings', soloDueno: true });
   if (!process.env.NEXT_PUBLIC_GA_ID && !process.env.NEXT_PUBLIC_FB_PIXEL_ID) tienda.push({ clave: 'medicion', texto: 'Google Analytics y el píxel de Meta no están conectados: los anuncios no pueden medir sus ventas.', href: '/admin/reports', soloDueno: true });
 

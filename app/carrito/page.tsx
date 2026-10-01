@@ -17,12 +17,14 @@ import { toast } from 'react-hot-toast';
 import { HiTrash } from 'react-icons/hi';
 import { adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
-import { ivaIncluido, orderAmountProblems } from '@/lib/pricing';
+import { calculateOrder, ivaIncluido, orderAmountProblems, toPricingSettings, type ShippingBreakdown } from '@/lib/pricing';
+import { resumenEmbalaje } from '@/lib/embalaje';
+import { AvisosEmbalaje } from '@/components/envios/AvisosEmbalaje';
 import IvaIncluido from '@/components/ui/IvaIncluido';
 import { getGiftCardDesign } from '@/lib/gift-card-designs';
 import { useSettings } from '@/contexts/SettingsContext';
 import CouponBox from '@/components/cart/CouponBox';
-import { toOrderItem } from '@/lib/cart-items';
+import { parseCartItemId, toOrderItem } from '@/lib/cart-items';
 
 // Diseño de una gift card del carrito: el id es "gift-card-<diseño>-<fecha>" (app/gift-cards).
 // Antes se leía un campo `design` que el carrito no guarda y todas salían con el mismo diseño (revisión R11).
@@ -84,13 +86,16 @@ export default function CarritoPage() {
 
   // C-102: con sesión, el servidor cotiza los productos con ofertas y cupón (la entrega se elige en el pago).
   // Las gift cards se compran aparte y no pasan por aquí: con una en el carrito se muestra el cálculo local.
+  // C-153: se cotiza como envío nacional (si la tienda lo ofrece) para traer el embalaje de este paquete; el total
+  // del carrito sigue siendo solo el de los productos.
+  const enviosNacionales = settings ? settings.deliveryEnabled !== false : false;
   const quoteBody = useMemo(
     () => items.some((item) => item.id.startsWith('gift-card-'))
       ? null
-      : JSON.stringify({ items: items.map(toOrderItem), deliveryMethod: 'PICKUP', couponCode }),
-    [items, couponCode]
+      : JSON.stringify({ items: items.map(toOrderItem), deliveryMethod: enviosNacionales ? 'SHIPPING' : 'PICKUP', couponCode }),
+    [items, couponCode, enviosNacionales]
   );
-  const [quote, setQuote] = useState<{ key: string; subtotalUSD: number; discountUSD: number; totalUSD: number; fisicosUSD: number; coupon: { applied: boolean; message: string } | null; errors: string[] } | null>(null);
+  const [quote, setQuote] = useState<{ key: string; subtotalUSD: number; discountUSD: number; totalUSD: number; fisicosUSD: number; coupon: { applied: boolean; message: string } | null; errors: string[]; envio: ShippingBreakdown | null } | null>(null);
   useEffect(() => {
     if (status !== 'authenticated' || !quoteBody || items.length === 0) return;
     const controller = new AbortController();
@@ -107,6 +112,7 @@ export default function CarritoPage() {
             fisicosUSD: c.physical ? Math.round((c.physical.subtotalUSD - c.physical.discountUSD) * 100) / 100 : 0,
             // Productos que ya no se pueden comprar (sin stock, sin publicar, monto digital que ya no existe): no suman al total
             errors: Array.isArray(data.errors) ? data.errors : [],
+            envio: c.shipping ?? null,
           });
         })
         .catch(() => { });
@@ -128,7 +134,30 @@ export default function CarritoPage() {
   const iva = settings?.taxEnabled ? ivaIncluido(gravado, Number(settings.taxPercent) || 0) : null;
   // C-106: el total aún no lleva la entrega; se avisa aquí para que el embalaje del checkout no sorprenda
   const hasPhysical = items.some(item => item.productType !== 'DIGITAL');
-  const envioGratis = items.some(item => item.freeShipping && item.productType !== 'DIGITAL');
+  // C-153: el embalaje de este paquete, antes de llegar al pago. Con sesión es el del servidor; sin sesión, el mismo
+  // cálculo con los datos del carrito. Sale de las medidas de los productos y de los empaques de la tienda.
+  const envioLocal = useMemo(
+    () => calculateOrder(
+      items.filter((item) => !item.id.startsWith('gift-card-')).map((item) => ({
+        productId: parseCartItemId(item).productId,
+        name: item.name,
+        productType: item.productType === 'DIGITAL' ? 'DIGITAL' as const : 'PHYSICAL' as const,
+        unitPriceUSD: item.price,
+        quantity: item.quantity,
+        weightKg: item.weightKg ?? null,
+        dimensions: item.dimensions ?? null,
+        isConsolidable: item.isConsolidable !== false,
+        shippingCostUSD: 0,
+        freeShipping: item.productType !== 'DIGITAL' && item.freeShipping === true,
+        discountPercent: 0,
+      })),
+      toPricingSettings(settings),
+      'SHIPPING'
+    ).shipping,
+    [items, settings]
+  );
+  const envio = server?.envio ?? envioLocal;
+  const empaque = envio.packaging ? resumenEmbalaje(envio.packaging) : null;
   // C-115: lo que impide pagar se avisa aquí, no recién en el checkout: productos que el servidor rechaza y
   // mínimo o máximo de compra. Sin sesión se compara con el total local; con sesión, con el del servidor.
   // Aún no hay entrega elegida: para el máximo, el total de productos es lo mínimo que se cobrará.
@@ -433,10 +462,22 @@ export default function CarritoPage() {
                     )}
                     {hasPhysical && (
                       <p className="mt-2 text-xs text-muted">
-                        {envioGratis
-                          ? 'Tu pedido tiene envío gratis: la tienda paga el embalaje y el flete.'
-                          : 'Aún sin la entrega: la eliges en el pago. Por ZOOM o MRW pagas aquí solo el embalaje, y el flete se lo pagas a la empresa al retirar.'}
+                        {!enviosNacionales
+                          ? 'Aún sin la entrega: la eliges en el pago.'
+                          : envio.isFreeShipping
+                            ? 'Tu pedido tiene envío gratis: la tienda paga el embalaje y el flete.'
+                            : envio.packagingFee > 0
+                              ? `Aún sin la entrega: la eliges en el pago. Por ZOOM o MRW pagas aquí solo el embalaje (${formatUSD(envio.packagingFee)}${empaque ? `, ${empaque.toLowerCase()}` : ''}), y el flete se lo pagas a la empresa al retirar.`
+                              : 'Aún sin la entrega: la eliges en el pago. Por ZOOM o MRW el embalaje es gratis en este pedido, y el flete se lo pagas a la empresa al retirar.'}
                       </p>
+                    )}
+                    {hasPhysical && enviosNacionales && (
+                      <AvisosEmbalaje
+                        envio={envio}
+                        umbralEmbalaje={settings?.freePackagingThresholdUSD ?? null}
+                        umbralEnvio={settings?.freeDeliveryThresholdUSD ?? null}
+                        className="mt-3"
+                      />
                     )}
                   </div>
                 </div>

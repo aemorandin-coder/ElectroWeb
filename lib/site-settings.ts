@@ -4,6 +4,7 @@
 import { cache } from 'react';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { reglasEmbalajeActivas, type ReglasEmbalaje } from '@/lib/embalaje';
 
 export interface SiteSettings {
     companyName: string;
@@ -128,6 +129,9 @@ export interface PublicSettings {
     shippingCostPerKg: number;
     minConsolidatedShipping: number;
     packagingFeeUSD: number;
+    /** C-153: empaques de la tienda si el embalaje se calcula por paquete (`null`: precio único) y el monto del embalaje gratis */
+    packagingRules: ReglasEmbalaje | null;
+    freePackagingThresholdUSD: number | null;
     /** C-146: los precios incluyen IVA y con qué porcentaje (0 = no se muestra) */
     taxEnabled: boolean;
     taxPercent: number;
@@ -187,7 +191,7 @@ const PUBLIC_SETTINGS_SELECT = {
     socialMedia: true, businessHours: true,
     primaryCurrency: true, exchangeRateVES: true, exchangeRateEUR: true,
     deliveryEnabled: true, localDeliveryEnabled: true, deliveryFeeUSD: true, freeDeliveryThresholdUSD: true, shippingCostPerKg: true,
-    minConsolidatedShipping: true, packagingFeeUSD: true, taxEnabled: true, taxPercent: true, taxDigitalProducts: true,
+    minConsolidatedShipping: true, packagingFeeUSD: true, packagingRules: true, freePackagingThresholdUSD: true, taxEnabled: true, taxPercent: true, taxDigitalProducts: true,
     pickupEnabled: true, pickupAddress: true, pickupInstructions: true,
     minOrderAmountUSD: true, maxOrderAmountUSD: true,
     heroVideoEnabled: true, heroVideoUrl: true, heroVideoTitle: true, heroVideoDescription: true,
@@ -212,7 +216,7 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     socialMedia: [], businessHours: null,
     primaryCurrency: 'USD', exchangeRateVES: 36.5, exchangeRateEUR: 0.92,
     deliveryEnabled: false, localDeliveryEnabled: false, deliveryFeeUSD: 0, freeDeliveryThresholdUSD: null, shippingCostPerKg: 2,
-    minConsolidatedShipping: 3, packagingFeeUSD: 2.5, taxEnabled: false, taxPercent: 0, taxDigital: false,
+    minConsolidatedShipping: 3, packagingFeeUSD: 2.5, packagingRules: null, freePackagingThresholdUSD: null, taxEnabled: false, taxPercent: 0, taxDigital: false,
     pickupEnabled: false, pickupAddress: null, pickupInstructions: null,
     minOrderAmountUSD: null, maxOrderAmountUSD: null,
     heroVideoEnabled: false, heroVideoUrl: null, heroVideoTitle: null, heroVideoDescription: null,
@@ -255,6 +259,8 @@ function toPublicSettings(row: PublicSettingsRow): PublicSettings {
         shippingCostPerKg: num(row.shippingCostPerKg, 2),
         minConsolidatedShipping: num(row.minConsolidatedShipping, 3),
         packagingFeeUSD: num(row.packagingFeeUSD, 2.5),
+        packagingRules: reglasEmbalajeActivas(row.packagingRules),
+        freePackagingThresholdUSD: row.freePackagingThresholdUSD ? Number(row.freePackagingThresholdUSD) : null,
         taxEnabled: Boolean(row.taxEnabled) && num(row.taxPercent, 0) > 0,
         taxPercent: num(row.taxPercent, 0),
         taxDigital: Boolean(taxDigitalProducts),

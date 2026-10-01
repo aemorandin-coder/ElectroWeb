@@ -2,6 +2,7 @@
 // la validación real está en el servidor (lib/validations/settings.ts).
 
 import type { IconType } from 'react-icons';
+import { leerReglasEmbalaje, type Empaque } from '@/lib/embalaje';
 import { FiBriefcase, FiDollarSign, FiMail, FiSearch, FiShield, FiShoppingBag, FiTruck } from 'react-icons/fi';
 
 export const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
@@ -12,6 +13,14 @@ export const DAY_LABELS: Record<WeekDay, string> = {
   monday: 'Lunes', tuesday: 'Martes', wednesday: 'Miércoles', thursday: 'Jueves',
   friday: 'Viernes', saturday: 'Sábado', sunday: 'Domingo',
 };
+
+/** C-153: empaques de la tienda, con los números como texto mientras se escriben */
+export interface EmpaqueForm { id: string; nombre: string; largoCm: string; anchoCm: string; altoCm: string; precioUSD: string }
+export interface PackagingRulesForm { activo: boolean; bultoAparteUSD: string; empaques: EmpaqueForm[] }
+
+export const empaqueAForm = (e: Empaque): EmpaqueForm => ({
+  id: e.id, nombre: e.nombre, largoCm: String(e.largoCm), anchoCm: String(e.anchoCm), altoCm: String(e.altoCm), precioUSD: String(e.precioUSD),
+});
 
 /** Números como texto: el campo puede quedar vacío mientras se escribe. */
 export interface SettingsForm {
@@ -27,6 +36,7 @@ export interface SettingsForm {
 
   deliveryEnabled: boolean; packagingFeeUSD: string;
   freeDeliveryThresholdUSD: string;
+  freePackagingThresholdUSD: string; packagingRules: PackagingRulesForm;
   localDeliveryEnabled: boolean; deliveryFeeUSD: string;
   pickupEnabled: boolean; pickupAddress: string; pickupInstructions: string;
 
@@ -71,7 +81,7 @@ export const SECTIONS: { id: SectionId; label: string; description: string; icon
   {
     id: 'envios', label: 'Envíos y retiro', icon: FiTruck,
     description: 'Cómo reciben los clientes sus productos físicos y cuánto cuesta el envío.',
-    fields: ['deliveryEnabled', 'packagingFeeUSD', 'freeDeliveryThresholdUSD', 'localDeliveryEnabled', 'deliveryFeeUSD',
+    fields: ['deliveryEnabled', 'packagingFeeUSD', 'freeDeliveryThresholdUSD', 'freePackagingThresholdUSD', 'packagingRules', 'localDeliveryEnabled', 'deliveryFeeUSD',
       'pickupEnabled', 'pickupAddress', 'pickupInstructions'],
   },
   {
@@ -140,6 +150,11 @@ function toHours(value: unknown): Record<WeekDay, DayHours> {
   ) as Record<WeekDay, DayHours>;
 }
 
+function toPackagingRules(value: unknown): PackagingRulesForm {
+  const reglas = leerReglasEmbalaje(value);
+  return { activo: reglas.activo, bultoAparteUSD: String(reglas.bultoAparteUSD), empaques: reglas.empaques.map(empaqueAForm) };
+}
+
 /** Respuesta de GET /api/settings → formulario. */
 export function toSettingsForm(data: Record<string, unknown>): SettingsForm {
   return {
@@ -157,6 +172,7 @@ export function toSettingsForm(data: Record<string, unknown>): SettingsForm {
 
     deliveryEnabled: bool(data.deliveryEnabled, true), packagingFeeUSD: num(data.packagingFeeUSD, '2.5'),
     freeDeliveryThresholdUSD: num(data.freeDeliveryThresholdUSD),
+    freePackagingThresholdUSD: num(data.freePackagingThresholdUSD), packagingRules: toPackagingRules(data.packagingRules),
     localDeliveryEnabled: bool(data.localDeliveryEnabled, false), deliveryFeeUSD: num(data.deliveryFeeUSD, '0'),
     pickupEnabled: bool(data.pickupEnabled, true), pickupAddress: text(data.pickupAddress), pickupInstructions: text(data.pickupInstructions),
 

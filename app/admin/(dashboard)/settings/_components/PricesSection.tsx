@@ -171,7 +171,9 @@ export default function PricesSection({ form, set, errors, savedAutoExchangeRate
           <p className={`${adminNotice('neutral')} mt-4 tabular-nums`}>
             Un carrito con <strong className="text-ink">{formatUSD(sampleProducts)}</strong> en productos ve «Te faltan {formatUSD(roundMoney(minOrder - sampleProducts))}» y no puede pagar.
             Con <strong className="text-ink">{formatUSD(minOrder)}</strong> en productos ya compra
-            {packagingFee > 0 ? <>; si pide envío por ZOOM o MRW paga además {formatUSD(packagingFee)} de embalaje, y el flete al retirar.</> : '.'}
+            {form.packagingRules.activo
+              ? <>; si pide envío por ZOOM o MRW paga además el embalaje de su paquete, y el flete al retirar.</>
+              : packagingFee > 0 ? <>; si pide envío por ZOOM o MRW paga además {formatUSD(packagingFee)} de embalaje, y el flete al retirar.</> : '.'}
           </p>
         )}
       </SettingsCard>

@@ -632,6 +632,8 @@ model Order {
   // C-100: destino y destinatario que eligió el cliente en el checkout
   shippingMode         String?  // OFFICE (retira en oficina) o DOOR (puerta a puerta)
   shippingPaidBy       String?  // CUSTOMER (cobro a destino) o STORE (envío gratis)
+  // C-153: cómo se despacha (JSON: piezas, peso y qué va en cada empaque). Copia del momento de la compra
+  packagingPlan        String?
   shippingState        String?
   shippingCity         String?
   courierCityCode      String?  // Código de ciudad de ZOOM
@@ -819,6 +821,10 @@ model CompanySettings {
   shippingCostPerKg Decimal? @default(2)     // Cost per kg for consolidable products
   minConsolidatedShipping Decimal? @default(3) // Minimum shipping for consolidated items
   packagingFeeUSD Decimal? @default(2.5)     // Fixed packaging/handling fee
+  // C-153: empaques de la tienda (JSON: {activo, empaques[], bultoAparteUSD}). Vacío o apagado: se cobra packagingFeeUSD
+  packagingRules String?
+  // C-153: compra física desde la que el embalaje no se cobra (el flete sigue con cobro a destino)
+  freePackagingThresholdUSD Decimal?
   pickupEnabled Boolean @default(true)
   pickupAddress String?
   pickupInstructions String?

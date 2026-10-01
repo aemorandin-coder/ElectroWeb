@@ -1,9 +1,28 @@
-# Punto de partida (actualizado 2026-09-30, cierre de C-141)
+# Punto de partida (actualizado 2026-09-30, cierre de C-141 y C-139)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-141** (merge de `claude/C-141`).
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-141 y C-139**.
 - **Producción:** C-138 confirmado (`d53d5b4`, con los dos crons). **Falta el deploy de C-141** (§00000), que es urgente por lo que cambia: al terminar, el panel pide configurar los dos pasos.
 - Andrés dijo el 30/09 que las pruebas de los deploys del 30/09 salieron "excelentes", con algunos ajustes para más adelante. **No confirmó expresamente el deploy de C-140**: los pasos de C-141 sirven igual si ese deploy no se hizo (§00000).
-- **Sigue C-139** (Puntos ES), con una regla nueva de Andrés sobre las cuentas que se cierran (§3).
+- **C-139** (Puntos ES) hecha y en `main`: va en el mismo deploy que C-141 y no cambia la base (§000000).
+- **Falta una decisión de Andrés:** publicar ya, o con C-120, los términos de los Puntos ES con la regla del cierre de cuenta (§000000).
+- **Sigue:** la revisión final con Andrés (§3).
+
+## 000000. C-139 · Página de Puntos ES: en `main`, va con el deploy de C-141
+Detalle y pruebas en `estado/C-139.md`. **Sin cambio de base.**
+- **Puntos ES** (panel del cliente): historial completo con "Cargar más", recargas por confirmar y rechazadas claras (con el motivo), enlace al pedido en cada compra o devolución y "Cómo funcionan".
+- **Eliminar la cuenta:** si el cliente tiene Puntos ES, el modal dice cuántos, que se pierden y le ofrece "Ver productos". Tiene que marcar que lo entiende. El equipo recibe el monto y la aceptación.
+- **`/terminos`** (sección 3.1) dice que los Puntos ES se pierden al cerrar la cuenta.
+- La API de movimientos ya no devuelve datos internos (antes salía `metadata`).
+
+**Pruebas después del deploy:**
+1. Puntos ES en el teléfono: el historial, "Cargar más" y los filtros. Tocar "Ver el pedido" en una compra.
+2. Una recarga de prueba sin pagar: aparece "Por confirmar" y el aviso arriba. Rechazarla desde Transacciones con un motivo: el cliente ve "Rechazada" y el motivo.
+3. Con una cuenta de prueba con Puntos ES: Mi perfil → Seguridad → "Eliminar". El modal dice cuántos tiene y no deja seguir sin marcar la casilla. En Mensajes y Solicitudes llega con "(aceptó que los pierde al cerrar la cuenta)". Después, "Cancelar el pedido".
+4. Movimientos viejos (de antes del 30/09): deben decir "Puntos ES", nunca "saldo" ni "billetera". Si alguno se ve raro, avisar a Claude con el texto.
+
+**Decisión pendiente de Andrés:** los términos que se firman (versión 2) no dicen qué pasa con los Puntos ES al cerrar la cuenta.
+- Publicar una versión 3 obliga a todos los clientes a firmar otra vez en su próxima recarga.
+- **Recomendación de Claude:** publicarla con C-120 (la revisión legal), una sola vez. Mientras tanto la regla ya está en `/terminos`, en "Cómo funcionan" y en la casilla del cierre.
 
 ## 00000. C-141 · Equipo, roles y dos pasos: en `main`, falta el deploy
 Detalle, hallazgos y pruebas en `estado/C-141.md`.
@@ -227,12 +246,7 @@ bash scripts/deploy.sh
   - Hubo dos fallos del build: los tipos de una ruta borrada y la falta de memoria. Los dos se arreglaron en `deploy.sh` y `next.config.js`.
 
 ## 3. Qué sigue (Claude, en orden)
-1. **C-139 · Página de Puntos ES** (antes, confirmar el deploy de C-141, §00000):
-   - Historial completo con "Cargar más", recargas pendientes y rechazadas claras (con el motivo), "Cómo funcionan" con enlace a los términos y enlace al pedido en cada compra o devolución.
-   - **Regla nueva de Andrés (30/09): quien cierra su cuenta pierde sus Puntos ES; no son reembolsables.**
-     - En "Eliminar cuenta" (Mi perfil): si tiene Puntos ES, mostrar cuántos y sugerirle gastarlos en productos antes de pedir el cierre.
-     - En "Cómo funcionan" y en los términos de los Puntos ES: decir que no son reembolsables y que se pierden al cerrar la cuenta. Cambiar los términos crea una versión nueva que cada cliente firma en su próxima recarga (C-135).
-     - En el aviso al equipo de la solicitud de cierre: cuántos Puntos ES tiene esa cuenta.
+1. ~~C-141 y C-139~~: hechas (§00000 y §000000). Antes de seguir, confirmar su deploy.
 2. **Revisión final con Andrés** (`REVISION_FINAL.md`), y arreglar lo que salga. En producción:
    - Checkout: con el mínimo de compra activo, el aviso aparece antes de pagar. Una compra real con saldo y otra con Pago Móvil.
    - Una compra con cupón.
@@ -251,6 +265,7 @@ bash scripts/deploy.sh
 5. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
 6. **C-92:** desactivar clientes en vez de borrarlos. Detalle en `AUDITORIA_CLIENTES_BORRADOS.md`.
    - Falta de Andrés: las 4 consultas de diagnóstico y cancelar esas órdenes con el motivo "Prueba: cliente eliminado".
+   - Sumar (C-139): al cerrar una cuenta con Puntos ES, dejar un movimiento que anote que se perdieron (regla del 30/09).
    - Lleva una migración de `onDelete`, con su OK.
 7. **Wizard de producto** (crear y editar): rediseño paso a paso, lo que quedó de C-51.
 8. **Menores:**
@@ -259,6 +274,7 @@ bash scripts/deploy.sh
    - Ocultar el formulario de reseña a quien no puede reseñar.
    - `/terminos` y `/privacidad` como documentos editables.
    - Conservar el slug al renombrar una categoría.
+   - Borrar `POST /api/customer/balance/deduct` si las gift cards no lo necesitan: ninguna pantalla lo llama (C-139).
    - Los errores de ESLint fuera de `app`, `components`, `lib` y `contexts`: `scripts/`, `prisma/seed.ts` y `docs/plan/scripts` (`proxy.ts` quedó limpio en C-141).
 9. **ElectroStudio:** el artefacto "Flyers ElectroShop" ya se puede retirar. Si Andrés quiere pasar sus historias, se hace un importador.
 10. **Al cerrar el ciclo:** borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` de la máquina local.
@@ -334,7 +350,7 @@ bash scripts/deploy.sh
 ## 6. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto.
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
-> 2. Pregúntame si el deploy de C-141 terminó bien (§00000): si configuré mis dos pasos, si llegó el correo de invitación y qué cuentas quedaron en Equipo.
+> 2. Pregúntame si el deploy de C-141 y C-139 terminó bien (§00000 y §000000): si configuré mis dos pasos, si llegó el correo de invitación, qué cuentas quedaron en Equipo y cómo se ve la página de Puntos ES. Y qué decidí sobre los términos de los Puntos ES (§000000).
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
-> 4. Sigue con **C-139** (Puntos ES, con la regla de las cuentas que se cierran, §3). Al terminar: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
-> 5. Después: la revisión final, C-107, C-92, el wizard de producto y C-120 (`SIGUIENTE.md` §3).
+> 4. Sigue con la **revisión final** conmigo (`REVISION_FINAL.md`) y arregla lo que salga. Al terminar cada tarea: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
+> 5. Después: C-107, C-92, el wizard de producto y C-120 (`SIGUIENTE.md` §3).

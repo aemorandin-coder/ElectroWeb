@@ -5,12 +5,13 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiArchive, FiCheck, FiClock, FiCircle, FiEye, FiEyeOff, FiLogIn, FiLogOut, FiMonitor, FiSlash, FiSmartphone, FiTrash2, FiX, FiXCircle, FiKey } from 'react-icons/fi';
+import { FiAlertTriangle, FiArchive, FiCheck, FiClock, FiCircle, FiEye, FiEyeOff, FiLogIn, FiLogOut, FiMonitor, FiShoppingBag, FiSlash, FiSmartphone, FiTrash2, FiX, FiXCircle, FiKey } from 'react-icons/fi';
 import {
   adminBadge, adminDangerButton, adminError, adminInput, adminLabel, adminModalBody, adminModalFooter, adminModalHeader,
   adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPrimaryButton, adminSecondaryButton, adminIconButton,
 } from '@/lib/admin-ui';
 import { REGLAS_CONTRASENA } from '@/lib/validations/registro';
+import { formatPuntos } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
@@ -398,8 +399,18 @@ function ModalEliminar({ onCerrar, onListo }: { onCerrar: () => void; onListo: (
   const montado = useMontado();
   const [motivo, setMotivo] = useState('');
   const [enviando, setEnviando] = useState(false);
+  // C-139: los Puntos ES no son reembolsables y se pierden al cerrar la cuenta (regla de Andrés del 30/09).
+  // null = todavía no se sabe cuántos tiene; el servidor lo vuelve a revisar al enviar.
+  const [puntos, setPuntos] = useState<number | null>(null);
+  const [aceptaPerder, setAceptaPerder] = useState(false);
   useBodyScrollLock(true);
   useCajonAccesible(true, 'modal-eliminar-cuenta', onCerrar);
+  useCargarAlMontar(async () => {
+    const res = await fetch('/api/customer/balance', { cache: 'no-store' }).catch(() => null);
+    const datos = res?.ok ? await res.json().catch(() => null) : null;
+    setPuntos(Number(datos?.balance) || 0);
+  }, []);
+  const tienePuntos = (puntos ?? 0) > 0;
 
   const enviar = async () => {
     setEnviando(true);
@@ -407,10 +418,12 @@ function ModalEliminar({ onCerrar, onListo }: { onCerrar: () => void; onListo: (
       const res = await fetch('/api/customer/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'request_deletion', reason: motivo.trim() || undefined }),
+        body: JSON.stringify({ action: 'request_deletion', reason: motivo.trim() || undefined, aceptaPerderPuntos: aceptaPerder }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        // El servidor encontró Puntos ES que aquí no se habían cargado: se muestran y se pide la confirmación
+        if (data.codigo === 'PUNTOS_ES' && typeof data.puntos === 'number') setPuntos(data.puntos);
         toast.error(data.error || 'No se pudo enviar el pedido');
         return;
       }
@@ -441,8 +454,20 @@ function ModalEliminar({ onCerrar, onListo }: { onCerrar: () => void; onListo: (
         </div>
         <div className={`${adminModalBody} space-y-3 text-sm text-ink-soft`}>
           <p>Tu pedido le llega al equipo, que te escribirá a tu correo para confirmarlo antes de cerrar la cuenta.</p>
+          {tienePuntos && (
+            <div className={adminNotice('warning')}>
+              <p className="flex items-start gap-2">
+                <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>
+                  <strong>Tienes {formatPuntos(puntos ?? 0)}.</strong> No son reembolsables: si cierras tu cuenta, se pierden. Úsalos antes en productos de la tienda.
+                </span>
+              </p>
+              <Link href="/productos" className={`${adminSecondaryButton} mt-3 w-full sm:w-auto`}>
+                <FiShoppingBag className="h-4 w-4" aria-hidden="true" /> Ver productos
+              </Link>
+            </div>
+          )}
           <ul className="space-y-2">
-            <li className="flex gap-2"><FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" aria-hidden="true" /><span><strong className="text-ink">Antes, usa tus Puntos ES:</strong> no se convierten en dinero.</span></li>
             <li className="flex gap-2"><FiArchive className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><span><strong className="text-ink">Se guardan tus pedidos y recibos</strong> en los registros de la tienda, como exige la ley.</span></li>
             <li className="flex gap-2"><FiClock className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><span><strong className="text-ink">Mientras tanto</strong> puedes seguir usando tu cuenta y cancelar el pedido desde aquí.</span></li>
           </ul>
@@ -451,10 +476,16 @@ function ModalEliminar({ onCerrar, onListo }: { onCerrar: () => void; onListo: (
             <label htmlFor="motivo-eliminar" className={adminLabel}>¿Por qué te vas? <span className="font-normal text-muted">(opcional)</span></label>
             <textarea id="motivo-eliminar" value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={500} rows={3} className={`${adminInput()} h-auto py-2`} />
           </div>
+          {tienePuntos && (
+            <label className="flex cursor-pointer items-start gap-3 text-sm text-ink">
+              <input type="checkbox" checked={aceptaPerder} onChange={(e) => setAceptaPerder(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-brand-500" />
+              <span>Entiendo que al cerrar mi cuenta pierdo mis {formatPuntos(puntos ?? 0)} y que no se me devuelven en dinero.</span>
+            </label>
+          )}
         </div>
         <div className={adminModalFooter}>
           <button type="button" onClick={onCerrar} className={adminSecondaryButton}>Volver</button>
-          <button type="button" onClick={enviar} disabled={enviando} className={adminDangerButton}>
+          <button type="button" onClick={enviar} disabled={enviando || puntos === null || (tienePuntos && !aceptaPerder)} className={adminDangerButton}>
             {enviando ? 'Enviando…' : 'Pedir que eliminen mi cuenta'}
           </button>
         </div>

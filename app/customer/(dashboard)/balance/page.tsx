@@ -1,495 +1,297 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
-import { useTiempoReal } from '@/lib/realtime/hooks';
+import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiPlus, FiArrowUpRight, FiArrowDownLeft } from 'react-icons/fi';
-import RechargeModal from '@/components/modals/RechargeModalV2';
-import { formatPaymentMethod, formatTransactionStatus, isCreditTransaction } from '@/lib/format-helpers';
-import { formatUSD } from '@/lib/currency';
+import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import { FiArrowDownLeft, FiArrowUpRight, FiChevronRight, FiClock, FiDollarSign, FiInfo, FiPlus, FiRefreshCw, FiShoppingBag, FiSlash, FiXCircle } from 'react-icons/fi';
+import RechargeModal from '@/components/modals/RechargeModalV2';
+import { formatUSD } from '@/lib/currency';
+import { useTiempoReal } from '@/lib/realtime/hooks';
 import { useMontado } from '@/lib/hooks/useMontado';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import type { EstadoMovimiento, MovimientoDTO } from '@/lib/dto/movimiento';
 
-interface RawTransaction {
-  id: string;
-  type: string;
-  amount: number | string;
-  description: string;
-  createdAt: string;
-  status: string;
-  paymentMethod?: string;
-  [key: string]: unknown;
+// Puntos ES (C-139). Una sola maqueta para teléfono y escritorio (antes había dos, duplicadas, que mostraban 10 y 5
+// movimientos y nada más). Ahora: historial completo con "Cargar más", recargas por confirmar y rechazadas claras
+// (con el motivo y sin sumarlas en verde), enlace al pedido en cada compra o devolución y "Cómo funcionan".
+// Se conserva todo lo de antes: Puntos ES disponibles, recargado, usado, los filtros, "Recargar", ?recargar=1 y el
+// tiempo real (C-127).
+
+interface Resumen {
+  puntos: number;
+  recargado: number;
+  usado: number;
+  porConfirmar: { cantidad: number; monto: number };
 }
 
-interface Transaction {
-  id: string;
-  type: string;
-  amount: number;
-  description: string;
-  createdAt: string;
-  status: string;
-  paymentMethod?: string;
-}
+const FILTROS = [
+  { id: '', label: 'Todos', vacio: 'Todavía no tienes movimientos.' },
+  { id: 'RECHARGE', label: 'Recargas', vacio: 'No tienes recargas.' },
+  { id: 'PURCHASE', label: 'Compras', vacio: 'No tienes compras con Puntos ES.' },
+  { id: 'REFUND', label: 'Devoluciones', vacio: 'No tienes devoluciones.' },
+  { id: 'DEPOSIT', label: 'Abonos', vacio: 'No tienes abonos (gift cards, comisiones o ajustes de la tienda).' },
+] as const;
+type Filtro = (typeof FILTROS)[number]['id'];
 
-interface UserBalance {
-  balance: number;
-  totalRecharges: number;
-  totalSpent: number;
-  recentTransactions: Transaction[];
-}
+const ESTADOS: Record<Exclude<EstadoMovimiento, 'COMPLETADO'>, { texto: string; clase: string }> = {
+  POR_CONFIRMAR: { texto: 'Por confirmar', clase: 'bg-warning/15 text-warning-strong' },
+  RECHAZADO: { texto: 'Rechazada', clase: 'bg-deal-bg text-deal' },
+  NO_COMPLETADO: { texto: 'No completada', clase: 'bg-surface text-ink-soft' },
+};
 
-// ============================================
-// MOBILE-ONLY SKELETON COMPONENTS
-// Premium loading states for mobile
-// ============================================
-const MobileBalanceSkeleton = () => (
-  <div className="lg:hidden space-y-4 p-4">
-    {/* Hero Balance Skeleton */}
-    <div className="relative overflow-hidden rounded-2xl bg-brand-950 p-6">
-      <div className="animate-pulse">
-        <div className="h-3 w-20 bg-white/20 rounded-full mb-3" />
-        <div className="h-10 w-40 bg-white/30 rounded-lg mb-4" />
-        <div className="h-12 w-full bg-white/20 rounded-xl" />
+const fecha = (iso: string) => new Date(iso).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+function Movimiento({ m }: { m: MovimientoDTO }) {
+  const hecho = m.estado === 'COMPLETADO';
+  const Icono = m.estado === 'POR_CONFIRMAR' ? FiClock : m.estado === 'RECHAZADO' ? FiXCircle : m.estado === 'NO_COMPLETADO' ? FiSlash : m.entra ? FiArrowDownLeft : FiArrowUpRight;
+  const color = !hecho ? 'bg-surface text-muted' : m.entra ? 'bg-success-strong/10 text-success-strong' : 'bg-brand-50 text-brand-600';
+  return (
+    <li className="flex gap-3 px-4 py-3">
+      <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${color}`} aria-hidden="true">
+        <Icono className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-3">
+          <p className="min-w-0 break-words text-sm font-semibold text-ink">{m.descripcion}</p>
+          {/* Solo lo completado suma o resta: una recarga por confirmar o rechazada no se pinta como Puntos ES ganados */}
+          <p className={`shrink-0 text-sm font-bold ${!hecho ? 'text-muted' : m.entra ? 'text-success-strong' : 'text-ink'} ${m.estado === 'RECHAZADO' || m.estado === 'NO_COMPLETADO' ? 'line-through' : ''}`}>
+            {hecho ? (m.entra ? '+' : '-') : ''}{formatUSD(m.monto)}
+          </p>
+        </div>
+        <p className="mt-0.5 text-xs text-muted">
+          {fecha(m.fecha)}
+          {m.metodo && <> · {m.metodo}</>}
+          {m.referencia && <> · Ref. {m.referencia}</>}
+        </p>
+        {m.estado !== 'COMPLETADO' && (
+          <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-soft">
+            <span className={`inline-flex items-center rounded-full px-2 py-0.5 font-semibold ${ESTADOS[m.estado].clase}`}>{ESTADOS[m.estado].texto}</span>
+            {m.estado === 'POR_CONFIRMAR' && <span>La tienda está confirmando tu pago. Te avisamos cuando tus Puntos ES estén disponibles.</span>}
+            {m.estado === 'RECHAZADO' && <span>{m.motivo ? <>Motivo: {m.motivo}</> : 'No pudimos confirmar este pago. Escríbenos si crees que es un error.'}</span>}
+            {m.estado === 'NO_COMPLETADO' && <span>Cerraste la recarga antes de terminarla. No se sumó nada.</span>}
+          </p>
+        )}
+        {m.pedido && (
+          <Link href={`/customer/orders?orden=${m.pedido.id}`} className="mt-1.5 inline-flex min-h-8 items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700">
+            Ver el pedido {m.pedido.numero}
+            <FiChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
+        )}
       </div>
-    </div>
-
-    {/* Stats Cards Skeleton */}
-    <div className="grid grid-cols-2 gap-3">
-      {[1, 2].map((i) => (
-        <div key={i} className="rounded-xl bg-white border border-line p-4 animate-pulse">
-          <div className="h-3 w-16 bg-line rounded-full mb-2" />
-          <div className="h-6 w-24 bg-surface rounded-lg" />
-        </div>
-      ))}
-    </div>
-
-    {/* Transactions Skeleton */}
-    <div className="rounded-xl bg-white border border-line p-4">
-      <div className="h-4 w-24 bg-line rounded-full mb-4" />
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center gap-3 py-3 border-b border-line last:border-0 animate-pulse">
-          <div className="w-10 h-10 bg-surface rounded-xl" />
-          <div className="flex-1">
-            <div className="h-3 w-28 bg-line rounded-full mb-2" />
-            <div className="h-2 w-20 bg-surface rounded-full" />
-          </div>
-          <div className="h-4 w-16 bg-line rounded-full" />
-        </div>
-      ))}
-    </div>
-  </div>
-);
+    </li>
+  );
+}
 
 export default function BalancePage() {
-  const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [showRechargeModal, setShowRechargeModal] = useState(false);
-  const [filterType, setFilterType] = useState<string>('ALL');
-  const mounted = useMontado();
-  const [balanceAnimated, setBalanceAnimated] = useState(false);
+  const [resumen, setResumen] = useState<Resumen | null>(null);
+  const [movimientos, setMovimientos] = useState<MovimientoDTO[]>([]);
+  const [siguiente, setSiguiente] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState<Filtro>('');
+  const [cargando, setCargando] = useState(true);
+  const [cargandoMas, setCargandoMas] = useState(false);
+  const [error, setError] = useState(false);
+  const [recargar, setRecargar] = useState(false);
+  const montado = useMontado();
+  // Cambiar de filtro con una carga en camino: solo vale la respuesta del último pedido
+  const pedido = useRef(0);
 
-  useEffect(() => {
-    fetchBalance();
-  }, []);
+  /** Primera página del filtro: trae también el resumen. `silencioso` no borra la lista mientras llega (tiempo real). */
+  async function cargar(tipo: Filtro, silencioso = false) {
+    const turno = ++pedido.current;
+    if (!silencioso) setCargando(true);
+    try {
+      const res = await fetch(`/api/customer/transactions${tipo ? `?tipo=${tipo}` : ''}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(String(res.status));
+      const datos = await res.json();
+      if (turno !== pedido.current) return;
+      setResumen(datos.resumen);
+      setMovimientos(datos.movimientos);
+      setSiguiente(datos.siguiente);
+      setError(false);
+    } catch {
+      if (turno !== pedido.current) return;
+      setError(true);
+      if (!silencioso) toast.error('No se pudieron cargar tus Puntos ES');
+    } finally {
+      if (turno === pedido.current) setCargando(false);
+    }
+  }
+
+  async function cargarMas() {
+    if (!siguiente || cargandoMas) return;
+    const turno = pedido.current;
+    setCargandoMas(true);
+    try {
+      const res = await fetch(`/api/customer/transactions?cursor=${siguiente}${filtro ? `&tipo=${filtro}` : ''}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(String(res.status));
+      const datos = await res.json();
+      if (turno !== pedido.current) return;
+      // Sin repetidos: si entró un movimiento nuevo mientras tanto, las páginas se corren
+      setMovimientos((antes) => [...antes, ...(datos.movimientos as MovimientoDTO[]).filter((m) => !antes.some((a) => a.id === m.id))]);
+      setSiguiente(datos.siguiente);
+    } catch {
+      toast.error('No se pudieron cargar más movimientos');
+    } finally {
+      setCargandoMas(false);
+    }
+  }
+
+  useCargarAlMontar(() => cargar(filtro), [filtro]);
 
   // C-128: "Recargar" del inicio llega con ?recargar=1 y abre el modal directo
   useCargarAlMontar(() => {
-    if (new URLSearchParams(window.location.search).get('recargar') === '1') setShowRechargeModal(true);
+    if (new URLSearchParams(window.location.search).get('recargar') === '1') setRecargar(true);
   });
 
-  // Trigger balance animation after data loads
-  useEffect(() => {
-    if (userBalance && !balanceAnimated) {
-      const timer = setTimeout(() => setBalanceAnimated(true), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [userBalance, balanceAnimated]);
-
-  async function fetchBalance() {
-    try {
-      const response = await fetch('/api/customer/balance');
-      if (response.ok) {
-        const data = await response.json();
-        // Convert Decimal fields to numbers
-        setUserBalance({
-          balance: Number(data.balance || 0),
-          totalRecharges: Number(data.totalRecharges || 0),
-          totalSpent: Number(data.totalSpent || 0),
-          recentTransactions: (data.recentTransactions || []).map((t: RawTransaction) => ({
-            ...t,
-            amount: Number(t.amount)
-          }))
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching balance:', error);
-      toast.error('No se pudieron cargar tus Puntos ES');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // C-127: cuando el equipo aprueba o rechaza una recarga (o el banco la confirma), el saldo se actualiza solo
+  // C-127: cuando el equipo aprueba o rechaza una recarga (o el banco la confirma), la página se actualiza sola
   useTiempoReal((evento) => {
     if (evento.tipo !== 'payment:verified' || evento.contexto !== 'RECHARGE') return;
-    if (evento.transactionId && !showRechargeModal) toast.success(evento.aprobado ? 'Tu recarga fue aprobada: tus Puntos ES ya están disponibles.' : 'Tu recarga fue rechazada. Revisa el motivo en tus movimientos.');
-    void fetchBalance();
-  }, { onReconectar: () => void fetchBalance() });
+    if (evento.transactionId && !recargar) toast.success(evento.aprobado ? 'Tu recarga fue aprobada: tus Puntos ES ya están disponibles.' : 'Tu recarga fue rechazada. Revisa el motivo en tus movimientos.');
+    void cargar(filtro, true);
+  }, { onReconectar: () => void cargar(filtro, true) });
 
-  const getTransactionIcon = (type: string) => {
-    return isCreditTransaction(type) ? <FiTrendingUp className="w-4 h-4 lg:w-5 lg:h-5" /> : <FiTrendingDown className="w-4 h-4 lg:w-5 lg:h-5" />;
-  };
-
-  const getTransactionColor = (type: string) => {
-    return isCreditTransaction(type) ? 'text-success-strong bg-success-strong/10' : 'text-deal bg-deal-bg';
-  };
-
-  const filteredTransactions = filterType === 'ALL'
-    ? userBalance?.recentTransactions || []
-    : (userBalance?.recentTransactions || []).filter(t => t.type === filterType);
-
-  // ============================================
-  // DESKTOP LOADING STATE (unchanged)
-  // ============================================
-  if (loading) {
-    return (
-      <>
-        {/* Mobile skeleton */}
-        <MobileBalanceSkeleton />
-
-        {/* Desktop loading - unchanged */}
-        <div className="hidden lg:flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-brand-500"></div>
-        </div>
-      </>
-    );
-  }
+  const actual = FILTROS.find((f) => f.id === filtro) ?? FILTROS[0];
+  const pendientes = resumen?.porConfirmar.cantidad ?? 0;
 
   return (
-    <>
-      {/* ============================================
-          MOBILE VIEW - PREMIUM ANIMATED DESIGN
-          Epic animations for Full HD+ / QHD+ devices
-          ============================================ */}
-      <div className="lg:hidden overflow-y-auto h-full space-y-4">
-        {/* ========================================
-            ANIMATED HERO BALANCE - Premium Effects
-            ======================================== */}
-        <div className="relative rounded-2xl bg-brand-600 p-4 text-white overflow-hidden">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
-              <FiDollarSign className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="text-white/80 text-xs font-medium tracking-wide uppercase">Puntos ES disponibles</span>
-          </div>
-
-          <div className="mb-3">
-            <h1 className="text-4xl font-bold text-white tracking-tight">
-              {formatUSD(userBalance?.balance || 0)} <span className="text-base font-semibold text-white/80">Puntos ES</span>
+    <div className="space-y-4 pb-24 lg:pb-6">
+      <header className="rounded-2xl bg-brand-600 p-4 text-white lg:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="flex items-center gap-2 text-sm font-semibold text-white/80">
+              <FiDollarSign className="h-4 w-4" aria-hidden="true" />
+              Puntos ES disponibles
             </h1>
-          </div>
-
-          {/* Stats Cards Row */}
-          <div className="flex gap-2 mb-3">
-            {/* Recargado */}
-            <div className="flex-1 bg-white/15 rounded-lg p-2 text-center border border-white/20">
-              <div className="flex items-center justify-center gap-1 mb-0.5">
-                <FiArrowDownLeft className="w-3 h-3 text-white" />
-                <span className="text-white/80 text-xs uppercase font-bold">Recargado</span>
-              </div>
-              <p className="text-white font-bold text-sm">{formatUSD(userBalance?.totalRecharges || 0)}</p>
-            </div>
-
-            {/* Gastado */}
-            <div className="flex-1 bg-white/15 rounded-lg p-2 text-center border border-white/20">
-              <div className="flex items-center justify-center gap-1 mb-0.5">
-                <FiArrowUpRight className="w-3 h-3 text-white" />
-                <span className="text-white/80 text-xs uppercase font-bold">Gastado</span>
-              </div>
-              <p className="text-white font-bold text-sm">{formatUSD(userBalance?.totalSpent || 0)}</p>
-            </div>
-          </div>
-
-          {/* CTA Button */}
-          <button
-            onClick={() => setShowRechargeModal(true)}
-            className="w-full py-3 rounded-xl font-bold text-sm bg-white text-brand-700 shadow-sm flex items-center justify-center gap-2 hover:bg-surface active:scale-[0.98] transition-all"
-          >
-            <FiPlus className="w-4 h-4" />
-            Recargar Puntos ES
-          </button>
-        </div>
-
-        {/* TRANSACTIONS */}
-        <div className="pt-3 pb-20">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <span className="text-xs font-bold text-ink">Movimientos</span>
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                { value: 'ALL', label: 'Todos' },
-                { value: 'RECHARGE', label: 'Recargas' },
-                { value: 'PURCHASE', label: 'Compras' },
-                { value: 'REFUND', label: 'Reembolsos' },
-              ].map((filter) => (
-                <button
-                  key={filter.value}
-                  onClick={() => setFilterType(filter.value)}
-                  className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all ${filterType === filter.value
-                    ? 'bg-brand-500 text-white shadow-sm'
-                    : 'bg-surface text-muted hover:bg-line border border-line'
-                    }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Transactions List */}
-          {filteredTransactions.length > 0 ? (
-            <div className="space-y-1">
-              {filteredTransactions.slice(0, 10).map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="bg-white rounded-lg p-2 border border-line shadow-sm"
-                >
-                  <div className="flex items-center gap-2">
-                    {/* Icon */}
-                    <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${isCreditTransaction(transaction.type)
-                      ? 'bg-success-strong/10 text-success-strong'
-                      : 'bg-deal-bg text-deal'
-                      }`}>
-                      {isCreditTransaction(transaction.type)
-                        ? <FiArrowDownLeft className="w-3 h-3" />
-                        : <FiArrowUpRight className="w-3 h-3" />
-                      }
-                    </div>
-
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-ink text-xs whitespace-nowrap overflow-hidden text-ellipsis">
-                        {transaction.description}
-                      </p>
-                      <p className="text-xs text-muted">
-                        {new Date(transaction.createdAt).toLocaleDateString('es-ES', {
-                          day: 'numeric',
-                          month: 'short'
-                        })}
-                      </p>
-                    </div>
-
-                    {/* Amount */}
-                    <span className={`text-xs font-bold flex-shrink-0 ${isCreditTransaction(transaction.type) ? 'text-success-strong' : 'text-ink'}`}>
-                      {isCreditTransaction(transaction.type) ? '+' : '-'}{formatUSD(transaction.amount)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            /* Empty State */
-            <div className="text-center py-8">
-              <div className="w-12 h-12 mx-auto mb-2 bg-brand-50 rounded-full flex items-center justify-center">
-                <FiDollarSign className="w-6 h-6 text-brand-500" />
-              </div>
-              <p className="text-xs font-bold text-ink mb-1">Sin movimientos</p>
-              <p className="text-xs text-muted mb-3">
-                {filterType === 'ALL' ? 'Aún no tienes transacciones' : 'Sin resultados'}
+            {resumen ? (
+              <p className="mt-1 text-4xl font-bold tracking-tight">
+                {formatUSD(resumen.puntos)} <span className="text-base font-semibold text-white/80">Puntos ES</span>
               </p>
-              <button
-                onClick={() => setShowRechargeModal(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-500 text-white text-xs font-bold rounded-lg hover:bg-brand-600 transition-colors shadow-sm"
-              >
-                <FiPlus className="w-3.5 h-3.5" />
-                Recargar
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ============================================
-          DESKTOP VIEW - COMPLETELY UNCHANGED
-          Only shows on screens >= 1024px
-          ============================================ */}
-      <div className="hidden lg:block space-y-2 lg:space-y-3 overflow-y-auto h-full">
-        {/* Header */}
-        <div className="bg-brand-600 rounded-xl p-3 lg:p-4 text-white shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 lg:gap-0">
-            <div>
-              <div className="flex items-center gap-2 mb-0.5 lg:mb-1">
-                <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-white/20 flex items-center justify-center">
-                  <FiDollarSign className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-white" />
-                </div>
-                <h1 className="text-lg lg:text-xl font-bold">Puntos ES</h1>
-              </div>
-              <p className="text-white/80 text-xs lg:text-sm hidden sm:block">Tus Puntos ES para comprar en la tienda y sus recargas</p>
-            </div>
-            <button
-              onClick={() => setShowRechargeModal(true)}
-              className="px-3 lg:px-4 py-2 bg-white text-brand-600 font-bold rounded-lg hover:bg-surface transition-all flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base w-full sm:w-auto"
-            >
-              <FiPlus className="w-4 h-4" />
-              <span className="sm:hidden">Recargar</span>
-              <span className="hidden sm:inline">Recargar Puntos ES</span>
+            ) : (
+              <div className="mt-2 h-10 w-44 animate-pulse rounded-lg bg-white/20" role="status" aria-label="Cargando" />
+            )}
+            <p className="mt-2 text-sm text-white/80">
+              {resumen ? <>Recargado {formatUSD(resumen.recargado)} · Usado {formatUSD(resumen.usado)}</> : 'Tus Puntos ES para comprar en la tienda.'}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link href="/productos" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/40 px-5 text-sm font-semibold text-white hover:bg-white/10">
+              <FiShoppingBag className="h-4 w-4" aria-hidden="true" />
+              Ir a la tienda
+            </Link>
+            <button type="button" onClick={() => setRecargar(true)} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-brand-700 hover:bg-surface">
+              <FiPlus className="h-4 w-4" aria-hidden="true" />
+              Recargar Puntos ES
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Balance Cards */}
-        <div className="grid grid-cols-3 gap-2 lg:gap-3">
-          <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-line shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
-            <p className="text-xs font-bold text-muted uppercase tracking-widest mb-1">Puntos ES</p>
-            <div className="flex items-center justify-center w-full overflow-hidden">
-              <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap">
-                {formatUSD(userBalance?.balance || 0)} <span className="text-sm font-semibold text-ink-soft">Puntos ES</span>
-              </span>
-            </div>
-            <div className="mt-1 w-6 h-1 bg-success-strong rounded-full opacity-20" />
-          </div>
+      {pendientes > 0 && resumen && (
+        <p className="flex items-start gap-2 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning-strong" role="status">
+          <FiClock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>
+            <strong>{pendientes === 1 ? 'Tienes 1 recarga por confirmar' : `Tienes ${pendientes} recargas por confirmar`}</strong> ({formatUSD(resumen.porConfirmar.monto)}).
+            {' '}Todavía no están en tus Puntos ES: la tienda confirma el pago y te avisa.
+          </span>
+        </p>
+      )}
 
-          <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-line shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
-            <p className="text-xs font-bold text-muted uppercase tracking-widest mb-1">Total</p>
-            <div className="flex items-center justify-center w-full overflow-hidden">
-              <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap">
-                {formatUSD(userBalance?.totalRecharges || 0)}
-              </span>
-            </div>
-            <div className="mt-1 w-6 h-1 bg-brand-500 rounded-full opacity-20" />
-          </div>
-
-          <div className="bg-white rounded-xl p-2.5 lg:p-3 border border-line shadow-sm flex flex-col items-center justify-center overflow-hidden h-20 lg:h-auto">
-            <p className="text-xs font-bold text-muted uppercase tracking-widest mb-1">Gastado</p>
-            <div className="flex items-center justify-center w-full overflow-hidden">
-              <span className="text-xl lg:text-2xl font-bold text-ink whitespace-nowrap">
-                {formatUSD(userBalance?.totalSpent || 0)}
-              </span>
-            </div>
-            <div className="mt-1 w-6 h-1 bg-deal rounded-full opacity-20" />
-          </div>
+      <section aria-labelledby="titulo-movimientos">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h2 id="titulo-movimientos" className="text-base font-bold text-ink">Movimientos</h2>
+          <button
+            type="button"
+            onClick={() => void cargar(filtro)}
+            disabled={cargando}
+            aria-label="Actualizar movimientos"
+            title="Actualizar"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-line bg-white text-ink-soft hover:bg-surface disabled:opacity-50"
+          >
+            <FiRefreshCw className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1">
+          {FILTROS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              aria-pressed={filtro === f.id}
+              onClick={() => setFiltro(f.id)}
+              className={`h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold ${filtro === f.id ? 'bg-brand-500 text-white' : 'border border-line bg-white text-ink-soft hover:bg-surface'}`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
 
-        {/* Transactions */}
-        <div className="bg-white rounded-lg border border-line shadow-sm overflow-hidden">
-          <div className="px-3 lg:px-4 py-2.5 border-b border-line bg-surface">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-xs lg:text-sm font-bold text-ink flex items-center gap-1.5 lg:gap-2 flex-shrink-0">
-                <FiTrendingUp className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-brand-500" />
-                <span className="hidden sm:inline">Transacciones</span>
-                <span className="sm:hidden">Historial</span>
-              </h2>
-              <div className="flex items-center gap-1 lg:gap-2">
-                <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-line">
-                  <button
-                    onClick={() => setFilterType('ALL')}
-                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'ALL' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
-                  >
-                    Todas
-                  </button>
-                  <button
-                    onClick={() => setFilterType('RECHARGE')}
-                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'RECHARGE' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
-                  >
-                    Recargas
-                  </button>
-                  <button
-                    onClick={() => setFilterType('PURCHASE')}
-                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'PURCHASE' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
-                  >
-                    Compras
-                  </button>
-                  <button
-                    onClick={() => setFilterType('REFUND')}
-                    className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${filterType === 'REFUND' ? 'bg-brand-500 text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
-                  >
-                    Reembolsos
-                  </button>
-                </div>
-              </div>
-            </div>
+        {cargando ? (
+          <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white" aria-label="Cargando movimientos">
+            {[1, 2, 3, 4].map((i) => (
+              <li key={i} className="flex animate-pulse items-center gap-3 px-4 py-3">
+                <div className="h-9 w-9 rounded-xl bg-surface" />
+                <div className="flex-1"><div className="mb-2 h-3 w-40 max-w-full rounded-full bg-line" /><div className="h-2.5 w-24 rounded-full bg-surface" /></div>
+                <div className="h-4 w-14 rounded-full bg-line" />
+              </li>
+            ))}
+          </ul>
+        ) : error && movimientos.length === 0 ? (
+          <div className="rounded-2xl border border-deal/30 bg-deal-bg p-4 text-sm text-deal" role="alert">
+            No pudimos cargar tus movimientos.{' '}
+            <button type="button" onClick={() => void cargar(filtro)} className="font-semibold underline">Intentar de nuevo</button>
           </div>
-
-          <div className="p-2 lg:p-3">
-            {filteredTransactions.length > 0 ? (
-              <div className="space-y-1.5 lg:space-y-2">
-                {filteredTransactions.slice(0, 5).map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-2.5 lg:p-4 rounded-lg border border-line hover:bg-surface transition-colors gap-2"
-                  >
-                    <div className="flex items-center gap-2 lg:gap-4 min-w-0">
-                      <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${getTransactionColor(transaction.type)}`}>
-                        {getTransactionIcon(transaction.type)}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-ink text-xs lg:text-base truncate">{transaction.description}</p>
-                        <div className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-muted">
-                          <span className="truncate">
-                            {new Date(transaction.createdAt).toLocaleDateString('es-ES', {
-                              day: 'numeric',
-                              month: 'short',
-                            })}
-                          </span>
-                          {transaction.paymentMethod && (
-                            <>
-                              <span className="text-subtle hidden sm:inline">•</span>
-                              <span className="text-xs bg-surface border border-line px-1.5 lg:px-2 py-0.5 rounded-full text-muted hidden sm:inline">
-                                {formatPaymentMethod(transaction.paymentMethod)}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className={`text-sm lg:text-lg font-bold ${isCreditTransaction(transaction.type) ? 'text-success-strong' : 'text-deal'}`}>
-                        {isCreditTransaction(transaction.type) ? '+' : '-'}{formatUSD(transaction.amount)}
-                      </p>
-                      <span className={`inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full text-xs font-semibold ${transaction.status === 'COMPLETED' ? 'bg-success-strong/10 text-success-strong' :
-                        transaction.status === 'PENDING' ? 'bg-warning/15 text-warning-strong' :
-                          transaction.status === 'CANCELLED' ? 'bg-deal-bg text-deal' :
-                            'bg-deal-bg text-deal'
-                        }`}>
-                        {formatTransactionStatus(transaction.status)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 lg:py-12">
-                <FiDollarSign className="w-12 h-12 lg:w-16 lg:h-16 text-line mx-auto mb-3 lg:mb-4" />
-                <h3 className="text-base lg:text-lg font-bold text-ink mb-1 lg:mb-2">
-                  No hay transacciones
-                </h3>
-                <p className="text-muted text-xs lg:text-base mb-4 lg:mb-6 px-4">
-                  {filterType === 'ALL'
-                    ? 'Aún no has realizado ninguna transacción'
-                    : `No tienes ${filterType === 'RECHARGE' ? 'recargas' : filterType === 'REFUND' ? 'reembolsos' : 'compras'}`
-                  }
-                </p>
-                <button
-                  onClick={() => setShowRechargeModal(true)}
-                  className="inline-flex items-center gap-1.5 lg:gap-2 px-4 lg:px-6 py-2 lg:py-3 bg-brand-500 text-white font-semibold rounded-lg hover:bg-brand-600 transition-all shadow-sm text-sm lg:text-base"
-                >
-                  <FiPlus className="w-4 h-4 lg:w-5 lg:h-5" />
-                  Primera Recarga
+        ) : movimientos.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-10 text-center">
+            <FiDollarSign className="mx-auto h-10 w-10 text-subtle" aria-hidden="true" />
+            <p className="mt-3 text-sm font-semibold text-ink">{actual.vacio}</p>
+            {filtro === '' && (
+              <>
+                <p className="mt-1 text-sm text-muted">Recarga Puntos ES y paga tus compras sin esperar la confirmación de cada pago.</p>
+                <button type="button" onClick={() => setRecargar(true)} className="mt-4 inline-flex h-11 items-center gap-2 rounded-xl bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">
+                  <FiPlus className="h-4 w-4" aria-hidden="true" />
+                  Recargar Puntos ES
                 </button>
-              </div>
+              </>
             )}
           </div>
-        </div>
-      </div>
+        ) : (
+          <>
+            <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
+              {movimientos.map((m) => <Movimiento key={m.id} m={m} />)}
+            </ul>
+            {siguiente ? (
+              <button type="button" onClick={cargarMas} disabled={cargandoMas} className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl border border-line bg-white text-sm font-semibold text-ink hover:bg-surface disabled:opacity-50">
+                {cargandoMas ? 'Cargando…' : 'Cargar más'}
+              </button>
+            ) : (
+              movimientos.length > 5 && <p className="mt-3 text-center text-xs text-muted">Ese es todo tu historial.</p>
+            )}
+          </>
+        )}
+      </section>
 
-      {mounted && createPortal(
-        <RechargeModal
-          isOpen={showRechargeModal}
-          onClose={() => setShowRechargeModal(false)}
-          onSuccess={fetchBalance}
-        />,
-        document.body
+      <section className="rounded-2xl border border-line bg-white p-4 lg:p-5" aria-labelledby="titulo-como">
+        <h2 id="titulo-como" className="flex items-center gap-2 text-base font-bold text-ink">
+          <FiInfo className="h-4 w-4 text-brand-600" aria-hidden="true" />
+          Cómo funcionan los Puntos ES
+        </h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-ink-soft">
+          <li><strong className="text-ink">1 Punto ES paga 1 dólar de compras.</strong> Por eso se escriben con el signo de dólar: &quot;$12,50 Puntos ES&quot;.</li>
+          <li><strong className="text-ink">Se recargan</strong> con los métodos de pago de la tienda. Quedan disponibles cuando confirmamos tu pago.</li>
+          <li><strong className="text-ink">También llegan</strong> al canjear una gift card y cuando la tienda te devuelve una compra: un pedido cancelado, una garantía o un pago hecho de más.</li>
+          <li><strong className="text-ink">Sirven solo para comprar en Electro Shop.</strong> No se cambian por dinero ni se pasan a otra persona.</li>
+          <li><strong className="text-ink">No son reembolsables.</strong> Si cierras tu cuenta, los Puntos ES que te queden se pierden: úsalos antes en productos de la tienda.</li>
+        </ul>
+        <Link href="/customer/documentos" className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
+          Términos y condiciones de los Puntos ES
+          <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </section>
+
+      {montado && createPortal(
+        <RechargeModal isOpen={recargar} onClose={() => setRecargar(false)} onSuccess={() => void cargar(filtro, true)} />,
+        document.body,
       )}
-    </>
+    </div>
   );
 }

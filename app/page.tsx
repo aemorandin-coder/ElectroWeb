@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
@@ -25,10 +26,15 @@ import {
 } from '@/lib/queries/home';
 import { getHotAd } from '@/lib/queries/hot-ad';
 import { getPublicSettings } from '@/lib/site-settings';
+import JsonLd from '@/components/seo/JsonLd';
+import { storeJsonLd, websiteJsonLd } from '@/lib/seo';
 
 const HotAdOverlay = dynamic(() => import('@/components/HotAdOverlay'));
 
 export const revalidate = 60;
+
+// Los enlaces de promotores (?ref=) y de las historias (?es=) son la misma portada
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 // La vitrina necesita 1 producto estrella + 4 en desktop
 const SHOWCASE_MIN = 5;
@@ -68,6 +74,9 @@ export default async function Home() {
   return (
     <div className="min-h-dvh bg-white">
       <PublicHeader />
+      {/* Datos estructurados (C-149): la tienda como negocio (nombre, RIF, dirección, horario) y el buscador del sitio */}
+      <JsonLd data={storeJsonLd(settings)} />
+      <JsonLd data={websiteJsonLd(settings)} />
 
       <main>
         <h1 className="sr-only">{settings.companyName}: tecnología, gaming y gift cards con envíos a toda Venezuela</h1>

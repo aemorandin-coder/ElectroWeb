@@ -10,6 +10,7 @@ import MobileNavBar from "@/components/public/MobileNavBar";
 import { GuidedTourWrapper } from "@/components/onboarding/GuidedTourWrapper";
 import { getPublicSettings, getSiteSettings } from "@/lib/site-settings";
 import { getNavCategories } from "@/lib/queries/navigation";
+import { absoluteUrl, siteUrl } from "@/lib/seo";
 
 // Los settings públicos se leen aquí para todo el sitio: cada ruta se regenera como mucho
 // cada 60 s para que la tasa BCV no quede congelada en las páginas estáticas.
@@ -36,15 +37,9 @@ const tektrron = localFont({
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
-
-  // Helper to ensure absolute URL
-  const ensureAbsoluteUrl = (url: string | null): string | null => {
-    if (!url) return null;
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
-    return `${baseUrl}${cleanUrl}`;
-  };
+  const baseUrl = siteUrl();
+  // Las imágenes subidas salen por /uploads/… (robots.txt cierra /api/): lib/seo.ts
+  const ensureAbsoluteUrl = absoluteUrl;
 
   const icons: Metadata['icons'] = {};
   // Sin favicon se usa el logo: sin ningún ícono declarado, el navegador pide /favicon.ico y da 404 (F6)
@@ -62,7 +57,10 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   // Open Graph image: homeMetaImage, logo o favicon (no hay imagen por defecto en public/)
-  const ogImage = ensureAbsoluteUrl(settings.homeMetaImage) || ensureAbsoluteUrl(settings.logo) || ensureAbsoluteUrl(settings.favicon);
+  // C-149: ya no se declara "JPEG de 1200 × 630" (el logo es un PNG cuadrado): el tipo y el tamaño los lee quien la muestra.
+  // La imagen ancha se sube en Configuración → SEO; con el logo cuadrado, la tarjeta de Twitter es la chica.
+  const socialImage = ensureAbsoluteUrl(settings.homeMetaImage);
+  const ogImage = socialImage || ensureAbsoluteUrl(settings.logo) || ensureAbsoluteUrl(settings.favicon);
 
   const titleText = settings.metaTitle || settings.companyName || "Electro Shop Morandin C.A. | Gaming, Laptops & Tecnología";
   const descText = settings.metaDescription || settings.tagline || "Tienda de tecnología especializada en Guanare. Computadoras gaming, laptops, consolas, CCTV y más.";
@@ -82,16 +80,13 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: titleText,
       description: descText,
-      url: baseUrl,
+      // Sin `url`: lo heredaban todas las páginas sin Open Graph propio y decían ser la portada (C-149)
       siteName: settings.companyName || "Electro Shop",
       images: ogImage ? [
         {
           url: ogImage,             // URL absoluta requerida para WhatsApp
           secureUrl: ogImage,       // HTTPS requerido para iOS preview
-          width: 1200,              // WhatsApp requiere mínimo 300x200, ideal 1200x630
-          height: 630,
           alt: `${settings.companyName || 'Electro Shop'} — Tecnología especializada en Venezuela`,
-          type: 'image/jpeg',       // WhatsApp prefiere JPEG vs PNG
         },
       ] : undefined,
       locale: 'es_VE',
@@ -99,13 +94,11 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     // Twitter Card
     twitter: {
-      card: 'summary_large_image',
+      card: socialImage ? 'summary_large_image' : 'summary',
       title: titleText,
       description: descText,
       images: ogImage ? [{
         url: ogImage,
-        width: 1200,
-        height: 630,
         alt: settings.companyName || 'Electro Shop',
       }] : undefined,
     },

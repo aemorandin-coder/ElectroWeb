@@ -1,6 +1,29 @@
-# Punto de partida (actualizado 2026-10-01, cierre de C-148b)
+# Punto de partida (actualizado 2026-10-01, cierre de C-149)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-148b**.
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-149**.
+- **C-149** (01/10, en `main`, falta el deploy, **sin cambio de base**): que Google, las redes y las IA encuentren el catálogo (`estado/C-149.md`). Incluye las seis correcciones técnicas del análisis externo que pasó Andrés.
+  - Sitemap corregido (las 14 categorías daban "no encontrado") y regenerado cada hora; sin `/login` ni `/registro`.
+  - `robots.txt` deja leer las fotos de los productos; `www` redirige al dominio principal.
+  - Una dirección por categoría (`/categorias/<slug>`) con título y texto propios.
+  - Datos estructurados completos: producto (código de barras, reseñas, oferta), tienda (RIF, dirección, horario) y catálogo.
+  - Nuevos: `/llms.txt` y `/feed/productos.xml` (catálogo de Meta).
+  - Título y descripción propios en contacto, términos, privacidad, gift cards, solicitar producto, servicios y cursos.
+  - **Venezuela no está en la lista de países de Google Merchant Center:** el feed sirve hoy para Meta, no para Google Shopping.
+  - **Deploy:** `git pull --ff-only` y `bash scripts/deploy.sh`. Sin SQL.
+  - **Pruebas después del deploy (Andrés):**
+    1. En el servidor: `curl -sI https://www.electroshopve.com/ | head -5`. Debe decir `308` y `location: https://electroshopve.com/`. Si dice `200`, nginx no le pasa el dominio a la tienda: avisar a Claude (se arregla con un bloque `server` para `www` en nginx que haga `return 301 https://electroshopve.com$request_uri;`).
+    2. Abrir `https://electroshopve.com/sitemap.xml`: las categorías salen como `/categorias/accesorios-gaming` y no están `/login` ni `/registro`.
+    3. Abrir `https://electroshopve.com/robots.txt`: tiene `Allow: /api/uploads/`.
+    4. Abrir `https://electroshopve.com/llms.txt` y `https://electroshopve.com/feed/productos.xml`: se leen, con los productos y sus precios.
+    5. En el navegador, la pestaña de Contacto dice "Contacto | Electro Shop" y la de Servicios, "Servicios | Electro Shop" (una sola vez).
+    6. Pegar la dirección de un producto en https://search.google.com/test/rich-results : debe reconocer "Fragmentos de productos" sin errores.
+  - **Tareas de Andrés (sin código):**
+    1. **Marca en los productos físicos** (Productos → editar → Marca): hoy ninguno la tiene, y Meta y Google la piden.
+    2. **Imagen para compartir:** Configuración → SEO → Inicio, una imagen de 1200 × 630 px (se puede hacer en ElectroStudio). Hoy sale el logo cuadrado.
+    3. **Google Search Console** (gratis): agregar `electroshopve.com`, enviar `https://electroshopve.com/sitemap.xml` y revisar "Páginas" una semana después.
+    4. **Catálogo de Meta** (cuando vaya a pagar anuncios): Administrador de ventas → Catálogo → Orígenes de datos → Lista de datos → URL programada, con `https://electroshopve.com/feed/productos.xml`, cada día, moneda USD.
+    5. Opcional: escribir la descripción de cada categoría en Categorías (si no, la tienda arma el texto con las marcas).
+  - **Decisiones abiertas para Andrés:** §3c.
 - **C-148b** (01/10, en `main`, falta el deploy, **tres columnas nuevas**): segunda parte de las cotizaciones (`estado/C-148b.md`).
   - Al aprobarse descuenta del inventario lo cotizado (y lo devuelve con "No se concretó"); "Marcar como aprobada" desde el panel.
   - El documento muestra los datos de los métodos de pago activos.
@@ -236,7 +259,7 @@ Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pe
 - Detalle y pruebas de cada una en su `estado/C-12X.md`.
 
 ## 1. Estado de las ramas
-- **`main`:** todo hasta C-141. En producción, hasta C-138 confirmado (C-140 y C-141: §00000).
+- **`main`:** todo hasta C-149. En producción (visto desde fuera el 01/10): `/cotizacion` responde, así que el deploy llegó al menos a C-148. Falta que Andrés confirme si incluyó C-148b.
 - **Gemini:** R23 (G-69) cerrada y en `main`, con dos arreglos de Claude (resultado al final de `PLAN_GEMINI.md`). **No tiene ronda abierta.** Su carril no tiene deudas de reglas (verificado el 28/09 con `grep`: 0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis).
 - **ChatGPT:** fuera del equipo desde el 21/09. Limpieza opcional en la máquina de Andrés: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
 - **Historial de tareas:** cada una tiene su `docs/plan/estado/C-XX.md`. Resumen en `PLAN_CLAUDE.md`, "Orden de trabajo".
@@ -309,16 +332,21 @@ bash scripts/deploy.sh
 Andrés quiere que la tienda sea la vitrina digital de la empresa en todo el país y pagar anuncios. Orden recomendado por Claude; falta que Andrés lo confirme:
 1. ✅ **C-145 · Medición del embudo** (hecha).
 2. ✅ **C-146 · "IVA incluido" a la vista** (hecha). Falta **C-146b**: precio sugerido desde el costo (costo × 1,30 × 1,16) y aviso de margen para el dueño.
-2b. ✅ **C-148 · Cotizaciones** (hecha). Falta **C-148b**: retención del IVA de contribuyentes especiales, convertir la aprobada en orden, enviarla por correo, y decidir si el documento muestra los datos para pagar.
-3. **C-149 · Que Google y las IA encuentren el catálogo:**
-   - Feed de productos para Google Merchant Center (fichas gratis de Shopping y, después, anuncios).
-   - Datos estructurados completos: disponibilidad, condición, envío, marca, código; `Organization` con RIF y dirección.
-   - `llms.txt` y páginas de categoría con texto propio.
-   - Revisar el sitemap: hoy incluye `/login` y `/registro`.
-4. **C-147 · Datos para la factura** y relación de ventas del mes.
-5. **C-148 · Cotizaciones y compras de empresas e instituciones** (con retención del IVA).
-- **Hallazgos de la revisión del 30/09:** la tienda ya tiene sitemap, `robots`, datos estructurados de producto y soporte para Google Analytics y el píxel de Meta. No tiene feed de Merchant Center, etiqueta de conversión de Google Ads ni `llms.txt`.
+2b. ✅ **C-148 y C-148b · Cotizaciones** (hechas). Falta: retención del IVA de contribuyentes especiales, mandarla por correo y "Mis cotizaciones" en el panel del cliente.
+3. ✅ **C-149 · Que Google, las redes y las IA encuentren el catálogo** (hecha, `estado/C-149.md`).
+4. **C-147 · Datos para la factura** y relación de ventas del mes. **Es la siguiente.**
+5. **C-150 · Confianza antes de pagar** (sale del análisis externo del 01/10; espera las decisiones de §3c).
+- **Google Merchant Center no admite a Venezuela** (lista oficial leída el 01/10). Los anuncios de Google que sí se pueden pagar son los de búsqueda (texto). Para medir sus ventas basta vincular Google Analytics con Google Ads e importar la conversión `purchase` (C-145): no hace falta otra etiqueta.
 - **Regla para los documentos:** el repositorio es público. Aquí no se escriben datos fiscales ni financieros de la empresa (ventas, márgenes reales, cómo declara). Eso va en la conversación con Andrés.
+
+## 3c. Análisis externo del 01/10: lo comercial (decide Andrés)
+Andrés pasó un análisis que compara la tienda con otras dos. Lo técnico se hizo en C-149. Queda lo comercial:
+1. **Garantía, despacho y entrega junto al botón de compra.** La ficha ya los muestra debajo del botón (envíos, delivery, retiro, garantía y formas de pago). Falta decidir si suben por encima del botón en el teléfono y si se agrega el embalaje.
+2. **Entrega de los digitales:** decir un plazo y un horario reales, y distinguir "código" de "recarga directa". **Falta de Andrés:** cuánto tarda de verdad cada tipo y en qué horario se atiende.
+3. **Devoluciones de garantía en Puntos ES.** Los términos dicen que, si no se puede reparar ni cambiar, se devuelve en Puntos ES. El análisis propone devolver al medio de pago original. Es una decisión de negocio (`PLAN.md` §7) y toca los términos: confirmar con el abogado.
+4. **Cursos sin contenido:** quitar "Cursos" del menú mientras no haya cursos publicados. C-149 ya los sacó del sitemap cuando no hay ninguno.
+5. **Reseñas verificadas:** pedir la reseña por correo unos días después de la entrega (hoy el cliente tiene que acordarse).
+6. **Precios:** fuera del código. Es de Andrés con sus proveedores.
 
 ## 4. Decisiones tomadas (no volver a preguntar)
 - **Google:** vincular por correo; teléfono y cédula en la primera compra; admins nunca con Google.
@@ -391,7 +419,7 @@ Andrés quiere que la tienda sea la vitrina digital de la empresa en todo el pa�
 ## 6. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto.
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
-> 2. Pregúntame cómo me fue invitando al equipo (si llegó el correo de invitación y si cada persona configuró sus dos pasos) y si el deploy de C-141, C-139, C-142 y C-143 terminó bien (§00000 y §000000): si configuré mis dos pasos, si llegó el correo de invitación, qué cuentas quedaron en Equipo, cómo se ve la página de Puntos ES y si la recarga pide firmar los términos nuevos. Y mis respuestas a las 5 preguntas de C-120 (`estado/C-120.md`).
+> 2. Pregúntame cómo me fue invitando al equipo (si llegó el correo de invitación y si cada persona configuró sus dos pasos) y si el deploy de C-139 a C-149 terminó bien: hasta qué tarea llegó, si puse 16 en el IVA (C-146), las pruebas de las cotizaciones (C-148b) y las de C-149 (arriba), y mis decisiones de §3c.
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
 > 4. Sigue con la **revisión final** conmigo (`REVISION_FINAL.md`) y arregla lo que salga. Al terminar cada tarea: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
-> 5. Después, el plan de crecimiento de `SIGUIENTE.md` §3b en el orden que yo confirme (C-146, C-149, C-147, C-148), y C-107 y C-92 cuando te pase los datos.
+> 5. Después, el plan de crecimiento de `SIGUIENTE.md` §3b (sigue C-147) y lo comercial de §3c con mis decisiones, y C-107 y C-92 cuando te pase los datos.

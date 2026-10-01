@@ -1,11 +1,13 @@
 // DTO público de producto: lo único que sale del servidor hacia la tienda y las APIs públicas.
 // Lista blanca de campos. Nunca incluir costPerItem, barcode, minStock, sku, status, tags
 // ni el costo o el proveedor de las variantes digitales.
+// Del código de barras solo sale `gtin`: el del fabricante, cuando es válido (C-149).
 
 import type { Brand, Category, DigitalVariant, Prisma, Product, ProductType } from '@prisma/client';
 import { formatFaceValue, guessLegacyUnit, isDigitalUnit, type DigitalUnit } from '@/lib/digital-catalog';
 import { parseProductImages } from '@/lib/product-utils';
 import { INTERNAL_SPEC_KEYS } from '@/lib/product-specs';
+import { validGtin } from '@/lib/seo';
 import {
   CONDITION_LABEL,
   GRADE_DEFINITION,
@@ -49,6 +51,8 @@ export interface PublicProduct {
   name: string;
   slug: string;
   shortCode: string | null;
+  /** C-149: código de barras del fabricante (UPC o EAN) si es válido; un código interno no sale */
+  gtin: string | null;
   description: string;
   priceUSD: number;
   compareAtPriceUSD: number | null;
@@ -203,6 +207,7 @@ export function toPublicProduct(product: ProductWithPublicRelations): PublicProd
     name: product.name,
     slug: product.slug,
     shortCode: product.shortCode,
+    gtin: validGtin(product.barcode),
     description: product.description,
     priceUSD: toNumberOrNull(product.priceUSD) ?? 0,
     compareAtPriceUSD: toNumberOrNull(product.compareAtPriceUSD),

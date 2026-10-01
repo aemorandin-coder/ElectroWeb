@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FiShield, FiCreditCard, FiTruck, FiPackage, FiDollarSign, FiAlertCircle, FiFileText, FiEdit3 } from 'react-icons/fi';
 import PublicHeader from '@/components/public/PublicHeader';
@@ -5,6 +6,13 @@ import Footer from '@/components/Footer';
 import { CONDITION_HELP, DEFAULT_WARRANTY_DAYS, GRADE_DEFINITION, GRADE_LABEL } from '@/lib/product-condition';
 import Container from '@/components/ui/Container';
 import PageHeader from '@/components/ui/PageHeader';
+
+// C-149: título y descripción propios (salía con los de la portada)
+export const metadata: Metadata = {
+  title: 'Términos y condiciones',
+  description: 'Condiciones de compra en Electro Shop: cuenta, Puntos ES, pagos y precios, envíos, garantía y devoluciones, productos usados y productos digitales.',
+  alternates: { canonical: '/terminos' },
+};
 
 export default function TermsPage() {
   return (

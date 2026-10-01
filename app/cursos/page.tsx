@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
+import { absoluteUrl } from '@/lib/seo';
 import PublicHeader from '@/components/public/PublicHeader';
 import PageHeader from '@/components/ui/PageHeader';
 import Footer from '@/components/Footer';
@@ -18,34 +19,35 @@ export async function generateMetadata(): Promise<Metadata> {
       coursesMetaKeywords: true,
       coursesMetaImage: true,
       logo: true,
-      companyName: true,
     }
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
-
-  const title = settings?.coursesMetaTitle || `Cursos | ${settings?.companyName || 'Electro Shop'}`;
+  // C-149: el layout ya agrega " | Empresa" (salía "Cursos | Electro Shop | Electro Shop"); el título del admin va tal cual
+  const title = settings?.coursesMetaTitle || 'Cursos';
   const description = settings?.coursesMetaDescription || 'Aprende redes, electrónica, CCTV, gaming y más con nuestros cursos online.';
   const keywords = settings?.coursesMetaKeywords ? settings.coursesMetaKeywords.split(',').map(k => k.trim()) : undefined;
 
-  const shareImage = settings?.coursesMetaImage || settings?.logo || '/og-image.png';
-  const absoluteShareImage = shareImage.startsWith('http') ? shareImage : `${baseUrl}${shareImage.startsWith('/') ? '' : '/'}${shareImage}`;
+  // Sin el respaldo a /og-image.png, que no existe (C-06)
+  const absoluteShareImage = absoluteUrl(settings?.coursesMetaImage || settings?.logo);
+  const images = absoluteShareImage ? [{ url: absoluteShareImage }] : undefined;
 
   return {
-    title,
+    title: settings?.coursesMetaTitle ? { absolute: title } : title,
     description,
     keywords,
+    alternates: { canonical: '/cursos' },
     openGraph: {
       title,
       description,
-      images: [{ url: absoluteShareImage }],
+      url: '/cursos',
+      images,
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [{ url: absoluteShareImage }],
+      images,
     }
   };
 }

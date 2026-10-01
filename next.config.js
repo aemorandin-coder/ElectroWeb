@@ -1,3 +1,12 @@
+// C-149: la tienda vive en un solo dominio (el de NEXT_PUBLIC_BASE_URL, sin "www"). La variante con "www" respondía
+// con el mismo contenido: dos direcciones para cada página, y Google reparte entre las dos lo que debería sumar en una.
+const SITE_URL = (process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com').replace(/\/+$/, '');
+const SITE_HOST = new URL(SITE_URL).hostname;
+const wwwRedirect = SITE_HOST.startsWith('www.')
+  ? []
+  // Menos /api/: un servicio externo que llame a la API con "www" (un webhook, un cron) no sigue redirecciones
+  : [{ source: '/:path((?!api/).*)', has: [{ type: 'host', value: `www.${SITE_HOST}` }], destination: `${SITE_URL}/:path`, permanent: true }];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // En producción, scripts/deploy.sh alterna .next-a y .next-b: compila en la que no se está sirviendo y solo
@@ -33,6 +42,7 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      ...wwwRedirect,
       {
         source: '/auth/signin',
         destination: '/login',

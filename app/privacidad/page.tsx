@@ -1,9 +1,17 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FiShield, FiLock, FiDatabase, FiEye, FiUsers, FiSettings, FiServer, FiEdit3 } from 'react-icons/fi';
 import PublicHeader from '@/components/public/PublicHeader';
 import Footer from '@/components/Footer';
 import Container from '@/components/ui/Container';
 import PageHeader from '@/components/ui/PageHeader';
+
+// C-149: título y descripción propios (salía con los de la portada)
+export const metadata: Metadata = {
+  title: 'Política de privacidad',
+  description: 'Qué datos personales guarda Electro Shop, para qué los usa y cómo se protegen.',
+  alternates: { canonical: '/privacidad' },
+};
 
 export default function PrivacyPage() {
   return (

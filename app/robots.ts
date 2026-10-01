@@ -1,30 +1,21 @@
 import { MetadataRoute } from 'next';
+import { siteUrl } from '@/lib/seo';
+
+// Lo privado de la tienda. Las páginas con enlace secreto (presupuestos, certificados, verificación) no van aquí:
+// llevan "noindex", que es lo que de verdad las saca de un buscador; cerrarlas impediría leer esa etiqueta.
+const PRIVATE = ['/admin/', '/api/', '/customer/', '/carrito', '/checkout/', '/canjear-gift-card'];
 
 export default function robots(): MetadataRoute.Robots {
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
-
   return {
     rules: [
       {
-        // Bots principales
         userAgent: '*',
-        allow: '/',
-        disallow: [
-          '/admin/',
-          '/api/',
-          '/customer/',
-          '/carrito',
-          '/checkout/',
-          '/canjear-gift-card',
-        ],
-      },
-      {
-        // WhatsApp y Facebook previews — permitir acceso a páginas de productos
-        userAgent: ['WhatsApp', 'facebookexternalhit', 'Twitterbot', 'LinkedInBot'],
-        allow: '/',
-        disallow: ['/admin/', '/api/', '/customer/', '/checkout/'],
+        // C-149: las fotos nuevas de los productos se guardan como /api/uploads/…; sin este permiso, "Disallow: /api/"
+        // dejaba esas fotos fuera de Google Imágenes y de las vistas previas de Facebook. La regla más larga gana.
+        allow: ['/', '/api/uploads/'],
+        disallow: PRIVATE,
       },
     ],
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    sitemap: `${siteUrl()}/sitemap.xml`,
   };
 }

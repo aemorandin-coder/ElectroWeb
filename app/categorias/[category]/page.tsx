@@ -21,7 +21,8 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 /**
  * Categoría (C-32): el mismo catálogo de /productos filtrado por la categoría (búsqueda, filtros, orden y paginación en el servidor).
  * Antes era un hero con el color de cada categoría y todos los productos cargados en el navegador.
- * La URL /categorias/<slug> se mantiene para el menú del header; el canonical apunta a /productos?category=<slug>.
+ * /categorias/<slug> es la dirección propia de la categoría (canonical, sitemap y enlaces de la tienda) desde C-149;
+ * /productos?category=<slug> muestra lo mismo y apunta aquí.
  */
 export default async function CategoryDetailPage(props: PageProps) {
   const { category } = await props.params;

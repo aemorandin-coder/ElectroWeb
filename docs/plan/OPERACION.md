@@ -14,7 +14,7 @@
 - **Crons** (`crontab -l` de `luami`, desde el 30/09). Cada guion lee `CRON_SECRET` del `.env`:
   - `0 * * * * /home/luami/cron-favoritos.sh`: avisos de favoritos (C-138).
   - `15 */2 * * * /home/luami/cron-envios.sh`: rastreo de las guías de ZOOM (C-100).
-  - `0 15 * * * /home/luami/cron-resenas.sh`: pide la reseña por correo a quien recibió su pedido hace unos días (C-157, una vez al día). **Pendiente de poner en el servidor** (pasos en `SIGUIENTE.md`); al subirlo, quitar esta nota.
+  - `0 15 * * * /home/luami/cron-resenas.sh`: pide la reseña por correo a quien recibió su pedido hace unos días (C-157, una vez al día). Confirmar con `crontab -l` que la línea está puesta (la ruta ya existe en producción desde el 01/10).
   - Para probar uno a mano se corre el guion: responde JSON (`revisados`, `avisos`…).
 - **Variables de entorno:** todas explicadas en `.env.example`. Opcionales que todavía no están en el servidor: `GROQ_API_KEY` (C-155, la pone Andrés con el deploy), `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` (C-145), `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (C-85).
 
@@ -53,6 +53,7 @@ DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg
 ### Deploys hechos
 | Fecha | Qué subió | Commit | Base |
 |---|---|---|---|
+| 01/10 (noche) | C-157 y C-158 | `ba6055c` | 1 columna (`orders.reviewRequestedAt`); cron nuevo |
 | 01/10 (noche) | C-162 y C-163 | `71703ab` | sin cambio; guion de categorías |
 | 01/10 (noche) | C-161 y C-155 (con C-156, documentos) | `57840db` | sin cambio; variable `GROQ_API_KEY` |
 | 01/10 (noche) | C-153 y C-154 | `6aae5a6` | 3 columnas (`packagingPlan`, `packagingRules`, `freePackagingThresholdUSD`) |

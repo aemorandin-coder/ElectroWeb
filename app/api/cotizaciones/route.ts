@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     });
 
     const cotizacion = await crearCotizacion(
-      { ...cliente, subject: null, validityDays: 15, advancePercent: null, conditions: CONDICIONES_POR_DEFECTO, terms: TERMINOS_POR_DEFECTO, items },
+      { ...cliente, subject: null, validityDays: 15, advancePercent: null, ivaRetentionPercent: 0, conditions: CONDICIONES_POR_DEFECTO, terms: TERMINOS_POR_DEFECTO, items },
       { status: 'REQUESTED', userId: session?.user?.id ?? null, requestNote },
     );
 

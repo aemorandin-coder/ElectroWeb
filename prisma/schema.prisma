@@ -1131,6 +1131,9 @@ model Quote {
   // Totales (se recalculan en el servidor cada vez que se guarda)
   totalUSD       Decimal   @default(0)
   taxPercent     Decimal   @default(0) // IVA que ya va dentro de los precios al emitirla (C-146)
+  // C-159: porcentaje del IVA que el cliente retiene al pagar (0, 75 o 100). Solo lo practican los sujetos pasivos
+  // especiales (Providencia SNAT/2025/000054); lo marca el equipo. El presupuesto muestra el neto a pagar.
+  ivaRetentionPercent Int  @default(0)
   // Seguimiento
   userId         String?   // cuenta del cliente que la pidió, si tenía sesión
   createdById    String?   // quién del equipo la hizo
@@ -1139,6 +1142,9 @@ model Quote {
   approvedName   String?
   approvedDoc    String?
   approvedIp     String?
+  // C-159: la última vez que el equipo la mandó por correo, y a qué dirección
+  emailedAt      DateTime?
+  emailedTo      String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

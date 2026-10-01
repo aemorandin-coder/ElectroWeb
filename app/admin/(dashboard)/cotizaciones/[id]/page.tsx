@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { FaWhatsapp } from 'react-icons/fa6';
-import { FiAlertTriangle, FiArrowLeft, FiBox, FiCheckCircle, FiCopy, FiExternalLink, FiPlus, FiSend, FiTrash2 } from 'react-icons/fi';
+import { FiAlertTriangle, FiArrowLeft, FiBox, FiCheckCircle, FiCopy, FiExternalLink, FiMail, FiPlus, FiSend, FiTrash2 } from 'react-icons/fi';
 import {
   adminBadge, adminCard, adminDangerButton, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminNotice, adminPageSubtitle, adminPageTitle,
   adminPrimaryButton, adminSecondaryButton, adminSectionTitle, adminSpinner,
@@ -14,7 +14,7 @@ import { formatUSD } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
-import { CONDICIONES_POR_DEFECTO, ESTADO_TEXTO, TERMINOS_POR_DEFECTO, totalesCotizacion } from '@/lib/cotizaciones/core';
+import { CONDICIONES_POR_DEFECTO, ESTADO_TEXTO, RETENCIONES_IVA, TERMINOS_POR_DEFECTO, totalesCotizacion } from '@/lib/cotizaciones/core';
 import type { CotizacionAdmin } from '@/lib/cotizaciones';
 import type { ProductoParaCotizar } from '@/lib/cotizaciones/productos';
 import { BuscadorProductos } from '@/components/cotizaciones/BuscadorProductos';
@@ -42,13 +42,15 @@ interface Formulario {
   subject: string;
   validityDays: string;
   advancePercent: string;
+  /** '0', '75' o '100': lo que el cliente retiene del IVA al pagar (C-159) */
+  ivaRetentionPercent: string;
   conditions: string;
   terms: string;
 }
 
 const VACIO: Formulario = {
   clientName: '', clientDoc: '', contactName: '', contactEmail: '', contactPhone: '', location: '', subject: '',
-  validityDays: '15', advancePercent: '', conditions: CONDICIONES_POR_DEFECTO, terms: TERMINOS_POR_DEFECTO,
+  validityDays: '15', advancePercent: '', ivaRetentionPercent: '0', conditions: CONDICIONES_POR_DEFECTO, terms: TERMINOS_POR_DEFECTO,
 };
 
 let siguienteClave = 0;
@@ -61,7 +63,7 @@ function aFormulario(c: CotizacionAdmin): { form: Formulario; lineas: Linea[] } 
     form: {
       clientName: c.clientName, clientDoc: c.clientDoc ?? '', contactName: c.contactName ?? '', contactEmail: c.contactEmail ?? '',
       contactPhone: c.contactPhone ?? '', location: c.location ?? '', subject: c.subject ?? '', validityDays: String(c.validityDays),
-      advancePercent: c.advancePercent ? String(c.advancePercent) : '', conditions: c.conditions ?? '', terms: c.terms ?? '',
+      advancePercent: c.advancePercent ? String(c.advancePercent) : '', ivaRetentionPercent: String(c.ivaRetentionPercent), conditions: c.conditions ?? '', terms: c.terms ?? '',
     },
     lineas: c.items.map((l) => ({ clave: clave(), productId: l.productId, title: l.title, description: l.description ?? '', quantity: String(l.quantity), unitPriceUSD: String(l.unitPriceUSD) })),
   };
@@ -80,6 +82,10 @@ export default function EditorCotizacion() {
   const [noExiste, setNoExiste] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState('');
+  // Enviar por correo (C-159): null = la dirección guardada de la cotización
+  const [correoA, setCorreoA] = useState<string | null>(null);
+  const [correoMensaje, setCorreoMensaje] = useState('');
+  const [correoOcupado, setCorreoOcupado] = useState(false);
   // Lo que se sabe de los productos del catálogo que están en las líneas (código y disponible)
   const [catalogo, setCatalogo] = useState<Record<string, ProductoParaCotizar>>({});
 
@@ -120,12 +126,13 @@ export default function EditorCotizacion() {
   /** Unidades de cada producto del catálogo que van en la cotización */
   const enCotizacion = new Map<string, number>();
   for (const l of lineas) if (l.productId) enCotizacion.set(l.productId, (enCotizacion.get(l.productId) ?? 0) + cantidadDe(l));
-  const totales = totalesCotizacion(lineas.map((l) => ({ quantity: Math.max(1, Math.floor(numero(l.quantity))), unitPriceUSD: numero(l.unitPriceUSD) })), taxPercent, numero(form.advancePercent) || null);
+  const totales = totalesCotizacion(lineas.map((l) => ({ quantity: Math.max(1, Math.floor(numero(l.quantity))), unitPriceUSD: numero(l.unitPriceUSD) })), taxPercent, numero(form.advancePercent) || null, Number(form.ivaRetentionPercent));
 
   const cuerpo = () => ({
     ...form,
     validityDays: Math.floor(numero(form.validityDays)),
     advancePercent: form.advancePercent.trim() ? Math.floor(numero(form.advancePercent)) : null,
+    ivaRetentionPercent: Number(form.ivaRetentionPercent),
     items: lineas.map((l) => ({ productId: l.productId, title: l.title, description: l.description, quantity: Math.floor(numero(l.quantity)), unitPriceUSD: numero(l.unitPriceUSD) })),
   });
 
@@ -281,6 +288,42 @@ export default function EditorCotizacion() {
   const telefono = (cotizacion?.contactPhone ?? '').replace(/\D/g, '').replace(/^0/, '58');
   const mensaje = cotizacion ? `Hola${cotizacion.contactName ? ` ${cotizacion.contactName.split(' ')[0]}` : ''}, te enviamos el presupuesto ${cotizacion.number}: ${enlace}` : '';
 
+  const destinoCorreo = correoA ?? cotizacion?.contactEmail ?? '';
+  const enviarPorCorreo = async () => {
+    if (!cotizacion) return;
+    if (cotizacion.emailedAt) {
+      const otraVez = await confirm({
+        title: 'Enviar otra vez',
+        message: `Ya se envió a ${cotizacion.emailedTo} (${new Date(cotizacion.emailedAt).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })}). ¿Enviarla otra vez?`,
+        confirmText: 'Enviar otra vez',
+        cancelText: 'Cancelar',
+        type: 'warning',
+      });
+      if (!otraVez) return;
+    }
+    setCorreoOcupado(true);
+    try {
+      const res = await fetch(`/api/admin/cotizaciones/${cotizacion.id}/correo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: destinoCorreo.trim(), mensaje: correoMensaje.trim() || undefined }),
+      });
+      const datos = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(datos.error || 'No se pudo enviar el correo.');
+        return;
+      }
+      // Solo se anota el envío: lo que se esté editando sin guardar no se toca
+      setCotizacion((c) => (c ? { ...c, emailedAt: datos.emailedAt, emailedTo: datos.to } : c));
+      setCorreoMensaje('');
+      toast.success(`Correo enviado a ${datos.to}`);
+    } catch {
+      toast.error('Sin conexión. Intenta de nuevo.');
+    } finally {
+      setCorreoOcupado(false);
+    }
+  };
+
   const copiar = async () => {
     try {
       await navigator.clipboard.writeText(enlace);
@@ -342,6 +385,27 @@ export default function EditorCotizacion() {
               </a>
             )}
             <a href={enlace} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}><FiExternalLink className="h-4 w-4" aria-hidden="true" />Abrir</a>
+          </div>
+
+          <div className="mt-4 border-t border-line pt-4" data-correo>
+            <h3 className="text-sm font-semibold text-ink">Enviar por correo</h3>
+            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="c-correoA" className={adminLabel}>Correo del cliente</label>
+                <input id="c-correoA" type="email" inputMode="email" autoComplete="off" value={destinoCorreo} onChange={(e) => setCorreoA(e.target.value)} maxLength={150} className={adminInput()} placeholder="compras@empresa.com" />
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="c-correoMensaje" className={adminLabel}>Mensaje <span className="font-normal text-muted">(opcional)</span></label>
+                <textarea id="c-correoMensaje" rows={2} value={correoMensaje} onChange={(e) => setCorreoMensaje(e.target.value)} maxLength={600} className={`${adminInput()} h-auto py-2`} placeholder="Ej.: Quedo atento a cualquier duda." />
+              </div>
+            </div>
+            <p className={adminHint}>
+              Le llega el resumen con el botón para verla y aprobarla. Va lo último que guardaste.
+              {cotizacion.emailedAt && ` Último envío: a ${cotizacion.emailedTo} (${new Date(cotizacion.emailedAt).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })}).`}
+            </p>
+            <button type="button" onClick={enviarPorCorreo} disabled={correoOcupado || !destinoCorreo.trim()} className={`${adminSecondaryButton} mt-3`}>
+              <FiMail className="h-4 w-4" aria-hidden="true" />{correoOcupado ? 'Enviando…' : 'Enviar por correo'}
+            </button>
           </div>
         </section>
       )}
@@ -457,7 +521,12 @@ export default function EditorCotizacion() {
             <p className="text-sm text-muted">Total</p>
             <p className="text-2xl font-bold tabular-nums text-ink" data-total>{formatUSD(totales.totalUSD)}</p>
             {totales.ivaUSD > 0 && <p className="text-xs text-ink-soft">IVA incluido ({taxPercent} %): {formatUSD(totales.ivaUSD)} · Base imponible: {formatUSD(totales.baseUSD)}</p>}
-            {totales.anticipoUSD !== null && totales.saldoUSD !== null && <p className="text-xs text-ink-soft">Anticipo: {formatUSD(totales.anticipoUSD)} · Saldo: {formatUSD(totales.saldoUSD)}</p>}
+            {totales.retencionUSD > 0 && (
+              <p className="text-xs text-ink-soft" data-retencion>
+                Retención del IVA ({form.ivaRetentionPercent} %): −{formatUSD(totales.retencionUSD)} · <strong className="font-semibold text-ink">Neto a pagar: {formatUSD(totales.netoUSD)}</strong>
+              </p>
+            )}
+            {totales.anticipoUSD !== null && totales.saldoUSD !== null && <p className="text-xs text-ink-soft">Anticipo{totales.retencionUSD > 0 ? ' (del neto)' : ''}: {formatUSD(totales.anticipoUSD)} · Saldo: {formatUSD(totales.saldoUSD)}</p>}
           </div>
         </section>
 
@@ -474,6 +543,19 @@ export default function EditorCotizacion() {
               <input id="c-advancePercent" inputMode="numeric" value={form.advancePercent} onChange={(e) => cambiar('advancePercent', e.target.value.replace(/\D/g, ''))} maxLength={2} className={`${adminInput()} max-w-32`} placeholder="70" />
               <p className={adminHint}>Vacío: sin anticipo. Con 70, muestra el anticipo y el saldo contra entrega.</p>
             </div>
+            {taxPercent > 0 && (
+              <div className="sm:col-span-2">
+                <label htmlFor="c-ivaRetentionPercent" className={adminLabel}>Retención del IVA que practica el cliente</label>
+                <select id="c-ivaRetentionPercent" value={form.ivaRetentionPercent} onChange={(e) => cambiar('ivaRetentionPercent', e.target.value)} className={`${adminInput()} max-w-xs`}>
+                  {RETENCIONES_IVA.map((r) => <option key={r} value={r}>{r === 0 ? 'No retiene' : `Retiene el ${r} % del IVA`}</option>)}
+                </select>
+                <p className={adminHint}>
+                  Solo la practican los contribuyentes especiales (75 %; 100 % si la factura no cumple los requisitos o el proveedor no está inscrito en el Portal Fiscal).
+                  Los órganos del Estado, las gobernaciones, las alcaldías y los entes públicos sin fines empresariales no retienen.
+                  Confirma la condición del cliente con el SENIAT antes de marcarla. El presupuesto muestra el neto a pagar.
+                </p>
+              </div>
+            )}
             <div className="sm:col-span-2">
               <label htmlFor="c-conditions" className={adminLabel}>Condiciones comerciales</label>
               <textarea id="c-conditions" rows={4} value={form.conditions} onChange={(e) => cambiar('conditions', e.target.value)} maxLength={3000} className={`${adminInput()} h-auto py-2`} />

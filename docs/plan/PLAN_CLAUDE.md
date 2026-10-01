@@ -5,13 +5,13 @@
 > Al terminar una tarea se agrega su fila aquí y se actualizan `PLAN.md` §5 y `SIGUIENTE.md`.
 
 ## 1. Abiertas
-La fila y lo que espera datos de Andrés están en **`PLAN.md` §5.2**: C-155, C-157 a C-160, C-92, C-107, C-154b y C-153b.
+La fila y lo que espera datos de Andrés están en **`PLAN.md` §5.2**: C-157 a C-160, C-92, C-107, C-154b y C-153b.
 - **C-92 · Clientes: desactivar en vez de borrar.** `AUDITORIA_CLIENTES_BORRADOS.md`. Decisión del 17/09: "Eliminar" borra de verdad solo si el cliente no tiene órdenes, Puntos ES, transacciones ni gift cards; si tiene algo, se desactiva. Espera la salida del diagnóstico de Andrés. Lleva una migración de `onDelete`.
 - **C-107 · Seguro del envío a elección del cliente.** Decisión del 24/09: en el checkout, con ZOOM o MRW, "Asegurar mi envío (declarar el valor de la compra)". El seguro lo cobra la empresa junto con el flete, al retirar. La orden guarda la elección y el panel la muestra en "Copiar datos para la guía". Espera cuánto cobran ZOOM y MRW en Guanare. Una columna nueva en `orders`.
 
 **Números que no son tareas de Claude:** C-76 (emojis de correos) pasó a Gemini G-53; C-79 (panel de creadores en móvil), a ChatGPT GPT-05; C-81 (estilos viejos de `components/ui`, Footer, botón de cuenta y carrito del header), a Gemini G-45 y G-46. Los demás huecos no se usaron.
 
-## 2. Hechas (121)
+## 2. Hechas (122)
 Las marcas de dinero y de seguridad de las filas vienen de cuando se escribieron. "Rama `claude/C-XX`" dice de dónde salió cada una: todas están fusionadas en `main`.
 
 | ID | Tarea | Qué quedó |
@@ -135,6 +135,7 @@ Las marcas de dinero y de seguridad de las filas vienen de cuando se escribieron
 | C-153 | **C-153 · Embalaje según el paquete** 💰 (01/10, tres columnas nuevas; `estado/C-153.md`) | El embalaje ya no es un monto fijo que ignora el producto: la tienda arma el paquete con las medidas de cada producto y los empaques de Configuración (el más barato en el que quepa, todo lo consolidable junto, "bulto aparte" en su propia caja). Embalaje gratis desde un monto sin pagar el flete, con "te faltan $X" en el carrito y el pago. La orden guarda el plan y el panel dice cómo empacar, las piezas y el peso de la guía. Apagado por defecto. Verificado: 50/50, HTTP y navegador 51/51 y 15/15, y la prueba de humo 59/59. |
 | C-154 | **C-154 · Confianza antes de pagar** (01/10, sin cambio de base; `estado/C-154.md`) | La ficha del producto dice, en una línea encima del botón de compra, la garantía, el envío y el embalaje. La garantía con sus días también en los productos nuevos (antes solo en usados) y cómo se resuelve, con las palabras de los términos. El embalaje de ese producto (C-153) y los montos de embalaje y envío gratis. No desapareció nada. Verificado: 26/26 a cuatro anchos y la prueba de humo 59/59. El plazo de los digitales espera los datos de Andrés (C-154b). |
 | C-fix-cursos | **C-fix-cursos · Filtro por categoría de /cursos** | `estado/C-fix-cursos.md` |
+| C-155 | **C-155 · Buscar el producto en la web desde el asistente** (01/10, sin cambio de base; variable opcional `GROQ_API_KEY`; `estado/C-155.md`) | En el primer paso del asistente: marca, código de barras, peso y medidas de la caja (leídos o estimados, marcados como tales), especificaciones y un borrador de la descripción, con casillas; nada se llena solo. La tienda busca y lee las páginas con una descarga que no deja llegar a la red interna; Groq ordena y redacta, y todo lo que devuelve se comprueba contra los datos. Sin clave sigue con sus reglas. **El asistente no tenía campo de Marca: ahora sí.** Verificado: piezas 118/118, HTTP 31/31, navegador 38/38 y humo 59/59. Falta probarlo desde el servidor. |
 | C-156 | **C-156 · Orden de los documentos del plan** (01/10, solo documentos; `estado/C-156.md`) | `PLAN.md` vuelve a ser el plan maestro (carriles, tablero, lista única de pendientes y decisiones al día); `SIGUIENTE.md` queda solo con lo vigente; nuevos `OPERACION.md` e `HISTORIAL.md`; este registro ordenado por número; las siete auditorías con su cierre; 13 estados vencidos anotados; y el guion de un comando para el redondeo de C-96. |
 | C-161 | **C-161 · La foto de un producto usado, bien encuadrada** (01/10, sin cambio de base; `estado/C-161.md`) | Aviso de Andrés con una captura de producción. La foto recortada de un producto que no es nuevo quedaba pegada a los bordes: ahora el servidor la arma con fondo blanco y centrada, sin la cinta ES. Verificado: HTTP 17/17 con la foto real. Las fotos ya subidas hay que volver a subirlas. |
 

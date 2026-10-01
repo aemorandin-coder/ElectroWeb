@@ -298,7 +298,7 @@ docs/plan/estado/G-*.md
 
 Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estado/<ID>.md`. Aquí va el mapa.
 
-### 5.1 Lo hecho (121 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 01/10)
+### 5.1 Lo hecho (122 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 01/10)
 
 **Plan original (12/09):**
 | Fase | Tareas | Qué dejó |
@@ -316,7 +316,7 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 | Acceso y cuentas | C-80, C-83 a C-85, C-88, C-89, C-105, C-140, C-141, C-143 | Login con límites en el servidor, registro corto y con Google, una sola regla de contraseñas, IP real, sesiones con nombre, roles, equipo por invitación y verificación en dos pasos. |
 | Dinero: pagos y Puntos ES | C-87, C-96, C-101, C-114, C-115, C-123, C-125, C-129 a C-132, C-135, C-139, C-142 | Montos exactos, métodos de pago bien hechos, Pago Móvil que verifica al primer intento, pagos sin orden, mínimo de compra, checkout con todos los métodos y pago mixto, y "Puntos ES" con sus términos. |
 | Envíos y entrega | C-100, C-106, C-126, C-127, C-153 | ZOOM y MRW con oficinas reales y cobro a destino, rastreo, detalle de la orden, tiempo real y embalaje según el paquete. |
-| Catálogo que vende | C-78, C-102, C-117 a C-119, C-121, C-122, C-124, C-133, C-134, C-136, C-154, C-161 | Ofertas y cupones, cinta ES, carga masiva, usados y reacondicionados, garantías, reseñas, el asistente de productos y la confianza junto al botón de compra. |
+| Catálogo que vende | C-78, C-102, C-117 a C-119, C-121, C-122, C-124, C-133, C-134, C-136, C-154, C-155, C-161 | Ofertas y cupones, cinta ES, carga masiva, usados y reacondicionados, garantías, reseñas, el asistente de productos y la confianza junto al botón de compra. |
 | Panel del cliente | C-55, C-128, C-137, C-138 | Marco, inicio con resumen, Mis pedidos, Favoritos, Direcciones y Mi perfil en pestañas. |
 | Legal y facturación | C-103, C-120, C-144, C-146, C-146b, C-147, C-147b, C-148, C-148b, C-151 | Firma de documentos, IVA incluido a la vista, precio sugerido desde el costo, datos para la factura, relación de ventas, cotizaciones y términos sin promesas falsas. |
 | Crecimiento | C-112, C-113, C-116, C-145, C-149 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
@@ -328,7 +328,6 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 **En fila (Claude, en este orden):**
 | ID | Tarea | Notas |
 |---|---|---|
-| **C-155** | Buscar el producto en la web desde el asistente | Decisiones de Andrés del 01/10 (§7.2). Sin API de pago; las medidas entran como sugerencia porque ahora mueven dinero (C-153); la descripción se redacta propia. |
 | **C-157** | Pedir la reseña por correo unos días después de la entrega | Hoy el cliente tiene que acordarse. Solo a quien tiene una orden entregada del producto. |
 | **C-158** | Buscador de la tienda sin acentos | "bateria" encuentra "Batería". Reutiliza `lib/cotizaciones/busqueda.ts` (C-148b). |
 | **C-159** | Cotizaciones, tercera parte | Mandarla por correo desde el panel, "Mis cotizaciones" en el panel del cliente y la retención del 75 % del IVA para contribuyentes especiales y entes públicos. |
@@ -362,6 +361,7 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 - Importador de las historias del artefacto viejo a ElectroStudio, si Andrés las quiere.
 - Firma dibujada con el dedo al aprobar una cotización (hoy la aprobación es digital, con nombre y cédula).
 - Entrar con Facebook o Apple: no va por ahora (24/09).
+- Búsqueda de productos en la web (C-155): un buscador con API gratuita (Brave o Google) como tercera fuente, si en producción los buscadores no le responden al servidor; buscar por código de barras desde el teléfono; proponer también la categoría y las etiquetas.
 
 **Limpieza (sin urgencia):**
 - Máquina de Andrés: la carpeta y las ramas de ChatGPT, y las ramas locales ya fusionadas (comandos en `SIGUIENTE.md`).
@@ -372,12 +372,12 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 La base técnica está: el embudo se mide (C-145), el catálogo es legible para buscadores e IA (C-149), el precio dice su IVA, hay cotizaciones para empresas y la ficha da confianza antes de pagar.
 
 **Lo que frena hoy no es código:**
-1. **El catálogo es corto** (9 productos publicados el 01/10, ninguno con marca). Sin catálogo no hay qué posicionar ni qué anunciar. Herramientas: la carga masiva con plantilla (C-118) y la búsqueda del producto en la web (C-155).
+1. **El catálogo es corto** (9 productos publicados el 01/10, ninguno con marca). Sin catálogo no hay qué posicionar ni qué anunciar. Herramientas, ya hechas: la carga masiva con plantilla (C-118) y la búsqueda del producto en la web (C-155).
 2. **La medición no está encendida:** faltan las claves de Google Analytics y del píxel de Meta en el servidor, y dar de alta el dominio en Google Search Console.
 3. **Los precios:** dependen de los proveedores (fuera del código).
 
 **Orden recomendado:**
-1. Catálogo: C-155, y cargar productos con marca, medidas y fotos.
+1. Catálogo: cargar productos con marca, medidas y fotos (C-155 ayuda con cada uno).
 2. Encender la medición y Search Console; esperar una semana de datos.
 3. Anuncios: búsqueda de Google (texto) y catálogo de Meta con `/feed/productos.xml`. Google Merchant Center no admite a Venezuela (lista oficial leída el 01/10).
 4. Reseñas por correo (C-157): la prueba social que hoy falta.
@@ -468,7 +468,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - Sin devoluciones por cambio de opinión: falla, daño o producto distinto se atienden como garantía. Si no se puede reparar ni cambiar, se devuelve en Puntos ES, como dicen los términos (01/10).
   - Duplicar: el servidor copia todo; la copia nace en borrador y sin stock.
   - Especificaciones sin mínimo y sugeridas por categoría (30/09).
-  - Buscar el producto en la web (C-155, 01/10): un botón por producto en el primer paso del asistente; sin API de pago; trae descripción, peso y medidas de la caja, especificaciones, marca y código de barras; busca por modelo y nombre; si no encuentra las medidas, propone un estimado marcado como tal.
+  - Buscar el producto en la web (C-155, 01/10): un botón por producto en el primer paso del asistente; sin API de pago; trae descripción, peso y medidas de la caja, especificaciones, marca y código de barras; busca por modelo y nombre; si no encuentra las medidas, propone un estimado marcado como tal. El mismo día Andrés dio una clave de Groq (capa gratuita) para ordenar los datos y redactar la descripción: va solo en el `.env`.
 - **Descuentos (25/09):** si hay varios, gana el mayor. Los digitales, fuera. Precio tachado. "Pedir descuento" reemplazado por ofertas y cupones. El cupón de monto fijo va primero a los productos sin oferta.
 - **Reseñas:** solo con una orden entregada del producto.
 - **Facturación e IVA (30/09 y 01/10):**

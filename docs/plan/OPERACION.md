@@ -15,7 +15,7 @@
   - `0 * * * * /home/luami/cron-favoritos.sh`: avisos de favoritos (C-138).
   - `15 */2 * * * /home/luami/cron-envios.sh`: rastreo de las guías de ZOOM (C-100).
   - Para probar uno a mano se corre el guion: responde JSON (`revisados`, `avisos`…).
-- **Variables de entorno:** todas explicadas en `.env.example`. Opcionales que todavía no están en el servidor: `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` (C-145), `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (C-85).
+- **Variables de entorno:** todas explicadas en `.env.example`. Opcionales que todavía no están en el servidor: `GROQ_API_KEY` (C-155, la pone Andrés con el deploy), `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` (C-145), `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (C-85).
 
 ## 2. Deploy
 El deploy lo hace Andrés. Claude deja en `SIGUIENTE.md` **un solo bloque** con todo lo que falta subir: el commit que debe tener producción, el SQL total, las pruebas en orden y la vuelta atrás.
@@ -95,6 +95,8 @@ Build con el `DATABASE_URL` de `rev10_demo` y `NEXT_DIST_DIR=.next-test`, y `nex
   - Para leer un canvas, `canvas[role=img]`: el primer `<canvas>` puede ser una miniatura.
   - Detener las animaciones antes de capturar.
 - **Cambios en órdenes, carrito o Puntos ES:** el caso normal y el caso manipulado.
+- **Búsqueda de productos en la web (C-155):** sale a internet de verdad (buscadores, páginas y Groq con la clave del `.env` local). Groq da 8.000 tokens por minuto: entre una búsqueda con IA y la siguiente, esperar un minuto, o la segunda sale con las reglas. Para probar sin red, simular `globalThis.fetch` (Groq) y usar páginas guardadas.
+- **BiDi devuelve bien los textos y los números, no los objetos:** para leer una lista de la página, `JSON.stringify` dentro y `JSON.parse` fuera.
 - **Producción desde fuera:** `https://electroshopve.com/api/settings/public` da los ajustes reales (leerlos antes de proponer precios o valores por defecto) y las marcas de cada versión (`/llms.txt` existe desde C-149).
 
 ## 4. Equipo y permisos en producción

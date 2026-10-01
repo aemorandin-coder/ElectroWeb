@@ -459,3 +459,8 @@ Mueven datos de facturación: **no los cambies ni los "limpies".**
 - Donde una tarjeta vieja diga "`SIGUIENTE.md` §5" (el prompt de arranque): ya no existe. El prompt lo da Andrés al abrir la ronda.
 - **No edites ninguno de esos archivos** (regla 4): son carril de Claude, igual que `README.md`.
 - El merge a `main` y el push los hace Claude desde el 30/09. Tú terminas la ronda con commits en tu rama y avisas.
+
+## 13. Cambios de Claude del 01/10 que te afectan (C-155 y C-161)
+- **El asistente de productos tiene un campo nuevo, "Marca"** (`WizardData.brand`), y un bloque "Buscar este producto en la web" (`wizard/BusquedaWeb.tsx`). `products/**` sigue fuera de tu carril.
+- `lib/busqueda-web/**`, `lib/marcas.ts` y `app/api/admin/products/**` son carril Claude: leen páginas ajenas y llaman a una IA con una clave. No copies ese patrón a otra pantalla ni uses `fetch` hacia direcciones que no sean de la tienda.
+- `uploadProductPhoto` devuelve ahora `framed` además de `badged` (C-161). Si una tarjeta te pide tocar la subida de fotos, no cambies el `purpose` que se manda.

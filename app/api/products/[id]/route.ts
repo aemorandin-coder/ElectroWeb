@@ -10,6 +10,7 @@ import { publicarStock } from '@/lib/realtime/bus';
 import { precioValido } from '@/lib/pricing';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { conditionInputSchema, pickConditionInput } from '@/lib/product-condition';
+import { leerNombreMarca, resolverMarca } from '@/lib/marcas';
 
 // Variantes con costo y proveedor: esta ruta es solo para quien administra productos (C-60)
 const adminVariantsInclude = { orderBy: [{ sortOrder: 'asc' as const }] };
@@ -43,6 +44,8 @@ export async function GET(
       where: { id },
       include: {
         category: true,
+        // C-155: el asistente muestra la marca
+        brand: { select: { name: true } },
         digitalVariants: adminVariantsInclude,
       },
     });
@@ -213,6 +216,9 @@ export async function PATCH(
 
     // Fields that might not exist in current schema or need specific handling
     if (body.brandId !== undefined) updateData.brandId = body.brandId;
+    // C-155: la marca escrita en el asistente; vacía la quita
+    const marca = leerNombreMarca(body.brandName);
+    if ('error' in marca) return NextResponse.json({ error: marca.error }, { status: 400 });
 
     // Digital Product Fields
     if (body.productType !== undefined) updateData.productType = body.productType;
@@ -254,6 +260,7 @@ export async function PATCH(
     }
 
     const product = await prisma.$transaction(async (tx) => {
+      if (body.brandName !== undefined) updateData.brandId = await resolverMarca(tx, marca.nombre);
       await tx.product.update({ where: { id }, data: updateData });
       if (variants) await syncDigitalVariants(tx, id, variants);
       return tx.product.findUniqueOrThrow({ where: { id }, include: { category: true, digitalVariants: adminVariantsInclude } });

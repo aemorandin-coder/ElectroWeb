@@ -169,6 +169,7 @@ export default function ProductWizard({ productId }: Props) {
           sku: product.sku || '',
           description: product.description || '',
           categoryId: product.categoryId || '',
+          brand: product.brand?.name || '',
           tags: parsedTags,
           images: parsedImages,
           isFeatured: product.isFeatured ?? false,
@@ -184,6 +185,7 @@ export default function ProductWizard({ productId }: Props) {
           dimensionLength: dimLength,
           dimensionWidth: dimWidth,
           dimensionHeight: dimHeight,
+          medidasEstimadas: false,
           isConsolidable: product.isConsolidable !== false,
           shippingCost: product.shippingCost?.toString() || '',
           freeShipping: product.freeShipping === true,
@@ -306,6 +308,8 @@ export default function ProductWizard({ productId }: Props) {
         payload.isConsolidable = data.isConsolidable;
         payload.shippingCost = data.isConsolidable ? 0 : (data.shippingCost.trim() ? leerNumero(data.shippingCost) : 0);
         payload.freeShipping = data.freeShipping;
+        // C-155: la marca por su nombre; vacía, el producto queda sin marca
+        payload.brandName = data.brand.trim();
         payload.specifications = Object.keys(data.specifications).length > 0 ? data.specifications : null;
         // C-119: condición; el servidor la valida y, si es nuevo, guarda vacío lo de usado
         Object.assign(payload, {

@@ -86,6 +86,8 @@ export interface WizardData {
   sku: string;
   description: string;
   categoryId: string;
+  /** C-155: nombre de la marca; el servidor la busca o la crea */
+  brand: string;
   tags: string[];
   images: string[];
   isFeatured: boolean;
@@ -102,6 +104,8 @@ export interface WizardData {
   dimensionLength: string;
   dimensionWidth: string;
   dimensionHeight: string;
+  /** C-155: el peso o las medidas vienen de un estimado de la búsqueda en la web y nadie los ha tocado. No se guarda */
+  medidasEstimadas: boolean;
   isConsolidable: boolean;
   shippingCost: string;
   /** C-100: la tienda paga el envío del paquete que lo lleve */
@@ -143,6 +147,7 @@ export const DEFAULT_WIZARD_DATA: WizardData = {
   sku: '',
   description: '',
   categoryId: '',
+  brand: '',
   tags: [],
   images: [],
   isFeatured: false,
@@ -158,6 +163,7 @@ export const DEFAULT_WIZARD_DATA: WizardData = {
   dimensionLength: '',
   dimensionWidth: '',
   dimensionHeight: '',
+  medidasEstimadas: false,
   isConsolidable: true,
   shippingCost: '',
   freeShipping: false,
@@ -193,6 +199,7 @@ export function validatePhysicalStep1(data: WizardData): Record<string, string> 
   else if (!SKU_VALIDO.test(data.sku.trim())) e.sku = 'Solo letras, números, punto y guion (2 a 60), por ejemplo LAPTOP-ASUS-001';
   if (!data.categoryId) e.categoryId = 'Selecciona una categoría';
   if (data.barcode.trim() && !/^[0-9A-Za-z-]{4,30}$/.test(data.barcode.trim())) e.barcode = 'Solo números y letras, de 4 a 30';
+  if (data.brand.trim().length > 60) e.brand = 'Máximo 60 caracteres';
   // C-119: lo que el cliente necesita saber de un equipo que no es nuevo
   if (isSecondHand(data.condition)) {
     if (needsGrade(data.condition) && !data.conditionGrade) e.conditionGrade = 'Elige el estado estético';

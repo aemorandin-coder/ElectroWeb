@@ -89,6 +89,8 @@ export interface PublicProduct {
   oferta: PublicOffer | null;
   /** C-119: estado del equipo; null si es nuevo. El número de serie nunca sale del servidor */
   condition: PublicCondition | null;
+  /** C-154: garantía de la tienda en días, ya resuelta (la del producto o la de su condición). `null` en digitales */
+  warrantyDays: number | null;
 }
 
 /** C-119: lo que ve el cliente de un producto que no es nuevo */
@@ -238,6 +240,7 @@ export function toPublicProduct(product: ProductWithPublicRelations): PublicProd
     seoImage: product.seoImage,
     oferta: null,
     condition: toPublicCondition(product),
+    warrantyDays: product.productType === 'DIGITAL' ? null : warrantyDaysFor(product.condition as Condition, product.warrantyDays),
   };
 }
 

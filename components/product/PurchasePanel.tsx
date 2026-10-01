@@ -21,6 +21,8 @@ interface PurchasePanelProps {
   lowStockThreshold: number;
   /** C-102: oferta y cupones, debajo del precio */
   afterPrice?: ReactNode;
+  /** C-154: garantía, envío y embalaje en una línea, justo encima de los botones */
+  beforeActions?: ReactNode;
 }
 
 const MAX_DIGITAL_QUANTITY = 10;
@@ -33,7 +35,7 @@ const MAX_DIGITAL_QUANTITY = 10;
  * - En móvil, mientras los botones no están a la vista aparece una barra fija encima de la barra inferior.
  * El precio real lo vuelve a calcular el servidor al crear la orden (C-01).
  */
-export default function PurchasePanel({ product: productoInicial, exchangeRateVES, ivaIncluido = false, lowStockThreshold, afterPrice }: PurchasePanelProps) {
+export default function PurchasePanel({ product: productoInicial, exchangeRateVES, ivaIncluido = false, lowStockThreshold, afterPrice, beforeActions }: PurchasePanelProps) {
   // C-127: stock en vivo. Si otra compra o el panel lo cambian, "Quedan 2" o "Agotado" se ven sin recargar
   const stockVivo = useStockEnVivo(productoInicial.id, productoInicial.stock);
   const product = stockVivo === productoInicial.stock ? productoInicial : { ...productoInicial, stock: stockVivo };
@@ -213,6 +215,8 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
           </p>
         </div>
       )}
+
+      {beforeActions}
 
       <div ref={actionsRef} className="space-y-3">
         {soldOut ? (

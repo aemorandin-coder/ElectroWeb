@@ -1,8 +1,13 @@
-# Punto de partida (actualizado 2026-10-01, cierre de C-147)
+# Punto de partida (actualizado 2026-10-01, cierre de C-150)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-147** (se hizo después de C-149).
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-150** (orden real: C-149, C-147, C-150).
+- **C-150** (01/10, en `main`, falta el deploy, **sin cambio de base**): menú del panel por secciones y Dashboard de trabajo (`estado/C-150.md`). Aprobado por Andrés el 01/10 ("deja Dashboard como Dashboard").
+  - **Pruebas después del deploy (Andrés):**
+    1. En el teléfono, abrir el menú del panel: Dashboard y seis secciones, sin deslizar. Tocar "Ventas": se abren sus cinco páginas.
+    2. Entrar a Configuración: "Administración" queda abierta y Configuración, marcada.
+    3. Dashboard: las acciones rápidas arriba; "Ventas cobradas" de hoy y del mes deben parecerse a lo que sabes que cobraste (ahora solo cuenta lo pagado).
+    4. "Tu tienda: por completar" lista lo que falta (marca de los productos, imagen para compartir…). Cada renglón desaparece al resolverlo.
 - **Dicho por Andrés el 01/10:** ya puso 16 en el IVA (C-146). Los cursos se van a llenar: "Cursos" se queda en el menú. Las devoluciones de garantía quedan como en los términos (reparar, cambiar por uno igual y, si no hay, Puntos ES). No sabe si el deploy incluyó C-148b: se ve en Configuración → Negocio ("Sello y firma de los presupuestos").
-- **Pedido de Andrés del 01/10, sin hacer:** el menú del panel tiene 25 ítems y mucho scroll. Claude propuso agruparlo en 7 secciones que se abren y se cierran, sin cambiar ninguna página (§3d). **Falta su visto bueno.**
 - **C-147** (01/10, en `main`, falta el deploy, **siete columnas nuevas**): datos para la factura y relación de ventas del mes (`estado/C-147.md`).
   - En el pago: "¿A nombre de quién va la factura?" (la persona o su empresa verificada, con RIF y domicilio fiscal). La orden guarda la copia.
   - En el panel, detalle de la orden: "Copiar datos para facturar" y "N.º de la factura emitida". El cliente ve el número en su pedido.
@@ -372,7 +377,7 @@ Andrés pasó un análisis que compara la tienda con otras dos. Lo técnico se h
 5. **Reseñas verificadas:** pedir la reseña por correo unos días después de la entrega (hoy el cliente tiene que acordarse).
 6. **Precios:** fuera del código. Es de Andrés con sus proveedores.
 
-## 3d. Menú del panel: propuesta de Claude del 01/10 (falta el visto bueno de Andrés)
+## 3d. Menú del panel: hecho en C-150 (aprobado por Andrés el 01/10; "Inicio" se llama Dashboard)
 Hoy son 25 ítems en una lista. La propuesta no fusiona páginas ni cambia direcciones: las agrupa en secciones que se abren y se cierran, con la suma de sus avisos en el título.
 | Sección | Lo que lleva |
 |---|---|
@@ -385,6 +390,23 @@ Hoy son 25 ítems en una lista. La propuesta no fusiona páginas ni cambia direc
 | Administración | Reportes, Notificaciones, Documentos Legales, Métodos de Pago, Equipo, Configuración, Mi seguridad |
 - Se abre sola la sección de la página en la que estás. En el teléfono, el menú cabe sin deslizar.
 - **Por qué no meter todo dentro de Configuración:** Configuración, Métodos de Pago y Equipo son solo del dueño; Notificaciones y Documentos Legales también los usa el Administrador. Como sección del menú, cada quien ve lo suyo.
+
+## 3e. Lo que falta del plan (al 01/10, después de C-150)
+**Depende de Andrés (sin código):**
+- Deploy de C-149, C-147 y C-150 (y C-148b si no entró), con sus pruebas.
+- La revisión final en producción (`REVISION_FINAL.md`).
+- Marca de los productos, imagen para compartir, Google Search Console, y las claves de Google Analytics y del píxel de Meta.
+- Términos y privacidad con el abogado (`estado/C-120.md` §7 y las 3 afirmaciones de `estado/C-144.md`).
+- Datos que esperan tareas: costos del seguro de ZOOM y MRW (C-107), el diagnóstico de clientes borrados (C-92), plazos reales de la entrega digital (§3c) y SADES arriba (taller).
+
+**De Claude, en el orden recomendado:**
+1. **C-146b · Precio sugerido desde el costo** (costo × 1,30 × 1,16) y aviso de margen para el dueño.
+2. **C-151 · Confianza antes de pagar** (§3c): garantía, despacho y embalaje junto al botón; cómo se resuelve una garantía dicho antes del pago; plazo de los digitales.
+3. **Reseñas por correo** unos días después de la entrega.
+4. **Buscador de la tienda sin acentos** ("bateria" encuentra "Batería"), con lo hecho en C-148b.
+5. **Cotizaciones:** mandarla por correo, "Mis cotizaciones" y la retención del 75 % del IVA.
+6. **C-92 y C-107** cuando lleguen los datos.
+7. **Menores** (§3, punto 8) y, al cerrar el ciclo, borrar `rev10_demo`.
 
 ## 4. Decisiones tomadas (no volver a preguntar)
 - **Google:** vincular por correo; teléfono y cédula en la primera compra; admins nunca con Google.
@@ -460,4 +482,4 @@ Hoy son 25 ítems en una lista. La propuesta no fusiona páginas ni cambia direc
 > 2. Pregúntame cómo me fue invitando al equipo (si llegó el correo de invitación y si cada persona configuró sus dos pasos) y si el deploy de C-139 a C-149 terminó bien: hasta qué tarea llegó, si puse 16 en el IVA (C-146), las pruebas de las cotizaciones (C-148b) y las de C-149 (arriba), y mis decisiones de §3c.
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
 > 4. Sigue con la **revisión final** conmigo (`REVISION_FINAL.md`) y arregla lo que salga. Al terminar cada tarea: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
-> 5. Después, el menú del panel (§3d, si lo aprobé), lo comercial de §3c con mis decisiones, C-146b (precio sugerido desde el costo) y C-107 y C-92 cuando te pase los datos.
+> 5. Después, lo que falta del plan (§3e): C-146b (precio sugerido desde el costo), lo comercial de §3c con mis decisiones, y C-107 y C-92 cuando te pase los datos.

@@ -35,6 +35,7 @@ export async function GET() {
       pendingReviews,
       pendingWarranty,
       pendingQuotes,
+      pendingVerifications,
     ] = await Promise.all([
       // Órdenes pendientes
       prisma.order.count({ where: { status: 'PENDING' } }),
@@ -71,6 +72,9 @@ export async function GET() {
 
       // Cotizaciones que pidió un cliente y esperan precios (menú Cotizaciones, C-148)
       prisma.quote.count({ where: { status: 'REQUESTED' } }),
+
+      // Empresas que subieron sus documentos y esperan revisión (menú Verificaciones, C-150)
+      prisma.profile.count({ where: { businessVerificationStatus: 'PENDING' } }),
     ]);
 
     // Mensajes y Solicitudes = mensajes + solicitudes de producto (las notificaciones tienen su propio menú desde C-73)
@@ -86,6 +90,7 @@ export async function GET() {
       pendingReviews,
       pendingWarranty,
       pendingQuotes,
+      pendingVerifications,
       unreadNotifications,
     });
   } catch (error) {

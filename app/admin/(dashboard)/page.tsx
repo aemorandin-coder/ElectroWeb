@@ -1,440 +1,269 @@
-'use client';
-
-import { formatUSD } from '@/lib/currency';
-import { adminCard, adminCardFlush, adminEmpty, adminPageHeader, adminPageTitle, adminPageSubtitle, adminSectionTitle, adminSecondaryButton, adminStatLabel, adminStatValue } from '@/lib/admin-ui';
-
-import { toast } from 'react-hot-toast';
-
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-// Removed ReviewsWidget import
+import { getServerSession } from 'next-auth';
+import type { ReactNode } from 'react';
 import {
-  FiUsers,
-  FiPercent,
-  FiLayers,
-  FiMail,
-  FiShare2,
-  FiStar,
-  FiShield,
-  FiAlertTriangle,
-  FiClock,
-  FiCheckCircle,
-  FiChevronRight
+  FiAlertTriangle, FiBarChart2, FiBox, FiCheckCircle, FiChevronRight, FiClipboard, FiClock, FiDollarSign, FiFileText, FiFilm,
+  FiLayers, FiLifeBuoy, FiMail, FiPercent, FiPlus, FiSettings, FiShare2, FiShield, FiStar, FiTag, FiTool, FiTruck, FiUpload, FiUsers,
 } from 'react-icons/fi';
+import { adminBadge, adminCard, adminCardFlush, adminPageHeader, adminPageSubtitle, adminPageTitle, adminSectionTitle } from '@/lib/admin-ui';
+import { authOptions } from '@/lib/auth';
+import { hasPermission } from '@/lib/auth-helpers';
+import { formatUSD } from '@/lib/currency';
+import { ETIQUETA_ESTADO } from '@/lib/order-admin';
+import { estadoPago, tonoEstadoOrden } from '@/lib/order-pago';
+import { getDashboard, type DashboardData } from '@/lib/queries/dashboard';
 
-// Dynamic import for charts to reduce initial bundle size
-const AreaChart = dynamic(
-  () => import('recharts').then((mod) => mod.AreaChart),
-  { ssr: false }
-);
-const Area = dynamic(
-  () => import('recharts').then((mod) => mod.Area),
-  { ssr: false }
-);
-const XAxis = dynamic(
-  () => import('recharts').then((mod) => mod.XAxis),
-  { ssr: false }
-);
-const YAxis = dynamic(
-  () => import('recharts').then((mod) => mod.YAxis),
-  { ssr: false }
-);
-const CartesianGrid = dynamic(
-  () => import('recharts').then((mod) => mod.CartesianGrid),
-  { ssr: false }
-);
-const Tooltip = dynamic(
-  () => import('recharts').then((mod) => mod.Tooltip),
-  { ssr: false }
-);
-const ResponsiveContainer = dynamic(
-  () => import('recharts').then((mod) => mod.ResponsiveContainer),
-  { ssr: false }
-);
+// Siempre al día: son los pendientes y las ventas de este momento
+export const dynamic = 'force-dynamic';
 
-interface Stats {
-  products: {
-    total: number;
-    published: number;
-    draft: number;
-    outOfStock: number;
-  };
-  orders: {
-    total: number;
-    pending: number;
-    completed: number;
-  };
-  customers: {
-    total: number;
-  };
-  sales: {
-    total: number;
-    history: { date: string; amount: number }[];
-  };
-  pendingActions?: {
-    creators: number;
-    discounts: number;
-    productRequests: number;
-    contactMessages: number;
-    referrals: number;
-    reviews: number;
-    businessVerifications: number;
-  };
+/**
+ * Dashboard del panel (C-150): una pantalla de trabajo. Arriba, lo que se hace más seguido y lo que espera al equipo;
+ * las ventas en números (hoy y este mes) con una gráfica mínima de la semana. Las gráficas completas están en Reportes.
+ * Server Component: lee la base directamente (antes pedía /api/stats desde el navegador).
+ */
+
+type Permiso = 'MANAGE_PRODUCTS' | 'MANAGE_ORDERS' | 'MANAGE_CONTENT' | 'MANAGE_USERS' | 'VIEW_REPORTS' | 'MANAGE_SETTINGS';
+
+const ACCIONES: Array<{ titulo: string; href: string; icono: ReactNode; permiso: Permiso }> = [
+  { titulo: 'Nuevo producto', href: '/admin/products/new', icono: <FiPlus />, permiso: 'MANAGE_PRODUCTS' },
+  { titulo: 'Ver órdenes', href: '/admin/orders', icono: <FiClipboard />, permiso: 'MANAGE_ORDERS' },
+  { titulo: 'Nueva cotización', href: '/admin/cotizaciones/nueva', icono: <FiFileText />, permiso: 'MANAGE_ORDERS' },
+  { titulo: 'Consultar un pago', href: '/admin/transactions', icono: <FiDollarSign />, permiso: 'MANAGE_ORDERS' },
+  { titulo: 'Oferta o cupón', href: '/admin/discount-requests', icono: <FiPercent />, permiso: 'MANAGE_CONTENT' },
+  { titulo: 'Nueva historia', href: '/admin/studio/nueva', icono: <FiFilm />, permiso: 'MANAGE_CONTENT' },
+  { titulo: 'Importar productos', href: '/admin/products/importar', icono: <FiUpload />, permiso: 'MANAGE_PRODUCTS' },
+  { titulo: 'Categorías', href: '/admin/categories', icono: <FiTag />, permiso: 'MANAGE_PRODUCTS' },
+  { titulo: 'Relación de ventas', href: '/admin/reports', icono: <FiBarChart2 />, permiso: 'VIEW_REPORTS' },
+  { titulo: 'Configuración', href: '/admin/settings', icono: <FiSettings />, permiso: 'MANAGE_SETTINGS' },
+];
+
+type Pendiente = { clave: keyof DashboardData['porAtender']; uno: string; varios: string; href: string; icono: ReactNode; permiso: Permiso; urgente?: boolean };
+
+// En el orden en que conviene atenderlos: primero el dinero y lo que espera un cliente
+const PENDIENTES: Pendiente[] = [
+  { clave: 'pagosPorConfirmar', uno: 'pago por confirmar', varios: 'pagos por confirmar', href: '/admin/orders', icono: <FiClock />, permiso: 'MANAGE_ORDERS', urgente: true },
+  { clave: 'porPreparar', uno: 'pedido pagado por preparar o entregar', varios: 'pedidos pagados por preparar o entregar', href: '/admin/orders', icono: <FiTruck />, permiso: 'MANAGE_ORDERS', urgente: true },
+  { clave: 'recargas', uno: 'recarga de Puntos ES por confirmar', varios: 'recargas de Puntos ES por confirmar', href: '/admin/transactions', icono: <FiDollarSign />, permiso: 'MANAGE_ORDERS', urgente: true },
+  { clave: 'pagosSinOrden', uno: 'Pago Móvil sin orden', varios: 'Pagos Móvil sin orden', href: '/admin/transactions', icono: <FiAlertTriangle />, permiso: 'MANAGE_ORDERS', urgente: true },
+  { clave: 'cotizaciones', uno: 'cotización por armar', varios: 'cotizaciones por armar', href: '/admin/cotizaciones', icono: <FiFileText />, permiso: 'MANAGE_ORDERS' },
+  { clave: 'garantias', uno: 'garantía por atender', varios: 'garantías por atender', href: '/admin/garantias', icono: <FiLifeBuoy />, permiso: 'MANAGE_ORDERS' },
+  { clave: 'facturasEmpresa', uno: 'compra de empresa sin número de factura', varios: 'compras de empresa sin número de factura', href: '/admin/orders', icono: <FiFileText />, permiso: 'MANAGE_ORDERS' },
+  { clave: 'mensajes', uno: 'mensaje de cliente', varios: 'mensajes de clientes', href: '/admin/inquiries', icono: <FiMail />, permiso: 'MANAGE_CONTENT' },
+  { clave: 'solicitudes', uno: 'solicitud de producto', varios: 'solicitudes de producto', href: '/admin/inquiries?tab=requests', icono: <FiLayers />, permiso: 'MANAGE_CONTENT' },
+  { clave: 'sinStock', uno: 'producto publicado sin existencias', varios: 'productos publicados sin existencias', href: '/admin/products', icono: <FiBox />, permiso: 'MANAGE_PRODUCTS' },
+  { clave: 'resenas', uno: 'reseña por moderar', varios: 'reseñas por moderar', href: '/admin/reviews', icono: <FiStar />, permiso: 'MANAGE_CONTENT' },
+  { clave: 'descuentos', uno: 'descuento por aprobar', varios: 'descuentos por aprobar', href: '/admin/discount-requests', icono: <FiPercent />, permiso: 'MANAGE_CONTENT' },
+  { clave: 'verificaciones', uno: 'empresa por verificar', varios: 'empresas por verificar', href: '/admin/verifications', icono: <FiShield />, permiso: 'MANAGE_USERS' },
+  { clave: 'referidos', uno: 'comisión de promotor por aprobar', varios: 'comisiones de promotores por aprobar', href: '/admin/marketing', icono: <FiShare2 />, permiso: 'MANAGE_CONTENT' },
+  { clave: 'creadores', uno: 'solicitud de creador de cursos', varios: 'solicitudes de creadores de cursos', href: '/admin/creators', icono: <FiUsers />, permiso: 'MANAGE_USERS' },
+  { clave: 'cursos', uno: 'curso por aprobar', varios: 'cursos por aprobar', href: '/admin/cursos', icono: <FiTool />, permiso: 'MANAGE_CONTENT' },
+];
+
+const fechaCorta = new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+
+/** La semana en siete barras: lo justo para ver el ritmo. Los montos van también escritos (no dependen del puntero). */
+function Semana({ dias }: { dias: DashboardData['ventas']['semana'] }) {
+  const maximo = Math.max(...dias.map((d) => d.totalUSD), 0);
+  const total = dias.reduce((suma, d) => suma + Math.round(d.totalUSD * 100), 0) / 100;
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-xs text-muted">Últimos 7 días</p>
+        <p className="text-sm font-semibold tabular-nums text-ink">{formatUSD(total)}</p>
+      </div>
+      <ol className="mt-2 flex h-20 items-end gap-1.5" aria-label="Ventas cobradas por día">
+        {dias.map((dia) => (
+          <li key={dia.fecha} className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1" title={`${dia.etiqueta}: ${formatUSD(dia.totalUSD)}`}>
+            <span
+              className={`block w-full rounded-t ${dia.totalUSD > 0 ? 'bg-brand-500' : 'bg-line'}`}
+              style={{ height: dia.totalUSD > 0 && maximo > 0 ? `${Math.max(8, (dia.totalUSD / maximo) * 100)}%` : '2px' }}
+              aria-hidden="true"
+            />
+            <span className="block whitespace-nowrap text-center text-xs text-muted" aria-hidden="true">{dia.etiqueta.split(' ')[0].replace('.', '')}</span>
+            <span className="sr-only">{dia.etiqueta}: {formatUSD(dia.totalUSD)}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
 }
 
-export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default async function AdminDashboard() {
+  const session = await getServerSession(authOptions);
+  // El `proxy` ya exige admin con dos pasos; esto es el candado de la página (ventas y conteos del negocio)
+  if (!hasPermission(session, 'VIEW_DASHBOARD')) return null;
+  const puede = (permiso: Permiso) => hasPermission(session, permiso);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/stats');
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        }
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-        toast.error('No se pudieron cargar las estadísticas');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
-
-  const dashboardStats = [
-    {
-      name: 'Ventas totales',
-      value: isLoading ? '...' : formatUSD(stats?.sales?.total || 0),
-      change: '',
-      changeType: 'neutral' as const,
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      gradient: 'from-brand-500 to-brand-600',
-    },
-    {
-      name: 'Órdenes',
-      value: isLoading ? '...' : (stats?.orders.total.toString() || '0'),
-      change: `${stats?.orders.pending || 0} ${(stats?.orders.pending || 0) === 1 ? 'pendiente' : 'pendientes'}`,
-      changeType: (stats?.orders.pending || 0) > 0 ? 'positive' as const : 'neutral' as const,
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-        </svg>
-      ),
-      gradient: 'from-brand-500 to-brand-600',
-    },
-    {
-      name: 'Productos',
-      value: isLoading ? '...' : (stats?.products.total.toString() || '0'),
-      change: `${stats?.products.published || 0} ${(stats?.products.published || 0) === 1 ? 'publicado' : 'publicados'}`,
-      changeType: (stats?.products.published || 0) > 0 ? 'positive' as const : 'neutral' as const,
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-        </svg>
-      ),
-      gradient: 'from-brand-500 to-brand-600',
-    },
-    {
-      name: 'Clientes',
-      value: isLoading ? '...' : (stats?.customers.total.toString() || '0'),
-      change: '',
-      changeType: 'neutral' as const,
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ),
-      gradient: 'from-brand-500 to-brand-600',
-    },
-  ];
-
-  const quickActions = [
-    {
-      title: 'Agregar Producto',
-      description: 'Crear producto',
-      href: '/admin/products/new',
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-      ),
-      gradient: 'from-brand-500 to-brand-600',
-    },
-    {
-      title: 'Categorías',
-      description: 'Organizar productos',
-      href: '/admin/categories',
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-        </svg>
-      ),
-      gradient: 'from-brand-500 to-brand-600',
-    },
-    {
-      title: 'Ver Órdenes',
-      description: 'Gestionar pedidos',
-      href: '/admin/orders',
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
-      ),
-      gradient: 'from-brand-500 to-brand-600',
-    },
-    {
-      title: 'Configuración',
-      description: 'Ajustes del sistema',
-      href: '/admin/settings',
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      ),
-      gradient: 'from-brand-500 to-brand-600',
-    },
-  ];
-
-  const pendingActions = stats?.pendingActions || {
-    creators: 0,
-    discounts: 0,
-    productRequests: 0,
-    contactMessages: 0,
-    referrals: 0,
-    reviews: 0,
-    businessVerifications: 0,
-  };
-
-  const totalPendingActions =
-    (pendingActions.creators || 0) +
-    (pendingActions.discounts || 0) +
-    (pendingActions.productRequests || 0) +
-    (pendingActions.contactMessages || 0) +
-    (pendingActions.referrals || 0) +
-    (pendingActions.reviews || 0) +
-    (pendingActions.businessVerifications || 0) +
-    (stats?.products?.outOfStock || 0) +
-    (stats?.orders?.pending || 0);
-
-  const alertsList = [
-    {
-      id: 'orders',
-      count: stats?.orders?.pending || 0,
-      title: 'Pedidos Pendientes',
-      description: `${stats?.orders?.pending || 0} por procesar`,
-      icon: <FiClock className="w-4 h-4" />,
-      href: '/admin/orders',
-      bgColor: 'bg-white border-line text-ink hover:bg-surface',
-      iconBg: 'bg-warning text-white',
-      hoverColor: 'hover:border-warning',
-      pulse: true,
-    },
-    {
-      id: 'outOfStock',
-      count: stats?.products?.outOfStock || 0,
-      title: 'Productos Agotados',
-      description: `${stats?.products?.outOfStock || 0} sin stock`,
-      icon: <FiAlertTriangle className="w-4 h-4" />,
-      href: '/admin/products',
-      bgColor: 'bg-white border-line text-ink hover:bg-surface',
-      iconBg: 'bg-deal text-white',
-      hoverColor: 'hover:border-deal',
-      pulse: true,
-    },
-    {
-      id: 'creators',
-      count: pendingActions.creators || 0,
-      title: 'Creadores de Cursos',
-      description: `${pendingActions.creators || 0} solicitudes`,
-      icon: <FiUsers className="w-4 h-4" />,
-      href: '/admin/creators',
-      bgColor: 'bg-white border-line text-ink hover:bg-surface',
-      iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-brand-500',
-      pulse: false,
-    },
-    {
-      id: 'discounts',
-      count: pendingActions.discounts || 0,
-      title: 'Solicitudes Descuento',
-      description: `${pendingActions.discounts || 0} por aprobar`,
-      icon: <FiPercent className="w-4 h-4" />,
-      href: '/admin/discount-requests',
-      bgColor: 'bg-white border-line text-ink hover:bg-surface',
-      iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-brand-500',
-      pulse: false,
-    },
-    {
-      id: 'productRequests',
-      count: pendingActions.productRequests || 0,
-      title: 'Solicitudes Especiales',
-      description: `${pendingActions.productRequests || 0} solicitudes`,
-      icon: <FiLayers className="w-4 h-4" />,
-      href: '/admin/inquiries?tab=requests',
-      bgColor: 'bg-white border-line text-ink hover:bg-surface',
-      iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-brand-500',
-      pulse: false,
-    },
-    {
-      id: 'contactMessages',
-      count: pendingActions.contactMessages || 0,
-      title: 'Consultas de Clientes',
-      description: `${pendingActions.contactMessages || 0} mensajes`,
-      icon: <FiMail className="w-4 h-4" />,
-      href: '/admin/inquiries',
-      bgColor: 'bg-white border-line text-ink hover:bg-surface',
-      iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-brand-500',
-      pulse: false,
-    },
-    {
-      id: 'referrals',
-      count: pendingActions.referrals || 0,
-      title: 'Afiliados / Referidos',
-      description: `${pendingActions.referrals || 0} por aprobar`,
-      icon: <FiShare2 className="w-4 h-4" />,
-      href: '/admin/marketing',
-      bgColor: 'bg-white border-line text-ink hover:bg-surface',
-      iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-brand-500',
-      pulse: false,
-    },
-    {
-      id: 'reviews',
-      count: pendingActions.reviews || 0,
-      title: 'Reseñas de Productos',
-      description: `${pendingActions.reviews || 0} por moderar`,
-      icon: <FiStar className="w-4 h-4" />,
-      href: '/admin/reviews',
-      bgColor: 'bg-white border-line text-ink hover:bg-surface',
-      iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-brand-500',
-      pulse: false,
-    },
-    {
-      id: 'businessVerifications',
-      count: pendingActions.businessVerifications || 0,
-      title: 'Verificaciones Perfil',
-      description: `${pendingActions.businessVerifications || 0} pendientes`,
-      icon: <FiShield className="w-4 h-4" />,
-      href: '/admin/verifications',
-      bgColor: 'bg-white border-line text-ink hover:bg-surface',
-      iconBg: 'bg-brand-500 text-white',
-      hoverColor: 'hover:border-brand-500',
-      pulse: false,
-    },
-  ];
-
-  const pendingLabel = (id: string, count: number) => {
-    const plural = count !== 1;
-    const labels: Record<string, string> = {
-      orders: plural ? 'pedidos por procesar' : 'pedido por procesar',
-      outOfStock: plural ? 'productos sin stock' : 'producto sin stock',
-      creators: plural ? 'solicitudes de creadores' : 'solicitud de creador',
-      discounts: plural ? 'descuentos por aprobar' : 'descuento por aprobar',
-      productRequests: plural ? 'solicitudes especiales' : 'solicitud especial',
-      contactMessages: plural ? 'mensajes de clientes' : 'mensaje de cliente',
-      referrals: plural ? 'referidos por aprobar' : 'referido por aprobar',
-      reviews: plural ? 'reseñas por moderar' : 'reseña por moderar',
-      businessVerifications: plural ? 'perfiles por verificar' : 'perfil por verificar',
-    };
-    return `${count} ${labels[id]}`;
-  };
-
-  const activeAlerts = alertsList.filter((alert) => alert.count > 0);
+  const datos = await getDashboard();
+  const acciones = ACCIONES.filter((a) => puede(a.permiso));
+  const pendientes = PENDIENTES.filter((p) => puede(p.permiso) && datos.porAtender[p.clave] > 0);
+  const totalPendientes = pendientes.reduce((suma, p) => suma + datos.porAtender[p.clave], 0);
+  const tienda = datos.tienda.filter((t) => !t.soloDueno || puede('MANAGE_SETTINGS'));
+  const hoy = new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
 
   return (
     <div className="space-y-4">
       <header className={adminPageHeader}>
         <div>
-          <h1 className={adminPageTitle}>Resumen</h1>
-          <p className={adminPageSubtitle}>{new Date().toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <h1 className={adminPageTitle}>Dashboard</h1>
+          <p className={adminPageSubtitle}>{hoy}</p>
         </div>
       </header>
 
-      <section aria-labelledby="pendientes-titulo" className={adminCardFlush}>
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-          <h2 id="pendientes-titulo" className={adminSectionTitle}>Por atender</h2>
-          {totalPendingActions > 0 && <span className="text-sm text-muted">{totalPendingActions} pendientes</span>}
-        </div>
-        {isLoading ? (
-          <div role="status" aria-label="Cargando pendientes" className="space-y-2 px-4 pb-4">
-            {[0, 1].map((i) => <div key={i} className="h-11 rounded-lg bg-surface" />)}
-          </div>
-        ) : totalPendingActions === 0 ? (
-          <p className="flex items-center gap-2 px-4 pb-3 text-sm text-ink-soft"><FiCheckCircle className="h-4 w-4 text-success-strong" aria-hidden="true" /> Todo al día</p>
-        ) : (
-          <ul className="divide-y divide-line border-t border-line">
-            {activeAlerts.map((alert) => (
-              <li key={alert.id}>
-                <Link href={alert.href} className="flex min-h-11 items-center gap-3 px-4 py-3 text-sm text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
-                  <span className="shrink-0 text-muted" aria-hidden="true">{alert.icon}</span>
-                  <span className="min-w-0 flex-1 font-medium">{pendingLabel(alert.id, alert.count)}</span>
-                  <FiChevronRight className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+      <section aria-labelledby="acciones-titulo">
+        <h2 id="acciones-titulo" className="sr-only">Acciones rápidas</h2>
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          {acciones.map((accion) => (
+            <li key={accion.href + accion.titulo}>
+              <Link
+                href={accion.href}
+                className="flex min-h-12 items-center gap-2.5 rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold text-ink hover:border-brand-500 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 [&_svg]:h-4 [&_svg]:w-4" aria-hidden="true">{accion.icono}</span>
+                <span className="min-w-0 leading-tight">{accion.titulo}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {dashboardStats.map((stat) => (
-          <div key={stat.name} className="min-w-0 rounded-2xl border border-line bg-white p-3 sm:p-4">
-            <p className={adminStatLabel}>{stat.name}</p>
-            <p className={`${adminStatValue} mt-1 text-lg tabular-nums [overflow-wrap:anywhere] sm:text-2xl`}>{stat.value}</p>
-            {stat.change && <p className="mt-1 text-xs text-muted">{stat.change}</p>}
-          </div>
-        ))}
-      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          <section aria-labelledby="pendientes-titulo" className={adminCardFlush}>
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+              <h2 id="pendientes-titulo" className={adminSectionTitle}>Por atender</h2>
+              {totalPendientes > 0 && <span className="text-sm text-muted">{totalPendientes} {totalPendientes === 1 ? 'pendiente' : 'pendientes'}</span>}
+            </div>
+            {pendientes.length === 0 ? (
+              <p className="flex items-center gap-2 px-4 pb-4 text-sm text-ink-soft"><FiCheckCircle className="h-4 w-4 text-success-strong" aria-hidden="true" /> Todo al día</p>
+            ) : (
+              <ul className="divide-y divide-line border-t border-line">
+                {pendientes.map((p) => {
+                  const cantidad = datos.porAtender[p.clave];
+                  return (
+                    <li key={p.clave}>
+                      <Link href={p.href} className="flex min-h-12 items-center gap-3 px-4 py-2.5 text-sm text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg [&_svg]:h-4 [&_svg]:w-4 ${p.urgente ? 'bg-warning/15 text-warning-strong' : 'bg-surface text-muted'}`} aria-hidden="true">{p.icono}</span>
+                        <span className="min-w-0 flex-1 font-medium"><span className="tabular-nums">{cantidad}</span> {cantidad === 1 ? p.uno : p.varios}</span>
+                        <FiChevronRight className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
-      <section className={adminCard} aria-labelledby="ventas-titulo">
-        <div className="mb-4">
-          <h2 id="ventas-titulo" className={adminSectionTitle}>Ventas</h2>
-          <p className="text-sm text-muted">Últimos 7 días</p>
-        </div>
-        <div className="h-40 min-w-0 sm:h-56">
-          {isLoading ? (
-            <div role="status" aria-label="Cargando ventas" className="h-full rounded-lg bg-surface" />
-          ) : stats?.sales?.history && stats.sales.history.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-              <AreaChart data={stats.sales.history} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-line)" />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-muted)', fontSize: 12 }} dy={5} />
-                <YAxis width={76} axisLine={false} tickLine={false} tick={{ fill: 'var(--color-muted)', fontSize: 12 }} tickFormatter={(value) => formatUSD(Number(value))} />
-                <Tooltip formatter={(value) => [formatUSD(Number(value) || 0), 'Ventas']} />
-                <Area type="monotone" dataKey="amount" stroke="var(--color-brand-500)" strokeWidth={1.5} fillOpacity={0.15} fill="var(--color-brand-500)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className={`${adminEmpty} h-full py-4`}><p className="text-sm text-muted">No hay datos de ventas recientes</p></div>
+          {puede('MANAGE_ORDERS') && (
+            <section aria-labelledby="recientes-titulo" className={adminCardFlush}>
+              <div className="flex items-center justify-between gap-2 px-4 py-3">
+                <h2 id="recientes-titulo" className={adminSectionTitle}>Órdenes recientes</h2>
+                <Link href="/admin/orders" className="inline-flex h-9 items-center rounded-lg px-2 text-sm font-semibold text-brand-600 hover:bg-brand-50">Ver todas</Link>
+              </div>
+              {datos.ordenesRecientes.length === 0 ? (
+                <p className="px-4 pb-4 text-sm text-muted">Todavía no hay órdenes.</p>
+              ) : (
+                <ul className="divide-y divide-line border-t border-line">
+                  {datos.ordenesRecientes.map((orden) => {
+                    const pago = estadoPago(orden.paymentStatus);
+                    return (
+                      <li key={orden.id}>
+                        <Link href="/admin/orders" className="flex min-h-12 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
+                          <span className="min-w-0 flex-1 basis-40">
+                            <span className="block truncate font-medium text-ink">{orden.cliente}</span>
+                            <span className="block text-xs tabular-nums text-muted">{orden.orderNumber} · {fechaCorta.format(new Date(orden.createdAt))}</span>
+                          </span>
+                          <span className="flex flex-wrap items-center gap-1.5">
+                            <span className={adminBadge(tonoEstadoOrden(orden.status))}>{ETIQUETA_ESTADO[orden.status]}</span>
+                            {orden.paymentStatus !== 'PAID' && <span className={adminBadge(pago.tono)}>{pago.label}</span>}
+                          </span>
+                          <span className="w-20 shrink-0 text-right font-semibold tabular-nums text-ink">{formatUSD(orden.totalUSD)}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
           )}
         </div>
-      </section>
 
-      <section aria-labelledby="accesos-titulo">
-        <h2 id="accesos-titulo" className={`${adminSectionTitle} mb-3`}>Accesos rápidos</h2>
-        <div className="flex flex-wrap gap-2">
-          {quickActions.map((action) => (
-            <Link key={action.title} href={action.href} title={action.description} className={adminSecondaryButton}>
-              <span aria-hidden="true">{action.icon}</span>{action.title}
-              <span className="sr-only">: {action.description}</span>
-            </Link>
-          ))}
+        <div className="space-y-4">
+          <section aria-labelledby="ventas-titulo" className={adminCard}>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 id="ventas-titulo" className={adminSectionTitle}>Ventas cobradas</h2>
+              {puede('VIEW_REPORTS') && <Link href="/admin/reports" className="inline-flex h-9 items-center rounded-lg px-2 text-sm font-semibold text-brand-600 hover:bg-brand-50">Reportes</Link>}
+            </div>
+            <dl className="grid grid-cols-2 gap-3">
+              <div>
+                <dt className="text-xs text-muted">Hoy</dt>
+                <dd className="text-xl font-bold tabular-nums text-ink [overflow-wrap:anywhere]">{formatUSD(datos.ventas.hoyUSD)}</dd>
+                <dd className="text-xs text-muted">{datos.ventas.hoyOrdenes} {datos.ventas.hoyOrdenes === 1 ? 'orden' : 'órdenes'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted">Este mes</dt>
+                <dd className="text-xl font-bold tabular-nums text-ink [overflow-wrap:anywhere]">{formatUSD(datos.ventas.mesUSD)}</dd>
+                <dd className="text-xs text-muted">{datos.ventas.mesOrdenes} {datos.ventas.mesOrdenes === 1 ? 'orden' : 'órdenes'}</dd>
+              </div>
+            </dl>
+            <div className="mt-4 border-t border-line pt-3">
+              <Semana dias={datos.ventas.semana} />
+            </div>
+            <p className="mt-3 text-xs text-muted">Solo órdenes pagadas, sin las canceladas ni las reembolsadas.</p>
+          </section>
+
+          {puede('MANAGE_PRODUCTS') && datos.pocoInventario.total > 0 && (
+            <section aria-labelledby="inventario-titulo" className={adminCardFlush}>
+              <div className="px-4 py-3">
+                <h2 id="inventario-titulo" className={adminSectionTitle}>Poco inventario</h2>
+                <p className="text-xs text-muted">Publicados con {datos.pocoInventario.umbral} unidades o menos</p>
+              </div>
+              <ul className="divide-y divide-line border-t border-line">
+                {datos.pocoInventario.productos.map((producto) => (
+                  <li key={producto.id}>
+                    <Link href={`/admin/products/${producto.id}`} className="flex min-h-11 items-center gap-3 px-4 py-2 text-sm hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
+                      <span className="min-w-0 flex-1 truncate text-ink">{producto.name}</span>
+                      <span className={adminBadge(producto.stock <= 2 ? 'danger' : 'warning')}>{producto.stock === 1 ? 'Queda 1' : `Quedan ${producto.stock}`}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {datos.pocoInventario.total > datos.pocoInventario.productos.length && (
+                <p className="border-t border-line px-4 py-2 text-xs text-muted">Y {datos.pocoInventario.total - datos.pocoInventario.productos.length} más en <Link href="/admin/products" className="font-semibold text-brand-600 hover:text-brand-700">Productos</Link>.</p>
+              )}
+            </section>
+          )}
+
+          {tienda.length > 0 && (
+            <section aria-labelledby="tienda-titulo" className={adminCardFlush}>
+              <div className="px-4 py-3">
+                <h2 id="tienda-titulo" className={adminSectionTitle}>Tu tienda: por completar</h2>
+              </div>
+              <ul className="divide-y divide-line border-t border-line">
+                {tienda.map((item) => (
+                  <li key={item.clave}>
+                    <Link href={item.href} className="flex min-h-11 items-start gap-3 px-4 py-2.5 text-sm text-ink-soft hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
+                      <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" aria-hidden="true" />
+                      <span className="min-w-0 flex-1">{item.texto}</span>
+                      <FiChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <section aria-labelledby="totales-titulo" className={adminCard}>
+            <h2 id="totales-titulo" className={`${adminSectionTitle} mb-3`}>En total</h2>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+              <div><dt className="text-xs text-muted">Ventas cobradas</dt><dd className="font-semibold tabular-nums text-ink [overflow-wrap:anywhere]">{formatUSD(datos.totales.ventasUSD)}</dd></div>
+              <div><dt className="text-xs text-muted">Órdenes</dt><dd className="font-semibold tabular-nums text-ink">{datos.totales.ordenes}</dd></div>
+              <div><dt className="text-xs text-muted">Productos</dt><dd className="font-semibold tabular-nums text-ink">{datos.totales.productos} <span className="font-normal text-muted">· {datos.totales.publicados} {datos.totales.publicados === 1 ? 'publicado' : 'publicados'}</span></dd></div>
+              <div><dt className="text-xs text-muted">Clientes</dt><dd className="font-semibold tabular-nums text-ink">{datos.totales.clientes}</dd></div>
+            </dl>
+          </section>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

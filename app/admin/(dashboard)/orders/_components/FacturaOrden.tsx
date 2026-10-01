@@ -14,6 +14,7 @@ export interface OrdenFactura {
   id: string;
   orderNumber: string;
   createdAt: string;
+  deliveryMethod?: string | null;
   user: { name: string; email: string; profile?: { companyName: string | null; taxId: string | null; businessVerified?: boolean | null; phone?: string | null; idNumber?: string | null } } | null;
   guestEmail?: string | null;
   billingType?: string | null;

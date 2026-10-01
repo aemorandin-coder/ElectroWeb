@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   FiBarChart2, FiBox, FiClipboard, FiCreditCard, FiDollarSign, FiExternalLink, FiGift, FiGrid, FiLogOut,
-  FiAlertTriangle, FiBell, FiBookOpen, FiFilm, FiLifeBuoy, FiLock, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUserPlus, FiUsers, FiX,
+  FiAlertTriangle, FiBell, FiBookOpen, FiFileText, FiFilm, FiLifeBuoy, FiLock, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUserPlus, FiUsers, FiX,
 } from 'react-icons/fi';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { MdAdminPanelSettings } from 'react-icons/md';
@@ -30,6 +30,7 @@ interface SidebarCounts {
   pendingInquiries: number;
   pendingReviews: number;
   pendingWarranty: number;
+  pendingQuotes: number;
   pendingDiscounts: number;
   pendingCreators: number;
   pendingCourses: number;
@@ -56,6 +57,7 @@ export default function AdminLayout({
     pendingInquiries: 0,
     pendingReviews: 0,
     pendingWarranty: 0,
+    pendingQuotes: 0,
     pendingDiscounts: 0,
     pendingCreators: 0,
     pendingCourses: 0,
@@ -189,6 +191,14 @@ export default function AdminLayout({
       icon: <FiDollarSign className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_ORDERS',
       countKey: 'pendingTransactions',
+    },
+    {
+      // C-148: presupuestos para empresas e instituciones
+      name: 'Cotizaciones',
+      href: '/admin/cotizaciones',
+      icon: <FiFileText className="h-5 w-5" aria-hidden="true" />,
+      permission: 'MANAGE_ORDERS',
+      countKey: 'pendingQuotes',
     },
     {
       // C-122: antes las solicitudes llegaban mezcladas en Mensajes y Solicitudes

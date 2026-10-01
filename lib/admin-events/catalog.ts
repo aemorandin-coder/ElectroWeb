@@ -44,6 +44,7 @@ export const ADMIN_EVENTS = {
   ORDER_CREATED: { category: 'ventas', label: 'Nueva venta', description: 'Un cliente hizo una orden, con total, pago y entrega.', defaults: on(true, true, true) },
   ORDER_PAID: { category: 'ventas', label: 'Pago de orden confirmado', description: 'Un administrador marcó una orden como pagada.', defaults: on(true, false, true) },
   DIGITAL_ORDER_PENDING: { category: 'ventas', label: 'Pedido digital por entregar', description: 'Una orden pagada trae códigos o recargas que hay que comprar y enviar desde el pedido.', defaults: on(true, true, true) },
+  QUOTE_APPROVED: { category: 'ventas', label: 'Cotización aprobada', description: 'Un cliente dio su conformidad a una cotización desde su enlace.', defaults: on(true, true, true) },
   ORDER_CANCELLED: { category: 'ventas', label: 'Orden cancelada', description: 'Una orden pasó a cancelada, con el motivo.', defaults: on(true, false, true) },
 
   RECHARGE_REQUESTED: { category: 'pagos', label: 'Recarga por aprobar', description: 'Un cliente pidió recargar Puntos ES y espera aprobación.', defaults: on(true, true, true) },
@@ -59,6 +60,7 @@ export const ADMIN_EVENTS = {
   ACCOUNT_DELETION_REQUESTED: { category: 'clientes', label: 'Pedido de eliminar la cuenta', description: 'Un cliente pidió eliminar su cuenta desde Mi perfil. Llega también a Mensajes y Solicitudes.', defaults: on(true, true, true) },
   REVIEW_SUBMITTED: { category: 'clientes', label: 'Reseña por aprobar', description: 'Un cliente dejó una reseña de producto.', defaults: on(true, false, false), silent: true },
 
+  QUOTE_REQUESTED: { category: 'solicitudes', label: 'Piden una cotización', description: 'Un cliente o una empresa pidió una cotización desde la tienda.', defaults: on(true, true, true) },
   PRODUCT_REQUESTED: { category: 'solicitudes', label: 'Solicitud de producto', description: 'Un cliente pidió un producto que no está en el catálogo.', defaults: on(true, false, true) },
   DISCOUNT_REQUESTED: { category: 'solicitudes', label: 'Solicitud de descuento', description: 'Un cliente pidió descuento en un producto de su lista de deseos.', defaults: on(true, false, true) },
 

@@ -467,6 +467,10 @@ export default function CarritoPage() {
                   >
                     Seguir comprando
                   </Link>
+                  {/* C-148: empresas e instituciones piden un presupuesto formal con lo que tienen en el carrito */}
+                  <Link href="/cotizacion" className="mt-3 block text-center text-sm font-semibold text-brand-600 hover:text-brand-700">
+                    ¿Compras para una empresa? Pide una cotización
+                  </Link>
                 </div>
               </div>
 

@@ -1084,6 +1084,62 @@ model UserSession {
   @@map("user_sessions")
 }
 
+// C-148: cotizaciones (presupuestos) para empresas e instituciones. El equipo las arma en el panel o el cliente las
+// pide desde la tienda; el cliente la abre con un enlace (`token`), la imprime y la aprueba.
+model Quote {
+  id             String    @id @default(cuid())
+  number         String    @unique // PRES-2026-0001
+  token          String    @unique // enlace público /cotizacion/<token>
+  status         String    @default("DRAFT") // REQUESTED | DRAFT | SENT | APPROVED | REJECTED
+  // Cliente
+  clientName     String    // empresa o persona
+  clientDoc      String?   // RIF o cédula
+  contactName    String?
+  contactEmail   String?
+  contactPhone   String?
+  location       String?
+  subject        String?   // para qué es ("Equipos para taquilla")
+  requestNote    String?   // lo que escribió el cliente al pedirla
+  // Condiciones
+  validityDays   Int       @default(15)
+  advancePercent Int?      // anticipo, si lo hay
+  conditions     String?   // condiciones comerciales, una por línea
+  terms          String?   // entrega y garantía, una por línea
+  // Totales (se recalculan en el servidor cada vez que se guarda)
+  totalUSD       Decimal   @default(0)
+  taxPercent     Decimal   @default(0) // IVA que ya va dentro de los precios al emitirla (C-146)
+  // Seguimiento
+  userId         String?   // cuenta del cliente que la pidió, si tenía sesión
+  createdById    String?   // quién del equipo la hizo
+  sentAt         DateTime?
+  approvedAt     DateTime?
+  approvedName   String?
+  approvedDoc    String?
+  approvedIp     String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  items QuoteItem[]
+
+  @@index([status])
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id           String  @id @default(cuid())
+  quoteId      String
+  quote        Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId    String? // sin relación: la cotización conserva la línea aunque el producto cambie o se borre
+  title        String
+  description  String?
+  quantity     Int     @default(1)
+  unitPriceUSD Decimal
+  position     Int     @default(0)
+
+  @@index([quoteId])
+  @@map("quote_items")
+}
+
 // C-141: verificación en dos pasos (TOTP, RFC 6238) de los admin. Obligatoria para usar el panel.
 model SegundoFactor {
   userId          String    @id

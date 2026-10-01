@@ -1,6 +1,6 @@
-# Punto de partida (actualizado 2026-09-30, cierre de C-141, C-139, C-142 y C-143)
+# Punto de partida (actualizado 2026-09-30, cierre de C-141 a C-148)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-143**.
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-148**.
 - **Producción: C-141 desplegada el 30/09** (Andrés configuró sus dos pasos). No se sabe con qué commit exacto: preguntarle si el deploy incluyó C-139 y C-142.
 - **Incidente del deploy (C-143):** la cuenta de Andrés era ADMIN, no SUPER_ADMIN, y quedó sin Configuración, Métodos de Pago ni Equipo. Arreglo: `npx tsx scripts/create-master-admin.ts <su correo>` en el servidor y volver a entrar. **Resuelto el 30/09 (10:46 p. m.):** Andrés mandó la captura de Equipo con su cuenta como Super admin, con dos pasos activos. Es la única cuenta del equipo en producción; va a invitar al resto desde ahí.
 - **Decidido por Andrés (30/09, después del incidente):** él es el super admin y desde ahí da los roles y los usuarios en Equipo. El rol Administrador queda como está (sin Configuración, Métodos de Pago ni Equipo). Todavía no corrió el diagnóstico de C-92.
@@ -11,6 +11,7 @@ Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-143**.
 - **C-139** (Puntos ES) hecha y en `main`: va en el mismo deploy que C-141 y no cambia la base (§000000).
 - **C-142:** los términos de los Puntos ES que se firman ya traen la regla del cierre de cuenta (decisión de Andrés del 30/09). Se publican solos con el deploy y cada cliente los firma en su próxima recarga (`estado/C-142.md`).
 - **C-120** (facturación, IVA y términos): investigación hecha y **rediseñada con las respuestas de Andrés del 30/09** (`estado/C-120.md`): la web no emite facturas (eso es de SADES y del talonario); la web prepara los datos. Sigue en C-146, C-147 y C-148.
+- **C-148** (en `main`, falta el deploy, **con dos tablas nuevas**): **cotizaciones para empresas e instituciones**. El cliente la pide en `/cotizacion`, el equipo la arma en el panel y el cliente la abre con un enlace, la imprime (una hoja, con el logo largo en el membrete) y la aprueba. SQL y pruebas en `estado/C-148.md`.
 - **C-146** (en `main`, falta el deploy): **"IVA incluido" con la base y el IVA** en ficha, carrito, pago, correo, recibo y panel; fuera "Impuestos (Exento)". El total no cambia. **Después del deploy, Andrés tiene que poner 16 en Configuración → Precios → IVA** (`estado/C-146.md`).
 - **C-145** (en `main`, falta el deploy): el embudo de compra ya se mide (carrito, pago, compra y registro). Para que llegue a Google Analytics y a Meta faltan `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` en el `.env` del servidor (`estado/C-145.md`).
 - **Datos de Andrés (30/09):** tiene contador; puede invertir unos $200 al mes en anuncios; falta que configure Google Analytics y el píxel de Meta (Claude le dio los pasos).
@@ -48,6 +49,8 @@ Detalle, hallazgos y pruebas en `estado/C-141.md`.
 - Instala **Google Authenticator** o **Authy** en tu teléfono.
 - Ten a mano dónde guardar 10 códigos fuera del teléfono (papel, o un archivo en otra computadora).
 - Hazlo cuando puedas terminar los pasos de una vez: entre el deploy y tu configuración, quien tenga tu contraseña podría registrar su propia app.
+
+**Deploy siguiente (C-139, C-142 a C-148; C-141 ya está en producción):** igual que abajo, con el respaldo como `~/respaldo-antes-deploy-c148.dump`. El guion para y muestra el SQL: debe ser solo `CREATE TABLE "quotes"`, `CREATE TABLE "quote_items"`, sus índices y su llave (`estado/C-148.md`). Después: poner 16 en Configuración → Precios → IVA (C-146) y las pruebas de `estado/C-148.md`.
 
 **Deploy (Andrés, en el servidor):**
 1. `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-c141.dump`
@@ -290,7 +293,7 @@ bash scripts/deploy.sh
 Andrés quiere que la tienda sea la vitrina digital de la empresa en todo el país y pagar anuncios. Orden recomendado por Claude; falta que Andrés lo confirme:
 1. ✅ **C-145 · Medición del embudo** (hecha).
 2. ✅ **C-146 · "IVA incluido" a la vista** (hecha). Falta **C-146b**: precio sugerido desde el costo (costo × 1,30 × 1,16) y aviso de margen para el dueño.
-2b. **C-148 primero (pedido de Andrés del 30/09):** "Pedir cotización" para empresas. Andrés tiene en sus artefactos los `.html` que usó para ABBY Kingdom y un laboratorio clínico: usarlos como modelo.
+2b. ✅ **C-148 · Cotizaciones** (hecha). Falta **C-148b**: retención del IVA de contribuyentes especiales, convertir la aprobada en orden, enviarla por correo, y decidir si el documento muestra los datos para pagar.
 3. **C-149 · Que Google y las IA encuentren el catálogo:**
    - Feed de productos para Google Merchant Center (fichas gratis de Shopping y, después, anuncios).
    - Datos estructurados completos: disponibilidad, condición, envío, marca, código; `Organization` con RIF y dirección.

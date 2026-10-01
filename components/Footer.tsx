@@ -80,6 +80,7 @@ export default function Footer() {
                 ['Gift Cards', '/gift-cards'],
                 ['Categorías', '/categorias'],
                 ['Cursos', '/cursos'],
+                ['Cotizaciones para empresas', '/cotizacion'],
                 ['Enseña en ElectroShop', '/creator'],
               ].map(([l, h]) => (
                 <li key={h}>
@@ -159,6 +160,7 @@ export default function Footer() {
             )}
           </div>
           <div className="flex gap-4">
+            <Link href="/cotizacion" className="hover:text-brand-500 transition-colors">Cotizaciones</Link>
             <Link href="/terminos" className="hover:text-brand-500 transition-colors">Términos</Link>
             <Link href="/privacidad" className="hover:text-brand-500 transition-colors">Privacidad</Link>
           </div>

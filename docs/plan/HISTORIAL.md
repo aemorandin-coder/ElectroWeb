@@ -1,10 +1,17 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `6aae5a6`, hasta C-154, el 01/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `57840db`, hasta C-155, el 01/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 01/10 (noche) · C-161 y C-155 (`57840db`)
+Sin cambio de base. Visto desde fuera: la tablet W&O tiene marca (campo de C-155) y la foto del Sonic Frontier está armada sin cinta (C-161).
+- **C-161 · La foto de un producto usado, bien encuadrada** (`estado/C-161.md`).
+- **C-155 · Buscar el producto en la web desde el asistente**, con Groq y el campo Marca (`estado/C-155.md`). Variable opcional `GROQ_API_KEY` en el `.env` del servidor.
+- **C-156 · Orden de los documentos** (`estado/C-156.md`): no cambia la tienda.
+- Sin confirmar con Andrés: si la búsqueda respondió bien desde el servidor y si se corrió el redondeo de C-96.
 
 ## 01/10 (noche) · C-153 y C-154 (`6aae5a6`)
 Andrés los subió el mismo 01/10, antes de recibir el bloque que los juntaba con C-161 y C-155. Comprobado desde fuera: los ajustes públicos traen `packagingRules` y `freePackagingThresholdUSD`, y la ficha dice "Garantía … · Envío nacional".

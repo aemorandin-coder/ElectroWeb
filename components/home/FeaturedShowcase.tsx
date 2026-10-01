@@ -16,6 +16,9 @@ interface FeaturedShowcaseProps {
  * Hasta xl: fila deslizable (tarjeta a 78vw en móvil, 3 visibles en lg).
  * Desde xl: producto estrella + fila deslizable con el resto, todo a la altura de una tarjeta
  * para que quepa en la primera pantalla. En lg no hay estrella: a ese ancho su imagen quedaba pequeña.
+ * C-162: la estrella ocupa 8 de 12 columnas y la fila, 4 (dos tarjetas a la vista). Así la foto de la estrella,
+ * que es cuadrada y mide la mitad de su tarjeta, queda del alto de la fila: antes (6 y 6) medía 330 px en una
+ * tarjeta de 405 y dejaba una franja blanca arriba.
  */
 export default function FeaturedShowcase({ products, exchangeRateVES, lowStockThreshold }: FeaturedShowcaseProps) {
   if (products.length === 0) return null;
@@ -41,12 +44,12 @@ export default function FeaturedShowcase({ products, exchangeRateVES, lowStockTh
 
         <div className="hidden gap-4 xl:grid xl:grid-cols-12">
           {/* pb-2: iguala el espacio inferior que deja la fila deslizable */}
-          <div className={`pb-2 ${rest.length > 0 ? 'col-span-6' : 'col-span-12'}`}>
+          <div className={`pb-2 ${rest.length > 0 ? 'col-span-8' : 'col-span-12'}`}>
             <FeaturedHeroCard product={star} exchangeRateVES={exchangeRateVES} lowStockThreshold={lowStockThreshold} />
           </div>
           {rest.length > 0 && (
-            <div className="col-span-6 min-w-0">
-              <ProductShelf label="Más destacados" variant="featured">
+            <div className="col-span-4 min-w-0">
+              <ProductShelf label="Más destacados" variant="featuredSide">
                 {rest.map((product) => (
                   <ProductCard key={product.id} product={product} exchangeRateVES={exchangeRateVES} lowStockThreshold={lowStockThreshold} />
                 ))}

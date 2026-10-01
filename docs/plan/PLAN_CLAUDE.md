@@ -11,7 +11,7 @@ La fila y lo que espera datos de Andrés están en **`PLAN.md` §5.2**: C-157 a 
 
 **Números que no son tareas de Claude:** C-76 (emojis de correos) pasó a Gemini G-53; C-79 (panel de creadores en móvil), a ChatGPT GPT-05; C-81 (estilos viejos de `components/ui`, Footer, botón de cuenta y carrito del header), a Gemini G-45 y G-46. Los demás huecos no se usaron.
 
-## 2. Hechas (122)
+## 2. Hechas (124)
 Las marcas de dinero y de seguridad de las filas vienen de cuando se escribieron. "Rama `claude/C-XX`" dice de dónde salió cada una: todas están fusionadas en `main`.
 
 | ID | Tarea | Qué quedó |
@@ -138,6 +138,8 @@ Las marcas de dinero y de seguridad de las filas vienen de cuando se escribieron
 | C-155 | **C-155 · Buscar el producto en la web desde el asistente** (01/10, sin cambio de base; variable opcional `GROQ_API_KEY`; `estado/C-155.md`) | En el primer paso del asistente: marca, código de barras, peso y medidas de la caja (leídos o estimados, marcados como tales), especificaciones y un borrador de la descripción, con casillas; nada se llena solo. La tienda busca y lee las páginas con una descarga que no deja llegar a la red interna; Groq ordena y redacta, y todo lo que devuelve se comprueba contra los datos. Sin clave sigue con sus reglas. **El asistente no tenía campo de Marca: ahora sí.** Verificado: piezas 118/118, HTTP 31/31, navegador 38/38 y humo 59/59. Falta probarlo desde el servidor. |
 | C-156 | **C-156 · Orden de los documentos del plan** (01/10, solo documentos; `estado/C-156.md`) | `PLAN.md` vuelve a ser el plan maestro (carriles, tablero, lista única de pendientes y decisiones al día); `SIGUIENTE.md` queda solo con lo vigente; nuevos `OPERACION.md` e `HISTORIAL.md`; este registro ordenado por número; las siete auditorías con su cierre; 13 estados vencidos anotados; y el guion de un comando para el redondeo de C-96. |
 | C-161 | **C-161 · La foto de un producto usado, bien encuadrada** (01/10, sin cambio de base; `estado/C-161.md`) | Aviso de Andrés con una captura de producción. La foto recortada de un producto que no es nuevo quedaba pegada a los bordes: ahora el servidor la arma con fondo blanco y centrada, sin la cinta ES. Verificado: HTTP 17/17 con la foto real. Las fotos ya subidas hay que volver a subirlas. |
+| C-162 | **C-162 · La tarjeta estrella del inicio sin franja blanca, y la cinta ES sin corte** (01/10, sin cambio de base; `estado/C-162.md`) | Aviso de Andrés con capturas de producción. La foto de la estrella medía 330 px en una tarjeta de 405: ahora la estrella ocupa 8 de 12 columnas y su foto llena el alto. La cinta que arma la tienda terminaba en un corte vertical: ahora baja en diagonal hasta el borde, como en las fotos hechas a mano. Verificado: humo 59/59 y capturas a 1280 y 1440. Las fotos ya armadas hay que volver a subirlas. |
+| C-163 | **C-163 · Ordenar las categorías: guion para producción** (01/10, sin cambio de base; `estado/C-163.md`) | `scripts/reorganizar-categorias.ts`: crea Gift Cards y Recargas, Videojuegos y Audio, mueve los productos, corrige descripciones e íconos y sube a 6 las categorías del inicio (estaba en 3: por eso "no detectaba" las nuevas). Sin `--aplicar` solo muestra. Probado en la tienda de ejemplo. **Lo corre Andrés en el servidor.** |
 
 ## 3. Plan original (rondas R1 a R8, del 12/09): cerrado
 > Así se planificó el 12/09 y así quedó hecho. Se conserva como referencia de por qué existe cada pieza. **Las reglas de trabajo vigentes están en `CLAUDE.md` y en `PLAN.md` §4** (hoy el merge y el push los hace Claude, no Andrés).

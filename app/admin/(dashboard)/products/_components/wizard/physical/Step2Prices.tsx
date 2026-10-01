@@ -149,7 +149,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
                 type="text"
                 inputMode="decimal"
                 value={data.weightKg}
-                onChange={(e) => onChange({ weightKg: e.target.value.replace(/[^\d.,]/g, '') })}
+                onChange={(e) => onChange({ weightKg: e.target.value.replace(/[^\d.,]/g, ''), medidasEstimadas: false })}
                 placeholder="0,5"
                 className={`${wizardInput(Boolean(errors.weightKg))} pr-10 tabular-nums`}
               />
@@ -168,7 +168,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
                     type="text"
                     inputMode="decimal"
                     value={data[field]}
-                    onChange={(e) => onChange({ [field]: e.target.value.replace(/[^\d.,]/g, '') } as Partial<StepProps['data']>)}
+                    onChange={(e) => onChange({ [field]: e.target.value.replace(/[^\d.,]/g, ''), medidasEstimadas: false } as Partial<StepProps['data']>)}
                     placeholder={lbl}
                     aria-invalid={errors.dimensions ? true : undefined}
                     aria-describedby={errors.dimensions ? 'p-medidas-error' : undefined}
@@ -180,6 +180,14 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
             {errors.dimensions && <p id="p-medidas-error" className="mt-1 text-xs font-medium text-deal">{errors.dimensions}</p>}
           </fieldset>
         </div>
+
+        {/* C-155: un estimado de la búsqueda en la web se recuerda hasta que alguien toque el peso o las medidas */}
+        {data.medidasEstimadas && (
+          <p className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning-strong">
+            <FiInfo className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>El peso o las medidas son un estimado de la búsqueda en la web. Compruébalos con la caja real: de aquí salen el embalaje y el flete.</span>
+          </p>
+        )}
 
         <fieldset>
           <legend className="mb-1.5 block text-sm font-semibold text-ink">Cómo viaja</legend>

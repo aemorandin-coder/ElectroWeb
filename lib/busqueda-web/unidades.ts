@@ -39,7 +39,7 @@ export function leerPeso(texto: string): number | null {
 
 const UNIDAD_LARGO = String.raw`(mm|mil[ií]metros?|millimeters?|cm|cent[ií]metros?|centimeters?|pulgadas?|pulg|inches|inch|in|"|''|”|″|m|metros?)`;
 const SEPARADOR = String.raw`\s*(?:${UNIDAD_LARGO})?\s*(?:\([^)]{0,12}\))?\s*[a-záéíóú.]{0,6}\s*[x×*]\s*`;
-const TRES = new RegExp(String.raw`${NUM}${SEPARADOR}${NUM}${SEPARADOR}${NUM}\s*(?:${UNIDAD_LARGO})?(?:[^a-z0-9"]{0,3}(?:\([^)]{0,12}\))?[^a-z0-9"]{0,3}[a-záéíóú.]{0,6}\s*(?:${UNIDAD_LARGO}))?`, 'i');
+const TRES = new RegExp(String.raw`${NUM}${SEPARADOR}${NUM}${SEPARADOR}${NUM}\s*(?:${UNIDAD_LARGO})?(?:[^a-z0-9"]{0,3}(?:\([^)]{0,12}\))?[^a-z0-9"]{0,3}[a-záéíóú.]{0,6}?\s*(?:${UNIDAD_LARGO}))?`, 'i');
 
 function aCentimetros(unidad: string | undefined): number | null {
   if (!unidad) return null;

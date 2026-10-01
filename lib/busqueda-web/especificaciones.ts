@@ -88,7 +88,7 @@ function valorLimpio(valor: string, enEspanol: boolean): string | null {
 }
 
 /** El valor escrito como en el resto de la tienda: "Alámbrico", "Cableado" y "wired" son "Con cable" */
-function valorDeTienda(canonico: string | null, valor: string): string {
+export function valorDeTienda(canonico: string | null, valor: string): string {
   const k = clave(valor);
   if (canonico === 'Conexión') {
     if (/^(alambric[oa]|cablead[oa]|con cable|wired|cable|por cable)$/.test(k)) return 'Con cable';

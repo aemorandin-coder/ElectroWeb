@@ -1,16 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiPlus, FiStar, FiX } from 'react-icons/fi';
 import { wizardInput, wizardSectionTitle, wizardSectionHelp } from '../ui';
 import { StepProps } from '../types';
 import { Campo, controlDe } from '../Campo';
 import ConditionSection from './ConditionSection';
+import BusquedaWeb from '../BusquedaWeb';
 
 // C-134: una columna en el teléfono, errores debajo de cada campo y etiquetas que se agregan también con un botón
 // (en el teclado del teléfono "Enter" no siempre agrega).
 export default function PhysicalStep1BasicInfo({ data, onChange, errors, categories }: StepProps) {
   const [tagInput, setTagInput] = useState('');
+  // C-155: las marcas que ya existen, para escribirlas siempre igual
+  const [marcas, setMarcas] = useState<string[]>([]);
+  useEffect(() => {
+    const control = new AbortController();
+    fetch('/api/admin/products/marcas', { signal: control.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((datos: { marcas?: string[] } | null) => { if (datos?.marcas) setMarcas(datos.marcas); })
+      .catch(() => {});
+    return () => control.abort();
+  }, []);
 
   const agregarEtiqueta = () => {
     const val = tagInput.trim();
@@ -37,6 +48,8 @@ export default function PhysicalStep1BasicInfo({ data, onChange, errors, categor
           className={wizardInput(Boolean(errors.name))}
         />
       </Campo>
+
+      <BusquedaWeb data={data} onChange={onChange} />
 
       <Campo id="p-descripcion" label="Descripción">
         <textarea
@@ -76,6 +89,7 @@ export default function PhysicalStep1BasicInfo({ data, onChange, errors, categor
         </Campo>
       </div>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <Campo id="p-categoria" label="Categoría" required error={errors.categoryId}>
         <select
           {...controlDe('p-categoria', errors.categoryId)}
@@ -89,6 +103,23 @@ export default function PhysicalStep1BasicInfo({ data, onChange, errors, categor
           ))}
         </select>
       </Campo>
+      <Campo id="p-marca" label="Marca" error={errors.brand} hint="La del fabricante. Sale en la ficha y en los catálogos de Google y Meta">
+        <input
+          {...controlDe('p-marca', errors.brand, 'hint')}
+          type="text"
+          value={data.brand}
+          maxLength={60}
+          list="p-marcas"
+          autoComplete="off"
+          onChange={(e) => onChange({ brand: e.target.value })}
+          placeholder="Ej: Xiaomi"
+          className={wizardInput(Boolean(errors.brand))}
+        />
+        <datalist id="p-marcas">
+          {marcas.map((m) => <option key={m} value={m} />)}
+        </datalist>
+      </Campo>
+      </div>
 
       <Campo id="p-etiquetas" label="Etiquetas" hint="Palabras con las que el cliente lo busca: marca, modelo, uso">
         <div className="flex gap-2">
